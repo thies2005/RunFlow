@@ -61,13 +61,16 @@ ThemeData buildDarkTheme() {
 
 ThemeData _buildTheme(ColorScheme colorScheme, Brightness brightness) {
   final textTheme = GoogleFonts.interTextTheme(
-    brightness == Brightness.dark ? ThemeData.dark().textTheme : ThemeData.light().textTheme,
+    brightness == Brightness.dark
+        ? ThemeData.dark().textTheme
+        : ThemeData.light().textTheme,
   );
 
   final headlineTheme = GoogleFonts.outfitTextTheme(textTheme);
 
   return ThemeData(
     useMaterial3: true,
+    splashFactory: InkRipple.splashFactory,
     colorScheme: colorScheme,
     brightness: brightness,
     scaffoldBackgroundColor: colorScheme.surface,
@@ -89,9 +92,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, Brightness brightness) {
     cardTheme: CardThemeData(
       color: colorScheme.surfaceContainerHighest,
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -109,9 +110,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, Brightness brightness) {
       backgroundColor: colorScheme.surfaceContainerHighest,
       selectedColor: colorScheme.primary,
       labelStyle: TextStyle(color: colorScheme.onSurface),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -132,9 +131,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, Brightness brightness) {
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: colorScheme.surface,
@@ -144,9 +141,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, Brightness brightness) {
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: colorScheme.primary,

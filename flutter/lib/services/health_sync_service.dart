@@ -4,7 +4,8 @@ import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:health/health.dart';
 import 'package:runflow_flutter/data/repositories/health_api_repository_impl.dart';
 import 'package:runflow_flutter/services/health_connect_service.dart';
-import 'package:runflow_flutter/domain/entities/health_entities.dart' show BodyMeasurement;
+import 'package:runflow_flutter/domain/entities/health_entities.dart'
+    show BodyMeasurement, FoodItem, FoodLogEntry;
 
 class HealthSyncService {
   HealthSyncService({
@@ -71,8 +72,64 @@ class HealthSyncService {
       await _apiRepo.batchSync({
         'data': [payload],
       });
+
+      await syncNutritionFromHealthConnect(date);
+      await syncNutritionToHealthConnect(date);
     } catch (e) {
       logger.error('Health sync failed for $date: $e');
+    }
+  }
+
+  Future<void> syncNutritionFromHealthConnect(DateTime date) async {
+    try {
+      final start = DateTime(date.year, date.month, date.day);
+      final end = start.add(const Duration(days: 1));
+      final entries = await _healthConnect.readNutrition(start, end);
+      if (entries.isEmpty) return;
+
+      final existing = await _apiRepo.getDailyHealth(start);
+      for (final entry in entries) {
+        final foodLog = entry.toFoodLogEntry();
+        if (_hasMatchingFoodLog(existing.foodLogs, foodLog)) continue;
+        await _apiRepo.logFoodEntry(
+          date: start,
+          mealType: foodLog.mealType,
+          quantity: 1,
+          foodItem: FoodItem(
+            id: 0,
+            name: foodLog.name,
+            calories: foodLog.calories ?? 0,
+            protein: foodLog.protein ?? 0,
+            carbs: foodLog.carbs ?? 0,
+            fat: foodLog.fats ?? 0,
+            servingSize: 100,
+            brand: 'Health Connect',
+          ),
+        );
+      }
+    } catch (e) {
+      logger.error('[HealthSyncService] Nutrition import failed: $e');
+    }
+  }
+
+  Future<void> syncNutritionToHealthConnect(DateTime date) async {
+    try {
+      final start = DateTime(date.year, date.month, date.day);
+      final daily = await _apiRepo.getDailyHealth(start);
+      for (final entry in daily.foodLogs) {
+        if (entry.id.isEmpty) continue;
+        await _healthConnect.writeNutritionEntry(entry, start);
+      }
+    } catch (e) {
+      logger.error('[HealthSyncService] Nutrition export failed: $e');
+    }
+  }
+
+  Future<void> deleteNutritionFromHealthConnect(String logId) async {
+    try {
+      await _healthConnect.deleteNutritionEntry(logId);
+    } catch (e) {
+      logger.error('[HealthSyncService] Nutrition Health Connect delete failed: $e');
     }
   }
 
@@ -105,6 +162,17 @@ class HealthSyncService {
     } catch (e) {
       logger.error('[HealthSyncService] Weight sync failed: $e');
     }
+  }
+
+  bool _hasMatchingFoodLog(List<FoodLogEntry> existing, FoodLogEntry candidate) {
+    return existing.any((entry) {
+      final sameName = entry.name.trim().toLowerCase() ==
+          candidate.name.trim().toLowerCase();
+      final sameCalories =
+          ((entry.calories ?? 0) - (candidate.calories ?? 0)).abs() < 1;
+      final sameMeal = entry.mealType == candidate.mealType;
+      return sameName && sameCalories && sameMeal;
+    });
   }
 
   Future<void> writeWeight(double weightKg, DateTime date) async {

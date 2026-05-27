@@ -86,7 +86,8 @@ export async function POST(request: NextRequest) {
                 calcium: dbFoodItem.calcium ? dbFoodItem.calcium * quantity : null,
                 iron: dbFoodItem.iron ? dbFoodItem.iron * quantity : null,
                 foodItemId: dbFoodItem.id,
-            }
+            },
+            include: { foodItem: true },
         });
 
         return NextResponse.json(log, { headers: rateLimitHeaders(rateLimitResult) });

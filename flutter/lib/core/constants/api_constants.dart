@@ -36,6 +36,7 @@ class ApiConstants {
   static String get aiChatStreamUrl => '$baseUrl/api/ai/chat';
 
   static const String nutritionLogPath = '/health/nutrition/log';
+  static String nutritionLogEntryPath(String id) => '/health/nutrition/log/$id';
   static const String nutritionSearchPath = '/health/nutrition/search';
   static const String nutritionScanPath = '/health/nutrition/scan';
   static const String nutritionAiScanPath = '/health/nutrition/ai-scan';

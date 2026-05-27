@@ -16,7 +16,11 @@ class NutritionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     final nutritionAsync = ref.watch(nutritionProvider(today));
     final theme = Theme.of(context);
 
@@ -30,12 +34,18 @@ class NutritionScreen extends ConsumerWidget {
         actions: [
           IconButton(
             onPressed: () => context.push('/health/library'),
-            icon: const Icon(Icons.bookmarks_outlined, color: AppColors.primary),
+            icon: const Icon(
+              Icons.bookmarks_outlined,
+              color: AppColors.primary,
+            ),
             tooltip: 'Nutrition Library',
           ),
           IconButton(
             onPressed: () => _showTargetsDialog(context, ref),
-            icon: const Icon(Icons.settings_outlined, color: AppColors.onSurfaceVariant),
+            icon: const Icon(
+              Icons.settings_outlined,
+              color: AppColors.onSurfaceVariant,
+            ),
             tooltip: S.of(context).nutritionSetTargets,
           ),
           IconButton(
@@ -53,20 +63,27 @@ class NutritionScreen extends ConsumerWidget {
       body: nutritionAsync.when(
         data: (nutrition) {
           final targetsAsync = ref.watch(nutritionTargetsProvider);
-          final rawTargets = targetsAsync.asData?.value ??
-              NutritionTargets.defaults;
+          final rawTargets =
+              targetsAsync.asData?.value ?? NutritionTargets.defaults;
           final targets = rawTargets.water > 20
               ? rawTargets.copyWith(water: rawTargets.water / 1000)
               : rawTargets;
           return _NutritionContent(
-              nutrition: nutrition, ref: ref, today: today, targets: targets);
+            nutrition: nutrition,
+            ref: ref,
+            today: today,
+            targets: targets,
+          );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('${S.of(context).actionError}: $e', style: theme.textTheme.bodyMedium),
+              Text(
+                '${S.of(context).actionError}: $e',
+                style: theme.textTheme.bodyMedium,
+              ),
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: () => ref.invalidate(nutritionProvider(today)),
@@ -87,14 +104,12 @@ class NutritionScreen extends ConsumerWidget {
 
   void _showTargetsDialog(BuildContext context, WidgetRef ref) {
     final targetsAsync = ref.read(nutritionTargetsProvider);
-    final rawTargets = targetsAsync.asData?.value ??
-        NutritionTargets.defaults;
+    final rawTargets = targetsAsync.asData?.value ?? NutritionTargets.defaults;
     final targets = rawTargets.water > 20
         ? rawTargets.copyWith(water: rawTargets.water / 1000)
         : rawTargets;
     final calCtl = TextEditingController(text: targets.calories.toString());
-    final proteinCtl =
-        TextEditingController(text: targets.protein.toString());
+    final proteinCtl = TextEditingController(text: targets.protein.toString());
     final carbsCtl = TextEditingController(text: targets.carbs.toString());
     final fatCtl = TextEditingController(text: targets.fat.toString());
     final waterCtl = TextEditingController(text: targets.water.toString());
@@ -103,17 +118,17 @@ class NutritionScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor:
-          Theme.of(context).colorScheme.surfaceContainerHighest,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
           return Padding(
             padding: EdgeInsets.only(
-              left: 24, right: 24, top: 24,
+              left: 24,
+              right: 24,
+              top: 24,
               bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
             ),
             child: Column(
@@ -122,7 +137,8 @@ class NutritionScreen extends ConsumerWidget {
               children: [
                 Center(
                   child: Container(
-                    width: 40, height: 4,
+                    width: 40,
+                    height: 4,
                     decoration: BoxDecoration(
                       color: AppColors.onSurfaceVariant,
                       borderRadius: BorderRadius.circular(2),
@@ -130,17 +146,20 @@ class NutritionScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text(S.of(context).nutritionTargetsTitle,
-                    style: Theme.of(ctx)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.w700)),
+                Text(
+                  S.of(context).nutritionTargetsTitle,
+                  style: Theme.of(
+                    ctx,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 16),
                 TextField(
-                    controller: calCtl,
-                    decoration: InputDecoration(
-                        labelText: S.of(context).nutritionCaloriesKcal),
-                    keyboardType: TextInputType.number),
+                  controller: calCtl,
+                  decoration: InputDecoration(
+                    labelText: S.of(context).nutritionCaloriesKcal,
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   S.of(context).nutritionMacroPresets,
@@ -160,8 +179,12 @@ class NutritionScreen extends ConsumerWidget {
                         onTap: () {
                           final cal = double.tryParse(calCtl.text) ?? 2000.0;
                           setDialogState(() {
-                            proteinCtl.text = ((cal * 0.30) / 4).round().toString();
-                            carbsCtl.text = ((cal * 0.40) / 4).round().toString();
+                            proteinCtl.text = ((cal * 0.30) / 4)
+                                .round()
+                                .toString();
+                            carbsCtl.text = ((cal * 0.40) / 4)
+                                .round()
+                                .toString();
                             fatCtl.text = ((cal * 0.30) / 9).round().toString();
                           });
                         },
@@ -173,8 +196,12 @@ class NutritionScreen extends ConsumerWidget {
                         onTap: () {
                           final cal = double.tryParse(calCtl.text) ?? 2000.0;
                           setDialogState(() {
-                            proteinCtl.text = ((cal * 0.30) / 4).round().toString();
-                            carbsCtl.text = ((cal * 0.10) / 4).round().toString();
+                            proteinCtl.text = ((cal * 0.30) / 4)
+                                .round()
+                                .toString();
+                            carbsCtl.text = ((cal * 0.10) / 4)
+                                .round()
+                                .toString();
                             fatCtl.text = ((cal * 0.60) / 9).round().toString();
                           });
                         },
@@ -186,8 +213,12 @@ class NutritionScreen extends ConsumerWidget {
                         onTap: () {
                           final cal = double.tryParse(calCtl.text) ?? 2000.0;
                           setDialogState(() {
-                            proteinCtl.text = ((cal * 0.40) / 4).round().toString();
-                            carbsCtl.text = ((cal * 0.35) / 4).round().toString();
+                            proteinCtl.text = ((cal * 0.40) / 4)
+                                .round()
+                                .toString();
+                            carbsCtl.text = ((cal * 0.35) / 4)
+                                .round()
+                                .toString();
                             fatCtl.text = ((cal * 0.25) / 9).round().toString();
                           });
                         },
@@ -199,37 +230,49 @@ class NutritionScreen extends ConsumerWidget {
                 Row(
                   children: [
                     Expanded(
-                        child: TextField(
-                            controller: proteinCtl,
-                            decoration: InputDecoration(
-                                labelText: S.of(context).nutritionProteinG),
-                            keyboardType: TextInputType.number)),
+                      child: TextField(
+                        controller: proteinCtl,
+                        decoration: InputDecoration(
+                          labelText: S.of(context).nutritionProteinG,
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                        child: TextField(
-                            controller: carbsCtl,
-                            decoration: InputDecoration(
-                                labelText: S.of(context).nutritionCarbsG),
-                            keyboardType: TextInputType.number)),
+                      child: TextField(
+                        controller: carbsCtl,
+                        decoration: InputDecoration(
+                          labelText: S.of(context).nutritionCarbsG,
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
                     Expanded(
-                        child: TextField(
-                            controller: fatCtl,
-                            decoration:
-                                InputDecoration(labelText: S.of(context).nutritionFatG),
-                            keyboardType: TextInputType.number)),
+                      child: TextField(
+                        controller: fatCtl,
+                        decoration: InputDecoration(
+                          labelText: S.of(context).nutritionFatG,
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
                     if (waterTrackingEnabled) ...[
                       const SizedBox(width: 8),
                       Expanded(
-                          child: TextField(
-                              controller: waterCtl,
-                              decoration: InputDecoration(
-                                  labelText: S.of(context).nutritionWaterL),
-                              keyboardType: TextInputType.number)),
+                        child: TextField(
+                          controller: waterCtl,
+                          decoration: InputDecoration(
+                            labelText: S.of(context).nutritionWaterL,
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -237,7 +280,8 @@ class NutritionScreen extends ConsumerWidget {
                 SwitchListTile(
                   title: Text(S.of(context).nutritionTrackWater),
                   value: waterTrackingEnabled,
-                  onChanged: (val) => setDialogState(() => waterTrackingEnabled = val),
+                  onChanged: (val) =>
+                      setDialogState(() => waterTrackingEnabled = val),
                   contentPadding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: 20),
@@ -246,14 +290,12 @@ class NutritionScreen extends ConsumerWidget {
                   child: FilledButton(
                     onPressed: () {
                       final newTargets = NutritionTargets(
-                        calories:
-                            int.tryParse(calCtl.text) ?? targets.calories,
-                        protein: int.tryParse(proteinCtl.text) ??
-                            targets.protein,
+                        calories: int.tryParse(calCtl.text) ?? targets.calories,
+                        protein:
+                            int.tryParse(proteinCtl.text) ?? targets.protein,
                         carbs: int.tryParse(carbsCtl.text) ?? targets.carbs,
                         fat: int.tryParse(fatCtl.text) ?? targets.fat,
-                        water: double.tryParse(waterCtl.text) ??
-                            targets.water,
+                        water: double.tryParse(waterCtl.text) ?? targets.water,
                         waterTrackingEnabled: waterTrackingEnabled,
                       );
                       updateNutritionTargets(ref, newTargets);
@@ -277,16 +319,34 @@ class NutritionScreen extends ConsumerWidget {
   }
 
   void _showMealSuggestion(BuildContext context, WidgetRef ref) {
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     final nutrition = ref.read(nutritionProvider(today)).asData?.value;
-    final targets = ref.read(nutritionTargetsProvider).asData?.value ?? NutritionTargets.defaults;
+    final targets =
+        ref.read(nutritionTargetsProvider).asData?.value ??
+        NutritionTargets.defaults;
 
     if (nutrition == null) return;
 
-    final remainingCalories = (targets.calories - nutrition.calories).clamp(0.0, double.infinity);
-    final remainingProtein = (targets.protein - nutrition.protein).clamp(0.0, double.infinity);
-    final remainingCarbs = (targets.carbs - nutrition.carbs).clamp(0.0, double.infinity);
-    final remainingFats = (targets.fat - nutrition.fat).clamp(0.0, double.infinity);
+    final remainingCalories = (targets.calories - nutrition.calories).clamp(
+      0.0,
+      double.infinity,
+    );
+    final remainingProtein = (targets.protein - nutrition.protein).clamp(
+      0.0,
+      double.infinity,
+    );
+    final remainingCarbs = (targets.carbs - nutrition.carbs).clamp(
+      0.0,
+      double.infinity,
+    );
+    final remainingFats = (targets.fat - nutrition.fat).clamp(
+      0.0,
+      double.infinity,
+    );
 
     ref.read(mealSuggestionProvider.notifier).reset();
 
@@ -342,7 +402,12 @@ class NutritionScreen extends ConsumerWidget {
 }
 
 class _NutritionContent extends StatelessWidget {
-  const _NutritionContent({required this.nutrition, required this.ref, required this.today, required this.targets});
+  const _NutritionContent({
+    required this.nutrition,
+    required this.ref,
+    required this.today,
+    required this.targets,
+  });
 
   final NutritionLog nutrition;
   final WidgetRef ref;
@@ -352,11 +417,14 @@ class _NutritionContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final proteinPct = nutrition.protein > 0 && nutrition.calories > 0
-        ? (nutrition.protein * 4) / nutrition.calories : 0.0;
+        ? (nutrition.protein * 4) / nutrition.calories
+        : 0.0;
     final carbsPct = nutrition.carbs > 0 && nutrition.calories > 0
-        ? (nutrition.carbs * 4) / nutrition.calories : 0.0;
+        ? (nutrition.carbs * 4) / nutrition.calories
+        : 0.0;
     final fatPct = nutrition.fat > 0 && nutrition.calories > 0
-        ? (nutrition.fat * 9) / nutrition.calories : 0.0;
+        ? (nutrition.fat * 9) / nutrition.calories
+        : 0.0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
@@ -369,9 +437,24 @@ class _NutritionContent extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              CircularGauge(value: nutrition.protein, label: S.of(context).nutritionProteinG, maxValue: targets.protein.toDouble(), color: AppColors.success),
-              CircularGauge(value: nutrition.carbs, label: S.of(context).nutritionCarbsG, maxValue: targets.carbs.toDouble(), color: AppColors.warning),
-              CircularGauge(value: nutrition.fat, label: S.of(context).nutritionFatG, maxValue: targets.fat.toDouble(), color: AppColors.fatigued),
+              CircularGauge(
+                value: nutrition.protein,
+                label: S.of(context).nutritionProteinG,
+                maxValue: targets.protein.toDouble(),
+                color: AppColors.success,
+              ),
+              CircularGauge(
+                value: nutrition.carbs,
+                label: S.of(context).nutritionCarbsG,
+                maxValue: targets.carbs.toDouble(),
+                color: AppColors.warning,
+              ),
+              CircularGauge(
+                value: nutrition.fat,
+                label: S.of(context).nutritionFatG,
+                maxValue: targets.fat.toDouble(),
+                color: AppColors.fatigued,
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -379,7 +462,12 @@ class _NutritionContent extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                CircularGauge(value: nutrition.water, label: S.of(context).nutritionWaterL, maxValue: targets.water, color: AppColors.peaked),
+                CircularGauge(
+                  value: nutrition.water,
+                  label: S.of(context).nutritionWaterL,
+                  maxValue: targets.water,
+                  color: AppColors.peaked,
+                ),
               ],
             ),
           const SizedBox(height: 20),
@@ -388,11 +476,26 @@ class _NutritionContent extends StatelessWidget {
             title: S.of(context).nutritionMacroBreakdown,
             child: Column(
               children: [
-                _MacroBar(label: S.of(context).nutritionProteinG, percent: proteinPct, grams: nutrition.protein, color: AppColors.success),
+                _MacroBar(
+                  label: S.of(context).nutritionProteinG,
+                  percent: proteinPct,
+                  grams: nutrition.protein,
+                  color: AppColors.success,
+                ),
                 const SizedBox(height: 8),
-                _MacroBar(label: S.of(context).nutritionCarbs, percent: carbsPct, grams: nutrition.carbs, color: AppColors.warning),
+                _MacroBar(
+                  label: S.of(context).nutritionCarbs,
+                  percent: carbsPct,
+                  grams: nutrition.carbs,
+                  color: AppColors.warning,
+                ),
                 const SizedBox(height: 8),
-                _MacroBar(label: S.of(context).nutritionFatLabel, percent: fatPct, grams: nutrition.fat, color: AppColors.fatigued),
+                _MacroBar(
+                  label: S.of(context).nutritionFatLabel,
+                  percent: fatPct,
+                  grams: nutrition.fat,
+                  color: AppColors.fatigued,
+                ),
               ],
             ),
           ),
@@ -410,11 +513,10 @@ class _NutritionContent extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-          const SizedBox(height: 12),
-          _TodayLoggedFoods(ref: ref, today: today),
-          const SizedBox(height: 12),
           // 7-day trends
           _NutritionTrendsSection(),
+          const SizedBox(height: 12),
+          _LastMealsSection(today: today),
         ],
       ),
     );
@@ -440,10 +542,7 @@ class _CalorieRing extends StatelessWidget {
       builder: (context, value, childWidget) {
         return Transform.translate(
           offset: Offset(0.0, 30.0 * (1.0 - value)),
-          child: Opacity(
-            opacity: value,
-            child: childWidget,
-          ),
+          child: Opacity(opacity: value, child: childWidget),
         );
       },
       child: Container(
@@ -451,11 +550,15 @@ class _CalorieRing extends StatelessWidget {
         decoration: BoxDecoration(
           // Glassmorphic background
           color: isDark
-              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.65)
+              ? theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.65,
+                )
               : theme.colorScheme.surface.withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.08,
+            ),
             width: 1.0,
           ),
           boxShadow: [
@@ -484,13 +587,26 @@ class _CalorieRing extends StatelessWidget {
               children: [
                 Text(
                   '${nutrition.calories.toInt()} / ${goal.toInt()}',
-                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                Text(S.of(context).nutritionKcalEaten, style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant)),
+                Text(
+                  S.of(context).nutritionKcalEaten,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  S.of(context).nutritionKcalRemaining((goal - nutrition.calories).clamp(0, goal).toInt()),
-                  style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primary),
+                  S
+                      .of(context)
+                      .nutritionKcalRemaining(
+                        (goal - nutrition.calories).clamp(0, goal).toInt(),
+                      ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.primary,
+                  ),
                 ),
               ],
             ),
@@ -502,7 +618,12 @@ class _CalorieRing extends StatelessWidget {
 }
 
 class _MacroBar extends StatelessWidget {
-  const _MacroBar({required this.label, required this.percent, required this.grams, required this.color});
+  const _MacroBar({
+    required this.label,
+    required this.percent,
+    required this.grams,
+    required this.color,
+  });
   final String label;
   final double percent;
   final double grams;
@@ -522,7 +643,9 @@ class _MacroBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: percent.clamp(0.0, 1.0),
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
               color: color,
               minHeight: 8,
             ),
@@ -533,7 +656,10 @@ class _MacroBar extends StatelessWidget {
           width: 44,
           child: Text(
             '${grams.toInt()}g',
-            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: color),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
             textAlign: TextAlign.end,
           ),
         ),
@@ -565,7 +691,7 @@ class _WaterTrackerState extends State<_WaterTracker> {
     final theme = Theme.of(context);
     final goal = widget.waterGoal;
     final current = widget.currentWater;
-    
+
     // Number of cups/drops to show
     final totalDrops = (goal / _selectedGlassSize).ceil().clamp(1, 16);
     final filledDrops = (current / _selectedGlassSize).floor();
@@ -587,14 +713,18 @@ class _WaterTrackerState extends State<_WaterTracker> {
             children: [
               Text(
                 S.of(context).nutritionCupSize,
-                style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
               const SizedBox(width: 8),
               Wrap(
                 spacing: 6,
                 children: [0.25, 0.33, 0.50].map((size) {
                   final isSelected = (_selectedGlassSize - size).abs() < 0.01;
-                  final sizeName = size >= 1.0 ? '${size}L' : '${(size * 1000).round()}ml';
+                  final sizeName = size >= 1.0
+                      ? '${size}L'
+                      : '${(size * 1000).round()}ml';
                   return ChoiceChip(
                     label: Text(sizeName),
                     selected: isSelected,
@@ -609,7 +739,9 @@ class _WaterTrackerState extends State<_WaterTracker> {
                     labelStyle: theme.textTheme.labelSmall?.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
+                      color: isSelected
+                          ? Colors.white
+                          : AppColors.onSurfaceVariant,
                     ),
                     selectedColor: AppColors.peaked,
                     backgroundColor: theme.colorScheme.surfaceContainerHighest,
@@ -643,8 +775,8 @@ class _WaterTrackerState extends State<_WaterTracker> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color: isFilled 
-                        ? AppColors.peaked.withValues(alpha: 0.15) 
+                    color: isFilled
+                        ? AppColors.peaked.withValues(alpha: 0.15)
                         : theme.colorScheme.surfaceContainerHighest,
                     border: Border.all(
                       color: isFilled ? AppColors.peaked : Colors.transparent,
@@ -655,9 +787,11 @@ class _WaterTrackerState extends State<_WaterTracker> {
                   child: Icon(
                     Icons.water_drop,
                     size: 20,
-                    color: isFilled 
-                        ? AppColors.peaked 
-                        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                    color: isFilled
+                        ? AppColors.peaked
+                        : theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.3,
+                          ),
                   ),
                 ),
               );
@@ -673,17 +807,25 @@ class _WaterTrackerState extends State<_WaterTracker> {
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.peaked),
                     foregroundColor: AppColors.peaked,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   icon: const Icon(Icons.add, size: 16),
-                  label: Text(S.of(context).nutritionAddMl(( _selectedGlassSize * 1000 ).round())),
+                  label: Text(
+                    S
+                        .of(context)
+                        .nutritionAddMl((_selectedGlassSize * 1000).round()),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               OutlinedButton(
                 onPressed: current > 0 ? () => widget.onUpdate(-current) : null,
                 style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 child: Text(S.of(context).nutritionReset),
               ),
@@ -708,9 +850,15 @@ class _NutritionTrendsSection extends ConsumerWidget {
           title: S.of(context).nutrition7DayCalories,
           trailing: analytics.macroAdherenceScore > 0
               ? Text(
-                  S.of(context).nutritionAdherence(analytics.macroAdherenceScore.toStringAsFixed(0)),
+                  S
+                      .of(context)
+                      .nutritionAdherence(
+                        analytics.macroAdherenceScore.toStringAsFixed(0),
+                      ),
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: analytics.macroAdherenceScore >= 80 ? AppColors.success : AppColors.warning,
+                    color: analytics.macroAdherenceScore >= 80
+                        ? AppColors.success
+                        : AppColors.warning,
                   ),
                 )
               : null,
@@ -728,8 +876,12 @@ class _NutritionTrendsSection extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text('${day.calories.toInt()}',
-                          style: theme.textTheme.labelSmall?.copyWith(fontSize: 8)),
+                      Text(
+                        '${day.calories.toInt()}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontSize: 8,
+                        ),
+                      ),
                       const SizedBox(height: 2),
                       Container(
                         width: 28,
@@ -740,9 +892,13 @@ class _NutritionTrendsSection extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text('${day.date.day}/${day.date.month}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppColors.onSurfaceVariant, fontSize: 8)),
+                      Text(
+                        '${day.date.day}/${day.date.month}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                          fontSize: 8,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -769,7 +925,9 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final trailingWidgets = trailing == null ? const <Widget>[] : <Widget>[trailing!];
+    final trailingWidgets = trailing == null
+        ? const <Widget>[]
+        : <Widget>[trailing!];
 
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0.0, end: 1.0),
@@ -778,10 +936,7 @@ class _SectionCard extends StatelessWidget {
       builder: (context, value, childWidget) {
         return Transform.translate(
           offset: Offset(0.0, 30.0 * (1.0 - value)),
-          child: Opacity(
-            opacity: value,
-            child: childWidget,
-          ),
+          child: Opacity(opacity: value, child: childWidget),
         );
       },
       child: Container(
@@ -791,11 +946,15 @@ class _SectionCard extends StatelessWidget {
         decoration: BoxDecoration(
           // Glassmorphic background
           color: isDark
-              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.65)
+              ? theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.65,
+                )
               : theme.colorScheme.surface.withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
+            color: (isDark ? Colors.white : Colors.black).withValues(
+              alpha: 0.08,
+            ),
             width: 1.0,
           ),
           boxShadow: [
@@ -831,80 +990,78 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-class _TodayLoggedFoods extends ConsumerWidget {
-  const _TodayLoggedFoods({required this.ref, required this.today});
-  final WidgetRef ref;
+class _LastMealsSection extends ConsumerStatefulWidget {
+  const _LastMealsSection({required this.today});
+
   final DateTime today;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final dailyAsync = ref.watch(dailyHealthProvider(today));
-    final theme = Theme.of(context);
+  ConsumerState<_LastMealsSection> createState() => _LastMealsSectionState();
+}
 
-    return dailyAsync.when(
-      data: (dailyLog) {
-        final logs = dailyLog.foodLogs;
-        if (logs.isEmpty) {
-          return const SizedBox.shrink();
-        }
+class _LastMealsSectionState extends ConsumerState<_LastMealsSection> {
+  int _daysVisible = 7;
 
+  @override
+  Widget build(BuildContext context) {
+    final todayAsync = ref.watch(dailyHealthProvider(widget.today));
+
+    return todayAsync.when(
+      data: (todayLog) {
+        final todayLogs = todayLog.foodLogs;
         return _SectionCard(
-          title: "Today's Logged Foods",
-          trailing: TextButton.icon(
-            onPressed: () => _showSaveMealDialog(context, ref, logs),
-            icon: const Icon(Icons.bookmark_add_outlined, size: 16),
-            label: const Text('Save as Meal', style: TextStyle(fontSize: 12)),
-          ),
+          title: 'Last Meals',
+          trailing: todayLogs.isEmpty
+              ? null
+              : TextButton.icon(
+                  onPressed: () => _showSaveMealDialog(context, ref, todayLogs),
+                  icon: const Icon(Icons.bookmark_add_outlined, size: 16),
+                  label: const Text(
+                    'Save as Meal',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: logs.length,
-                separatorBuilder: (context, index) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final entry = logs[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                entry.name,
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'P: ${entry.protein?.round() ?? 0}g • C: ${entry.carbs?.round() ?? 0}g • F: ${entry.fats?.round() ?? 0}g',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: AppColors.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${entry.calories?.round() ?? 0} kcal',
-                            style: const TextStyle(
-                              color: AppColors.warning,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+              Text(
+                'Today',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              if (todayLogs.isEmpty)
+                Text(
+                  'No meals logged today.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                )
+              else
+                _FoodLogList(
+                  logs: todayLogs,
+                  date: widget.today,
+                  onEdit: _showEditFoodDialog,
+                  onDelete: _confirmDeleteFood,
+                ),
+              const SizedBox(height: 12),
+              ...List.generate(_daysVisible - 1, (index) {
+                final date = widget.today.subtract(Duration(days: index + 1));
+                return _HistoricalMealsTile(
+                  date: date,
+                  onEdit: _showEditFoodDialog,
+                  onDelete: _confirmDeleteFood,
+                );
+              }),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => setState(() => _daysVisible += 7),
+                  icon: const Icon(Icons.expand_more),
+                  label: const Text('Load more'),
+                ),
               ),
             ],
           ),
@@ -915,7 +1072,147 @@ class _TodayLoggedFoods extends ConsumerWidget {
     );
   }
 
-  void _showSaveMealDialog(BuildContext context, WidgetRef ref, List<FoodLogEntry> logs) {
+  void _showEditFoodDialog(
+    BuildContext context,
+    WidgetRef ref,
+    DateTime date,
+    FoodLogEntry entry,
+  ) {
+    final quantityCtl = TextEditingController(
+      text: (entry.quantity ?? 1)
+          .toStringAsFixed(2)
+          .replaceFirst(RegExp(r'\.?0+$'), ''),
+    );
+    var mealType = _normalizedMealType(entry.mealType);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              20,
+              20,
+              MediaQuery.of(ctx).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Edit Food',
+                  style: Theme.of(
+                    ctx,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 12),
+                Text(entry.name, style: Theme.of(ctx).textTheme.bodyMedium),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: quantityCtl,
+                  decoration: const InputDecoration(
+                    labelText: 'Quantity',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: mealType,
+                  decoration: const InputDecoration(
+                    labelText: 'Meal Type',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'breakfast',
+                      child: Text('Breakfast'),
+                    ),
+                    DropdownMenuItem(value: 'lunch', child: Text('Lunch')),
+                    DropdownMenuItem(value: 'dinner', child: Text('Dinner')),
+                    DropdownMenuItem(value: 'snack', child: Text('Snack')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() => mealType = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      final quantity = double.tryParse(quantityCtl.text) ?? 1;
+                      if (quantity <= 0) return;
+                      ref
+                          .read(nutritionProvider(date).notifier)
+                          .updateFoodLog(entry, quantity, mealType: mealType);
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text('Save'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    ).whenComplete(quantityCtl.dispose);
+  }
+
+  String _normalizedMealType(String mealType) {
+    switch (mealType.toLowerCase()) {
+      case 'breakfast':
+      case 'lunch':
+      case 'dinner':
+      case 'snack':
+        return mealType.toLowerCase();
+      default:
+        return 'snack';
+    }
+  }
+
+  void _confirmDeleteFood(
+    BuildContext context,
+    WidgetRef ref,
+    DateTime date,
+    FoodLogEntry entry,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Food'),
+        content: Text('Delete "${entry.name}" from this day?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref.read(nutritionProvider(date).notifier).deleteFoodLog(entry);
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSaveMealDialog(
+    BuildContext context,
+    WidgetRef ref,
+    List<FoodLogEntry> logs,
+  ) {
     final nameCtl = TextEditingController();
     showDialog(
       context: context,
@@ -950,23 +1247,29 @@ class _TodayLoggedFoods extends ConsumerWidget {
             onPressed: () {
               final name = nameCtl.text.trim();
               if (name.isEmpty) return;
-              
-              final foodItems = logs.map((entry) => FoodItem(
-                id: 0,
-                name: entry.name,
-                calories: entry.calories ?? 0.0,
-                protein: entry.protein ?? 0.0,
-                carbs: entry.carbs ?? 0.0,
-                fat: entry.fats ?? 0.0,
-                servingSize: entry.quantity ?? 100.0,
-              )).toList();
+
+              final foodItems = logs
+                  .map(
+                    (entry) => FoodItem(
+                      id: 0,
+                      name: entry.name,
+                      calories: entry.calories ?? 0.0,
+                      protein: entry.protein ?? 0.0,
+                      carbs: entry.carbs ?? 0.0,
+                      fat: entry.fats ?? 0.0,
+                      servingSize: entry.quantity ?? 100.0,
+                    ),
+                  )
+                  .toList();
 
               ref.read(savedMealsProvider.notifier).save(name, foodItems);
               Navigator.pop(ctx);
-              
+
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Saved today\'s log as "$name" inside Nutrition Library'),
+                  content: Text(
+                    'Saved today\'s log as "$name" inside Nutrition Library',
+                  ),
                   behavior: SnackBarBehavior.floating,
                   backgroundColor: AppColors.success,
                   action: SnackBarAction(
@@ -980,6 +1283,180 @@ class _TodayLoggedFoods extends ConsumerWidget {
             child: const Text('Save Meal'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HistoricalMealsTile extends ConsumerWidget {
+  const _HistoricalMealsTile({
+    required this.date,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final DateTime date;
+  final void Function(BuildContext, WidgetRef, DateTime, FoodLogEntry) onEdit;
+  final void Function(BuildContext, WidgetRef, DateTime, FoodLogEntry) onDelete;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dailyAsync = ref.watch(dailyHealthProvider(date));
+    final label = '${date.day}/${date.month}/${date.year}';
+
+    return dailyAsync.when(
+      data: (daily) {
+        final logs = daily.foodLogs;
+        final calories = logs.fold<double>(
+          0,
+          (sum, log) => sum + (log.calories ?? 0),
+        );
+
+        return Material(
+          type: MaterialType.transparency,
+          child: ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: EdgeInsets.zero,
+            title: Text(label),
+            subtitle: Text(
+              logs.isEmpty
+                  ? 'No meals'
+                  : '${logs.length} meals • ${calories.round()} kcal',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+            children: [
+              if (logs.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'No meals logged.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                _FoodLogList(
+                  logs: logs,
+                  date: date,
+                  onEdit: onEdit,
+                  onDelete: onDelete,
+                ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _FoodLogList extends StatelessWidget {
+  const _FoodLogList({
+    required this.logs,
+    required this.date,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final List<FoodLogEntry> logs;
+  final DateTime date;
+  final void Function(BuildContext, WidgetRef, DateTime, FoodLogEntry) onEdit;
+  final void Function(BuildContext, WidgetRef, DateTime, FoodLogEntry) onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, _) => ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: logs.length,
+        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final entry = logs[index];
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entry.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${entry.mealType} • P: ${entry.protein?.round() ?? 0}g • C: ${entry.carbs?.round() ?? 0}g • F: ${entry.fats?.round() ?? 0}g',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${entry.calories?.round() ?? 0} kcal',
+                    style: const TextStyle(
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      onEdit(context, ref, date, entry);
+                    } else if (value == 'delete') {
+                      onDelete(context, ref, date, entry);
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: ListTile(
+                        leading: Icon(Icons.edit_outlined),
+                        title: Text('Edit'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.delete_outline,
+                          color: AppColors.error,
+                        ),
+                        title: Text('Delete'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

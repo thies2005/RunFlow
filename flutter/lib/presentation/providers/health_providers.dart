@@ -42,7 +42,9 @@ Future<List<BodyMeasurement>> bodyMeasurements(Ref ref) async {
     final apiRepo = ref.read(healthApiRepositoryProvider);
     return await apiRepo.getBodyMeasurements();
   } catch (e) {
-    debugPrint('HealthProviders: API body measurements failed, falling back to local: $e');
+    debugPrint(
+      'HealthProviders: API body measurements failed, falling back to local: $e',
+    );
     final repo = ref.read(healthRepositoryProvider);
     return repo.getBodyMeasurements();
   }
@@ -54,13 +56,10 @@ Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
     final apiRepo = ref.read(healthApiRepositoryProvider);
     return apiRepo.getDailyHealth(date);
   } catch (e) {
-    debugPrint('HealthProviders: API daily health failed, returning default: $e');
-    return DailyHealthLog(
-      id: 0,
-      date: date,
-      supplementLogs: [],
-      foodLogs: [],
+    debugPrint(
+      'HealthProviders: API daily health failed, returning default: $e',
     );
+    return DailyHealthLog(id: 0, date: date, supplementLogs: [], foodLogs: []);
   }
 }
 
@@ -68,7 +67,11 @@ Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
 class TakenSupplementIds extends _$TakenSupplementIds {
   @override
   Future<Set<String>> build() async {
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     try {
       final daily = await ref.read(dailyHealthProvider(today).future);
       return daily.supplementLogs
@@ -139,7 +142,9 @@ class FastingScheduleNotifier extends _$FastingScheduleNotifier {
           jsonDecode(json) as Map<String, dynamic>,
         );
       } catch (e) {
-        debugPrint('FastingScheduleNotifier: Failed to parse saved schedule: $e');
+        debugPrint(
+          'FastingScheduleNotifier: Failed to parse saved schedule: $e',
+        );
       }
     }
   }
@@ -160,7 +165,9 @@ class SupplementList extends _$SupplementList {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       return await apiRepo.getSupplements();
     } catch (e) {
-      debugPrint('HealthProviders: API supplements failed, falling back to local: $e');
+      debugPrint(
+        'HealthProviders: API supplements failed, falling back to local: $e',
+      );
       final repo = ref.read(healthRepositoryProvider);
       return repo.getSupplements();
     }
@@ -169,10 +176,14 @@ class SupplementList extends _$SupplementList {
   Future<void> toggle(String supplementId) async {
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
-      final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-      final supplement = state.value?.where(
-        (s) => s.uniqueId == supplementId,
-      ).firstOrNull;
+      final today = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      );
+      final supplement = state.value
+          ?.where((s) => s.uniqueId == supplementId)
+          .firstOrNull;
       final resolvedId = supplement?.serverId ?? supplementId;
       final daily = await ref.read(dailyHealthProvider(today).future);
       final existingLog = daily.supplementLogs
@@ -202,7 +213,9 @@ class SupplementList extends _$SupplementList {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       await apiRepo.saveSupplementRemote(supplement);
     } catch (e) {
-      debugPrint('HealthProviders: API save supplement failed, falling back to local: $e');
+      debugPrint(
+        'HealthProviders: API save supplement failed, falling back to local: $e',
+      );
       final repo = ref.read(healthRepositoryProvider);
       await repo.saveSupplement(supplement);
     }
@@ -211,7 +224,11 @@ class SupplementList extends _$SupplementList {
 
   Future<void> takeAll(List<String> supplementIds) async {
     final apiRepo = ref.read(healthApiRepositoryProvider);
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
 
     Set<String> alreadyTaken = {};
     try {
@@ -221,25 +238,29 @@ class SupplementList extends _$SupplementList {
           .map((log) => log.supplementId)
           .toSet();
     } catch (e) {
-      debugPrint('HealthProviders: Failed to load already-taken supplements: $e');
+      debugPrint(
+        'HealthProviders: Failed to load already-taken supplements: $e',
+      );
     }
 
     final optimisticIds = <String>[];
     for (final sid in supplementIds) {
-      final supplement = state.value?.where(
-        (s) => s.uniqueId == sid,
-      ).firstOrNull;
+      final supplement = state.value
+          ?.where((s) => s.uniqueId == sid)
+          .firstOrNull;
       if (supplement == null) continue;
       final resolvedId = supplement.serverId ?? sid;
       optimisticIds.add(resolvedId);
     }
-    ref.read(takenSupplementIdsProvider.notifier).optimisticAddAll(optimisticIds);
+    ref
+        .read(takenSupplementIdsProvider.notifier)
+        .optimisticAddAll(optimisticIds);
 
     for (final sid in supplementIds) {
       try {
-        final supplement = state.value?.where(
-          (s) => s.uniqueId == sid,
-        ).firstOrNull;
+        final supplement = state.value
+            ?.where((s) => s.uniqueId == sid)
+            .firstOrNull;
         if (supplement == null) continue;
         final resolvedId = supplement.serverId ?? sid;
         if (alreadyTaken.contains(resolvedId)) continue;
@@ -283,7 +304,9 @@ class NutritionNotifier extends _$NutritionNotifier {
         createdAt: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('HealthProviders: API nutrition log failed, falling back to local: $e');
+      debugPrint(
+        'HealthProviders: API nutrition log failed, falling back to local: $e',
+      );
       final repo = ref.read(healthRepositoryProvider);
       return repo.getNutritionLog(date);
     }
@@ -304,6 +327,9 @@ class NutritionNotifier extends _$NutritionNotifier {
         quantity: 1,
         foodItem: food,
       );
+      await ref
+          .read(healthSyncServiceProvider)
+          .syncNutritionToHealthConnect(date);
     } catch (e) {
       logger.error('[NutritionNotifier] Log food entry failed: $e');
     }
@@ -342,6 +368,9 @@ class NutritionNotifier extends _$NutritionNotifier {
           foodItem: food,
         );
       }
+      await ref
+          .read(healthSyncServiceProvider)
+          .syncNutritionToHealthConnect(date);
     } catch (e) {
       logger.error('[NutritionNotifier] Log saved meal failed: $e');
     }
@@ -355,6 +384,44 @@ class NutritionNotifier extends _$NutritionNotifier {
       );
       final repo = ref.read(healthRepositoryProvider);
       await repo.saveNutritionLog(updated);
+    }
+    ref.invalidateSelf();
+    ref.invalidate(dailyHealthProvider(date));
+  }
+
+  Future<void> updateFoodLog(
+    FoodLogEntry entry,
+    double quantity, {
+    String? mealType,
+  }) async {
+    if (entry.id.isEmpty) return;
+    try {
+      final apiRepo = ref.read(healthApiRepositoryProvider);
+      await apiRepo.updateFoodLogEntry(
+        logId: entry.id,
+        mealType: mealType ?? entry.mealType,
+        quantity: quantity,
+      );
+      await ref
+          .read(healthSyncServiceProvider)
+          .syncNutritionToHealthConnect(date);
+    } catch (e) {
+      logger.error('[NutritionNotifier] Update food log failed: $e');
+    }
+    ref.invalidateSelf();
+    ref.invalidate(dailyHealthProvider(date));
+  }
+
+  Future<void> deleteFoodLog(FoodLogEntry entry) async {
+    if (entry.id.isEmpty) return;
+    try {
+      final apiRepo = ref.read(healthApiRepositoryProvider);
+      await apiRepo.deleteFoodLogEntry(entry.id);
+      await ref
+          .read(healthSyncServiceProvider)
+          .deleteNutritionFromHealthConnect(entry.id);
+    } catch (e) {
+      logger.error('[NutritionNotifier] Delete food log failed: $e');
     }
     ref.invalidateSelf();
     ref.invalidate(dailyHealthProvider(date));
@@ -442,7 +509,9 @@ class FoodSearch extends _$FoodSearch {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       return apiRepo.searchFood(query);
     } catch (e) {
-      debugPrint('HealthProviders: API food search failed, falling back to local: $e');
+      debugPrint(
+        'HealthProviders: API food search failed, falling back to local: $e',
+      );
       try {
         final repo = ref.read(healthRepositoryProvider);
         return repo.searchFoodItems(query);
@@ -461,7 +530,9 @@ class FoodSearch extends _$FoodSearch {
         final apiRepo = ref.read(healthApiRepositoryProvider);
         return apiRepo.searchFood(q);
       } catch (e) {
-        debugPrint('HealthProviders: API food search failed, falling back to local: $e');
+        debugPrint(
+          'HealthProviders: API food search failed, falling back to local: $e',
+        );
         final repo = ref.read(healthRepositoryProvider);
         return repo.searchFoodItems(q);
       }
@@ -574,9 +645,11 @@ class FoodFavorites extends _$FoodFavorites {
     final favorites = state.asData?.value ?? [];
     final normalizedName = name.toLowerCase();
     final normalizedBrand = (brand ?? '').toLowerCase();
-    return favorites.any((f) =>
-        f.name.toLowerCase() == normalizedName &&
-        (f.brand ?? '').toLowerCase() == normalizedBrand);
+    return favorites.any(
+      (f) =>
+          f.name.toLowerCase() == normalizedName &&
+          (f.brand ?? '').toLowerCase() == normalizedBrand,
+    );
   }
 
   String? favoriteIdFor(String name, {String? brand}) {
@@ -585,9 +658,11 @@ class FoodFavorites extends _$FoodFavorites {
     final normalizedBrand = (brand ?? '').toLowerCase();
     try {
       return favorites
-          .firstWhere((f) =>
-              f.name.toLowerCase() == normalizedName &&
-              (f.brand ?? '').toLowerCase() == normalizedBrand)
+          .firstWhere(
+            (f) =>
+                f.name.toLowerCase() == normalizedName &&
+                (f.brand ?? '').toLowerCase() == normalizedBrand,
+          )
           .favoriteId;
     } catch (_) {
       return null;
@@ -613,6 +688,16 @@ class SavedMeals extends _$SavedMeals {
     });
   }
 
+  Future<void> edit(String mealId, String name, List<FoodItem> items) async {
+    if (items.isEmpty) return;
+    final apiRepo = ref.read(healthApiRepositoryProvider);
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await apiRepo.updateSavedMeal(mealId: mealId, name: name, items: items);
+      return apiRepo.getSavedMeals();
+    });
+  }
+
   Future<void> delete(String mealId) async {
     final apiRepo = ref.read(healthApiRepositoryProvider);
     final current = state.asData?.value ?? [];
@@ -625,4 +710,3 @@ class SavedMeals extends _$SavedMeals {
     }
   }
 }
-

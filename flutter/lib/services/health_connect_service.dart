@@ -2,6 +2,8 @@ import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:health/health.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/models/health_vitals_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart'
+    show FoodLogEntry;
 
 abstract class HealthConnectService {
   Future<bool> isAvailable();
@@ -12,6 +14,9 @@ abstract class HealthConnectService {
   Future<List<HealthDataPoint>> readActiveCalories(DateTime start, DateTime end);
   Future<List<HealthDataPoint>> readWeight(DateTime start, DateTime end);
   Future<double?> readLatestWeight();
+  Future<List<NutritionHealthEntry>> readNutrition(DateTime start, DateTime end);
+  Future<bool> writeNutritionEntry(FoodLogEntry entry, DateTime date);
+  Future<bool> deleteNutritionEntry(String clientRecordId);
 
   // Vitals
   Future<VitalsData> readVitals();
@@ -37,6 +42,45 @@ class SleepDayData {
   final double lightMinutes;
 }
 
+class NutritionHealthEntry {
+  const NutritionHealthEntry({
+    required this.name,
+    required this.mealType,
+    required this.startTime,
+    required this.endTime,
+    this.calories,
+    this.protein,
+    this.carbs,
+    this.fats,
+    this.water,
+    this.uuid,
+  });
+
+  final String name;
+  final String mealType;
+  final DateTime startTime;
+  final DateTime endTime;
+  final double? calories;
+  final double? protein;
+  final double? carbs;
+  final double? fats;
+  final double? water;
+  final String? uuid;
+
+  FoodLogEntry toFoodLogEntry() {
+    return FoodLogEntry(
+      id: uuid ?? '',
+      mealType: mealType,
+      name: name,
+      quantity: 1,
+      calories: calories,
+      protein: protein,
+      carbs: carbs,
+      fats: fats,
+    );
+  }
+}
+
 class HealthConnectServiceImpl implements HealthConnectService {
   HealthConnectServiceImpl({Health? health}) : _health = health ?? Health();
 
@@ -58,6 +102,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
     HealthDataType.WEIGHT,
     HealthDataType.BODY_FAT_PERCENTAGE,
     HealthDataType.DISTANCE_DELTA,
+    HealthDataType.NUTRITION,
   ];
 
   Future<void> _ensureConfigured() async {
@@ -85,8 +130,14 @@ class HealthConnectServiceImpl implements HealthConnectService {
   Future<bool> requestPermissions() async {
     try {
       await _ensureConfigured();
-      return await _health.requestAuthorization(_permissionTypes,
-          permissions: _permissionTypes.map((_) => HealthDataAccess.READ).toList());
+      return await _health.requestAuthorization(
+        _permissionTypes,
+        permissions: _permissionTypes
+            .map((type) => type == HealthDataType.NUTRITION
+                ? HealthDataAccess.READ_WRITE
+                : HealthDataAccess.READ)
+            .toList(),
+      );
     } catch (e) {
       logger.error('[HealthConnect] Permission request failed: $e');
       return false;
@@ -205,6 +256,100 @@ class HealthConnectServiceImpl implements HealthConnectService {
     } catch (e) {
       logger.error('[HealthConnect] readLatestWeight failed: $e');
       return null;
+    }
+  }
+
+  @override
+  Future<List<NutritionHealthEntry>> readNutrition(
+      DateTime start, DateTime end) async {
+    try {
+      await _ensureConfigured();
+      final points = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.NUTRITION],
+        startTime: start,
+        endTime: end,
+      );
+
+      final entries = <NutritionHealthEntry>[];
+      for (final point in points) {
+        final value = point.value;
+        if (value is! NutritionHealthValue) continue;
+        final calories = value.calories;
+        final protein = value.protein;
+        final carbs = value.carbs;
+        final fats = value.fat;
+        final water = value.water;
+
+        if ((calories ?? 0) <= 0 &&
+            (protein ?? 0) <= 0 &&
+            (carbs ?? 0) <= 0 &&
+            (fats ?? 0) <= 0) {
+          continue;
+        }
+
+        entries.add(NutritionHealthEntry(
+          uuid: point.uuid,
+          name: (value.name?.trim().isNotEmpty ?? false)
+              ? value.name!.trim()
+              : 'Health Connect meal',
+          mealType: _mealTypeString(value.mealType),
+          startTime: point.dateFrom,
+          endTime: point.dateTo,
+          calories: calories,
+          protein: protein,
+          carbs: carbs,
+          fats: fats,
+          water: water,
+        ));
+      }
+      return entries;
+    } catch (e) {
+      logger.error('[HealthConnect] readNutrition failed: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<bool> writeNutritionEntry(FoodLogEntry entry, DateTime date) async {
+    try {
+      await _ensureConfigured();
+      final start = DateTime(date.year, date.month, date.day, 12);
+      final end = start.add(const Duration(minutes: 1));
+      final clientRecordId = entry.id.isNotEmpty
+          ? 'runflow-nutrition-${entry.id}'
+          : 'runflow-nutrition-${date.toIso8601String()}-${entry.name.hashCode}';
+
+      return _health.writeMeal(
+        mealType: _mealType(entry.mealType),
+        startTime: start,
+        endTime: end,
+        clientRecordId: clientRecordId,
+        clientRecordVersion: DateTime.now().millisecondsSinceEpoch.toDouble(),
+        name: entry.name,
+        caloriesConsumed: entry.calories,
+        carbohydrates: entry.carbs,
+        protein: entry.protein,
+        fatTotal: entry.fats,
+        recordingMethod: RecordingMethod.manual,
+      );
+    } catch (e) {
+      logger.error('[HealthConnect] writeNutritionEntry failed: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> deleteNutritionEntry(String clientRecordId) async {
+    if (clientRecordId.isEmpty) return false;
+    try {
+      await _ensureConfigured();
+      return _health.deleteByClientRecordId(
+        dataTypeKey: HealthDataType.NUTRITION,
+        clientRecordId: 'runflow-nutrition-$clientRecordId',
+      );
+    } catch (e) {
+      logger.error('[HealthConnect] deleteNutritionEntry failed: $e');
+      return false;
     }
   }
 
@@ -560,6 +705,36 @@ class HealthConnectServiceImpl implements HealthConnectService {
         return 'Strength Training';
       default:
         return 'Workout';
+    }
+  }
+
+  static MealType _mealType(String mealType) {
+    switch (mealType.toLowerCase()) {
+      case 'breakfast':
+        return MealType.BREAKFAST;
+      case 'lunch':
+        return MealType.LUNCH;
+      case 'dinner':
+        return MealType.DINNER;
+      case 'snack':
+        return MealType.SNACK;
+      default:
+        return MealType.UNKNOWN;
+    }
+  }
+
+  static String _mealTypeString(String? mealType) {
+    switch ((mealType ?? '').toLowerCase()) {
+      case 'breakfast':
+        return 'breakfast';
+      case 'lunch':
+        return 'lunch';
+      case 'dinner':
+        return 'dinner';
+      case 'snack':
+        return 'snack';
+      default:
+        return 'snack';
     }
   }
 

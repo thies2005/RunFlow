@@ -93,6 +93,8 @@ dev_dependencies:
 flutter:
   generate: true
   uses-material-design: true
+  shaders:
+    - shaders/ink_sparkle.frag
 
 flutter_native_splash:
   color: "#000000"

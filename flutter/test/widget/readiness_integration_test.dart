@@ -101,12 +101,26 @@ class _FakeHealthConnectService implements HealthConnectService {
   Future<List<HealthDataPoint>> readSteps() async => [];
   @override
   Future<List<HealthDataPoint>> readActiveCalories(
-      DateTime start, DateTime end) async => [];
+    DateTime start,
+    DateTime end,
+  ) async => [];
   @override
   Future<List<HealthDataPoint>> readWeight(
-      DateTime start, DateTime end) async => [];
+    DateTime start,
+    DateTime end,
+  ) async => [];
   @override
   Future<double?> readLatestWeight() async => null;
+  @override
+  Future<List<NutritionHealthEntry>> readNutrition(
+    DateTime start,
+    DateTime end,
+  ) async => [];
+  @override
+  Future<bool> writeNutritionEntry(FoodLogEntry entry, DateTime date) async =>
+      false;
+  @override
+  Future<bool> deleteNutritionEntry(String clientRecordId) async => false;
   @override
   Future<VitalsData> readVitals() async => const VitalsData();
   @override
@@ -118,62 +132,58 @@ class _FakeHealthConnectService implements HealthConnectService {
 }
 
 NutritionLog _testNutritionLog() => NutritionLog(
-      id: 1,
-      date: DateTime(2024, 6, 15),
-      calories: 2000,
-      protein: 100,
-      carbs: 250,
-      fat: 55,
-      water: 2.5,
-      createdAt: DateTime(2024, 6, 15),
-    );
+  id: 1,
+  date: DateTime(2024, 6, 15),
+  calories: 2000,
+  protein: 100,
+  carbs: 250,
+  fat: 55,
+  water: 2.5,
+  createdAt: DateTime(2024, 6, 15),
+);
 
 DailyReadinessRecord _testReadinessRecord() => DailyReadinessRecord(
-      date: DateTime(2024, 6, 15),
-      componentScores: const [
-        ComponentScore(
-          component: ReadinessComponent.hrr,
-          score: 72,
-          isAvailable: true,
-        ),
-        ComponentScore(
-          component: ReadinessComponent.sleep,
-          score: 80,
-          isAvailable: true,
-        ),
-        ComponentScore(
-          component: ReadinessComponent.load,
-          score: 60,
-          isAvailable: true,
-        ),
-        ComponentScore(
-          component: ReadinessComponent.subjective,
-          score: 0,
-          isAvailable: false,
-        ),
-      ],
-      compositeScore: 71,
-      state: ReadinessState.good,
-      confidence: DataConfidence.full,
-      reasons: const ['RHR within normal range', 'Good sleep quality'],
-      rhr: const RhrMetrics(
-        todayRhr: 50,
-        baselineRhr: 48,
-        rhrDelta: 2,
-      ),
-      sleep: const SleepMetrics(
-        totalDurationMinutes: 450,
-        deepPercent: 18,
-        remPercent: 22,
-      ),
-      load: const LoadMetrics(
-        todayTrimp: 85,
-        atl: 62,
-        ctl: 78,
-        tsb: 16,
-        workloadRatio: 0.8,
-      ),
-    );
+  date: DateTime(2024, 6, 15),
+  componentScores: const [
+    ComponentScore(
+      component: ReadinessComponent.hrr,
+      score: 72,
+      isAvailable: true,
+    ),
+    ComponentScore(
+      component: ReadinessComponent.sleep,
+      score: 80,
+      isAvailable: true,
+    ),
+    ComponentScore(
+      component: ReadinessComponent.load,
+      score: 60,
+      isAvailable: true,
+    ),
+    ComponentScore(
+      component: ReadinessComponent.subjective,
+      score: 0,
+      isAvailable: false,
+    ),
+  ],
+  compositeScore: 71,
+  state: ReadinessState.good,
+  confidence: DataConfidence.full,
+  reasons: const ['RHR within normal range', 'Good sleep quality'],
+  rhr: const RhrMetrics(todayRhr: 50, baselineRhr: 48, rhrDelta: 2),
+  sleep: const SleepMetrics(
+    totalDurationMinutes: 450,
+    deepPercent: 18,
+    remPercent: 22,
+  ),
+  load: const LoadMetrics(
+    todayTrimp: 85,
+    atl: 62,
+    ctl: 78,
+    tsb: 16,
+    workloadRatio: 0.8,
+  ),
+);
 
 Future<void> _pumpAndSettle(WidgetTester tester) async {
   for (var i = 0; i < 10; i++) {
@@ -188,13 +198,9 @@ List<Object> _defaultOverrides({_FakeReadinessNotifier? readinessNotifier}) {
       () => _FakeNutritionNotifier(_testNutritionLog()),
     ),
     // ignore: deprecated_member_use
-    supplementListProvider.overrideWith(
-      () => _FakeSupplementList([]),
-    ),
+    supplementListProvider.overrideWith(() => _FakeSupplementList([])),
     // ignore: deprecated_member_use
-    fastingProvider.overrideWith(
-      () => _FakeFasting(null),
-    ),
+    fastingProvider.overrideWith(() => _FakeFasting(null)),
     fastingHistoryProvider.overrideWithValue(const AsyncValue.data([])),
     bodyMeasurementsProvider.overrideWithValue(const AsyncValue.data([])),
     healthSyncServiceProvider.overrideWith((ref) {
@@ -234,14 +240,14 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
-      const MethodChannel('plugins.flutter.io/shared_preferences'),
-      (MethodCall methodCall) async {
-        if (methodCall.method == 'getAll') {
-          return <String, Object>{};
-        }
-        return null;
-      },
-    );
+          const MethodChannel('plugins.flutter.io/shared_preferences'),
+          (MethodCall methodCall) async {
+            if (methodCall.method == 'getAll') {
+              return <String, Object>{};
+            }
+            return null;
+          },
+        );
   });
 
   group('Readiness Integration', () {
@@ -252,8 +258,9 @@ void main() {
       expect(find.text('Readiness'), findsOneWidget);
     });
 
-    testWidgets('renders readiness score and state when data available',
-        (tester) async {
+    testWidgets('renders readiness score and state when data available', (
+      tester,
+    ) async {
       await tester.pumpWidget(_testWidget(_defaultOverrides()));
       await _pumpAndSettle(tester);
 
@@ -270,12 +277,13 @@ void main() {
       expect(find.text('Feel'), findsOneWidget);
     });
 
-    testWidgets('shows unavailable card when readiness is null',
-        (tester) async {
+    testWidgets('shows unavailable card when readiness is null', (
+      tester,
+    ) async {
       final notifier = _FakeReadinessNotifier(null);
-      await tester.pumpWidget(_testWidget(_defaultOverrides(
-        readinessNotifier: notifier,
-      )));
+      await tester.pumpWidget(
+        _testWidget(_defaultOverrides(readinessNotifier: notifier)),
+      );
       await _pumpAndSettle(tester);
 
       expect(find.text('Readiness'), findsOneWidget);
@@ -283,8 +291,7 @@ void main() {
       expect(find.text('Check'), findsOneWidget);
     });
 
-    testWidgets('pull-to-refresh rebuilds readiness card',
-        (tester) async {
+    testWidgets('pull-to-refresh rebuilds readiness card', (tester) async {
       await tester.pumpWidget(_testWidget(_defaultOverrides()));
       await _pumpAndSettle(tester);
 
@@ -301,8 +308,9 @@ void main() {
       expect(find.text('Readiness'), findsOneWidget);
     });
 
-    testWidgets('readiness card is first content below app bar',
-        (tester) async {
+    testWidgets('readiness card is first content below app bar', (
+      tester,
+    ) async {
       await tester.pumpWidget(_testWidget(_defaultOverrides()));
       await _pumpAndSettle(tester);
 

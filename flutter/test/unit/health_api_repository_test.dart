@@ -32,21 +32,28 @@ void main() {
           createdAt: DateTime(2024, 6, 15),
         );
 
-        when(() => mockDio.post(
-              any(),
-              data: any(named: 'data'),
-            )).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: null,
-            ));
+        when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: {
+              'id': 'log1',
+              'mealType': 'lunch',
+              'quantity': 1,
+              'calories': 200,
+              'protein': 30,
+              'carbs': 5,
+              'fats': 8,
+              'foodItem': {'name': 'Chicken Breast'},
+            },
+          ),
+        );
 
         await repository.syncNutritionLog(log);
 
-        verify(() => mockDio.post(
-              '/health/nutrition/log',
-              data: any(named: 'data'),
-            )).called(1);
+        verify(
+          () => mockDio.post('/health/nutrition/log', data: any(named: 'data')),
+        ).called(1);
       });
 
       test('throws ServerException on network error', () async {
@@ -61,13 +68,12 @@ void main() {
           createdAt: DateTime(2024, 6, 15),
         );
 
-        when(() => mockDio.post(
-              any(),
-              data: any(named: 'data'),
-            )).thenThrow(DioException(
-              requestOptions: RequestOptions(path: ''),
-              type: DioExceptionType.connectionError,
-            ));
+        when(() => mockDio.post(any(), data: any(named: 'data'))).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            type: DioExceptionType.connectionError,
+          ),
+        );
 
         expect(
           () => repository.syncNutritionLog(log),
@@ -88,14 +94,22 @@ void main() {
           servingSize: 150,
         );
 
-        when(() => mockDio.post(
-              any(),
-              data: any(named: 'data'),
-            )).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: null,
-            ));
+        when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: {
+              'id': 'log1',
+              'mealType': 'lunch',
+              'quantity': 1,
+              'calories': 200,
+              'protein': 30,
+              'carbs': 5,
+              'fats': 8,
+              'foodItem': {'id': 0, 'name': 'Chicken Breast'},
+            },
+          ),
+        );
 
         await repository.logFoodEntry(
           date: DateTime(2024, 6, 15),
@@ -104,45 +118,51 @@ void main() {
           foodItem: food,
         );
 
-        verify(() => mockDio.post(
-              '/health/nutrition/log',
-              data: {
-                'date': '2024-06-15',
-                'mealType': 'lunch',
-                'quantity': 1,
-                'foodItem': {
-                  'name': 'Chicken Breast',
-                  'calories': 200,
-                  'protein': 30,
-                  'carbs': 5,
-                  'fats': 8,
-                  'servingSize': '150g',
-                },
+        verify(
+          () => mockDio.post(
+            '/health/nutrition/log',
+            data: {
+              'date': '2024-06-15',
+              'mealType': 'lunch',
+              'quantity': 1,
+              'foodItem': {
+                'name': 'Chicken Breast',
+                'calories': 200,
+                'protein': 30,
+                'carbs': 5,
+                'fats': 8,
+                'servingSize': '150g',
               },
-            )).called(1);
+            },
+          ),
+        ).called(1);
       });
     });
 
     group('searchFood', () {
       test('returns list of FoodItem from array response', () async {
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: [
-                {
-                  'id': 1,
-                  'name': 'Apple',
-                  'calories': 95.0,
-                  'protein': 0.5,
-                  'carbs': 25.0,
-                  'fat': 0.3,
-                  'servingSize': 182.0,
-                },
-              ],
-            ));
+        when(
+          () => mockDio.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: [
+              {
+                'id': 1,
+                'name': 'Apple',
+                'calories': 95.0,
+                'protein': 0.5,
+                'carbs': 25.0,
+                'fat': 0.3,
+                'servingSize': 182.0,
+              },
+            ],
+          ),
+        );
 
         final results = await repository.searchFood('apple');
 
@@ -151,26 +171,30 @@ void main() {
       });
 
       test('returns list of FoodItem from envelope response', () async {
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: {
-                'foods': [
-                  {
-                    'id': 2,
-                    'name': 'Banana',
-                    'calories': 105.0,
-                    'protein': 1.3,
-                    'carbs': 27.0,
-                    'fat': 0.4,
-                    'servingSize': 118.0,
-                  },
-                ],
-              },
-            ));
+        when(
+          () => mockDio.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: {
+              'foods': [
+                {
+                  'id': 2,
+                  'name': 'Banana',
+                  'calories': 105.0,
+                  'protein': 1.3,
+                  'carbs': 27.0,
+                  'fat': 0.4,
+                  'servingSize': 118.0,
+                },
+              ],
+            },
+          ),
+        );
 
         final results = await repository.searchFood('banana');
 
@@ -179,13 +203,17 @@ void main() {
       });
 
       test('throws ServerException on DioException', () async {
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenThrow(DioException(
-              requestOptions: RequestOptions(path: ''),
-              type: DioExceptionType.connectionError,
-            ));
+        when(
+          () => mockDio.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            type: DioExceptionType.connectionError,
+          ),
+        );
 
         expect(
           () => repository.searchFood('test'),
@@ -196,25 +224,29 @@ void main() {
 
     group('scanBarcode', () {
       test('returns FoodItem when found', () async {
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: {
-                'food': {
-                  'id': 10,
-                  'name': 'Protein Bar',
-                  'calories': 200.0,
-                  'protein': 20.0,
-                  'carbs': 25.0,
-                  'fat': 7.0,
-                  'servingSize': 60.0,
-                  'barcode': '1234567890',
-                },
+        when(
+          () => mockDio.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: {
+              'food': {
+                'id': 10,
+                'name': 'Protein Bar',
+                'calories': 200.0,
+                'protein': 20.0,
+                'carbs': 25.0,
+                'fat': 7.0,
+                'servingSize': 60.0,
+                'barcode': '1234567890',
               },
-            ));
+            },
+          ),
+        );
 
         final result = await repository.scanBarcode('1234567890');
 
@@ -224,17 +256,21 @@ void main() {
       });
 
       test('returns null when barcode not found (404)', () async {
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenThrow(DioException(
+        when(
+          () => mockDio.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response<dynamic>(
               requestOptions: RequestOptions(path: ''),
-              response: Response<dynamic>(
-                requestOptions: RequestOptions(path: ''),
-                statusCode: 404,
-              ),
-              type: DioExceptionType.badResponse,
-            ));
+              statusCode: 404,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
 
         final result = await repository.scanBarcode('0000000000');
 
@@ -242,17 +278,21 @@ void main() {
       });
 
       test('throws on non-404 error', () async {
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenThrow(DioException(
+        when(
+          () => mockDio.get(
+            any(),
+            queryParameters: any(named: 'queryParameters'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response<dynamic>(
               requestOptions: RequestOptions(path: ''),
-              response: Response<dynamic>(
-                requestOptions: RequestOptions(path: ''),
-                statusCode: 500,
-              ),
-              type: DioExceptionType.badResponse,
-            ));
+              statusCode: 500,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
 
         expect(
           () => repository.scanBarcode('123'),
@@ -267,36 +307,42 @@ void main() {
         final tempFile = File('${tempDir.path}/test_image.jpg');
         await tempFile.writeAsBytes([1, 2, 3, 4, 5]);
 
-        when(() => mockDio.post(
-              any(),
-              data: any(named: 'data'),
-              options: any(named: 'options'),
-            )).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: {
-                'food': {
-                  'id': 20,
-                  'name': 'Scanned Meal',
-                  'calories': 500.0,
-                  'protein': 30.0,
-                  'carbs': 50.0,
-                  'fat': 15.0,
-                  'servingSize': 250.0,
-                },
+        when(
+          () => mockDio.post(
+            any(),
+            data: any(named: 'data'),
+            options: any(named: 'options'),
+          ),
+        ).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: {
+              'food': {
+                'id': 20,
+                'name': 'Scanned Meal',
+                'calories': 500.0,
+                'protein': 30.0,
+                'carbs': 50.0,
+                'fat': 15.0,
+                'servingSize': 250.0,
               },
-            ));
+            },
+          ),
+        );
 
         final result = await repository.aiScanImage(tempFile.path);
 
         expect(result, isNotNull);
         expect(result!.name, 'Scanned Meal');
 
-        final captured = verify(() => mockDio.post(
-              '/health/nutrition/ai-scan',
-              data: captureAny(named: 'data'),
-              options: any(named: 'options'),
-            )).captured;
+        final captured = verify(
+          () => mockDio.post(
+            '/health/nutrition/ai-scan',
+            data: captureAny(named: 'data'),
+            options: any(named: 'options'),
+          ),
+        ).captured;
 
         expect(captured.first, isA<FormData>());
 
@@ -308,18 +354,22 @@ void main() {
         final tempFile = File('${tempDir.path}/test_image.jpg');
         await tempFile.writeAsBytes([1, 2, 3]);
 
-        when(() => mockDio.post(
-              any(),
-              data: any(named: 'data'),
-              options: any(named: 'options'),
-            )).thenThrow(DioException(
+        when(
+          () => mockDio.post(
+            any(),
+            data: any(named: 'data'),
+            options: any(named: 'options'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response<dynamic>(
               requestOptions: RequestOptions(path: ''),
-              response: Response<dynamic>(
-                requestOptions: RequestOptions(path: ''),
-                statusCode: 404,
-              ),
-              type: DioExceptionType.badResponse,
-            ));
+              statusCode: 404,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
 
         final result = await repository.aiScanImage(tempFile.path);
 
@@ -333,18 +383,22 @@ void main() {
         final tempFile = File('${tempDir.path}/test_image.jpg');
         await tempFile.writeAsBytes([1, 2, 3]);
 
-        when(() => mockDio.post(
-              any(),
-              data: any(named: 'data'),
-              options: any(named: 'options'),
-            )).thenThrow(DioException(
+        when(
+          () => mockDio.post(
+            any(),
+            data: any(named: 'data'),
+            options: any(named: 'options'),
+          ),
+        ).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response<dynamic>(
               requestOptions: RequestOptions(path: ''),
-              response: Response<dynamic>(
-                requestOptions: RequestOptions(path: ''),
-                statusCode: 500,
-              ),
-              type: DioExceptionType.badResponse,
-            ));
+              statusCode: 500,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
 
         expect(
           () => repository.aiScanImage(tempFile.path),
@@ -357,19 +411,21 @@ void main() {
 
     group('getSupplements', () {
       test('returns supplements from list response', () async {
-        when(() => mockDio.get(any())).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: [
-                {
-                  'id': 1,
-                  'name': 'Vitamin D',
-                  'dosage': '2000 IU',
-                  'frequency': 'Daily',
-                  'isActive': true,
-                },
-              ],
-            ));
+        when(() => mockDio.get(any())).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: [
+              {
+                'id': 1,
+                'name': 'Vitamin D',
+                'dosage': '2000 IU',
+                'frequency': 'Daily',
+                'isActive': true,
+              },
+            ],
+          ),
+        );
 
         final results = await repository.getSupplements();
 
@@ -378,21 +434,23 @@ void main() {
       });
 
       test('returns supplements from envelope response', () async {
-        when(() => mockDio.get(any())).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: {
-                'supplements': [
-                  {
+        when(() => mockDio.get(any())).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: {
+              'supplements': [
+                {
                   'id': 2,
                   'name': 'Creatine',
-                    'dosage': '5g',
-                    'frequency': 'Daily',
-                    'isActive': true,
-                  },
-                ],
-              },
-            ));
+                  'dosage': '5g',
+                  'frequency': 'Daily',
+                  'isActive': true,
+                },
+              ],
+            },
+          ),
+        );
 
         final results = await repository.getSupplements();
 
@@ -411,21 +469,19 @@ void main() {
           isActive: true,
         );
 
-        when(() => mockDio.post(
-              any(),
-              data: any(named: 'data'),
-            )).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: null,
-            ));
+        when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: null,
+          ),
+        );
 
         await repository.saveSupplementRemote(supplement);
 
-        verify(() => mockDio.post(
-              '/health/supplements',
-              data: any(named: 'data'),
-            )).called(1);
+        verify(
+          () => mockDio.post('/health/supplements', data: any(named: 'data')),
+        ).called(1);
       });
     });
 
@@ -438,21 +494,19 @@ void main() {
           isActive: true,
         );
 
-        when(() => mockDio.post(
-              any(),
-              data: any(named: 'data'),
-            )).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: null,
-            ));
+        when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: null,
+          ),
+        );
 
         await repository.syncFasting(session);
 
-        verify(() => mockDio.post(
-              '/health/fasting',
-              data: any(named: 'data'),
-            )).called(1);
+        verify(
+          () => mockDio.post('/health/fasting', data: any(named: 'data')),
+        ).called(1);
       });
     });
 
@@ -465,51 +519,50 @@ void main() {
           bodyFat: 15.2,
         );
 
-        when(() => mockDio.post(
-              any(),
-              data: any(named: 'data'),
-            )).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: null,
-            ));
+        when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: null,
+          ),
+        );
 
         await repository.syncBodyMeasurement(measurement);
 
-        verify(() => mockDio.post(
-              '/health/body-composition',
-              data: {
-                'dateStr': '2024-06-15',
-                'weight': 75.5,
-                'bodyFat': 15.2,
-              },
-            )).called(1);
+        verify(
+          () => mockDio.post(
+            '/health/body-composition',
+            data: {'dateStr': '2024-06-15', 'weight': 75.5, 'bodyFat': 15.2},
+          ),
+        ).called(1);
       });
     });
 
     group('getBodyMeasurements', () {
       test('parses mixed server payload types', () async {
-        when(() => mockDio.get(any())).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: {
-                'measurements': [
-                  {
-                    'id': 'abc-1',
-                    'dateStr': '2024-06-10',
-                    'weight': 75.2,
-                    'bodyFat': 14.8,
-                    'waist': 81,
-                  },
-                  {
-                    'id': 2,
-                    'date': '2024-06-11T00:00:00.000Z',
-                    'weight': '74.9',
-                    'bodyFat': '14.5',
-                  },
-                ],
-              },
-            ));
+        when(() => mockDio.get(any())).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: {
+              'measurements': [
+                {
+                  'id': 'abc-1',
+                  'dateStr': '2024-06-10',
+                  'weight': 75.2,
+                  'bodyFat': 14.8,
+                  'waist': 81,
+                },
+                {
+                  'id': 2,
+                  'date': '2024-06-11T00:00:00.000Z',
+                  'weight': '74.9',
+                  'bodyFat': '14.5',
+                },
+              ],
+            },
+          ),
+        );
 
         final result = await repository.getBodyMeasurements();
 
@@ -527,36 +580,33 @@ void main() {
 
     group('batchSync', () {
       test('sends POST to sync-batch path', () async {
-        final data = <String, dynamic>{
-          'nutritionLogs': [],
-          'supplements': [],
-        };
+        final data = <String, dynamic>{'nutritionLogs': [], 'supplements': []};
 
-        when(() => mockDio.post(
-              any(),
-              data: any(named: 'data'),
-            )).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: null,
-            ));
+        when(() => mockDio.post(any(), data: any(named: 'data'))).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: null,
+          ),
+        );
 
         await repository.batchSync(data);
 
-        verify(() => mockDio.post(
-              '/health/sync-batch',
-              data: any(named: 'data'),
-            )).called(1);
+        verify(
+          () => mockDio.post('/health/sync-batch', data: any(named: 'data')),
+        ).called(1);
       });
     });
 
     group('getInsights', () {
       test('returns insights map', () async {
-        when(() => mockDio.get(any())).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: {'insights': []},
-            ));
+        when(() => mockDio.get(any())).thenAnswer(
+          (_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: {'insights': []},
+          ),
+        );
 
         final result = await repository.getInsights();
 

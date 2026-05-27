@@ -51,6 +51,7 @@ Future<ReadinessRepository> readinessRepository(Ref ref) async {
 @riverpod
 class ReadinessNotifier extends _$ReadinessNotifier {
   bool _isRefreshing = false;
+  bool _isBackfilling = false;
   AdaptedWorkout? _adaptedWorkout;
 
   @override
@@ -63,6 +64,7 @@ class ReadinessNotifier extends _$ReadinessNotifier {
     if (record == null || _isStale(record)) {
       unawaited(Future.microtask(() => refresh()));
     }
+    unawaited(Future.microtask(() => _backfillMissingHistory(days: 30)));
 
     return record;
   }
@@ -115,6 +117,7 @@ class ReadinessNotifier extends _$ReadinessNotifier {
       final repo = await ref.read(readinessRepositoryProvider.future);
       final saved = await repo.saveDailyRecord(record);
       state = AsyncValue.data(saved);
+      unawaited(_backfillMissingHistory(days: 30));
     } catch (e, st) {
       if (state.value == null) {
         state = AsyncValue.error(e, st);
@@ -186,6 +189,68 @@ class ReadinessNotifier extends _$ReadinessNotifier {
       debugPrint('ReadinessNotifier: Failed to override easier: $e');
     }
   }
+
+  Future<void> _backfillMissingHistory({required int days}) async {
+    if (_isBackfilling) return;
+    _isBackfilling = true;
+    try {
+      final repo = await ref.read(readinessRepositoryProvider.future);
+      final todayNow = DateTime.now();
+      final end = DateTime(todayNow.year, todayNow.month, todayNow.day);
+      final start = end.subtract(Duration(days: days - 1));
+      final records = await repo.getHistory(start, end);
+      final existingDates = records
+          .map((r) => DateTime(r.date.year, r.date.month, r.date.day))
+          .toSet();
+
+      final missingDays = <DateTime>[];
+      for (var i = 0; i < days; i++) {
+        final date = start.add(Duration(days: i));
+        if (!existingDates.contains(date)) {
+          missingDays.add(date);
+        }
+      }
+      if (missingDays.isEmpty) return;
+
+      final orchestrator = ref.read(readinessOrchestratorProvider);
+      final historyDays = days + 14;
+      final rhrHistory =
+          await orchestrator.healthConnect.readRestingHeartRateHistory(historyDays);
+      final sleepHistory =
+          await orchestrator.healthConnect.readSleepHistory(historyDays);
+
+      for (final missingDate in missingDays) {
+        final inputs = await orchestrator.collectInputsForDate(
+          targetDate: missingDate,
+          rhrHistory: rhrHistory,
+          sleepHistory: sleepHistory,
+        );
+        final result = await orchestrator.computeReadiness(inputs: inputs);
+        if (result.state == ReadinessState.unavailable) continue;
+
+        await repo.saveDailyRecord(DailyReadinessRecord(
+          date: missingDate,
+          rhr: inputs.rhr,
+          sleep: inputs.sleep,
+          load: inputs.load,
+          subjective: inputs.subjective,
+          componentScores: result.componentScores,
+          compositeScore: result.compositeScore,
+          state: result.state,
+          confidence: result.confidence,
+          reasons: result.reasons,
+          result: result,
+          computedAt: DateTime.now(),
+          maxHr: inputs.maxHr,
+          restingHr: inputs.restingHr,
+        ));
+      }
+    } catch (e) {
+      debugPrint('ReadinessNotifier: Failed to backfill readiness history: $e');
+    } finally {
+      _isBackfilling = false;
+    }
+  }
 }
 
 class ReadinessHistoryRange {
@@ -235,10 +300,11 @@ Future<List<DailyReadinessRecord>> readinessHistory(
 
   try {
     final orchestrator = ref.read(readinessOrchestratorProvider);
+    final historyDays = totalDays + 14;
     final rhrHistory =
-        await orchestrator.healthConnect.readRestingHeartRateHistory(30);
+        await orchestrator.healthConnect.readRestingHeartRateHistory(historyDays);
     final sleepHistory =
-        await orchestrator.healthConnect.readSleepHistory(28);
+        await orchestrator.healthConnect.readSleepHistory(historyDays);
 
     for (final missingDate in missingDays) {
       final inputs = await orchestrator.collectInputsForDate(
@@ -260,7 +326,10 @@ Future<List<DailyReadinessRecord>> readinessHistory(
         state: result.state,
         confidence: result.confidence,
         reasons: result.reasons,
+        result: result,
         computedAt: DateTime.now(),
+        maxHr: inputs.maxHr,
+        restingHr: inputs.restingHr,
       );
 
       await repo.saveDailyRecord(record);

@@ -39,6 +39,7 @@ class HealthSyncState extends _$HealthSyncState {
       await syncService.syncHistoricalHealth();
       final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
       ref.invalidate(nutritionProvider(today));
+      ref.invalidate(nutritionAnalyticsProvider);
       ref.invalidate(supplementListProvider);
       ref.invalidate(bodyMeasurementsProvider);
       ref.invalidate(fastingProvider);

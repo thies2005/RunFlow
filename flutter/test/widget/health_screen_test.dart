@@ -60,15 +60,15 @@ class _FakeFasting extends Fasting {
 }
 
 NutritionLog _testNutritionLog() => NutritionLog(
-      id: 1,
-      date: DateTime(2024, 6, 15),
-      calories: 2000,
-      protein: 100,
-      carbs: 250,
-      fat: 55,
-      water: 2.5,
-      createdAt: DateTime(2024, 6, 15),
-    );
+  id: 1,
+  date: DateTime(2024, 6, 15),
+  calories: 2000,
+  protein: 100,
+  carbs: 250,
+  fat: 55,
+  water: 2.5,
+  createdAt: DateTime(2024, 6, 15),
+);
 
 class _FakeHealthConnectService implements HealthConnectService {
   @override
@@ -82,11 +82,27 @@ class _FakeHealthConnectService implements HealthConnectService {
   @override
   Future<List<HealthDataPoint>> readSteps() async => [];
   @override
-  Future<List<HealthDataPoint>> readActiveCalories(DateTime start, DateTime end) async => [];
+  Future<List<HealthDataPoint>> readActiveCalories(
+    DateTime start,
+    DateTime end,
+  ) async => [];
   @override
-  Future<List<HealthDataPoint>> readWeight(DateTime start, DateTime end) async => [];
+  Future<List<HealthDataPoint>> readWeight(
+    DateTime start,
+    DateTime end,
+  ) async => [];
   @override
   Future<double?> readLatestWeight() async => null;
+  @override
+  Future<List<NutritionHealthEntry>> readNutrition(
+    DateTime start,
+    DateTime end,
+  ) async => [];
+  @override
+  Future<bool> writeNutritionEntry(FoodLogEntry entry, DateTime date) async =>
+      false;
+  @override
+  Future<bool> deleteNutritionEntry(String clientRecordId) async => false;
   @override
   Future<VitalsData> readVitals() async => const VitalsData();
   @override
@@ -104,41 +120,35 @@ void main() {
       // Mock SharedPreferences for _FastingCard
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/shared_preferences'),
-        (MethodCall methodCall) async {
-          if (methodCall.method == 'getAll') {
-            return <String, Object>{};
-          }
-          return null;
-        },
-      );
+            const MethodChannel('plugins.flutter.io/shared_preferences'),
+            (MethodCall methodCall) async {
+              if (methodCall.method == 'getAll') {
+                return <String, Object>{};
+              }
+              return null;
+            },
+          );
     });
 
     List<Object> defaultOverrides() {
       return [
-          // ignore: deprecated_member_use
-          nutritionProvider.overrideWith(
-            () => _FakeNutritionNotifier(_testNutritionLog()),
-          ),
-          // ignore: deprecated_member_use
-          supplementListProvider.overrideWith(
-            () => _FakeSupplementList([]),
-          ),
-          // ignore: deprecated_member_use
-          fastingProvider.overrideWith(
-            () => _FakeFasting(null),
-          ),
-          fastingHistoryProvider
-              .overrideWithValue(const AsyncValue.data([])),
-          bodyMeasurementsProvider
-              .overrideWithValue(const AsyncValue.data([])),
-          healthSyncServiceProvider.overrideWith((ref) {
-            return HealthSyncService(
-              healthConnect: _FakeHealthConnectService(),
-              apiRepo: HealthApiRepositoryImpl(dio: Dio()),
-            );
-          }),
-        ];
+        // ignore: deprecated_member_use
+        nutritionProvider.overrideWith(
+          () => _FakeNutritionNotifier(_testNutritionLog()),
+        ),
+        // ignore: deprecated_member_use
+        supplementListProvider.overrideWith(() => _FakeSupplementList([])),
+        // ignore: deprecated_member_use
+        fastingProvider.overrideWith(() => _FakeFasting(null)),
+        fastingHistoryProvider.overrideWithValue(const AsyncValue.data([])),
+        bodyMeasurementsProvider.overrideWithValue(const AsyncValue.data([])),
+        healthSyncServiceProvider.overrideWith((ref) {
+          return HealthSyncService(
+            healthConnect: _FakeHealthConnectService(),
+            apiRepo: HealthApiRepositoryImpl(dio: Dio()),
+          );
+        }),
+      ];
     }
 
     Future<void> pumpHealth(WidgetTester tester) async {
@@ -231,8 +241,9 @@ void main() {
       expect(find.text('Supplements'), findsOneWidget);
     });
 
-    testWidgets('renders Fasting card with Not fasting',
-        (WidgetTester tester) async {
+    testWidgets('renders Fasting card with Not fasting', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: defaultOverrides().cast(),
@@ -281,8 +292,9 @@ void main() {
       expect(find.text('Log Food'), findsOneWidget);
     });
 
-    testWidgets('shows nutrition calories and macros',
-        (WidgetTester tester) async {
+    testWidgets('shows nutrition calories and macros', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: defaultOverrides().cast(),

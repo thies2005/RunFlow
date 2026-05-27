@@ -3,12 +3,18 @@ import 'package:runflow_flutter/domain/entities/meal_suggestion_entities.dart';
 
 abstract class HealthApiRepository {
   Future<void> syncNutritionLog(NutritionLog log);
-  Future<void> logFoodEntry({
+  Future<FoodLogEntry> logFoodEntry({
     required DateTime date,
     required String mealType,
     required double quantity,
     required FoodItem foodItem,
   });
+  Future<FoodLogEntry> updateFoodLogEntry({
+    required String logId,
+    required String mealType,
+    required double quantity,
+  });
+  Future<void> deleteFoodLogEntry(String logId);
   Future<List<FoodItem>> searchFood(String query);
   Future<FoodItem?> scanBarcode(String code);
   Future<FoodItem?> aiScanImage(String imagePath, {String? context});
@@ -38,5 +44,6 @@ abstract class HealthApiRepository {
   Future<void> removeFoodFavorite(String favoriteId);
   Future<List<SavedMeal>> getSavedMeals();
   Future<SavedMeal> saveMeal({required String name, required List<FoodItem> items});
+  Future<SavedMeal> updateSavedMeal({required String mealId, required String name, required List<FoodItem> items});
   Future<void> deleteSavedMeal(String mealId);
 }

@@ -73,10 +73,39 @@ const TRI_BIKE_SPEED_KMH: Partial<Record<RaceType, number>> = {
     FULL_IRONMAN: 23,
 };
 
+function classifyCustomTri(swimDistM: number, bikeDistM: number, runDistM: number): RaceType {
+    const totalKm = (swimDistM + bikeDistM + runDistM) / 1000;
+    if (totalKm <= 40) return 'SPRINT_TRI';
+    if (totalKm <= 70) return 'OLYMPIC_TRI';
+    if (totalKm <= 160) return 'HALF_IRONMAN';
+    return 'FULL_IRONMAN';
+}
+
 export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
     const { vdot, raceDate } = config;
     const raceType = config.raceType as RaceType;
     const requestedStartDate = config.startDate || new Date();
+
+    let effectiveRaceType: RaceType = raceType;
+    let customSwimDist: number | undefined;
+    let customBikeDist: number | undefined;
+    let customRunDist: number | undefined;
+
+    if (raceType === 'CUSTOM_TRI') {
+        customSwimDist = (config.customSwimDistM && config.customSwimDistM > 0)
+            ? config.customSwimDistM : undefined;
+        customBikeDist = (config.customBikeDistM && config.customBikeDistM > 0)
+            ? config.customBikeDistM : undefined;
+        customRunDist = (config.customRunDistM && config.customRunDistM > 0)
+            ? config.customRunDistM : undefined;
+
+        effectiveRaceType = classifyCustomTri(
+            customSwimDist ?? 750,
+            customBikeDist ?? 20000,
+            customRunDist ?? 5000,
+        );
+    }
+
     const startDate = requestedStartDate > raceDate ? new Date(raceDate) : requestedStartDate;
 
     const runsPerWeek = Math.max(2, config.runsPerWeek ?? 3);
@@ -87,10 +116,10 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
     const swimDay = config.swimDay !== undefined ? config.swimDay : 1;
     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
 
-    const distribution = TRI_DISTRIBUTION[raceType] || TRI_DISTRIBUTION.OLYMPIC_TRI!;
+    const distribution = TRI_DISTRIBUTION[effectiveRaceType] || TRI_DISTRIBUTION.OLYMPIC_TRI!;
 
-    let peakVolume = config.weeklyMileageGoal || TRI_MIN_PEAK_VOLUME[raceType] || 40000;
-    const minPeak = TRI_MIN_PEAK_VOLUME[raceType] || 40000;
+    let peakVolume = config.weeklyMileageGoal || TRI_MIN_PEAK_VOLUME[effectiveRaceType] || 40000;
+    const minPeak = TRI_MIN_PEAK_VOLUME[effectiveRaceType] || 40000;
     if (peakVolume < minPeak) peakVolume = minPeak;
 
     let currentDate = new Date(startDate);
@@ -116,7 +145,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
     const bikeFtp = estimateBikeFtpFromVdot(vdot);
     const bikeZones = calculateBikeZones(bikeFtp);
 
-    const taperFractions = TRI_TAPER_FRACTIONS[raceType] || [0.80, 0.60];
+    const taperFractions = TRI_TAPER_FRACTIONS[effectiveRaceType] || [0.80, 0.60];
     const taperWeeks = config.taperWeeks ?? taperFractions.length;
     const peakWeeks = Math.min(config.peakWeeks ?? 2, Math.floor((totalWeeks - taperWeeks - 1) * 0.3));
     const buildWeeks = Math.min(config.buildWeeks ?? 4, totalWeeks - taperWeeks - peakWeeks - 1);
@@ -155,7 +184,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
         if (phase === 'RACE_WEEK') {
             const raceWeekWorkouts = generateTriRaceWeek({
                 raceDate,
-                raceType,
+                raceType: effectiveRaceType,
                 paces,
                 css,
                 bikeZones,
@@ -163,6 +192,9 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
                 ridesPerWeek,
                 swimsPerWeek,
                 strengthPerWeek,
+                customSwimDist,
+                customBikeDist,
+                customRunDist,
             });
             raceWeekWorkouts.forEach(w => {
                 const specificDate = new Date(raceDate);
@@ -214,7 +246,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
 
         const weekSchedule = generateTriWeek({
             phase,
-            raceType,
+            raceType: effectiveRaceType,
             paces,
             css,
             bikeZones,
@@ -233,6 +265,9 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
             isRecoveryWeek,
             taperWeeks,
             weeksUntilRace,
+            customSwimDist,
+            customRunDist,
+            customBikeDist,
         });
 
         weekSchedule.forEach(w => {
@@ -254,7 +289,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
     }
 
     const result = fixBackToBackSameType(workouts, { raceDate, restDays: config.restDays });
-    const racePace = getRacePace(raceType, paces);
+    const racePace = getRacePace(effectiveRaceType, paces);
     enrichWorkoutsWithDescriptions(result, racePace);
     return result;
 }
@@ -292,6 +327,9 @@ function generateTriWeek(params: {
     isRecoveryWeek: boolean;
     taperWeeks: number;
     weeksUntilRace: number;
+    customSwimDist?: number;
+    customRunDist?: number;
+    customBikeDist?: number;
 }): ScheduledWorkout[] {
     const {
         phase, raceType, paces, css, bikeZones, bikeFtp, distribution,
@@ -299,6 +337,7 @@ function generateTriWeek(params: {
         weeklyVolume, maxLongRunKm,
         preferredLongRunDay, preferredWorkoutDay, preferredSwimDay,
         restDays, isRecoveryWeek, taperWeeks, weeksUntilRace,
+        customSwimDist, customRunDist, customBikeDist,
     } = params;
 
     const workouts: ScheduledWorkout[] = [];
@@ -373,7 +412,7 @@ function generateTriWeek(params: {
     } else {
         let longRunDesc = `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`;
         if (phase === 'PEAK') {
-            const raceRunDist = TRI_RACE_RUN_DIST[raceType] || 10000;
+            const raceRunDist = customRunDist ?? TRI_RACE_RUN_DIST[raceType] ?? 10000;
             const mpDist = Math.min(Math.round(longRunDist * 0.3 / 100) * 100, raceRunDist * 0.3);
             const easyPart = longRunDist - mpDist;
             longRunDesc = `Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(mpDist / 1000).toFixed(1)}km @ Race Pace`;
@@ -441,7 +480,7 @@ function generateTriWeek(params: {
         });
     }
 
-    const raceSwimDist = TRI_RACE_SWIM_DIST[raceType] || 1500;
+    const raceSwimDist = customSwimDist ?? TRI_RACE_SWIM_DIST[raceType] ?? 1500;
     const maxSwimPerSession = raceSwimDist * 2;
     const swimDistPerSession = Math.min(
         swimsPerWeek > 0 ? Math.round(swimVolume / swimsPerWeek / 100) * 100 : 1500,
@@ -653,8 +692,11 @@ function generateTriRaceWeek(params: {
     ridesPerWeek: number;
     swimsPerWeek: number;
     strengthPerWeek: number;
+    customSwimDist?: number;
+    customBikeDist?: number;
+    customRunDist?: number;
 }): ScheduledWorkout[] {
-    const { raceType, paces, css } = params;
+    const { raceType, paces, css, customSwimDist, customBikeDist, customRunDist } = params;
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
 
@@ -662,8 +704,10 @@ function generateTriRaceWeek(params: {
     workouts.push({
         dayOffset: 0,
         type: WorkoutType.RACE,
-        description: `Race Day: ${TRI_RACE_LABELS[raceType] || 'Triathlon'}`,
-        totalDistance: TRI_RACE_RUN_DIST[raceType] || 10000,
+        description: `Race Day: ${(customSwimDist || customBikeDist || customRunDist)
+            ? `Custom Tri (${((customSwimDist ?? 750) / 1000).toFixed(1)}km / ${((customBikeDist ?? 20000) / 1000).toFixed(0)}km / ${((customRunDist ?? 5000) / 1000).toFixed(1)}km)`
+            : (TRI_RACE_LABELS[raceType] || 'Triathlon')}`,
+        totalDistance: customRunDist ?? TRI_RACE_RUN_DIST[raceType] ?? 10000,
         targetPace: 0,
         targetDuration: 0,
     });

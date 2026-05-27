@@ -109,6 +109,10 @@ export type PlanConfig = {
     hrZone6Max?: number | null;
     hrMax?: number | null;
     hrRest?: number | null;
+    customDistanceM?: number | null;
+    customSwimDistM?: number;
+    customBikeDistM?: number;
+    customRunDistM?: number;
 };
 
 export type GeneratedWorkout = {
@@ -152,8 +156,11 @@ type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
 
 export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
+    const paces = calculateTrainingPaces(config.vdot);
+
     const enrichTargets = (workouts: GeneratedWorkout[]) => {
-        enrichWorkoutsWithTargets(workouts, calculateTrainingPaces(config.vdot), config);
+        fillDurations(workouts, paces);
+        enrichWorkoutsWithTargets(workouts, paces, config);
         return workouts;
     };
 
@@ -173,7 +180,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
 }
 
 function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
-    const { vdot, raceDate } = config;
+    const { vdot, raceDate, customDistanceM } = config;
     const raceType = config.raceType as RaceType;
     const requestedStartDate = config.startDate || new Date();
     const startDate = requestedStartDate > raceDate ? new Date(raceDate) : requestedStartDate;
@@ -255,10 +262,11 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
                 raceType,
                 paces,
                 runsPerWeek,
-                raceWeekRunVolumeCap: getRaceWeekRunVolumeCap(raceType, effectivePeakVolume),
+                raceWeekRunVolumeCap: getRaceWeekRunVolumeCap(raceType, effectivePeakVolume, customDistanceM),
                 ridesPerWeek,
                 swimsPerWeek,
                 strengthPerWeek,
+                customDistanceM,
             });
             raceWeekWorkouts.forEach(w => {
                 const specificDate = new Date(raceDate);
@@ -391,10 +399,10 @@ function getTaperVolume(
     return Math.round(peakVolume * fraction);
 }
 
-export function getRaceWeekRunVolumeCap(raceType: RaceType, effectivePeakVolume: number): number {
+export function getRaceWeekRunVolumeCap(raceType: RaceType, effectivePeakVolume: number, customDistanceM?: number | null): number {
     const fractions = TAPER_FRACTIONS[raceType];
     const finalTaperFraction = fractions ? fractions[fractions.length - 1] : 0.45;
-    const raceDist = getRaceDistanceMeters(raceType) || 10000;
+    const raceDist = getRaceDistanceMeters(raceType, customDistanceM) || 10000;
     return Math.max(
         Math.round(effectivePeakVolume * finalTaperFraction * 0.5),
         raceDist + 10000,
@@ -410,13 +418,14 @@ function generateRaceWeek(params: {
     ridesPerWeek?: number;
     swimsPerWeek?: number;
     strengthPerWeek?: number;
+    customDistanceM?: number | null;
 }): ScheduledWorkout[] {
-    const { raceType, paces, runsPerWeek, raceWeekRunVolumeCap } = params;
+    const { raceType, paces, runsPerWeek, raceWeekRunVolumeCap, customDistanceM } = params;
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
 
-    const raceDistKm = getRaceDistanceKm(raceType);
-    const raceDistMeters = getRaceDistanceMeters(raceType);
+    const raceDistKm = getRaceDistanceKm(raceType, customDistanceM);
+    const raceDistMeters = getRaceDistanceMeters(raceType, customDistanceM);
     const maxRunVolume = Math.max(raceDistMeters, raceWeekRunVolumeCap);
 
     let remainingExtraRunSlots = Math.max(0, runsPerWeek - 1);
@@ -1285,7 +1294,7 @@ function preserveSpecialDescription(w: ScheduledWorkout, distance: number): stri
     return updateDescription(w.type, distance, w.targetPace || 0);
 }
 
-function getRaceDistanceKm(raceType: RaceType): string {
+function getRaceDistanceKm(raceType: RaceType, customDistanceM?: number | null): string {
     switch (raceType) {
         case 'FIVE_K': return '5';
         case 'TEN_K': return '10';
@@ -1295,11 +1304,12 @@ function getRaceDistanceKm(raceType: RaceType): string {
         case 'FIFTY_MILE': return '80.5';
         case 'HUNDRED_K': return '100';
         case 'HUNDRED_MILE': return '161';
+        case 'CUSTOM_DISTANCE': return customDistanceM && customDistanceM > 0 ? (customDistanceM / 1000).toFixed(1) : '0';
         default: return '0';
     }
 }
 
-function getRaceDistanceMeters(raceType: RaceType): number {
+function getRaceDistanceMeters(raceType: RaceType, customDistanceM?: number | null): number {
     switch (raceType) {
         case 'FIVE_K': return 5000;
         case 'TEN_K': return 10000;
@@ -1309,6 +1319,7 @@ function getRaceDistanceMeters(raceType: RaceType): number {
         case 'FIFTY_MILE': return 80467;
         case 'HUNDRED_K': return 100000;
         case 'HUNDRED_MILE': return 160934;
+        case 'CUSTOM_DISTANCE': return customDistanceM && customDistanceM > 0 ? customDistanceM : 0;
         default: return 0;
     }
 }
@@ -1361,6 +1372,35 @@ export function getQualityFraction(type: WorkoutType): number {
         case WorkoutType.TEMPO: return 0.65;
         case WorkoutType.FARTLEK: return 0.45;
         default: return 0.5;
+    }
+}
+
+export function fillDurations(workouts: GeneratedWorkout[], paces: TrainingPaces): void {
+    const easyPace = Math.round((paces.easy.min + paces.easy.max) / 2);
+    const qualityTypes = new Set<WorkoutType>([
+        WorkoutType.TEMPO, WorkoutType.INTERVALS,
+        WorkoutType.FARTLEK, WorkoutType.REPETITIONS,
+    ]);
+    const swimTypes = new Set<WorkoutType>([
+        WorkoutType.SWIM, WorkoutType.SWIM_DRILL, WorkoutType.OPEN_WATER_SWIM,
+    ]);
+
+    for (const w of workouts) {
+        if (w.targetDuration != null && w.targetDuration > 0) continue;
+        if (!w.totalDistance || w.totalDistance <= 0) continue;
+        if (!w.targetPace || w.targetPace <= 0) continue;
+
+        const type = w.type as WorkoutType;
+
+        if (qualityTypes.has(type)) {
+            w.targetDuration = computeQualityDuration(
+                w.totalDistance, w.targetPace, easyPace, getQualityFraction(type)
+            );
+        } else if (swimTypes.has(type)) {
+            w.targetDuration = Math.round((w.totalDistance / 100) * w.targetPace * 1.5);
+        } else {
+            w.targetDuration = computeDuration(w.totalDistance, w.targetPace);
+        }
     }
 }
 

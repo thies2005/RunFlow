@@ -209,6 +209,16 @@ class _UnifiedPlanWizardState extends ConsumerState<UnifiedPlanWizard> {
     notifier.setCurrentStep(visible.length - 1);
   }
 
+  Future<void> _skipOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.onboardingCompletedKey, true);
+    if (!mounted) return;
+    final authState = ref.read(authStateProvider);
+    final isAuthenticated =
+        authState is AsyncData && authState.value != null;
+    context.go(isAuthenticated ? '/dashboard' : '/login');
+  }
+
   Future<void> _submit() async {
     final wizardState = ref.read(planWizardProvider);
     if (wizardState.isSubmitting) return;
@@ -405,6 +415,13 @@ class _UnifiedPlanWizardState extends ConsumerState<UnifiedPlanWizard> {
                       style:
                           const TextStyle(color: AppColors.onSurfaceVariant),
                     ),
+                    if (widget.isFromOnboarding) ...[
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: _skipOnboarding,
+                        child: const Text('Skip'),
+                      ),
+                    ],
                   ],
                 ),
               ),

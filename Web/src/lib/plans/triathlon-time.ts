@@ -105,7 +105,7 @@ export function estimateTriathlonTime(input: TriathlonTimeInput): TriathlonTimeP
 
     const optimal = computeTriathlonSplits(input.vdot, swimDistM, bikeDistM, runDistM, transitions);
 
-    const isLongCourse = fallbackRace === 'HALF_IRONMAN' || fallbackRace === 'FULL_IRONMAN';
+    const isLongCourse = (swimDistM + bikeDistM + runDistM) / 1000 >= 100;
     const projRunMult = isLongCourse ? 1.15 : 1.10;
     const consRunMult = isLongCourse ? 1.25 : 1.20;
 

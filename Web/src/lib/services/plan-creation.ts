@@ -837,6 +837,10 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         hrZone6Max: hrZone6Max ?? null,
         hrMax: hrMax ?? null,
         hrRest: hrRest ?? null,
+        customDistanceM: customDistanceM ?? null,
+        customSwimDistM: customSwimDistM ?? undefined,
+        customBikeDistM: customBikeDistM ?? undefined,
+        customRunDistM: customRunDistM ?? undefined,
     };
 
     const workouts = generateTrainingPlan(planConfig);

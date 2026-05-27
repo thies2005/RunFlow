@@ -117,6 +117,41 @@ export function resolvePhaseBudget(
     let remaining = availableWeeks - taper;
 
     if (isUltra) {
+        const hasExplicitUltraBuildOrPeak = config.peakWeeks !== undefined || config.buildWeeks !== undefined;
+        if (hasExplicitUltraBuildOrPeak) {
+            let peak = config.peakWeeks !== undefined && config.peakWeeks !== null
+                ? config.peakWeeks
+                : 2;
+            peak = Math.max(0, Math.min(peak, remaining));
+            remaining -= peak;
+
+            let build = config.buildWeeks !== undefined && config.buildWeeks !== null
+                ? config.buildWeeks
+                : Math.max(2, Math.min(6, Math.floor(availableWeeks * 0.35)));
+            build = Math.max(0, Math.min(build, remaining));
+            remaining -= build;
+
+            let endurance = Math.max(0, Math.min(Math.max(3, Math.min(6, Math.floor(availableWeeks * 0.25))), remaining));
+            remaining -= endurance;
+
+            let mentalPrep = 0;
+            if (isBackyardUltra && remaining > 0) {
+                mentalPrep = Math.min(4, remaining);
+                remaining -= mentalPrep;
+            }
+
+            const base = Math.max(0, remaining);
+
+            return {
+                taperWeeks: taper,
+                peakWeeks: peak,
+                buildWeeks: build,
+                enduranceWeeks: endurance,
+                mentalPrepWeeks: mentalPrep,
+                baseWeeks: base,
+            };
+        }
+
         let peak = 2;
         peak = Math.max(0, Math.min(peak, remaining));
         remaining -= peak;
@@ -1472,15 +1507,11 @@ function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: numbe
         return weekSchedule.map(w => {
             if (!isRun(w.type)) return w;
             if (!isPriority(w)) {
-                return { ...w, totalDistance: 0, description: 'Rest (Volume Cap)' };
+                return { ...w, totalDistance: 0, targetDuration: 0, description: 'Rest (Volume Cap)' };
             }
             const newDist = roundDownTo100(w.totalDistance * scalingFactor);
             const finalDist = Math.max(newDist, 0);
-            return {
-                ...w,
-                totalDistance: finalDist,
-                description: preserveSpecialDescription(w, finalDist),
-            };
+            return withScaledDistance(w, finalDist, preserveSpecialDescription(w, finalDist));
         });
     }
 
@@ -1489,14 +1520,29 @@ function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: numbe
         if (!isRun(w.type) || isPriority(w)) return w;
         const newDist = roundDownTo100(w.totalDistance * fillScalingFactor);
         if (newDist > 0 && newDist < PLAN_CONSTANTS.EASY_RUN_MIN) {
-            return { ...w, totalDistance: 0, description: 'Rest (Volume Cap)' };
+            return { ...w, totalDistance: 0, targetDuration: 0, description: 'Rest (Volume Cap)' };
         }
-        return {
-            ...w,
-            totalDistance: newDist,
-            description: preserveSpecialDescription(w, newDist),
-        };
+        return withScaledDistance(w, newDist, preserveSpecialDescription(w, newDist));
     });
+}
+
+function withScaledDistance(w: ScheduledWorkout, distance: number, description: string): ScheduledWorkout {
+    const previousDistance = w.totalDistance;
+    let targetDuration = w.targetDuration ?? 0;
+    if (distance <= 0) {
+        targetDuration = 0;
+    } else if (targetDuration > 0 && previousDistance > 0) {
+        targetDuration = Math.round(targetDuration * (distance / previousDistance));
+    } else if (w.targetPace && w.targetPace > 0) {
+        targetDuration = computeDuration(distance, w.targetPace);
+    }
+
+    return {
+        ...w,
+        totalDistance: distance,
+        targetDuration,
+        description,
+    };
 }
 
 function preserveSpecialDescription(w: ScheduledWorkout, distance: number): string {

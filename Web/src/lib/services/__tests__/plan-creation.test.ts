@@ -125,7 +125,7 @@ describe('validateTrainingPaces', () => {
         expect(result.warnings).toEqual([]);
     });
 
-    it('returns clampedVdot when validation fails', () => {
+    it('returns warnings without clamping VDOT when validation fails', () => {
         const result = validateTrainingPaces({
             trainingVdot: 57.5,
             raceType: 'HALF_MARATHON',
@@ -133,8 +133,8 @@ describe('validateTrainingPaces', () => {
         });
 
         expect(result.isValid).toBe(false);
-        expect(result.clampedVdot).toBeDefined();
-        expect(result.clampedVdot!).toBeLessThan(57.5);
+        expect(result.warnings.length).toBeGreaterThan(0);
+        expect(result.clampedVdot).toBeUndefined();
     });
 
     it('validateTrainingPaces handles raceType with no targetTime', () => {

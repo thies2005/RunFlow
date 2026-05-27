@@ -1,4 +1,4 @@
-import { buildStructuredStepsForWorkout, generateTrainingPlan, getRaceWeekRunVolumeCap, PLAN_CONSTANTS, scaleQualitySessionDistance } from '../index';
+import { buildStructuredStepsForWorkout, generateTrainingPlan, getRaceWeekRunVolumeCap, PLAN_CONSTANTS, resolvePhaseBudget, scaleQualitySessionDistance } from '../index';
 import { calculateTrainingPaces } from '../../metrics/vdot';
 import { WorkoutType } from '@/generated/prisma/browser';
 
@@ -518,6 +518,35 @@ describe('Training Plan Generation', () => {
             const hasFartlek = baseWorkouts.some(w => w.description.includes('Fartlek'));
             expect(hasFartlek).toBe(true);
         });
+
+        it('scaled workouts keep duration consistent with scaled distance', () => {
+            const workouts = generateTrainingPlan(makeConfig({
+                raceType: 'FIVE_K',
+                weeklyMileageGoal: 20000,
+                startWeeklyMileage: 8000,
+                runsPerWeek: 2,
+                taperWeeks: 1,
+                peakWeeks: 1,
+                buildWeeks: 4,
+            }));
+
+            const runWorkouts = workouts.filter(w =>
+                isRunType(w.type) &&
+                w.type !== WorkoutType.RACE &&
+                w.totalDistance > 0 &&
+                w.targetPace &&
+                w.targetPace > 0 &&
+                w.targetDuration &&
+                w.targetDuration > 0
+            );
+
+            expect(runWorkouts.length).toBeGreaterThan(0);
+            for (const w of runWorkouts) {
+                const impliedDuration = Math.round((w.totalDistance / 1000) * w.targetPace!);
+                expect(w.targetDuration!).toBeLessThanOrEqual(impliedDuration * 1.7);
+                expect(w.targetDuration!).toBeGreaterThanOrEqual(impliedDuration * 0.7);
+            }
+        });
     });
 
     describe('Edge Cases', () => {
@@ -752,6 +781,49 @@ describe('Training Plan Generation', () => {
                 paceSecondsPerKm: 360,
                 hrZone: 2,
             });
+        });
+
+        it('honors explicit ultra peak and build phase counts', () => {
+            const phases = resolvePhaseBudget(18, {
+                vdot: 50,
+                raceType: 'FIFTY_MILE',
+                raceDate: new Date('2026-09-01'),
+                taperWeeks: 2,
+                peakWeeks: 4,
+                buildWeeks: 6,
+            }, {
+                isUltra: true,
+                defaultTaper: 2,
+            });
+
+            expect(phases.peakWeeks).toBe(4);
+            expect(phases.buildWeeks).toBe(6);
+            const allocated = phases.taperWeeks + phases.peakWeeks + phases.buildWeeks +
+                (phases.enduranceWeeks ?? 0) + (phases.mentalPrepWeeks ?? 0) + phases.baseWeeks;
+            expect(allocated).toBe(17);
+        });
+
+        it('triathlon run workouts do not exceed the generated run budget in early low-volume weeks', () => {
+            const workouts = generateTrainingPlan({
+                vdot: 50,
+                raceType: 'SPRINT_TRI',
+                raceDate: new Date('2026-07-19'),
+                startDate: new Date('2026-04-05'),
+                weeklyMileageGoal: 30000,
+                runsPerWeek: 3,
+                ridesPerWeek: 2,
+                swimsPerWeek: 2,
+                taperWeeks: 1,
+                peakWeeks: 2,
+                buildWeeks: 4,
+            });
+
+            const firstWeek = groupByWeek(workouts)[0];
+            const firstWeekRunDistance = firstWeek
+                .filter(w => w.type && isRunType(w.type))
+                .reduce((sum, w) => sum + w.totalDistance, 0);
+
+            expect(firstWeekRunDistance).toBeLessThanOrEqual(13000);
         });
 
         it('adds concrete LTHR and pace targets to generated workouts', () => {
@@ -1211,7 +1283,7 @@ describe('Training Plan Generation', () => {
             });
 
             const workouts = generateTrainingPlan(config);
-            const easyTypes = new Set([WorkoutType.EASY, WorkoutType.RECOVERY, WorkoutType.LONG_RUN]);
+            const easyTypes = new Set<WorkoutType>([WorkoutType.EASY, WorkoutType.RECOVERY, WorkoutType.LONG_RUN]);
             const baseEasy = workouts.find(
                 w => w.phase === 'BASE' && easyTypes.has(w.type) && w.targetPaceMinSecondsPerKm != null
             );

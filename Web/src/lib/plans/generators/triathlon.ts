@@ -668,7 +668,101 @@ function generateTriWeek(params: {
         remainingStrength--;
     }
 
-    return workouts;
+    return scaleTriRunVolume(workouts, weeklyRunDistanceM);
+}
+
+function scaleTriRunVolume(workouts: ScheduledWorkout[], weeklyRunDistanceM: number): ScheduledWorkout[] {
+    const runWorkouts = workouts.filter(w => isTriRun(w.type) && w.totalDistance > 0);
+    const totalRunDistance = runWorkouts.reduce((sum, w) => sum + w.totalDistance, 0);
+    if (weeklyRunDistanceM <= 0 || totalRunDistance <= weeklyRunDistanceM) return workouts;
+
+    const priorityTypes = new Set<WorkoutType>([
+        WorkoutType.LONG_RUN,
+        WorkoutType.TEMPO,
+        WorkoutType.INTERVALS,
+        WorkoutType.REPETITIONS,
+        WorkoutType.FARTLEK,
+    ]);
+
+    const priorityDistance = runWorkouts
+        .filter(w => priorityTypes.has(w.type))
+        .reduce((sum, w) => sum + w.totalDistance, 0);
+    const fillDistance = runWorkouts
+        .filter(w => !priorityTypes.has(w.type))
+        .reduce((sum, w) => sum + w.totalDistance, 0);
+    const fillBudget = Math.max(0, weeklyRunDistanceM - priorityDistance);
+    const fillScale = fillDistance > 0 ? Math.min(1, fillBudget / fillDistance) : 0;
+
+    if (priorityDistance <= weeklyRunDistanceM) {
+        return workouts
+            .map(w => {
+                if (!isTriRun(w.type) || priorityTypes.has(w.type)) return w;
+                const newDistance = roundRunDistance(w.totalDistance * fillScale);
+                return withTriRunDistance(w, newDistance);
+            })
+            .filter(w => !isTriRun(w.type) || w.totalDistance > 0);
+    }
+
+    const priorityScale = weeklyRunDistanceM / priorityDistance;
+    return workouts
+        .map(w => {
+            if (!isTriRun(w.type)) return w;
+            if (!priorityTypes.has(w.type)) return { ...w, totalDistance: 0, targetDuration: 0 };
+            const newDistance = roundRunDistance(w.totalDistance * priorityScale);
+            return withTriRunDistance(w, newDistance);
+        })
+        .filter(w => !isTriRun(w.type) || w.totalDistance > 0);
+}
+
+function roundRunDistance(distance: number): number {
+    if (distance <= 0) return 0;
+    return Math.floor(distance / 100) * 100;
+}
+
+function withTriRunDistance(workout: ScheduledWorkout, distance: number): ScheduledWorkout {
+    if (distance <= 0) {
+        return { ...workout, totalDistance: 0, targetDuration: 0 };
+    }
+
+    const description = updateTriRunDescription(workout, distance);
+    const targetDuration = workout.targetDuration && workout.targetDuration > 0 && workout.totalDistance > 0
+        ? Math.round(workout.targetDuration * (distance / workout.totalDistance))
+        : workout.targetDuration;
+
+    return {
+        ...workout,
+        totalDistance: distance,
+        targetDuration,
+        description,
+    };
+}
+
+function updateTriRunDescription(workout: ScheduledWorkout, distance: number): string {
+    const distanceKm = (distance / 1000).toFixed(1);
+    if (workout.type === WorkoutType.LONG_RUN) {
+        const segmentMatch = workout.description.match(/Easy\s*\+\s*([\d.]+)km\s*@\s*Race Pace/);
+        if (segmentMatch) {
+            return `Long Run: ${distanceKm}km @ Easy with Race Pace finish`;
+        }
+        return `Long Run: ${distanceKm}km @ Easy`;
+    }
+    if (workout.type === WorkoutType.EASY || workout.type === WorkoutType.RECOVERY) {
+        return `${workout.type === WorkoutType.RECOVERY ? 'Recovery' : 'Easy'}: ${distanceKm}km`;
+    }
+    return workout.description;
+}
+
+function isTriRun(type: WorkoutType): boolean {
+    const triRunTypes: WorkoutType[] = [
+        WorkoutType.EASY,
+        WorkoutType.LONG_RUN,
+        WorkoutType.TEMPO,
+        WorkoutType.INTERVALS,
+        WorkoutType.FARTLEK,
+        WorkoutType.RECOVERY,
+        WorkoutType.REPETITIONS,
+    ];
+    return triRunTypes.includes(type);
 }
 
 function getLongRideDuration(raceType: RaceType, phase: TriPhase, isTaper: boolean, taperIdx: number, bikeVolumeSeconds?: number): number {

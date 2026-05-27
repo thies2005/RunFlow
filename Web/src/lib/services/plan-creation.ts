@@ -327,26 +327,7 @@ export function validateTrainingPaces(params: {
         warnings.push(`Threshold pace (${thresholdPace}s/km) is not faster than race pace (${Math.round(racePaceSecPerKm)}s/km)`);
     }
 
-    if (warnings.length === 0) {
-        return { isValid: true, warnings: [] };
-    }
-
-    let clampedVdot: number | undefined;
-    let low = 10;
-    let high = params.trainingVdot;
-    for (let i = 0; i < 50; i++) {
-        const mid = (low + high) / 2;
-        const testPaces = calculateTrainingPaces(mid);
-        const testEasyMid = (testPaces.easy.min + testPaces.easy.max) / 2;
-        if (testEasyMid > racePaceSecPerKm) {
-            high = mid;
-        } else {
-            low = mid;
-        }
-    }
-    clampedVdot = Math.round(high * 10) / 10;
-
-    return { isValid: false, warnings, clampedVdot };
+    return { isValid: warnings.length === 0, warnings };
 }
 
 export const CALIB_DISTANCE_MAP: Record<string, RaceDistance> = {
@@ -478,6 +459,19 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
                 vdotFromActivities = true;
                 vdotConfidence = 'medium';
             }
+        }
+    }
+
+    if (!currentVdot && targetTime && raceType) {
+        const dist = RACE_TYPE_TO_VDOT_DIST[raceType];
+        if (dist) {
+            const result = analyzeRace({
+                distance: dist,
+                timeSeconds: targetTime,
+            });
+            currentVdot = result.vdot;
+            predictedTime = result.predictions[dist];
+            vdotConfidence = 'low';
         }
     }
 
@@ -818,15 +812,13 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         raceType: raceType ?? null,
         targetTime: targetTime || calculatedTargetTime,
     });
-    let effectiveTrainingVdot = trainingVdot;
-    if (!paceValidation.isValid && paceValidation.clampedVdot) {
-        logger.warn('Training paces failed sanity validation; clamping VDOT', {
+    const effectiveTrainingVdot = trainingVdot;
+    if (!paceValidation.isValid) {
+        logger.warn('Training paces differ from target time expectation; keeping fitness-derived VDOT', {
             userId,
-            originalVdot: trainingVdot,
-            clampedVdot: paceValidation.clampedVdot,
+            trainingVdot,
             warnings: paceValidation.warnings,
         });
-        effectiveTrainingVdot = paceValidation.clampedVdot;
     }
 
     const finalRaceDate = raceDate ? new Date(raceDate) : new Date(startDate.getTime() + resolvedPlanWeeks * 7 * 24 * 60 * 60 * 1000);

@@ -29,6 +29,11 @@ class NutritionScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
+            onPressed: () => context.push('/health/library'),
+            icon: const Icon(Icons.bookmarks_outlined, color: AppColors.primary),
+            tooltip: 'Nutrition Library',
+          ),
+          IconButton(
             onPressed: () => _showTargetsDialog(context, ref),
             icon: const Icon(Icons.settings_outlined, color: AppColors.onSurfaceVariant),
             tooltip: S.of(context).nutritionSetTargets,
@@ -405,6 +410,9 @@ class _NutritionContent extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
+          const SizedBox(height: 12),
+          _TodayLoggedFoods(ref: ref, today: today),
+          const SizedBox(height: 12),
           // 7-day trends
           _NutritionTrendsSection(),
         ],
@@ -818,6 +826,160 @@ class _SectionCard extends StatelessWidget {
             child,
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TodayLoggedFoods extends ConsumerWidget {
+  const _TodayLoggedFoods({required this.ref, required this.today});
+  final WidgetRef ref;
+  final DateTime today;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dailyAsync = ref.watch(dailyHealthProvider(today));
+    final theme = Theme.of(context);
+
+    return dailyAsync.when(
+      data: (dailyLog) {
+        final logs = dailyLog.foodLogs;
+        if (logs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return _SectionCard(
+          title: "Today's Logged Foods",
+          trailing: TextButton.icon(
+            onPressed: () => _showSaveMealDialog(context, ref, logs),
+            icon: const Icon(Icons.bookmark_add_outlined, size: 16),
+            label: const Text('Save as Meal', style: TextStyle(fontSize: 12)),
+          ),
+          child: Column(
+            children: [
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: logs.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final entry = logs[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                entry.name,
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'P: ${entry.protein?.round() ?? 0}g • C: ${entry.carbs?.round() ?? 0}g • F: ${entry.fats?.round() ?? 0}g',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${entry.calories?.round() ?? 0} kcal',
+                            style: const TextStyle(
+                              color: AppColors.warning,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  void _showSaveMealDialog(BuildContext context, WidgetRef ref, List<FoodLogEntry> logs) {
+    final nameCtl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Save Log as Meal'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Save today\'s logged food items together as a reusable Saved Meal.',
+              style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: nameCtl,
+              decoration: const InputDecoration(
+                labelText: 'Meal Name',
+                hintText: 'e.g. Daily Protein Shake',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameCtl.text.trim();
+              if (name.isEmpty) return;
+              
+              final foodItems = logs.map((entry) => FoodItem(
+                id: 0,
+                name: entry.name,
+                calories: entry.calories ?? 0.0,
+                protein: entry.protein ?? 0.0,
+                carbs: entry.carbs ?? 0.0,
+                fat: entry.fats ?? 0.0,
+                servingSize: entry.quantity ?? 100.0,
+              )).toList();
+
+              ref.read(savedMealsProvider.notifier).save(name, foodItems);
+              Navigator.pop(ctx);
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Saved today\'s log as "$name" inside Nutrition Library'),
+                  behavior: SnackBarBehavior.floating,
+                  backgroundColor: AppColors.success,
+                  action: SnackBarAction(
+                    label: 'VIEW',
+                    textColor: Colors.white,
+                    onPressed: () => context.push('/health/library'),
+                  ),
+                ),
+              );
+            },
+            child: const Text('Save Meal'),
+          ),
+        ],
       ),
     );
   }

@@ -46,7 +46,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
             'protein': data.protein,
             'carbs': data.carbs,
             'fats': data.fat,
-            'servingSize': data.servingSize,
+            'servingSize': '${data.servingSize.toInt()}g',
             if (data.barcode != null) 'barcode': data.barcode,
           },
         },
@@ -611,6 +611,79 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       );
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to remove food favorite.');
+    }
+  }
+
+  @override
+  Future<List<domain.SavedMeal>> getSavedMeals() async {
+    try {
+      final response = await dio.get(ApiConstants.nutritionMealsPath);
+      final data = response.data;
+      if (data is List) {
+        return data
+            .map((dynamic item) =>
+                SavedMeal.fromJson(item as Map<String, dynamic>).toDomain())
+            .toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _mapException(e, 'Failed to get saved meals.');
+    }
+  }
+
+  @override
+  Future<domain.SavedMeal> saveMeal({
+    required String name,
+    required List<domain.FoodItem> items,
+  }) async {
+    try {
+      double totalCal = 0;
+      double totalProt = 0;
+      double totalCarbs = 0;
+      double totalFat = 0;
+      
+      final mappedItems = items.map((i) {
+        totalCal += i.calories;
+        totalProt += i.protein;
+        totalCarbs += i.carbs;
+        totalFat += i.fat;
+        
+        return {
+          'name': i.name,
+          'estimatedGrams': i.servingSize,
+          'calories': i.calories,
+          'protein': i.protein,
+          'carbs': i.carbs,
+          'fats': i.fat,
+        };
+      }).toList();
+
+      final response = await dio.post(
+        ApiConstants.nutritionMealsPath,
+        data: {
+          'name': name,
+          'totalCalories': totalCal,
+          'totalProtein': totalProt,
+          'totalCarbs': totalCarbs,
+          'totalFats': totalFat,
+          'items': mappedItems,
+        },
+      );
+      return SavedMeal.fromJson(response.data as Map<String, dynamic>).toDomain();
+    } on DioException catch (e) {
+      throw _mapException(e, 'Failed to save meal.');
+    }
+  }
+
+  @override
+  Future<void> deleteSavedMeal(String mealId) async {
+    try {
+      await dio.delete(
+        ApiConstants.nutritionMealsPath,
+        queryParameters: {'id': mealId},
+      );
+    } on DioException catch (e) {
+      throw _mapException(e, 'Failed to delete saved meal.');
     }
   }
 }

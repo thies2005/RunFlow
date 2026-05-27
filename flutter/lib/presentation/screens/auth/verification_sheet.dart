@@ -84,7 +84,8 @@ class _VerificationSheetState extends ConsumerState<VerificationSheet> {
                   controller: _controllers[index],
                   focusNode: _focusNodes[index],
                   textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
+                  keyboardType: TextInputType.text,
+                  textCapitalization: TextCapitalization.characters,
                   maxLength: 1,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,

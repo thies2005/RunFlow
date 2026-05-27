@@ -1144,3 +1144,143 @@ class HealthHistoryPoint {
   @override
   int get hashCode => Object.hash(date, value);
 }
+
+class SavedMeal {
+  const SavedMeal({
+    required this.id,
+    required this.userId,
+    required this.name,
+    required this.totalCalories,
+    required this.totalProtein,
+    required this.totalCarbs,
+    required this.totalFats,
+    required this.items,
+  });
+
+  final String id;
+  final String userId;
+  final String name;
+  final double totalCalories;
+  final double totalProtein;
+  final double totalCarbs;
+  final double totalFats;
+  final List<SavedMealItem> items;
+
+  SavedMeal copyWith({
+    String? id,
+    String? userId,
+    String? name,
+    double? totalCalories,
+    double? totalProtein,
+    double? totalCarbs,
+    double? totalFats,
+    List<SavedMealItem>? items,
+  }) {
+    return SavedMeal(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      totalCalories: totalCalories ?? this.totalCalories,
+      totalProtein: totalProtein ?? this.totalProtein,
+      totalCarbs: totalCarbs ?? this.totalCarbs,
+      totalFats: totalFats ?? this.totalFats,
+      items: items ?? this.items,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SavedMeal &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          userId == other.userId &&
+          name == other.name &&
+          totalCalories == other.totalCalories &&
+          totalProtein == other.totalProtein &&
+          totalCarbs == other.totalCarbs &&
+          totalFats == other.totalFats &&
+          listEquals(items, other.items);
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        userId,
+        name,
+        totalCalories,
+        totalProtein,
+        totalCarbs,
+        totalFats,
+        Object.hashAll(items),
+      );
+}
+
+class SavedMealItem {
+  const SavedMealItem({
+    required this.id,
+    required this.savedMealId,
+    required this.name,
+    required this.estimatedGrams,
+    required this.calories,
+    required this.protein,
+    required this.carbs,
+    required this.fats,
+  });
+
+  final String id;
+  final String savedMealId;
+  final String name;
+  final double estimatedGrams;
+  final double calories;
+  final double protein;
+  final double carbs;
+  final double fats;
+
+  SavedMealItem copyWith({
+    String? id,
+    String? savedMealId,
+    String? name,
+    double? estimatedGrams,
+    double? calories,
+    double? protein,
+    double? carbs,
+    double? fats,
+  }) {
+    return SavedMealItem(
+      id: id ?? this.id,
+      savedMealId: savedMealId ?? this.savedMealId,
+      name: name ?? this.name,
+      estimatedGrams: estimatedGrams ?? this.estimatedGrams,
+      calories: calories ?? this.calories,
+      protein: protein ?? this.protein,
+      carbs: carbs ?? this.carbs,
+      fats: fats ?? this.fats,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SavedMealItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          savedMealId == other.savedMealId &&
+          name == other.name &&
+          estimatedGrams == other.estimatedGrams &&
+          calories == other.calories &&
+          protein == other.protein &&
+          carbs == other.carbs &&
+          fats == other.fats;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        savedMealId,
+        name,
+        estimatedGrams,
+        calories,
+        protein,
+        carbs,
+        fats,
+      );
+}

@@ -299,7 +299,7 @@ class NutritionNotifier extends _$NutritionNotifier {
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       await apiRepo.logFoodEntry(
-        date: DateTime.now(),
+        date: date,
         mealType: mealType,
         quantity: 1,
         foodItem: food,
@@ -319,6 +319,45 @@ class NutritionNotifier extends _$NutritionNotifier {
       await repo.saveNutritionLog(updated);
     }
     ref.invalidateSelf();
+    ref.invalidate(dailyHealthProvider(date));
+  }
+
+  Future<void> logSavedMeal(SavedMeal meal, {String mealType = 'snack'}) async {
+    try {
+      final apiRepo = ref.read(healthApiRepositoryProvider);
+      for (final item in meal.items) {
+        final food = FoodItem(
+          id: 0,
+          name: item.name,
+          calories: item.calories,
+          protein: item.protein,
+          carbs: item.carbs,
+          fat: item.fats,
+          servingSize: item.estimatedGrams,
+        );
+        await apiRepo.logFoodEntry(
+          date: date,
+          mealType: mealType,
+          quantity: 1,
+          foodItem: food,
+        );
+      }
+    } catch (e) {
+      logger.error('[NutritionNotifier] Log saved meal failed: $e');
+    }
+    final current = state.value;
+    if (current != null) {
+      final updated = current.copyWith(
+        calories: current.calories + meal.totalCalories,
+        protein: current.protein + meal.totalProtein,
+        carbs: current.carbs + meal.totalCarbs,
+        fat: current.fat + meal.totalFats,
+      );
+      final repo = ref.read(healthRepositoryProvider);
+      await repo.saveNutritionLog(updated);
+    }
+    ref.invalidateSelf();
+    ref.invalidate(dailyHealthProvider(date));
   }
 }
 
@@ -555,3 +594,35 @@ class FoodFavorites extends _$FoodFavorites {
     }
   }
 }
+
+@riverpod
+class SavedMeals extends _$SavedMeals {
+  @override
+  FutureOr<List<SavedMeal>> build() async {
+    final apiRepo = ref.read(healthApiRepositoryProvider);
+    return apiRepo.getSavedMeals();
+  }
+
+  Future<void> save(String name, List<FoodItem> items) async {
+    if (items.isEmpty) return;
+    final apiRepo = ref.read(healthApiRepositoryProvider);
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await apiRepo.saveMeal(name: name, items: items);
+      return apiRepo.getSavedMeals();
+    });
+  }
+
+  Future<void> delete(String mealId) async {
+    final apiRepo = ref.read(healthApiRepositoryProvider);
+    final current = state.asData?.value ?? [];
+    state = AsyncValue.data(current.where((m) => m.id != mealId).toList());
+    try {
+      await apiRepo.deleteSavedMeal(mealId);
+    } catch (e) {
+      debugPrint('HealthProviders: Failed to delete saved meal: $e');
+      ref.invalidateSelf();
+    }
+  }
+}
+

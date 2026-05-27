@@ -398,3 +398,55 @@ extension DomainHealthHistoryPointMapper on domain.HealthHistoryPoint {
         value: value,
       );
 }
+
+extension SavedMealMapper on SavedMeal {
+  domain.SavedMeal toDomain() => domain.SavedMeal(
+        id: id,
+        userId: userId,
+        name: name,
+        totalCalories: totalCalories,
+        totalProtein: totalProtein,
+        totalCarbs: totalCarbs,
+        totalFats: totalFats,
+        items: items.map((i) => i.toDomain()).toList(),
+      );
+}
+
+extension DomainSavedMealMapper on domain.SavedMeal {
+  SavedMeal toData() => SavedMeal(
+        id: id,
+        userId: userId,
+        name: name,
+        totalCalories: totalCalories,
+        totalProtein: totalProtein,
+        totalCarbs: totalCarbs,
+        totalFats: totalFats,
+        items: items.map((i) => i.toData()).toList(),
+      );
+}
+
+extension SavedMealItemMapper on SavedMealItem {
+  domain.SavedMealItem toDomain() => domain.SavedMealItem(
+        id: id,
+        savedMealId: savedMealId,
+        name: name,
+        estimatedGrams: estimatedGrams,
+        calories: calories,
+        protein: protein,
+        carbs: carbs,
+        fats: fats,
+      );
+}
+
+extension DomainSavedMealItemMapper on domain.SavedMealItem {
+  SavedMealItem toData() => SavedMealItem(
+        id: id,
+        savedMealId: savedMealId,
+        name: name,
+        estimatedGrams: estimatedGrams,
+        calories: calories,
+        protein: protein,
+        carbs: carbs,
+        fats: fats,
+      );
+}

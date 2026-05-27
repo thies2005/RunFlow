@@ -341,11 +341,18 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            connectivityInterceptorProvider
+                .overrideWithValue(NoOpConnectivityInterceptor()),
             nutritionProvider.overrideWith2((arg) => _FakeNutritionNotifier()),
             nutritionTargetsProvider
                 .overrideWith((ref) async => NutritionTargets.defaults),
             nutritionAnalyticsProvider
                 .overrideWith((ref) async => const NutritionAnalytics()),
+            dailyHealthProvider.overrideWith((ref, arg) async => DailyHealthLog(
+                  id: 1,
+                  date: arg,
+                  foodLogs: [],
+                )),
           ],
           child: const MaterialApp(
             localizationsDelegates: [

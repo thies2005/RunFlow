@@ -520,7 +520,7 @@ final class NutritionNotifierProvider
   }
 }
 
-String _$nutritionNotifierHash() => r'07cfb182f7010702c28cf190d8ef612147a82b91';
+String _$nutritionNotifierHash() => r'f4b22f82909f049258eeba58c6439bd1efd43e25';
 
 final class NutritionNotifierFamily extends $Family
     with
@@ -1001,6 +1001,50 @@ abstract class _$FoodFavorites extends $AsyncNotifier<List<FoodItem>> {
             as $ClassProviderElement<
               AnyNotifier<AsyncValue<List<FoodItem>>, List<FoodItem>>,
               AsyncValue<List<FoodItem>>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(SavedMeals)
+final savedMealsProvider = SavedMealsProvider._();
+
+final class SavedMealsProvider
+    extends $AsyncNotifierProvider<SavedMeals, List<SavedMeal>> {
+  SavedMealsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'savedMealsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$savedMealsHash();
+
+  @$internal
+  @override
+  SavedMeals create() => SavedMeals();
+}
+
+String _$savedMealsHash() => r'6941343148aa2438ed508147fd1ec0441ab03de2';
+
+abstract class _$SavedMeals extends $AsyncNotifier<List<SavedMeal>> {
+  FutureOr<List<SavedMeal>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<List<SavedMeal>>, List<SavedMeal>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<SavedMeal>>, List<SavedMeal>>,
+              AsyncValue<List<SavedMeal>>,
               Object?,
               Object?
             >;

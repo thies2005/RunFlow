@@ -33,14 +33,14 @@ describe('tokens', () => {
     });
 
     describe('generateAuthCode', () => {
-        it('should generate a code of length 8', () => {
+        it('should generate a code of length 6', () => {
             const code = generateAuthCode();
-            expect(code).toHaveLength(8);
+            expect(code).toHaveLength(6);
         });
 
         it('should generate a code with allowed characters', () => {
             const code = generateAuthCode();
-            const allowedChars = /^[0-9A-Z]{8}$/;
+            const allowedChars = /^[0-9A-Z]{6}$/;
             expect(code).toMatch(allowedChars);
         });
 
@@ -61,7 +61,7 @@ describe('tokens', () => {
 
             const code = await createAuthCode(email, type);
 
-            expect(code).toHaveLength(8);
+            expect(code).toHaveLength(6);
             expect(prisma.authCode.deleteMany).toHaveBeenCalledWith({
                 where: { email, type }
             });
@@ -78,7 +78,7 @@ describe('tokens', () => {
 
     describe('verifyAuthCode', () => {
         const email = 'test@example.com';
-        const code = 'ABC12345';
+        const code = 'ABC123';
         const type = AuthCodeType.VERIFY_EMAIL;
 
         it('should return false if rate limit is exceeded', async () => {
@@ -145,7 +145,7 @@ describe('tokens', () => {
             const recordId = 'record-123';
             findFirstMock.mockResolvedValue({ id: recordId });
 
-            const lowerCaseCode = 'abc12345';
+            const lowerCaseCode = 'abc123';
             const result = await verifyAuthCode(email, lowerCaseCode, type);
 
             expect(result).toBe(true);

@@ -56,6 +56,7 @@ class ApiConstants {
   static const String consentPath = '/user/consent';
   static const String nutritionSuggestPath = '/health/nutrition/suggest';
   static const String nutritionFavoritesPath = '/health/nutrition/favorites';
+  static const String nutritionMealsPath = '/health/nutrition/meals';
   static const String workoutReorderPath = '/workouts/reorder';
   static const String readinessDailyPath = '/readiness/daily';
   static const String readinessHistoryPath = '/readiness/history';

@@ -42,6 +42,7 @@ import 'package:runflow_flutter/presentation/screens/health/sleep_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/fasting_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/ai_scan_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/readiness_detail_screen.dart';
+import 'package:runflow_flutter/presentation/screens/health/nutrition_library_screen.dart';
 import 'package:runflow_flutter/presentation/screens/onboarding/feature_showcase_screen.dart';
 import 'package:runflow_flutter/presentation/screens/startup/startup_screen.dart';
 import 'package:runflow_flutter/presentation/screens/record/record_screen.dart';
@@ -162,6 +163,11 @@ GoRouter createRouter(Ref ref) {
         path: '/health/nutrition',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const NutritionScreen(),
+      ),
+      GoRoute(
+        path: '/health/library',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const NutritionLibraryScreen(),
       ),
       GoRoute(
         path: '/health/supplements',

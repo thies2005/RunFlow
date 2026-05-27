@@ -36,4 +36,7 @@ abstract class HealthApiRepository {
   Future<List<FoodItem>> getFoodFavorites();
   Future<FoodItem> addFoodFavorite(FoodItem food);
   Future<void> removeFoodFavorite(String favoriteId);
+  Future<List<SavedMeal>> getSavedMeals();
+  Future<SavedMeal> saveMeal({required String name, required List<FoodItem> items});
+  Future<void> deleteSavedMeal(String mealId);
 }

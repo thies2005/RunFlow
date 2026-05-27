@@ -173,6 +173,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 _buildPasswordField(colorScheme),
                 const SizedBox(height: 24),
                 _buildLoginButton(colorScheme),
+                const SizedBox(height: 16),
+                _buildRegisterLink(colorScheme),
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 16),
                   _buildErrorMessage(colorScheme),
@@ -278,6 +280,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
       ),
       child: Text(S.of(context).authSignIn),
+    );
+  }
+
+  Widget _buildRegisterLink(ColorScheme colorScheme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          S.of(context).authNoAccountYet,
+          style: TextStyle(color: colorScheme.onSurfaceVariant),
+        ),
+        GestureDetector(
+          onTap: _isLoading ? null : () => context.go('/register'),
+          child: Text(
+            S.of(context).authSignUp,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

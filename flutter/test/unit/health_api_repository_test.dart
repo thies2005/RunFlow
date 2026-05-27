@@ -116,7 +116,7 @@ void main() {
                   'protein': 30,
                   'carbs': 5,
                   'fats': 8,
-                  'servingSize': 150,
+                  'servingSize': '150g',
                 },
               },
             )).called(1);

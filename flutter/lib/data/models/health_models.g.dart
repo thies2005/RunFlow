@@ -178,25 +178,26 @@ Map<String, dynamic> _$BodyMeasurementToJson(_BodyMeasurement instance) =>
       'notes': instance.notes,
     };
 
-_NutritionAnalytics _$NutritionAnalyticsFromJson(
-  Map<String, dynamic> json,
-) => _NutritionAnalytics(
-  macroAdherenceScore: (json['macroAdherenceScore'] as num?)?.toDouble() ?? 0,
-  dailyData:
-      (json['dailyData'] as List<dynamic>?)
-          ?.map((e) => DailyNutrition.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      const [],
-  micronutrients:
-      (json['micronutrients'] as List<dynamic>?)
-          ?.map((e) => MicronutrientSummary.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      const [],
-);
+_NutritionAnalytics _$NutritionAnalyticsFromJson(Map<String, dynamic> json) =>
+    _NutritionAnalytics(
+      macroAdherenceScore: (json['adherenceScore'] as num?)?.toDouble() ?? 0,
+      dailyData:
+          (json['dailyData'] as List<dynamic>?)
+              ?.map((e) => DailyNutrition.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      micronutrients:
+          (json['micronutrients'] as List<dynamic>?)
+              ?.map(
+                (e) => MicronutrientSummary.fromJson(e as Map<String, dynamic>),
+              )
+              .toList() ??
+          const [],
+    );
 
 Map<String, dynamic> _$NutritionAnalyticsToJson(_NutritionAnalytics instance) =>
     <String, dynamic>{
-      'macroAdherenceScore': instance.macroAdherenceScore,
+      'adherenceScore': instance.macroAdherenceScore,
       'dailyData': instance.dailyData,
       'micronutrients': instance.micronutrients,
     };
@@ -311,4 +312,53 @@ Map<String, dynamic> _$HealthHistoryPointToJson(_HealthHistoryPoint instance) =>
     <String, dynamic>{
       'date': instance.date.toIso8601String(),
       'value': instance.value,
+    };
+
+_SavedMeal _$SavedMealFromJson(Map<String, dynamic> json) => _SavedMeal(
+  id: json['id'] as String,
+  userId: json['userId'] as String,
+  name: json['name'] as String,
+  totalCalories: (json['totalCalories'] as num).toDouble(),
+  totalProtein: (json['totalProtein'] as num).toDouble(),
+  totalCarbs: (json['totalCarbs'] as num).toDouble(),
+  totalFats: (json['totalFats'] as num).toDouble(),
+  items: (json['items'] as List<dynamic>)
+      .map((e) => SavedMealItem.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
+
+Map<String, dynamic> _$SavedMealToJson(_SavedMeal instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'userId': instance.userId,
+      'name': instance.name,
+      'totalCalories': instance.totalCalories,
+      'totalProtein': instance.totalProtein,
+      'totalCarbs': instance.totalCarbs,
+      'totalFats': instance.totalFats,
+      'items': instance.items,
+    };
+
+_SavedMealItem _$SavedMealItemFromJson(Map<String, dynamic> json) =>
+    _SavedMealItem(
+      id: json['id'] as String,
+      savedMealId: json['savedMealId'] as String,
+      name: json['name'] as String,
+      estimatedGrams: (json['estimatedGrams'] as num).toDouble(),
+      calories: (json['calories'] as num).toDouble(),
+      protein: (json['protein'] as num).toDouble(),
+      carbs: (json['carbs'] as num).toDouble(),
+      fats: (json['fats'] as num).toDouble(),
+    );
+
+Map<String, dynamic> _$SavedMealItemToJson(_SavedMealItem instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'savedMealId': instance.savedMealId,
+      'name': instance.name,
+      'estimatedGrams': instance.estimatedGrams,
+      'calories': instance.calories,
+      'protein': instance.protein,
+      'carbs': instance.carbs,
+      'fats': instance.fats,
     };

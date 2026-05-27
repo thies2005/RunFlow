@@ -407,7 +407,7 @@ class NutritionTargets {
 @Freezed(copyWith: true)
 sealed class NutritionAnalytics with _$NutritionAnalytics {
   const factory NutritionAnalytics({
-    @Default(0) double macroAdherenceScore,
+    @JsonKey(name: 'adherenceScore') @Default(0) double macroAdherenceScore,
     @Default([]) List<DailyNutrition> dailyData,
     @Default([]) List<MicronutrientSummary> micronutrients,
   }) = _NutritionAnalytics;
@@ -499,4 +499,40 @@ sealed class HealthHistoryPoint with _$HealthHistoryPoint {
 
   factory HealthHistoryPoint.fromJson(Map<String, dynamic> json) =>
       _$HealthHistoryPointFromJson(json);
+}
+
+@Freezed(copyWith: true)
+sealed class SavedMeal with _$SavedMeal {
+  const factory SavedMeal({
+    required String id,
+    required String userId,
+    required String name,
+    required double totalCalories,
+    required double totalProtein,
+    required double totalCarbs,
+    required double totalFats,
+    required List<SavedMealItem> items,
+  }) = _SavedMeal;
+  const SavedMeal._();
+
+  factory SavedMeal.fromJson(Map<String, dynamic> json) =>
+      _$SavedMealFromJson(json);
+}
+
+@Freezed(copyWith: true)
+sealed class SavedMealItem with _$SavedMealItem {
+  const factory SavedMealItem({
+    required String id,
+    required String savedMealId,
+    required String name,
+    required double estimatedGrams,
+    required double calories,
+    required double protein,
+    required double carbs,
+    required double fats,
+  }) = _SavedMealItem;
+  const SavedMealItem._();
+
+  factory SavedMealItem.fromJson(Map<String, dynamic> json) =>
+      _$SavedMealItemFromJson(json);
 }

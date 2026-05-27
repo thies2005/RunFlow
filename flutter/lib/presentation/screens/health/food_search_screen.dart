@@ -508,10 +508,28 @@ class _FoodResultTileState extends State<_FoodResultTile> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               title: Row(
                 children: [
-                  Expanded(child: Text(
-                    food.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                  )),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          food.name,
+                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        if (food.servingSize > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2.0),
+                            child: Text(
+                              '${food.brand != null && food.brand!.isNotEmpty ? "${food.brand} • " : ""}${food.servingSize.toInt()}g',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                   GestureDetector(
                     onTap: widget.onToggleFavorite,
                     child: Icon(
@@ -543,6 +561,7 @@ class _FoodResultTileState extends State<_FoodResultTile> {
                   children: [
                     _PortionControl(
                       multiplier: m,
+                      servingSize: food.servingSize,
                       onChanged: (v) => setState(() => _multiplier = v),
                     ),
                     const SizedBox(height: 12),
@@ -600,10 +619,12 @@ class _MacroChip extends StatelessWidget {
 class _PortionControl extends StatelessWidget {
   const _PortionControl({
     required this.multiplier,
+    required this.servingSize,
     required this.onChanged,
   });
 
   final double multiplier;
+  final double servingSize;
   final ValueChanged<double> onChanged;
 
   @override
@@ -630,7 +651,7 @@ class _PortionControl extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                '${multiplier.toStringAsFixed(multiplier == multiplier.roundToDouble() ? 0 : 1)}x',
+                '${multiplier.toStringAsFixed(multiplier == multiplier.roundToDouble() ? 0 : 1)}x${servingSize > 0 ? " (${(servingSize * multiplier).toInt()}g)" : ""}',
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: AppColors.primary,

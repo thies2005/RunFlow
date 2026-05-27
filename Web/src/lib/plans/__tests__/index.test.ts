@@ -88,18 +88,19 @@ describe('Training Plan Generation', () => {
             }
         });
 
-        it('Half Marathon PEAK sessions use marathon pace (Task 1.2)', () => {
+        it('Half Marathon PEAK sessions use HM race pace (Task 1.2)', () => {
             const config = makeConfig({
                 raceType: 'HALF_MARATHON',
                 weeklyMileageGoal: 50000,
             });
             const workouts = generateTrainingPlan(config);
-            const mpWorkouts = workouts.filter(
-                w => w.description.includes('MP Segment')
+            const hmWorkouts = workouts.filter(
+                w => w.description.includes('HM Pace Segment')
             );
-            expect(mpWorkouts.length).toBeGreaterThan(0);
-            for (const w of mpWorkouts) {
-                expect(w.targetPace).toBe(MOCK_PACES.marathon);
+            expect(hmWorkouts.length).toBeGreaterThan(0);
+            const expectedHmRacePace = Math.round((MOCK_PACES.marathon + MOCK_PACES.threshold) / 2);
+            for (const w of hmWorkouts) {
+                expect(w.targetPace).toBe(expectedHmRacePace);
             }
         });
 
@@ -296,24 +297,24 @@ describe('Training Plan Generation', () => {
             expect(thresholdTempos.length).toBeGreaterThan(0);
         });
 
-        it('HM BUILD phase uses threshold pace (Task 3.1)', () => {
+        it('HM BUILD phase uses interval pace (Task 3.1)', () => {
             const config = makeConfig({
                 raceType: 'HALF_MARATHON',
                 weeklyMileageGoal: 50000,
             });
             const workouts = generateTrainingPlan(config);
-            const thresholdTempos = workouts.filter(
+            const intervalWorkouts = workouts.filter(
                 w =>
-                    w.type === WorkoutType.TEMPO &&
-                    w.description.includes('Threshold')
+                    w.type === WorkoutType.INTERVALS &&
+                    w.description.includes('6x800m')
             );
-            expect(thresholdTempos.length).toBeGreaterThan(0);
-            for (const t of thresholdTempos) {
-                expect(t.targetPace).toBe(MOCK_PACES.threshold);
+            expect(intervalWorkouts.length).toBeGreaterThan(0);
+            for (const w of intervalWorkouts) {
+                expect(w.targetPace).toBe(MOCK_PACES.interval);
             }
         });
 
-        it('quality sessions progress through phases: BASE fartlek -> BUILD threshold -> PEAK specific (Task 3.2)', () => {
+        it('quality sessions progress through phases: BASE fartlek -> BUILD intervals -> PEAK specific (Task 3.2)', () => {
             expect(mockedCalculateTrainingPaces).toHaveBeenCalled();
             const config = makeConfig({
                 raceType: 'MARATHON',
@@ -322,14 +323,14 @@ describe('Training Plan Generation', () => {
             const workouts = generateTrainingPlan(config);
             const allDescs = workouts.map(w => w.description);
             const fartlekDescs = allDescs.filter(d => d.includes('Fartlek'));
-            const thresholdDescs = allDescs.filter(d => d.includes('Threshold'));
+            const intervalDescs = allDescs.filter(d => d.includes('Intervals'));
             const mpDescs = allDescs.filter(d => d.includes('MP Segment'));
             expect(fartlekDescs.length).toBeGreaterThan(0);
-            expect(thresholdDescs.length).toBeGreaterThan(0);
+            expect(intervalDescs.length).toBeGreaterThan(0);
             expect(mpDescs.length).toBeGreaterThan(0);
         });
 
-        it('BASE fartlek uses midpoint hard pace between threshold and interval with zone labels', () => {
+        it('BASE fartlek uses threshold + 5s/km hard pace with zone labels', () => {
             const config = makeConfig({
                 raceType: 'FIVE_K',
                 taperWeeks: 1,
@@ -340,7 +341,7 @@ describe('Training Plan Generation', () => {
             const fartleks = workouts.filter(w => w.type === WorkoutType.FARTLEK);
             expect(fartleks.length).toBeGreaterThan(0);
 
-            const expectedHardPace = Math.round((MOCK_PACES.threshold + MOCK_PACES.interval) / 2);
+            const expectedHardPace = MOCK_PACES.threshold + 5;
             for (const w of fartleks) {
                 expect(w.targetPace).toBe(expectedHardPace);
                 expect(w.description).toContain('@ F (T-I)');
@@ -382,7 +383,7 @@ describe('Training Plan Generation', () => {
             expect(stridesRuns.length).toBeGreaterThan(0);
         });
 
-        it('progressive long run with MP segments in PEAK phase for marathon (Task 3.3)', () => {
+        it('progressive long run with Goal Pace segments in PEAK phase for marathon (Task 3.3)', () => {
             const config = makeConfig({
                 raceType: 'MARATHON',
                 weeklyMileageGoal: 60000,
@@ -391,7 +392,7 @@ describe('Training Plan Generation', () => {
             const progressiveLR = workouts.filter(
                 w =>
                     w.type === WorkoutType.LONG_RUN &&
-                    w.description.includes('MP')
+                    w.description.includes('Goal Pace')
             );
             expect(progressiveLR.length).toBeGreaterThan(0);
         });
@@ -796,8 +797,8 @@ describe('Training Plan Generation', () => {
 
             expect(fartleks.length).toBeGreaterThan(0);
             for (const w of fartleks) {
-                expect(w.description).toContain('2min @ F (T-I)');
-                expect(w.description).toContain('2min @ E');
+                expect(w.description).toContain('@ F (T-I)');
+                expect(w.description).toContain('@ E ');
             }
         });
 
@@ -1012,6 +1013,222 @@ describe('Training Plan Generation', () => {
             expect(workouts.length).toBeGreaterThan(0);
             const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
             expect(raceWorkout).toBeDefined();
+        });
+    });
+
+    describe('phase-based VDOT progression', () => {
+        function scaledPaces(vdot: number) {
+            const baseVdot = 50;
+            const scale = baseVdot / vdot;
+            return {
+                easy: { min: Math.round(MOCK_PACES.easy.min * scale), max: Math.round(MOCK_PACES.easy.max * scale) },
+                marathon: Math.round(MOCK_PACES.marathon * scale),
+                threshold: Math.round(MOCK_PACES.threshold * scale),
+                interval: Math.round(MOCK_PACES.interval * scale),
+                repetition: Math.round(MOCK_PACES.repetition * scale),
+            };
+        }
+
+        it('uses higher VDOT in BUILD and PEAK phases when targetVdot is provided', () => {
+            mockedCalculateTrainingPaces.mockImplementation((vdot: number) => scaledPaces(vdot));
+
+            const currentVdot = 43;
+            const targetVdot = 47;
+            const maxVdot = Math.round(43 * 1.05 * 10) / 10;
+            const buildVdot = Math.min(Math.round((43 + (47 - 43) * 0.5) * 10) / 10, maxVdot);
+            const peakVdot = Math.min(Math.round((43 + (47 - 43) * 0.75) * 10) / 10, maxVdot);
+            const basePaces = scaledPaces(currentVdot);
+            const buildPaces = scaledPaces(buildVdot);
+            const peakPaces = scaledPaces(peakVdot);
+
+            const config = makeConfig({
+                vdot: currentVdot,
+                targetVdot,
+                raceType: 'HALF_MARATHON',
+            });
+
+            const workouts = generateTrainingPlan(config);
+
+            const baseWorkouts = workouts.filter(w => w.phase === 'BASE' && w.type === WorkoutType.EASY);
+            const buildWorkouts = workouts.filter(w => w.phase === 'BUILD' && w.type === WorkoutType.EASY);
+            const peakWorkouts = workouts.filter(w => w.phase === 'PEAK' && w.type === WorkoutType.EASY);
+
+            if (baseWorkouts.length > 0) {
+                expect(baseWorkouts[0].targetPace).toBe(basePaces.easy.max);
+            }
+            if (buildWorkouts.length > 0) {
+                expect(buildWorkouts[0].targetPace).toBeLessThanOrEqual(basePaces.easy.max);
+                expect(buildWorkouts[0].targetPace).toBe(buildPaces.easy.max);
+            }
+            if (peakWorkouts.length > 0) {
+                expect(peakWorkouts[0].targetPace).toBeLessThanOrEqual(buildPaces.easy.max);
+                expect(peakWorkouts[0].targetPace).toBe(peakPaces.easy.max);
+            }
+        });
+
+        it('does not exceed 5% above currentVdot even with high targetVdot', () => {
+            mockedCalculateTrainingPaces.mockImplementation((vdot: number) => scaledPaces(vdot));
+
+            const currentVdot = 40;
+            const targetVdot = 60;
+            const maxVdot = Math.round(40 * 1.05 * 10) / 10;
+            const maxPaces = scaledPaces(maxVdot);
+
+            const config = makeConfig({
+                vdot: currentVdot,
+                targetVdot,
+                raceType: 'HALF_MARATHON',
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const allEasy = workouts.filter(w => w.type === WorkoutType.EASY && w.targetPace && w.targetPace > 0 && w.phase !== 'RACE_WEEK');
+
+            for (const w of allEasy) {
+                expect(w.targetPace!).toBeGreaterThanOrEqual(maxPaces.easy.max);
+            }
+        });
+
+        it('RACE_WEEK uses current fitness paces, not progression paces', () => {
+            mockedCalculateTrainingPaces.mockImplementation((vdot: number) => scaledPaces(vdot));
+
+            const currentVdot = 43;
+            const targetVdot = 47;
+            const basePaces = scaledPaces(currentVdot);
+
+            const config = makeConfig({
+                vdot: currentVdot,
+                targetVdot,
+                raceType: 'HALF_MARATHON',
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const raceWeekRecovery = workouts.filter(w => w.phase === 'RACE_WEEK' && w.type === WorkoutType.RECOVERY);
+
+            for (const w of raceWeekRecovery) {
+                expect(w.targetPace).toBe(basePaces.easy.max);
+            }
+        });
+
+        it('falls back to currentVdot when no targetVdot provided', () => {
+            mockedCalculateTrainingPaces.mockImplementation((vdot: number) => scaledPaces(vdot));
+
+            const currentVdot = 43;
+            const basePaces = scaledPaces(currentVdot);
+
+            const config = makeConfig({
+                vdot: currentVdot,
+                raceType: 'HALF_MARATHON',
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const nonRaceWeekEasy = workouts.filter(
+                w => w.type === WorkoutType.EASY && w.targetPace && w.targetPace > 0 && w.phase !== 'RACE_WEEK'
+            );
+
+            for (const w of nonRaceWeekEasy) {
+                expect(w.targetPace).toBe(basePaces.easy.max);
+            }
+        });
+
+        it('progresses quality session paces across phases', () => {
+            mockedCalculateTrainingPaces.mockImplementation((vdot: number) => scaledPaces(vdot));
+
+            const currentVdot = 42;
+            const targetVdot = 46;
+            const maxVdot = Math.round(42 * 1.05 * 10) / 10;
+            const buildVdot = Math.min(Math.round((42 + (46 - 42) * 0.5) * 10) / 10, maxVdot);
+            const peakVdot = Math.min(Math.round((42 + (46 - 42) * 0.75) * 10) / 10, maxVdot);
+            const basePaces = scaledPaces(currentVdot);
+            const buildPaces = scaledPaces(buildVdot);
+            const peakPaces = scaledPaces(peakVdot);
+
+            const config = makeConfig({
+                vdot: currentVdot,
+                targetVdot,
+                raceType: 'HALF_MARATHON',
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const baseQuality = workouts.find(w => w.phase === 'BASE' && w.type === WorkoutType.FARTLEK);
+            const buildQuality = workouts.find(w => w.phase === 'BUILD' && w.type === WorkoutType.INTERVALS);
+            const peakQuality = workouts.find(w => w.phase === 'PEAK' && w.description.includes('HM Pace Segments'));
+
+            expect(baseQuality).toBeDefined();
+            expect(buildQuality).toBeDefined();
+            expect(peakQuality).toBeDefined();
+
+            if (baseQuality) {
+                const baseHardPace = Math.round(basePaces.threshold + 5);
+                expect(baseQuality.targetPace).toBe(baseHardPace);
+            }
+            if (buildQuality) {
+                expect(buildQuality.targetPace).toBe(buildPaces.interval);
+            }
+            if (peakQuality) {
+                const peakHmPace = Math.round((peakPaces.marathon + peakPaces.threshold) / 2);
+                expect(peakQuality.targetPace).toBe(peakHmPace);
+            }
+        });
+
+        it('TAPER uses the same progression VDOT as PEAK', () => {
+            mockedCalculateTrainingPaces.mockImplementation((vdot: number) => scaledPaces(vdot));
+
+            const currentVdot = 42;
+            const targetVdot = 46;
+            const maxVdot = Math.round(42 * 1.05 * 10) / 10;
+            const peakVdot = Math.min(Math.round((42 + (46 - 42) * 0.75) * 10) / 10, maxVdot);
+            const peakPaces = scaledPaces(peakVdot);
+
+            const config = makeConfig({
+                vdot: currentVdot,
+                targetVdot,
+                raceType: 'HALF_MARATHON',
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const taperEasy = workouts.find(w => w.phase === 'TAPER' && w.type === WorkoutType.EASY);
+
+            expect(taperEasy).toBeDefined();
+            if (taperEasy) {
+                expect(taperEasy.targetPace).toBe(peakPaces.easy.max);
+            }
+        });
+
+        it('uses phase paces for pace zone bounds', () => {
+            mockedCalculateTrainingPaces.mockImplementation((vdot: number) => scaledPaces(vdot));
+
+            const currentVdot = 42;
+            const targetVdot = 46;
+            const maxVdot = Math.round(42 * 1.05 * 10) / 10;
+            const buildVdot = Math.min(Math.round((42 + (46 - 42) * 0.5) * 10) / 10, maxVdot);
+            const basePaces = scaledPaces(currentVdot);
+            const buildPaces = scaledPaces(buildVdot);
+
+            const config = makeConfig({
+                vdot: currentVdot,
+                targetVdot,
+                raceType: 'HALF_MARATHON',
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const easyTypes = new Set([WorkoutType.EASY, WorkoutType.RECOVERY, WorkoutType.LONG_RUN]);
+            const baseEasy = workouts.find(
+                w => w.phase === 'BASE' && easyTypes.has(w.type) && w.targetPaceMinSecondsPerKm != null
+            );
+            const buildEasy = workouts.find(
+                w => w.phase === 'BUILD' && easyTypes.has(w.type) && w.targetPaceMinSecondsPerKm != null
+            );
+
+            expect(baseEasy).toBeDefined();
+            expect(buildEasy).toBeDefined();
+            if (baseEasy) {
+                expect(baseEasy.targetPaceMinSecondsPerKm).toBe(basePaces.easy.min);
+                expect(baseEasy.targetPaceMaxSecondsPerKm).toBe(basePaces.easy.max);
+            }
+            if (buildEasy) {
+                expect(buildEasy.targetPaceMinSecondsPerKm).toBe(buildPaces.easy.min);
+                expect(buildEasy.targetPaceMaxSecondsPerKm).toBe(buildPaces.easy.max);
+            }
         });
     });
 });

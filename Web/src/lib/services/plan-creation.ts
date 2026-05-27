@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { analyzeRace, calculateVdot, type RaceDistance } from '@/lib/metrics/vdot';
+import { analyzeRace, calculateTrainingPaces, calculateVdot, DISTANCES, type RaceDistance } from '@/lib/metrics/vdot';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { type ActivityForShape } from '@/lib/metrics/runalyze';
 import { calculateProjectedGoalTime, type PlanSettings } from '@/lib/metrics/goalProjection';
@@ -275,17 +275,78 @@ export function resolveTrainingVdotForGoal(params: {
 }): { trainingVdot: number; targetVdot?: number; wasCapped: boolean } {
     const maxImprovementFactor = params.maxImprovementFactor ?? 1.15;
     const distance = params.raceType ? RACE_TYPE_TO_VDOT_DIST[params.raceType] : undefined;
+
     if (!params.targetTime || !distance || !params.hasFitnessBaseline) {
         return { trainingVdot: params.currentVdot, wasCapped: false };
     }
 
     const targetVdot = calculateVdot({ distance, timeSeconds: params.targetTime });
     const maxTrainingVdot = Math.round(params.currentVdot * maxImprovementFactor * 10) / 10;
-    if (targetVdot > maxTrainingVdot) {
-        return { trainingVdot: maxTrainingVdot, targetVdot, wasCapped: true };
+
+    return {
+        trainingVdot: params.currentVdot,
+        targetVdot: Math.min(targetVdot, maxTrainingVdot),
+        wasCapped: targetVdot > maxTrainingVdot,
+    };
+}
+
+export function validateTrainingPaces(params: {
+    trainingVdot: number;
+    raceType: RaceType | null;
+    targetTime?: number | null;
+}): { isValid: boolean; warnings: string[]; clampedVdot?: number } {
+    const warnings: string[] = [];
+
+    if (!params.raceType || !params.targetTime) {
+        return { isValid: true, warnings: [] };
     }
 
-    return { trainingVdot: Math.max(params.currentVdot, targetVdot), targetVdot, wasCapped: false };
+    const distance = RACE_TYPE_TO_VDOT_DIST[params.raceType];
+    if (!distance) {
+        return { isValid: true, warnings: [] };
+    }
+
+    const distanceMeters = DISTANCES[distance];
+    if (!distanceMeters) {
+        return { isValid: true, warnings: [] };
+    }
+
+    const racePaceSecPerKm = (params.targetTime / distanceMeters) * 1000;
+    const paces = calculateTrainingPaces(params.trainingVdot);
+    const easyPaceMidpoint = (paces.easy.min + paces.easy.max) / 2;
+    const thresholdPace = paces.threshold;
+
+    const easySlowerThanRace = easyPaceMidpoint > racePaceSecPerKm;
+    const thresholdFasterThanRace = thresholdPace < racePaceSecPerKm;
+
+    if (!easySlowerThanRace) {
+        warnings.push(`Easy pace midpoint (${Math.round(easyPaceMidpoint)}s/km) is faster than race pace (${Math.round(racePaceSecPerKm)}s/km)`);
+    }
+
+    if (!thresholdFasterThanRace) {
+        warnings.push(`Threshold pace (${thresholdPace}s/km) is not faster than race pace (${Math.round(racePaceSecPerKm)}s/km)`);
+    }
+
+    if (warnings.length === 0) {
+        return { isValid: true, warnings: [] };
+    }
+
+    let clampedVdot: number | undefined;
+    let low = 10;
+    let high = params.trainingVdot;
+    for (let i = 0; i < 50; i++) {
+        const mid = (low + high) / 2;
+        const testPaces = calculateTrainingPaces(mid);
+        const testEasyMid = (testPaces.easy.min + testPaces.easy.max) / 2;
+        if (testEasyMid > racePaceSecPerKm) {
+            high = mid;
+        } else {
+            low = mid;
+        }
+    }
+    clampedVdot = Math.round(high * 10) / 10;
+
+    return { isValid: false, warnings, clampedVdot };
 }
 
 export const CALIB_DISTANCE_MAP: Record<string, RaceDistance> = {
@@ -325,6 +386,7 @@ export interface ResolveVdotResult {
     currentVdot: number;
     predictedTime: number | null;
     vdotFromActivities: boolean;
+    vdotConfidence: 'low' | 'medium' | 'high';
 }
 
 export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotResult> {
@@ -333,6 +395,7 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
     let currentVdot: number | null = null;
     let predictedTime: number | null = null;
     let vdotFromActivities = false;
+    let vdotConfidence: 'low' | 'medium' | 'high' = 'low';
 
     if (calibrationTime && calibrationTime > 0 && calibrationDistance) {
         const calDist = CALIB_DISTANCE_MAP[calibrationDistance] || '5K';
@@ -342,6 +405,7 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
         });
         currentVdot = result.vdot;
         predictedTime = result.predictions[calDist];
+        vdotConfidence = 'high';
     }
 
     if (!currentVdot && useActivityVdot && raceType) {
@@ -371,6 +435,7 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
                 });
                 currentVdot = result.vdot;
                 predictedTime = result.predictions[targetRaceDistance];
+                vdotConfidence = 'high';
             }
         }
     }
@@ -411,17 +476,15 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
             if (effectiveVO2max > 0) {
                 currentVdot = effectiveVO2max;
                 vdotFromActivities = true;
+                vdotConfidence = 'medium';
             }
         }
     }
 
-    if (!currentVdot && targetTime && raceType) {
-        const dist = RACE_TYPE_TO_VDOT_DIST[raceType] || 'MARATHON';
-        const result = analyzeRace({
-            distance: dist,
-            timeSeconds: targetTime,
-        });
-        currentVdot = result.vdot;
+    if (!currentVdot) {
+        logger.info('No VDOT data available. Defaulting to VDOT 30.', { userId });
+        currentVdot = 30.0;
+        vdotConfidence = 'low';
     }
 
     if (currentVdot && !vdotFromActivities && userId) {
@@ -435,12 +498,7 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
         }
     }
 
-    if (!currentVdot) {
-        logger.info('No VDOT data available. Defaulting to VDOT 30.', { userId });
-        currentVdot = 30.0;
-    }
-
-    return { currentVdot, predictedTime, vdotFromActivities };
+    return { currentVdot, predictedTime, vdotFromActivities, vdotConfidence };
 }
 
 export interface ResolvePhasesInput {
@@ -755,6 +813,22 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         calculatedTargetTime = projection.projectedTime;
     }
 
+    const paceValidation = validateTrainingPaces({
+        trainingVdot,
+        raceType: raceType ?? null,
+        targetTime: targetTime || calculatedTargetTime,
+    });
+    let effectiveTrainingVdot = trainingVdot;
+    if (!paceValidation.isValid && paceValidation.clampedVdot) {
+        logger.warn('Training paces failed sanity validation; clamping VDOT', {
+            userId,
+            originalVdot: trainingVdot,
+            clampedVdot: paceValidation.clampedVdot,
+            warnings: paceValidation.warnings,
+        });
+        effectiveTrainingVdot = paceValidation.clampedVdot;
+    }
+
     const finalRaceDate = raceDate ? new Date(raceDate) : new Date(startDate.getTime() + resolvedPlanWeeks * 7 * 24 * 60 * 60 * 1000);
 
     const resolvedStartMileage = await resolveStartWeeklyMileage(
@@ -804,7 +878,8 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
     const goal = await prisma.goal.create({ data: goalData });
 
     const planConfig: PlanConfig = {
-        vdot: trainingVdot,
+        vdot: effectiveTrainingVdot,
+        targetVdot: trainingVdotResult.targetVdot ?? null,
         raceType: raceType ?? null,
         raceDate: finalRaceDate,
         startDate,
@@ -897,7 +972,8 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
                     const subBuild = Math.min(phases.buildWeeks, Math.max(0, subPhaseWeeks - subTaper - subPeak));
 
                     const subWorkouts = generateTrainingPlan({
-                        vdot: trainingVdot,
+                        vdot: effectiveTrainingVdot,
+                        targetVdot: trainingVdotResult.targetVdot ?? null,
                         raceType: sg.raceType as RaceType,
                         raceDate: subRaceDate,
                         startDate,

@@ -108,16 +108,24 @@ function generateRunDescription(workout: WorkoutInput, racePace?: number): strin
       return `Easy Run: ${dist}`;
     case WorkoutType.LONG_RUN: {
       const mpMatch = workout.description?.match(
-        /([\d.]+)km\s*Easy\s*\+\s*([\d.]+)km\s*@\s*(?:MP|Race Pace|Ultra Pace)/
+        /([\d.]+)km\s*Easy\s*\+\s*([\d.]+)km\s*@\s*(?:MP|Race Pace|Ultra Pace|Goal Pace)/
       );
       if (mpMatch) {
-        return `Long Run: ${dist} (${mpMatch[1]}km Easy + ${mpMatch[2]}km @ MP)`;
+        return `Long Run: ${dist} (${mpMatch[1]}km Easy + ${mpMatch[2]}km @ Goal Pace)`;
+      }
+      const progMatch = workout.description?.match(/\(last \d+km progressive\)/);
+      if (progMatch) {
+        return `Long Run: ${dist} ${progMatch[0]}`;
       }
       return `Long Run: ${dist}`;
     }
     case WorkoutType.RECOVERY:
       return `Recovery Run: ${dist}`;
     case WorkoutType.TEMPO: {
+      const hmSegMatch = workout.description?.match(/HM Pace Segments:\s*(.+)/);
+      if (hmSegMatch) {
+        return `HM Pace Segments: ${hmSegMatch[1]}`;
+      }
       const mpSegMatch = workout.description?.match(/MP Segments:\s*(.+)/);
       if (mpSegMatch) {
         return `MP Segments: ${mpSegMatch[1]}`;
@@ -204,12 +212,12 @@ function generateOtherDescription(workout: WorkoutInput): string {
 export function inferIntensityZone(workoutType: string, description?: string): string | null {
   if (description) {
     if (workoutType === WorkoutType.TEMPO) {
-      if (description.includes('MP Segments')) return 'MP/Race Pace';
+      if (description.includes('MP Segments') || description.includes('HM Pace Segments')) return 'MP/Race Pace';
       if (description.match(/^Steady(?:\s+State)?:/)) return 'Steady';
       if (description.includes('Ultra Threshold')) return 'Steady';
       if (description.includes('Target Race Pace')) return 'Race Pace';
     }
-    if (workoutType === WorkoutType.LONG_RUN && description.match(/@\s*(?:MP|Race Pace|Ultra Pace)/)) {
+    if (workoutType === WorkoutType.LONG_RUN && description.match(/@\s*(?:MP|Race Pace|Ultra Pace|Goal Pace)/)) {
       return 'E + MP';
     }
   }

@@ -348,6 +348,26 @@ describe('Training Plan Generation', () => {
             }
         });
 
+        it('does not emit placeholder-length easy or recovery runs after volume scaling', () => {
+            const workouts = generateTrainingPlan(makeConfig({
+                raceType: 'FIVE_K',
+                weeklyMileageGoal: 20000,
+                startWeeklyMileage: 8000,
+                runsPerWeek: 5,
+                taperWeeks: 1,
+                peakWeeks: 2,
+                buildWeeks: 4,
+            }));
+            const undersizedFillRuns = workouts.filter(w =>
+                (w.type === WorkoutType.EASY || w.type === WorkoutType.RECOVERY) &&
+                w.phase !== 'RACE_WEEK' &&
+                w.totalDistance > 0 &&
+                w.totalDistance < PLAN_CONSTANTS.EASY_RUN_MIN
+            );
+
+            expect(undersizedFillRuns).toHaveLength(0);
+        });
+
         it('strides injected in BASE phase easy runs (Task 3.3)', () => {
             const config = makeConfig({
                 raceType: 'MARATHON',

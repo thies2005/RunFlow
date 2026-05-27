@@ -175,6 +175,16 @@ describe('deriveMissingField', () => {
         expect(result.targetDistance).toBeUndefined();
     });
 
+    it('derives swim duration from pace per 100m', () => {
+        const result = deriveMissingField({
+            workoutType: 'SWIM',
+            targetDistance: 1500,
+            targetPace: 120,
+            targetDuration: 0,
+        });
+        expect(result.targetDuration).toBe(1800);
+    });
+
     it('rounds derived distance to nearest 100m', () => {
         const result = deriveMissingField({
             targetDistance: 0,

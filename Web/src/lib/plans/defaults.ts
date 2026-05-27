@@ -115,13 +115,16 @@ export function getScaledPhaseDefaults(
   let taper = defaults.taperWeeks;
   let peak = defaults.peakWeeks;
   let build = defaults.buildWeeks;
+  const weeks = Math.max(1, planWeeks);
+  const minBaseWeeks = weeks >= 10 ? 4 : weeks >= 8 ? 3 : weeks >= 6 ? 2 : 1;
+  const phaseBudget = Math.max(1, weeks - minBaseWeeks);
   const total = taper + peak + build;
-  if (total <= planWeeks || total === 0) {
+  if (total <= phaseBudget || total === 0) {
     return { taperWeeks: taper, peakWeeks: peak, buildWeeks: build };
   }
-  const proportion = planWeeks / total;
+  const proportion = phaseBudget / total;
   const clampedTaper = Math.max(1, Math.round(taper * proportion));
   const clampedPeak = Math.max(1, Math.round(peak * proportion));
-  const clampedBuild = Math.max(0, planWeeks - clampedTaper - clampedPeak);
+  const clampedBuild = Math.max(0, phaseBudget - clampedTaper - clampedPeak);
   return { taperWeeks: clampedTaper, peakWeeks: clampedPeak, buildWeeks: clampedBuild };
 }

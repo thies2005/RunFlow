@@ -146,18 +146,24 @@ export function resolvePhaseBudget(
             baseWeeks: base,
         };
     } else {
+        const reserveBaseWeeks = config.peakWeeks === undefined && config.buildWeeks === undefined
+            ? (resolvedTotal >= 10 ? 4 : resolvedTotal >= 8 ? 3 : resolvedTotal >= 6 ? 2 : 0)
+            : 0;
+        const phaseBudget = Math.max(0, remaining - reserveBaseWeeks);
+
         let peak = config.peakWeeks !== undefined && config.peakWeeks !== null
             ? config.peakWeeks
             : (isTriathlon ? 2 : 2);
         const maxPeak = Math.max(1, Math.floor(availableWeeks / 3));
         peak = Math.max(0, Math.min(peak, maxPeak));
-        peak = Math.min(peak, remaining);
+        peak = Math.min(peak, reserveBaseWeeks > 0 ? phaseBudget : remaining);
         remaining -= peak;
 
         let build = config.buildWeeks !== undefined && config.buildWeeks !== null
             ? config.buildWeeks
             : (isTriathlon ? 4 : 4);
-        build = Math.max(0, Math.min(build, remaining));
+        const buildBudget = reserveBaseWeeks > 0 ? Math.max(0, phaseBudget - peak) : remaining;
+        build = Math.max(0, Math.min(build, buildBudget));
         remaining -= build;
 
         const base = Math.max(0, remaining);
@@ -773,7 +779,7 @@ function generateWeek(params: {
             ...qualitySession,
             targetDuration: computeQualityDuration(qualitySession.totalDistance, qualitySession.targetPace, easyPace, getQualityFraction(qualitySession.type)),
             phase: phase as PlanPhase,
-            targetHrZone: workoutTypeToHrZone(qualitySession.type),
+            targetHrZone: getRunQualityHrZone(qualitySession),
         });
     } else if (runsPerWeek >= 2) {
         const day = getAvailableDayWithGap(preferredWorkoutDay, hardSessionDays);
@@ -1353,6 +1359,9 @@ function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: numbe
     return weekSchedule.map(w => {
         if (!isRun(w.type) || isPriority(w)) return w;
         const newDist = roundDownTo100(w.totalDistance * fillScalingFactor);
+        if (newDist > 0 && newDist < PLAN_CONSTANTS.EASY_RUN_MIN) {
+            return { ...w, totalDistance: 0, description: 'Rest (Volume Cap)' };
+        }
         return {
             ...w,
             totalDistance: newDist,
@@ -1437,6 +1446,11 @@ export function computeDuration(distanceMeters: number, paceSecondsPerKm: number
     return Math.round((distanceMeters / 1000) * paceSecondsPerKm);
 }
 
+export function computeSwimDuration(distanceMeters: number, paceSecondsPer100m: number): number {
+    if (distanceMeters <= 0 || paceSecondsPer100m <= 0) return 0;
+    return Math.round((distanceMeters / 100) * paceSecondsPer100m);
+}
+
 export function computeQualityDuration(
     totalDistance: number,
     qualityPace: number,
@@ -1461,6 +1475,11 @@ export function workoutTypeToHrZone(type: WorkoutType): number | undefined {
         case WorkoutType.RACE: return 5;
         default: return undefined;
     }
+}
+
+function getRunQualityHrZone(workout: { type: WorkoutType; description?: string }): number | undefined {
+    if (workout.type === WorkoutType.TEMPO && workout.description?.includes('Threshold')) return 4;
+    return workoutTypeToHrZone(workout.type);
 }
 
 export function getQualityFraction(type: WorkoutType): number {
@@ -1495,7 +1514,7 @@ export function fillDurations(workouts: GeneratedWorkout[], paces: TrainingPaces
                 w.totalDistance, w.targetPace, easyPace, getQualityFraction(type)
             );
         } else if (swimTypes.has(type)) {
-            w.targetDuration = Math.round((w.totalDistance / 100) * w.targetPace * 1.5);
+            w.targetDuration = computeSwimDuration(w.totalDistance, w.targetPace);
         } else {
             w.targetDuration = computeDuration(w.totalDistance, w.targetPace);
         }
@@ -1794,6 +1813,8 @@ export function assignWorkoutTargets(
             workout.targetHrZone = 4;
         } else if (type === WorkoutType.SWIM || type === WorkoutType.SWIM_DRILL || type === WorkoutType.OPEN_WATER_SWIM) {
             workout.targetHrZone = 2;
+        } else if (type === WorkoutType.TEMPO && workout.description?.includes('Threshold')) {
+            workout.targetHrZone = 4;
         } else {
             workout.targetHrZone = workoutTypeToHrZone(type);
         }

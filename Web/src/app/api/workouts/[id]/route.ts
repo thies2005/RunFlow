@@ -20,6 +20,13 @@ const VALID_WORKOUT_TYPES: WorkoutType[] = [
     'SWIM',
     'STRENGTH',
     'OTHER',
+    'BRICK',
+    'OPEN_WATER_SWIM',
+    'LONG_RIDE',
+    'RIDE_INTERVALS',
+    'SWIM_DRILL',
+    'TRANSITION_PRACTICE',
+    'DOUBLE_DAY',
 ];
 
 function isValidWorkoutType(value: string): value is WorkoutType {

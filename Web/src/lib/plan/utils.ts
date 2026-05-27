@@ -10,14 +10,22 @@ export const workoutStyles: Record<string, { color: string, icon: LucideIcon, la
     RECOVERY: { color: 'text-teal-400', icon: Activity, label: 'Recovery' },
     REST: { color: 'text-gray-500', icon: Clock, label: 'Rest Day' },
     RIDE: { color: 'text-orange-400', icon: Bike, label: 'Bike Ride' },
+    LONG_RIDE: { color: 'text-orange-300', icon: Bike, label: 'Long Ride' },
+    RIDE_INTERVALS: { color: 'text-red-400', icon: Bike, label: 'Bike Intervals' },
+    BRICK: { color: 'text-fuchsia-400', icon: Bike, label: 'Brick' },
     SWIM: { color: 'text-cyan-400', icon: Waves, label: 'Swim' },
+    SWIM_DRILL: { color: 'text-sky-300', icon: Waves, label: 'Swim Drill' },
+    OPEN_WATER_SWIM: { color: 'text-cyan-300', icon: Waves, label: 'Open Water' },
+    TRANSITION_PRACTICE: { color: 'text-violet-400', icon: Clock, label: 'Transition' },
     STRENGTH: { color: 'text-pink-400', icon: Dumbbell, label: 'Strength' },
+    CROSS_TRAIN: { color: 'text-lime-400', icon: Activity, label: 'Cross Training' },
+    DOUBLE_DAY: { color: 'text-indigo-400', icon: Activity, label: 'Double Day' },
     OTHER: { color: 'text-gray-400', icon: Activity, label: 'Other' },
     RACE: { color: 'text-purple-400', icon: Flag, label: 'Race' },
 };
 
 export const RUN_TYPES = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'RECOVERY', 'RACE', 'REPETITIONS'];
-export const SWIM_TYPES = ['SWIM'];
+export const SWIM_TYPES = ['SWIM', 'SWIM_DRILL', 'OPEN_WATER_SWIM'];
 
 export function getPhase(weeksUntilRace: number, options?: { taperWeeks?: number; peakWeeks?: number; buildWeeks?: number }) {
     const taperWeeks = options?.taperWeeks ?? 0;

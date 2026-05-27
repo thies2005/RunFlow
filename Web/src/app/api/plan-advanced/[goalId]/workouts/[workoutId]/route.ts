@@ -43,7 +43,7 @@ export async function PATCH(req: Request, ctx: RouteContext) {
         }
 
         const body = await req.json();
-        const allowedFields = ['scheduledDate', 'workoutType', 'description', 'phase', 'order', 'notes', 'targetDistance', 'targetDuration', 'targetPace', 'targetHrZone', 'customName', 'color', 'structuredSteps', 'groupId', 'subGoalId', 'isCompleted'];
+        const allowedFields = ['scheduledDate', 'workoutType', 'description', 'phase', 'order', 'notes', 'targetDistance', 'targetDuration', 'targetPace', 'targetHrZone', 'customName', 'color', 'structuredSteps', 'groupId', 'subGoalId', 'isCompleted', 'linkedActivityId'];
         const updateData: Record<string, unknown> = {};
 
         for (const field of allowedFields) {
@@ -52,14 +52,30 @@ export async function PATCH(req: Request, ctx: RouteContext) {
             }
         }
 
+        if (body.linkedActivityId) {
+            const activity = await prisma.activity.findFirst({
+                where: { id: body.linkedActivityId, userId: session.user.id },
+            });
+            if (!activity) {
+                return NextResponse.json({ error: 'Activity not found' }, { status: 404 });
+            }
+        }
+
+        if (body.isCompleted !== undefined) {
+            updateData.completedAt = body.isCompleted ? (workout.completedAt ?? new Date()) : null;
+            if (!body.isCompleted) updateData.linkedActivityId = null;
+        }
+
         if (Object.keys(updateData).length === 0) {
             return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
         }
 
+        const workoutType = updateData.workoutType !== undefined ? updateData.workoutType as string : workout.workoutType;
         const merged = {
             targetDistance: updateData.targetDistance !== undefined ? updateData.targetDistance as number | null : workout.targetDistance,
             targetPace: updateData.targetPace !== undefined ? updateData.targetPace as number | null : workout.targetPace,
             targetDuration: updateData.targetDuration !== undefined ? updateData.targetDuration as number | null : workout.targetDuration,
+            workoutType,
         };
 
         const derived = deriveMissingField(merged);
@@ -71,6 +87,7 @@ export async function PATCH(req: Request, ctx: RouteContext) {
             targetDistance: updateData.targetDistance !== undefined ? updateData.targetDistance as number | null : workout.targetDistance,
             targetPace: updateData.targetPace !== undefined ? updateData.targetPace as number | null : workout.targetPace,
             targetDuration: updateData.targetDuration !== undefined ? updateData.targetDuration as number | null : workout.targetDuration,
+            workoutType,
         };
         const warnings = checkFieldConsistency(finalValues);
 

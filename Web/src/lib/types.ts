@@ -201,7 +201,14 @@ export type WorkoutType =
     | 'RIDE'
     | 'SWIM'
     | 'STRENGTH'
-    | 'OTHER';
+    | 'OTHER'
+    | 'BRICK'
+    | 'OPEN_WATER_SWIM'
+    | 'LONG_RIDE'
+    | 'RIDE_INTERVALS'
+    | 'SWIM_DRILL'
+    | 'TRANSITION_PRACTICE'
+    | 'DOUBLE_DAY';
 
 export interface Workout {
     id: string;
@@ -214,6 +221,7 @@ export interface Workout {
     targetDuration: number | null;
     targetPace: number | null;
     targetHrZone: number | null;
+    phase?: string | null;
     isCompleted: boolean;
     completedAt: string | Date | null;
     linkedActivityId: string | null;

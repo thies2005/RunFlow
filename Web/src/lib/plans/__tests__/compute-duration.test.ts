@@ -1,5 +1,6 @@
-import { computeDuration, computeQualityDuration, workoutTypeToHrZone, getQualityFraction } from '../index';
+import { computeDuration, computeSwimDuration, computeQualityDuration, workoutTypeToHrZone, getQualityFraction } from '../index';
 import { WorkoutType } from '@/generated/prisma/browser';
+import { getScaledPhaseDefaults } from '../defaults';
 
 describe('computeDuration', () => {
     it('calculates duration from distance and pace', () => {
@@ -28,6 +29,17 @@ describe('computeDuration', () => {
 
     it('rounds to nearest second', () => {
         expect(computeDuration(3333, 300)).toBe(1000);
+    });
+});
+
+describe('computeSwimDuration', () => {
+    it('uses seconds per 100m for swim pace', () => {
+        expect(computeSwimDuration(1500, 120)).toBe(1800);
+    });
+
+    it('returns 0 for missing swim distance or pace', () => {
+        expect(computeSwimDuration(0, 120)).toBe(0);
+        expect(computeSwimDuration(1500, 0)).toBe(0);
     });
 });
 
@@ -132,5 +144,12 @@ describe('getQualityFraction', () => {
 
     it('returns 0.5 default for EASY', () => {
         expect(getQualityFraction(WorkoutType.EASY)).toBe(0.5);
+    });
+});
+
+describe('getScaledPhaseDefaults', () => {
+    it('reserves a real base block in shorter plans', () => {
+        const phases = getScaledPhaseDefaults('OLYMPIC_TRI', 10);
+        expect(10 - phases.taperWeeks - phases.peakWeeks - phases.buildWeeks).toBeGreaterThanOrEqual(4);
     });
 });

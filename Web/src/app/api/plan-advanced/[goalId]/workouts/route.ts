@@ -99,7 +99,7 @@ export async function POST(req: Request, ctx: RouteContext) {
         }
 
         const body = await req.json();
-        const { scheduledDate, workoutType, description, phase, order, notes, targetDistance, targetDuration, targetPace, targetHrZone, customName, color, structuredSteps, groupId, subGoalId } = body;
+        const { scheduledDate, workoutType, description, phase, order, notes, targetDistance, targetDuration, targetPace, targetHrZone, customName, color, structuredSteps, groupId, subGoalId, isCompleted, linkedActivityId } = body;
 
         if (!scheduledDate || isNaN(new Date(scheduledDate).getTime())) {
             return NextResponse.json({ error: 'Valid scheduledDate is required' }, { status: 400 });
@@ -115,6 +115,15 @@ export async function POST(req: Request, ctx: RouteContext) {
 
         if (!description || typeof description !== 'string') {
             return NextResponse.json({ error: 'description is required' }, { status: 400 });
+        }
+
+        if (linkedActivityId) {
+            const activity = await prisma.activity.findFirst({
+                where: { id: linkedActivityId, userId: session.user.id },
+            });
+            if (!activity) {
+                return NextResponse.json({ error: 'Activity not found' }, { status: 404 });
+            }
         }
 
         await createSnapshot(goalId, 'Before workout create', 'create_workout');
@@ -137,6 +146,9 @@ export async function POST(req: Request, ctx: RouteContext) {
                 structuredSteps: structuredSteps ?? null,
                 groupId: groupId || null,
                 subGoalId: subGoalId || null,
+                isCompleted: Boolean(isCompleted),
+                completedAt: isCompleted ? new Date() : null,
+                linkedActivityId: linkedActivityId || null,
             },
         });
 

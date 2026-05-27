@@ -23,7 +23,8 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { goalId, scheduledDate, type, description, targetDistance, targetDuration } = body;
+        const { goalId, scheduledDate, type, workoutType, description, targetDistance, targetDuration } = body;
+        const resolvedType = workoutType || type;
 
         // Verify ownership of goal
         const goal = await prisma.goal.findUnique({
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
             data: {
                 goalId,
                 scheduledDate: new Date(scheduledDate),
-                workoutType: type as WorkoutType,
+                workoutType: resolvedType as WorkoutType,
                 description,
                 targetDistance: targetDistance || 0,
                 targetDuration: targetDuration || 0,

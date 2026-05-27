@@ -19,7 +19,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
   String? _errorMessage;
-  static const String _stravaRedirectUri = AppConstants.stravaRedirectUri;
+  static final String _stravaRedirectUri = AppConstants.stravaRedirectUri;
 
   @override
   void dispose() {

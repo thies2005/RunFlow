@@ -23,6 +23,7 @@ dependencies:
   go_router: ^17.2.2
 
   dio: ^5.9.2
+  http: ^1.2.2
 
   freezed_annotation: ^3.1.0
   json_annotation: ^4.9.0

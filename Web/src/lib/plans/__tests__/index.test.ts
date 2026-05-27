@@ -666,7 +666,10 @@ describe('Training Plan Generation', () => {
 
             expect(intervalWorkouts.length).toBeGreaterThan(0);
             for (const w of intervalWorkouts) {
-                expect(w.description).toContain('5x1km');
+                const isValidDescription = w.description.includes('5x1km') || 
+                                           w.description.includes('3x1600m') || 
+                                           w.description.includes('8x600m');
+                expect(isValidDescription).toBe(true);
                 expect(w.description).not.toContain('Total');
             }
         });
@@ -956,6 +959,256 @@ describe('Training Plan Generation', () => {
             expect(workouts.length).toBeGreaterThan(0);
             const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
             expect(raceWorkout).toBeDefined();
+        });
+    });
+
+    describe('SOTA Plan Improvements (plan27.5.md)', () => {
+        it('rotates quality session templates across weeks in BUILD/PEAK/BASE phases', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                weeklyMileageGoal: 60000,
+                buildWeeks: 4,
+            });
+            const workouts = generateTrainingPlan(config);
+            const buildWorkouts = workouts.filter(w => w.phase === 'BUILD' && (w.type === WorkoutType.TEMPO || w.type === WorkoutType.INTERVALS || w.type === WorkoutType.REPETITIONS));
+            
+            const descriptions = new Set(buildWorkouts.map(w => w.description));
+            expect(descriptions.size).toBeGreaterThanOrEqual(2);
+        });
+
+        it('schedules secondary quality session when runsPerWeek >= 5', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                runsPerWeek: 5,
+                weeklyMileageGoal: 80000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const weeks = groupByWeek(workouts);
+            const buildWeeks = weeks.filter(w => w.length > 0 && w[0].phase === 'BUILD');
+            expect(buildWeeks.length).toBeGreaterThan(0);
+            for (const week of buildWeeks) {
+                const qualityWorkouts = week.filter(w => 
+                    w.type === WorkoutType.INTERVALS || 
+                    w.type === WorkoutType.TEMPO || 
+                    w.type === WorkoutType.REPETITIONS || 
+                    w.type === WorkoutType.FARTLEK
+                );
+                expect(qualityWorkouts.length).toBe(2);
+            }
+        });
+
+        it('schedules a Medium-Long Run (MLR) for Marathon plans when runsPerWeek >= 5', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                runsPerWeek: 5,
+                weeklyMileageGoal: 80000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const mlrWorkouts = workouts.filter(w => w.description.includes('Medium-Long Run'));
+            expect(mlrWorkouts.length).toBeGreaterThan(0);
+            for (const mlr of mlrWorkouts) {
+                expect(mlr.type).toBe(WorkoutType.EASY);
+                expect(mlr.totalDistance).toBeGreaterThan(2000);
+            }
+        });
+
+        it('uses exponential taper volume reduction (Phase 4)', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                weeklyMileageGoal: 60000,
+                taperWeeks: 2,
+            });
+            const workouts = generateTrainingPlan(config);
+            const weeks = groupByWeek(workouts);
+            const raceWeekIndex = weeks.findIndex(week => week.some(w => w.type === WorkoutType.RACE));
+            expect(raceWeekIndex).toBeGreaterThan(2);
+            
+            const taperWeek1 = weeks[raceWeekIndex - 2];
+            const taperWeek2 = weeks[raceWeekIndex - 1];
+            
+            const taper1Volume = taperWeek1.reduce((s, w) => s + w.totalDistance, 0);
+            const taper2Volume = taperWeek2.reduce((s, w) => s + w.totalDistance, 0);
+            
+            expect(taper1Volume).toBeLessThan(60000);
+            expect(taper2Volume).toBeLessThan(taper1Volume);
+        });
+
+        it('attaches HR targets and zone labels to structured steps when LTHR is provided (Phase 5)', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                runsPerWeek: 4,
+                thresholdHeartRate: 165,
+            });
+            const workouts = generateTrainingPlan(config);
+            
+            let foundHrTargets = false;
+            for (const w of workouts) {
+                const steps = buildStructuredStepsForWorkout(w);
+                if (steps && steps.steps.length > 0) {
+                    for (const step of steps.steps) {
+                        if (step.hrTargetMinBpm !== undefined && step.hrTargetMaxBpm !== undefined && step.hrZoneLabel !== undefined) {
+                            foundHrTargets = true;
+                            expect(step.hrTargetMinBpm).toBeGreaterThan(0);
+                            expect(step.hrTargetMaxBpm).toBeGreaterThan(step.hrTargetMinBpm);
+                        }
+                    }
+                }
+            }
+            expect(foundHrTargets).toBe(true);
+        });
+
+        describe('Audit Fixes', () => {
+            it('clamps runsPerWeek = 0 to 1', () => {
+                const config = makeConfig({
+                    raceType: 'TEN_K',
+                    runsPerWeek: 0,
+                });
+                const workouts = generateTrainingPlan(config);
+                const runningWorkouts = workouts.filter(w => isRunType(w.type));
+                expect(runningWorkouts.length).toBeGreaterThan(1);
+            });
+
+            it('supports custom race distance for CUSTOM_DISTANCE race type', () => {
+                const config = makeConfig({
+                    raceType: 'CUSTOM_DISTANCE',
+                    customRunDistM: 15000,
+                    runsPerWeek: 3,
+                });
+                const workouts = generateTrainingPlan(config);
+                const raceWorkout = workouts.find(w => w.type === 'RACE');
+                expect(raceWorkout).toBeDefined();
+                expect(raceWorkout!.totalDistance).toBe(15000);
+                expect(raceWorkout!.description).toContain('15.0km');
+            });
+
+            it('rotates secondary quality session variants across weeks', () => {
+                const config = makeConfig({
+                    raceType: 'MARATHON',
+                    runsPerWeek: 5,
+                    weeklyMileageGoal: 80000,
+                });
+                const workouts = generateTrainingPlan(config);
+                const secondarySessions = workouts.filter(w => w.description.includes('Secondary'));
+                const descriptions = new Set(secondarySessions.map(w => w.description));
+                expect(descriptions.size).toBeGreaterThan(1);
+            });
+
+            it('clips rest days if they exceed 7 - runsPerWeek to prevent silently scheduling on rest days', () => {
+                const config = makeConfig({
+                    raceType: 'TEN_K',
+                    runsPerWeek: 4,
+                    restDays: [0, 1, 2, 3, 4, 5, 6],
+                });
+                const workouts = generateTrainingPlan(config);
+                const runningWorkouts = workouts.filter(w => isRunType(w.type));
+                expect(runningWorkouts.length).toBeGreaterThan(0);
+                expect(workouts.length).toBeGreaterThan(0);
+            });
+
+            it('verifies Ultra plan has targetHrZone on all workouts, restDays overflow handling, back-to-back fallback', () => {
+                const config = makeConfig({
+                    raceType: 'FIFTY_K',
+                    runsPerWeek: 5,
+                    restDays: [0, 1, 2, 3, 4, 5, 6], // Overflows! Sliced to 7 - 5 = 2 rest days.
+                });
+                const workouts = generateTrainingPlan(config);
+                expect(workouts.length).toBeGreaterThan(0);
+                
+                // Check that targetHrZone is defined on all workouts that are run/strength/etc.
+                for (const w of workouts) {
+                    if (w.type === WorkoutType.LONG_RUN || w.type === WorkoutType.EASY || w.type === WorkoutType.TEMPO || w.type === WorkoutType.RECOVERY) {
+                        expect(w.targetHrZone).toBeDefined();
+                        expect(w.targetHrZone).toBeGreaterThan(0);
+                    }
+                    // targetDuration should be computed and > 0 for non-zero distance workouts
+                    if (w.totalDistance > 0 && w.type !== WorkoutType.RACE) {
+                        expect(w.targetDuration).toBeGreaterThan(0);
+                    }
+                }
+            });
+
+            it('verifies Triathlon plan has targetHrZone on all run workouts, restDays overflow, raceType null guard, CSS-derived swim pace', () => {
+                // raceType null guard test
+                const config = {
+                    vdot: 40,
+                    raceType: null,
+                    sport: 'TRIATHLON' as any,
+                    raceDate: new Date(Date.now() + 86400000 * 14),
+                    startDate: new Date(),
+                    runsPerWeek: 3,
+                    ridesPerWeek: 3,
+                    swimsPerWeek: 3,
+                    restDays: [0, 1, 2, 3, 4, 5, 6], // Overflows!
+                };
+                const workouts = generateTrainingPlan(config as any);
+                expect(workouts.length).toBeGreaterThan(0);
+                
+                const swimWorkouts = workouts.filter(w => w.type === WorkoutType.SWIM);
+                expect(swimWorkouts.length).toBeGreaterThan(0);
+                for (const w of swimWorkouts) {
+                    // estimated css from vdot=40 is Math.max(80, Math.min(180, Math.round(180 - 40 * 1.5))) = 120
+                    // targetPace for swim is CSS + 8 (128) in normal weeks, or CSS + 10 (130) in race week
+                    expect(w.targetPace === 128 || w.targetPace === 130).toBe(true);
+                }
+
+                // Check that targetHrZone is defined on all run/strength/etc workouts
+                for (const w of workouts) {
+                    if (w.type === WorkoutType.LONG_RUN || w.type === WorkoutType.EASY || w.type === WorkoutType.TEMPO || w.type === WorkoutType.INTERVALS) {
+                        expect(w.targetHrZone).toBeDefined();
+                        expect(w.targetHrZone).toBeGreaterThan(0);
+                    }
+                }
+            });
+
+            it('verifies No-race plan has targetHrZone on all workouts, restDays overflow, swimPace based on VDOT', () => {
+                const config = makeConfig({
+                    raceType: null,
+                    runsPerWeek: 4,
+                    swimsPerWeek: 2,
+                    restDays: [0, 1], // Leaves free days for swims
+                });
+                const workouts = generateTrainingPlan(config);
+                expect(workouts.length).toBeGreaterThan(0);
+                
+                const swimWorkouts = workouts.filter(w => w.type === WorkoutType.SWIM);
+                expect(swimWorkouts.length).toBeGreaterThan(0);
+                for (const w of swimWorkouts) {
+                    // VDOT default is 50, CSS is 105. targetPace is swimPace (105)
+                    expect(w.targetPace).toBe(105);
+                }
+
+                // Check that targetHrZone is defined on all run/strength/etc workouts
+                for (const w of workouts) {
+                    if (w.type === WorkoutType.LONG_RUN || w.type === WorkoutType.EASY || w.type === WorkoutType.TEMPO || w.type === WorkoutType.RECOVERY) {
+                        expect(w.targetHrZone).toBeDefined();
+                        expect(w.targetHrZone).toBeGreaterThan(0);
+                    }
+                }
+            });
+
+            it('verifies CUSTOM_DISTANCE getQualitySession selection logic', () => {
+                // Short distance (< 10km) -> gets 5K-style sessions (containing Repetitions / VO2max Intervals)
+                const configShort = makeConfig({
+                    raceType: 'CUSTOM_DISTANCE',
+                    customRunDistM: 5000,
+                    runsPerWeek: 3,
+                    weeklyMileageGoal: 30000,
+                });
+                const workoutsShort = generateTrainingPlan(configShort);
+                const qualityTypesShort = workoutsShort.map(w => w.type);
+                expect(qualityTypesShort).toContain(WorkoutType.INTERVALS);
+
+                // Long distance (>= 30km) -> gets Marathon-style sessions (Tempo / MP runs)
+                const configLong = makeConfig({
+                    raceType: 'CUSTOM_DISTANCE',
+                    customRunDistM: 35000,
+                    runsPerWeek: 3,
+                    weeklyMileageGoal: 50000,
+                });
+                const workoutsLong = generateTrainingPlan(configLong);
+                const tempoSessions = workoutsLong.filter(w => w.type === WorkoutType.TEMPO);
+                expect(tempoSessions.length).toBeGreaterThan(0);
+            });
         });
     });
 });

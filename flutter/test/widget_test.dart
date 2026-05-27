@@ -10,10 +10,20 @@ import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  String? originalClientId;
+
   setUp(() {
+    originalClientId = AppConstants.stravaClientId;
+    AppConstants.stravaClientId = '';
     SharedPreferences.setMockInitialValues({
       AppConstants.onboardingCompletedKey: true,
     });
+  });
+
+  tearDown(() {
+    if (originalClientId != null) {
+      AppConstants.stravaClientId = originalClientId!;
+    }
   });
 
   testWidgets('Unauthenticated app redirects to login',

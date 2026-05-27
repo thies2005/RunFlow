@@ -5,6 +5,7 @@ import { generateTriathlonPlan } from './generators/triathlon';
 import { generateNoRacePlan } from './generators/no-race';
 import { fixBackToBackSameType } from './schedule-utils';
 import { enrichWorkoutsWithDescriptions, getRacePace } from './descriptions';
+import { estimateSwimPaceFromVdot } from './swim-pace';
 
 export const ULTRA_RACE_TYPES: RaceType[] = [
     'FIFTY_K', 'FIFTY_MILE', 'HUNDRED_K', 'HUNDRED_MILE',
@@ -63,12 +64,7 @@ export const PLAN_CONSTANTS = {
     MAX_TIME_ON_FEET_SECONDS: 12600,
 };
 
-const TAPER_FRACTIONS: Partial<Record<RaceType, number[]>> = {
-    FIVE_K: [0.75],
-    TEN_K: [0.80, 0.60],
-    HALF_MARATHON: [0.75, 0.55],
-    MARATHON: [0.80, 0.65, 0.45],
-};
+// TAPER_FRACTIONS removed
 
 export function getMinStartVolume(raceType: RaceType | null): number {
     if (raceType && PLAN_CONSTANTS.MIN_START_VOLUME[raceType]) {
@@ -98,6 +94,8 @@ export type PlanConfig = {
     swimDay?: number;
     restDays?: number[];
     weeksTotal?: number;
+    thresholdHeartRate?: number;
+    customRunDistM?: number;
 };
 
 export type GeneratedWorkout = {
@@ -113,6 +111,7 @@ export type GeneratedWorkout = {
     sport?: string;
     intensityZone?: string | null;
     structuredSteps?: StructuredWorkoutPlan | null;
+    thresholdHeartRate?: number;
 };
 
 export type StructuredWorkoutPlan = {
@@ -128,6 +127,11 @@ export type StructuredWorkoutStep = {
     durationSeconds?: number;
     paceSecondsPerKm?: number;
     hrZone?: number;
+    hrTargetMinBpm?: number;
+    hrTargetMaxBpm?: number;
+    hrZoneLabel?: string;
+    paceTargetMinSecondsPerKm?: number;
+    paceTargetMaxSecondsPerKm?: number;
 };
 
 type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
@@ -135,19 +139,23 @@ type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
 
 export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
+    let workouts: GeneratedWorkout[] = [];
     if (config.sport === 'TRIATHLON' || (config.raceType && TRIATHLON_RACE_TYPES.includes(config.raceType))) {
-        return generateTriathlonPlan({ ...config, raceType: config.raceType as RaceType });
+        workouts = generateTriathlonPlan({ ...config, raceType: config.raceType as RaceType });
+    } else if (config.raceType === null) {
+        workouts = generateNoRacePlan(config);
+    } else if (config.raceType && ULTRA_RACE_TYPES.includes(config.raceType)) {
+        workouts = generateUltraPlan(config);
+    } else {
+        workouts = generateStandardPlan(config);
     }
 
-    if (config.raceType === null) {
-        return generateNoRacePlan(config);
+    if (config.thresholdHeartRate) {
+        for (const w of workouts) {
+            w.thresholdHeartRate = config.thresholdHeartRate;
+        }
     }
-
-    if (config.raceType && ULTRA_RACE_TYPES.includes(config.raceType)) {
-        return generateUltraPlan(config);
-    }
-
-    return generateStandardPlan(config);
+    return workouts;
 }
 
 function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
@@ -155,13 +163,19 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     const raceType = config.raceType as RaceType;
     const requestedStartDate = config.startDate || new Date();
     const startDate = requestedStartDate > raceDate ? new Date(raceDate) : requestedStartDate;
-    const runsPerWeek = Math.max(0, config.runsPerWeek ?? 4);
+    const runsPerWeek = Math.max(1, config.runsPerWeek ?? 4);
     const ridesPerWeek = Math.max(0, config.ridesPerWeek || 0);
     const strengthPerWeek = Math.max(0, config.strengthPerWeek || 0);
     const swimsPerWeek = Math.max(0, config.swimsPerWeek || 0);
 
     const longRunDay = config.longRunDay !== undefined ? config.longRunDay : 0;
     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
+
+    // Validate and adjust rest days if they leave fewer slots than runsPerWeek requires
+    let restDays = config.restDays ? [...config.restDays] : [];
+    if (restDays.length > 7 - runsPerWeek) {
+        restDays = restDays.slice(0, 7 - runsPerWeek);
+    }
 
     let peakVolume = config.weeklyMileageGoal || 40000;
     const minPeak = PLAN_CONSTANTS.MIN_PEAK_VOLUME[raceType] || 20000;
@@ -187,7 +201,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
 
     const paces = calculateTrainingPaces(vdot);
 
-    const defaultTaperWeeks = TAPER_FRACTIONS[raceType]?.length || 2;
+    const defaultTaperWeeks = raceType === 'MARATHON' ? 3 : raceType === 'FIVE_K' ? 1 : 2;
     const taperWeeks = (config.taperWeeks != null && config.taperWeeks > 0)
         ? config.taperWeeks
         : defaultTaperWeeks;
@@ -233,10 +247,11 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
                 raceType,
                 paces,
                 runsPerWeek,
-                raceWeekRunVolumeCap: getRaceWeekRunVolumeCap(raceType, effectivePeakVolume),
+                raceWeekRunVolumeCap: getRaceWeekRunVolumeCap(raceType, effectivePeakVolume, taperWeeks, config.customRunDistM),
                 ridesPerWeek,
                 swimsPerWeek,
                 strengthPerWeek,
+                customRunDistM: config.customRunDistM,
             });
             raceWeekWorkouts.forEach(w => {
                 const specificDate = new Date(raceDate);
@@ -299,7 +314,10 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
             preferredLongRunDay: longRunDay,
             preferredWorkoutDay: workoutDay,
             preferredSwimDay: config.swimDay,
-            restDays: config.restDays,
+            restDays: restDays,
+            weekNumber: week,
+            vdot: vdot,
+            customRunDistM: config.customRunDistM,
         });
 
         const runningWorkouts = weekSchedule.filter(w => isRun(w.type));
@@ -333,7 +351,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
 
     const result = fixBackToBackSameType(workouts, {
         raceDate,
-        restDays: config.restDays,
+        restDays: restDays,
     });
     const racePace = getRacePace(raceType, paces);
     enrichWorkoutsWithDescriptions(result, racePace);
@@ -361,18 +379,37 @@ function getTaperVolume(
     peakVolume: number,
     raceType: RaceType
 ): number {
-    const fractions = TAPER_FRACTIONS[raceType];
-    if (!fractions) return Math.round(peakVolume * 0.65);
-    const taperWeekIndex = taperWeeks - weeksUntilRace;
-    const clampedIndex = Math.min(Math.max(0, taperWeekIndex), fractions.length - 1);
-    const fraction = fractions[clampedIndex];
-    return Math.round(peakVolume * fraction);
+    const decayRate = (() => {
+        switch (raceType) {
+            case 'FIVE_K': return 0.45;
+            case 'TEN_K': return 0.40;
+            case 'HALF_MARATHON': return 0.35;
+            case 'MARATHON': return 0.30;
+            default: return 0.35;
+        }
+    })();
+    const t = taperWeeks - weeksUntilRace + 1;
+    const fraction = Math.exp(-decayRate * t);
+    const minFraction = raceType === 'MARATHON' ? 0.35 : 0.40;
+    return Math.round(peakVolume * Math.max(fraction, minFraction));
 }
 
-export function getRaceWeekRunVolumeCap(raceType: RaceType, effectivePeakVolume: number): number {
-    const fractions = TAPER_FRACTIONS[raceType];
-    const finalTaperFraction = fractions ? fractions[fractions.length - 1] : 0.45;
-    const raceDist = getRaceDistanceMeters(raceType) || 10000;
+export function getRaceWeekRunVolumeCap(raceType: RaceType, effectivePeakVolume: number, taperWeeks?: number, customRunDistM?: number): number {
+    const decayRate = (() => {
+        switch (raceType) {
+            case 'FIVE_K': return 0.45;
+            case 'TEN_K': return 0.40;
+            case 'HALF_MARATHON': return 0.35;
+            case 'MARATHON': return 0.30;
+            default: return 0.35;
+        }
+    })();
+    const actualTaperWeeks = taperWeeks ?? (raceType === 'MARATHON' ? 3 : 2);
+    const finalTaperFraction = Math.max(
+        raceType === 'MARATHON' ? 0.35 : 0.40,
+        Math.exp(-decayRate * actualTaperWeeks)
+    );
+    const raceDist = getRaceDistanceMeters(raceType, customRunDistM) || 10000;
     return Math.max(
         Math.round(effectivePeakVolume * finalTaperFraction * 0.5),
         raceDist + 10000,
@@ -388,13 +425,14 @@ function generateRaceWeek(params: {
     ridesPerWeek?: number;
     swimsPerWeek?: number;
     strengthPerWeek?: number;
+    customRunDistM?: number;
 }): ScheduledWorkout[] {
-    const { raceType, paces, runsPerWeek, raceWeekRunVolumeCap } = params;
+    const { raceType, paces, runsPerWeek, raceWeekRunVolumeCap, customRunDistM } = params;
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
 
-    const raceDistKm = getRaceDistanceKm(raceType);
-    const raceDistMeters = getRaceDistanceMeters(raceType);
+    const raceDistKm = getRaceDistanceKm(raceType, customRunDistM);
+    const raceDistMeters = getRaceDistanceMeters(raceType, customRunDistM);
     const maxRunVolume = Math.max(raceDistMeters, raceWeekRunVolumeCap);
 
     let remainingExtraRunSlots = Math.max(0, runsPerWeek - 1);
@@ -537,11 +575,17 @@ function generateWeek(params: {
     preferredWorkoutDay: number;
     preferredSwimDay?: number;
     restDays?: number[];
+    weekNumber?: number;
+    vdot: number;
+    customRunDistM?: number;
 }): ScheduledWorkout[] {
     const {
         phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, weeklyVolume,
         maxLongRunKm,
-        preferredLongRunDay, preferredWorkoutDay, preferredSwimDay, restDays
+        preferredLongRunDay, preferredWorkoutDay, preferredSwimDay, restDays,
+        weekNumber = 1,
+        vdot,
+        customRunDistM
     } = params;
 
     const workouts: ScheduledWorkout[] = [];
@@ -556,22 +600,33 @@ function generateWeek(params: {
     }
 
     const longRunDist = getLongRunDistance(raceType, weeklyVolume, paces, maxLongRunKm);
+    const swimPace = estimateSwimPaceFromVdot(vdot);
 
     const hasQuality = runsPerWeek >= 2 && phase !== 'TAPER';
     const qualitySession = hasQuality
-        ? getQualitySession(raceType, paces, phase, weeklyVolume)
+        ? getQualitySession(raceType, paces, phase, weeklyVolume, weekNumber, customRunDistM)
         : null;
     const qualityDist = qualitySession ? qualitySession.totalDistance : 0;
 
-    const longRunCount = runsPerWeek >= 1 ? 1 : 0;
-    const qualityRunCount = hasQuality ? 1 : 0;
-    const totalKeyRuns = longRunCount + qualityRunCount;
-    const easyRunsCount = hasQuality
-        ? Math.max(0, runsPerWeek - totalKeyRuns)
-        : Math.max(0, runsPerWeek - longRunCount);
+    const hasSecondaryQuality = runsPerWeek >= 5 && phase !== 'TAPER';
+    const secondaryQualitySession = hasSecondaryQuality && qualitySession
+        ? getSecondaryQualitySession(raceType, paces, phase, weeklyVolume, qualitySession.type, weekNumber)
+        : null;
+    const secondaryQualityDist = secondaryQualitySession ? secondaryQualitySession.totalDistance : 0;
 
-    const remainingVol = Math.max(0, weeklyVolume - longRunDist - qualityDist);
-    const calculatedEasyDist = easyRunsCount > 0 ? remainingVol / easyRunsCount : 5000;
+    const hasMlr = raceType === 'MARATHON' && runsPerWeek >= 5 && phase !== 'TAPER';
+    const mlrDist = hasMlr
+        ? Math.max(PLAN_CONSTANTS.EASY_RUN_MIN, Math.min(Math.round((longRunDist * 0.75) / 500) * 500, weeklyVolume * 0.30))
+        : 0;
+
+    const longRunCount = runsPerWeek >= 1 ? 1 : 0;
+    const qualityRunCount = hasQuality ? (hasSecondaryQuality ? 2 : 1) : 0;
+    const totalKeyRuns = longRunCount + qualityRunCount;
+    const easyRunsCount = Math.max(0, runsPerWeek - totalKeyRuns);
+
+    const remainingVol = Math.max(0, weeklyVolume - longRunDist - qualityDist - secondaryQualityDist - mlrDist);
+    const normalEasyRunsCount = hasMlr ? Math.max(0, easyRunsCount - 1) : easyRunsCount;
+    const calculatedEasyDist = normalEasyRunsCount > 0 ? remainingVol / normalEasyRunsCount : 5000;
 
     const easyDist = Math.max(
         PLAN_CONSTANTS.EASY_RUN_MIN,
@@ -613,14 +668,32 @@ function generateWeek(params: {
         usedDays.add(day);
         hardSessionDays.push(day);
 
+        const rotation = (weekNumber - 1) % 3;
         let longRunDesc = `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`;
         let longRunPace = easyPace;
 
-        if (phase === 'PEAK' && (raceType === 'HALF_MARATHON' || raceType === 'MARATHON')) {
+        if (phase === 'TAPER') {
+            longRunDesc = `Easy Long Run: ${(longRunDist / 1000).toFixed(1)}km`;
+        } else if (phase === 'PEAK' && (raceType === 'HALF_MARATHON' || raceType === 'MARATHON')) {
             const mpDist = Math.round(longRunDist * 0.3 / 100) * 100;
             const easyPart = longRunDist - mpDist;
-            longRunDesc = `Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(mpDist / 1000).toFixed(1)}km @ MP`;
-            longRunPace = easyPace;
+            longRunDesc = `Progressive Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(mpDist / 1000).toFixed(1)}km @ MP ${formatPace(paces.marathon)}`;
+        } else if (phase === 'BUILD' || phase === 'PEAK') {
+            if (rotation === 1) {
+                const steadyDist = Math.round(longRunDist * 0.4 / 100) * 100;
+                const easyPart = longRunDist - steadyDist;
+                longRunDesc = `Steady Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(steadyDist / 1000).toFixed(1)}km @ Steady ${formatPace(paces.easy.min)}`;
+            } else if (rotation === 2) {
+                if (raceType === 'MARATHON' || raceType === 'HALF_MARATHON') {
+                    const fastDist = Math.min(5000, Math.round(longRunDist * 0.2 / 100) * 100);
+                    const easyPart = longRunDist - fastDist;
+                    longRunDesc = `Progressive Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(fastDist / 1000).toFixed(1)}km @ MP ${formatPace(paces.marathon)}`;
+                } else {
+                    const fastDist = Math.min(3000, Math.round(longRunDist * 0.2 / 100) * 100);
+                    const easyPart = longRunDist - fastDist;
+                    longRunDesc = `Fast-Finish Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(fastDist / 1000).toFixed(1)}km @ T ${formatPace(paces.threshold)}`;
+                }
+            }
         }
 
         workouts.push({
@@ -661,12 +734,27 @@ function generateWeek(params: {
         });
     }
 
+    if (hasSecondaryQuality && secondaryQualitySession) {
+        const preferredSecondaryDay = (preferredWorkoutDay - 2 + 7) % 7;
+        const day = getAvailableDayWithGap(preferredSecondaryDay, hardSessionDays);
+        usedDays.add(day);
+        hardSessionDays.push(day);
+        workouts.push({
+            dayOffset: day,
+            ...secondaryQualitySession,
+            targetDuration: computeQualityDuration(secondaryQualitySession.totalDistance, secondaryQualitySession.targetPace, easyPace, getQualityFraction(secondaryQualitySession.type)),
+            phase: phase as PlanPhase,
+            targetHrZone: workoutTypeToHrZone(secondaryQualitySession.type),
+        });
+    }
+
     const alreadyScheduledEasyRuns = hasQuality ? 0 : (runsPerWeek >= 2 ? 1 : 0);
     const additionalRunsCount = Math.max(0, easyRunsCount - alreadyScheduledEasyRuns);
     const easyRunDays = getDistributedDays(additionalRunsCount, usedDays);
 
     let stridesInjected = 0;
     const stridesPerWeek = phase === 'BASE' ? 2 : 0;
+    let mlrScheduled = false;
 
     for (const d of easyRunDays) {
         usedDays.add(d);
@@ -676,18 +764,32 @@ function generateWeek(params: {
             return diff === 1;
         });
 
-        if (dayAfterHard) {
+        if (hasMlr && !mlrScheduled && (!dayAfterHard || d === easyRunDays[easyRunDays.length - 1])) {
+            mlrScheduled = true;
+            workouts.push({
+                dayOffset: d,
+                type: WorkoutType.EASY,
+                description: `Medium-Long Run: ${(mlrDist / 1000).toFixed(1)}km`,
+                totalDistance: mlrDist,
+                targetPace: easyPace,
+                targetDuration: computeDuration(mlrDist, easyPace),
+                phase: phase as PlanPhase,
+                targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
+            });
+        } else if (dayAfterHard) {
             const includeStrides = phase === 'BASE' && stridesInjected < stridesPerWeek;
             const suffix = includeStrides ? ' + 6x100m Strides' : '';
             if (includeStrides) stridesInjected++;
 
+            const recoveryDist = Math.max(PLAN_CONSTANTS.EASY_RUN_MIN, Math.round((easyDist * 0.65) / 100) * 100);
+
             workouts.push({
                 dayOffset: d,
                 type: WorkoutType.RECOVERY,
-                description: `Recovery Run: ${(easyDist / 1000).toFixed(1)}km${suffix}`,
-                totalDistance: easyDist,
+                description: `Recovery Run: ${(recoveryDist / 1000).toFixed(1)}km${suffix}`,
+                totalDistance: recoveryDist,
                 targetPace: recoveryPace,
-                targetDuration: computeDuration(easyDist, recoveryPace),
+                targetDuration: computeDuration(recoveryDist, recoveryPace),
                 phase: phase as PlanPhase,
                 targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
             });
@@ -735,7 +837,7 @@ function generateWeek(params: {
             type: WorkoutType.SWIM,
             description: 'Swim: 1500m @ Easy',
             totalDistance: 1500,
-            targetPace: 120,
+            targetPace: swimPace,
             targetDuration: 2700,
             phase: phase as PlanPhase,
             targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
@@ -766,7 +868,7 @@ function generateWeek(params: {
                 type: WorkoutType.SWIM,
                 description: 'Swim: 1500m @ Easy',
                 totalDistance: 1500,
-                targetPace: 120,
+                targetPace: swimPace,
                 targetDuration: 2700,
                 phase: phase as PlanPhase,
                 targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
@@ -797,7 +899,7 @@ function generateWeek(params: {
                     type: WorkoutType.SWIM,
                     description: 'Swim: 1500m @ Easy',
                     totalDistance: 1500,
-                    targetPace: 120,
+                    targetPace: swimPace,
                     targetDuration: 2700,
                     phase: phase as PlanPhase,
                     targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
@@ -936,6 +1038,8 @@ function getQualitySession(
     paces: TrainingPaces,
     phase: Phase,
     weeklyVolume: number,
+    weekNumber: number,
+    customRunDistM?: number,
 ): { type: WorkoutType; description: string; totalDistance: number; targetPace: number } {
     const scale = (session: { type: WorkoutType; description: string; totalDistance: number; targetPace: number }) => ({
         ...session,
@@ -943,15 +1047,26 @@ function getQualitySession(
     });
 
     if (raceType === 'FIVE_K') {
-        return scale(get5KQualitySession(paces, phase));
+        return scale(get5KQualitySession(paces, phase, weekNumber));
     }
     if (raceType === 'TEN_K') {
-        return scale(get10KQualitySession(paces, phase));
+        return scale(get10KQualitySession(paces, phase, weekNumber));
     }
     if (raceType === 'HALF_MARATHON') {
-        return scale(getHalfMarathonQualitySession(paces, phase));
+        return scale(getHalfMarathonQualitySession(paces, phase, weekNumber));
     }
-    return scale(getMarathonQualitySession(paces, phase));
+    if (raceType === 'CUSTOM_DISTANCE' && customRunDistM) {
+        if (customRunDistM < 10000) {
+            return scale(get5KQualitySession(paces, phase, weekNumber));
+        } else if (customRunDistM < 20000) {
+            return scale(get10KQualitySession(paces, phase, weekNumber));
+        } else if (customRunDistM < 30000) {
+            return scale(getHalfMarathonQualitySession(paces, phase, weekNumber));
+        } else {
+            return scale(getMarathonQualitySession(paces, phase, weekNumber));
+        }
+    }
+    return scale(getMarathonQualitySession(paces, phase, weekNumber));
 }
 
 export function scaleQualitySessionDistance(
@@ -990,111 +1105,376 @@ function getFartlekDescription(
     return `Fartlek: ${distanceKm}km (${hardMinutes}min @ F (T-I) ${formatPace(hardPace)} / ${easyMinutes}min @ E ${formatPace(easyPace)})`;
 }
 
-function get5KQualitySession(paces: TrainingPaces, phase: Phase) {
+function get5KQualitySession(paces: TrainingPaces, phase: Phase, weekNumber: number) {
+    const rotation = (weekNumber - 1) % 3;
     if (phase === 'BASE') {
-        const hardPace = getFartlekHardPace(paces);
-        const easyPace = paces.easy.max;
-        return {
-            type: WorkoutType.FARTLEK,
-            description: getFartlekDescription(8, 2, 2, hardPace, easyPace),
-            totalDistance: 8000,
-            targetPace: hardPace,
-        };
+        if (rotation === 0) {
+            const hardPace = getFartlekHardPace(paces);
+            const easyPace = paces.easy.max;
+            return {
+                type: WorkoutType.FARTLEK,
+                description: getFartlekDescription(8, 2, 2, hardPace, easyPace),
+                totalDistance: 8000,
+                targetPace: hardPace,
+            };
+        } else if (rotation === 1) {
+            return {
+                type: WorkoutType.REPETITIONS,
+                description: `Hill Repeats: 6x200m hill reps @ hard effort`,
+                totalDistance: 6000,
+                targetPace: paces.repetition,
+            };
+        } else {
+            return {
+                type: WorkoutType.EASY,
+                description: `Progression Run: 6km (Start @ E ${formatPace(paces.easy.max)}, finish final 1.5km @ T ${formatPace(paces.threshold)})`,
+                totalDistance: 6000,
+                targetPace: paces.threshold,
+            };
+        }
     }
     if (phase === 'PEAK') {
+        if (rotation === 0) {
+            return {
+                type: WorkoutType.REPETITIONS,
+                description: `Reps: 6x400m @ ${formatPace(paces.repetition)}`,
+                totalDistance: 7000,
+                targetPace: paces.repetition,
+            };
+        } else if (rotation === 1) {
+            return {
+                type: WorkoutType.REPETITIONS,
+                description: `Reps: 8x300m @ ${formatPace(paces.repetition)}`,
+                totalDistance: 6500,
+                targetPace: paces.repetition,
+            };
+        } else {
+            return {
+                type: WorkoutType.REPETITIONS,
+                description: `Reps: 10x200m @ ${formatPace(paces.repetition)}`,
+                totalDistance: 6000,
+                targetPace: paces.repetition,
+            };
+        }
+    }
+    if (rotation === 0) {
         return {
-            type: WorkoutType.REPETITIONS,
-            description: `Reps: 6x400m @ ${formatPace(paces.repetition)}`,
-            totalDistance: 7000,
-            targetPace: paces.repetition,
+            type: WorkoutType.INTERVALS,
+            description: `Intervals: 5x1km @ ${formatPace(paces.interval)}`,
+            totalDistance: 10000,
+            targetPace: paces.interval,
+        };
+    } else if (rotation === 1) {
+        return {
+            type: WorkoutType.INTERVALS,
+            description: `Intervals: 3x1600m @ ${formatPace(paces.interval)}`,
+            totalDistance: 9800,
+            targetPace: paces.interval,
+        };
+    } else {
+        return {
+            type: WorkoutType.INTERVALS,
+            description: `Intervals: 8x600m @ ${formatPace(paces.interval)}`,
+            totalDistance: 9000,
+            targetPace: paces.interval,
         };
     }
-    return {
-        type: WorkoutType.INTERVALS,
-        description: `Intervals: 5x1km @ ${formatPace(paces.interval)}`,
-        totalDistance: 10000,
-        targetPace: paces.interval,
-    };
 }
 
-function get10KQualitySession(paces: TrainingPaces, phase: Phase) {
+function get10KQualitySession(paces: TrainingPaces, phase: Phase, weekNumber: number) {
+    const rotation = (weekNumber - 1) % 3;
     if (phase === 'BASE') {
-        const hardPace = getFartlekHardPace(paces);
-        const easyPace = paces.easy.max;
-        return {
-            type: WorkoutType.FARTLEK,
-            description: getFartlekDescription(10, 3, 2, hardPace, easyPace),
-            totalDistance: 10000,
-            targetPace: hardPace,
-        };
+        if (rotation === 0) {
+            const hardPace = getFartlekHardPace(paces);
+            const easyPace = paces.easy.max;
+            return {
+                type: WorkoutType.FARTLEK,
+                description: getFartlekDescription(10, 3, 2, hardPace, easyPace),
+                totalDistance: 10000,
+                targetPace: hardPace,
+            };
+        } else if (rotation === 1) {
+            return {
+                type: WorkoutType.REPETITIONS,
+                description: `Hill Repeats: 8x200m hill reps @ hard effort`,
+                totalDistance: 7000,
+                targetPace: paces.repetition,
+            };
+        } else {
+            return {
+                type: WorkoutType.EASY,
+                description: `Progression Run: 8km (Start @ E ${formatPace(paces.easy.max)}, finish final 2km @ T ${formatPace(paces.threshold)})`,
+                totalDistance: 8000,
+                targetPace: paces.threshold,
+            };
+        }
     }
     if (phase === 'PEAK') {
+        if (rotation === 0) {
+            return {
+                type: WorkoutType.TEMPO,
+                description: `Threshold: 4x2km @ ${formatPace(paces.threshold)}`,
+                totalDistance: 12000,
+                targetPace: paces.threshold,
+            };
+        } else if (rotation === 1) {
+            return {
+                type: WorkoutType.TEMPO,
+                description: `Threshold: 3x3km @ ${formatPace(paces.threshold)}`,
+                totalDistance: 13000,
+                targetPace: paces.threshold,
+            };
+        } else {
+            return {
+                type: WorkoutType.TEMPO,
+                description: `Threshold: 8km @ ${formatPace(paces.threshold)}`,
+                totalDistance: 12000,
+                targetPace: paces.threshold,
+            };
+        }
+    }
+    if (rotation === 0) {
+        return {
+            type: WorkoutType.INTERVALS,
+            description: `Intervals: 6x1km @ ${formatPace(paces.interval)}`,
+            totalDistance: 11000,
+            targetPace: paces.interval,
+        };
+    } else if (rotation === 1) {
+        return {
+            type: WorkoutType.INTERVALS,
+            description: `Intervals: 4x1200m @ ${formatPace(paces.interval)}`,
+            totalDistance: 9800,
+            targetPace: paces.interval,
+        };
+    } else {
+        return {
+            type: WorkoutType.INTERVALS,
+            description: `Intervals: 5x1km @ ${formatPace(paces.interval)}`,
+            totalDistance: 10000,
+            targetPace: paces.interval,
+        };
+    }
+}
+
+function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekNumber: number) {
+    const rotation = (weekNumber - 1) % 3;
+    if (phase === 'BASE') {
+        if (rotation === 0) {
+            const hardPace = getFartlekHardPace(paces);
+            const easyPace = paces.easy.max;
+            return {
+                type: WorkoutType.FARTLEK,
+                description: getFartlekDescription(10, 4, 3, hardPace, easyPace),
+                totalDistance: 10000,
+                targetPace: hardPace,
+            };
+        } else if (rotation === 1) {
+            return {
+                type: WorkoutType.REPETITIONS,
+                description: `Hill Repeats: 8x200m hill reps @ hard effort`,
+                totalDistance: 8000,
+                targetPace: paces.repetition,
+            };
+        } else {
+            return {
+                type: WorkoutType.EASY,
+                description: `Progression Run: 10km (Start @ E ${formatPace(paces.easy.max)}, finish final 3km @ T ${formatPace(paces.threshold)})`,
+                totalDistance: 10000,
+                targetPace: paces.threshold,
+            };
+        }
+    }
+    if (phase === 'PEAK') {
+        if (rotation === 0) {
+            return {
+                type: WorkoutType.TEMPO,
+                description: `MP Segments: 3x3km @ ${formatPace(paces.marathon)}`,
+                totalDistance: 13000,
+                targetPace: paces.marathon,
+            };
+        } else if (rotation === 1) {
+            return {
+                type: WorkoutType.TEMPO,
+                description: `Tempo + MP: 4km T ${formatPace(paces.threshold)} + 4km MP ${formatPace(paces.marathon)}`,
+                totalDistance: 12000,
+                targetPace: paces.marathon,
+            };
+        } else {
+            return {
+                type: WorkoutType.TEMPO,
+                description: `MP Segments: 10km @ MP ${formatPace(paces.marathon)}`,
+                totalDistance: 14000,
+                targetPace: paces.marathon,
+            };
+        }
+    }
+    if (rotation === 0) {
         return {
             type: WorkoutType.TEMPO,
-            description: `Threshold: 4x2km @ ${formatPace(paces.threshold)}`,
+            description: `Threshold: 8km @ ${formatPace(paces.threshold)}`,
             totalDistance: 12000,
             targetPace: paces.threshold,
         };
-    }
-    return {
-        type: WorkoutType.INTERVALS,
-        description: `Intervals: 6x1km @ ${formatPace(paces.interval)}`,
-        totalDistance: 11000,
-        targetPace: paces.interval,
-    };
-}
-
-function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
-    if (phase === 'BASE') {
-        const hardPace = getFartlekHardPace(paces);
-        const easyPace = paces.easy.max;
+    } else if (rotation === 1) {
         return {
-            type: WorkoutType.FARTLEK,
-            description: getFartlekDescription(10, 4, 3, hardPace, easyPace),
+            type: WorkoutType.TEMPO,
+            description: `Cruise Intervals: 5x1.5km @ T ${formatPace(paces.threshold)} w/ 2min recovery`,
+            totalDistance: 11500,
+            targetPace: paces.threshold,
+        };
+    } else {
+        return {
+            type: WorkoutType.TEMPO,
+            description: `Threshold: 6km @ T ${formatPace(paces.threshold)}`,
             totalDistance: 10000,
-            targetPace: hardPace,
+            targetPace: paces.threshold,
         };
     }
-    if (phase === 'PEAK') {
-        return {
-            type: WorkoutType.TEMPO,
-            description: `MP Segments: 3x3km @ ${formatPace(paces.marathon)}`,
-            totalDistance: 13000,
-            targetPace: paces.marathon,
-        };
-    }
-    return {
-        type: WorkoutType.TEMPO,
-        description: `Threshold: 8km @ ${formatPace(paces.threshold)}`,
-        totalDistance: 12000,
-        targetPace: paces.threshold,
-    };
 }
 
-function getMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
+function getMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekNumber: number) {
+    const rotation = (weekNumber - 1) % 3;
     if (phase === 'BASE') {
-        const hardPace = getFartlekHardPace(paces);
-        const easyPace = paces.easy.max;
-        return {
-            type: WorkoutType.FARTLEK,
-            description: getFartlekDescription(12, 5, 3, hardPace, easyPace),
-            totalDistance: 12000,
-            targetPace: hardPace,
-        };
+        if (rotation === 0) {
+            const hardPace = getFartlekHardPace(paces);
+            const easyPace = paces.easy.max;
+            return {
+                type: WorkoutType.FARTLEK,
+                description: getFartlekDescription(12, 5, 3, hardPace, easyPace),
+                totalDistance: 12000,
+                targetPace: hardPace,
+            };
+        } else if (rotation === 1) {
+            return {
+                type: WorkoutType.REPETITIONS,
+                description: `Hill Repeats: 10x200m hill reps @ hard effort`,
+                totalDistance: 9000,
+                targetPace: paces.repetition,
+            };
+        } else {
+            return {
+                type: WorkoutType.EASY,
+                description: `Progression Run: 12km (Start @ E ${formatPace(paces.easy.max)}, finish final 4km @ T ${formatPace(paces.threshold)})`,
+                totalDistance: 12000,
+                targetPace: paces.threshold,
+            };
+        }
     }
     if (phase === 'PEAK') {
+        if (rotation === 0) {
+            return {
+                type: WorkoutType.TEMPO,
+                description: `MP Segments: 3x5km @ ${formatPace(paces.marathon)}`,
+                totalDistance: 18000,
+                targetPace: paces.marathon,
+            };
+        } else if (rotation === 1) {
+            return {
+                type: WorkoutType.TEMPO,
+                description: `Tempo + MP: 6km T ${formatPace(paces.threshold)} + 6km MP ${formatPace(paces.marathon)}`,
+                totalDistance: 16000,
+                targetPace: paces.marathon,
+            };
+        } else {
+            return {
+                type: WorkoutType.TEMPO,
+                description: `MP Segments: 12km @ MP ${formatPace(paces.marathon)}`,
+                totalDistance: 16000,
+                targetPace: paces.marathon,
+            };
+        }
+    }
+    if (rotation === 0) {
         return {
             type: WorkoutType.TEMPO,
-            description: `MP Segments: 3x5km @ ${formatPace(paces.marathon)}`,
-            totalDistance: 18000,
-            targetPace: paces.marathon,
+            description: `Threshold: 10km @ ${formatPace(paces.threshold)}`,
+            totalDistance: 14000,
+            targetPace: paces.threshold,
+        };
+    } else if (rotation === 1) {
+        return {
+            type: WorkoutType.TEMPO,
+            description: `Cruise Intervals: 3x2mile @ T ${formatPace(paces.threshold)} w/ 3min recovery`,
+            totalDistance: 13000,
+            targetPace: paces.threshold,
+        };
+    } else {
+        return {
+            type: WorkoutType.TEMPO,
+            description: `Threshold: 6km T ${formatPace(paces.threshold)} + 4km MP ${formatPace(paces.marathon)}`,
+            totalDistance: 14000,
+            targetPace: paces.threshold,
         };
     }
+}
+
+function getSecondaryQualitySession(
+    raceType: RaceType,
+    paces: TrainingPaces,
+    phase: Phase,
+    weeklyVolume: number,
+    primaryType: WorkoutType,
+    weekNumber: number
+): { type: WorkoutType; description: string; totalDistance: number; targetPace: number } {
+    const rotation = (weekNumber - 1) % 3;
+    let type = WorkoutType.TEMPO;
+    let description = '';
+    let targetPace = paces.threshold;
+    let totalDistance = 8000;
+
+    if (primaryType === WorkoutType.INTERVALS || primaryType === WorkoutType.REPETITIONS) {
+        type = WorkoutType.TEMPO;
+        targetPace = paces.threshold;
+        if (raceType === 'FIVE_K' || raceType === 'TEN_K') {
+            totalDistance = 6000;
+            if (rotation === 0) {
+                description = `Secondary Threshold: 4km Tempo @ T ${formatPace(paces.threshold)}`;
+            } else if (rotation === 1) {
+                description = `Secondary Threshold: 3x1km @ T ${formatPace(paces.threshold)} w/ 1min recovery`;
+            } else {
+                description = `Secondary Threshold: 2x2km @ T ${formatPace(paces.threshold)} w/ 2min recovery`;
+            }
+        } else {
+            totalDistance = 8000;
+            if (rotation === 0) {
+                description = `Secondary Threshold: 6km Tempo @ T ${formatPace(paces.threshold)}`;
+            } else if (rotation === 1) {
+                description = `Secondary Threshold: 4x1.5km @ T ${formatPace(paces.threshold)} w/ 90s recovery`;
+            } else {
+                description = `Secondary Threshold: 3x2km @ T ${formatPace(paces.threshold)} w/ 2min recovery`;
+            }
+        }
+    } else {
+        type = WorkoutType.REPETITIONS;
+        targetPace = paces.repetition;
+        if (raceType === 'FIVE_K' || raceType === 'TEN_K') {
+            totalDistance = 5000;
+            if (rotation === 0) {
+                description = `Secondary Reps: 6x200m @ R ${formatPace(paces.repetition)} w/ 200m jog`;
+            } else if (rotation === 1) {
+                description = `Secondary Reps: 4x400m @ R ${formatPace(paces.repetition)} w/ 400m jog`;
+            } else {
+                description = `Secondary Reps: 300m-200m-100m x2 @ R ${formatPace(paces.repetition)} w/ jog recovery`;
+            }
+        } else {
+            totalDistance = 7000;
+            if (rotation === 0) {
+                description = `Secondary Reps: 8x200m @ R ${formatPace(paces.repetition)} w/ 200m jog`;
+            } else if (rotation === 1) {
+                description = `Secondary Reps: 6x400m @ R ${formatPace(paces.repetition)} w/ 400m jog`;
+            } else {
+                description = `Secondary Reps: 400m-300m-200m x2 @ R ${formatPace(paces.repetition)} w/ jog recovery`;
+            }
+        }
+    }
+
+    const scaledDist = scaleQualitySessionDistance(type, totalDistance, weeklyVolume, raceType);
     return {
-        type: WorkoutType.TEMPO,
-        description: `Threshold: 10km @ ${formatPace(paces.threshold)}`,
-        totalDistance: 14000,
-        targetPace: paces.threshold,
+        type,
+        description,
+        totalDistance: scaledDist,
+        targetPace,
     };
 }
 
@@ -1235,6 +1615,10 @@ function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: numbe
 function preserveSpecialDescription(w: ScheduledWorkout, distance: number): string {
     const distanceKm = (distance / 1000).toFixed(1);
 
+    if (w.description.includes('Medium-Long Run')) {
+        return `Medium-Long Run: ${distanceKm}km`;
+    }
+
     if (w.description.includes('Fartlek')) {
         const match = w.description.match(/^Fartlek:\s*[0-9.]+km(.*)$/);
         const suffix = match ? match[1] : '';
@@ -1263,7 +1647,7 @@ function preserveSpecialDescription(w: ScheduledWorkout, distance: number): stri
     return updateDescription(w.type, distance, w.targetPace || 0);
 }
 
-function getRaceDistanceKm(raceType: RaceType): string {
+function getRaceDistanceKm(raceType: RaceType, customRunDistM?: number): string {
     switch (raceType) {
         case 'FIVE_K': return '5';
         case 'TEN_K': return '10';
@@ -1273,11 +1657,11 @@ function getRaceDistanceKm(raceType: RaceType): string {
         case 'FIFTY_MILE': return '80.5';
         case 'HUNDRED_K': return '100';
         case 'HUNDRED_MILE': return '161';
-        default: return '0';
+        default: return customRunDistM && customRunDistM > 0 ? (customRunDistM / 1000).toFixed(1) : '0';
     }
 }
 
-function getRaceDistanceMeters(raceType: RaceType): number {
+function getRaceDistanceMeters(raceType: RaceType, customRunDistM?: number): number {
     switch (raceType) {
         case 'FIVE_K': return 5000;
         case 'TEN_K': return 10000;
@@ -1287,7 +1671,7 @@ function getRaceDistanceMeters(raceType: RaceType): number {
         case 'FIFTY_MILE': return 80467;
         case 'HUNDRED_K': return 100000;
         case 'HUNDRED_MILE': return 160934;
-        default: return 0;
+        default: return customRunDistM && customRunDistM > 0 ? customRunDistM : 0;
     }
 }
 
@@ -1342,7 +1726,19 @@ export function getQualityFraction(type: WorkoutType): number {
     }
 }
 
-export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, 'type' | 'description' | 'totalDistance' | 'targetPace' | 'targetDuration' | 'targetHrZone'>): StructuredWorkoutPlan | null {
+export function calculateHRZones(lthr: number) {
+    return {
+        z1: { min: Math.round(lthr * 0.50), max: Math.round(lthr * 0.75), label: 'Recovery' },
+        z2: { min: Math.round(lthr * 0.75) + 1, max: Math.round(lthr * 0.87), label: 'Aerobic' },
+        z3: { min: Math.round(lthr * 0.87) + 1, max: Math.round(lthr * 0.94), label: 'Tempo' },
+        z4: { min: Math.round(lthr * 0.94) + 1, max: lthr, label: 'Threshold' },
+        z5: { min: lthr + 1, max: Math.round(lthr * 1.05), label: 'VO2max' },
+        z6: { min: Math.round(lthr * 1.05) + 1, max: Math.round(lthr * 1.10), label: 'Anaerobic' },
+        z7: { min: Math.round(lthr * 1.10) + 1, max: 999, label: 'Neuromuscular' },
+    };
+}
+
+export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, 'type' | 'description' | 'totalDistance' | 'targetPace' | 'targetDuration' | 'targetHrZone' | 'thresholdHeartRate'>): StructuredWorkoutPlan | null {
     if (workout.totalDistance <= 0 && (!workout.targetDuration || workout.targetDuration <= 0)) return null;
 
     const targetPace = workout.targetPace && workout.targetPace > 0 ? workout.targetPace : undefined;
@@ -1350,6 +1746,26 @@ export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, '
     const warmupDistance = workout.totalDistance >= 5000 ? 1500 : 0;
     const cooldownDistance = workout.totalDistance >= 5000 ? 1000 : 0;
     const remainingDistance = Math.max(0, workout.totalDistance - warmupDistance - cooldownDistance);
+
+    const lthr = workout.thresholdHeartRate;
+    const hrZones = lthr ? calculateHRZones(lthr) : null;
+
+    let hrTargetMinBpm: number | undefined;
+    let hrTargetMaxBpm: number | undefined;
+    let hrZoneLabel: string | undefined;
+
+    if (hrZones && hrZone) {
+        const zoneKey = `z${hrZone}` as keyof typeof hrZones;
+        const zone = hrZones[zoneKey];
+        if (zone) {
+            hrTargetMinBpm = zone.min;
+            hrTargetMaxBpm = zone.max;
+            hrZoneLabel = zone.label;
+        }
+    }
+
+    const paceTargetMinSecondsPerKm = targetPace ? targetPace - 10 : undefined;
+    const paceTargetMaxSecondsPerKm = targetPace ? targetPace + 10 : undefined;
 
     if (workout.type === WorkoutType.EASY || workout.type === WorkoutType.RECOVERY || workout.type === WorkoutType.LONG_RUN) {
         return {
@@ -1362,27 +1778,72 @@ export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, '
                 durationSeconds: workout.targetDuration || undefined,
                 paceSecondsPerKm: targetPace,
                 hrZone,
+                hrTargetMinBpm,
+                hrTargetMaxBpm,
+                hrZoneLabel,
+                paceTargetMinSecondsPerKm,
+                paceTargetMaxSecondsPerKm,
             }],
         };
     }
 
     const steps: StructuredWorkoutStep[] = [];
     if (warmupDistance > 0) {
-        steps.push({ type: 'warmup', name: 'Warm up', distanceMeters: warmupDistance, hrZone: 1 });
+        let wuMin: number | undefined;
+        let wuMax: number | undefined;
+        let wuLabel: string | undefined;
+        if (hrZones) {
+            wuMin = hrZones.z1.min;
+            wuMax = hrZones.z1.max;
+            wuLabel = hrZones.z1.label;
+        }
+        steps.push({
+            type: 'warmup',
+            name: 'Warm up',
+            distanceMeters: warmupDistance,
+            hrZone: 1,
+            hrTargetMinBpm: wuMin,
+            hrTargetMaxBpm: wuMax,
+            hrZoneLabel: wuLabel
+        });
     }
+
     steps.push({
         type: 'work',
         name: workout.description.split(':')[0] || 'Main set',
         distanceMeters: remainingDistance || workout.totalDistance || undefined,
         paceSecondsPerKm: targetPace,
         hrZone,
+        hrTargetMinBpm,
+        hrTargetMaxBpm,
+        hrZoneLabel,
+        paceTargetMinSecondsPerKm,
+        paceTargetMaxSecondsPerKm,
     });
+
     if (cooldownDistance > 0) {
-        steps.push({ type: 'cooldown', name: 'Cool down', distanceMeters: cooldownDistance, hrZone: 1 });
+        let cdMin: number | undefined;
+        let cdMax: number | undefined;
+        let cdLabel: string | undefined;
+        if (hrZones) {
+            cdMin = hrZones.z1.min;
+            cdMax = hrZones.z1.max;
+            cdLabel = hrZones.z1.label;
+        }
+        steps.push({
+            type: 'cooldown',
+            name: 'Cool down',
+            distanceMeters: cooldownDistance,
+            hrZone: 1,
+            hrTargetMinBpm: cdMin,
+            hrTargetMaxBpm: cdMax,
+            hrZoneLabel: cdLabel
+        });
     }
 
     return { version: 1, source: 'generated-plan', steps };
 }
+
 
 function updateDescription(type: WorkoutType, distance: number, pace: number): string {
     const distKm = (distance / 1000).toFixed(1);

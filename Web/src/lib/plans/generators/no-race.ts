@@ -1,8 +1,9 @@
 import { WorkoutType, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
-import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume } from '../index';
+import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume, workoutTypeToHrZone, computeDuration } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
 import { enrichWorkoutsWithDescriptions } from '../descriptions';
+import { estimateSwimPaceFromVdot } from '../swim-pace';
 
 type NoRacePhase = 'BASE' | 'BUILD' | 'MAINTAIN';
 
@@ -18,6 +19,14 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
     const swimsPerWeek = Math.max(0, config.swimsPerWeek || 0);
     const longRunDay = config.longRunDay !== undefined ? config.longRunDay : 0;
     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
+
+    // Validate and adjust rest days if they leave fewer slots than runsPerWeek requires
+    let restDays = config.restDays ? [...config.restDays] : [];
+    if (restDays.length > 7 - runsPerWeek) {
+        restDays = restDays.slice(0, 7 - runsPerWeek);
+    }
+
+    const swimPace = estimateSwimPaceFromVdot(vdot);
 
     const peakVolume = config.weeklyMileageGoal || 40000;
     const minStart = getMinStartVolume(config.raceType ?? null);
@@ -91,8 +100,9 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
             preferredLongRunDay: longRunDay,
             preferredWorkoutDay: workoutDay,
             preferredSwimDay: config.swimDay,
-            restDays: config.restDays,
+            restDays: restDays,
             isRecoveryWeek,
+            swimPace: swimPace,
         });
 
         weekSchedule.forEach(w => {
@@ -108,13 +118,14 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
                 targetPace: w.targetPace,
                 targetDuration: w.targetDuration,
                 phase: phase as PlanPhase,
+                targetHrZone: w.targetHrZone,
             });
         });
 
         currentDate.setDate(currentDate.getDate() + 7);
     }
 
-    const result = fixBackToBackSameType(workouts, { restDays: config.restDays });
+    const result = fixBackToBackSameType(workouts, { restDays: restDays });
     enrichWorkoutsWithDescriptions(result);
     return result;
 }
@@ -141,11 +152,12 @@ function generateNoRaceWeek(params: {
     preferredSwimDay?: number;
     restDays?: number[];
     isRecoveryWeek: boolean;
+    swimPace: number;
 }): ScheduledWorkout[] {
     const {
         phase, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
         weeklyVolume, preferredLongRunDay, preferredWorkoutDay,
-        preferredSwimDay, restDays, isRecoveryWeek,
+        preferredSwimDay, restDays, isRecoveryWeek, swimPace,
     } = params;
 
     const workouts: ScheduledWorkout[] = [];
@@ -201,7 +213,8 @@ function generateNoRaceWeek(params: {
         description: `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`,
         totalDistance: longRunDist,
         targetPace: easyPace,
-        targetDuration: 0,
+        targetDuration: computeDuration(longRunDist, easyPace),
+        targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RUN),
     });
 
     if (hasQuality) {
@@ -210,13 +223,15 @@ function generateNoRaceWeek(params: {
         hardSessionDays.push(qualityDay);
 
         if (phase === 'BASE') {
+            const paceVal = Math.round((paces.threshold + paces.interval) / 2);
             workouts.push({
                 dayOffset: qualityDay,
                 type: WorkoutType.FARTLEK,
                 description: `Fartlek: 8km (3min hard / 2min easy)`,
                 totalDistance: 8000,
-                targetPace: Math.round((paces.threshold + paces.interval) / 2),
-                targetDuration: 0,
+                targetPace: paceVal,
+                targetDuration: computeDuration(8000, paceVal),
+                targetHrZone: workoutTypeToHrZone(WorkoutType.FARTLEK),
             });
         } else {
             workouts.push({
@@ -225,7 +240,8 @@ function generateNoRaceWeek(params: {
                 description: `Threshold: 6km @ ${formatPace(paces.threshold)}`,
                 totalDistance: 8000,
                 targetPace: paces.threshold,
-                targetDuration: 0,
+                targetDuration: computeDuration(8000, paces.threshold),
+                targetHrZone: workoutTypeToHrZone(WorkoutType.TEMPO),
             });
         }
     }
@@ -254,7 +270,8 @@ function generateNoRaceWeek(params: {
                 description: `Recovery: ${(easyDist / 1000).toFixed(1)}km`,
                 totalDistance: easyDist,
                 targetPace: recoveryPace,
-                targetDuration: 0,
+                targetDuration: computeDuration(easyDist, recoveryPace),
+                targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
             });
         } else {
             workouts.push({
@@ -263,7 +280,8 @@ function generateNoRaceWeek(params: {
                 description: `Easy: ${(easyDist / 1000).toFixed(1)}km`,
                 totalDistance: easyDist,
                 targetPace: easyPace,
-                targetDuration: 0,
+                targetDuration: computeDuration(easyDist, easyPace),
+                targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
             });
         }
     }
@@ -279,8 +297,9 @@ function generateNoRaceWeek(params: {
             type: WorkoutType.SWIM,
             description: 'Swim: 1500m @ Easy',
             totalDistance: 1500,
-            targetPace: 120,
+            targetPace: swimPace,
             targetDuration: 2700,
+            targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
         });
     }
 
@@ -302,6 +321,7 @@ function generateNoRaceWeek(params: {
                 totalDistance: 0,
                 targetPace: 0,
                 targetDuration: 3600,
+                targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE),
             });
         } else if (remainingSwims > 0) {
             remainingSwims--;
@@ -310,8 +330,9 @@ function generateNoRaceWeek(params: {
                 type: WorkoutType.SWIM,
                 description: 'Swim: 1500m @ Easy',
                 totalDistance: 1500,
-                targetPace: 120,
+                targetPace: swimPace,
                 targetDuration: 2700,
+                targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
             });
         }
     }
@@ -331,6 +352,7 @@ function generateNoRaceWeek(params: {
             totalDistance: 0,
             targetPace: 0,
             targetDuration: 2700,
+            targetHrZone: workoutTypeToHrZone(WorkoutType.STRENGTH),
         });
         remainingStrength--;
     }

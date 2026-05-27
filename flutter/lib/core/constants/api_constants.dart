@@ -70,11 +70,11 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'RunFlow';
-  static const String stravaClientId = String.fromEnvironment(
+  static String stravaClientId = const String.fromEnvironment(
     'STRAVA_CLIENT_ID',
     defaultValue: '',
   );
-  static const String stravaRedirectUri = String.fromEnvironment(
+  static String stravaRedirectUri = const String.fromEnvironment(
     'STRAVA_REDIRECT_URI',
     defaultValue: 'https://runflow.schuelken.uk/api/auth/strava/callback',
   );

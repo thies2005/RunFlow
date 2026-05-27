@@ -1,6 +1,6 @@
 import { WorkoutType, RaceType, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '@/lib/metrics/vdot';
-import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume } from '../index';
+import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume, workoutTypeToHrZone, computeDuration, computeQualityDuration, getQualityFraction } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
 import { enrichWorkoutsWithDescriptions } from '../descriptions';
 
@@ -68,6 +68,12 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
     const runsPerWeek = Math.max(3, config.runsPerWeek ?? 5);
     const strengthPerWeek = Math.max(0, config.strengthPerWeek ?? 1);
     const longRunDay = config.longRunDay !== undefined ? config.longRunDay : 0;
+
+    // Validate restDays: ensure they leave enough slots for runs
+    let restDays = config.restDays ? [...config.restDays] : [];
+    if (restDays.length > 7 - runsPerWeek) {
+        restDays = restDays.slice(0, 7 - runsPerWeek);
+    }
 
     const isBackyardUltra = raceType === 'BACKYARD_ULTRA';
     const isTimedEvent = raceType === 'TWELVE_HOUR' || raceType === 'TWENTY_FOUR_HOUR';
@@ -169,6 +175,7 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
                     targetPace: w.targetPace,
                     targetDuration: w.targetDuration,
                     phase: 'RACE_WEEK' as PlanPhase,
+                    targetHrZone: w.targetHrZone,
                 });
             });
             currentDate.setDate(currentDate.getDate() + 7);
@@ -230,7 +237,7 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
             weeklyVolume: weekVolumeCap,
             maxLongRunKm: config.maxLongRunKm,
             preferredLongRunDay: longRunDay,
-            restDays: config.restDays,
+            restDays: restDays,
             isBackyardUltra,
             isTimedEvent,
             isRecoveryWeek,
@@ -256,6 +263,7 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
                 targetPace: w.targetPace,
                 targetDuration: w.targetDuration,
                 phase: phase as PlanPhase,
+                targetHrZone: w.targetHrZone,
             });
         });
 
@@ -264,7 +272,7 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
 
     const result = fixBackToBackSameType(workouts, {
         raceDate,
-        restDays: config.restDays,
+        restDays: restDays,
         protectedTypes: [WorkoutType.RACE, WorkoutType.LONG_RUN],
     });
     enrichWorkoutsWithDescriptions(result, ultraEasyPace);
@@ -362,6 +370,8 @@ function generateUltraWeek(params: {
         for (const rd of restDays) usedDays.add(rd);
     }
 
+    const easyPaceForDuration = Math.round((paces.easy.min + paces.easy.max) / 2);
+
     const longRunDist = getUltraLongRunDistance(raceType, weeklyVolume, paces, maxLongRunKm);
     const backToBackDist = Math.round(longRunDist * ULTRA_CONSTANTS.BACK_TO_BACK_RATIO);
 
@@ -436,12 +446,29 @@ function generateUltraWeek(params: {
             description: longRunDesc,
             totalDistance: longRunDist,
             targetPace: longRunPace,
-            targetDuration: 0,
+            targetDuration: computeDuration(longRunDist, longRunPace),
+            targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RUN),
         });
 
         if (hasBackToBack) {
             const nextDay = (day + 1) % 7;
-            const b2bDay = usedDays.has(nextDay) ? (day + 2) % 7 : nextDay;
+            const altDay = (day + 2) % 7;
+            let b2bDay: number | null = null;
+            if (!usedDays.has(nextDay)) {
+                b2bDay = nextDay;
+            } else if (!usedDays.has(altDay)) {
+                b2bDay = altDay;
+            } else {
+                // Find any adjacent free day
+                for (let offset = 3; offset <= 6; offset++) {
+                    const candidate = (day + offset) % 7;
+                    if (!usedDays.has(candidate)) {
+                        b2bDay = candidate;
+                        break;
+                    }
+                }
+            }
+            if (b2bDay !== null) {
             usedDays.add(b2bDay);
 
             let b2bDesc: string;
@@ -457,8 +484,10 @@ function generateUltraWeek(params: {
                 description: b2bDesc,
                 totalDistance: backToBackDist,
                 targetPace: ultraEasyPace,
-                targetDuration: 0,
+                targetDuration: computeDuration(backToBackDist, ultraEasyPace),
+                targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RUN),
             });
+            } // end if b2bDay !== null
         }
     }
 
@@ -466,7 +495,12 @@ function generateUltraWeek(params: {
         const day = getAvailableDay(3, hardSessionDays);
         usedDays.add(day);
         hardSessionDays.push(day);
-        workouts.push({ dayOffset: day, ...qualitySession, targetDuration: 0 });
+        workouts.push({
+            dayOffset: day,
+            ...qualitySession,
+            targetDuration: computeQualityDuration(qualitySession.totalDistance, qualitySession.targetPace, easyPaceForDuration, getQualityFraction(qualitySession.type)),
+            targetHrZone: workoutTypeToHrZone(qualitySession.type),
+        });
     }
 
     const additionalRunsCount = Math.max(0, easyRunsCount);
@@ -486,7 +520,8 @@ function generateUltraWeek(params: {
                 description: `Recovery: ${(easyDist / 1000).toFixed(1)}km`,
                 totalDistance: easyDist,
                 targetPace: recoveryPace,
-                targetDuration: 0,
+                targetDuration: computeDuration(easyDist, recoveryPace),
+                targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
             });
         } else {
             workouts.push({
@@ -495,7 +530,8 @@ function generateUltraWeek(params: {
                 description: `Easy: ${(easyDist / 1000).toFixed(1)}km`,
                 totalDistance: easyDist,
                 targetPace: easyPace,
-                targetDuration: 0,
+                targetDuration: computeDuration(easyDist, easyPace),
+                targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
             });
         }
     }
@@ -510,7 +546,8 @@ function generateUltraWeek(params: {
                 description: `Night Run: ${(easyDist / 1000).toFixed(1)}km (sleep deprivation practice)`,
                 totalDistance: easyDist,
                 targetPace: ultraEasyPace,
-                targetDuration: 0,
+                targetDuration: computeDuration(easyDist, ultraEasyPace),
+                targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
             });
         }
     }
@@ -527,6 +564,7 @@ function generateUltraWeek(params: {
                 totalDistance: Math.round(easyDist * 1.5),
                 targetPace: ultraEasyPace,
                 targetDuration: targetHours * 3600,
+                targetHrZone: workoutTypeToHrZone(WorkoutType.TEMPO),
             });
         }
     }
@@ -547,6 +585,7 @@ function generateUltraWeek(params: {
             totalDistance: 0,
             targetPace: 0,
             targetDuration: 2700,
+            targetHrZone: workoutTypeToHrZone(WorkoutType.STRENGTH),
         });
         remainingStrength--;
     }
@@ -613,6 +652,7 @@ function generateUltraRaceWeek(params: {
         totalDistance: ULTRA_RACE_DISTANCE_M[raceType] || 50000,
         targetPace: 0,
         targetDuration: 0,
+        targetHrZone: workoutTypeToHrZone(WorkoutType.RACE),
     });
 
     const shakeoutOffsets = [-2, -3, -4];
@@ -628,7 +668,8 @@ function generateUltraRaceWeek(params: {
             description: 'Shakeout: 3km Easy',
             totalDistance: 3000,
             targetPace: params.ultraEasyPace,
-            targetDuration: 0,
+            targetDuration: computeDuration(3000, params.ultraEasyPace),
+            targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
         });
     }
 

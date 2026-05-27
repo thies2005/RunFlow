@@ -803,6 +803,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         swimDay: typeof swimDay === 'number' ? swimDay : undefined,
         restDays: Array.isArray(restDays) ? restDays : undefined,
         weeksTotal: resolvedPlanWeeks,
+        customRunDistM: customRunDistM || undefined,
     };
 
     const workouts = generateTrainingPlan(planConfig);

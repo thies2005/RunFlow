@@ -10,9 +10,23 @@ import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/screens/auth/login_screen.dart';
 import 'package:runflow_flutter/services/auth_service_impl.dart';
+import 'package:runflow_flutter/core/constants/api_constants.dart';
 
 void main() {
   group('LoginScreen', () {
+    String? originalClientId;
+
+    setUp(() {
+      originalClientId = AppConstants.stravaClientId;
+      AppConstants.stravaClientId = '';
+    });
+
+    tearDown(() {
+      if (originalClientId != null) {
+        AppConstants.stravaClientId = originalClientId!;
+      }
+    });
+
     testWidgets('renders RunFlow branding', (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(child: _TestApp()),

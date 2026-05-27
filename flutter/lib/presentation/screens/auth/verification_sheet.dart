@@ -86,7 +86,7 @@ class _VerificationSheetState extends ConsumerState<VerificationSheet> {
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.text,
                   textCapitalization: TextCapitalization.characters,
-                  maxLength: 1,
+                  autofillHints: const [AutofillHints.oneTimeCode],
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -97,7 +97,20 @@ class _VerificationSheetState extends ConsumerState<VerificationSheet> {
                     ),
                   ),
                   onChanged: (value) {
-                    if (value.isNotEmpty && index < 5) {
+                    if (value.length > 1) {
+                      final chars = value.split('');
+                      for (int i = 0; i < chars.length; i++) {
+                        if (index + i < 6) {
+                          _controllers[index + i].text = chars[i].toUpperCase();
+                        }
+                      }
+                      final nextIndex = index + chars.length;
+                      if (nextIndex < 6) {
+                        _focusNodes[nextIndex].requestFocus();
+                      } else {
+                        _focusNodes[5].unfocus();
+                      }
+                    } else if (value.isNotEmpty && index < 5) {
                       _focusNodes[index + 1].requestFocus();
                     }
                     if (_code.length == 6) {

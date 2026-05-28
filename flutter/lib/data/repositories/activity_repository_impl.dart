@@ -235,7 +235,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
     final apiPayload = <String, dynamic>{
       'name': name,
       'type': type,
-      'startDate': date.toIso8601String(),
+      'startDate': date.toUtc().toIso8601String(),
       'distance': distance * 1000,
       'movingTime': duration * 60,
       'elapsedTime': duration * 60,
@@ -466,7 +466,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
     return <String, dynamic>{
       'name': workout.name,
       'type': workout.activityType,
-      'startDate': workout.startTime.toIso8601String(),
+      'startDate': workout.startTime.toUtc().toIso8601String(),
       'distance': workout.distanceMeters,
       'movingTime': workout.durationSeconds,
       'elapsedTime': workout.durationSeconds,

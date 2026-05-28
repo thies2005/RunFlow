@@ -426,6 +426,12 @@ class WorkoutRecordingService {
     _isScanning = true;
 
     try {
+      try {
+        await ble.UniversalBle.requestPermissions();
+      } catch (e) {
+        logger.error('BLE requestPermissions error: $e');
+      }
+
       _scanSubscription =
           ble.UniversalBle.scanStream.listen((ble.BleDevice device) {
         final String name = device.name ?? 'Unknown Device';

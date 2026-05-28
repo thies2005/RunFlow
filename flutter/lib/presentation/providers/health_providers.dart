@@ -78,9 +78,33 @@ Future<void> _updateDailyHealthCache(DateTime date, FutureOr<DailyHealthLog> Fun
 Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
   final dateStr = date.toIso8601String().split('T').first;
   final cacheKey = 'daily_health_log_$dateStr';
+
+  Future<List<FoodLogEntry>> getLocalCachedFoodLogs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedStr = prefs.getString(cacheKey);
+      if (cachedStr != null && cachedStr.isNotEmpty) {
+        final Map<String, dynamic> jsonMap = jsonDecode(cachedStr) as Map<String, dynamic>;
+        final dataLog = data_models.DailyHealthLog.fromJson(jsonMap);
+        return dataLog.toDomain().foodLogs;
+      }
+    } catch (_) {}
+    return [];
+  }
+
   try {
     final apiRepo = ref.read(healthApiRepositoryProvider);
-    final log = await apiRepo.getDailyHealth(date);
+    var log = await apiRepo.getDailyHealth(date);
+
+    final localFoodLogs = await getLocalCachedFoodLogs();
+    if (localFoodLogs.isNotEmpty) {
+      final existingIds = log.foodLogs.map((e) => e.id).toSet();
+      final uniqueLocalLogs = localFoodLogs.where((e) => !existingIds.contains(e.id)).toList();
+      if (uniqueLocalLogs.isNotEmpty) {
+        log = log.copyWith(foodLogs: [...log.foodLogs, ...uniqueLocalLogs]);
+      }
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = jsonEncode(log.toData().toJson());

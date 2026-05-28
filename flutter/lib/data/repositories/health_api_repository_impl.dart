@@ -385,49 +385,32 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       );
       final envelope = response.data as Map<String, dynamic>;
       final dailyHealthData = envelope['dailyHealth'] as Map<String, dynamic>?;
-      if (dailyHealthData == null) {
-        return DailyHealthLog(
-          id: envelope['id'] as int? ?? 0,
-          date: date,
-          steps: 0,
-          waterIntake: 0,
-          exerciseCalories: (envelope['exerciseCalories'] as num?)?.toInt() ?? 0,
-          supplementLogs: (envelope['supplementLogs'] as List<dynamic>?)
-                  ?.map((e) => SupplementLog.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-          foodLogs: (envelope['foodLogs'] as List<dynamic>?)
-                  ?.map((e) => _parseFoodLogEntry(e as Map<String, dynamic>).toData())
-                  .toList() ??
-              [],
-          meta: envelope['meta'] != null
-              ? DailyHealthMeta.fromJson(envelope['meta'] as Map<String, dynamic>)
-              : null,
-        ).toDomain();
-      }
-      dailyHealthData['date'] = dailyHealthData['date'] ?? dateStr;
-      dailyHealthData['id'] = dailyHealthData['id'] ?? 0;
-      if (envelope.containsKey('exerciseCalories')) {
-        dailyHealthData['exerciseCalories'] = envelope['exerciseCalories'];
-      }
-      if (envelope.containsKey('supplementLogs')) {
-        dailyHealthData['supplementLogs'] = envelope['supplementLogs'];
-      }
-      if (envelope.containsKey('foodLogs')) {
-        dailyHealthData['foodLogs'] = envelope['foodLogs'];
-      }
-      if (envelope.containsKey('meta')) {
-        dailyHealthData['meta'] = envelope['meta'];
-      }
-      final foodLogs = (dailyHealthData['foodLogs'] as List<dynamic>?)
+
+      final foodLogs = (envelope['foodLogs'] as List<dynamic>?)
               ?.map((e) => _parseFoodLogEntry(e as Map<String, dynamic>))
               .toList() ??
           <domain.FoodLogEntry>[];
-      dailyHealthData['foodLogs'] =
-          foodLogs.map((f) => f.toData().toJson()).toList();
-      return DailyHealthLog.fromJson(dailyHealthData).toDomain().copyWith(
-            foodLogs: foodLogs,
-          );
+
+      final supplementLogs = (envelope['supplementLogs'] as List<dynamic>?)
+              ?.map((e) => _parseSupplementLog(e as Map<String, dynamic>))
+              .toList() ??
+          <domain.SupplementLog>[];
+
+      final steps = dailyHealthData != null ? (dailyHealthData['steps'] as num?)?.toInt() ?? 0 : 0;
+      final weight = dailyHealthData != null ? (dailyHealthData['weight'] as num?)?.toDouble() : null;
+      final waterIntake = dailyHealthData != null ? (dailyHealthData['waterIntake'] as num?)?.toDouble() ?? 0.0 : 0.0;
+      final exerciseCalories = (envelope['exerciseCalories'] as num?)?.toInt() ?? 0;
+
+      return domain.DailyHealthLog(
+        id: dailyHealthData != null ? (dailyHealthData['id'] as num?)?.toInt() ?? 0 : 0,
+        date: date,
+        steps: steps,
+        weight: weight,
+        waterIntake: waterIntake,
+        exerciseCalories: exerciseCalories,
+        supplementLogs: supplementLogs,
+        foodLogs: foodLogs,
+      );
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get daily health.');
     }
@@ -797,6 +780,14 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       carbs: toDouble(json['carbs']) ?? toDouble(foodItem['carbs']),
       fats: toDouble(json['fats']) ?? toDouble(foodItem['fats']),
       foodItemId: json['foodItemId']?.toString() ?? foodItem['id']?.toString(),
+    );
+  }
+
+  domain.SupplementLog _parseSupplementLog(Map<String, dynamic> json) {
+    return domain.SupplementLog(
+      supplementId: json['supplementId']?.toString() ?? '',
+      date: json['date'] != null ? DateTime.parse(json['date'].toString()) : DateTime.now(),
+      taken: json['taken'] as bool? ?? false,
     );
   }
 }

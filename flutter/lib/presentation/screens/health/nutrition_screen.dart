@@ -33,20 +33,20 @@ class NutritionScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () => context.push('/health/library'),
-            icon: const Icon(
-              Icons.bookmarks_outlined,
-              color: AppColors.primary,
-            ),
-            tooltip: 'Nutrition Library',
-          ),
-          IconButton(
             onPressed: () => _showTargetsDialog(context, ref),
             icon: const Icon(
               Icons.settings_outlined,
               color: AppColors.onSurfaceVariant,
             ),
             tooltip: S.of(context).nutritionSetTargets,
+          ),
+          IconButton(
+            onPressed: () => context.push('/health/library'),
+            icon: const Icon(
+              Icons.bookmarks_outlined,
+              color: AppColors.primary,
+            ),
+            tooltip: 'Nutrition Library',
           ),
           IconButton(
             onPressed: () => _showMealSuggestion(context, ref),

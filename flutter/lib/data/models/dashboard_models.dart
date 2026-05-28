@@ -182,7 +182,7 @@ sealed class Activity with _$Activity {
     required int? maxHr,
     required double? averageCadence,
     required bool hasHeartrate,
-    required double totalElevation,
+    @JsonKey(fromJson: _parseDouble) required double totalElevation,
     required double? trimp,
     required double? runningTss,
     required double? estimatedVdot,

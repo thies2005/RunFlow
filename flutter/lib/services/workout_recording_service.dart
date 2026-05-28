@@ -432,6 +432,13 @@ class WorkoutRecordingService {
         logger.error('BLE requestPermissions error: $e');
       }
 
+      final ble.AvailabilityState availability =
+          await ble.UniversalBle.getBluetoothAvailabilityState();
+      if (availability != ble.AvailabilityState.poweredOn) {
+        throw Exception(
+            'Bluetooth is not powered on or authorized. Status: ${availability.name}');
+      }
+
       _scanSubscription =
           ble.UniversalBle.scanStream.listen((ble.BleDevice device) {
         final String name = device.name ?? 'Unknown Device';

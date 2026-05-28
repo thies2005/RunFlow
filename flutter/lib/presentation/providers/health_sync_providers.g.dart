@@ -50,7 +50,7 @@ final class HealthSyncStateProvider
   }
 }
 
-String _$healthSyncStateHash() => r'e03be9c6468f06437cf9dce71916a187bf68cac2';
+String _$healthSyncStateHash() => r'a769ae2920d33afba4674e5b1358c8efaa75f1e4';
 
 abstract class _$HealthSyncState
     extends

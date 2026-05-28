@@ -520,7 +520,7 @@ final class NutritionNotifierProvider
   }
 }
 
-String _$nutritionNotifierHash() => r'f4b22f82909f049258eeba58c6439bd1efd43e25';
+String _$nutritionNotifierHash() => r'd98812c1ab5e4d099ad328afef072e79a5d51cfe';
 
 final class NutritionNotifierFamily extends $Family
     with
@@ -1032,7 +1032,7 @@ final class SavedMealsProvider
   SavedMeals create() => SavedMeals();
 }
 
-String _$savedMealsHash() => r'6941343148aa2438ed508147fd1ec0441ab03de2';
+String _$savedMealsHash() => r'b6d85f5f372e3380452f47fdabfe7e55eb7ba28f';
 
 abstract class _$SavedMeals extends $AsyncNotifier<List<SavedMeal>> {
   FutureOr<List<SavedMeal>> build();

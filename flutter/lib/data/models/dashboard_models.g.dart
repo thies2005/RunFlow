@@ -85,7 +85,7 @@ _Activity _$ActivityFromJson(Map<String, dynamic> json) => _Activity(
   maxHr: (json['maxHr'] as num?)?.toInt(),
   averageCadence: (json['averageCadence'] as num?)?.toDouble(),
   hasHeartrate: json['hasHeartrate'] as bool,
-  totalElevation: (json['totalElevation'] as num).toDouble(),
+  totalElevation: _parseDouble(json['totalElevation']),
   trimp: (json['trimp'] as num?)?.toDouble(),
   runningTss: (json['runningTss'] as num?)?.toDouble(),
   estimatedVdot: (json['estimatedVdot'] as num?)?.toDouble(),

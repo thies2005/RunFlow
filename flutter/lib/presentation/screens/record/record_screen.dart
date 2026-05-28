@@ -490,6 +490,22 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
     final List<HrSensorInfo> sensors = await bleNotifier.scanForDevices();
 
     if (mounted) {
+      final bleState = ref.read(bleConnectionProvider);
+      if (bleState is AsyncError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Bluetooth scan failed: ${bleState.error}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      } else if (sensors.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'No Bluetooth heart rate monitors found. Make sure your sensor is on and in pairing mode.'),
+          ),
+        );
+      }
       setState(() {
         _scannedSensors = sensors;
         _isScanning = false;

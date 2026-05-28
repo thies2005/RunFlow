@@ -212,7 +212,7 @@ final class ReadinessNotifierProvider
   ReadinessNotifier create() => ReadinessNotifier();
 }
 
-String _$readinessNotifierHash() => r'8594523a0fea92c5398f09360452944e790ff283';
+String _$readinessNotifierHash() => r'0a6b5e7368f182549dc05187bf602e5e4e627be6';
 
 abstract class _$ReadinessNotifier
     extends $AsyncNotifier<DailyReadinessRecord?> {
@@ -295,7 +295,7 @@ final class ReadinessHistoryProvider
   }
 }
 
-String _$readinessHistoryHash() => r'c8fa5c40698b80010c009417ba6dfc4e4d83c13a';
+String _$readinessHistoryHash() => r'b7462323d6332ae54c9f68fc57b0c490ea01efdd';
 
 final class ReadinessHistoryFamily extends $Family
     with

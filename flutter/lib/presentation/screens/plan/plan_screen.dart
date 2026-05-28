@@ -68,6 +68,28 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
     }
     final sortedDates = workoutsByDate.keys.toList()..sort();
 
+    // Group workouts by calendar week
+    DateTime? planStartDate;
+    if (goal.workouts.isNotEmpty) {
+      planStartDate = goal.workouts
+          .map((w) => w.scheduledDate)
+          .reduce((a, b) => a.isBefore(b) ? a : b);
+    }
+    DateTime? firstMonday;
+    if (planStartDate != null) {
+      firstMonday = DateTime(planStartDate.year, planStartDate.month, planStartDate.day)
+          .subtract(Duration(days: planStartDate.weekday - 1));
+    }
+    final datesByWeek = <int, List<DateTime>>{};
+    if (firstMonday != null) {
+      for (final date in sortedDates) {
+        final daysDiff = date.difference(firstMonday).inDays;
+        final weekNumber = (daysDiff / 7).floor() + 1;
+        datesByWeek.putIfAbsent(weekNumber, () => []).add(date);
+      }
+    }
+    final sortedWeeks = datesByWeek.keys.toList()..sort();
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -82,27 +104,6 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
               icon: const Icon(Icons.analytics_outlined),
               onPressed: () => context.push('/analytics'),
               tooltip: 'Analysis',
-            ),
-          if (!_reorderMode)
-            FilledButton.tonal(
-              onPressed: () => setState(() => _reorderMode = true),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.swap_vert, size: 18),
-                const SizedBox(width: 4),
-                Text(S.of(context).planReorderWorkouts, style: const TextStyle(fontSize: 13)),
-              ]),
-            ),
-          if (!_reorderMode)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: OutlinedButton(
-                onPressed: () => context.push('/goals/${goal.id}'),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.info_outline, size: 16),
-                  const SizedBox(width: 4),
-                  Text(S.of(context).planGoalDetailsTooltip, style: const TextStyle(fontSize: 13)),
-                ]),
-              ),
             ),
           if (!_reorderMode)
             PopupMenuButton<String>(
@@ -231,6 +232,31 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
               ),
             ),
           ),
+          if (!_reorderMode) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.tonalIcon(
+                      onPressed: () => setState(() => _reorderMode = true),
+                      icon: const Icon(Icons.swap_vert, size: 18),
+                      label: Text(S.of(context).planReorderWorkouts),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.push('/goals/${goal.id}'),
+                      icon: const Icon(Icons.info_outline, size: 16),
+                      label: Text(S.of(context).planGoalDetailsTooltip),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -272,51 +298,80 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
           else if (_reorderMode)
             _buildReorderableList(sortedDates, workoutsByDate)
           else
-            ...sortedDates.map((date) {
-              final dayWorkouts = workoutsByDate[date]!;
-              final isToday = _isToday(date);
-              final isPast = date.isBefore(DateTime.now());
-
+            ...sortedWeeks.map((weekNum) {
+              final weekDates = datesByWeek[weekNum]!;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.fromLTRB(16, isToday ? 12 : 8, 16, 4),
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                     child: Row(
                       children: [
                         Text(
-                          _formatDateHeader(context, date),
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: isToday ? AppColors.primary : (isPast ? AppColors.onSurfaceVariant : theme.textTheme.bodyMedium?.color),
-                            fontWeight: isToday ? FontWeight.w600 : FontWeight.w500,
+                          'Week $weekNum',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
                           ),
                         ),
-                        if (isToday) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              S.of(context).planToday,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: AppColors.onPrimary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 10,
-                              ),
-                            ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Divider(
+                            color: AppColors.primary.withValues(alpha: 0.15),
+                            thickness: 1.5,
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ),
-                  ...dayWorkouts.map((workout) => _PlanWorkoutCard(
-                    workout: workout,
-                    goalId: goal.id,
-                    isToday: isToday,
-                  )),
+                  ...weekDates.map((date) {
+                    final dayWorkouts = workoutsByDate[date]!;
+                    final isToday = _isToday(date);
+                    final isPast = date.isBefore(DateTime.now());
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(16, isToday ? 12 : 8, 16, 4),
+                          child: Row(
+                            children: [
+                              Text(
+                                _formatDateHeader(context, date),
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: isToday ? AppColors.primary : (isPast ? AppColors.onSurfaceVariant : theme.textTheme.bodyMedium?.color),
+                                  fontWeight: isToday ? FontWeight.w600 : FontWeight.w500,
+                                ),
+                              ),
+                              if (isToday) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    S.of(context).planToday,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: AppColors.onPrimary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        ...dayWorkouts.map((workout) => _PlanWorkoutCard(
+                          workout: workout,
+                          goalId: goal.id,
+                          isToday: isToday,
+                        )),
+                      ],
+                    );
+                  }),
                 ],
               );
             }),

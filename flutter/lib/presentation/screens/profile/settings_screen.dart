@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
+import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -327,6 +328,50 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
           ),
+          if (ref.watch(healthConnectAvailableProvider).asData?.value ?? false) ...[
+            const SizedBox(height: 8),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.sync),
+                title: const Text('Reconnect to Health Connect'),
+                subtitle: Text(
+                  'Refresh permissions and sync vitals & sleep data',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  final granted = await ref
+                      .read(healthPermissionsProvider.notifier)
+                      .requestPermissions();
+                  if (granted) {
+                    unawaited(ref.read(vitalsProvider.notifier).refresh());
+                    unawaited(ref.read(sleepProvider.notifier).refresh());
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Successfully connected to Health Connect!'),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Failed to connect to Health Connect.'),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: AppColors.error,
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

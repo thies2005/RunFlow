@@ -283,6 +283,15 @@ class NutritionNotifier extends _$NutritionNotifier {
   Future<NutritionLog> build(DateTime date) async {
     try {
       final daily = await ref.read(dailyHealthProvider(date).future);
+      if (daily.id == 0 && daily.foodLogs.isEmpty) {
+        try {
+          final repo = ref.read(healthRepositoryProvider);
+          final localLog = await repo.getNutritionLog(date);
+          if (localLog.calories > 0 || localLog.water > 0) {
+            return localLog;
+          }
+        } catch (_) {}
+      }
       double totalCalories = 0;
       double totalProtein = 0;
       double totalCarbs = 0;

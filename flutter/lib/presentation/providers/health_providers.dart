@@ -10,6 +10,8 @@ import 'package:runflow_flutter/data/repositories/health_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/health_repository.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:runflow_flutter/data/models/health_models.dart' as data_models;
+import 'package:runflow_flutter/data/mappers/health_mappers.dart';
 
 part 'health_providers.g.dart';
 
@@ -50,15 +52,58 @@ Future<List<BodyMeasurement>> bodyMeasurements(Ref ref) async {
   }
 }
 
+Future<void> _updateDailyHealthCache(DateTime date, FutureOr<DailyHealthLog> Function(DailyHealthLog) updater) async {
+  final dateStr = date.toIso8601String().split('T').first;
+  final cacheKey = 'daily_health_log_$dateStr';
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedStr = prefs.getString(cacheKey);
+    DailyHealthLog current;
+    if (cachedStr != null && cachedStr.isNotEmpty) {
+      final Map<String, dynamic> jsonMap = jsonDecode(cachedStr) as Map<String, dynamic>;
+      final dataLog = data_models.DailyHealthLog.fromJson(jsonMap);
+      current = dataLog.toDomain();
+    } else {
+      current = DailyHealthLog(id: 0, date: date, supplementLogs: [], foodLogs: []);
+    }
+    final updated = await updater(current);
+    final jsonStr = jsonEncode(updated.toData().toJson());
+    await prefs.setString(cacheKey, jsonStr);
+  } catch (e) {
+    debugPrint('HealthProviders: Failed to update daily health cache: $e');
+  }
+}
+
 @Riverpod(keepAlive: true)
 Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
+  final dateStr = date.toIso8601String().split('T').first;
+  final cacheKey = 'daily_health_log_$dateStr';
   try {
     final apiRepo = ref.read(healthApiRepositoryProvider);
-    return apiRepo.getDailyHealth(date);
+    final log = await apiRepo.getDailyHealth(date);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = jsonEncode(log.toData().toJson());
+      await prefs.setString(cacheKey, jsonStr);
+    } catch (cacheErr) {
+      debugPrint('HealthProviders: Failed to cache daily health log: $cacheErr');
+    }
+    return log;
   } catch (e) {
     debugPrint(
-      'HealthProviders: API daily health failed, returning default: $e',
+      'HealthProviders: API daily health failed, attempting cache fallback: $e',
     );
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedStr = prefs.getString(cacheKey);
+      if (cachedStr != null && cachedStr.isNotEmpty) {
+        final Map<String, dynamic> jsonMap = jsonDecode(cachedStr) as Map<String, dynamic>;
+        final dataLog = data_models.DailyHealthLog.fromJson(jsonMap);
+        return dataLog.toDomain();
+      }
+    } catch (cacheErr) {
+      debugPrint('HealthProviders: Failed to load daily health log from cache: $cacheErr');
+    }
     return DailyHealthLog(id: 0, date: date, supplementLogs: [], foodLogs: []);
   }
 }
@@ -328,14 +373,35 @@ class NutritionNotifier extends _$NutritionNotifier {
   }
 
   Future<void> logFood(FoodItem food, {String mealType = 'snack'}) async {
+    final newEntry = FoodLogEntry(
+      id: 'local_${DateTime.now().millisecondsSinceEpoch}',
+      mealType: mealType,
+      name: food.name,
+      quantity: 1,
+      calories: food.calories,
+      protein: food.protein,
+      carbs: food.carbs,
+      fats: food.fat,
+    );
+    
+    await _updateDailyHealthCache(date, (log) {
+      return log.copyWith(foodLogs: [...log.foodLogs, newEntry]);
+    });
+
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
-      await apiRepo.logFoodEntry(
+      final loggedEntry = await apiRepo.logFoodEntry(
         date: date,
         mealType: mealType,
         quantity: 1,
         foodItem: food,
       );
+      
+      await _updateDailyHealthCache(date, (log) {
+        final filtered = log.foodLogs.where((e) => e.id != newEntry.id).toList();
+        return log.copyWith(foodLogs: [...filtered, loggedEntry]);
+      });
+
       await ref
           .read(healthSyncServiceProvider)
           .syncNutritionToHealthConnect(date);
@@ -358,8 +424,29 @@ class NutritionNotifier extends _$NutritionNotifier {
   }
 
   Future<void> logSavedMeal(SavedMeal meal, {String mealType = 'snack'}) async {
+    final List<FoodLogEntry> localEntries = [];
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    for (int i = 0; i < meal.items.length; i++) {
+      final item = meal.items[i];
+      localEntries.add(FoodLogEntry(
+        id: 'local_${nowMs}_$i',
+        mealType: mealType,
+        name: item.name,
+        quantity: 1,
+        calories: item.calories,
+        protein: item.protein,
+        carbs: item.carbs,
+        fats: item.fats,
+      ));
+    }
+
+    await _updateDailyHealthCache(date, (log) {
+      return log.copyWith(foodLogs: [...log.foodLogs, ...localEntries]);
+    });
+
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
+      final List<FoodLogEntry> serverEntries = [];
       for (final item in meal.items) {
         final food = FoodItem(
           id: 0,
@@ -370,13 +457,21 @@ class NutritionNotifier extends _$NutritionNotifier {
           fat: item.fats,
           servingSize: item.estimatedGrams,
         );
-        await apiRepo.logFoodEntry(
+        final logged = await apiRepo.logFoodEntry(
           date: date,
           mealType: mealType,
           quantity: 1,
           foodItem: food,
         );
+        serverEntries.add(logged);
       }
+      
+      await _updateDailyHealthCache(date, (log) {
+        final localIds = localEntries.map((e) => e.id).toSet();
+        final filtered = log.foodLogs.where((e) => !localIds.contains(e.id)).toList();
+        return log.copyWith(foodLogs: [...filtered, ...serverEntries]);
+      });
+
       await ref
           .read(healthSyncServiceProvider)
           .syncNutritionToHealthConnect(date);
@@ -404,6 +499,25 @@ class NutritionNotifier extends _$NutritionNotifier {
     String? mealType,
   }) async {
     if (entry.id.isEmpty) return;
+    
+    await _updateDailyHealthCache(date, (log) {
+      final updatedLogs = log.foodLogs.map((e) {
+        if (e.id == entry.id) {
+          final factor = quantity / (e.quantity ?? 1.0);
+          return e.copyWith(
+            quantity: quantity,
+            mealType: mealType ?? e.mealType,
+            calories: e.calories != null ? e.calories! * factor : null,
+            protein: e.protein != null ? e.protein! * factor : null,
+            carbs: e.carbs != null ? e.carbs! * factor : null,
+            fats: e.fats != null ? e.fats! * factor : null,
+          );
+        }
+        return e;
+      }).toList();
+      return log.copyWith(foodLogs: updatedLogs);
+    });
+
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       await apiRepo.updateFoodLogEntry(
@@ -423,6 +537,12 @@ class NutritionNotifier extends _$NutritionNotifier {
 
   Future<void> deleteFoodLog(FoodLogEntry entry) async {
     if (entry.id.isEmpty) return;
+    
+    await _updateDailyHealthCache(date, (log) {
+      final filtered = log.foodLogs.where((e) => e.id != entry.id).toList();
+      return log.copyWith(foodLogs: filtered);
+    });
+
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       await apiRepo.deleteFoodLogEntry(entry.id);

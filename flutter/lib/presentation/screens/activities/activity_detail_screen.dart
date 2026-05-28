@@ -20,6 +20,54 @@ class ActivityDetailScreen extends ConsumerWidget {
 
   final String activityId;
 
+  void _showRenameDialog(BuildContext context, WidgetRef ref, Activity activity) {
+    final controller = TextEditingController(text: activity.name);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Rename Activity'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              hintText: 'Enter new activity name',
+            ),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newName = controller.text.trim();
+                if (newName.isNotEmpty && newName != activity.name) {
+                  Navigator.pop(context);
+                  try {
+                    await ref
+                        .read(activitiesProvider.notifier)
+                        .updateActivity(activity.id, name: newName);
+                    ref.invalidate(activityDetailProvider(activity.id));
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to rename: $e')),
+                      );
+                    }
+                  }
+                } else {
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activityAsync = ref.watch(activityDetailProvider(activityId));
@@ -37,6 +85,14 @@ class ActivityDetailScreen extends ConsumerWidget {
             }
           },
         ),
+        actions: [
+          if (activityAsync.asData?.value != null)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => _showRenameDialog(context, ref, activityAsync.asData!.value),
+              tooltip: 'Rename Activity',
+            ),
+        ],
       ),
       body: activityAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

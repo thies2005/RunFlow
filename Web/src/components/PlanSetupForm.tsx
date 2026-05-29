@@ -201,7 +201,7 @@ export default function PlanSetupForm({
     const hasExistingCalibration = useRef(false);
     // Track whether we've loaded settings from the server (to prevent race-type defaults from overriding them)
     const settingsLoadedRef = useRef(false);
-    const initialRaceTypeRef = useRef<string | null>(null);
+
 
     const [message, setMessage] = useState('');
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -265,9 +265,8 @@ export default function PlanSetupForm({
     const shapePercent = propShapePercent > 0 ? propShapePercent : (internalStatsData?.marathonShape?.shape || 0);
 
     // Auto-initialize startWeeklyMileage from the user's last 4 weeks of running
-    // Skip in settings mode — the goal's saved value will be loaded instead
+    // startWeeklyMileage is not persisted in the Goal model, so we always derive it
     useEffect(() => {
-        if (mode === 'settings') return;
         if (!startMileageInitialized.current && internalStatsData?.avgWeeklyKmLast4Weeks > 0) {
             const avg = internalStatsData.avgWeeklyKmLast4Weeks;
             // Round down to nearest 5 km for a clean slider value
@@ -275,7 +274,7 @@ export default function PlanSetupForm({
             setStartWeeklyMileage(Math.max(5, rounded));
             startMileageInitialized.current = true;
         }
-    }, [internalStatsData, mode]);
+    }, [internalStatsData]);
 
     // Fetch existing settings (for settings mode)
     const { data: settingsData } = useQuery({
@@ -393,12 +392,18 @@ export default function PlanSetupForm({
         ? (parseInt(durationWeeks) || 12)
         : Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / msPerWeek));
 
+    // Track whether the user has explicitly changed raceType after settings loaded
+    const userChangedRaceTypeRef = useRef(false);
+    // Track whether the user has explicitly changed weeklyMileage or raceType after settings loaded
+    const userChangedVolumeRef = useRef(false);
+
     const maxLongRunLoadedRef = useRef(false);
     useEffect(() => {
-        // In settings mode, skip the first recalculation — the API value was loaded
-        if (mode === 'settings' && settingsLoadedRef.current && !maxLongRunLoadedRef.current) {
-            maxLongRunLoadedRef.current = true;
-            return;
+        // In settings mode, only recalculate maxLongRunKm when the user explicitly changed volume/race
+        if (mode === 'settings') {
+            if (!userChangedVolumeRef.current) {
+                return; // Don't recalculate from defaults — API value is correct
+            }
         }
         setMaxLongRunKm(getDefaultMaxLongRunKm(raceType, weeklyMileage));
     }, [raceType, weeklyMileage, mode]);
@@ -406,15 +411,11 @@ export default function PlanSetupForm({
     useEffect(() => {
         // In settings mode, only apply race-type defaults when the user explicitly changes the race type.
         // The settingsData effect already loaded the correct saved values from the API.
-        if (mode === 'settings' && !settingsLoadedRef.current) return;
-        if (mode === 'settings' && initialRaceTypeRef.current !== null) {
-            // First raceType change from goalsData — skip and clear the guard
-            if (raceType === initialRaceTypeRef.current) {
-                initialRaceTypeRef.current = null;
-                return;
+        // We block ALL default overwrites until the user explicitly changes raceType.
+        if (mode === 'settings') {
+            if (!userChangedRaceTypeRef.current) {
+                return; // Skip — settings were loaded from API, no user change yet
             }
-            // Different raceType — user changed it, allow defaults to apply
-            initialRaceTypeRef.current = null;
         }
         let defaults = getRaceDefaults(raceType);
         if (effectiveVO2max > 0) {
@@ -436,6 +437,8 @@ export default function PlanSetupForm({
             setTargetLaps(defaults.targetLaps);
         }
         setTriGoalTimeSeconds(null);
+        // Mark volume as changed too, so maxLongRunKm recalculates on next render
+        userChangedVolumeRef.current = true;
     }, [raceType, mode, computedPlanWeeks]);
 
     // Auto-prefill threshold values from calibration data while still allowing manual overrides.
@@ -497,7 +500,7 @@ export default function PlanSetupForm({
         if (goalsData?.goals?.length > 0) {
             const activeGoal = goalsData.goals.find((g: any) => g.isActive);
             if (activeGoal) {
-                initialRaceTypeRef.current = activeGoal.raceType || 'MARATHON';
+
                 setGoalName(activeGoal.name || 'My Race');
                 setRaceType(activeGoal.raceType || 'MARATHON');
                 if (activeGoal.raceDate) {
@@ -875,7 +878,13 @@ export default function PlanSetupForm({
                 goalName={goalName}
                 setGoalName={setGoalName}
                 raceType={raceType}
-                setRaceType={setRaceType}
+                setRaceType={(val: string) => {
+                    if (mode === 'settings' && settingsLoadedRef.current) {
+                        userChangedRaceTypeRef.current = true;
+                        userChangedVolumeRef.current = true;
+                    }
+                    setRaceType(val);
+                }}
                 raceDate={raceDate}
                 setRaceDate={setRaceDate}
                 planStartDate={planStartDate}
@@ -1004,10 +1013,20 @@ export default function PlanSetupForm({
                 strengthPerWeek={strengthPerWeek}
                 setStrengthPerWeek={setStrengthPerWeek}
                 weeklyMileage={weeklyMileage}
-                setWeeklyMileage={setWeeklyMileage}
+                setWeeklyMileage={(val: number) => {
+                    if (mode === 'settings' && settingsLoadedRef.current) {
+                        userChangedVolumeRef.current = true;
+                    }
+                    setWeeklyMileage(val);
+                }}
                 raceType={raceType}
                 maxLongRunKm={maxLongRunKm}
-                setMaxLongRunKm={setMaxLongRunKm}
+                setMaxLongRunKm={(val: number) => {
+                    if (mode === 'settings' && settingsLoadedRef.current) {
+                        userChangedVolumeRef.current = true;
+                    }
+                    setMaxLongRunKm(val);
+                }}
                 taperWeeks={taperWeeks}
                 setTaperWeeks={setTaperWeeks}
                 peakWeeks={peakWeeks}

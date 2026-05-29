@@ -315,6 +315,10 @@ export default function PlanSetupForm({
             setSwimsPerWeek(settingsData.swimsPerWeek || 0);
             setStrengthPerWeek(settingsData.strengthPerWeek || 0);
             setWeeklyMileage(settingsData.weeklyMileageGoal || 40);
+            if (typeof settingsData.startWeeklyMileage === 'number' && settingsData.startWeeklyMileage > 0) {
+                setStartWeeklyMileage(settingsData.startWeeklyMileage);
+                startMileageInitialized.current = true;
+            }
             setTaperWeeks(settingsData.taperWeeks || 2);
             setPeakWeeks(settingsData.peakWeeks || 4);
             setBuildWeeks(settingsData.buildWeeks || 4);

@@ -11,7 +11,23 @@ async function cacheFoodItem(item: any) {
     try {
         await prisma.foodItem.upsert({
             where: { barcode: item.barcode },
-            update: {},
+            update: {
+                name: item.name,
+                brand: item.brand,
+                servingSize: item.servingSize,
+                calories: item.calories,
+                protein: item.protein,
+                carbs: item.carbs,
+                fats: item.fats,
+                fiber: item.fiber ?? 0,
+                sugar: item.sugar ?? 0,
+                saturatedFat: item.saturatedFat ?? 0,
+                sodium: item.sodium ?? 0,
+                potassium: item.potassium ?? 0,
+                cholesterol: item.cholesterol ?? 0,
+                calcium: item.calcium ?? 0,
+                iron: item.iron ?? 0,
+            },
             create: {
                 name: item.name,
                 brand: item.brand,
@@ -64,7 +80,7 @@ export async function GET(request: NextRequest) {
             where: { barcode: barcode }
         });
 
-        if (cachedItem) {
+        if (cachedItem && (cachedItem.calories > 0 || cachedItem.protein > 0 || cachedItem.carbs > 0 || cachedItem.fats > 0)) {
             return NextResponse.json({
                 name: cachedItem.name,
                 brand: cachedItem.brand,
@@ -115,18 +131,18 @@ export async function GET(request: NextRequest) {
             brand: p.brands ? p.brands.split(',')[0] : null,
             barcode: barcode,
             servingSize: p.serving_size || '100g',
-            calories: nutriments['energy-kcal_100g'] || 0,
-            protein: nutriments.proteins_100g || 0,
-            carbs: nutriments.carbohydrates_100g || 0,
-            fats: nutriments.fat_100g || 0,
-            fiber: nutriments.fiber_100g || 0,
-            sugar: nutriments.sugars_100g || 0,
-            saturatedFat: nutriments['saturated-fat_100g'] || 0,
-            sodium: nutriments.sodium_100g || 0,
-            potassium: nutriments.potassium_100g || 0,
-            cholesterol: nutriments.cholesterol_100g || 0,
-            calcium: nutriments.calcium_100g || 0,
-            iron: nutriments.iron_100g || 0,
+            calories: parseFloat(String(nutriments['energy-kcal_100g'] || nutriments['energy-kcal_value'] || nutriments['energy_100g'] || 0)),
+            protein: parseFloat(String(nutriments.proteins_100g || nutriments.proteins_value || 0)),
+            carbs: parseFloat(String(nutriments.carbohydrates_100g || nutriments.carbohydrates_value || 0)),
+            fats: parseFloat(String(nutriments.fat_100g || nutriments.fat_value || 0)),
+            fiber: parseFloat(String(nutriments.fiber_100g || nutriments.fiber_value || 0)),
+            sugar: parseFloat(String(nutriments.sugars_100g || nutriments.sugars_value || 0)),
+            saturatedFat: parseFloat(String(nutriments['saturated-fat_100g'] || nutriments['saturated-fat_value'] || 0)),
+            sodium: parseFloat(String(nutriments.sodium_100g || nutriments.sodium_value || 0)),
+            potassium: parseFloat(String(nutriments.potassium_100g || nutriments.potassium_value || 0)),
+            cholesterol: parseFloat(String(nutriments.cholesterol_100g || nutriments.cholesterol_value || 0)),
+            calcium: parseFloat(String(nutriments.calcium_100g || nutriments.calcium_value || 0)),
+            iron: parseFloat(String(nutriments.iron_100g || nutriments.iron_value || 0)),
         };
 
         await cacheFoodItem(standardData);

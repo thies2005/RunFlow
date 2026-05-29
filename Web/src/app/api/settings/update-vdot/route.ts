@@ -49,6 +49,35 @@ export async function GET() {
             },
         });
 
+        let startWeeklyMileage = null;
+        if (activeGoal) {
+            const firstWorkout = await prisma.workout.findFirst({
+                where: { goalId: activeGoal.id },
+                orderBy: { scheduledDate: 'asc' },
+                select: { scheduledDate: true },
+            });
+
+            if (firstWorkout) {
+                const startDate = new Date(firstWorkout.scheduledDate);
+                const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+                const firstWeekWorkouts = await prisma.workout.findMany({
+                    where: {
+                        goalId: activeGoal.id,
+                        sport: 'RUN',
+                        scheduledDate: {
+                            gte: startDate,
+                            lt: endDate,
+                        },
+                    },
+                    select: { targetDistance: true },
+                });
+
+                const totalMeters = firstWeekWorkouts.reduce((sum, w) => sum + (w.targetDistance || 0), 0);
+                startWeeklyMileage = Math.round(totalMeters / 1000);
+            }
+        }
+
         return NextResponse.json({
             hrMax: user?.hrMax || 185,
             hrRest: user?.hrRest || 55,
@@ -70,6 +99,7 @@ export async function GET() {
             swimsPerWeek: activeGoal?.swimsPerWeek || 0,
             strengthPerWeek: activeGoal?.strengthPerWeek || 0,
             weeklyMileageGoal: (activeGoal?.weeklyMileageGoal || 40000) / 1000,
+            startWeeklyMileage: startWeeklyMileage || null,
             taperWeeks: activeGoal?.taperWeeks,
             peakWeeks: activeGoal?.peakWeeks,
             buildWeeks: activeGoal?.buildWeeks,

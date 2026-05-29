@@ -754,6 +754,12 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
     if (resolvedHrRestForProfile != null) userUpdateData.hrRest = resolvedHrRestForProfile;
     if (thresholdHeartRate != null) userUpdateData.thresholdHeartRate = thresholdHeartRate;
     if (thresholdPaceSecondsPerKm != null) userUpdateData.thresholdPace = Math.round(thresholdPaceSecondsPerKm);
+    // Persist calibration reference race data so the settings form can restore it
+    if (calibrationTime && calibrationTime > 0 && calibrationDistance) {
+        userUpdateData.vdotReferenceRaceTime = Math.round(calibrationTime);
+        userUpdateData.vdotReferenceRaceType = calibrationDistance;
+        userUpdateData.vdotReferenceRaceDate = new Date();
+    }
     if (hrZone1Max != null) userUpdateData.hrZone1Max = hrZone1Max;
     if (hrZone2Max != null) userUpdateData.hrZone2Max = hrZone2Max;
     if (hrZone3Max != null) userUpdateData.hrZone3Max = hrZone3Max;

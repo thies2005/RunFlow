@@ -153,6 +153,17 @@ export async function GET(req: Request) {
 
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
+        // Calculate average weekly km from the last 4 weeks for plan setup defaults
+        const fourWeeksAgo = new Date();
+        fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+        let last4WeeksRunDistM = 0;
+        for (const a of runActivities) {
+            if (a.startDate >= fourWeeksAgo) {
+                last4WeeksRunDistM += a.distance;
+            }
+        }
+        const avgWeeklyKmLast4Weeks = Math.round((last4WeeksRunDistM / 4 / 1000) * 10) / 10;
+
         return cachedResponse({
             currentWeekMileage,
             effectiveVO2max,
@@ -168,7 +179,8 @@ export async function GET(req: Request) {
             easyTrimp,
             hrMax: maxHR,
             maxCtl,
-            maxAtl
+            maxAtl,
+            avgWeeklyKmLast4Weeks,
         }, { maxAge: 300, staleWhileRevalidate: 60 });
 
     } catch (error) {

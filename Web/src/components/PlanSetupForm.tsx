@@ -177,6 +177,7 @@ export default function PlanSetupForm({
 
     // Start Weekly Mileage
     const [startWeeklyMileage, setStartWeeklyMileage] = useState<number>(0);
+    const startMileageInitialized = useRef(false);
 
     // Experience Level
     const [experienceLevel, setExperienceLevel] = useState<string>('INTERMEDIATE');
@@ -263,6 +264,19 @@ export default function PlanSetupForm({
     const effectiveVO2max = propEffectiveVO2max > 0 ? propEffectiveVO2max : (internalStatsData?.effectiveVO2max || 0);
     const shapePercent = propShapePercent > 0 ? propShapePercent : (internalStatsData?.marathonShape?.shape || 0);
 
+    // Auto-initialize startWeeklyMileage from the user's last 4 weeks of running
+    // Skip in settings mode — the goal's saved value will be loaded instead
+    useEffect(() => {
+        if (mode === 'settings') return;
+        if (!startMileageInitialized.current && internalStatsData?.avgWeeklyKmLast4Weeks > 0) {
+            const avg = internalStatsData.avgWeeklyKmLast4Weeks;
+            // Round down to nearest 5 km for a clean slider value
+            const rounded = Math.floor(avg / 5) * 5;
+            setStartWeeklyMileage(Math.max(5, rounded));
+            startMileageInitialized.current = true;
+        }
+    }, [internalStatsData, mode]);
+
     // Fetch existing settings (for settings mode)
     const { data: settingsData } = useQuery({
         queryKey: ['user-settings'],
@@ -308,8 +322,15 @@ export default function PlanSetupForm({
             // Scheduling preferences
             setLongRunDay(settingsData.longRunDay ?? 0);
             setQualityDay(settingsData.qualityDay ?? 3);
+            if (typeof settingsData.swimDay === 'number') {
+                setSwimDay(settingsData.swimDay);
+            }
             if (Array.isArray(settingsData.restDays)) {
                 setRestDays(settingsData.restDays);
+            }
+            // Max long run distance (derived from longest scheduled long run)
+            if (typeof settingsData.maxLongRunKm === 'number' && settingsData.maxLongRunKm > 0) {
+                setMaxLongRunKm(settingsData.maxLongRunKm);
             }
             // Threshold values
             if (settingsData.thresholdHeartRate) {
@@ -372,17 +393,28 @@ export default function PlanSetupForm({
         ? (parseInt(durationWeeks) || 12)
         : Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / msPerWeek));
 
+    const maxLongRunLoadedRef = useRef(false);
     useEffect(() => {
+        // In settings mode, skip the first recalculation — the API value was loaded
+        if (mode === 'settings' && settingsLoadedRef.current && !maxLongRunLoadedRef.current) {
+            maxLongRunLoadedRef.current = true;
+            return;
+        }
         setMaxLongRunKm(getDefaultMaxLongRunKm(raceType, weeklyMileage));
-    }, [raceType, weeklyMileage]);
+    }, [raceType, weeklyMileage, mode]);
 
     useEffect(() => {
-        // In settings mode, skip when settings just loaded — the settingsData effect handles initial values
+        // In settings mode, only apply race-type defaults when the user explicitly changes the race type.
+        // The settingsData effect already loaded the correct saved values from the API.
         if (mode === 'settings' && !settingsLoadedRef.current) return;
-        // In settings mode, skip the first raceType change (from goalsData) — only apply on user-initiated changes
-        if (mode === 'settings' && initialRaceTypeRef.current !== null && raceType === initialRaceTypeRef.current) {
-            initialRaceTypeRef.current = null; // Allow future user changes
-            return;
+        if (mode === 'settings' && initialRaceTypeRef.current !== null) {
+            // First raceType change from goalsData — skip and clear the guard
+            if (raceType === initialRaceTypeRef.current) {
+                initialRaceTypeRef.current = null;
+                return;
+            }
+            // Different raceType — user changed it, allow defaults to apply
+            initialRaceTypeRef.current = null;
         }
         let defaults = getRaceDefaults(raceType);
         if (effectiveVO2max > 0) {
@@ -1045,7 +1077,11 @@ export default function PlanSetupForm({
                     <span>{Math.round(weeklyMileage / 2)}km</span>
                     <span>{Math.round(weeklyMileage)}km</span>
                 </div>
-                <p className="text-xs text-foreground-muted mt-1">Your current weekly mileage at the start of the plan.</p>
+                <p className="text-xs text-foreground-muted mt-1">
+                    {internalStatsData?.avgWeeklyKmLast4Weeks > 0
+                        ? `Based on your last 4 weeks avg (${internalStatsData.avgWeeklyKmLast4Weeks} km/wk). Adjust if needed.`
+                        : 'Your current weekly mileage at the start of the plan.'}
+                </p>
             </div>
 
             {/* Sub-Goals (advanced mode only) */}
@@ -1144,7 +1180,7 @@ export default function PlanSetupForm({
                             });
                             if (res.ok) {
                                 const data = await res.json();
-                                window.location.href = `/plan-advanced/${data.plan?.id ?? data.goal?.id}`;
+                                window.location.href = `/plan/${data.plan?.id ?? data.goal?.id}`;
                             }
                         }}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-glass-border text-foreground-muted hover:text-foreground hover:border-foreground-muted text-sm transition-colors"

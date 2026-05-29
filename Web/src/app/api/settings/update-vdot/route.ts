@@ -39,6 +39,14 @@ export async function GET() {
 
         const activeGoal = await prisma.goal.findFirst({
             where: { userId: session.user.id, isActive: true },
+            include: {
+                workouts: {
+                    where: { workoutType: 'LONG_RUN', isCompleted: false },
+                    select: { targetDistance: true },
+                    orderBy: { targetDistance: 'desc' },
+                    take: 1,
+                },
+            },
         });
 
         return NextResponse.json({
@@ -68,7 +76,11 @@ export async function GET() {
             currentVdot: activeGoal?.currentVdot || 30,
             longRunDay: activeGoal?.longRunDay ?? 0,
             qualityDay: activeGoal?.workoutDay ?? 3,
+            swimDay: activeGoal?.swimDay ?? null,
             restDays: activeGoal?.restDays ?? [1, 5],
+            maxLongRunKm: activeGoal?.workouts?.[0]?.targetDistance
+                ? Math.round(activeGoal.workouts[0].targetDistance / 1000)
+                : null,
             vdotCorrectionFactor: user?.vdotCorrectionFactor || 1.0,
             vdotReferenceRaceTime: user?.vdotReferenceRaceTime || null,
             vdotReferenceRaceType: user?.vdotReferenceRaceType || null,
@@ -128,6 +140,13 @@ export async function POST(req: NextRequest) {
                 userUpdateData.autoRevolvingVo2max = null;
                 userUpdateData.autoRevolvingCalculatedAt = null;
             }
+        }
+
+        // Persist calibration reference race data so the form can restore it
+        if (typeof timeSeconds === 'number' && timeSeconds > 0 && raceDistance) {
+            userUpdateData.vdotReferenceRaceTime = Math.round(timeSeconds);
+            userUpdateData.vdotReferenceRaceType = raceDistance;
+            userUpdateData.vdotReferenceRaceDate = new Date();
         }
 
         // Max Heart Rate: 100-250 bpm

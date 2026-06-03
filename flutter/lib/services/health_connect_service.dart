@@ -14,6 +14,7 @@ abstract class HealthConnectService {
   Future<List<HealthDataPoint>> readActiveCalories(DateTime start, DateTime end);
   Future<List<HealthDataPoint>> readWeight(DateTime start, DateTime end);
   Future<double?> readLatestWeight();
+  Future<bool> writeWeight(double weightKg, DateTime date);
   Future<List<NutritionHealthEntry>> readNutrition(DateTime start, DateTime end);
   Future<bool> writeNutritionEntry(FoodLogEntry entry, DateTime date);
   Future<bool> deleteNutritionEntry(String clientRecordId);
@@ -51,7 +52,7 @@ class NutritionHealthEntry {
     this.calories,
     this.protein,
     this.carbs,
-    this.fats,
+    this.fat,
     this.water,
     this.uuid,
   });
@@ -63,7 +64,7 @@ class NutritionHealthEntry {
   final double? calories;
   final double? protein;
   final double? carbs;
-  final double? fats;
+  final double? fat;
   final double? water;
   final String? uuid;
 
@@ -76,7 +77,7 @@ class NutritionHealthEntry {
       calories: calories,
       protein: protein,
       carbs: carbs,
-      fats: fats,
+      fat: fat,
     );
   }
 }
@@ -260,6 +261,22 @@ class HealthConnectServiceImpl implements HealthConnectService {
   }
 
   @override
+  Future<bool> writeWeight(double weightKg, DateTime date) async {
+    try {
+      await _ensureConfigured();
+      return await _health.writeHealthData(
+        type: HealthDataType.WEIGHT,
+        value: weightKg,
+        startTime: date,
+        endTime: date,
+      );
+    } catch (e) {
+      logger.error('[HealthConnect] writeWeight failed: $e');
+      return false;
+    }
+  }
+
+  @override
   Future<List<NutritionHealthEntry>> readNutrition(
       DateTime start, DateTime end) async {
     try {
@@ -277,13 +294,13 @@ class HealthConnectServiceImpl implements HealthConnectService {
         final calories = value.calories;
         final protein = value.protein;
         final carbs = value.carbs;
-        final fats = value.fat;
+        final fat = value.fat;
         final water = value.water;
 
         if ((calories ?? 0) <= 0 &&
             (protein ?? 0) <= 0 &&
             (carbs ?? 0) <= 0 &&
-            (fats ?? 0) <= 0) {
+            (fat ?? 0) <= 0) {
           continue;
         }
 
@@ -298,7 +315,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
           calories: calories,
           protein: protein,
           carbs: carbs,
-          fats: fats,
+          fat: fat,
           water: water,
         ));
       }
@@ -313,7 +330,23 @@ class HealthConnectServiceImpl implements HealthConnectService {
   Future<bool> writeNutritionEntry(FoodLogEntry entry, DateTime date) async {
     try {
       await _ensureConfigured();
-      final start = DateTime(date.year, date.month, date.day, 12);
+      int hour = 12;
+      switch (entry.mealType.toLowerCase()) {
+        case 'breakfast':
+          hour = 8;
+          break;
+        case 'lunch':
+          hour = 12;
+          break;
+        case 'dinner':
+          hour = 19;
+          break;
+        case 'snack':
+        default:
+          hour = 15;
+          break;
+      }
+      final start = DateTime(date.year, date.month, date.day, hour);
       final end = start.add(const Duration(minutes: 1));
       final clientRecordId = entry.id.isNotEmpty
           ? 'runflow-nutrition-${entry.id}'
@@ -329,7 +362,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
         caloriesConsumed: entry.calories,
         carbohydrates: entry.carbs,
         protein: entry.protein,
-        fatTotal: entry.fats,
+        fatTotal: entry.fat,
         recordingMethod: RecordingMethod.manual,
       );
     } catch (e) {

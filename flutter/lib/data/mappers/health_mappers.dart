@@ -164,7 +164,7 @@ extension FoodLogEntryMapper on FoodLogEntry {
         calories: calories,
         protein: protein,
         carbs: carbs,
-        fats: fats,
+        fat: fat,
         foodItemId: foodItemId,
       );
 }
@@ -178,7 +178,7 @@ extension DomainFoodLogEntryMapper on domain.FoodLogEntry {
         calories: calories,
         protein: protein,
         carbs: carbs,
-        fats: fats,
+        fat: fat,
         foodItemId: foodItemId,
       );
 }
@@ -252,10 +252,11 @@ extension NutritionTargetsMapper on NutritionTargets {
         water: water,
         proteinPercent: proteinPercent,
         carbsPercent: carbsPercent,
-        fatsPercent: fatsPercent,
+        fatPercent: fatPercent,
         waterGoalMl: waterGoalMl,
         exerciseCalorieFactor: exerciseCalorieFactor,
         exerciseCalorieSource: exerciseCalorieSource,
+        waterTrackingEnabled: waterTrackingEnabled,
       );
 }
 
@@ -268,10 +269,11 @@ extension DomainNutritionTargetsMapper on domain.NutritionTargets {
         water: water,
         proteinPercent: proteinPercent,
         carbsPercent: carbsPercent,
-        fatsPercent: fatsPercent,
+        fatPercent: fatPercent,
         waterGoalMl: waterGoalMl,
         exerciseCalorieFactor: exerciseCalorieFactor,
         exerciseCalorieSource: exerciseCalorieSource,
+        waterTrackingEnabled: waterTrackingEnabled,
       );
 }
 
@@ -297,7 +299,7 @@ extension DailyNutritionMapper on DailyNutrition {
         calories: calories,
         protein: protein,
         carbs: carbs,
-        fats: fats,
+        fat: fat,
       );
 }
 
@@ -307,7 +309,7 @@ extension DomainDailyNutritionMapper on domain.DailyNutrition {
         calories: calories,
         protein: protein,
         carbs: carbs,
-        fats: fats,
+        fat: fat,
       );
 }
 
@@ -407,7 +409,7 @@ extension SavedMealMapper on SavedMeal {
         totalCalories: totalCalories,
         totalProtein: totalProtein,
         totalCarbs: totalCarbs,
-        totalFats: totalFats,
+        totalFat: totalFat,
         items: items.map((i) => i.toDomain()).toList(),
       );
 }
@@ -420,7 +422,7 @@ extension DomainSavedMealMapper on domain.SavedMeal {
         totalCalories: totalCalories,
         totalProtein: totalProtein,
         totalCarbs: totalCarbs,
-        totalFats: totalFats,
+        totalFat: totalFat,
         items: items.map((i) => i.toData()).toList(),
       );
 }
@@ -434,7 +436,7 @@ extension SavedMealItemMapper on SavedMealItem {
         calories: calories,
         protein: protein,
         carbs: carbs,
-        fats: fats,
+        fat: fat,
       );
 }
 
@@ -447,6 +449,6 @@ extension DomainSavedMealItemMapper on domain.SavedMealItem {
         calories: calories,
         protein: protein,
         carbs: carbs,
-        fats: fats,
+        fat: fat,
       );
 }

@@ -415,7 +415,7 @@ class FoodLogEntry {
     this.calories,
     this.protein,
     this.carbs,
-    this.fats,
+    this.fat,
     this.foodItemId,
   });
 
@@ -426,7 +426,7 @@ class FoodLogEntry {
   final double? calories;
   final double? protein;
   final double? carbs;
-  final double? fats;
+  final double? fat;
   final String? foodItemId;
 
   FoodLogEntry copyWith({
@@ -437,7 +437,7 @@ class FoodLogEntry {
     double? calories,
     double? protein,
     double? carbs,
-    double? fats,
+    double? fat,
     String? foodItemId,
   }) {
     return FoodLogEntry(
@@ -448,7 +448,7 @@ class FoodLogEntry {
       calories: calories ?? this.calories,
       protein: protein ?? this.protein,
       carbs: carbs ?? this.carbs,
-      fats: fats ?? this.fats,
+      fat: fat ?? this.fat,
       foodItemId: foodItemId ?? this.foodItemId,
     );
   }
@@ -465,7 +465,7 @@ class FoodLogEntry {
           calories == other.calories &&
           protein == other.protein &&
           carbs == other.carbs &&
-          fats == other.fats &&
+          fat == other.fat &&
           foodItemId == other.foodItemId;
 
   @override
@@ -477,7 +477,7 @@ class FoodLogEntry {
     calories,
     protein,
     carbs,
-    fats,
+    fat,
     foodItemId,
   ]);
 }
@@ -757,8 +757,8 @@ class NutritionTargets {
     required this.water,
     this.proteinPercent = 30,
     this.carbsPercent = 40,
-    this.fatsPercent = 30,
-    this.waterGoalMl = 2000,
+    this.fatPercent = 30,
+    this.waterGoalMl = 2500,
     this.exerciseCalorieFactor = 0.5,
     this.exerciseCalorieSource = 'strava',
     this.waterTrackingEnabled = false,
@@ -770,9 +770,9 @@ class NutritionTargets {
     carbs: 300,
     fat: 80,
     water: 2.5,
-    proteinPercent: 0.30,
-    carbsPercent: 0.45,
-    fatsPercent: 0.25,
+    proteinPercent: 30,
+    carbsPercent: 40,
+    fatPercent: 30,
     waterGoalMl: 2500,
     exerciseCalorieFactor: 0.5,
     exerciseCalorieSource: 'strava',
@@ -786,7 +786,7 @@ class NutritionTargets {
   final double water;
   final double proteinPercent;
   final double carbsPercent;
-  final double fatsPercent;
+  final double fatPercent;
   final int waterGoalMl;
   final double exerciseCalorieFactor;
   final String exerciseCalorieSource;
@@ -800,7 +800,7 @@ class NutritionTargets {
     double? water,
     double? proteinPercent,
     double? carbsPercent,
-    double? fatsPercent,
+    double? fatPercent,
     int? waterGoalMl,
     double? exerciseCalorieFactor,
     String? exerciseCalorieSource,
@@ -814,7 +814,7 @@ class NutritionTargets {
       water: water ?? this.water,
       proteinPercent: proteinPercent ?? this.proteinPercent,
       carbsPercent: carbsPercent ?? this.carbsPercent,
-      fatsPercent: fatsPercent ?? this.fatsPercent,
+      fatPercent: fatPercent ?? this.fatPercent,
       waterGoalMl: waterGoalMl ?? this.waterGoalMl,
       exerciseCalorieFactor:
           exerciseCalorieFactor ?? this.exerciseCalorieFactor,
@@ -836,7 +836,7 @@ class NutritionTargets {
           water == other.water &&
           proteinPercent == other.proteinPercent &&
           carbsPercent == other.carbsPercent &&
-          fatsPercent == other.fatsPercent &&
+          fatPercent == other.fatPercent &&
           waterGoalMl == other.waterGoalMl &&
           exerciseCalorieFactor == other.exerciseCalorieFactor &&
           exerciseCalorieSource == other.exerciseCalorieSource &&
@@ -851,7 +851,7 @@ class NutritionTargets {
     water,
     proteinPercent,
     carbsPercent,
-    fatsPercent,
+    fatPercent,
     waterGoalMl,
     exerciseCalorieFactor,
     exerciseCalorieSource,
@@ -905,28 +905,28 @@ class DailyNutrition {
     this.calories = 0,
     this.protein = 0,
     this.carbs = 0,
-    this.fats = 0,
+    this.fat = 0,
   });
 
   final DateTime date;
   final double calories;
   final double protein;
   final double carbs;
-  final double fats;
+  final double fat;
 
   DailyNutrition copyWith({
     DateTime? date,
     double? calories,
     double? protein,
     double? carbs,
-    double? fats,
+    double? fat,
   }) {
     return DailyNutrition(
       date: date ?? this.date,
       calories: calories ?? this.calories,
       protein: protein ?? this.protein,
       carbs: carbs ?? this.carbs,
-      fats: fats ?? this.fats,
+      fat: fat ?? this.fat,
     );
   }
 
@@ -939,10 +939,10 @@ class DailyNutrition {
           calories == other.calories &&
           protein == other.protein &&
           carbs == other.carbs &&
-          fats == other.fats;
+          fat == other.fat;
 
   @override
-  int get hashCode => Object.hash(date, calories, protein, carbs, fats);
+  int get hashCode => Object.hash(date, calories, protein, carbs, fat);
 }
 
 class MicronutrientSummary {
@@ -1153,7 +1153,7 @@ class SavedMeal {
     required this.totalCalories,
     required this.totalProtein,
     required this.totalCarbs,
-    required this.totalFats,
+    required this.totalFat,
     required this.items,
   });
 
@@ -1163,7 +1163,7 @@ class SavedMeal {
   final double totalCalories;
   final double totalProtein;
   final double totalCarbs;
-  final double totalFats;
+  final double totalFat;
   final List<SavedMealItem> items;
 
   SavedMeal copyWith({
@@ -1173,7 +1173,7 @@ class SavedMeal {
     double? totalCalories,
     double? totalProtein,
     double? totalCarbs,
-    double? totalFats,
+    double? totalFat,
     List<SavedMealItem>? items,
   }) {
     return SavedMeal(
@@ -1183,7 +1183,7 @@ class SavedMeal {
       totalCalories: totalCalories ?? this.totalCalories,
       totalProtein: totalProtein ?? this.totalProtein,
       totalCarbs: totalCarbs ?? this.totalCarbs,
-      totalFats: totalFats ?? this.totalFats,
+      totalFat: totalFat ?? this.totalFat,
       items: items ?? this.items,
     );
   }
@@ -1199,7 +1199,7 @@ class SavedMeal {
           totalCalories == other.totalCalories &&
           totalProtein == other.totalProtein &&
           totalCarbs == other.totalCarbs &&
-          totalFats == other.totalFats &&
+          totalFat == other.totalFat &&
           listEquals(items, other.items);
 
   @override
@@ -1210,7 +1210,7 @@ class SavedMeal {
         totalCalories,
         totalProtein,
         totalCarbs,
-        totalFats,
+        totalFat,
         Object.hashAll(items),
       );
 }
@@ -1224,7 +1224,7 @@ class SavedMealItem {
     required this.calories,
     required this.protein,
     required this.carbs,
-    required this.fats,
+    required this.fat,
   });
 
   final String id;
@@ -1234,7 +1234,7 @@ class SavedMealItem {
   final double calories;
   final double protein;
   final double carbs;
-  final double fats;
+  final double fat;
 
   SavedMealItem copyWith({
     String? id,
@@ -1244,7 +1244,7 @@ class SavedMealItem {
     double? calories,
     double? protein,
     double? carbs,
-    double? fats,
+    double? fat,
   }) {
     return SavedMealItem(
       id: id ?? this.id,
@@ -1254,7 +1254,7 @@ class SavedMealItem {
       calories: calories ?? this.calories,
       protein: protein ?? this.protein,
       carbs: carbs ?? this.carbs,
-      fats: fats ?? this.fats,
+      fat: fat ?? this.fat,
     );
   }
 
@@ -1270,7 +1270,7 @@ class SavedMealItem {
           calories == other.calories &&
           protein == other.protein &&
           carbs == other.carbs &&
-          fats == other.fats;
+          fat == other.fat;
 
   @override
   int get hashCode => Object.hash(
@@ -1281,6 +1281,6 @@ class SavedMealItem {
         calories,
         protein,
         carbs,
-        fats,
+        fat,
       );
 }

@@ -6,7 +6,7 @@ class AiMealSuggestion {
     required this.totalCalories,
     required this.totalProtein,
     required this.totalCarbs,
-    required this.totalFats,
+    required this.totalFat,
   });
 
   final String suggestionName;
@@ -15,7 +15,7 @@ class AiMealSuggestion {
   final double totalCalories;
   final double totalProtein;
   final double totalCarbs;
-  final double totalFats;
+  final double totalFat;
 
   @override
   bool operator ==(Object other) =>
@@ -28,7 +28,7 @@ class AiMealSuggestion {
           totalCalories == other.totalCalories &&
           totalProtein == other.totalProtein &&
           totalCarbs == other.totalCarbs &&
-          totalFats == other.totalFats;
+          totalFat == other.totalFat;
 
   @override
   int get hashCode => Object.hash(
@@ -38,7 +38,7 @@ class AiMealSuggestion {
         totalCalories,
         totalProtein,
         totalCarbs,
-        totalFats,
+        totalFat,
       );
 
   static bool _listEquals(List<AiMealItem> a, List<AiMealItem> b) {
@@ -56,7 +56,7 @@ class AiMealItem {
     required this.calories,
     required this.protein,
     required this.carbs,
-    required this.fats,
+    required this.fat,
     this.servingSize,
   });
 
@@ -64,7 +64,7 @@ class AiMealItem {
   final double calories;
   final double protein;
   final double carbs;
-  final double fats;
+  final double fat;
   final String? servingSize;
 
   @override
@@ -76,7 +76,7 @@ class AiMealItem {
           calories == other.calories &&
           protein == other.protein &&
           carbs == other.carbs &&
-          fats == other.fats &&
+          fat == other.fat &&
           servingSize == other.servingSize;
 
   @override
@@ -85,7 +85,7 @@ class AiMealItem {
         calories,
         protein,
         carbs,
-        fats,
+        fat,
         servingSize,
       );
 }

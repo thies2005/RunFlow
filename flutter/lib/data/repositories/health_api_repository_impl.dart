@@ -166,7 +166,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
         final totalCalories = (data['totalCalories'] as num?)?.toDouble() ?? 0;
         final totalProtein = (data['totalProtein'] as num?)?.toDouble() ?? 0;
         final totalCarbs = (data['totalCarbs'] as num?)?.toDouble() ?? 0;
-        final totalFats = (data['totalFats'] as num?)?.toDouble() ?? 0;
+        final totalFatFromApi = (data['totalFats'] as num?)?.toDouble() ?? 0;
         // Estimate serving size from total grams of items
         double servingGrams = 0;
         if (data['items'] is List) {
@@ -184,7 +184,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
           calories: totalCalories,
           protein: totalProtein,
           carbs: totalCarbs,
-          fat: totalFats,
+          fat: totalFatFromApi,
           servingSize: servingGrams,
         );
       }
@@ -557,7 +557,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
                 calories: (item['calories'] as num?)?.toDouble() ?? 0,
                 protein: (item['protein'] as num?)?.toDouble() ?? 0,
                 carbs: (item['carbs'] as num?)?.toDouble() ?? 0,
-                fats: (item['fats'] as num?)?.toDouble() ?? 0,
+                fat: (item['fats'] as num?)?.toDouble() ?? 0,
                 servingSize: item['servingSize'] as String?,
               ))
           .toList();
@@ -568,7 +568,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
         totalCalories: (data['totalCalories'] as num?)?.toDouble() ?? 0,
         totalProtein: (data['totalProtein'] as num?)?.toDouble() ?? 0,
         totalCarbs: (data['totalCarbs'] as num?)?.toDouble() ?? 0,
-        totalFats: (data['totalFats'] as num?)?.toDouble() ?? 0,
+        totalFat: (data['totalFats'] as num?)?.toDouble() ?? 0,
       );
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get meal suggestion.');
@@ -778,7 +778,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       calories: toDouble(json['calories']) ?? toDouble(foodItem['calories']),
       protein: toDouble(json['protein']) ?? toDouble(foodItem['protein']),
       carbs: toDouble(json['carbs']) ?? toDouble(foodItem['carbs']),
-      fats: toDouble(json['fats']) ?? toDouble(foodItem['fats']),
+      fat: toDouble(json['fats']) ?? toDouble(foodItem['fats']),
       foodItemId: json['foodItemId']?.toString() ?? foodItem['id']?.toString(),
     );
   }

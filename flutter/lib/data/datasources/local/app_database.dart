@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
@@ -20,7 +21,7 @@ class AppDatabase {
 
   Database? _db;
 
-  static const int _currentVersion = 5;
+  static const int _currentVersion = 6;
 
   static final Map<int, void Function(Database)> _migrations = {
     1: (Database db) {
@@ -148,6 +149,21 @@ class AppDatabase {
         )
       ''');
     },
+    5: (Database db) {
+      _addColumnIfNotExists(db, 'food_items', 'brand', 'TEXT');
+      _addColumnIfNotExists(db, 'food_items', 'favorite_id', 'TEXT');
+      
+      _addColumnIfNotExists(db, 'supplements', 'amount', 'REAL NOT NULL DEFAULT 0');
+      _addColumnIfNotExists(db, 'supplements', 'unit', 'TEXT NOT NULL DEFAULT "mg"');
+      _addColumnIfNotExists(db, 'supplements', 'time_of_day', 'TEXT NOT NULL DEFAULT "MORNING"');
+      _addColumnIfNotExists(db, 'supplements', 'days_of_week', 'TEXT NOT NULL DEFAULT "[]"');
+      _addColumnIfNotExists(db, 'supplements', 'stack_id', 'TEXT');
+      _addColumnIfNotExists(db, 'supplements', 'sort_order', 'INTEGER NOT NULL DEFAULT 0');
+
+      db.execute('CREATE INDEX IF NOT EXISTS idx_nutrition_logs_date ON nutrition_logs(date)');
+      db.execute('CREATE INDEX IF NOT EXISTS idx_daily_health_logs_date ON daily_health_logs(date)');
+      db.execute('CREATE INDEX IF NOT EXISTS idx_food_items_name ON food_items(name)');
+    },
   };
 
   Future<Database> get database async {
@@ -220,7 +236,9 @@ class AppDatabase {
         carbs REAL NOT NULL,
         fat REAL NOT NULL,
         serving_size REAL NOT NULL,
-        barcode TEXT
+        barcode TEXT,
+        brand TEXT,
+        favorite_id TEXT
       )
     ''');
     db.execute('''
@@ -230,7 +248,13 @@ class AppDatabase {
         name TEXT NOT NULL,
         dosage TEXT NOT NULL,
         frequency TEXT NOT NULL,
-        is_active INTEGER NOT NULL DEFAULT 1
+        is_active INTEGER NOT NULL DEFAULT 1,
+        amount REAL NOT NULL DEFAULT 0,
+        unit TEXT NOT NULL DEFAULT 'mg',
+        time_of_day TEXT NOT NULL DEFAULT 'MORNING',
+        days_of_week TEXT NOT NULL DEFAULT '[]',
+        stack_id TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0
       )
     ''');
     db.execute('''
@@ -257,6 +281,9 @@ class AppDatabase {
         notes TEXT
       )
     ''');
+    db.execute('CREATE INDEX IF NOT EXISTS idx_nutrition_logs_date ON nutrition_logs(date)');
+    db.execute('CREATE INDEX IF NOT EXISTS idx_daily_health_logs_date ON daily_health_logs(date)');
+    db.execute('CREATE INDEX IF NOT EXISTS idx_food_items_name ON food_items(name)');
     db.execute('''
       CREATE TABLE IF NOT EXISTS fasting_sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -462,8 +489,8 @@ class AppDatabase {
     try {
       final db = await database;
       db.execute(
-        'INSERT INTO food_items (name, calories, protein, carbs, fat, serving_size, barcode) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [item.name, item.calories, item.protein, item.carbs, item.fat, item.servingSize, item.barcode],
+        'INSERT INTO food_items (name, calories, protein, carbs, fat, serving_size, barcode, brand, favorite_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [item.name, item.calories, item.protein, item.carbs, item.fat, item.servingSize, item.barcode, item.brand, item.favoriteId],
       );
       return db.lastInsertRowId;
     } catch (e) {
@@ -485,8 +512,11 @@ class AppDatabase {
     try {
       final db = await database;
       db.execute(
-        'INSERT INTO supplements (server_id, name, dosage, frequency, is_active) VALUES (?, ?, ?, ?, ?)',
-        [supplement.serverId, supplement.name, supplement.dosage, supplement.frequency, supplement.isActive ? 1 : 0],
+        'INSERT INTO supplements (server_id, name, dosage, frequency, is_active, amount, unit, time_of_day, days_of_week, stack_id, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          supplement.serverId, supplement.name, supplement.dosage, supplement.frequency, supplement.isActive ? 1 : 0,
+          supplement.amount, supplement.unit, supplement.timeOfDay, jsonEncode(supplement.daysOfWeek), supplement.stackId, supplement.order,
+        ],
       );
       return db.lastInsertRowId;
     } catch (e) {
@@ -498,8 +528,12 @@ class AppDatabase {
     try {
       final db = await database;
       db.execute(
-        'UPDATE supplements SET server_id = ?, name = ?, dosage = ?, frequency = ?, is_active = ? WHERE id = ?',
-        [supplement.serverId, supplement.name, supplement.dosage, supplement.frequency, supplement.isActive ? 1 : 0, supplement.id],
+        'UPDATE supplements SET server_id = ?, name = ?, dosage = ?, frequency = ?, is_active = ?, amount = ?, unit = ?, time_of_day = ?, days_of_week = ?, stack_id = ?, sort_order = ? WHERE id = ?',
+        [
+          supplement.serverId, supplement.name, supplement.dosage, supplement.frequency, supplement.isActive ? 1 : 0,
+          supplement.amount, supplement.unit, supplement.timeOfDay, jsonEncode(supplement.daysOfWeek), supplement.stackId, supplement.order,
+          supplement.id,
+        ],
       );
     } catch (e) {
       throw CacheException(message: 'Failed to update supplement: $e');
@@ -636,6 +670,8 @@ class AppDatabase {
       fat: (row['fat'] as num).toDouble(),
       servingSize: (row['serving_size'] as num).toDouble(),
       barcode: row['barcode'] as String?,
+      brand: row['brand'] as String?,
+      favoriteId: row['favorite_id'] as String?,
     );
   }
 
@@ -647,6 +683,12 @@ class AppDatabase {
       dosage: row['dosage'] as String,
       frequency: row['frequency'] as String,
       isActive: (row['is_active'] as int) == 1,
+      amount: (row['amount'] as num?)?.toDouble() ?? 0.0,
+      unit: row['unit'] as String? ?? 'mg',
+      timeOfDay: row['time_of_day'] as String? ?? 'MORNING',
+      daysOfWeek: List<int>.from(jsonDecode(row['days_of_week'] as String? ?? '[]') as Iterable),
+      stackId: row['stack_id'] as String?,
+      order: row['sort_order'] as int? ?? 0,
     );
   }
 

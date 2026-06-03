@@ -101,7 +101,7 @@ class HealthSyncService {
             calories: foodLog.calories ?? 0,
             protein: foodLog.protein ?? 0,
             carbs: foodLog.carbs ?? 0,
-            fat: foodLog.fats ?? 0,
+            fat: foodLog.fat ?? 0,
             servingSize: 100,
             brand: 'Health Connect',
           ),
@@ -177,13 +177,7 @@ class HealthSyncService {
 
   Future<void> writeWeight(double weightKg, DateTime date) async {
     try {
-      final health = Health();
-      await health.writeHealthData(
-        type: HealthDataType.WEIGHT,
-        value: weightKg,
-        startTime: date,
-        endTime: date,
-      );
+      await _healthConnect.writeWeight(weightKg, date);
     } catch (e) {
       logger.error('Failed to write weight: $e');
     }

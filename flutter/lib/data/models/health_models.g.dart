@@ -109,7 +109,7 @@ _FoodLogEntry _$FoodLogEntryFromJson(Map<String, dynamic> json) =>
       calories: (json['calories'] as num?)?.toDouble(),
       protein: (json['protein'] as num?)?.toDouble(),
       carbs: (json['carbs'] as num?)?.toDouble(),
-      fats: (json['fats'] as num?)?.toDouble(),
+      fat: (json['fat'] as num?)?.toDouble(),
       foodItemId: json['foodItemId'] as String?,
     );
 
@@ -122,7 +122,7 @@ Map<String, dynamic> _$FoodLogEntryToJson(_FoodLogEntry instance) =>
       'calories': instance.calories,
       'protein': instance.protein,
       'carbs': instance.carbs,
-      'fats': instance.fats,
+      'fat': instance.fat,
       'foodItemId': instance.foodItemId,
     };
 
@@ -208,7 +208,7 @@ _DailyNutrition _$DailyNutritionFromJson(Map<String, dynamic> json) =>
       calories: (json['calories'] as num?)?.toDouble() ?? 0,
       protein: (json['protein'] as num?)?.toDouble() ?? 0,
       carbs: (json['carbs'] as num?)?.toDouble() ?? 0,
-      fats: (json['fats'] as num?)?.toDouble() ?? 0,
+      fat: (json['fat'] as num?)?.toDouble() ?? 0,
     );
 
 Map<String, dynamic> _$DailyNutritionToJson(_DailyNutrition instance) =>
@@ -217,7 +217,7 @@ Map<String, dynamic> _$DailyNutritionToJson(_DailyNutrition instance) =>
       'calories': instance.calories,
       'protein': instance.protein,
       'carbs': instance.carbs,
-      'fats': instance.fats,
+      'fat': instance.fat,
     };
 
 _MicronutrientSummary _$MicronutrientSummaryFromJson(
@@ -321,7 +321,7 @@ _SavedMeal _$SavedMealFromJson(Map<String, dynamic> json) => _SavedMeal(
   totalCalories: (json['totalCalories'] as num).toDouble(),
   totalProtein: (json['totalProtein'] as num).toDouble(),
   totalCarbs: (json['totalCarbs'] as num).toDouble(),
-  totalFats: (json['totalFats'] as num).toDouble(),
+  totalFat: (json['totalFat'] as num).toDouble(),
   items: (json['items'] as List<dynamic>)
       .map((e) => SavedMealItem.fromJson(e as Map<String, dynamic>))
       .toList(),
@@ -335,7 +335,7 @@ Map<String, dynamic> _$SavedMealToJson(_SavedMeal instance) =>
       'totalCalories': instance.totalCalories,
       'totalProtein': instance.totalProtein,
       'totalCarbs': instance.totalCarbs,
-      'totalFats': instance.totalFats,
+      'totalFat': instance.totalFat,
       'items': instance.items,
     };
 
@@ -348,7 +348,7 @@ _SavedMealItem _$SavedMealItemFromJson(Map<String, dynamic> json) =>
       calories: (json['calories'] as num).toDouble(),
       protein: (json['protein'] as num).toDouble(),
       carbs: (json['carbs'] as num).toDouble(),
-      fats: (json['fats'] as num).toDouble(),
+      fat: (json['fat'] as num).toDouble(),
     );
 
 Map<String, dynamic> _$SavedMealItemToJson(_SavedMealItem instance) =>
@@ -360,5 +360,5 @@ Map<String, dynamic> _$SavedMealItemToJson(_SavedMealItem instance) =>
       'calories': instance.calories,
       'protein': instance.protein,
       'carbs': instance.carbs,
-      'fats': instance.fats,
+      'fat': instance.fat,
     };

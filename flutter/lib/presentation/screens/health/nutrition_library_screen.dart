@@ -275,7 +275,7 @@ class _NutritionLibraryScreenState extends ConsumerState<NutritionLibraryScreen>
         ),
         'protein': TextEditingController(text: item.protein.toStringAsFixed(0)),
         'carbs': TextEditingController(text: item.carbs.toStringAsFixed(0)),
-        'fats': TextEditingController(text: item.fats.toStringAsFixed(0)),
+        'fat': TextEditingController(text: item.fat.toStringAsFixed(0)),
       };
     }).toList();
     final removed = <int>{};
@@ -368,7 +368,7 @@ class _NutritionLibraryScreenState extends ConsumerState<NutritionLibraryScreen>
                               ),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: _editNumberField(ctrls['fats']!, 'F'),
+                                child: _editNumberField(ctrls['fat']!, 'F'),
                               ),
                             ],
                           ),
@@ -399,7 +399,7 @@ class _NutritionLibraryScreenState extends ConsumerState<NutritionLibraryScreen>
                               protein:
                                   double.tryParse(ctrls['protein']!.text) ?? 0,
                               carbs: double.tryParse(ctrls['carbs']!.text) ?? 0,
-                              fat: double.tryParse(ctrls['fats']!.text) ?? 0,
+                              fat: double.tryParse(ctrls['fat']!.text) ?? 0,
                             ),
                           );
                         }
@@ -748,7 +748,7 @@ class _NutritionLibraryScreenState extends ConsumerState<NutritionLibraryScreen>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'P: ${meal.totalProtein.round()}g • C: ${meal.totalCarbs.round()}g • F: ${meal.totalFats.round()}g',
+                          'P: ${meal.totalProtein.round()}g • C: ${meal.totalCarbs.round()}g • F: ${meal.totalFat.round()}g',
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(

@@ -227,7 +227,7 @@ sealed class FoodLogEntry with _$FoodLogEntry {
     double? calories,
     double? protein,
     double? carbs,
-    double? fats,
+    double? fat,
     String? foodItemId,
   }) = _FoodLogEntry;
   const FoodLogEntry._();
@@ -289,8 +289,8 @@ class NutritionTargets {
     required this.water,
     this.proteinPercent = 30,
     this.carbsPercent = 40,
-    this.fatsPercent = 30,
-    this.waterGoalMl = 2000,
+    this.fatPercent = 30,
+    this.waterGoalMl = 2500,
     this.exerciseCalorieFactor = 0.5,
     this.exerciseCalorieSource = 'strava',
     this.waterTrackingEnabled = false,
@@ -317,8 +317,8 @@ class NutritionTargets {
               1000),
     proteinPercent: ((json['proteinPercent'] ?? 30) as num).toDouble(),
     carbsPercent: ((json['carbsPercent'] ?? 40) as num).toDouble(),
-    fatsPercent: ((json['fatsPercent'] ?? 30) as num).toDouble(),
-    waterGoalMl: ((json['waterGoalMl'] ?? 2000) as num).toInt(),
+    fatPercent: ((json['fatPercent'] ?? 30) as num).toDouble(),
+    waterGoalMl: ((json['waterGoalMl'] ?? 2500) as num).toInt(),
     exerciseCalorieFactor: ((json['exerciseCalorieFactor'] ?? 0.5) as num)
         .toDouble(),
     exerciseCalorieSource:
@@ -341,7 +341,7 @@ class NutritionTargets {
   final double water;
   final double proteinPercent;
   final double carbsPercent;
-  final double fatsPercent;
+  final double fatPercent;
   final int waterGoalMl;
   final double exerciseCalorieFactor;
   final String exerciseCalorieSource;
@@ -353,6 +353,12 @@ class NutritionTargets {
     'carbs': carbs,
     'fat': fat,
     'water': water,
+    'proteinPercent': proteinPercent,
+    'carbsPercent': carbsPercent,
+    'fatPercent': fatPercent,
+    'waterGoalMl': waterGoalMl,
+    'exerciseCalorieFactor': exerciseCalorieFactor,
+    'exerciseCalorieSource': exerciseCalorieSource,
     'waterTrackingEnabled': waterTrackingEnabled,
   };
 
@@ -364,7 +370,7 @@ class NutritionTargets {
     double? water,
     double? proteinPercent,
     double? carbsPercent,
-    double? fatsPercent,
+    double? fatPercent,
     int? waterGoalMl,
     double? exerciseCalorieFactor,
     String? exerciseCalorieSource,
@@ -378,7 +384,7 @@ class NutritionTargets {
       water: water ?? this.water,
       proteinPercent: proteinPercent ?? this.proteinPercent,
       carbsPercent: carbsPercent ?? this.carbsPercent,
-      fatsPercent: fatsPercent ?? this.fatsPercent,
+      fatPercent: fatPercent ?? this.fatPercent,
       waterGoalMl: waterGoalMl ?? this.waterGoalMl,
       exerciseCalorieFactor:
           exerciseCalorieFactor ?? this.exerciseCalorieFactor,
@@ -392,11 +398,11 @@ class NutritionTargets {
     calories: calories,
     protein: ((calories * proteinPercent / 100) / 4).round(),
     carbs: ((calories * carbsPercent / 100) / 4).round(),
-    fat: ((calories * fatsPercent / 100) / 9).round(),
+    fat: ((calories * fatPercent / 100) / 9).round(),
     water: water,
     proteinPercent: proteinPercent,
     carbsPercent: carbsPercent,
-    fatsPercent: fatsPercent,
+    fatPercent: fatPercent,
     waterGoalMl: waterGoalMl,
     exerciseCalorieFactor: exerciseCalorieFactor,
     exerciseCalorieSource: exerciseCalorieSource,
@@ -424,7 +430,7 @@ sealed class DailyNutrition with _$DailyNutrition {
     @Default(0) double calories,
     @Default(0) double protein,
     @Default(0) double carbs,
-    @Default(0) double fats,
+    @Default(0) double fat,
   }) = _DailyNutrition;
   const DailyNutrition._();
 
@@ -510,7 +516,7 @@ sealed class SavedMeal with _$SavedMeal {
     required double totalCalories,
     required double totalProtein,
     required double totalCarbs,
-    required double totalFats,
+    required double totalFat,
     required List<SavedMealItem> items,
   }) = _SavedMeal;
   const SavedMeal._();
@@ -529,7 +535,7 @@ sealed class SavedMealItem with _$SavedMealItem {
     required double calories,
     required double protein,
     required double carbs,
-    required double fats,
+    required double fat,
   }) = _SavedMealItem;
   const SavedMealItem._();
 

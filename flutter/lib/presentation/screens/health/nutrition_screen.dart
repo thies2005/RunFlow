@@ -368,7 +368,7 @@ class NutritionScreen extends ConsumerWidget {
           calories: suggestion.totalCalories,
           protein: suggestion.totalProtein,
           carbs: suggestion.totalCarbs,
-          fat: suggestion.totalFats,
+          fat: suggestion.totalFat,
           servingSize: 100,
         );
         ref.read(nutritionProvider(today).notifier).logFood(food);
@@ -1256,7 +1256,7 @@ class _LastMealsSectionState extends ConsumerState<_LastMealsSection> {
                       calories: entry.calories ?? 0.0,
                       protein: entry.protein ?? 0.0,
                       carbs: entry.carbs ?? 0.0,
-                      fat: entry.fats ?? 0.0,
+                      fat: entry.fat ?? 0.0,
                       servingSize: entry.quantity ?? 100.0,
                     ),
                   )
@@ -1397,7 +1397,7 @@ class _FoodLogList extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${entry.mealType} • P: ${entry.protein?.round() ?? 0}g • C: ${entry.carbs?.round() ?? 0}g • F: ${entry.fats?.round() ?? 0}g',
+                        '${entry.mealType} • P: ${entry.protein?.round() ?? 0}g • C: ${entry.carbs?.round() ?? 0}g • F: ${entry.fat?.round() ?? 0}g',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),

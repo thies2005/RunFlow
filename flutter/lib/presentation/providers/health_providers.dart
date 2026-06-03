@@ -369,7 +369,7 @@ class NutritionNotifier extends _$NutritionNotifier {
         totalCalories += entry.calories ?? 0;
         totalProtein += entry.protein ?? 0;
         totalCarbs += entry.carbs ?? 0;
-        totalFat += entry.fats ?? 0;
+        totalFat += entry.fat ?? 0;
       }
       return NutritionLog(
         id: daily.id,
@@ -396,16 +396,25 @@ class NutritionNotifier extends _$NutritionNotifier {
     ref.invalidateSelf();
   }
 
-  Future<void> logFood(FoodItem food, {String mealType = 'snack'}) async {
+  String _getDefaultMealType() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 11) return 'breakfast';
+    if (hour >= 11 && hour < 15) return 'lunch';
+    if (hour >= 15 && hour < 22) return 'dinner';
+    return 'snack';
+  }
+
+  Future<void> logFood(FoodItem food, {String? mealType}) async {
+    final actualMealType = mealType ?? _getDefaultMealType();
     final newEntry = FoodLogEntry(
       id: 'local_${DateTime.now().millisecondsSinceEpoch}',
-      mealType: mealType,
+      mealType: actualMealType,
       name: food.name,
       quantity: 1,
       calories: food.calories,
       protein: food.protein,
       carbs: food.carbs,
-      fats: food.fat,
+      fat: food.fat,
     );
     
     await _updateDailyHealthCache(date, (log) {
@@ -416,7 +425,7 @@ class NutritionNotifier extends _$NutritionNotifier {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       final loggedEntry = await apiRepo.logFoodEntry(
         date: date,
-        mealType: mealType,
+        mealType: actualMealType,
         quantity: 1,
         foodItem: food,
       );
@@ -447,20 +456,21 @@ class NutritionNotifier extends _$NutritionNotifier {
     ref.invalidate(dailyHealthProvider(date));
   }
 
-  Future<void> logSavedMeal(SavedMeal meal, {String mealType = 'snack'}) async {
+  Future<void> logSavedMeal(SavedMeal meal, {String? mealType}) async {
+    final actualMealType = mealType ?? _getDefaultMealType();
     final List<FoodLogEntry> localEntries = [];
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     for (int i = 0; i < meal.items.length; i++) {
       final item = meal.items[i];
       localEntries.add(FoodLogEntry(
         id: 'local_${nowMs}_$i',
-        mealType: mealType,
+        mealType: actualMealType,
         name: item.name,
         quantity: 1,
         calories: item.calories,
         protein: item.protein,
         carbs: item.carbs,
-        fats: item.fats,
+        fat: item.fat,
       ));
     }
 
@@ -478,12 +488,12 @@ class NutritionNotifier extends _$NutritionNotifier {
           calories: item.calories,
           protein: item.protein,
           carbs: item.carbs,
-          fat: item.fats,
+          fat: item.fat,
           servingSize: item.estimatedGrams,
         );
         final logged = await apiRepo.logFoodEntry(
           date: date,
-          mealType: mealType,
+          mealType: actualMealType,
           quantity: 1,
           foodItem: food,
         );
@@ -508,7 +518,7 @@ class NutritionNotifier extends _$NutritionNotifier {
         calories: current.calories + meal.totalCalories,
         protein: current.protein + meal.totalProtein,
         carbs: current.carbs + meal.totalCarbs,
-        fat: current.fat + meal.totalFats,
+        fat: current.fat + meal.totalFat,
       );
       final repo = ref.read(healthRepositoryProvider);
       await repo.saveNutritionLog(updated);
@@ -534,7 +544,7 @@ class NutritionNotifier extends _$NutritionNotifier {
             calories: e.calories != null ? e.calories! * factor : null,
             protein: e.protein != null ? e.protein! * factor : null,
             carbs: e.carbs != null ? e.carbs! * factor : null,
-            fats: e.fats != null ? e.fats! * factor : null,
+            fat: e.fat != null ? e.fat! * factor : null,
           );
         }
         return e;

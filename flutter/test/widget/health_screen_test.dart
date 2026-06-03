@@ -94,6 +94,8 @@ class _FakeHealthConnectService implements HealthConnectService {
   @override
   Future<double?> readLatestWeight() async => null;
   @override
+  Future<bool> writeWeight(double weightKg, DateTime date) async => false;
+  @override
   Future<List<NutritionHealthEntry>> readNutrition(
     DateTime start,
     DateTime end,

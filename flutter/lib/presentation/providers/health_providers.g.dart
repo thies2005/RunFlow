@@ -272,7 +272,7 @@ final class DailyHealthProvider
   }
 }
 
-String _$dailyHealthHash() => r'3cbdddc55663e52a214a63168c69633287740fee';
+String _$dailyHealthHash() => r'b0daf65560329c00ff222f2d725579031677f874';
 
 final class DailyHealthFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<DailyHealthLog>, DateTime> {
@@ -520,7 +520,7 @@ final class NutritionNotifierProvider
   }
 }
 
-String _$nutritionNotifierHash() => r'd98812c1ab5e4d099ad328afef072e79a5d51cfe';
+String _$nutritionNotifierHash() => r'a6bbbfa5c36f6d20afc43378d05e050038384405';
 
 final class NutritionNotifierFamily extends $Family
     with

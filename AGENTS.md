@@ -20,7 +20,7 @@ flutter test
 ## Pre-push Checklist
 
 Before pushing changes to the Flutter app, always run both:
-1. `flutter analyze` - must pass with zero errors (infos are acceptable)
+1. `flutter analyze` - must pass with zero errors 
 2. `flutter test` - must pass with zero failures
 
 ## Important Notes

@@ -223,7 +223,7 @@ class _AiMealSuggestionSheetState
               const SizedBox(width: 8),
               _MacroChip(
                   label: 'Fat',
-                  value: '${suggestion.totalFats.round()}g',
+                  value: '${suggestion.totalFat.round()}g',
                   color: Colors.orange),
             ],
           ),

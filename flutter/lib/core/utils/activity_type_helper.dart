@@ -17,6 +17,8 @@ IconData activityTypeIcon(ActivityType type) {
       return Icons.pool;
     case ActivityType.workout:
       return Icons.fitness_center;
+    case ActivityType.strength:
+      return Icons.fitness_center;
     case ActivityType.other:
       return Icons.sports;
   }
@@ -38,6 +40,8 @@ String activityTypeLabel(ActivityType type) {
       return 'Swim';
     case ActivityType.workout:
       return 'Workout';
+    case ActivityType.strength:
+      return 'Strength';
     case ActivityType.other:
       return 'Other';
   }

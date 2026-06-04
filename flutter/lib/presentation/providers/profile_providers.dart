@@ -62,6 +62,8 @@ class Settings extends _$Settings {
   static const _supplementEveningMinuteKey = 'settings_supplement_evening_minute';
   static const _supplementNightHourKey = 'settings_supplement_night_hour';
   static const _supplementNightMinuteKey = 'settings_supplement_night_minute';
+  static const _showRpeKey = 'settings_strength_show_rpe';
+  static const _defaultRestSecondsKey = 'settings_strength_default_rest_seconds';
 
   @override
   AppSettings build() {
@@ -91,6 +93,8 @@ class Settings extends _$Settings {
       supplementEveningMinute: prefs.getInt(_supplementEveningMinuteKey) ?? 0,
       supplementNightHour: prefs.getInt(_supplementNightHourKey) ?? 21,
       supplementNightMinute: prefs.getInt(_supplementNightMinuteKey) ?? 0,
+      showRpe: prefs.getBool(_showRpeKey) ?? false,
+      defaultRestSeconds: prefs.getInt(_defaultRestSecondsKey) ?? 90,
     );
   }
 
@@ -182,6 +186,18 @@ class Settings extends _$Settings {
     await prefs.setInt(_supplementNightMinuteKey, minute);
     state = state.copyWith(supplementNightHour: hour, supplementNightMinute: minute);
   }
+
+  Future<void> setShowRpe(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_showRpeKey, value);
+    state = state.copyWith(showRpe: value);
+  }
+
+  Future<void> setDefaultRestSeconds(int value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_defaultRestSecondsKey, value);
+    state = state.copyWith(defaultRestSeconds: value);
+  }
 }
 
 class AppSettings {
@@ -205,6 +221,8 @@ class AppSettings {
     this.supplementEveningMinute = 0,
     this.supplementNightHour = 21,
     this.supplementNightMinute = 0,
+    this.showRpe = false,
+    this.defaultRestSeconds = 90,
   });
 
   final UnitSystem unitSystem;
@@ -226,6 +244,8 @@ class AppSettings {
   final int supplementEveningMinute;
   final int supplementNightHour;
   final int supplementNightMinute;
+  final bool showRpe;
+  final int defaultRestSeconds;
 
   AppSettings copyWith({
     UnitSystem? unitSystem,
@@ -247,6 +267,8 @@ class AppSettings {
     int? supplementEveningMinute,
     int? supplementNightHour,
     int? supplementNightMinute,
+    bool? showRpe,
+    int? defaultRestSeconds,
   }) {
     return AppSettings(
       unitSystem: unitSystem ?? this.unitSystem,
@@ -268,6 +290,8 @@ class AppSettings {
       supplementEveningMinute: supplementEveningMinute ?? this.supplementEveningMinute,
       supplementNightHour: supplementNightHour ?? this.supplementNightHour,
       supplementNightMinute: supplementNightMinute ?? this.supplementNightMinute,
+      showRpe: showRpe ?? this.showRpe,
+      defaultRestSeconds: defaultRestSeconds ?? this.defaultRestSeconds,
     );
   }
 }

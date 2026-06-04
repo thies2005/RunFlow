@@ -166,10 +166,13 @@ class LocalActivityDatasource {
     }
   }
 
-  Future<List<Activity>> getLocalActivities({int limit = 50, int offset = 0}) async {
+  Future<List<Activity>> getLocalActivities({int limit = 50, int offset = 0, bool excludeLinked = true}) async {
     final db = await _db.database;
+    final query = excludeLinked
+        ? 'SELECT * FROM activities WHERE is_linked_to_strength = 0 ORDER BY start_date DESC LIMIT ? OFFSET ?'
+        : 'SELECT * FROM activities ORDER BY start_date DESC LIMIT ? OFFSET ?';
     final rows = db.select(
-      'SELECT * FROM activities ORDER BY start_date DESC LIMIT ? OFFSET ?',
+      query,
       [limit, offset],
     );
     return rows.map(_rowToActivity).toList();
@@ -178,7 +181,7 @@ class LocalActivityDatasource {
   Future<List<Activity>> getUnsyncedActivities() async {
     final db = await _db.database;
     final rows = db.select(
-      'SELECT * FROM activities WHERE is_synced = 0 ORDER BY start_date DESC',
+      'SELECT * FROM activities WHERE is_synced = 0 AND is_linked_to_strength = 0 ORDER BY start_date DESC',
     );
     return rows.map(_rowToActivity).toList();
   }
@@ -341,8 +344,8 @@ class LocalActivityDatasource {
   Future<List<Activity>> getLocalActivitiesWithRoutes({DateTime? since}) async {
     final db = await _db.database;
     final where = since != null
-        ? 'WHERE streams_json IS NOT NULL AND start_date >= ?'
-        : 'WHERE streams_json IS NOT NULL';
+        ? 'WHERE streams_json IS NOT NULL AND is_linked_to_strength = 0 AND start_date >= ?'
+        : 'WHERE streams_json IS NOT NULL AND is_linked_to_strength = 0';
     final args = since != null ? [since.millisecondsSinceEpoch] : <Object?>[];
     final rows = db.select(
       'SELECT * FROM activities $where ORDER BY start_date DESC',

@@ -14,17 +14,20 @@ import 'package:runflow_flutter/data/models/ai_feedback_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
+import 'package:runflow_flutter/services/workout_merge_service.dart';
 
 class ActivityRepositoryImpl implements ActivityRepository {
   ActivityRepositoryImpl({
     required this.dio,
     required this.localDatasource,
     required this.cacheDatasource,
+    this.mergeService,
   });
 
   final Dio dio;
   final LocalActivityDatasource localDatasource;
   final CacheDatasource cacheDatasource;
+  final WorkoutMergeService? mergeService;
 
   @override
   Future<domain.ActivitiesResponse> listActivities({
@@ -49,6 +52,12 @@ class ActivityRepositoryImpl implements ActivityRepository {
       ).toDomain();
 
       await localDatasource.upsertServerActivities(result.activities);
+
+      if (mergeService != null) {
+        for (final activity in result.activities) {
+          await mergeService!.checkAndMergeOverlappingWorkouts(activity);
+        }
+      }
 
       final localOnlyActivities = await localDatasource.getUnsyncedActivities();
       if (localOnlyActivities.isNotEmpty) {

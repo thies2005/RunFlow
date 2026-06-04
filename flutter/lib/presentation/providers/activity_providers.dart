@@ -8,6 +8,8 @@ import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/services/activity_cache_sync_service.dart';
 import 'package:runflow_flutter/services/offline_sync_service.dart';
+import 'package:runflow_flutter/data/datasources/local/strength_local_datasource.dart';
+import 'package:runflow_flutter/services/workout_merge_service.dart';
 
 part 'activity_providers.g.dart';
 
@@ -27,7 +29,17 @@ CacheDatasource cacheDatasource(Ref ref) {
 ActivityRepository activityRepository(Ref ref) {
   final client = ref.watch(dioClientProvider);
   final localDs = ref.watch(localActivityDatasourceProvider);
-  return ActivityRepositoryImpl(dio: client.dio, localDatasource: localDs, cacheDatasource: ref.read(cacheDatasourceProvider));
+  final db = ref.watch(appDatabaseProvider);
+  final mergeService = WorkoutMergeService(
+    strengthDatasource: StrengthLocalDatasource(database: db),
+    activityDatasource: localDs,
+  );
+  return ActivityRepositoryImpl(
+    dio: client.dio,
+    localDatasource: localDs,
+    cacheDatasource: ref.read(cacheDatasourceProvider),
+    mergeService: mergeService,
+  );
 }
 
 @Riverpod(keepAlive: true)
@@ -42,7 +54,17 @@ ActivityCacheSyncService activityCacheSyncService(Ref ref) {
   final client = ref.watch(dioClientProvider);
   final localDs = ref.watch(localActivityDatasourceProvider);
   final cache = ref.watch(cacheDatasourceProvider);
-  return ActivityCacheSyncService(dio: client.dio, localDatasource: localDs, cacheDatasource: cache);
+  final db = ref.watch(appDatabaseProvider);
+  final mergeService = WorkoutMergeService(
+    strengthDatasource: StrengthLocalDatasource(database: db),
+    activityDatasource: localDs,
+  );
+  return ActivityCacheSyncService(
+    dio: client.dio,
+    localDatasource: localDs,
+    cacheDatasource: cache,
+    mergeService: mergeService,
+  );
 }
 
 @riverpod

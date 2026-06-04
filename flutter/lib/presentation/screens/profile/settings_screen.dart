@@ -305,6 +305,63 @@ class SettingsScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
+              'Strength Training Settings',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  title: const Text(
+                    'Show RPE',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: const Text(
+                    'Enable Rate of Perceived Exertion (1-10) logging for sets',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  value: settings.showRpe,
+                  onChanged: (bool value) {
+                    ref.read(settingsProvider.notifier).setShowRpe(value);
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: const Text(
+                    'Default Rest Timer',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                  subtitle: Text(
+                    'Current default: ${settings.defaultRestSeconds}s',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  trailing: DropdownButton<int>(
+                    value: settings.defaultRestSeconds,
+                    onChanged: (int? newValue) {
+                      if (newValue != null) {
+                        ref.read(settingsProvider.notifier).setDefaultRestSeconds(newValue);
+                      }
+                    },
+                    items: const [
+                      DropdownMenuItem(value: 30, child: Text('30s')),
+                      DropdownMenuItem(value: 60, child: Text('60s')),
+                      DropdownMenuItem(value: 90, child: Text('90s')),
+                      DropdownMenuItem(value: 120, child: Text('120s')),
+                      DropdownMenuItem(value: 180, child: Text('180s')),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
                'External Integrations',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,

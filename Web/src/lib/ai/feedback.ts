@@ -247,8 +247,7 @@ export async function generateAndSaveActivityFeedback(
     }
 
     // Generate all feedback in a single AI request
-    const _combinedPrompt: string = ACTIVITY_FEEDBACK_PROMPTS.combined;
-    const systemPromptMessage: string = `You are a running coach analyzing an athlete's activity.\n\n--- Athlete Profile ---\n${baseContext}`;
+    const systemPromptMessage: string = `You are a running coach analyzing an athlete's activity.\n\n--- Athlete Profile ---\n${baseContext}\n\n${ACTIVITY_FEEDBACK_PROMPTS.combined}`;
     const userMessage: string = `Here's the activity to analyze:\n\n${activityStr}`;
 
     const { generateCompletion } = await import('@/lib/ai/providers');
@@ -259,50 +258,89 @@ export async function generateAndSaveActivityFeedback(
 
     const raw = await generateCompletion(providerConfig, messages, signal);
 
-    // Parse the combined response into the 3 sections by searching for keywords
-    // This is more robust than regex as it handles different header styles (##, **, 1., etc.)
+    // Strip <think> blocks that some models (e.g. DeepSeek) emit before parsing.
+    // These blocks often echo back the prompt including section names, which confuses
+    // the section parser if left in.
+    let cleaned = raw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    // Also handle unclosed <think> tags (model cut off mid-thought)
+    const openThinkIdx = cleaned.indexOf('<think>');
+    if (openThinkIdx !== -1) {
+        cleaned = cleaned.substring(0, openThinkIdx).trim();
+    }
+    // If stripping removed everything, fall back to raw
+    if (!cleaned) {
+        cleaned = raw;
+    }
+
+    // Parse the combined response into the 3 sections using markdown headers.
+    // We look for ## headers first, then fall back to keyword search.
     const sections: Record<string, string> = {};
-    const lowerRaw = raw.toLowerCase();
-    
-    const markers = [
-        { key: 'plannedComparison', label: 'planned comparison' },
-        { key: 'progressAnalysis', label: 'progress analysis' },
-        { key: 'goalTrajectory', label: 'goal trajectory' }
+    const lowerCleaned = cleaned.toLowerCase();
+
+    // Strategy 1: Look for markdown headers (## Planned Comparison, etc.)
+    const headerPatterns = [
+        { key: 'plannedComparison', pattern: /^#{1,3}\s*(?:planned\s+comparison|vs\.?\s*planned\s*workout)/gim },
+        { key: 'progressAnalysis', pattern: /^#{1,3}\s*(?:progress\s+(?:analysis|&\s*execution)|progress\s+and\s+execution)/gim },
+        { key: 'goalTrajectory', pattern: /^#{1,3}\s*goal\s+trajectory/gim },
     ];
 
-    // Find indices of all markers
-    const found = markers
-        .map(m => ({ ...m, index: lowerRaw.indexOf(m.label) }))
-        .filter(m => m.index !== -1)
-        .sort((a, b) => a.index - b.index);
+    // Find header positions
+    let headerPositions: { key: string; index: number; matchEnd: number }[] = [];
+    for (const hp of headerPatterns) {
+        const match = hp.pattern.exec(cleaned);
+        if (match) {
+            headerPositions.push({ key: hp.key, index: match.index, matchEnd: match.index + match[0].length });
+        }
+    }
+    headerPositions.sort((a, b) => a.index - b.index);
 
-    if (found.length > 0) {
-        for (let i = 0; i < found.length; i++) {
-            const start = found[i].index + found[i].label.length;
-            // Skip characters like ':', '#', '*', '\n' that might follow the label
-            let actualStart = start;
-            while (actualStart < raw.length && /[:\s#*>\-]/.test(raw[actualStart])) {
-                actualStart++;
-            }
-            
-            const end = i + 1 < found.length ? found[i + 1].index : raw.length;
-            
-            // Clean up the ending as well (trailing markers/formatting)
-            let sectionContent = raw.slice(actualStart, end).trim();
-            // Remove some trailing markdown noise if it exists
+    if (headerPositions.length >= 2) {
+        // Use header-based parsing
+        for (let i = 0; i < headerPositions.length; i++) {
+            const contentStart = headerPositions[i].matchEnd;
+            const contentEnd = i + 1 < headerPositions.length ? headerPositions[i + 1].index : cleaned.length;
+            let sectionContent = cleaned.slice(contentStart, contentEnd).trim();
+            // Remove leading colons, dashes, newlines
+            sectionContent = sectionContent.replace(/^[:\s\-*>]+/, '').trim();
+            // Remove trailing markdown noise
             sectionContent = sectionContent.replace(/[#*>\-\s:]+$/, '').trim();
-            
-            sections[found[i].key as string] = sectionContent;
+            sections[headerPositions[i].key] = sectionContent;
+        }
+    } else {
+        // Strategy 2: Fall back to keyword search (for models that don't use markdown headers)
+        const markers = [
+            { key: 'plannedComparison', label: 'planned comparison' },
+            { key: 'progressAnalysis', label: 'progress analysis' },
+            { key: 'goalTrajectory', label: 'goal trajectory' }
+        ];
+
+        const found = markers
+            .map(m => ({ ...m, index: lowerCleaned.indexOf(m.label) }))
+            .filter(m => m.index !== -1)
+            .sort((a, b) => a.index - b.index);
+
+        if (found.length > 0) {
+            for (let i = 0; i < found.length; i++) {
+                const start = found[i].index + found[i].label.length;
+                let actualStart = start;
+                while (actualStart < cleaned.length && /[:\s#*>\-]/.test(cleaned[actualStart])) {
+                    actualStart++;
+                }
+                const end = i + 1 < found.length ? found[i + 1].index : cleaned.length;
+                let sectionContent = cleaned.slice(actualStart, end).trim();
+                sectionContent = sectionContent.replace(/[#*>\-\s:]+$/, '').trim();
+                sections[found[i].key as string] = sectionContent;
+            }
         }
     }
 
-    // Fallback: If no sections were parsed, or they are all empty, put the entire raw response in progressAnalysis
+    // Fallback: If no sections were parsed, or they are all empty, put the entire cleaned response in progressAnalysis
     let plannedComparison = sections.plannedComparison || '';
     let progressAnalysis = sections.progressAnalysis || '';
     let goalTrajectory = sections.goalTrajectory || '';
 
-    if (!plannedComparison && !progressAnalysis && !goalTrajectory && raw.trim()) {
-        progressAnalysis = raw.trim();
+    if (!plannedComparison && !progressAnalysis && !goalTrajectory && cleaned.trim()) {
+        progressAnalysis = cleaned.trim();
     }
 
     // Upsert into DB

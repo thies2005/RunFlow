@@ -53,6 +53,8 @@ enum ActivityType {
   swim,
   @JsonValue('WORKOUT')
   workout,
+  @JsonValue('STRENGTH')
+  strength,
   @JsonValue('OTHER')
   other,
 }

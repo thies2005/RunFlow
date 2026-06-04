@@ -158,14 +158,107 @@ class HealthConnectServiceImpl implements HealthConnectService {
         endTime: now,
       );
 
+      List<HealthDataPoint> hrData = [];
+      try {
+        hrData = await _health.getHealthDataFromTypes(
+          types: [HealthDataType.HEART_RATE],
+          startTime: startTime,
+          endTime: now,
+        );
+      } catch (e) {
+        logger.error('[HealthConnect] failed to fetch HR data for activities: $e');
+      }
+
+      List<HealthDataPoint> calData = [];
+      try {
+        calData = await _health.getHealthDataFromTypes(
+          types: [HealthDataType.ACTIVE_ENERGY_BURNED],
+          startTime: startTime,
+          endTime: now,
+        );
+      } catch (e) {
+        logger.error('[HealthConnect] failed to fetch calorie data for activities: $e');
+      }
+
       return data
           .where((point) => point.value is WorkoutHealthValue)
-          .map(_convertToActivity)
+          .map((point) => _convertToActivityEnriched(point, hrData, calData))
           .toList();
     } catch (e) {
       logger.error('[HealthConnect] readActivities failed: $e');
       return [];
     }
+  }
+
+  Activity _convertToActivityEnriched(
+    HealthDataPoint point,
+    List<HealthDataPoint> hrData,
+    List<HealthDataPoint> calData,
+  ) {
+    final workoutValue = point.value as WorkoutHealthValue;
+    final duration = point.dateTo.difference(point.dateFrom).inSeconds;
+    final distance = (workoutValue.totalDistance ?? 0).toDouble();
+
+    // Filter HR data inside this workout's window
+    final workoutHr = hrData.where((h) =>
+        !h.dateFrom.isBefore(point.dateFrom) &&
+        !h.dateTo.isAfter(point.dateTo));
+    
+    double? averageHr;
+    int? maxHr;
+    if (workoutHr.isNotEmpty) {
+      double sum = 0;
+      int count = 0;
+      int maxVal = 0;
+      for (final h in workoutHr) {
+        if (h.value is NumericHealthValue) {
+          final val = (h.value as NumericHealthValue).numericValue.toInt();
+          sum += val;
+          count++;
+          if (val > maxVal) maxVal = val;
+        }
+      }
+      if (count > 0) {
+        averageHr = sum / count;
+        maxHr = maxVal;
+      }
+    }
+
+    // Filter active calories in this workout's window
+    final workoutCal = calData.where((c) =>
+        !c.dateFrom.isBefore(point.dateFrom) &&
+        !c.dateTo.isAfter(point.dateTo));
+    double? calories;
+    if (workoutCal.isNotEmpty) {
+      double sum = 0;
+      for (final c in workoutCal) {
+        if (c.value is NumericHealthValue) {
+          sum += (c.value as NumericHealthValue).numericValue.toDouble();
+        }
+      }
+      calories = sum;
+    }
+
+    return Activity(
+      id: point.uuid,
+      stravaId: '',
+      type: _mapWorkoutType(workoutValue.workoutActivityType),
+      name: _workoutTypeName(workoutValue.workoutActivityType),
+      startDate: point.dateFrom,
+      distance: distance,
+      movingTime: duration,
+      averageSpeed: duration > 0 ? distance / duration : null,
+      averageHr: averageHr,
+      maxHr: maxHr,
+      averageCadence: null,
+      hasHeartrate: averageHr != null,
+      totalElevation: 0.0,
+      trimp: null,
+      runningTss: null,
+      estimatedVdot: null,
+      trainingType: null,
+      calories: calories,
+    );
   }
 
   @override
@@ -657,32 +750,6 @@ class HealthConnectServiceImpl implements HealthConnectService {
     }
   }
 
-  Activity _convertToActivity(HealthDataPoint point) {
-    final workoutValue = point.value as WorkoutHealthValue;
-    final duration = point.dateTo.difference(point.dateFrom).inSeconds;
-    final distance = (workoutValue.totalDistance ?? 0).toDouble();
-
-    return Activity(
-      id: point.uuid,
-      stravaId: '',
-      type: _mapWorkoutType(workoutValue.workoutActivityType),
-      name: _workoutTypeName(workoutValue.workoutActivityType),
-      startDate: point.dateFrom,
-      distance: distance,
-      movingTime: duration,
-      averageSpeed: duration > 0 ? distance / duration : null,
-      averageHr: null,
-      maxHr: null,
-      averageCadence: null,
-      hasHeartrate: false,
-      totalElevation: 0.0,
-      trimp: null,
-      runningTss: null,
-      estimatedVdot: null,
-      trainingType: null,
-    );
-  }
-
   static ActivityType _mapWorkoutType(HealthWorkoutActivityType type) {
     switch (type) {
       case HealthWorkoutActivityType.RUNNING:
@@ -701,6 +768,9 @@ class HealthConnectServiceImpl implements HealthConnectService {
         return ActivityType.swim;
       case HealthWorkoutActivityType.HIKING:
         return ActivityType.hike;
+      case HealthWorkoutActivityType.STRENGTH_TRAINING:
+      case HealthWorkoutActivityType.WEIGHTLIFTING:
+        return ActivityType.strength;
       default:
         return ActivityType.other;
     }

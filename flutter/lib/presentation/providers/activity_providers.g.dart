@@ -145,7 +145,7 @@ final class ActivityRepositoryProvider
 }
 
 String _$activityRepositoryHash() =>
-    r'e6491ce0c8a6b9d8c2932abfc5fb62a81c3e5e58';
+    r'af04e41d44568dd76bfd3bd53cdb4b8e772577cc';
 
 @ProviderFor(offlineSyncService)
 final offlineSyncServiceProvider = OfflineSyncServiceProvider._();
@@ -241,7 +241,7 @@ final class ActivityCacheSyncServiceProvider
 }
 
 String _$activityCacheSyncServiceHash() =>
-    r'6e76ab55f08651dd893e3214a4c5735eef5bf055';
+    r'dfc3fee1e60ba0942a46dd459ade32e0d5b73718';
 
 @ProviderFor(pendingSyncCount)
 final pendingSyncCountProvider = PendingSyncCountProvider._();

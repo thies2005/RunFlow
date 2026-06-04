@@ -191,6 +191,11 @@ class _ProfileMenuSection extends ConsumerWidget {
           onTap: () => context.push('/profile/hr-zones'),
         ),
         _MenuTile(
+          icon: Icons.fitness_center_outlined,
+          title: 'Strength Training',
+          onTap: () => context.push('/settings/strength'),
+        ),
+        _MenuTile(
           icon: Icons.settings_outlined,
           title: S.of(context).profileSettings,
           onTap: () => context.push('/profile/settings'),

@@ -45,7 +45,10 @@ import 'package:runflow_flutter/presentation/screens/health/readiness_detail_scr
 import 'package:runflow_flutter/presentation/screens/health/nutrition_library_screen.dart';
 import 'package:runflow_flutter/presentation/screens/onboarding/feature_showcase_screen.dart';
 import 'package:runflow_flutter/presentation/screens/startup/startup_screen.dart';
-import 'package:runflow_flutter/presentation/screens/record/record_screen.dart';
+import 'package:runflow_flutter/presentation/screens/record/record_tab_screen.dart';
+import 'package:runflow_flutter/presentation/screens/record/strength_recording_screen.dart';
+import 'package:runflow_flutter/presentation/screens/settings/strength_settings_screen.dart';
+import 'package:runflow_flutter/presentation/screens/settings/workout_template_editor_screen.dart';
 import 'package:runflow_flutter/presentation/screens/race/race_result_screen.dart';
 import 'package:runflow_flutter/presentation/screens/workout/workout_builder_screen.dart';
 import 'package:runflow_flutter/presentation/screens/workout/workout_preview_screen.dart';
@@ -220,6 +223,27 @@ GoRouter createRouter(Ref ref) {
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
+        path: '/settings/strength',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const StrengthSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/strength/template/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id'];
+          return WorkoutTemplateEditorScreen(templateId: id);
+        },
+      ),
+      GoRoute(
+        path: '/strength/recording',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final templateId = state.uri.queryParameters['templateId'];
+          return StrengthRecordingScreen(templateId: templateId);
+        },
+      ),
+      GoRoute(
         path: '/settings/about',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AboutScreen(),
@@ -336,7 +360,7 @@ GoRouter createRouter(Ref ref) {
                 builder: (context, state) {
                   final workoutId = state.uri.queryParameters['workoutId'];
                   final templateId = state.uri.queryParameters['templateId'];
-                  return RecordScreen(workoutId: workoutId, templateId: templateId);
+                  return RecordTabScreen(workoutId: workoutId, templateId: templateId);
                 },
               ),
             ],

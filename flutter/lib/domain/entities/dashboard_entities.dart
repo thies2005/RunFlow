@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 
-enum ActivityType { run, ride, virtualRide, walk, hike, swim, workout, other }
+enum ActivityType { run, ride, virtualRide, walk, hike, swim, workout, strength, other }
 
 enum RaceType {
   fiveK,

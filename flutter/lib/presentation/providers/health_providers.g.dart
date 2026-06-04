@@ -520,7 +520,7 @@ final class NutritionNotifierProvider
   }
 }
 
-String _$nutritionNotifierHash() => r'a6bbbfa5c36f6d20afc43378d05e050038384405';
+String _$nutritionNotifierHash() => r'426fdc117c1ddca8ce6237f976bbf9b2f5a9bc92';
 
 final class NutritionNotifierFamily extends $Family
     with

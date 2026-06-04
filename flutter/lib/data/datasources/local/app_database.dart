@@ -21,7 +21,7 @@ class AppDatabase {
 
   Database? _db;
 
-  static const int _currentVersion = 6;
+  static const int _currentVersion = 7;
 
   static final Map<int, void Function(Database)> _migrations = {
     1: (Database db) {
@@ -163,6 +163,52 @@ class AppDatabase {
       db.execute('CREATE INDEX IF NOT EXISTS idx_nutrition_logs_date ON nutrition_logs(date)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_daily_health_logs_date ON daily_health_logs(date)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_food_items_name ON food_items(name)');
+    },
+    6: (Database db) {
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS strength_exercises (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          primary_muscle TEXT NOT NULL,
+          secondary_muscle TEXT,
+          notes TEXT,
+          rest_seconds INTEGER NOT NULL DEFAULT 90,
+          is_bodyweight INTEGER NOT NULL DEFAULT 0,
+          is_custom INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL
+        )
+      ''');
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS strength_workout_templates (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          exercises_json TEXT NOT NULL DEFAULT '[]',
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        )
+      ''');
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS strength_sessions (
+          id TEXT PRIMARY KEY,
+          template_id TEXT,
+          workout_name TEXT NOT NULL,
+          start_time INTEGER NOT NULL,
+          end_time INTEGER NOT NULL,
+          duration_seconds INTEGER NOT NULL,
+          exercises_json TEXT NOT NULL DEFAULT '[]',
+          total_volume REAL NOT NULL DEFAULT 0,
+          total_sets INTEGER NOT NULL DEFAULT 0,
+          notes TEXT,
+          average_hr REAL,
+          max_hr INTEGER,
+          calories REAL,
+          linked_activity_id TEXT,
+          created_at INTEGER NOT NULL
+        )
+      ''');
+      db.execute('CREATE INDEX IF NOT EXISTS idx_strength_sessions_start ON strength_sessions(start_time)');
+      _addColumnIfNotExists(db, 'activities', 'is_linked_to_strength', 'INTEGER NOT NULL DEFAULT 0');
     },
   };
 
@@ -333,6 +379,7 @@ class AppDatabase {
         calories REAL,
         streams_json TEXT,
         is_synced INTEGER NOT NULL DEFAULT 0,
+        is_linked_to_strength INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )
@@ -421,6 +468,49 @@ class AppDatabase {
         synced_at INTEGER
       )
     ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS strength_exercises (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        primary_muscle TEXT NOT NULL,
+        secondary_muscle TEXT,
+        notes TEXT,
+        rest_seconds INTEGER NOT NULL DEFAULT 90,
+        is_bodyweight INTEGER NOT NULL DEFAULT 0,
+        is_custom INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS strength_workout_templates (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        exercises_json TEXT NOT NULL DEFAULT '[]',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS strength_sessions (
+        id TEXT PRIMARY KEY,
+        template_id TEXT,
+        workout_name TEXT NOT NULL,
+        start_time INTEGER NOT NULL,
+        end_time INTEGER NOT NULL,
+        duration_seconds INTEGER NOT NULL,
+        exercises_json TEXT NOT NULL DEFAULT '[]',
+        total_volume REAL NOT NULL DEFAULT 0,
+        total_sets INTEGER NOT NULL DEFAULT 0,
+        notes TEXT,
+        average_hr REAL,
+        max_hr INTEGER,
+        calories REAL,
+        linked_activity_id TEXT,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+    db.execute('CREATE INDEX IF NOT EXISTS idx_strength_sessions_start ON strength_sessions(start_time)');
   }
 
   Future<NutritionLog> getNutritionLogByDate(DateTime date) async {

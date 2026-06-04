@@ -17,11 +17,15 @@ import 'package:runflow_flutter/presentation/widgets/shape_calibration_sheet.dar
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/widgets/training_paces_card.dart';
 
+import 'package:runflow_flutter/presentation/providers/strength_providers.dart';
+import 'package:runflow_flutter/presentation/widgets/strength_analytics_widgets.dart';
+
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final viewMode = ref.watch(analyticsViewModeStateProvider);
     final statsAsync = ref.watch(analyticsStatsProvider);
     final selectedDays = ref.watch(selectedDateRangeProvider);
     final historyAsync = ref.watch(
@@ -30,70 +34,91 @@ class AnalyticsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(S.of(context).analyticsTitle),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(analyticsStatsProvider);
-          ref.invalidate(
-            analyticsHistoryProvider(days: selectedDays),
-          );
-        },
-        child: statsAsync.when(
-          loading: () => const _AnalyticsSkeleton(),
-          error: (error, _) => _AnalyticsError(
-            message: error.toString(),
-            onRetry: () {
-              ref.invalidate(analyticsStatsProvider);
-              ref.invalidate(
-                analyticsHistoryProvider(days: selectedDays),
-              );
-            },
-          ),
-          data: (stats) => ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 24),
-            children: [
-              _SummaryCardsRow(stats: stats),
-              const SizedBox(height: 16),
-              _FormIndicator(tsb: stats.tsb),
-              const SizedBox(height: 16),
-              _DateRangeSelector(),
-              const SizedBox(height: 16),
-              historyAsync.when(
-                loading: () => const SizedBox(
-                  height: 300,
-                  child: Card(
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ),
-                error: (_, _) => const SizedBox.shrink(),
-                data: (history) => RepaintBoundary(
-                  child: _FitnessChart(history: history),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const CombinedAnalyticsChart(),
-              const SizedBox(height: 16),
-              const _HeatmapSection(),
-              const SizedBox(height: 16),
-              const _HrZoneDistributionSection(),
-              const SizedBox(height: 16),
-              _RacePredictionsCard(),
-              const SizedBox(height: 16),
-              const TrainingPacesCard(),
-              const SizedBox(height: 16),
-              RepaintBoundary(
-                child: _MarathonShapeSection(stats: stats),
-              ),
-              const SizedBox(height: 16),
-              RepaintBoundary(
-                child: _WeeklyMileageCard(stats: stats),
-              ),
-            ],
-          ),
+        title: SegmentedButton<AnalyticsViewMode>(
+          segments: const [
+            ButtonSegment(
+              value: AnalyticsViewMode.endurance,
+              label: Text('Endurance'),
+              icon: Icon(Icons.directions_run),
+            ),
+            ButtonSegment(
+              value: AnalyticsViewMode.strength,
+              label: Text('Strength'),
+              icon: Icon(Icons.fitness_center),
+            ),
+          ],
+          selected: {viewMode},
+          onSelectionChanged: (selected) {
+            ref.read(analyticsViewModeStateProvider.notifier).setMode(selected.first);
+          },
+          showSelectedIcon: false,
         ),
+        centerTitle: true,
       ),
+      body: viewMode == AnalyticsViewMode.endurance
+          ? RefreshIndicator(
+              onRefresh: () async {
+                ref.invalidate(analyticsStatsProvider);
+                ref.invalidate(
+                  analyticsHistoryProvider(days: selectedDays),
+                );
+              },
+              child: statsAsync.when(
+                loading: () => const _AnalyticsSkeleton(),
+                error: (error, _) => _AnalyticsError(
+                  message: error.toString(),
+                  onRetry: () {
+                    ref.invalidate(analyticsStatsProvider);
+                    ref.invalidate(
+                      analyticsHistoryProvider(days: selectedDays),
+                    );
+                  },
+                ),
+                data: (stats) => ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(bottom: 24),
+                  children: [
+                    _SummaryCardsRow(stats: stats),
+                    const SizedBox(height: 16),
+                    _FormIndicator(tsb: stats.tsb),
+                    const SizedBox(height: 16),
+                    _DateRangeSelector(),
+                    const SizedBox(height: 16),
+                    historyAsync.when(
+                      loading: () => const SizedBox(
+                        height: 300,
+                        child: Card(
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                      ),
+                      error: (_, _) => const SizedBox.shrink(),
+                      data: (history) => RepaintBoundary(
+                        child: _FitnessChart(history: history),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const CombinedAnalyticsChart(),
+                    const SizedBox(height: 16),
+                    const _HeatmapSection(),
+                    const SizedBox(height: 16),
+                    const _HrZoneDistributionSection(),
+                    const SizedBox(height: 16),
+                    _RacePredictionsCard(),
+                    const SizedBox(height: 16),
+                    const TrainingPacesCard(),
+                    const SizedBox(height: 16),
+                    RepaintBoundary(
+                      child: _MarathonShapeSection(stats: stats),
+                    ),
+                    const SizedBox(height: 16),
+                    RepaintBoundary(
+                      child: _WeeklyMileageCard(stats: stats),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : const StrengthAnalyticsView(),
     );
   }
 }

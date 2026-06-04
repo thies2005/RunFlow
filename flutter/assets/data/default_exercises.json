@@ -1,0 +1,157 @@
+[
+  {
+    "id": "bench_press_barbell",
+    "name": "Barbell Bench Press",
+    "primaryMuscle": "chest",
+    "secondaryMuscle": "triceps",
+    "restSeconds": 120
+  },
+  {
+    "id": "incline_bench_press_dumbbell",
+    "name": "Dumbbell Incline Bench Press",
+    "primaryMuscle": "chest",
+    "secondaryMuscle": "shoulders",
+    "restSeconds": 90
+  },
+  {
+    "id": "chest_fly_dumbbell",
+    "name": "Dumbbell Chest Fly",
+    "primaryMuscle": "chest",
+    "restSeconds": 90
+  },
+  {
+    "id": "push_up",
+    "name": "Push Up",
+    "primaryMuscle": "chest",
+    "secondaryMuscle": "triceps",
+    "restSeconds": 60,
+    "isBodyweight": true
+  },
+  {
+    "id": "deadlift_barbell",
+    "name": "Barbell Deadlift",
+    "primaryMuscle": "back",
+    "secondaryMuscle": "hamstrings",
+    "restSeconds": 180
+  },
+  {
+    "id": "barbell_row",
+    "name": "Barbell Row",
+    "primaryMuscle": "back",
+    "secondaryMuscle": "biceps",
+    "restSeconds": 120
+  },
+  {
+    "id": "pull_up",
+    "name": "Pull Up",
+    "primaryMuscle": "back",
+    "secondaryMuscle": "biceps",
+    "restSeconds": 90,
+    "isBodyweight": true
+  },
+  {
+    "id": "lat_pulldown_cable",
+    "name": "Cable Lat Pulldown",
+    "primaryMuscle": "back",
+    "secondaryMuscle": "biceps",
+    "restSeconds": 90
+  },
+  {
+    "id": "overhead_press_barbell",
+    "name": "Barbell Overhead Press",
+    "primaryMuscle": "shoulders",
+    "secondaryMuscle": "triceps",
+    "restSeconds": 120
+  },
+  {
+    "id": "lateral_raise_dumbbell",
+    "name": "Dumbbell Lateral Raise",
+    "primaryMuscle": "shoulders",
+    "restSeconds": 60
+  },
+  {
+    "id": "bicep_curl_dumbbell",
+    "name": "Dumbbell Bicep Curl",
+    "primaryMuscle": "biceps",
+    "restSeconds": 60
+  },
+  {
+    "id": "hammer_curl_dumbbell",
+    "name": "Dumbbell Hammer Curl",
+    "primaryMuscle": "biceps",
+    "restSeconds": 60
+  },
+  {
+    "id": "overhead_extension_tricep_dumbbell",
+    "name": "Dumbbell Overhead Tricep Extension",
+    "primaryMuscle": "triceps",
+    "restSeconds": 60
+  },
+  {
+    "id": "pushdown_tricep_cable",
+    "name": "Cable Tricep Pushdown",
+    "primaryMuscle": "triceps",
+    "restSeconds": 60
+  },
+  {
+    "id": "squat_barbell",
+    "name": "Barbell Squat",
+    "primaryMuscle": "quads",
+    "secondaryMuscle": "glutes",
+    "restSeconds": 180
+  },
+  {
+    "id": "leg_press",
+    "name": "Leg Press",
+    "primaryMuscle": "quads",
+    "secondaryMuscle": "glutes",
+    "restSeconds": 120
+  },
+  {
+    "id": "romanian_deadlift_barbell",
+    "name": "Barbell Romanian Deadlift",
+    "primaryMuscle": "hamstrings",
+    "secondaryMuscle": "glutes",
+    "restSeconds": 120
+  },
+  {
+    "id": "leg_curl_lying",
+    "name": "Lying Leg Curl",
+    "primaryMuscle": "hamstrings",
+    "restSeconds": 90
+  },
+  {
+    "id": "hip_thrust_barbell",
+    "name": "Barbell Hip Thrust",
+    "primaryMuscle": "glutes",
+    "secondaryMuscle": "hamstrings",
+    "restSeconds": 120
+  },
+  {
+    "id": "calf_raise_standing",
+    "name": "Standing Calf Raise",
+    "primaryMuscle": "calves",
+    "restSeconds": 60
+  },
+  {
+    "id": "crunch",
+    "name": "Crunch",
+    "primaryMuscle": "core",
+    "restSeconds": 45,
+    "isBodyweight": true
+  },
+  {
+    "id": "plank",
+    "name": "Plank",
+    "primaryMuscle": "core",
+    "restSeconds": 45,
+    "isBodyweight": true
+  },
+  {
+    "id": "hanging_leg_raise",
+    "name": "Hanging Leg Raise",
+    "primaryMuscle": "core",
+    "restSeconds": 60,
+    "isBodyweight": true
+  }
+]

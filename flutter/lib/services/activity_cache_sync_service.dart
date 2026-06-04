@@ -9,17 +9,20 @@ import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/data/datasources/local/local_activity_datasource.dart';
 import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/activity_models.dart';
+import 'package:runflow_flutter/services/workout_merge_service.dart';
 
 class ActivityCacheSyncService {
   ActivityCacheSyncService({
     required this.dio,
     required this.localDatasource,
     required this.cacheDatasource,
+    this.mergeService,
   });
 
   final Dio dio;
   final LocalActivityDatasource localDatasource;
   final CacheDatasource cacheDatasource;
+  final WorkoutMergeService? mergeService;
 
   Future<int> syncAllActivitiesToLocal({
     bool force = false,
@@ -47,6 +50,9 @@ class ActivityCacheSyncService {
         await localDatasource.upsertServerActivities(result.activities);
         for (final a in result.activities) {
           seenServerIds.add(a.id);
+          if (mergeService != null) {
+            await mergeService!.checkAndMergeOverlappingWorkouts(a);
+          }
         }
         syncedCount += result.activities.length;
         hasMore = result.hasMore;

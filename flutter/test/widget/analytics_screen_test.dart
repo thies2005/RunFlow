@@ -59,7 +59,8 @@ void main() {
       );
       await pumpAnimated(tester);
 
-      expect(find.text('Analytics'), findsOneWidget);
+      expect(find.text('Endurance'), findsOneWidget);
+      expect(find.text('Strength'), findsOneWidget);
       expect(find.text('VDOT'), findsOneWidget);
       expect(find.text('CTL'), findsWidgets);
       expect(find.text('ATL'), findsWidgets);

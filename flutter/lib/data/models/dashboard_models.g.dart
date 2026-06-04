@@ -144,6 +144,7 @@ const _$ActivityTypeEnumMap = {
   ActivityType.hike: 'HIKE',
   ActivityType.swim: 'SWIM',
   ActivityType.workout: 'WORKOUT',
+  ActivityType.strength: 'STRENGTH',
   ActivityType.other: 'OTHER',
 };
 

@@ -105,6 +105,7 @@ class _WorkoutTemplateEditorScreenState extends ConsumerState<WorkoutTemplateEdi
                     )
                   : ReorderableListView.builder(
                       itemCount: _exercises.length,
+                      // ignore: deprecated_member_use
                       onReorder: _onReorderExercises,
                       itemBuilder: (context, index) {
                         final we = _exercises[index];

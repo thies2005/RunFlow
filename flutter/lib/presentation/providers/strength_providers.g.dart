@@ -239,7 +239,7 @@ final class StrengthRecordingProvider
   }
 }
 
-String _$strengthRecordingHash() => r'371355029dd973a25118e98ec0f9f033001cf2b7';
+String _$strengthRecordingHash() => r'463bf1dbf3f01276667bccbfae7c484b1493c7b6';
 
 abstract class _$StrengthRecording extends $Notifier<StrengthRecordingState> {
   StrengthRecordingState build();
@@ -404,4 +404,4 @@ final class StrengthAnalyticsProvider
   }
 }
 
-String _$strengthAnalyticsHash() => r'4f018dd4602c3422ef2c3af028a64f8d4b9fcf9b';
+String _$strengthAnalyticsHash() => r'e228503cf4d4cfcd36a1856b230dbd45d801aace';

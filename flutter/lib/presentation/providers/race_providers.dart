@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/models/race_models.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
@@ -11,6 +10,7 @@ import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/triathlon_estimator.dart';
 import 'package:runflow_flutter/core/utils/goal_projection.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 part 'race_providers.g.dart';
 
@@ -252,7 +252,7 @@ class RaceResultFlow extends _$RaceResultFlow {
         );
       }
     } catch (e) {
-      debugPrint('RaceResultFlow: Failed to load race suggestions: $e');
+      logger.debug('RaceResultFlow: Failed to load race suggestions: $e');
       state = state.copyWith(isLoading: false);
     }
   }
@@ -334,7 +334,7 @@ class RaceResultFlow extends _$RaceResultFlow {
       state = state.copyWith(isSaving: false);
       return true;
     } catch (e) {
-      debugPrint('RaceResultFlow: Failed to complete race: $e');
+      logger.debug('RaceResultFlow: Failed to complete race: $e');
       state = state.copyWith(isSaving: false);
       return false;
     }

@@ -9,7 +9,7 @@ import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/data/datasources/local/local_activity_datasource.dart';
 import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/activity_models.dart';
-import 'package:runflow_flutter/services/workout_merge_service.dart';
+import 'package:runflow_flutter/domain/services/workout_merge_service.dart';
 
 class ActivityCacheSyncService {
   ActivityCacheSyncService({

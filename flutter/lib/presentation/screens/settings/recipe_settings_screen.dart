@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
-import 'package:runflow_flutter/services/recipe_integration_service.dart';
+import 'package:runflow_flutter/data/services/recipe_integration_service.dart';
 
 class RecipeSettingsScreen extends StatefulWidget {
   const RecipeSettingsScreen({super.key});

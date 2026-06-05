@@ -10,7 +10,7 @@ import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/screens/auth/forgot_password_screen.dart';
-import 'package:runflow_flutter/services/auth_service.dart';
+import 'package:runflow_flutter/domain/services/auth_service.dart';
 
 void main() {
   group('ForgotPasswordScreen', () {

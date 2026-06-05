@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class VerificationState {
   const VerificationState({
@@ -55,7 +55,7 @@ class VerificationNotifier extends Notifier<VerificationState> {
       await _repo.resendVerification(email);
       return true;
     } catch (e) {
-      debugPrint('VerificationNotifier: Failed to resend verification: $e');
+      logger.debug('VerificationNotifier: Failed to resend verification: $e');
       return false;
     }
   }
@@ -71,7 +71,7 @@ final emailVerifiedProvider = FutureProvider<bool>((ref) async {
     final repo = ref.read(authRepositoryProvider);
     return repo.checkEmailVerified();
   } catch (e) {
-    debugPrint('VerificationProviders: Failed to check email verified: $e');
+    logger.debug('VerificationProviders: Failed to check email verified: $e');
     return false;
   }
 });

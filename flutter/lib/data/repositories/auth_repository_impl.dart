@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
@@ -8,7 +7,7 @@ import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/auth_models.dart';
 import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
-import 'package:runflow_flutter/services/auth_service.dart';
+import 'package:runflow_flutter/domain/services/auth_service.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
@@ -240,7 +239,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = await getCurrentUser();
       return user?.emailVerified ?? false;
     } catch (e) {
-      debugPrint('AuthRepository: Failed to check email verified: $e');
+      logger.debug('AuthRepository: Failed to check email verified: $e');
       return false;
     }
   }

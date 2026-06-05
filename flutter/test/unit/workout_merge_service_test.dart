@@ -4,7 +4,7 @@ import 'package:runflow_flutter/data/datasources/local/strength_local_datasource
 import 'package:runflow_flutter/data/datasources/local/local_activity_datasource.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/strength_entities.dart';
-import 'package:runflow_flutter/services/workout_merge_service.dart';
+import 'package:runflow_flutter/domain/services/workout_merge_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

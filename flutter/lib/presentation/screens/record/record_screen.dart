@@ -19,7 +19,8 @@ import 'package:runflow_flutter/presentation/widgets/runflow_map.dart';
 import 'package:runflow_flutter/presentation/widgets/step_progress_card.dart';
 import 'package:runflow_flutter/presentation/widgets/workout_progress_bar.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
-import 'package:runflow_flutter/services/workout_recording_service.dart';
+import 'package:runflow_flutter/data/services/workout_recording_service.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class RecordScreen extends ConsumerStatefulWidget {
   const RecordScreen({this.workoutId, this.templateId, super.key});
@@ -92,7 +93,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
         });
       }
     } catch (e) {
-      debugPrint('RecordScreen: Failed to load workout details: $e');
+      logger.debug('RecordScreen: Failed to load workout details: $e');
     }
   }
 
@@ -161,7 +162,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
         });
       }
     } catch (e) {
-      debugPrint('RecordScreen: Failed to load template: $e');
+      logger.debug('RecordScreen: Failed to load template: $e');
     }
   }
 

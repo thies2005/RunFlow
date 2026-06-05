@@ -7,6 +7,7 @@ import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart
 import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class SyncPlatform {
   const SyncPlatform({
@@ -216,7 +217,7 @@ class _SyncPlatformSelectorState extends ConsumerState<SyncPlatformSelector> {
         widget.onPlatformConnected?.call('strava');
       }
     } catch (e) {
-      debugPrint('SyncPlatformSelector: Strava auth failed: $e');
+      logger.debug('SyncPlatformSelector: Strava auth failed: $e');
     } finally {
       if (mounted) {
         setState(() => _stravaConnecting = false);
@@ -262,7 +263,7 @@ class _SyncPlatformSelectorState extends ConsumerState<SyncPlatformSelector> {
         try {
           await ref.read(healthSyncServiceProvider).syncHistoricalHealth();
         } catch (e) {
-          debugPrint('SyncPlatformSelector: Health Connect historical sync failed: $e');
+          logger.debug('SyncPlatformSelector: Health Connect historical sync failed: $e');
         }
         setState(() => _healthConnectSynced = true);
         widget.onPlatformConnected?.call('health-connect');
@@ -271,7 +272,8 @@ class _SyncPlatformSelectorState extends ConsumerState<SyncPlatformSelector> {
           _healthConnectError = 'No activities found in Health Connect.';
         });
       }
-    } catch (_) {
+    } catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       setState(() {
         _healthConnectError = 'Failed to sync with Health Connect.';
       });

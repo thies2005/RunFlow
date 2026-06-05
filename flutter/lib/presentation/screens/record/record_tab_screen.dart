@@ -6,7 +6,7 @@ import 'package:runflow_flutter/presentation/providers/recording_providers.dart'
 import 'package:runflow_flutter/presentation/providers/strength_providers.dart';
 import 'package:runflow_flutter/presentation/screens/record/record_screen.dart';
 import 'package:runflow_flutter/presentation/screens/record/strength_recording_screen.dart';
-import 'package:runflow_flutter/services/workout_recording_service.dart';
+import 'package:runflow_flutter/data/services/workout_recording_service.dart';
 
 enum RecordMode { running, strength }
 

@@ -9,6 +9,7 @@ import 'package:runflow_flutter/domain/entities/chat_entities.dart';
 import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/chat_providers.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 final currentSessionIdProvider = NotifierProvider<CurrentSessionIdNotifier, String?>(
   CurrentSessionIdNotifier.new,
@@ -646,7 +647,8 @@ class _MessageBubble extends StatelessWidget {
         try {
           final payload = jsonDecode(rawJson) as Map<String, dynamic>;
           loggedWidgets.add(_buildMealLoggedCard(context, payload));
-        } catch (_) {}
+        } catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');}
       }
     }
     finalContent = finalContent.replaceAll(mealRegExp, '').trim();
@@ -659,7 +661,8 @@ class _MessageBubble extends StatelessWidget {
         try {
           final payload = jsonDecode(rawJson) as Map<String, dynamic>;
           loggedWidgets.add(_buildWaterLoggedCard(context, payload));
-        } catch (_) {}
+        } catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');}
       }
     }
     finalContent = finalContent.replaceAll(waterRegExp, '').trim();

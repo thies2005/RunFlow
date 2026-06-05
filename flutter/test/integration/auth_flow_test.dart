@@ -7,7 +7,7 @@ import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/data/models/auth_models.dart';
 import 'package:runflow_flutter/data/repositories/auth_repository_impl.dart';
-import 'package:runflow_flutter/services/auth_service.dart';
+import 'package:runflow_flutter/domain/services/auth_service.dart';
 
 void main() {
   group('Auth flow integration', () {

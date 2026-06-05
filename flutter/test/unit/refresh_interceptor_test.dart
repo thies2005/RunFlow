@@ -9,7 +9,7 @@ import 'package:runflow_flutter/data/auth/refresh_session.dart';
 import 'package:runflow_flutter/data/interceptors/auth_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/refresh_interceptor.dart';
 import 'package:runflow_flutter/data/models/auth_models.dart';
-import 'package:runflow_flutter/services/auth_service.dart';
+import 'package:runflow_flutter/domain/services/auth_service.dart';
 
 void main() {
   group('RefreshInterceptor', () {

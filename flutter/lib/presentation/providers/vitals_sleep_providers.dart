@@ -1,7 +1,7 @@
 import 'package:health/health.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/models/health_vitals_models.dart';
-import 'package:runflow_flutter/services/health_connect_service.dart';
+import 'package:runflow_flutter/data/services/health_connect_service.dart';
 
 part 'vitals_sleep_providers.g.dart';
 

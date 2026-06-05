@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/domain/entities/settings_entities.dart';
 import 'package:runflow_flutter/data/repositories/profile_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/profile_repository.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 final apiKeyRepositoryProvider = Provider<ProfileRepository>((ref) {
   final client = ref.watch(dioClientProvider);
@@ -17,7 +17,7 @@ final apiKeyInfoProvider = FutureProvider<ApiKeyInfo?>((ref) async {
     final repo = ref.read(apiKeyRepositoryProvider);
     return repo.getApiKeyInfo();
   } catch (e) {
-    debugPrint('ApiKeyProviders: Failed to load API key info: $e');
+    logger.debug('ApiKeyProviders: Failed to load API key info: $e');
     return null;
   }
 });
@@ -46,7 +46,7 @@ class ApiKeyNotifier extends Notifier<AsyncValue<ApiKeyInfo?>> {
       await _load();
       return result;
     } catch (e) {
-      debugPrint('ApiKeyNotifier: Failed to generate API key: $e');
+      logger.debug('ApiKeyNotifier: Failed to generate API key: $e');
       return null;
     }
   }
@@ -58,7 +58,7 @@ class ApiKeyNotifier extends Notifier<AsyncValue<ApiKeyInfo?>> {
       await _load();
       return true;
     } catch (e) {
-      debugPrint('ApiKeyNotifier: Failed to revoke API key: $e');
+      logger.debug('ApiKeyNotifier: Failed to revoke API key: $e');
       return false;
     }
   }

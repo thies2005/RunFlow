@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:runflow_flutter/services/voice_coach_service.dart';
-import 'package:runflow_flutter/services/workout_recording_service.dart';
+import 'package:runflow_flutter/data/services/voice_coach_service.dart';
+import 'package:runflow_flutter/data/services/workout_recording_service.dart';
 
 final Provider<WorkoutRecordingService> recordingServiceProvider =
     Provider<WorkoutRecordingService>((Ref ref) {

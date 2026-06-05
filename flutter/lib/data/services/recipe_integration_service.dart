@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:runflow_flutter/domain/entities/health_entities.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class RecipeIntegrationService {
   RecipeIntegrationService._();
@@ -68,7 +68,7 @@ class RecipeIntegrationService {
         return response.statusCode == 200;
       }
     } catch (e) {
-      debugPrint('[Recipe Integration] Connection test failed: $e');
+      logger.debug('[Recipe Integration] Connection test failed: $e');
       return false;
     }
   }
@@ -210,7 +210,7 @@ class RecipeIntegrationService {
         return items;
       }
     } catch (e) {
-      debugPrint('[Recipe Integration] Search failed: $e');
+      logger.debug('[Recipe Integration] Search failed: $e');
       return [];
     }
   }

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:runflow_flutter/services/fcm_service.dart';
+import 'package:runflow_flutter/data/services/fcm_service.dart';
 
 class MockDio extends Mock implements Dio {}
 

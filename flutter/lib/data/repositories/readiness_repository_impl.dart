@@ -8,6 +8,7 @@ import 'package:runflow_flutter/data/mappers/readiness_mappers.dart';
 import 'package:runflow_flutter/data/models/readiness/readiness_models.dart';
 import 'package:runflow_flutter/domain/entities/readiness/readiness_entities.dart';
 import 'package:runflow_flutter/domain/repositories/readiness_repository.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class ReadinessRepositoryImpl implements ReadinessRepository {
   ReadinessRepositoryImpl({
@@ -42,7 +43,8 @@ class ReadinessRepositoryImpl implements ReadinessRepository {
       final updated = synced.copyWith(syncedAt: DateTime.now().toIso8601String());
       await localDatasource.upsertDailyRecord(updated);
       return updated.toDomain();
-    } on DioException catch (_) {
+    } on DioException catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       await localDatasource.enqueueSync(
         entityType: 'readiness_daily_record',
         localId: model.date,
@@ -71,7 +73,8 @@ class ReadinessRepositoryImpl implements ReadinessRepository {
       final synced = updated.copyWith(syncedAt: DateTime.now().toIso8601String());
       await localDatasource.upsertDailyRecord(synced);
       return synced.toDomain();
-    } on DioException catch (_) {
+    } on DioException catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       await localDatasource.enqueueSync(
         entityType: 'readiness_daily_record',
         localId: key,
@@ -111,7 +114,8 @@ class ReadinessRepositoryImpl implements ReadinessRepository {
       );
       await localDatasource.upsertBaseline(updated);
       return updated.toDomain();
-    } on DioException catch (_) {
+    } on DioException catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       await localDatasource.enqueueSync(
         entityType: 'readiness_baseline',
         localId: 'baseline',
@@ -140,7 +144,8 @@ class ReadinessRepositoryImpl implements ReadinessRepository {
       );
       await localDatasource.upsertAdaptedWorkout(updated);
       return updated.toDomain();
-    } on DioException catch (_) {
+    } on DioException catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       await localDatasource.enqueueSync(
         entityType: 'adapted_workout',
         localId: model.id,
@@ -173,7 +178,8 @@ class ReadinessRepositoryImpl implements ReadinessRepository {
       );
       await localDatasource.upsertWeeklyRecord(updated);
       return updated.toDomain();
-    } on DioException catch (_) {
+    } on DioException catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       await localDatasource.enqueueSync(
         entityType: 'weekly_reconciliation',
         localId: model.weekStartDate,
@@ -222,7 +228,8 @@ class ReadinessRepositoryImpl implements ReadinessRepository {
             break;
         }
         await localDatasource.markSyncCompleted(item.id);
-      } catch (_) {
+      } catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
         await localDatasource.incrementSyncRetry(item.id);
       }
     }

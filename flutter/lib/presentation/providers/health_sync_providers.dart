@@ -4,7 +4,7 @@ import 'package:runflow_flutter/data/repositories/health_api_repository_impl.dar
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
-import 'package:runflow_flutter/services/health_sync_service.dart';
+import 'package:runflow_flutter/data/services/health_sync_service.dart';
 
 part 'health_sync_providers.g.dart';
 

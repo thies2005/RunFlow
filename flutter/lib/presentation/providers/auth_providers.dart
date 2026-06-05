@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
@@ -16,10 +15,11 @@ import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
 import 'package:runflow_flutter/presentation/providers/chat_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
 import 'package:runflow_flutter/presentation/providers/recording_providers.dart';
-import 'package:runflow_flutter/services/auth_service.dart';
-import 'package:runflow_flutter/services/auth_service_impl.dart';
-import 'package:runflow_flutter/services/background_sync.dart';
-import 'package:runflow_flutter/services/fcm_service.dart';
+import 'package:runflow_flutter/domain/services/auth_service.dart';
+import 'package:runflow_flutter/data/services/auth_service_impl.dart';
+import 'package:runflow_flutter/data/services/background_sync.dart';
+import 'package:runflow_flutter/data/services/fcm_service.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 part 'auth_providers.g.dart';
 
@@ -95,7 +95,7 @@ class AuthState extends _$AuthState {
       await repo.restoreSession();
       return repo.getCurrentUser();
     } catch (e) {
-      debugPrint('AuthState: Failed to restore session: $e');
+      logger.debug('AuthState: Failed to restore session: $e');
       return null;
     }
   }

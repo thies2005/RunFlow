@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/data/repositories/consent_repository_impl.dart';
 import 'package:runflow_flutter/domain/entities/consent_entities.dart';
 import 'package:runflow_flutter/domain/repositories/consent_repository.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 final consentRepositoryProvider = Provider<ConsentRepository>((ref) {
   final client = ref.watch(dioClientProvider);
@@ -16,7 +16,7 @@ final consentStatusProvider = FutureProvider<ConsentStatus>((ref) async {
     final repo = ref.read(consentRepositoryProvider);
     return repo.checkConsent();
   } catch (e) {
-    debugPrint('ConsentProviders: Failed to check consent: $e');
+    logger.debug('ConsentProviders: Failed to check consent: $e');
     return const ConsentStatus(needsReconsent: false);
   }
 });
@@ -36,7 +36,7 @@ class ConsentNotifier extends Notifier<ConsentStatus> {
       final status = await repo.checkConsent();
       state = status;
     } catch (e) {
-      debugPrint('ConsentNotifier: Failed to check consent status: $e');
+      logger.debug('ConsentNotifier: Failed to check consent status: $e');
     }
   }
 
@@ -50,7 +50,7 @@ class ConsentNotifier extends Notifier<ConsentStatus> {
       state = state.copyWith(needsReconsent: false);
       return true;
     } catch (e) {
-      debugPrint('ConsentNotifier: Failed to accept all consents: $e');
+      logger.debug('ConsentNotifier: Failed to accept all consents: $e');
       return false;
     }
   }
@@ -62,7 +62,7 @@ class ConsentNotifier extends Notifier<ConsentStatus> {
       await _checkStatus();
       return true;
     } catch (e) {
-      debugPrint('ConsentNotifier: Failed to withdraw consent: $e');
+      logger.debug('ConsentNotifier: Failed to withdraw consent: $e');
       return false;
     }
   }

@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/constants/cache_keys.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
@@ -14,7 +13,8 @@ import 'package:runflow_flutter/data/models/ai_feedback_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
-import 'package:runflow_flutter/services/workout_merge_service.dart';
+import 'package:runflow_flutter/domain/services/workout_merge_service.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class ActivityRepositoryImpl implements ActivityRepository {
   ActivityRepositoryImpl({
@@ -306,7 +306,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
             jsonDecode(cached.data) as Map<String, dynamic>,
           ).toDomain();
         } catch (e) {
-          debugPrint('ActivityRepository: Failed to decode cached AI feedback: $e');
+          logger.debug('ActivityRepository: Failed to decode cached AI feedback: $e');
         }
       }
       throw e.error is AppException

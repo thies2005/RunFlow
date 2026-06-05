@@ -14,8 +14,8 @@ import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
 import 'package:runflow_flutter/presentation/screens/health/health_screen.dart';
-import 'package:runflow_flutter/services/health_connect_service.dart';
-import 'package:runflow_flutter/services/health_sync_service.dart';
+import 'package:runflow_flutter/data/services/health_connect_service.dart';
+import 'package:runflow_flutter/data/services/health_sync_service.dart';
 
 class _FakeNutritionNotifier extends NutritionNotifier {
   _FakeNutritionNotifier(this._log);

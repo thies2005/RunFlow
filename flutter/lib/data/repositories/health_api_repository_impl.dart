@@ -1,3 +1,4 @@
+import 'package:runflow_flutter/core/extensions/extensions.dart';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -37,7 +38,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       final response = await dio.post(
         ApiConstants.nutritionLogPath,
         data: {
-          'date': date.toIso8601String().split('T').first,
+          'date': date.toIsoDateString,
           'mealType': mealType,
           'quantity': quantity,
           'foodItem': {
@@ -257,7 +258,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   @override
   Future<void> syncBodyMeasurement(domain.BodyMeasurement measurement) async {
     try {
-      final dateStr = measurement.date.toIso8601String().split('T').first;
+      final dateStr = measurement.date.toIsoDateString;
       await dio.post(
         ApiConstants.bodyCompositionPath,
         data: {
@@ -378,7 +379,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   @override
   Future<domain.DailyHealthLog> getDailyHealth(DateTime date) async {
     try {
-      final dateStr = date.toIso8601String().split('T').first;
+      final dateStr = date.toIsoDateString;
       final response = await dio.get(
         ApiConstants.healthDailyPath,
         queryParameters: {'date': dateStr},
@@ -423,7 +424,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
         ApiConstants.healthDailyPath,
         data: {
           'action': 'updateWater',
-          'date': date.toIso8601String().split('T').first,
+          'date': date.toIsoDateString,
           'amount': amount,
         },
       );
@@ -440,7 +441,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
         data: {
           'action': 'toggleSupplement',
           'supplementId': supplementId,
-          'date': date.toIso8601String().split('T').first,
+          'date': date.toIsoDateString,
           'taken': taken,
         },
       );
@@ -455,8 +456,8 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       final response = await dio.get(
         ApiConstants.nutritionAnalyticsPath,
         queryParameters: {
-          'startDate': startDate.toIso8601String().split('T').first,
-          'endDate': endDate.toIso8601String().split('T').first,
+          'startDate': startDate.toIsoDateString,
+          'endDate': endDate.toIsoDateString,
         },
       );
       return NutritionAnalytics.fromJson(response.data as Map<String, dynamic>).toDomain();
@@ -471,8 +472,8 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       final response = await dio.get(
         ApiConstants.supplementsAnalyticsPath,
         queryParameters: {
-          'startDate': startDate.toIso8601String().split('T').first,
-          'endDate': endDate.toIso8601String().split('T').first,
+          'startDate': startDate.toIsoDateString,
+          'endDate': endDate.toIsoDateString,
         },
       );
       final data = response.data as Map<String, dynamic>;

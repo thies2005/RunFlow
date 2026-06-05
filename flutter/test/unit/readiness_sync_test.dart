@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/data/datasources/local/readiness_local_datasource.dart';
-import 'package:runflow_flutter/services/readiness_sync_service.dart';
+import 'package:runflow_flutter/data/services/readiness_sync_service.dart';
 
 class MockReadinessLocalDatasource extends Mock
     implements ReadinessLocalDatasource {}

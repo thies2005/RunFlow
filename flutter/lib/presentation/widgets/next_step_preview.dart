@@ -52,16 +52,11 @@ class NextStepPreview extends StatelessWidget {
 }
 
 IconData _stepIcon(StepType type) {
-  switch (type) {
-    case StepType.warmup:
-      return Icons.wb_sunny;
-    case StepType.cooldown:
-      return Icons.ac_unit;
-    case StepType.interval:
-      return Icons.flash_on;
-    case StepType.recovery:
-      return Icons.directions_walk;
-    case StepType.rest:
-      return Icons.pause_circle;
-  }
+  return switch (type) {
+    StepType.warmup => Icons.wb_sunny,
+    StepType.cooldown => Icons.ac_unit,
+    StepType.interval => Icons.flash_on,
+    StepType.recovery => Icons.directions_walk,
+    StepType.rest => Icons.pause_circle,
+  };
 }

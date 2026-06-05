@@ -272,7 +272,7 @@ final class DailyHealthProvider
   }
 }
 
-String _$dailyHealthHash() => r'b0daf65560329c00ff222f2d725579031677f874';
+String _$dailyHealthHash() => r'f05f6dc8493b6122da971358f7a79ab37796eb5f';
 
 final class DailyHealthFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<DailyHealthLog>, DateTime> {

@@ -1,9 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/domain/entities/readiness/readiness_entities.dart';
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
 import 'package:runflow_flutter/domain/services/readiness/readiness_scoring_service.dart';
 import 'package:runflow_flutter/domain/services/readiness/trimp_service.dart';
-import 'package:runflow_flutter/services/health_connect_service.dart';
+import 'package:runflow_flutter/data/services/health_connect_service.dart';
+import 'package:runflow_flutter/data/models/health_vitals_models.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class ReadinessOrchestrator {
   ReadinessOrchestrator({
@@ -32,7 +33,7 @@ class ReadinessOrchestrator {
         rhrMetrics = _computeRhrMetrics(rhrHistory);
       }
     } catch (e) {
-      debugPrint('ReadinessOrchestrator: Failed to collect RHR inputs: $e');
+      logger.debug('ReadinessOrchestrator: Failed to collect RHR inputs: $e');
     }
 
     try {
@@ -41,7 +42,7 @@ class ReadinessOrchestrator {
         sleepMetrics = _computeSleepMetrics(sleepHistory);
       }
     } catch (e) {
-      debugPrint('ReadinessOrchestrator: Failed to collect sleep inputs: $e');
+      logger.debug('ReadinessOrchestrator: Failed to collect sleep inputs: $e');
     }
 
     LoadMetrics load = const LoadMetrics(trimpStrategy: TrimpStrategy.unavailable);
@@ -89,7 +90,7 @@ class ReadinessOrchestrator {
         );
       }
     } catch (e) {
-      debugPrint('ReadinessOrchestrator: Failed to collect load inputs: $e');
+      logger.debug('ReadinessOrchestrator: Failed to collect load inputs: $e');
     }
 
     return ReadinessInputs(
@@ -135,7 +136,7 @@ class ReadinessOrchestrator {
         );
       }
     } catch (e) {
-      debugPrint('ReadinessOrchestrator: Failed to collect RHR inputs for date: $e');
+      logger.debug('ReadinessOrchestrator: Failed to collect RHR inputs for date: $e');
     }
 
     SleepMetrics? sleepMetrics;
@@ -173,7 +174,7 @@ class ReadinessOrchestrator {
         );
       }
     } catch (e) {
-      debugPrint('ReadinessOrchestrator: Failed to collect sleep inputs for date: $e');
+      logger.debug('ReadinessOrchestrator: Failed to collect sleep inputs for date: $e');
     }
 
     LoadMetrics load = const LoadMetrics(trimpStrategy: TrimpStrategy.unavailable);
@@ -229,7 +230,7 @@ class ReadinessOrchestrator {
         );
       }
     } catch (e) {
-      debugPrint('ReadinessOrchestrator: Failed to collect load inputs for date: $e');
+      logger.debug('ReadinessOrchestrator: Failed to collect load inputs for date: $e');
     }
 
     return ReadinessInputs(

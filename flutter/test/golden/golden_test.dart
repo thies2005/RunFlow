@@ -25,7 +25,7 @@ import 'package:runflow_flutter/presentation/screens/record/record_screen.dart';
 import 'package:runflow_flutter/presentation/widgets/charts/hr_zone_distribution_chart.dart';
 import 'package:runflow_flutter/presentation/widgets/shape_calibration_sheet.dart';
 import 'package:runflow_flutter/presentation/widgets/training_paces_card.dart';
-import 'package:runflow_flutter/services/workout_recording_service.dart';
+import 'package:runflow_flutter/data/services/workout_recording_service.dart';
 import '../helpers/test_dashboard_data.dart';
 
 const testStats = AnalyticsStats(

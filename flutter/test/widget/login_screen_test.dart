@@ -9,7 +9,7 @@ import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/screens/auth/login_screen.dart';
-import 'package:runflow_flutter/services/auth_service_impl.dart';
+import 'package:runflow_flutter/data/services/auth_service_impl.dart';
 
 void main() {
   group('LoginScreen', () {

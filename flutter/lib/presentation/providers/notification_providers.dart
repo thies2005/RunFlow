@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:runflow_flutter/services/notification_service.dart';
+import 'package:runflow_flutter/data/services/notification_service.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationServiceImpl();
@@ -75,7 +75,7 @@ class WorkoutReminderNotifier extends Notifier<bool> {
             scheduledDate: scheduledTime,
           );
         } catch (e) {
-          debugPrint('WorkoutReminder: Failed to schedule notification: $e');
+          logger.debug('WorkoutReminder: Failed to schedule notification: $e');
         }
       }
     }

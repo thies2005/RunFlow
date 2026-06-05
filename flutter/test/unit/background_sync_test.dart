@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:runflow_flutter/services/background_sync.dart';
+import 'package:runflow_flutter/data/services/background_sync.dart';
 
 class MockDio extends Mock implements Dio {}
 

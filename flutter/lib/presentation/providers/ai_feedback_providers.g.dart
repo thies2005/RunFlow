@@ -50,7 +50,7 @@ final class AiFeedbackProvider
   }
 }
 
-String _$aiFeedbackHash() => r'f4148b117bc35b8b5063147948160a19fc796afa';
+String _$aiFeedbackHash() => r'87c27191070bb3d92c698dae18710c772676c5bc';
 
 final class AiFeedbackFamily extends $Family
     with

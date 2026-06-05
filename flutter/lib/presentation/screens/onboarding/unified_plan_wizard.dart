@@ -21,6 +21,7 @@ import 'package:runflow_flutter/presentation/providers/plan_wizard_providers.dar
 import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/sync_platform_selector.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class _WizardStep {
   const _WizardStep({
@@ -722,7 +723,7 @@ class _UnifiedPlanWizardState extends ConsumerState<UnifiedPlanWizard> {
       ref.read(onboardingProvider.notifier).setSyncing(false);
       await ref.read(onboardingProvider.notifier).markSynced();
     } catch (e) {
-      debugPrint('UnifiedWizard: sync failed: $e');
+      logger.debug('UnifiedWizard: sync failed: $e');
       ref.read(onboardingProvider.notifier).setSyncing(false);
     }
   }

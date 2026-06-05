@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class ErrorInterceptor extends Interceptor {
   @override
@@ -56,7 +57,8 @@ class ErrorInterceptor extends Interceptor {
       try {
         final decoded = jsonDecode(data) as Map<String, dynamic>;
         apiMessage = (decoded['error'] as String?) ?? apiMessage;
-      } catch (_) {
+      } catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
         // use default message
       }
     }

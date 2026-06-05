@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
-import 'package:runflow_flutter/services/auth_service.dart';
+import 'package:runflow_flutter/domain/services/auth_service.dart';
 
 class AuthInterceptor extends Interceptor {
   AuthInterceptor({required this.authService});

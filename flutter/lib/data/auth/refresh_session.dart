@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/data/models/auth_models.dart';
-import 'package:runflow_flutter/services/auth_service.dart';
+import 'package:runflow_flutter/domain/services/auth_service.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 Future<String?> refreshSession({
   required Dio dio,
@@ -25,7 +26,8 @@ Future<String?> refreshSession({
       refreshToken: refreshResponse.refreshToken,
     );
     return refreshResponse.accessToken;
-  } on DioException catch (_) {
+  } on DioException catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
     return null;
   }
 }

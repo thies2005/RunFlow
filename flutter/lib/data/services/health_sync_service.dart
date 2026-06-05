@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:health/health.dart';
 import 'package:runflow_flutter/data/repositories/health_api_repository_impl.dart';
-import 'package:runflow_flutter/services/health_connect_service.dart';
+import 'package:runflow_flutter/data/services/health_connect_service.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
+import 'package:runflow_flutter/core/extensions/extensions.dart';
 import 'package:runflow_flutter/domain/entities/health_entities.dart'
     show BodyMeasurement, FoodItem, FoodLogEntry;
 
@@ -63,7 +65,7 @@ class HealthSyncService {
       }
 
       final payload = <String, dynamic>{
-        'date': start.toIso8601String().split('T').first,
+        'date': start.toIsoDateString,
         'steps': totalSteps > 0 ? totalSteps : null,
         'weight': weight,
         'activeCalories': totalCalories > 0 ? totalCalories : null,

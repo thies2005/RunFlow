@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -18,12 +17,12 @@ import 'package:runflow_flutter/data/repositories/goal_repository_impl.dart';
 import 'package:runflow_flutter/domain/services/readiness/readiness_scoring_service.dart';
 import 'package:runflow_flutter/domain/services/readiness/trimp_service.dart';
 import 'package:runflow_flutter/domain/services/readiness/weekly_reconciliation_service.dart';
-import 'package:runflow_flutter/services/activity_cache_sync_service.dart';
-import 'package:runflow_flutter/services/auth_service_impl.dart';
-import 'package:runflow_flutter/services/health_connect_service.dart';
-import 'package:runflow_flutter/services/offline_sync_service.dart';
-import 'package:runflow_flutter/services/readiness_orchestrator.dart';
-import 'package:runflow_flutter/services/readiness_sync_service.dart';
+import 'package:runflow_flutter/data/services/activity_cache_sync_service.dart';
+import 'package:runflow_flutter/data/services/auth_service_impl.dart';
+import 'package:runflow_flutter/data/services/health_connect_service.dart';
+import 'package:runflow_flutter/data/services/offline_sync_service.dart';
+import 'package:runflow_flutter/domain/services/readiness_orchestrator.dart';
+import 'package:runflow_flutter/data/services/readiness_sync_service.dart';
 import 'package:workmanager/workmanager.dart';
 
 String _dateKey(DateTime dt) {
@@ -163,7 +162,7 @@ Future<bool> performBackgroundSync({
                 }
               }
             } catch (e) {
-              debugPrint('BackgroundSync: Failed to fetch goals for weekly reconciliation: $e');
+              logger.debug('BackgroundSync: Failed to fetch goals for weekly reconciliation: $e');
             }
 
             final service = WeeklyReconciliationService();
@@ -217,7 +216,7 @@ Future<bool> performBackgroundSync({
     if (statusCode != null && statusCode >= 500) return false;
     return false;
   } catch (e) {
-    debugPrint('BackgroundSync: Unexpected error during sync: $e');
+    logger.debug('BackgroundSync: Unexpected error during sync: $e');
     return false;
   }
 }

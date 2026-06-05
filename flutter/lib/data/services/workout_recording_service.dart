@@ -79,6 +79,8 @@ class WorkoutRecordingService {
   int _maxHr = 0;
   int _movingPointCount = 0;
   double _totalCadence = 0.0;
+  int _totalHr = 0;
+  int _hrCount = 0;
 
   int _currentHr = 0;
   double _currentSpeed = 0.0;
@@ -97,7 +99,6 @@ class WorkoutRecordingService {
   StreamSubscription<ble.BleDevice>? _scanSubscription;
   StreamSubscription<List<int>>? _hrSubscription;
   Timer? _timer;
-  Timer? _metricsTimer;
 
   HrSensorInfo? _connectedSensor;
   bool _isScanning = false;
@@ -143,12 +144,7 @@ class WorkoutRecordingService {
             ? _totalDistance / _elapsedMovingSeconds
             : 0,
         currentHr: _currentHr,
-        averageHr: _hrSamples.isNotEmpty
-            ? _hrSamples
-                    .map((HrSample s) => s.heartRate)
-                    .reduce((int a, int b) => a + b) /
-                _hrSamples.length
-            : 0,
+        averageHr: _hrCount > 0 ? _totalHr / _hrCount : 0,
         maxHr: _maxHr,
         cadence: _currentCadence,
         averageCadence: _movingPointCount > 0
@@ -186,7 +182,6 @@ class WorkoutRecordingService {
 
     _startGpsStream();
     _startTimer();
-    _startMetricsEmitter();
   }
 
   void pauseRecording() {
@@ -224,12 +219,7 @@ class WorkoutRecordingService {
           ? _totalDistance / _elapsedMovingSeconds
           : null,
       maxSpeed: _maxSpeed > 0 ? _maxSpeed : null,
-      averageHr: _hrSamples.isNotEmpty
-          ? _hrSamples
-                  .map((HrSample s) => s.heartRate)
-                  .reduce((int a, int b) => a + b) /
-              _hrSamples.length
-          : null,
+      averageHr: _hrCount > 0 ? _totalHr / _hrCount : null,
       maxHr: _maxHr > 0 ? _maxHr : null,
       averageCadence: _movingPointCount > 0
           ? _totalCadence / _movingPointCount
@@ -259,6 +249,8 @@ class WorkoutRecordingService {
     _totalElevation = 0.0;
     _previousAltitude = null;
     _maxHr = 0;
+    _totalHr = 0;
+    _hrCount = 0;
     _currentHr = 0;
     _currentSpeed = 0.0;
     _currentCadence = 0.0;
@@ -280,8 +272,6 @@ class WorkoutRecordingService {
     _positionSubscription = null;
     _timer?.cancel();
     _timer = null;
-    _metricsTimer?.cancel();
-    _metricsTimer = null;
 
     _statusController.add(_status);
     _metricsController.add(currentMetrics);
@@ -401,14 +391,6 @@ class WorkoutRecordingService {
     });
   }
 
-  void _startMetricsEmitter() {
-    _metricsTimer?.cancel();
-    _metricsTimer =
-        Timer.periodic(const Duration(milliseconds: 500), (_) {
-      _metricsController.add(currentMetrics);
-    });
-  }
-
   void _updateElapsedTime() {
     if (_lastResumeTime != null) {
       final int additionalSeconds =
@@ -496,6 +478,8 @@ class WorkoutRecordingService {
           }
 
           _currentHr = hr;
+          _totalHr += hr;
+          _hrCount++;
           if (hr > _maxHr) _maxHr = hr;
           _hrSamples.add(HrSample(
             heartRate: hr,
@@ -534,7 +518,6 @@ class WorkoutRecordingService {
 
   Future<void> dispose() async {
     _timer?.cancel();
-    _metricsTimer?.cancel();
     await _hrSubscription?.cancel();
     _hrSubscription = null;
     await _scanSubscription?.cancel();

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/constants/cache_keys.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
@@ -12,6 +11,7 @@ import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/profile_models.dart';
 import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/profile_repository.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   ProfileRepositoryImpl({required this.dio, required this.cacheDatasource});
@@ -154,7 +154,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final result = await fetch();
       await cacheDatasource.set(cacheKey, encode(result));
       return result;
-    } on DioException catch (_) {
+    } on DioException catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       if (cached != null) return decode(cached.data);
       rethrow;
     }
@@ -169,7 +170,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
       final result = await fetch();
       await cacheDatasource.set(key, encode(result));
     } catch (e) {
-      debugPrint('ProfileRepository: Background cache refresh failed for $key: $e');
+      logger.debug('ProfileRepository: Background cache refresh failed for $key: $e');
     }
   }
 }

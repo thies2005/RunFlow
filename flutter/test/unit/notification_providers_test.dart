@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/presentation/providers/notification_providers.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
-import 'package:runflow_flutter/services/notification_service.dart';
+import 'package:runflow_flutter/data/services/notification_service.dart';
 
 void main() {
   group('NotificationServiceProvider', () {

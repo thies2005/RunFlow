@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/datasources/local/readiness_local_datasource.dart';
 import 'package:runflow_flutter/data/datasources/remote/readiness_remote_datasource.dart';
@@ -13,7 +12,8 @@ import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
-import 'package:runflow_flutter/services/readiness_orchestrator.dart';
+import 'package:runflow_flutter/domain/services/readiness_orchestrator.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 part 'readiness_providers.g.dart';
 
@@ -138,7 +138,7 @@ class ReadinessNotifier extends _$ReadinessNotifier {
       final repo = await ref.read(readinessRepositoryProvider.future);
       await repo.saveDailyRecord(updated);
     } catch (e) {
-      debugPrint('ReadinessNotifier: Failed to save subjective input: $e');
+      logger.debug('ReadinessNotifier: Failed to save subjective input: $e');
     }
 
     await refresh();
@@ -167,7 +167,7 @@ class ReadinessNotifier extends _$ReadinessNotifier {
       final updated = await repo.updateOverride(current.date, override);
       state = AsyncValue.data(updated);
     } catch (e) {
-      debugPrint('ReadinessNotifier: Failed to override harder: $e');
+      logger.debug('ReadinessNotifier: Failed to override harder: $e');
     }
   }
 
@@ -186,7 +186,7 @@ class ReadinessNotifier extends _$ReadinessNotifier {
       final updated = await repo.updateOverride(current.date, override);
       state = AsyncValue.data(updated);
     } catch (e) {
-      debugPrint('ReadinessNotifier: Failed to override easier: $e');
+      logger.debug('ReadinessNotifier: Failed to override easier: $e');
     }
   }
 
@@ -246,7 +246,7 @@ class ReadinessNotifier extends _$ReadinessNotifier {
         ));
       }
     } catch (e) {
-      debugPrint('ReadinessNotifier: Failed to backfill readiness history: $e');
+      logger.debug('ReadinessNotifier: Failed to backfill readiness history: $e');
     } finally {
       _isBackfilling = false;
     }
@@ -337,7 +337,7 @@ Future<List<DailyReadinessRecord>> readinessHistory(
 
     return repo.getHistory(range.start, range.end);
   } catch (e) {
-    debugPrint('ReadinessHistory: Failed to compute missing readiness history: $e');
+    logger.debug('ReadinessHistory: Failed to compute missing readiness history: $e');
     return records;
   }
 }

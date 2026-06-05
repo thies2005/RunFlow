@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/constants/cache_keys.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
@@ -12,6 +11,7 @@ import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/dashboard_repository.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
   DashboardRepositoryImpl({required this.dio, required this.cacheDatasource});
@@ -103,7 +103,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
             jsonDecode(cached.data) as Map<String, dynamic>,
           ).toDomain();
         } catch (e) {
-          debugPrint('DashboardRepository: Failed to decode cached sync status: $e');
+          logger.debug('DashboardRepository: Failed to decode cached sync status: $e');
         }
       }
       throw e.error is AppException
@@ -132,7 +132,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
       final result = await fetch();
       await cacheDatasource.set(cacheKey, encode(result));
       return result;
-    } on DioException catch (_) {
+    } on DioException catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       if (cached != null) return decode(cached.data);
       rethrow;
     }
@@ -147,7 +148,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
       final result = await fetch();
       await cacheDatasource.set(key, encode(result));
     } catch (e) {
-      debugPrint('DashboardRepository: Background cache refresh failed for $key: $e');
+      logger.debug('DashboardRepository: Background cache refresh failed for $key: $e');
     }
   }
 }

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:runflow_flutter/data/models/auth_models.dart';
-import 'package:runflow_flutter/services/auth_service.dart';
+import 'package:runflow_flutter/domain/services/auth_service.dart';
 
 class AuthServiceImpl implements AuthService {
   AuthServiceImpl({FlutterSecureStorage? storage})

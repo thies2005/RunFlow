@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/data/auth/refresh_session.dart';
-import 'package:runflow_flutter/services/auth_service.dart';
+import 'package:runflow_flutter/domain/services/auth_service.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class RefreshInterceptor extends QueuedInterceptor {
   RefreshInterceptor({
@@ -53,7 +54,8 @@ class RefreshInterceptor extends QueuedInterceptor {
       handler.resolve(retryResponse);
     } on DioException catch (retryError) {
       handler.next(retryError);
-    } catch (_) {
+    } catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       handler.next(
         DioException(
           requestOptions: request,

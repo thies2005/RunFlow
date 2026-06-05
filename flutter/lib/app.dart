@@ -14,6 +14,7 @@ import 'package:runflow_flutter/presentation/providers/readiness_providers.dart'
 import 'package:runflow_flutter/presentation/router/app_router.dart';
 import 'package:runflow_flutter/presentation/widgets/offline_banner.dart';
 import 'package:runflow_flutter/presentation/widgets/consent_banner.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class RunFlowApp extends ConsumerStatefulWidget {
   const RunFlowApp({super.key});
@@ -35,7 +36,7 @@ class _RunFlowAppState extends ConsumerState<RunFlowApp> {
       final user = next.asData?.value;
       if (user == null) return;
       unawaited(ref.read(readinessProvider.future).catchError((Object e) {
-        debugPrint('RunFlowApp: readiness warmup failed: $e');
+        logger.debug('RunFlowApp: readiness warmup failed: $e');
         return null;
       }));
     }, fireImmediately: true);

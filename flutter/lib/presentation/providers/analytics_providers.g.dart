@@ -94,7 +94,7 @@ final class AnalyticsStatsProvider
   }
 }
 
-String _$analyticsStatsHash() => r'fea5ca025f4f2af1b5e3d6b80082c0b093b2f79b';
+String _$analyticsStatsHash() => r'3c15d8d272d3798bcb924cbc353c3412195cfc58';
 
 @ProviderFor(analyticsHistory)
 final analyticsHistoryProvider = AnalyticsHistoryFamily._();

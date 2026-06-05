@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:runflow_flutter/presentation/providers/core_providers.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/screens/auth/login_screen.dart';
 import 'package:runflow_flutter/presentation/screens/auth/register_screen.dart';
@@ -62,9 +62,9 @@ GoRouter createRouter(Ref ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/startup',
     observers: kReleaseMode ? [SentryNavigatorObserver()] : null,
-    redirect: (context, state) async {
+    redirect: (context, state) {
       final authState = ref.read(authStateProvider);
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = ref.read(sharedPreferencesProvider);
       final onboardingComplete =
           prefs.getBool(AppConstants.onboardingCompletedKey) ?? false;
       final showcaseComplete =

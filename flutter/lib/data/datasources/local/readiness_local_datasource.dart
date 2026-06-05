@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/data/models/readiness/readiness_models.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class SyncQueueItem {
   const SyncQueueItem({
@@ -309,7 +309,7 @@ class ReadinessLocalDatasource {
           jsonDecode(rhrJson) as Map<String, dynamic>,
         );
       } catch (e) {
-        debugPrint('ReadinessLocalDatasource: Failed to parse rhr_json: $e');
+        logger.debug('ReadinessLocalDatasource: Failed to parse rhr_json: $e');
       }
     }
 
@@ -321,7 +321,7 @@ class ReadinessLocalDatasource {
           jsonDecode(sleepJson) as Map<String, dynamic>,
         );
       } catch (e) {
-        debugPrint('ReadinessLocalDatasource: Failed to parse sleep_json: $e');
+        logger.debug('ReadinessLocalDatasource: Failed to parse sleep_json: $e');
       }
     }
 
@@ -333,7 +333,7 @@ class ReadinessLocalDatasource {
           jsonDecode(loadJson) as Map<String, dynamic>,
         );
       } catch (e) {
-        debugPrint('ReadinessLocalDatasource: Failed to parse load_json: $e');
+        logger.debug('ReadinessLocalDatasource: Failed to parse load_json: $e');
       }
     }
 
@@ -345,7 +345,7 @@ class ReadinessLocalDatasource {
           jsonDecode(subjectiveJson) as Map<String, dynamic>,
         );
       } catch (e) {
-        debugPrint('ReadinessLocalDatasource: Failed to parse subjective_json: $e');
+        logger.debug('ReadinessLocalDatasource: Failed to parse subjective_json: $e');
       }
     }
 
@@ -359,7 +359,7 @@ class ReadinessLocalDatasource {
                 ComponentScoreModel.fromJson(e as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        debugPrint('ReadinessLocalDatasource: Failed to parse component_scores_json: $e');
+        logger.debug('ReadinessLocalDatasource: Failed to parse component_scores_json: $e');
       }
     }
 
@@ -370,7 +370,7 @@ class ReadinessLocalDatasource {
         final list = jsonDecode(reasonsJson) as List;
         reasons = list.map((e) => e.toString()).toList();
       } catch (e) {
-        debugPrint('ReadinessLocalDatasource: Failed to parse reasons_json: $e');
+        logger.debug('ReadinessLocalDatasource: Failed to parse reasons_json: $e');
       }
     }
 
@@ -382,7 +382,7 @@ class ReadinessLocalDatasource {
           jsonDecode(overrideJson) as Map<String, dynamic>,
         );
       } catch (e) {
-        debugPrint('ReadinessLocalDatasource: Failed to parse override_json: $e');
+        logger.debug('ReadinessLocalDatasource: Failed to parse override_json: $e');
       }
     }
 

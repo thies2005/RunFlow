@@ -2,13 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
-import 'package:runflow_flutter/services/notification_service.dart';
+import 'package:runflow_flutter/data/services/notification_service.dart';
 
 Future<bool> registerPushToken({
   required Dio dio,
@@ -29,7 +28,7 @@ Future<bool> registerPushToken({
     if (statusCode != null && statusCode >= 500) return false;
     return false;
   } catch (e) {
-    debugPrint('FcmService: Failed to register push token: $e');
+    logger.debug('FcmService: Failed to register push token: $e');
     return false;
   }
 }
@@ -61,7 +60,7 @@ class FcmService {
         (token) => _sendTokenToServer(token),
       );
     } catch (e) {
-      debugPrint('FcmService: Failed to initialize: $e');
+      logger.debug('FcmService: Failed to initialize: $e');
       _initialized = false;
     }
   }
@@ -81,7 +80,7 @@ class FcmService {
       _token = await FirebaseMessaging.instance.getToken();
       return _token;
     } catch (e) {
-      debugPrint('FcmService: Failed to get FCM token: $e');
+      logger.debug('FcmService: Failed to get FCM token: $e');
       return _token;
     }
   }

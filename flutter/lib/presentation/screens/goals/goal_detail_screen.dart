@@ -9,6 +9,7 @@ import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class GoalDetailScreen extends ConsumerWidget {
   const GoalDetailScreen({required this.goalId, super.key});
@@ -857,7 +858,8 @@ class _CompletionCheckboxState extends ConsumerState<_CompletionCheckbox> {
         UpdateWorkoutRequest(isCompleted: _isCompleted),
       );
       ref.invalidate(goalDetailProvider(widget.goalId));
-    } catch (_) {
+    } catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       if (mounted) {
         setState(() {
           _isCompleted = previousState;

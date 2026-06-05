@@ -6,10 +6,10 @@ import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
-import 'package:runflow_flutter/services/activity_cache_sync_service.dart';
-import 'package:runflow_flutter/services/offline_sync_service.dart';
+import 'package:runflow_flutter/data/services/activity_cache_sync_service.dart';
+import 'package:runflow_flutter/data/services/offline_sync_service.dart';
 import 'package:runflow_flutter/data/datasources/local/strength_local_datasource.dart';
-import 'package:runflow_flutter/services/workout_merge_service.dart';
+import 'package:runflow_flutter/domain/services/workout_merge_service.dart';
 
 part 'activity_providers.g.dart';
 

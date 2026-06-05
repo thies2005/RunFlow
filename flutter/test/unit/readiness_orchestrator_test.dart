@@ -2,11 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/domain/entities/activity_entities.dart';
 import 'package:runflow_flutter/domain/entities/readiness/readiness_entities.dart';
+import 'package:runflow_flutter/domain/services/readiness_orchestrator.dart';
+import 'package:runflow_flutter/data/models/health_vitals_models.dart';
 import 'package:runflow_flutter/domain/services/readiness/readiness_scoring_service.dart';
+
 import 'package:runflow_flutter/domain/services/readiness/trimp_service.dart';
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
-import 'package:runflow_flutter/services/health_connect_service.dart';
-import 'package:runflow_flutter/services/readiness_orchestrator.dart';
+import 'package:runflow_flutter/data/services/health_connect_service.dart';
 
 class MockHealthConnectService extends Mock implements HealthConnectService {}
 class MockActivityRepository extends Mock implements ActivityRepository {}

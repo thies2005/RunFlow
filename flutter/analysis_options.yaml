@@ -17,6 +17,7 @@ linter:
     always_declare_return_types: true
     annotate_overrides: true
     avoid_empty_else: true
+    # Use logger.debug/info/warning/error instead of print or debugPrint
     avoid_print: true
     avoid_return_types_on_setters: true
     avoid_types_as_parameter_names: true

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/ai_settings_providers.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 class AiSettingsScreen extends ConsumerStatefulWidget {
   const AiSettingsScreen({super.key});
@@ -119,7 +120,8 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
       setState(() {
         _testResult = 'success';
       });
-    } catch (_) {
+    } catch (e, stack) {
+      logger.debug('Exception: $e\n$stack');
       setState(() {
         _testResult = 'error';
       });

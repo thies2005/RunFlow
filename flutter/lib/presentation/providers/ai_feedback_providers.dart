@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/domain/entities/ai_feedback_entities.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 part 'ai_feedback_providers.g.dart';
 
@@ -13,7 +13,7 @@ class AiFeedback extends _$AiFeedback {
     try {
       return repo.getAiFeedback(activityId);
     } catch (e) {
-      debugPrint('AiFeedback: Failed to load AI feedback: $e');
+      logger.debug('AiFeedback: Failed to load AI feedback: $e');
       return const AiActivityFeedback();
     }
   }

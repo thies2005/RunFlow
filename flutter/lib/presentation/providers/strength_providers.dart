@@ -5,7 +5,7 @@ import 'package:runflow_flutter/data/datasources/local/strength_local_datasource
 import 'package:runflow_flutter/domain/entities/strength_entities.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart'; // for appDatabaseProvider
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart'; // for localActivityDatasourceProvider
-import 'package:runflow_flutter/services/workout_merge_service.dart';
+import 'package:runflow_flutter/domain/services/workout_merge_service.dart';
 
 part 'strength_providers.g.dart';
 

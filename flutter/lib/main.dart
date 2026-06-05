@@ -11,36 +11,41 @@ import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/presentation/providers/notification_providers.dart';
 import 'package:runflow_flutter/presentation/router/app_router.dart';
-import 'package:runflow_flutter/services/background_sync.dart';
+import 'package:runflow_flutter/data/services/background_sync.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:runflow_flutter/presentation/providers/core_providers.dart';
 
-final container = ProviderContainer();
+late final ProviderContainer container;
 final databaseInitFailed = ValueNotifier<bool>(false);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final prefs = await SharedPreferences.getInstance();
+  
+  container = ProviderContainer(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+    ],
+  );
+
   await _initializeServices();
 
-  final prefs = await SharedPreferences.getInstance();
   final analyticsConsent = prefs.getBool('privacy_analytics') ?? false;
 
   if (kReleaseMode && AppConstants.sentryDsn.isNotEmpty && analyticsConsent) {
-    await SentryFlutter.init(
+    unawaited(SentryFlutter.init(
       (options) {
         options.dsn = AppConstants.sentryDsn;
-        options.tracesSampleRate = 1.0;
+        options.tracesSampleRate = 0.2;
         options.enableAutoSessionTracking = true;
         options.attachStacktrace = true;
       },
-      appRunner: () => runApp(
-        UncontrolledProviderScope(container: container, child: const RunFlowApp()),
-      ),
-    );
-  } else {
-    runApp(UncontrolledProviderScope(container: container, child: const RunFlowApp()));
+    ));
   }
+  
+  runApp(UncontrolledProviderScope(container: container, child: const RunFlowApp()));
 }
 
 Future<void> _initializeServices() async {

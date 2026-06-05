@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 part 'readiness_models.freezed.dart';
 part 'readiness_models.g.dart';
@@ -127,7 +128,7 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             : Map<String, dynamic>.from(jsonDecode(raw.toString()) as Map);
         rhr = RhrMetricsModel.fromJson(map);
       } catch (e) {
-        debugPrint('DailyReadinessRecordModel: Failed to parse rhr: $e');
+        logger.debug('DailyReadinessRecordModel: Failed to parse rhr: $e');
       }
     }
 
@@ -140,7 +141,7 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             : Map<String, dynamic>.from(jsonDecode(raw.toString()) as Map);
         sleep = SleepMetricsModel.fromJson(map);
       } catch (e) {
-        debugPrint('DailyReadinessRecordModel: Failed to parse sleep: $e');
+        logger.debug('DailyReadinessRecordModel: Failed to parse sleep: $e');
       }
     }
 
@@ -153,7 +154,7 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             : Map<String, dynamic>.from(jsonDecode(raw.toString()) as Map);
         load = LoadMetricsModel.fromJson(map);
       } catch (e) {
-        debugPrint('DailyReadinessRecordModel: Failed to parse load: $e');
+        logger.debug('DailyReadinessRecordModel: Failed to parse load: $e');
       }
     }
 
@@ -166,7 +167,7 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             : Map<String, dynamic>.from(jsonDecode(raw.toString()) as Map);
         subjective = SubjectiveInputModel.fromJson(map);
       } catch (e) {
-        debugPrint('DailyReadinessRecordModel: Failed to parse subjective: $e');
+        logger.debug('DailyReadinessRecordModel: Failed to parse subjective: $e');
       }
     }
 
@@ -184,7 +185,7 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
                 Map<String, dynamic>.from(e as Map)))
             .toList();
       } catch (e) {
-        debugPrint('DailyReadinessRecordModel: Failed to parse componentScores: $e');
+        logger.debug('DailyReadinessRecordModel: Failed to parse componentScores: $e');
       }
     }
 
@@ -199,7 +200,7 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
                 : [];
         reasons = list.map((e) => e.toString()).toList();
       } catch (e) {
-        debugPrint('DailyReadinessRecordModel: Failed to parse reasons: $e');
+        logger.debug('DailyReadinessRecordModel: Failed to parse reasons: $e');
       }
     }
 
@@ -212,7 +213,7 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             : Map<String, dynamic>.from(jsonDecode(raw.toString()) as Map);
         override = ReadinessOverrideModel.fromJson(map);
       } catch (e) {
-        debugPrint('DailyReadinessRecordModel: Failed to parse readinessOverride: $e');
+        logger.debug('DailyReadinessRecordModel: Failed to parse readinessOverride: $e');
       }
     }
 
@@ -271,7 +272,7 @@ sealed class ReadinessBaselineModel with _$ReadinessBaselineModel {
         DateTime.parse(lastUpdated);
       }
     } catch (e) {
-      debugPrint('ReadinessBaselineModel: Failed to parse lastUpdated: $e');
+      logger.debug('ReadinessBaselineModel: Failed to parse lastUpdated: $e');
       lastUpdated = '';
     }
     return ReadinessBaselineModel(
@@ -320,7 +321,7 @@ sealed class AdaptedWorkoutModel with _$AdaptedWorkoutModel {
         DateTime.parse(createdAt);
       }
     } catch (e) {
-      debugPrint('AdaptedWorkoutModel: Failed to parse createdAt: $e');
+      logger.debug('AdaptedWorkoutModel: Failed to parse createdAt: $e');
       createdAt = '';
     }
     return AdaptedWorkoutModel(
@@ -398,7 +399,7 @@ sealed class WeeklyReconciliationRecordModel
         DateTime.parse(createdAt);
       }
     } catch (e) {
-      debugPrint('WeeklyReconciliationRecordModel: Failed to parse createdAt: $e');
+      logger.debug('WeeklyReconciliationRecordModel: Failed to parse createdAt: $e');
       createdAt = '';
     }
     return WeeklyReconciliationRecordModel(

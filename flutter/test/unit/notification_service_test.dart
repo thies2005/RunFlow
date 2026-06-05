@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runflow_flutter/services/notification_service.dart';
+import 'package:runflow_flutter/data/services/notification_service.dart';
 
 void main() {
   group('NotificationServiceImpl', () {

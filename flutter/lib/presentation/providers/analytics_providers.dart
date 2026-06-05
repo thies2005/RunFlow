@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/domain/entities/analytics_entities.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
@@ -8,6 +7,7 @@ import 'package:runflow_flutter/domain/repositories/analytics_repository.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/core/utils/vdot.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 part 'analytics_providers.g.dart';
 
@@ -43,7 +43,7 @@ Future<AnalyticsStats> analyticsStats(Ref ref) async {
         );
       }
     } catch (e) {
-      debugPrint('AnalyticsStats: Failed to enrich stats from history: $e');
+      logger.debug('AnalyticsStats: Failed to enrich stats from history: $e');
     }
   }
 

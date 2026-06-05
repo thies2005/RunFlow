@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
@@ -12,6 +11,9 @@ import 'package:runflow_flutter/presentation/providers/health_sync_providers.dar
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:runflow_flutter/data/models/health_models.dart' as data_models;
 import 'package:runflow_flutter/data/mappers/health_mappers.dart';
+import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
+import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
+import 'package:runflow_flutter/core/extensions/extensions.dart';
 
 part 'health_providers.g.dart';
 
@@ -44,23 +46,21 @@ Future<List<BodyMeasurement>> bodyMeasurements(Ref ref) async {
     final apiRepo = ref.read(healthApiRepositoryProvider);
     return await apiRepo.getBodyMeasurements();
   } catch (e) {
-    debugPrint(
-      'HealthProviders: API body measurements failed, falling back to local: $e',
-    );
+    logger.debug('HealthProviders: API body measurements failed, falling back to local: $e');
     final repo = ref.read(healthRepositoryProvider);
     return repo.getBodyMeasurements();
   }
 }
 
 Future<void> _updateDailyHealthCache(DateTime date, FutureOr<DailyHealthLog> Function(DailyHealthLog) updater) async {
-  final dateStr = date.toIso8601String().split('T').first;
+  final dateStr = date.toIsoDateString;
   final cacheKey = 'daily_health_log_$dateStr';
   try {
-    final prefs = await SharedPreferences.getInstance();
-    final cachedStr = prefs.getString(cacheKey);
+    final cacheDs = CacheDatasource(database: AppDatabase.instance);
+    final cachedJson = await cacheDs.get(cacheKey);
     DailyHealthLog current;
-    if (cachedStr != null && cachedStr.isNotEmpty) {
-      final Map<String, dynamic> jsonMap = jsonDecode(cachedStr) as Map<String, dynamic>;
+    if (cachedJson != null && cachedJson.data.isNotEmpty) {
+      final Map<String, dynamic> jsonMap = jsonDecode(cachedJson.data) as Map<String, dynamic>;
       final dataLog = data_models.DailyHealthLog.fromJson(jsonMap);
       current = dataLog.toDomain();
     } else {
@@ -68,27 +68,29 @@ Future<void> _updateDailyHealthCache(DateTime date, FutureOr<DailyHealthLog> Fun
     }
     final updated = await updater(current);
     final jsonStr = jsonEncode(updated.toData().toJson());
-    await prefs.setString(cacheKey, jsonStr);
+    await cacheDs.set(cacheKey, jsonStr);
   } catch (e) {
-    debugPrint('HealthProviders: Failed to update daily health cache: $e');
+    logger.debug('HealthProviders: Failed to update daily health cache: $e');
   }
 }
 
 @Riverpod(keepAlive: true)
 Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
-  final dateStr = date.toIso8601String().split('T').first;
+  final dateStr = date.toIsoDateString;
   final cacheKey = 'daily_health_log_$dateStr';
+  final cacheDs = ref.read(cacheDatasourceProvider);
 
   Future<List<FoodLogEntry>> getLocalCachedFoodLogs() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final cachedStr = prefs.getString(cacheKey);
-      if (cachedStr != null && cachedStr.isNotEmpty) {
-        final Map<String, dynamic> jsonMap = jsonDecode(cachedStr) as Map<String, dynamic>;
+      final cachedJson = await cacheDs.get(cacheKey);
+      if (cachedJson != null && cachedJson.data.isNotEmpty) {
+        final Map<String, dynamic> jsonMap = jsonDecode(cachedJson.data) as Map<String, dynamic>;
         final dataLog = data_models.DailyHealthLog.fromJson(jsonMap);
         return dataLog.toDomain().foodLogs;
       }
-    } catch (_) {}
+    } catch (e) {
+      logger.debug('HealthProviders: Failed to read local cached food logs: $e');
+    }
     return [];
   }
 
@@ -106,27 +108,25 @@ Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
     }
 
     try {
-      final prefs = await SharedPreferences.getInstance();
       final jsonStr = jsonEncode(log.toData().toJson());
-      await prefs.setString(cacheKey, jsonStr);
+      await cacheDs.set(cacheKey, jsonStr);
     } catch (cacheErr) {
-      debugPrint('HealthProviders: Failed to cache daily health log: $cacheErr');
+      logger.debug('HealthProviders: Failed to cache daily health log: $cacheErr');
     }
     return log;
   } catch (e) {
-    debugPrint(
+    logger.debug(
       'HealthProviders: API daily health failed, attempting cache fallback: $e',
     );
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final cachedStr = prefs.getString(cacheKey);
-      if (cachedStr != null && cachedStr.isNotEmpty) {
-        final Map<String, dynamic> jsonMap = jsonDecode(cachedStr) as Map<String, dynamic>;
+      final cachedJson = await cacheDs.get(cacheKey);
+      if (cachedJson != null && cachedJson.data.isNotEmpty) {
+        final Map<String, dynamic> jsonMap = jsonDecode(cachedJson.data) as Map<String, dynamic>;
         final dataLog = data_models.DailyHealthLog.fromJson(jsonMap);
         return dataLog.toDomain();
       }
     } catch (cacheErr) {
-      debugPrint('HealthProviders: Failed to load daily health log from cache: $cacheErr');
+      logger.debug('HealthProviders: Failed to load daily health log from cache: $cacheErr');
     }
     return DailyHealthLog(id: 0, date: date, supplementLogs: [], foodLogs: []);
   }
@@ -148,7 +148,7 @@ class TakenSupplementIds extends _$TakenSupplementIds {
           .map((log) => log.supplementId)
           .toSet();
     } catch (e) {
-      debugPrint('HealthProviders: Failed to load taken supplement IDs: $e');
+      logger.debug('HealthProviders: Failed to load taken supplement IDs: $e');
       return {};
     }
   }
@@ -211,9 +211,7 @@ class FastingScheduleNotifier extends _$FastingScheduleNotifier {
           jsonDecode(json) as Map<String, dynamic>,
         );
       } catch (e) {
-        debugPrint(
-          'FastingScheduleNotifier: Failed to parse saved schedule: $e',
-        );
+        logger.debug('FastingScheduleNotifier: Failed to parse saved schedule: $e');
       }
     }
   }
@@ -234,9 +232,7 @@ class SupplementList extends _$SupplementList {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       return await apiRepo.getSupplements();
     } catch (e) {
-      debugPrint(
-        'HealthProviders: API supplements failed, falling back to local: $e',
-      );
+      logger.debug('HealthProviders: API supplements failed, falling back to local: $e');
       final repo = ref.read(healthRepositoryProvider);
       return repo.getSupplements();
     }
@@ -282,9 +278,7 @@ class SupplementList extends _$SupplementList {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       await apiRepo.saveSupplementRemote(supplement);
     } catch (e) {
-      debugPrint(
-        'HealthProviders: API save supplement failed, falling back to local: $e',
-      );
+      logger.debug('HealthProviders: API save supplement failed, falling back to local: $e');
       final repo = ref.read(healthRepositoryProvider);
       await repo.saveSupplement(supplement);
     }
@@ -307,9 +301,7 @@ class SupplementList extends _$SupplementList {
           .map((log) => log.supplementId)
           .toSet();
     } catch (e) {
-      debugPrint(
-        'HealthProviders: Failed to load already-taken supplements: $e',
-      );
+      logger.debug('HealthProviders: Failed to load already-taken supplements: $e');
     }
 
     final optimisticIds = <String>[];
@@ -359,7 +351,9 @@ class NutritionNotifier extends _$NutritionNotifier {
           if (localLog.calories > 0 || localLog.water > 0) {
             return localLog;
           }
-        } catch (_) {}
+        } catch (e) {
+          logger.debug('HealthProviders: Local nutrition log fallback failed: $e');
+        }
       }
       double totalCalories = 0;
       double totalProtein = 0;
@@ -382,9 +376,7 @@ class NutritionNotifier extends _$NutritionNotifier {
         createdAt: DateTime.now(),
       );
     } catch (e) {
-      debugPrint(
-        'HealthProviders: API nutrition log failed, falling back to local: $e',
-      );
+      logger.debug('HealthProviders: API nutrition log failed, falling back to local: $e');
       final repo = ref.read(healthRepositoryProvider);
       return repo.getNutritionLog(date);
     }
@@ -634,7 +626,7 @@ Future<NutritionAnalytics> nutritionAnalytics(Ref ref) async {
     final startDate = now.subtract(const Duration(days: 7));
     return apiRepo.getNutritionAnalytics(startDate, now);
   } catch (e) {
-    debugPrint('HealthProviders: API nutrition analytics failed: $e');
+    logger.debug('HealthProviders: API nutrition analytics failed: $e');
     return const NutritionAnalytics();
   }
 }
@@ -647,7 +639,7 @@ Future<SupplementAnalytics> supplementAnalytics(Ref ref) async {
     final startDate = now.subtract(const Duration(days: 7));
     return apiRepo.getSupplementAnalytics(startDate, now);
   } catch (e) {
-    debugPrint('HealthProviders: API supplement analytics failed: $e');
+    logger.debug('HealthProviders: API supplement analytics failed: $e');
     return const SupplementAnalytics();
   }
 }
@@ -658,7 +650,7 @@ Future<HealthHistory> healthHistory(Ref ref, String range) async {
     final apiRepo = ref.read(healthApiRepositoryProvider);
     return apiRepo.getHealthHistory(range);
   } catch (e) {
-    debugPrint('HealthProviders: API health history failed: $e');
+    logger.debug('HealthProviders: API health history failed: $e');
     return const HealthHistory();
   }
 }
@@ -672,14 +664,12 @@ class FoodSearch extends _$FoodSearch {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       return apiRepo.searchFood(query);
     } catch (e) {
-      debugPrint(
-        'HealthProviders: API food search failed, falling back to local: $e',
-      );
+      logger.debug('HealthProviders: API food search failed, falling back to local: $e');
       try {
         final repo = ref.read(healthRepositoryProvider);
         return repo.searchFoodItems(query);
       } catch (e2) {
-        debugPrint('HealthProviders: Local food search also failed: $e2');
+        logger.debug('HealthProviders: Local food search also failed: $e2');
         return [];
       }
     }
@@ -693,9 +683,7 @@ class FoodSearch extends _$FoodSearch {
         final apiRepo = ref.read(healthApiRepositoryProvider);
         return apiRepo.searchFood(q);
       } catch (e) {
-        debugPrint(
-          'HealthProviders: API food search failed, falling back to local: $e',
-        );
+        logger.debug('HealthProviders: API food search failed, falling back to local: $e');
         final repo = ref.read(healthRepositoryProvider);
         return repo.searchFoodItems(q);
       }
@@ -780,7 +768,7 @@ class FoodFavorites extends _$FoodFavorites {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       return apiRepo.getFoodFavorites();
     } catch (e) {
-      debugPrint('HealthProviders: Failed to load food favorites: $e');
+      logger.debug('HealthProviders: Failed to load food favorites: $e');
       return [];
     }
   }
@@ -800,7 +788,7 @@ class FoodFavorites extends _$FoodFavorites {
         state = AsyncValue.data([favorited, ...current]);
       }
     } catch (e) {
-      debugPrint('HealthProviders: Failed to toggle favorite: $e');
+      logger.debug('HealthProviders: Failed to toggle favorite: $e');
     }
   }
 
@@ -827,7 +815,8 @@ class FoodFavorites extends _$FoodFavorites {
                 (f.brand ?? '').toLowerCase() == normalizedBrand,
           )
           .favoriteId;
-    } catch (_) {
+    } catch (e) {
+      logger.debug('HealthProviders: favoriteIdFor lookup failed: $e');
       return null;
     }
   }
@@ -868,7 +857,7 @@ class SavedMeals extends _$SavedMeals {
     try {
       await apiRepo.deleteSavedMeal(mealId);
     } catch (e) {
-      debugPrint('HealthProviders: Failed to delete saved meal: $e');
+      logger.debug('HealthProviders: Failed to delete saved meal: $e');
       ref.invalidateSelf();
     }
   }

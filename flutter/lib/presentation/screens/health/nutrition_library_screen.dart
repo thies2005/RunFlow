@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
-import 'package:runflow_flutter/services/recipe_integration_service.dart';
+import 'package:runflow_flutter/data/services/recipe_integration_service.dart';
 
 class NutritionLibraryScreen extends ConsumerStatefulWidget {
   const NutritionLibraryScreen({super.key});

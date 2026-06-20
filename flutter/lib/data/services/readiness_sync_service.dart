@@ -19,7 +19,12 @@ class ReadinessSyncService {
     int synced = 0;
     for (final item in items) {
       if (item.retryCount >= item.maxRetries) {
-        await localDatasource.markSyncCompleted(item.id);
+        // Permanently failed: retain as a dead-letter record (do NOT delete)
+        // so the data is recoverable and surfaced, rather than silently lost.
+        logger.warning(
+          '[ReadinessSyncService] Skipping permanently-failed '
+          '${item.entityType} item ${item.id} (exceeded ${item.maxRetries} retries; retained)',
+        );
         continue;
       }
 

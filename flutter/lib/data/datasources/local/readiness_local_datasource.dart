@@ -272,6 +272,7 @@ class ReadinessLocalDatasource {
       final rows = _db.select(
         'SELECT * FROM pending_sync WHERE entity_type IN '
         "('readiness_daily_record', 'readiness_baseline', 'adapted_workout', 'weekly_reconciliation') "
+        'AND retry_count < max_retries '
         'ORDER BY created_at',
       );
       return rows.map(_rowToSyncQueueItem).toList();

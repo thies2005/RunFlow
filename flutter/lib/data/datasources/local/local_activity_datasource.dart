@@ -232,7 +232,9 @@ class LocalActivityDatasource {
 
   Future<List<PendingSyncItem>> getPendingSyncItems() async {
     final db = await _db.database;
-    final rows = db.select('SELECT * FROM pending_sync ORDER BY created_at ASC');
+    final rows = db.select(
+      'SELECT * FROM pending_sync WHERE retry_count < max_retries ORDER BY created_at ASC',
+    );
     return rows.map(_rowToPendingSyncItem).toList();
   }
 

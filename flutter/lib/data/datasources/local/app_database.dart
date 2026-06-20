@@ -248,6 +248,58 @@ class AppDatabase {
     _db = null;
   }
 
+  static const _userScopedTables = <String>[
+    'activities',
+    'pending_sync',
+    'api_cache',
+    'readiness_daily_records',
+    'readiness_baselines',
+    'adapted_workouts',
+    'weekly_reconciliation_records',
+    'strength_exercises',
+    'strength_workout_templates',
+    'strength_sessions',
+    'nutrition_logs',
+    'food_items',
+    'supplements',
+    'supplement_stacks',
+    'supplement_stack_items',
+    'daily_health_logs',
+    'fasting_sessions',
+    'body_measurements',
+  ];
+
+  Future<void> clearUserData() async {
+    final db = await database;
+    // PRAGMA foreign_keys is a no-op inside a transaction, and the user tables
+    // have FK child->parent relationships (e.g. supplement_stack_items ->
+    // supplements/stacks, daily_health_logs -> nutrition_logs). Deleting in any
+    // order would otherwise trip a FOREIGN KEY constraint and roll back, wiping
+    // nothing. Disable enforcement for this connection (outside the txn), wipe
+    // every user table atomically, then restore the prior setting.
+    final fkWasOn =
+        (db.select('PRAGMA foreign_keys').first['foreign_keys'] as int?) == 1;
+    if (fkWasOn) {
+      db.execute('PRAGMA foreign_keys = OFF');
+    }
+    try {
+      db.execute('BEGIN');
+      try {
+        for (final table in _userScopedTables) {
+          db.execute('DELETE FROM $table');
+        }
+        db.execute('COMMIT');
+      } catch (e) {
+        db.execute('ROLLBACK');
+        rethrow;
+      }
+    } finally {
+      if (fkWasOn) {
+        db.execute('PRAGMA foreign_keys = ON');
+      }
+    }
+  }
+
   static void _addColumnIfNotExists(Database db, String table, String column, String type) {
     final columns = db.select('PRAGMA table_info($table)');
     final exists = columns.any((row) => row['name'] == column);

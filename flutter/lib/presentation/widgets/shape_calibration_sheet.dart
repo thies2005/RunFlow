@@ -892,7 +892,7 @@ class _ApplyButton extends ConsumerWidget {
           break;
         case CalibrationMode.manual:
           final factor = double.tryParse(state.manualFactor) ?? 1.0;
-          await notifier.submitManualFactor(factor);
+          await notifier.submitShapeFactor(factor);
           break;
       }
       if (context.mounted) {

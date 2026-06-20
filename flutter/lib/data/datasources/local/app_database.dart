@@ -209,15 +209,25 @@ class AppDatabase {
     },
   };
 
-  Future<Database> get database async {
-    if (_db != null) return _db!;
+  Future<Database>? _openFuture;
+
+  Future<Database> get database {
+    if (_db != null) return Future.value(_db!);
+    // Cache the in-flight open so concurrent callers don't race past the null
+    // check and open multiple sqlite handles / run migrations twice.
+    return _openFuture ??= _open();
+  }
+
+  Future<Database> _open() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'runflow.db'));
-    _db = sqlite3.open(file.path);
-    _db!.execute('PRAGMA journal_mode = WAL');
-    _db!.execute('PRAGMA foreign_keys = ON');
-    _runMigrations(_db!);
-    return _db!;
+    final db = sqlite3.open(file.path);
+    db.execute('PRAGMA journal_mode = WAL');
+    db.execute('PRAGMA foreign_keys = ON');
+    _runMigrations(db);
+    _db = db;
+    _openFuture = null;
+    return db;
   }
 
   Future<void> initialize() async {
@@ -246,6 +256,7 @@ class AppDatabase {
   void close() {
     _db?.close();
     _db = null;
+    _openFuture = null;
   }
 
   static const _userScopedTables = <String>[

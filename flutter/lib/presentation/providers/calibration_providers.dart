@@ -79,7 +79,7 @@ class Calibration extends _$Calibration {
       );
     } else if ((distanceMeters - 42195).abs() < 1000) {
       state = state.copyWith(
-        raceType: CalibrationRaceType.fiveK,
+        raceType: CalibrationRaceType.marathon,
         isCustomDistance: false,
       );
     } else {
@@ -128,25 +128,6 @@ class Calibration extends _$Calibration {
   }
 
   Future<void> submitShapeFactor(double factor) async {
-    state = state.copyWith(isSubmitting: true, error: '');
-    try {
-      final dio = ref.read(dioClientProvider).dio;
-
-      await dio.post(
-        '/goals/calibration',
-        data: {'shapeFactor': factor},
-      );
-      state = state.copyWith(isSubmitting: false);
-    } catch (e) {
-      state = state.copyWith(
-        isSubmitting: false,
-        error: 'Failed to update shape calibration',
-      );
-      rethrow;
-    }
-  }
-
-  Future<void> submitManualFactor(double factor) async {
     state = state.copyWith(isSubmitting: true, error: '');
     try {
       final dio = ref.read(dioClientProvider).dio;

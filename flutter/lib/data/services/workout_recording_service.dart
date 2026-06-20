@@ -116,12 +116,17 @@ class WorkoutRecordingService {
   List<GpsPoint> get gpsPoints => List.unmodifiable(_gpsPoints);
 
   double get smoothedCurrentPaceSecondsPerKm {
-    final DateTime cutoff = DateTime.now().subtract(_smoothedPaceWindow);
-    _paceSamples.removeWhere((_TimestampedPace p) => p.timestamp.isBefore(cutoff));
     if (_paceSamples.isEmpty) return 0.0;
-    final double sum = _paceSamples.fold<double>(
-        0.0, (double acc, _TimestampedPace p) => acc + p.paceSecondsPerKm);
-    return sum / _paceSamples.length;
+    final DateTime cutoff = DateTime.now().subtract(_smoothedPaceWindow);
+    double sum = 0;
+    var count = 0;
+    for (final p in _paceSamples) {
+      if (!p.timestamp.isBefore(cutoff)) {
+        sum += p.paceSecondsPerKm;
+        count++;
+      }
+    }
+    return count > 0 ? sum / count : 0.0;
   }
 
   Stream<RecordingStatus> get statusStream async* {
@@ -347,8 +352,13 @@ class WorkoutRecordingService {
             if (point.speed > 0.5) {
               _currentCadence = _estimateCadence(point.speed);
               _totalCadence += _currentCadence;
+              final now = DateTime.now();
+              _paceSamples.removeWhere(
+                (_TimestampedPace p) =>
+                    p.timestamp.isBefore(now.subtract(_smoothedPaceWindow)),
+              );
               _paceSamples.add(_TimestampedPace(
-                timestamp: DateTime.now(),
+                timestamp: now,
                 paceSecondsPerKm: 1000 / point.speed,
               ));
             }

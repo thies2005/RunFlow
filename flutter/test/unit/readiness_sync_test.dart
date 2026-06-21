@@ -170,7 +170,8 @@ void main() {
         verifyNever(() => mockLocal.markSyncCompleted(5));
       });
 
-      test('removes items at max retries', () async {
+      test('retains permanently-failed items as dead-letter at max retries',
+          () async {
         const item = SyncQueueItem(
           id: 6,
           entityType: 'readiness_daily_record',
@@ -182,14 +183,14 @@ void main() {
 
         when(() => mockLocal.getPendingReadinessSyncItems())
             .thenAnswer((_) async => [item]);
-        when(() => mockLocal.markSyncCompleted(6))
-            .thenAnswer((_) async {});
 
         final result = await service.flushPendingSync();
 
         expect(result, 0);
         verifyNever(() => mockDio.post(any(), data: any(named: 'data')));
-        verify(() => mockLocal.markSyncCompleted(6)).called(1);
+        // Dead-letter: the item must NOT be deleted so it stays recoverable and
+        // surfaced instead of being silently dropped.
+        verifyNever(() => mockLocal.markSyncCompleted(6));
       });
 
       test('syncs multiple items and returns total count', () async {

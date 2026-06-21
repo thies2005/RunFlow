@@ -209,15 +209,25 @@ class AppDatabase {
     },
   };
 
-  Future<Database> get database async {
-    if (_db != null) return _db!;
+  Future<Database>? _openFuture;
+
+  Future<Database> get database {
+    if (_db != null) return Future.value(_db!);
+    // Cache the in-flight open so concurrent callers don't race past the null
+    // check and open multiple sqlite handles / run migrations twice.
+    return _openFuture ??= _open();
+  }
+
+  Future<Database> _open() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'runflow.db'));
-    _db = sqlite3.open(file.path);
-    _db!.execute('PRAGMA journal_mode = WAL');
-    _db!.execute('PRAGMA foreign_keys = ON');
-    _runMigrations(_db!);
-    return _db!;
+    final db = sqlite3.open(file.path);
+    db.execute('PRAGMA journal_mode = WAL');
+    db.execute('PRAGMA foreign_keys = ON');
+    _runMigrations(db);
+    _db = db;
+    _openFuture = null;
+    return db;
   }
 
   Future<void> initialize() async {
@@ -246,6 +256,59 @@ class AppDatabase {
   void close() {
     _db?.close();
     _db = null;
+    _openFuture = null;
+  }
+
+  static const _userScopedTables = <String>[
+    'activities',
+    'pending_sync',
+    'api_cache',
+    'readiness_daily_records',
+    'readiness_baselines',
+    'adapted_workouts',
+    'weekly_reconciliation_records',
+    'strength_exercises',
+    'strength_workout_templates',
+    'strength_sessions',
+    'nutrition_logs',
+    'food_items',
+    'supplements',
+    'supplement_stacks',
+    'supplement_stack_items',
+    'daily_health_logs',
+    'fasting_sessions',
+    'body_measurements',
+  ];
+
+  Future<void> clearUserData() async {
+    final db = await database;
+    // PRAGMA foreign_keys is a no-op inside a transaction, and the user tables
+    // have FK child->parent relationships (e.g. supplement_stack_items ->
+    // supplements/stacks, daily_health_logs -> nutrition_logs). Deleting in any
+    // order would otherwise trip a FOREIGN KEY constraint and roll back, wiping
+    // nothing. Disable enforcement for this connection (outside the txn), wipe
+    // every user table atomically, then restore the prior setting.
+    final fkWasOn =
+        (db.select('PRAGMA foreign_keys').first['foreign_keys'] as int?) == 1;
+    if (fkWasOn) {
+      db.execute('PRAGMA foreign_keys = OFF');
+    }
+    try {
+      db.execute('BEGIN');
+      try {
+        for (final table in _userScopedTables) {
+          db.execute('DELETE FROM $table');
+        }
+        db.execute('COMMIT');
+      } catch (e) {
+        db.execute('ROLLBACK');
+        rethrow;
+      }
+    } finally {
+      if (fkWasOn) {
+        db.execute('PRAGMA foreign_keys = ON');
+      }
+    }
   }
 
   static void _addColumnIfNotExists(Database db, String table, String column, String type) {

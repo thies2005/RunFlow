@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/data/services/workout_recording_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('WorkoutRecordingService', () {
     late WorkoutRecordingService service;
 

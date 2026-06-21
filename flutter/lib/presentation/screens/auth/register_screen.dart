@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/presentation/providers/consent_providers.dart';
 import 'package:runflow_flutter/presentation/screens/auth/verification_sheet.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -50,6 +53,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             password: _passwordController.text,
             name: _nameController.text.trim(),
           );
+
+      // Record the standard GDPR consents (parity with the web register flow,
+      // which logs TERMS/PRIVACY/HEALTH_DATA/AGE_REQUIREMENT on signup).
+      // Best-effort: must not block registration.
+      unawaited(
+        ref.read(consentNotifierProvider.notifier).acceptAll(),
+      );
 
       if (mounted) {
         final email = _emailController.text.trim();

@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 
-class RetryInterceptor extends QueuedInterceptor {
+class RetryInterceptor extends Interceptor {
   RetryInterceptor({
     required this.dio,
     this.maxRetries = 3,
@@ -15,6 +15,8 @@ class RetryInterceptor extends QueuedInterceptor {
 
   static const _baseDelay = Duration(seconds: 1);
   static const _maxJitterMs = 500;
+
+  static const _idempotentMethods = {'GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE'};
 
   @override
   Future<void> onError(
@@ -33,7 +35,7 @@ class RetryInterceptor extends QueuedInterceptor {
       return;
     }
 
-    final delay = _calculateBackoff(retryCount);
+    final delay = _calculateBackoff(retryCount, err.response?.headers);
     await Future<void>.delayed(delay);
 
     try {
@@ -50,25 +52,40 @@ class RetryInterceptor extends QueuedInterceptor {
   }
 
   bool _shouldRetry(DioException err) {
+    final method = err.requestOptions.method.toUpperCase();
+
+    // Network-level errors (timeouts, connection failures) are only safe to
+    // retry for idempotent methods: a POST/PUT that times out may have already
+    // been applied by the server, and re-issuing it would create a duplicate
+    // write (activities, weight logs, AI scans, etc.).
     if (err.type == DioExceptionType.connectionTimeout ||
         err.type == DioExceptionType.sendTimeout ||
         err.type == DioExceptionType.receiveTimeout ||
         err.type == DioExceptionType.connectionError) {
-      return true;
+      return _idempotentMethods.contains(method);
     }
 
     final statusCode = err.response?.statusCode;
     if (statusCode == null) return false;
 
-    if (statusCode >= 500) return true;
-    if (statusCode == 408 || statusCode == 429) return true;
-
-    return false;
+    // Retryable status codes (5xx/408/429) mean the server did not apply the
+    // request, so retrying is safe regardless of method.
+    return retryableStatusCodes.contains(statusCode);
   }
 
-  Duration _calculateBackoff(int retryCount) {
+  Duration _calculateBackoff(int retryCount, Headers? responseHeaders) {
+    final serverHint = _retryAfterMillis(responseHeaders);
     final exponentialMs = _baseDelay.inMilliseconds * (1 << retryCount);
     final jitterMs = Random().nextInt(_maxJitterMs);
-    return Duration(milliseconds: exponentialMs + jitterMs);
+    final computed = exponentialMs + jitterMs;
+    return Duration(milliseconds: max(serverHint, computed));
+  }
+
+  int _retryAfterMillis(Headers? headers) {
+    final value = headers?.value('retry-after');
+    if (value == null || value.isEmpty) return 0;
+    final seconds = int.tryParse(value);
+    if (seconds == null) return 0;
+    return seconds * 1000;
   }
 }

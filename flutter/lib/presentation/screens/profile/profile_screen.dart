@@ -5,6 +5,8 @@ import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/presentation/providers/data_export_providers.dart';
+import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
 import 'package:runflow_flutter/presentation/providers/strava_status_providers.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -215,6 +217,11 @@ class _ProfileMenuSection extends ConsumerWidget {
           title: S.of(context).settingsAbout,
           onTap: () => context.push('/settings/about'),
         ),
+        _MenuTile(
+          icon: Icons.download_outlined,
+          title: S.of(context).settingsDataExport,
+          onTap: () => _exportData(context, ref),
+        ),
         const Divider(indent: 16, endIndent: 16, height: 32),
         _MenuTile(
           icon: Icons.logout,
@@ -265,33 +272,50 @@ class _ProfileMenuSection extends ConsumerWidget {
   void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
     showDialog<void>(
       context: context,
-        builder: (context) => AlertDialog(
-          title: Text(S.of(context).profileDeleteAccount),
-          content: Text(
-            S.of(context).profileDeleteAccountWarning,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(S.of(dialogContext).profileDeleteAccount),
+        content: Text(
+          S.of(dialogContext).profileDeleteAccountWarning,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(S.of(dialogContext).actionCancel),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(S.of(context).actionCancel),
-            ),
           FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(S.of(context).profileDeleteAccountContactSupport),
-                ),
-              );
-            },
+            onPressed: () => _confirmDeleteAccount(dialogContext, ref),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,
             ),
-            child: Text(S.of(context).actionDelete),
+            child: Text(S.of(dialogContext).actionDelete),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDeleteAccount(
+    BuildContext dialogContext,
+    WidgetRef ref,
+  ) async {
+    Navigator.pop(dialogContext);
+    try {
+      await ref.read(profileRepositoryProvider).deleteAccount();
+    } catch (_) {
+      // Best-effort: proceed to local teardown even if the server call failed.
+    }
+    await ref.read(authStateProvider.notifier).logout();
+  }
+
+  Future<void> _exportData(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    await ref.read(dataExportProvider.notifier).exportData();
+    final state = ref.read(dataExportProvider);
+    if (state.error != null) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(state.error!)),
+      );
+    }
   }
 }
 

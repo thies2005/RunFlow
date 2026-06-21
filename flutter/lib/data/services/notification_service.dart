@@ -50,15 +50,26 @@ class NotificationServiceImpl implements NotificationService {
 
     try {
       tz_data.initializeTimeZones();
-      final offset = DateTime.now().timeZoneOffset;
-      final totalMinutes = offset.inMinutes;
-      final absMinutes = totalMinutes.abs();
-      final h = (absMinutes ~/ 60).toString().padLeft(2, '0');
-      final m = (absMinutes % 60).toString().padLeft(2, '0');
-      final sign = totalMinutes >= 0 ? '-' : '+';
-      final tzName = 'Etc/GMT$sign$h${m != '00' ? ':$m' : ''}';
       try {
-        tz.setLocalLocation(tz.getLocation(tzName));
+        // Resolve a real IANA zone matching the device's current UTC offset.
+        // We can't use Etc/GMT±N because those only exist for whole-hour
+        // offsets (no Etc/GMT-05:30), which would force fractional-offset
+        // users (India, Iran, etc.) onto UTC and fire notifications at the
+        // wrong local time. Pick the first IANA location whose current offset
+        // equals the device offset.
+        final deviceOffset = DateTime.now().timeZoneOffset;
+        String? matchedZone;
+        for (final entry in tz.timeZoneDatabase.locations.entries) {
+          if (entry.value.currentTimeZone.offset == deviceOffset) {
+            matchedZone = entry.key;
+            break;
+          }
+        }
+        if (matchedZone != null) {
+          tz.setLocalLocation(tz.getLocation(matchedZone));
+        } else {
+          tz.setLocalLocation(tz.getLocation('UTC'));
+        }
       } catch (e) {
         logger.debug('NotificationService: Failed to set local timezone: $e');
         tz.setLocalLocation(tz.getLocation('UTC'));

@@ -15,6 +15,12 @@ import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
 import 'package:runflow_flutter/presentation/providers/chat_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
 import 'package:runflow_flutter/presentation/providers/recording_providers.dart';
+import 'package:runflow_flutter/presentation/providers/dashboard_providers.dart';
+import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
+import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
+import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
+import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
+import 'package:runflow_flutter/presentation/providers/readiness_providers.dart';
 import 'package:runflow_flutter/domain/services/auth_service.dart';
 import 'package:runflow_flutter/data/services/auth_service_impl.dart';
 import 'package:runflow_flutter/data/services/background_sync.dart';
@@ -132,27 +138,65 @@ class AuthState extends _$AuthState {
 
   Future<void> logout() async {
     try {
-      await BackgroundSyncService.cancel();
-      ref.invalidate(fcmServiceProvider);
-      ref.read(healthSyncServiceProvider).stopAutoSync();
-      ref.invalidate(healthSyncServiceProvider);
-      ref.invalidate(chatSessionsProvider);
-      final recordingService = ref.read(recordingServiceProvider);
-      recordingService.discardRecording();
-      await recordingService.disconnectHeartRateMonitor();
-      ref.read(deduplicationInterceptorProvider).close();
-      final repo = ref.read(authRepositoryProvider);
-      await repo.logout();
-      AppDatabase.instance.close();
+      await _tearDownSession(serverLogout: true);
     } finally {
       state = const AsyncValue.data(null);
     }
   }
 
   void forceLogout() {
-    final repo = ref.read(authRepositoryProvider);
-    repo.clearLocalSession();
+    // Session expired server-side (401 on refresh). We cannot hit the logout
+    // endpoint with an invalid token, so set the unauthenticated state
+    // immediately and run the same local teardown as logout.
     state = const AsyncValue.data(null);
+    _tearDownSession(serverLogout: false);
+  }
+
+  Future<void> _tearDownSession({required bool serverLogout}) async {
+    final repo = ref.read(authRepositoryProvider);
+
+    // Stop background work and active services first.
+    await BackgroundSyncService.cancel();
+    ref.invalidate(fcmServiceProvider);
+    ref.read(healthSyncServiceProvider).stopAutoSync();
+    ref.invalidate(healthSyncServiceProvider);
+    ref.invalidate(chatSessionsProvider);
+
+    final recordingService = ref.read(recordingServiceProvider);
+    recordingService.discardRecording();
+    await recordingService.disconnectHeartRateMonitor();
+    ref.read(deduplicationInterceptorProvider).close();
+
+    // Invalidate server-side session (skipped on forceLogout: token is invalid).
+    if (serverLogout) {
+      await repo.logout();
+    } else {
+      repo.clearLocalSession();
+    }
+
+    // Clear all local user-scoped SQLite data so nothing leaks to the next
+    // account that logs in on the same device.
+    try {
+      await AppDatabase.instance.clearUserData();
+    } catch (e) {
+      logger.warning('logout: failed to clear local user data: $e');
+    }
+
+    // Invalidate keepAlive repository/cache providers that hold in-memory or
+    // SQLite-backed user data so stale state from the previous account does
+    // not resurface.
+    ref.invalidate(chatRepositoryProvider);
+    ref.invalidate(dashboardRepositoryProvider);
+    ref.invalidate(activityRepositoryProvider);
+    ref.invalidate(localActivityDatasourceProvider);
+    ref.invalidate(profileRepositoryProvider);
+    ref.invalidate(goalRepositoryProvider);
+    ref.invalidate(analyticsRepositoryProvider);
+    ref.invalidate(healthApiRepositoryProvider);
+    ref.invalidate(readinessRepositoryProvider);
+    ref.invalidate(cacheDatasourceProvider);
+
+    AppDatabase.instance.close();
   }
 
   Future<void> register({

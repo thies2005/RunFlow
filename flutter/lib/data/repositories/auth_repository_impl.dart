@@ -292,9 +292,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
       rethrow;
     } on AuthException {
-      if (user != null) {
-        return;
-      }
+      // Refresh failed (rejected, or refresh token missing after a network
+      // blip in refreshToken). Fail closed: clear the cached session and
+      // surface the failure so the app logs the user out rather than
+      // continuing as a ghost session that 401s on every request. This is
+      // stricter than the old behavior but is the safer security posture.
+      await authService.clearAll();
       rethrow;
     }
   }

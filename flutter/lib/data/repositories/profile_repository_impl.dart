@@ -137,6 +137,20 @@ class ProfileRepositoryImpl implements ProfileRepository {
     }
   }
 
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      await dio.delete(ApiConstants.userDeleteUrl);
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : ServerException(
+              message: 'Failed to delete account.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
   Future<T> _cacheFirst<T>({
     required String cacheKey,
     required Future<T> Function() fetch,

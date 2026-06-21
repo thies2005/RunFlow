@@ -11,4 +11,6 @@ abstract class ProfileRepository {
   Future<GeneratedApiKey> generateApiKey({String name});
 
   Future<void> revokeApiKey();
+
+  Future<void> deleteAccount();
 }

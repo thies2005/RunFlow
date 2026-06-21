@@ -66,6 +66,8 @@ class ApiConstants {
   static String get plansUrl => '$baseUrl/api/plans';
   static String planUrl(String id) => '$baseUrl/api/plans/$id';
   static String subGoalsUrl(String goalId) => '$baseUrl/api/plan-advanced/$goalId/sub-goals';
+  static String get userDeleteUrl => '$baseUrl/api/user/delete';
+  static String get userExportUrl => '$baseUrl/api/user/export';
 }
 
 class AppConstants {

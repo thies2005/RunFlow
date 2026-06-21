@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -19,7 +20,7 @@ class DataExport extends _$DataExport {
     state = const DataExportState(isExporting: true);
     try {
       final client = ref.read(dioClientProvider);
-      final response = await client.dio.get('/user/export');
+      final response = await client.dio.get(ApiConstants.userExportUrl);
       final data = response.data;
 
       final jsonString = const JsonEncoder.withIndent('  ').convert(data);

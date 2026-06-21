@@ -118,6 +118,9 @@ class _FakeProfileRepository implements ProfileRepository {
 
   @override
   Future<void> revokeApiKey() async {}
+
+  @override
+  Future<void> deleteAccount() async {}
 }
 
 void main() {

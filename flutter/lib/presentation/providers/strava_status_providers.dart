@@ -1,6 +1,5 @@
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'strava_status_providers.g.dart';
@@ -49,30 +48,14 @@ class StravaStatus extends _$StravaStatus {
   }
 
   Future<void> refreshFromServer() async {
-    try {
-      final client = ref.read(dioClientProvider);
-      final response = await client.dio.get('/user/strava/status');
-      final data = response.data as Map<String, dynamic>;
-      final connected = data['connected'] as bool? ?? false;
-      final authExpired = data['authExpired'] as bool? ?? false;
-      final lastSync = data['lastSyncAt'] as String?;
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_connectedKey, connected);
-      await prefs.setBool(_authExpiredKey, authExpired);
-      if (lastSync != null) {
-        await prefs.setString(_lastSyncKey, lastSync);
-      }
-
-      state = StravaStatusState(
-        isConnected: connected,
-        isAuthExpired: authExpired,
-        lastSyncAt:
-            lastSync != null ? DateTime.tryParse(lastSync) : state.lastSyncAt,
-      );
-    } catch (e) {
-      logger.error('[StravaStatus] Refresh from server failed: $e');
-    }
+    // The server does not currently expose a mobile Strava-status endpoint, so
+    // there is nothing to refresh remotely. Strava connection state is tracked
+    // locally (set via setConnected/setAuthExpired during login) and is the
+    // source of truth until a GET /api/mobile/v1/user/strava/status route
+    // exists. Avoid firing a request that would always 404.
+    logger.debug(
+      '[StravaStatus] refreshFromServer is a no-op; no server endpoint yet.',
+    );
   }
 }
 

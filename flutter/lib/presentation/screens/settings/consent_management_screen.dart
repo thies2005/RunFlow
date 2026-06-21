@@ -171,13 +171,58 @@ class _ConsentTile extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(
-              isActive ? Icons.check_circle : Icons.cancel_outlined,
-              color: isActive ? AppColors.success : AppColors.onSurfaceVariant,
-              size: 24,
-            ),
+            if (isActive)
+              IconButton(
+                tooltip: 'Withdraw',
+                icon: const Icon(Icons.remove_circle_outline, size: 22),
+                color: AppColors.onSurfaceVariant,
+                onPressed: () => _confirmWithdraw(context, ref),
+              )
+            else
+              const Icon(
+                Icons.cancel_outlined,
+                color: AppColors.onSurfaceVariant,
+                size: 24,
+              ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _confirmWithdraw(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Withdraw consent?'),
+        content: Text('Withdraw your "$title" consent? You can re-grant it anytime.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(S.of(dialogContext).actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('Withdraw'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final ok = await ref
+        .read(consentNotifierProvider.notifier)
+        .withdrawConsent(type);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(ok ? 'Consent withdrawn' : 'Failed to withdraw consent'),
       ),
     );
   }

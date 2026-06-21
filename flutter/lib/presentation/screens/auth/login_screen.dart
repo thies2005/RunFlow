@@ -173,6 +173,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 _buildPasswordField(colorScheme),
                 const SizedBox(height: 24),
                 _buildLoginButton(colorScheme),
+                const SizedBox(height: 12),
+                _buildForgotPasswordLink(colorScheme),
                 const SizedBox(height: 16),
                 _buildRegisterLink(colorScheme),
                 if (_errorMessage != null) ...[
@@ -280,6 +282,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
       ),
       child: Text(S.of(context).authSignIn),
+    );
+  }
+
+  Widget _buildForgotPasswordLink(ColorScheme colorScheme) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: GestureDetector(
+        onTap: _isLoading ? null : () => context.push('/forgot-password'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text(
+            S.of(context).authForgotPassword,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
     );
   }
 

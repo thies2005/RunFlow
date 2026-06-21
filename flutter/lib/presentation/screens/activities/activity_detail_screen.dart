@@ -391,6 +391,20 @@ class _MetricsGrid extends StatelessWidget {
               value: '${activity.averageCadence!.round()} spm',
               color: AppColors.success,
             ),
+          if (activity.trimp != null)
+            _MetricCard(
+              icon: Icons.bolt,
+              label: 'TRIMP',
+              value: activity.trimp!.toStringAsFixed(0),
+              color: AppColors.primary,
+            ),
+          if (activity.runningTss != null)
+            _MetricCard(
+              icon: Icons.fitness_center,
+              label: 'rTSS',
+              value: activity.runningTss!.toStringAsFixed(1),
+              color: AppColors.primary,
+            ),
         ],
       ),
     );

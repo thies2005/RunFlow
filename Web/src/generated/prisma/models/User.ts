@@ -88,6 +88,7 @@ export type UserMinAggregateOutputType = {
   hrZone4Max: number | null
   hrZone5Max: number | null
   hrZone6Max: number | null
+  hrZoneMethod: string | null
   vdotCorrectionFactor: number | null
   vdotReferenceRaceDate: Date | null
   vdotReferenceRaceTime: number | null
@@ -130,6 +131,7 @@ export type UserMaxAggregateOutputType = {
   hrZone4Max: number | null
   hrZone5Max: number | null
   hrZone6Max: number | null
+  hrZoneMethod: string | null
   vdotCorrectionFactor: number | null
   vdotReferenceRaceDate: Date | null
   vdotReferenceRaceTime: number | null
@@ -172,6 +174,7 @@ export type UserCountAggregateOutputType = {
   hrZone4Max: number
   hrZone5Max: number
   hrZone6Max: number
+  hrZoneMethod: number
   vdotCorrectionFactor: number
   vdotReferenceRaceDate: number
   vdotReferenceRaceTime: number
@@ -252,6 +255,7 @@ export type UserMinAggregateInputType = {
   hrZone4Max?: true
   hrZone5Max?: true
   hrZone6Max?: true
+  hrZoneMethod?: true
   vdotCorrectionFactor?: true
   vdotReferenceRaceDate?: true
   vdotReferenceRaceTime?: true
@@ -294,6 +298,7 @@ export type UserMaxAggregateInputType = {
   hrZone4Max?: true
   hrZone5Max?: true
   hrZone6Max?: true
+  hrZoneMethod?: true
   vdotCorrectionFactor?: true
   vdotReferenceRaceDate?: true
   vdotReferenceRaceTime?: true
@@ -336,6 +341,7 @@ export type UserCountAggregateInputType = {
   hrZone4Max?: true
   hrZone5Max?: true
   hrZone6Max?: true
+  hrZoneMethod?: true
   vdotCorrectionFactor?: true
   vdotReferenceRaceDate?: true
   vdotReferenceRaceTime?: true
@@ -465,6 +471,7 @@ export type UserGroupByOutputType = {
   hrZone4Max: number
   hrZone5Max: number
   hrZone6Max: number
+  hrZoneMethod: string | null
   vdotCorrectionFactor: number
   vdotReferenceRaceDate: Date | null
   vdotReferenceRaceTime: number | null
@@ -530,6 +537,7 @@ export type UserWhereInput = {
   hrZone4Max?: Prisma.IntFilter<"User"> | number
   hrZone5Max?: Prisma.IntFilter<"User"> | number
   hrZone6Max?: Prisma.IntFilter<"User"> | number
+  hrZoneMethod?: Prisma.StringNullableFilter<"User"> | string | null
   vdotCorrectionFactor?: Prisma.FloatFilter<"User"> | number
   vdotReferenceRaceDate?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   vdotReferenceRaceTime?: Prisma.IntNullableFilter<"User"> | number | null
@@ -604,6 +612,7 @@ export type UserOrderByWithRelationInput = {
   hrZone4Max?: Prisma.SortOrder
   hrZone5Max?: Prisma.SortOrder
   hrZone6Max?: Prisma.SortOrder
+  hrZoneMethod?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceDate?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -681,6 +690,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   hrZone4Max?: Prisma.IntFilter<"User"> | number
   hrZone5Max?: Prisma.IntFilter<"User"> | number
   hrZone6Max?: Prisma.IntFilter<"User"> | number
+  hrZoneMethod?: Prisma.StringNullableFilter<"User"> | string | null
   vdotCorrectionFactor?: Prisma.FloatFilter<"User"> | number
   vdotReferenceRaceDate?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   vdotReferenceRaceTime?: Prisma.IntNullableFilter<"User"> | number | null
@@ -755,6 +765,7 @@ export type UserOrderByWithAggregationInput = {
   hrZone4Max?: Prisma.SortOrder
   hrZone5Max?: Prisma.SortOrder
   hrZone6Max?: Prisma.SortOrder
+  hrZoneMethod?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceDate?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -805,6 +816,7 @@ export type UserScalarWhereWithAggregatesInput = {
   hrZone4Max?: Prisma.IntWithAggregatesFilter<"User"> | number
   hrZone5Max?: Prisma.IntWithAggregatesFilter<"User"> | number
   hrZone6Max?: Prisma.IntWithAggregatesFilter<"User"> | number
+  hrZoneMethod?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   vdotCorrectionFactor?: Prisma.FloatWithAggregatesFilter<"User"> | number
   vdotReferenceRaceDate?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   vdotReferenceRaceTime?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
@@ -847,6 +859,7 @@ export type UserCreateInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -921,6 +934,7 @@ export type UserUncheckedCreateInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -995,6 +1009,7 @@ export type UserUpdateInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1069,6 +1084,7 @@ export type UserUncheckedUpdateInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1143,6 +1159,7 @@ export type UserCreateManyInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -1185,6 +1202,7 @@ export type UserUpdateManyMutationInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1227,6 +1245,7 @@ export type UserUncheckedUpdateManyInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1269,6 +1288,7 @@ export type UserCountOrderByAggregateInput = {
   hrZone4Max?: Prisma.SortOrder
   hrZone5Max?: Prisma.SortOrder
   hrZone6Max?: Prisma.SortOrder
+  hrZoneMethod?: Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceDate?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
@@ -1329,6 +1349,7 @@ export type UserMaxOrderByAggregateInput = {
   hrZone4Max?: Prisma.SortOrder
   hrZone5Max?: Prisma.SortOrder
   hrZone6Max?: Prisma.SortOrder
+  hrZoneMethod?: Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceDate?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
@@ -1371,6 +1392,7 @@ export type UserMinOrderByAggregateInput = {
   hrZone4Max?: Prisma.SortOrder
   hrZone5Max?: Prisma.SortOrder
   hrZone6Max?: Prisma.SortOrder
+  hrZoneMethod?: Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceDate?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
@@ -1940,6 +1962,7 @@ export type UserCreateWithoutConsentsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -2013,6 +2036,7 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -2102,6 +2126,7 @@ export type UserUpdateWithoutConsentsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2175,6 +2200,7 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2248,6 +2274,7 @@ export type UserCreateWithoutAiSettingsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -2321,6 +2348,7 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -2410,6 +2438,7 @@ export type UserUpdateWithoutAiSettingsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2483,6 +2512,7 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2556,6 +2586,7 @@ export type UserCreateWithoutFeedbackJobsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -2629,6 +2660,7 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -2718,6 +2750,7 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2791,6 +2824,7 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2864,6 +2898,7 @@ export type UserCreateWithoutAccountsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -2937,6 +2972,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -3026,6 +3062,7 @@ export type UserUpdateWithoutAccountsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3099,6 +3136,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3172,6 +3210,7 @@ export type UserCreateWithoutSessionsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -3245,6 +3284,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -3334,6 +3374,7 @@ export type UserUpdateWithoutSessionsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3407,6 +3448,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3480,6 +3522,7 @@ export type UserCreateWithoutActivitiesInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -3553,6 +3596,7 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -3642,6 +3686,7 @@ export type UserUpdateWithoutActivitiesInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3715,6 +3760,7 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3788,6 +3834,7 @@ export type UserCreateWithoutDailyFitnessInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -3861,6 +3908,7 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -3950,6 +3998,7 @@ export type UserUpdateWithoutDailyFitnessInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4023,6 +4072,7 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4096,6 +4146,7 @@ export type UserCreateWithoutSupplementStacksInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -4169,6 +4220,7 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -4258,6 +4310,7 @@ export type UserUpdateWithoutSupplementStacksInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4331,6 +4384,7 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4404,6 +4458,7 @@ export type UserCreateWithoutSupplementsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -4477,6 +4532,7 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -4566,6 +4622,7 @@ export type UserUpdateWithoutSupplementsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4639,6 +4696,7 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4712,6 +4770,7 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -4785,6 +4844,7 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -4874,6 +4934,7 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4947,6 +5008,7 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -5020,6 +5082,7 @@ export type UserCreateWithoutGoalsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -5093,6 +5156,7 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -5182,6 +5246,7 @@ export type UserUpdateWithoutGoalsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -5255,6 +5320,7 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -5328,6 +5394,7 @@ export type UserCreateWithoutNotificationsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -5401,6 +5468,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -5490,6 +5558,7 @@ export type UserUpdateWithoutNotificationsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -5563,6 +5632,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -5636,6 +5706,7 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -5709,6 +5780,7 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -5798,6 +5870,7 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -5871,6 +5944,7 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -5944,6 +6018,7 @@ export type UserCreateWithoutReminderSettingsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -6017,6 +6092,7 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -6106,6 +6182,7 @@ export type UserUpdateWithoutReminderSettingsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -6179,6 +6256,7 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -6252,6 +6330,7 @@ export type UserCreateWithoutApiKeyInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -6325,6 +6404,7 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -6414,6 +6494,7 @@ export type UserUpdateWithoutApiKeyInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -6487,6 +6568,7 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -6560,6 +6642,7 @@ export type UserCreateWithoutChatMessagesInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -6633,6 +6716,7 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -6722,6 +6806,7 @@ export type UserUpdateWithoutChatMessagesInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -6795,6 +6880,7 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -6868,6 +6954,7 @@ export type UserCreateWithoutChatSessionsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -6941,6 +7028,7 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -7030,6 +7118,7 @@ export type UserUpdateWithoutChatSessionsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -7103,6 +7192,7 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -7176,6 +7266,7 @@ export type UserCreateWithoutUsageHistoryInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -7249,6 +7340,7 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -7338,6 +7430,7 @@ export type UserUpdateWithoutUsageHistoryInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -7411,6 +7504,7 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -7484,6 +7578,7 @@ export type UserCreateWithoutNutritionLogsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -7557,6 +7652,7 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -7646,6 +7742,7 @@ export type UserUpdateWithoutNutritionLogsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -7719,6 +7816,7 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -7792,6 +7890,7 @@ export type UserCreateWithoutNutritionTargetInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -7865,6 +7964,7 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -7954,6 +8054,7 @@ export type UserUpdateWithoutNutritionTargetInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -8027,6 +8128,7 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -8100,6 +8202,7 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -8173,6 +8276,7 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -8262,6 +8366,7 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -8335,6 +8440,7 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -8408,6 +8514,7 @@ export type UserCreateWithoutFastingSessionsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -8481,6 +8588,7 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -8570,6 +8678,7 @@ export type UserUpdateWithoutFastingSessionsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -8643,6 +8752,7 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -8716,6 +8826,7 @@ export type UserCreateWithoutHealthInsightsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -8789,6 +8900,7 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -8878,6 +8990,7 @@ export type UserUpdateWithoutHealthInsightsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -8951,6 +9064,7 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -9024,6 +9138,7 @@ export type UserCreateWithoutSavedMealsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -9097,6 +9212,7 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -9186,6 +9302,7 @@ export type UserUpdateWithoutSavedMealsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -9259,6 +9376,7 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -9332,6 +9450,7 @@ export type UserCreateWithoutFoodFavoritesInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -9405,6 +9524,7 @@ export type UserUncheckedCreateWithoutFoodFavoritesInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -9494,6 +9614,7 @@ export type UserUpdateWithoutFoodFavoritesInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -9567,6 +9688,7 @@ export type UserUncheckedUpdateWithoutFoodFavoritesInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -9640,6 +9762,7 @@ export type UserCreateWithoutDeviceTokensInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -9713,6 +9836,7 @@ export type UserUncheckedCreateWithoutDeviceTokensInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -9802,6 +9926,7 @@ export type UserUpdateWithoutDeviceTokensInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -9875,6 +10000,7 @@ export type UserUncheckedUpdateWithoutDeviceTokensInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -9948,6 +10074,7 @@ export type UserCreateWithoutDailyReadinessRecordsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -10021,6 +10148,7 @@ export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -10110,6 +10238,7 @@ export type UserUpdateWithoutDailyReadinessRecordsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -10183,6 +10312,7 @@ export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -10256,6 +10386,7 @@ export type UserCreateWithoutReadinessBaselinesInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -10329,6 +10460,7 @@ export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -10418,6 +10550,7 @@ export type UserUpdateWithoutReadinessBaselinesInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -10491,6 +10624,7 @@ export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -10564,6 +10698,7 @@ export type UserCreateWithoutAdaptedWorkoutsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -10637,6 +10772,7 @@ export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -10726,6 +10862,7 @@ export type UserUpdateWithoutAdaptedWorkoutsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -10799,6 +10936,7 @@ export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -10872,6 +11010,7 @@ export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -10945,6 +11084,7 @@ export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -11034,6 +11174,7 @@ export type UserUpdateWithoutWeeklyReconciliationRecordsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -11107,6 +11248,7 @@ export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -11180,6 +11322,7 @@ export type UserCreateWithoutWeekTemplatesInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -11253,6 +11396,7 @@ export type UserUncheckedCreateWithoutWeekTemplatesInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -11342,6 +11486,7 @@ export type UserUpdateWithoutWeekTemplatesInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -11415,6 +11560,7 @@ export type UserUncheckedUpdateWithoutWeekTemplatesInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -11488,6 +11634,7 @@ export type UserCreateWithoutGuidedPlanSessionsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -11561,6 +11708,7 @@ export type UserUncheckedCreateWithoutGuidedPlanSessionsInput = {
   hrZone4Max?: number
   hrZone5Max?: number
   hrZone6Max?: number
+  hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
@@ -11650,6 +11798,7 @@ export type UserUpdateWithoutGuidedPlanSessionsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -11723,6 +11872,7 @@ export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -12070,6 +12220,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   hrZone4Max?: boolean
   hrZone5Max?: boolean
   hrZone6Max?: boolean
+  hrZoneMethod?: boolean
   vdotCorrectionFactor?: boolean
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
@@ -12145,6 +12296,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   hrZone4Max?: boolean
   hrZone5Max?: boolean
   hrZone6Max?: boolean
+  hrZoneMethod?: boolean
   vdotCorrectionFactor?: boolean
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
@@ -12187,6 +12339,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   hrZone4Max?: boolean
   hrZone5Max?: boolean
   hrZone6Max?: boolean
+  hrZoneMethod?: boolean
   vdotCorrectionFactor?: boolean
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
@@ -12229,6 +12382,7 @@ export type UserSelectScalar = {
   hrZone4Max?: boolean
   hrZone5Max?: boolean
   hrZone6Max?: boolean
+  hrZoneMethod?: boolean
   vdotCorrectionFactor?: boolean
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
@@ -12245,7 +12399,7 @@ export type UserSelectScalar = {
   isAdmin?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "vdotCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
@@ -12346,6 +12500,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     hrZone4Max: number
     hrZone5Max: number
     hrZone6Max: number
+    hrZoneMethod: string | null
     vdotCorrectionFactor: number
     vdotReferenceRaceDate: Date | null
     vdotReferenceRaceTime: number | null
@@ -12840,6 +12995,7 @@ export interface UserFieldRefs {
   readonly hrZone4Max: Prisma.FieldRef<"User", 'Int'>
   readonly hrZone5Max: Prisma.FieldRef<"User", 'Int'>
   readonly hrZone6Max: Prisma.FieldRef<"User", 'Int'>
+  readonly hrZoneMethod: Prisma.FieldRef<"User", 'String'>
   readonly vdotCorrectionFactor: Prisma.FieldRef<"User", 'Float'>
   readonly vdotReferenceRaceDate: Prisma.FieldRef<"User", 'DateTime'>
   readonly vdotReferenceRaceTime: Prisma.FieldRef<"User", 'Int'>

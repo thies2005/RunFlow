@@ -153,6 +153,7 @@ export const UserScalarFieldEnum = {
   hrZone4Max: 'hrZone4Max',
   hrZone5Max: 'hrZone5Max',
   hrZone6Max: 'hrZone6Max',
+  hrZoneMethod: 'hrZoneMethod',
   vdotCorrectionFactor: 'vdotCorrectionFactor',
   vdotReferenceRaceDate: 'vdotReferenceRaceDate',
   vdotReferenceRaceTime: 'vdotReferenceRaceTime',

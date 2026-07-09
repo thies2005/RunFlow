@@ -53,6 +53,7 @@ export type ReminderSettingsMinAggregateOutputType = {
   foodDinnerTime: string | null
   workoutReminderEnabled: boolean | null
   workoutReminderMinutes: number | null
+  workoutEmailEnabled: boolean | null
   timezone: string | null
   lastSupplementMorningSent: Date | null
   lastSupplementNoonSent: Date | null
@@ -61,6 +62,7 @@ export type ReminderSettingsMinAggregateOutputType = {
   lastFoodBreakfastSent: Date | null
   lastFoodLunchSent: Date | null
   lastFoodDinnerSent: Date | null
+  lastWorkoutEmailSent: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -84,6 +86,7 @@ export type ReminderSettingsMaxAggregateOutputType = {
   foodDinnerTime: string | null
   workoutReminderEnabled: boolean | null
   workoutReminderMinutes: number | null
+  workoutEmailEnabled: boolean | null
   timezone: string | null
   lastSupplementMorningSent: Date | null
   lastSupplementNoonSent: Date | null
@@ -92,6 +95,7 @@ export type ReminderSettingsMaxAggregateOutputType = {
   lastFoodBreakfastSent: Date | null
   lastFoodLunchSent: Date | null
   lastFoodDinnerSent: Date | null
+  lastWorkoutEmailSent: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -115,6 +119,7 @@ export type ReminderSettingsCountAggregateOutputType = {
   foodDinnerTime: number
   workoutReminderEnabled: number
   workoutReminderMinutes: number
+  workoutEmailEnabled: number
   timezone: number
   lastSupplementMorningSent: number
   lastSupplementNoonSent: number
@@ -123,6 +128,7 @@ export type ReminderSettingsCountAggregateOutputType = {
   lastFoodBreakfastSent: number
   lastFoodLunchSent: number
   lastFoodDinnerSent: number
+  lastWorkoutEmailSent: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -156,6 +162,7 @@ export type ReminderSettingsMinAggregateInputType = {
   foodDinnerTime?: true
   workoutReminderEnabled?: true
   workoutReminderMinutes?: true
+  workoutEmailEnabled?: true
   timezone?: true
   lastSupplementMorningSent?: true
   lastSupplementNoonSent?: true
@@ -164,6 +171,7 @@ export type ReminderSettingsMinAggregateInputType = {
   lastFoodBreakfastSent?: true
   lastFoodLunchSent?: true
   lastFoodDinnerSent?: true
+  lastWorkoutEmailSent?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -187,6 +195,7 @@ export type ReminderSettingsMaxAggregateInputType = {
   foodDinnerTime?: true
   workoutReminderEnabled?: true
   workoutReminderMinutes?: true
+  workoutEmailEnabled?: true
   timezone?: true
   lastSupplementMorningSent?: true
   lastSupplementNoonSent?: true
@@ -195,6 +204,7 @@ export type ReminderSettingsMaxAggregateInputType = {
   lastFoodBreakfastSent?: true
   lastFoodLunchSent?: true
   lastFoodDinnerSent?: true
+  lastWorkoutEmailSent?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -218,6 +228,7 @@ export type ReminderSettingsCountAggregateInputType = {
   foodDinnerTime?: true
   workoutReminderEnabled?: true
   workoutReminderMinutes?: true
+  workoutEmailEnabled?: true
   timezone?: true
   lastSupplementMorningSent?: true
   lastSupplementNoonSent?: true
@@ -226,6 +237,7 @@ export type ReminderSettingsCountAggregateInputType = {
   lastFoodBreakfastSent?: true
   lastFoodLunchSent?: true
   lastFoodDinnerSent?: true
+  lastWorkoutEmailSent?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -336,6 +348,7 @@ export type ReminderSettingsGroupByOutputType = {
   foodDinnerTime: string
   workoutReminderEnabled: boolean
   workoutReminderMinutes: number
+  workoutEmailEnabled: boolean
   timezone: string
   lastSupplementMorningSent: Date | null
   lastSupplementNoonSent: Date | null
@@ -344,6 +357,7 @@ export type ReminderSettingsGroupByOutputType = {
   lastFoodBreakfastSent: Date | null
   lastFoodLunchSent: Date | null
   lastFoodDinnerSent: Date | null
+  lastWorkoutEmailSent: Date | null
   createdAt: Date
   updatedAt: Date
   _count: ReminderSettingsCountAggregateOutputType | null
@@ -390,6 +404,7 @@ export type ReminderSettingsWhereInput = {
   foodDinnerTime?: Prisma.StringFilter<"ReminderSettings"> | string
   workoutReminderEnabled?: Prisma.BoolFilter<"ReminderSettings"> | boolean
   workoutReminderMinutes?: Prisma.IntFilter<"ReminderSettings"> | number
+  workoutEmailEnabled?: Prisma.BoolFilter<"ReminderSettings"> | boolean
   timezone?: Prisma.StringFilter<"ReminderSettings"> | string
   lastSupplementMorningSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
   lastSupplementNoonSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
@@ -398,6 +413,7 @@ export type ReminderSettingsWhereInput = {
   lastFoodBreakfastSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
   lastFoodLunchSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
   lastFoodDinnerSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
+  lastWorkoutEmailSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ReminderSettings"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ReminderSettings"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -422,6 +438,7 @@ export type ReminderSettingsOrderByWithRelationInput = {
   foodDinnerTime?: Prisma.SortOrder
   workoutReminderEnabled?: Prisma.SortOrder
   workoutReminderMinutes?: Prisma.SortOrder
+  workoutEmailEnabled?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   lastSupplementMorningSent?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSupplementNoonSent?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -430,6 +447,7 @@ export type ReminderSettingsOrderByWithRelationInput = {
   lastFoodBreakfastSent?: Prisma.SortOrderInput | Prisma.SortOrder
   lastFoodLunchSent?: Prisma.SortOrderInput | Prisma.SortOrder
   lastFoodDinnerSent?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastWorkoutEmailSent?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -457,6 +475,7 @@ export type ReminderSettingsWhereUniqueInput = Prisma.AtLeast<{
   foodDinnerTime?: Prisma.StringFilter<"ReminderSettings"> | string
   workoutReminderEnabled?: Prisma.BoolFilter<"ReminderSettings"> | boolean
   workoutReminderMinutes?: Prisma.IntFilter<"ReminderSettings"> | number
+  workoutEmailEnabled?: Prisma.BoolFilter<"ReminderSettings"> | boolean
   timezone?: Prisma.StringFilter<"ReminderSettings"> | string
   lastSupplementMorningSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
   lastSupplementNoonSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
@@ -465,6 +484,7 @@ export type ReminderSettingsWhereUniqueInput = Prisma.AtLeast<{
   lastFoodBreakfastSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
   lastFoodLunchSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
   lastFoodDinnerSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
+  lastWorkoutEmailSent?: Prisma.DateTimeNullableFilter<"ReminderSettings"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ReminderSettings"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ReminderSettings"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -489,6 +509,7 @@ export type ReminderSettingsOrderByWithAggregationInput = {
   foodDinnerTime?: Prisma.SortOrder
   workoutReminderEnabled?: Prisma.SortOrder
   workoutReminderMinutes?: Prisma.SortOrder
+  workoutEmailEnabled?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   lastSupplementMorningSent?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSupplementNoonSent?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -497,6 +518,7 @@ export type ReminderSettingsOrderByWithAggregationInput = {
   lastFoodBreakfastSent?: Prisma.SortOrderInput | Prisma.SortOrder
   lastFoodLunchSent?: Prisma.SortOrderInput | Prisma.SortOrder
   lastFoodDinnerSent?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastWorkoutEmailSent?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ReminderSettingsCountOrderByAggregateInput
@@ -528,6 +550,7 @@ export type ReminderSettingsScalarWhereWithAggregatesInput = {
   foodDinnerTime?: Prisma.StringWithAggregatesFilter<"ReminderSettings"> | string
   workoutReminderEnabled?: Prisma.BoolWithAggregatesFilter<"ReminderSettings"> | boolean
   workoutReminderMinutes?: Prisma.IntWithAggregatesFilter<"ReminderSettings"> | number
+  workoutEmailEnabled?: Prisma.BoolWithAggregatesFilter<"ReminderSettings"> | boolean
   timezone?: Prisma.StringWithAggregatesFilter<"ReminderSettings"> | string
   lastSupplementMorningSent?: Prisma.DateTimeNullableWithAggregatesFilter<"ReminderSettings"> | Date | string | null
   lastSupplementNoonSent?: Prisma.DateTimeNullableWithAggregatesFilter<"ReminderSettings"> | Date | string | null
@@ -536,6 +559,7 @@ export type ReminderSettingsScalarWhereWithAggregatesInput = {
   lastFoodBreakfastSent?: Prisma.DateTimeNullableWithAggregatesFilter<"ReminderSettings"> | Date | string | null
   lastFoodLunchSent?: Prisma.DateTimeNullableWithAggregatesFilter<"ReminderSettings"> | Date | string | null
   lastFoodDinnerSent?: Prisma.DateTimeNullableWithAggregatesFilter<"ReminderSettings"> | Date | string | null
+  lastWorkoutEmailSent?: Prisma.DateTimeNullableWithAggregatesFilter<"ReminderSettings"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"ReminderSettings"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"ReminderSettings"> | Date | string
 }
@@ -558,6 +582,7 @@ export type ReminderSettingsCreateInput = {
   foodDinnerTime?: string
   workoutReminderEnabled?: boolean
   workoutReminderMinutes?: number
+  workoutEmailEnabled?: boolean
   timezone?: string
   lastSupplementMorningSent?: Date | string | null
   lastSupplementNoonSent?: Date | string | null
@@ -566,6 +591,7 @@ export type ReminderSettingsCreateInput = {
   lastFoodBreakfastSent?: Date | string | null
   lastFoodLunchSent?: Date | string | null
   lastFoodDinnerSent?: Date | string | null
+  lastWorkoutEmailSent?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutReminderSettingsInput
@@ -590,6 +616,7 @@ export type ReminderSettingsUncheckedCreateInput = {
   foodDinnerTime?: string
   workoutReminderEnabled?: boolean
   workoutReminderMinutes?: number
+  workoutEmailEnabled?: boolean
   timezone?: string
   lastSupplementMorningSent?: Date | string | null
   lastSupplementNoonSent?: Date | string | null
@@ -598,6 +625,7 @@ export type ReminderSettingsUncheckedCreateInput = {
   lastFoodBreakfastSent?: Date | string | null
   lastFoodLunchSent?: Date | string | null
   lastFoodDinnerSent?: Date | string | null
+  lastWorkoutEmailSent?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -620,6 +648,7 @@ export type ReminderSettingsUpdateInput = {
   foodDinnerTime?: Prisma.StringFieldUpdateOperationsInput | string
   workoutReminderEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   workoutReminderMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutEmailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   lastSupplementMorningSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSupplementNoonSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -628,6 +657,7 @@ export type ReminderSettingsUpdateInput = {
   lastFoodBreakfastSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodLunchSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodDinnerSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastWorkoutEmailSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutReminderSettingsNestedInput
@@ -652,6 +682,7 @@ export type ReminderSettingsUncheckedUpdateInput = {
   foodDinnerTime?: Prisma.StringFieldUpdateOperationsInput | string
   workoutReminderEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   workoutReminderMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutEmailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   lastSupplementMorningSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSupplementNoonSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -660,6 +691,7 @@ export type ReminderSettingsUncheckedUpdateInput = {
   lastFoodBreakfastSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodLunchSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodDinnerSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastWorkoutEmailSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -683,6 +715,7 @@ export type ReminderSettingsCreateManyInput = {
   foodDinnerTime?: string
   workoutReminderEnabled?: boolean
   workoutReminderMinutes?: number
+  workoutEmailEnabled?: boolean
   timezone?: string
   lastSupplementMorningSent?: Date | string | null
   lastSupplementNoonSent?: Date | string | null
@@ -691,6 +724,7 @@ export type ReminderSettingsCreateManyInput = {
   lastFoodBreakfastSent?: Date | string | null
   lastFoodLunchSent?: Date | string | null
   lastFoodDinnerSent?: Date | string | null
+  lastWorkoutEmailSent?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -713,6 +747,7 @@ export type ReminderSettingsUpdateManyMutationInput = {
   foodDinnerTime?: Prisma.StringFieldUpdateOperationsInput | string
   workoutReminderEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   workoutReminderMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutEmailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   lastSupplementMorningSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSupplementNoonSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -721,6 +756,7 @@ export type ReminderSettingsUpdateManyMutationInput = {
   lastFoodBreakfastSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodLunchSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodDinnerSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastWorkoutEmailSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -744,6 +780,7 @@ export type ReminderSettingsUncheckedUpdateManyInput = {
   foodDinnerTime?: Prisma.StringFieldUpdateOperationsInput | string
   workoutReminderEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   workoutReminderMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutEmailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   lastSupplementMorningSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSupplementNoonSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -752,6 +789,7 @@ export type ReminderSettingsUncheckedUpdateManyInput = {
   lastFoodBreakfastSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodLunchSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodDinnerSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastWorkoutEmailSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -780,6 +818,7 @@ export type ReminderSettingsCountOrderByAggregateInput = {
   foodDinnerTime?: Prisma.SortOrder
   workoutReminderEnabled?: Prisma.SortOrder
   workoutReminderMinutes?: Prisma.SortOrder
+  workoutEmailEnabled?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   lastSupplementMorningSent?: Prisma.SortOrder
   lastSupplementNoonSent?: Prisma.SortOrder
@@ -788,6 +827,7 @@ export type ReminderSettingsCountOrderByAggregateInput = {
   lastFoodBreakfastSent?: Prisma.SortOrder
   lastFoodLunchSent?: Prisma.SortOrder
   lastFoodDinnerSent?: Prisma.SortOrder
+  lastWorkoutEmailSent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -815,6 +855,7 @@ export type ReminderSettingsMaxOrderByAggregateInput = {
   foodDinnerTime?: Prisma.SortOrder
   workoutReminderEnabled?: Prisma.SortOrder
   workoutReminderMinutes?: Prisma.SortOrder
+  workoutEmailEnabled?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   lastSupplementMorningSent?: Prisma.SortOrder
   lastSupplementNoonSent?: Prisma.SortOrder
@@ -823,6 +864,7 @@ export type ReminderSettingsMaxOrderByAggregateInput = {
   lastFoodBreakfastSent?: Prisma.SortOrder
   lastFoodLunchSent?: Prisma.SortOrder
   lastFoodDinnerSent?: Prisma.SortOrder
+  lastWorkoutEmailSent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -846,6 +888,7 @@ export type ReminderSettingsMinOrderByAggregateInput = {
   foodDinnerTime?: Prisma.SortOrder
   workoutReminderEnabled?: Prisma.SortOrder
   workoutReminderMinutes?: Prisma.SortOrder
+  workoutEmailEnabled?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   lastSupplementMorningSent?: Prisma.SortOrder
   lastSupplementNoonSent?: Prisma.SortOrder
@@ -854,6 +897,7 @@ export type ReminderSettingsMinOrderByAggregateInput = {
   lastFoodBreakfastSent?: Prisma.SortOrder
   lastFoodLunchSent?: Prisma.SortOrder
   lastFoodDinnerSent?: Prisma.SortOrder
+  lastWorkoutEmailSent?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -912,6 +956,7 @@ export type ReminderSettingsCreateWithoutUserInput = {
   foodDinnerTime?: string
   workoutReminderEnabled?: boolean
   workoutReminderMinutes?: number
+  workoutEmailEnabled?: boolean
   timezone?: string
   lastSupplementMorningSent?: Date | string | null
   lastSupplementNoonSent?: Date | string | null
@@ -920,6 +965,7 @@ export type ReminderSettingsCreateWithoutUserInput = {
   lastFoodBreakfastSent?: Date | string | null
   lastFoodLunchSent?: Date | string | null
   lastFoodDinnerSent?: Date | string | null
+  lastWorkoutEmailSent?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -942,6 +988,7 @@ export type ReminderSettingsUncheckedCreateWithoutUserInput = {
   foodDinnerTime?: string
   workoutReminderEnabled?: boolean
   workoutReminderMinutes?: number
+  workoutEmailEnabled?: boolean
   timezone?: string
   lastSupplementMorningSent?: Date | string | null
   lastSupplementNoonSent?: Date | string | null
@@ -950,6 +997,7 @@ export type ReminderSettingsUncheckedCreateWithoutUserInput = {
   lastFoodBreakfastSent?: Date | string | null
   lastFoodLunchSent?: Date | string | null
   lastFoodDinnerSent?: Date | string | null
+  lastWorkoutEmailSent?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -988,6 +1036,7 @@ export type ReminderSettingsUpdateWithoutUserInput = {
   foodDinnerTime?: Prisma.StringFieldUpdateOperationsInput | string
   workoutReminderEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   workoutReminderMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutEmailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   lastSupplementMorningSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSupplementNoonSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -996,6 +1045,7 @@ export type ReminderSettingsUpdateWithoutUserInput = {
   lastFoodBreakfastSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodLunchSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodDinnerSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastWorkoutEmailSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1018,6 +1068,7 @@ export type ReminderSettingsUncheckedUpdateWithoutUserInput = {
   foodDinnerTime?: Prisma.StringFieldUpdateOperationsInput | string
   workoutReminderEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   workoutReminderMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutEmailEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   lastSupplementMorningSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSupplementNoonSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1026,6 +1077,7 @@ export type ReminderSettingsUncheckedUpdateWithoutUserInput = {
   lastFoodBreakfastSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodLunchSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastFoodDinnerSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastWorkoutEmailSent?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1051,6 +1103,7 @@ export type ReminderSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   foodDinnerTime?: boolean
   workoutReminderEnabled?: boolean
   workoutReminderMinutes?: boolean
+  workoutEmailEnabled?: boolean
   timezone?: boolean
   lastSupplementMorningSent?: boolean
   lastSupplementNoonSent?: boolean
@@ -1059,6 +1112,7 @@ export type ReminderSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   lastFoodBreakfastSent?: boolean
   lastFoodLunchSent?: boolean
   lastFoodDinnerSent?: boolean
+  lastWorkoutEmailSent?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1083,6 +1137,7 @@ export type ReminderSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   foodDinnerTime?: boolean
   workoutReminderEnabled?: boolean
   workoutReminderMinutes?: boolean
+  workoutEmailEnabled?: boolean
   timezone?: boolean
   lastSupplementMorningSent?: boolean
   lastSupplementNoonSent?: boolean
@@ -1091,6 +1146,7 @@ export type ReminderSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   lastFoodBreakfastSent?: boolean
   lastFoodLunchSent?: boolean
   lastFoodDinnerSent?: boolean
+  lastWorkoutEmailSent?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1115,6 +1171,7 @@ export type ReminderSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   foodDinnerTime?: boolean
   workoutReminderEnabled?: boolean
   workoutReminderMinutes?: boolean
+  workoutEmailEnabled?: boolean
   timezone?: boolean
   lastSupplementMorningSent?: boolean
   lastSupplementNoonSent?: boolean
@@ -1123,6 +1180,7 @@ export type ReminderSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   lastFoodBreakfastSent?: boolean
   lastFoodLunchSent?: boolean
   lastFoodDinnerSent?: boolean
+  lastWorkoutEmailSent?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1147,6 +1205,7 @@ export type ReminderSettingsSelectScalar = {
   foodDinnerTime?: boolean
   workoutReminderEnabled?: boolean
   workoutReminderMinutes?: boolean
+  workoutEmailEnabled?: boolean
   timezone?: boolean
   lastSupplementMorningSent?: boolean
   lastSupplementNoonSent?: boolean
@@ -1155,11 +1214,12 @@ export type ReminderSettingsSelectScalar = {
   lastFoodBreakfastSent?: boolean
   lastFoodLunchSent?: boolean
   lastFoodDinnerSent?: boolean
+  lastWorkoutEmailSent?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ReminderSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "supplementMorningEnabled" | "supplementMorningTime" | "supplementNoonEnabled" | "supplementNoonTime" | "supplementEveningEnabled" | "supplementEveningTime" | "weightReminderEnabled" | "weightReminderTime" | "foodBreakfastEnabled" | "foodBreakfastTime" | "foodLunchEnabled" | "foodLunchTime" | "foodDinnerEnabled" | "foodDinnerTime" | "workoutReminderEnabled" | "workoutReminderMinutes" | "timezone" | "lastSupplementMorningSent" | "lastSupplementNoonSent" | "lastSupplementEveningSent" | "lastWeightSent" | "lastFoodBreakfastSent" | "lastFoodLunchSent" | "lastFoodDinnerSent" | "createdAt" | "updatedAt", ExtArgs["result"]["reminderSettings"]>
+export type ReminderSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "supplementMorningEnabled" | "supplementMorningTime" | "supplementNoonEnabled" | "supplementNoonTime" | "supplementEveningEnabled" | "supplementEveningTime" | "weightReminderEnabled" | "weightReminderTime" | "foodBreakfastEnabled" | "foodBreakfastTime" | "foodLunchEnabled" | "foodLunchTime" | "foodDinnerEnabled" | "foodDinnerTime" | "workoutReminderEnabled" | "workoutReminderMinutes" | "workoutEmailEnabled" | "timezone" | "lastSupplementMorningSent" | "lastSupplementNoonSent" | "lastSupplementEveningSent" | "lastWeightSent" | "lastFoodBreakfastSent" | "lastFoodLunchSent" | "lastFoodDinnerSent" | "lastWorkoutEmailSent" | "createdAt" | "updatedAt", ExtArgs["result"]["reminderSettings"]>
 export type ReminderSettingsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -1194,6 +1254,7 @@ export type $ReminderSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     foodDinnerTime: string
     workoutReminderEnabled: boolean
     workoutReminderMinutes: number
+    workoutEmailEnabled: boolean
     timezone: string
     lastSupplementMorningSent: Date | null
     lastSupplementNoonSent: Date | null
@@ -1202,6 +1263,7 @@ export type $ReminderSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     lastFoodBreakfastSent: Date | null
     lastFoodLunchSent: Date | null
     lastFoodDinnerSent: Date | null
+    lastWorkoutEmailSent: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["reminderSettings"]>
@@ -1646,6 +1708,7 @@ export interface ReminderSettingsFieldRefs {
   readonly foodDinnerTime: Prisma.FieldRef<"ReminderSettings", 'String'>
   readonly workoutReminderEnabled: Prisma.FieldRef<"ReminderSettings", 'Boolean'>
   readonly workoutReminderMinutes: Prisma.FieldRef<"ReminderSettings", 'Int'>
+  readonly workoutEmailEnabled: Prisma.FieldRef<"ReminderSettings", 'Boolean'>
   readonly timezone: Prisma.FieldRef<"ReminderSettings", 'String'>
   readonly lastSupplementMorningSent: Prisma.FieldRef<"ReminderSettings", 'DateTime'>
   readonly lastSupplementNoonSent: Prisma.FieldRef<"ReminderSettings", 'DateTime'>
@@ -1654,6 +1717,7 @@ export interface ReminderSettingsFieldRefs {
   readonly lastFoodBreakfastSent: Prisma.FieldRef<"ReminderSettings", 'DateTime'>
   readonly lastFoodLunchSent: Prisma.FieldRef<"ReminderSettings", 'DateTime'>
   readonly lastFoodDinnerSent: Prisma.FieldRef<"ReminderSettings", 'DateTime'>
+  readonly lastWorkoutEmailSent: Prisma.FieldRef<"ReminderSettings", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"ReminderSettings", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"ReminderSettings", 'DateTime'>
 }

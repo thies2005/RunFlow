@@ -52,7 +52,8 @@ export async function GET(request: NextRequest) {
             },
             orderBy: {
                 date: 'asc'
-            }
+            },
+            take: 1000,
         });
 
         // Format dates consistently for the frontend charts

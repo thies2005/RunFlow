@@ -187,6 +187,7 @@ export async function GET(req: NextRequest) {
                 hrZone7Time: true,
             },
             orderBy: { startDate: 'desc' },
+            take: 2000,
         });
 
         // 4. Sync Status

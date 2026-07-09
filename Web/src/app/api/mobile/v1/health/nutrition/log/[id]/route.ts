@@ -50,7 +50,10 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
         const { id } = await params;
         const body = await request.json();
         const quantity = Number(body.quantity);
-        const mealType = typeof body.mealType === 'string' ? body.mealType : 'snack';
+        const VALID_MEAL_TYPES = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'];
+        const mealType = typeof body.mealType === 'string' && VALID_MEAL_TYPES.includes(body.mealType)
+            ? body.mealType
+            : 'SNACK';
 
         if (!Number.isFinite(quantity) || quantity <= 0) {
             return errorResponses.badRequest('Quantity must be greater than zero');

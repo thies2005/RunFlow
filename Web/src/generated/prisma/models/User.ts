@@ -42,6 +42,7 @@ export type UserAvgAggregateOutputType = {
   vdotCorrectionFactor: number | null
   vdotReferenceRaceTime: number | null
   autoRevolvingVo2max: number | null
+  tokenVersion: number | null
 }
 
 export type UserSumAggregateOutputType = {
@@ -60,6 +61,7 @@ export type UserSumAggregateOutputType = {
   vdotCorrectionFactor: number | null
   vdotReferenceRaceTime: number | null
   autoRevolvingVo2max: number | null
+  tokenVersion: number | null
 }
 
 export type UserMinAggregateOutputType = {
@@ -103,6 +105,7 @@ export type UserMinAggregateOutputType = {
   updatedAt: Date | null
   healthTrackingEnabled: boolean | null
   isAdmin: boolean | null
+  tokenVersion: number | null
 }
 
 export type UserMaxAggregateOutputType = {
@@ -146,6 +149,7 @@ export type UserMaxAggregateOutputType = {
   updatedAt: Date | null
   healthTrackingEnabled: boolean | null
   isAdmin: boolean | null
+  tokenVersion: number | null
 }
 
 export type UserCountAggregateOutputType = {
@@ -189,6 +193,7 @@ export type UserCountAggregateOutputType = {
   updatedAt: number
   healthTrackingEnabled: number
   isAdmin: number
+  tokenVersion: number
   _all: number
 }
 
@@ -209,6 +214,7 @@ export type UserAvgAggregateInputType = {
   vdotCorrectionFactor?: true
   vdotReferenceRaceTime?: true
   autoRevolvingVo2max?: true
+  tokenVersion?: true
 }
 
 export type UserSumAggregateInputType = {
@@ -227,6 +233,7 @@ export type UserSumAggregateInputType = {
   vdotCorrectionFactor?: true
   vdotReferenceRaceTime?: true
   autoRevolvingVo2max?: true
+  tokenVersion?: true
 }
 
 export type UserMinAggregateInputType = {
@@ -270,6 +277,7 @@ export type UserMinAggregateInputType = {
   updatedAt?: true
   healthTrackingEnabled?: true
   isAdmin?: true
+  tokenVersion?: true
 }
 
 export type UserMaxAggregateInputType = {
@@ -313,6 +321,7 @@ export type UserMaxAggregateInputType = {
   updatedAt?: true
   healthTrackingEnabled?: true
   isAdmin?: true
+  tokenVersion?: true
 }
 
 export type UserCountAggregateInputType = {
@@ -356,6 +365,7 @@ export type UserCountAggregateInputType = {
   updatedAt?: true
   healthTrackingEnabled?: true
   isAdmin?: true
+  tokenVersion?: true
   _all?: true
 }
 
@@ -486,6 +496,7 @@ export type UserGroupByOutputType = {
   updatedAt: Date
   healthTrackingEnabled: boolean
   isAdmin: boolean
+  tokenVersion: number
   _count: UserCountAggregateOutputType | null
   _avg: UserAvgAggregateOutputType | null
   _sum: UserSumAggregateOutputType | null
@@ -552,6 +563,7 @@ export type UserWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   healthTrackingEnabled?: Prisma.BoolFilter<"User"> | boolean
   isAdmin?: Prisma.BoolFilter<"User"> | boolean
+  tokenVersion?: Prisma.IntFilter<"User"> | number
   accounts?: Prisma.AccountListRelationFilter
   activities?: Prisma.ActivityListRelationFilter
   usageHistory?: Prisma.AiUsageHistoryListRelationFilter
@@ -627,6 +639,7 @@ export type UserOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   healthTrackingEnabled?: Prisma.SortOrder
   isAdmin?: Prisma.SortOrder
+  tokenVersion?: Prisma.SortOrder
   accounts?: Prisma.AccountOrderByRelationAggregateInput
   activities?: Prisma.ActivityOrderByRelationAggregateInput
   usageHistory?: Prisma.AiUsageHistoryOrderByRelationAggregateInput
@@ -705,6 +718,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   healthTrackingEnabled?: Prisma.BoolFilter<"User"> | boolean
   isAdmin?: Prisma.BoolFilter<"User"> | boolean
+  tokenVersion?: Prisma.IntFilter<"User"> | number
   accounts?: Prisma.AccountListRelationFilter
   activities?: Prisma.ActivityListRelationFilter
   usageHistory?: Prisma.AiUsageHistoryListRelationFilter
@@ -780,6 +794,7 @@ export type UserOrderByWithAggregationInput = {
   updatedAt?: Prisma.SortOrder
   healthTrackingEnabled?: Prisma.SortOrder
   isAdmin?: Prisma.SortOrder
+  tokenVersion?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _avg?: Prisma.UserAvgOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
@@ -831,6 +846,7 @@ export type UserScalarWhereWithAggregatesInput = {
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   healthTrackingEnabled?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   isAdmin?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  tokenVersion?: Prisma.IntWithAggregatesFilter<"User"> | number
 }
 
 export type UserCreateInput = {
@@ -874,6 +890,7 @@ export type UserCreateInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -949,6 +966,7 @@ export type UserUncheckedCreateInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -1024,6 +1042,7 @@ export type UserUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -1099,6 +1118,7 @@ export type UserUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -1174,6 +1194,7 @@ export type UserCreateManyInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
 }
 
 export type UserUpdateManyMutationInput = {
@@ -1217,6 +1238,7 @@ export type UserUpdateManyMutationInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type UserUncheckedUpdateManyInput = {
@@ -1260,6 +1282,7 @@ export type UserUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type UserCountOrderByAggregateInput = {
@@ -1303,6 +1326,7 @@ export type UserCountOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
   healthTrackingEnabled?: Prisma.SortOrder
   isAdmin?: Prisma.SortOrder
+  tokenVersion?: Prisma.SortOrder
 }
 
 export type UserAvgOrderByAggregateInput = {
@@ -1321,6 +1345,7 @@ export type UserAvgOrderByAggregateInput = {
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   autoRevolvingVo2max?: Prisma.SortOrder
+  tokenVersion?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -1364,6 +1389,7 @@ export type UserMaxOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
   healthTrackingEnabled?: Prisma.SortOrder
   isAdmin?: Prisma.SortOrder
+  tokenVersion?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
@@ -1407,6 +1433,7 @@ export type UserMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
   healthTrackingEnabled?: Prisma.SortOrder
   isAdmin?: Prisma.SortOrder
+  tokenVersion?: Prisma.SortOrder
 }
 
 export type UserSumOrderByAggregateInput = {
@@ -1425,6 +1452,7 @@ export type UserSumOrderByAggregateInput = {
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   autoRevolvingVo2max?: Prisma.SortOrder
+  tokenVersion?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -1977,6 +2005,7 @@ export type UserCreateWithoutConsentsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -2051,6 +2080,7 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -2141,6 +2171,7 @@ export type UserUpdateWithoutConsentsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -2215,6 +2246,7 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -2289,6 +2321,7 @@ export type UserCreateWithoutAiSettingsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -2363,6 +2396,7 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -2453,6 +2487,7 @@ export type UserUpdateWithoutAiSettingsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -2527,6 +2562,7 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -2601,6 +2637,7 @@ export type UserCreateWithoutFeedbackJobsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -2675,6 +2712,7 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -2765,6 +2803,7 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -2839,6 +2878,7 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -2913,6 +2953,7 @@ export type UserCreateWithoutAccountsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
@@ -2987,6 +3028,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
@@ -3077,6 +3119,7 @@ export type UserUpdateWithoutAccountsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
@@ -3151,6 +3194,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
@@ -3225,6 +3269,7 @@ export type UserCreateWithoutSessionsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -3299,6 +3344,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -3389,6 +3435,7 @@ export type UserUpdateWithoutSessionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -3463,6 +3510,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -3537,6 +3585,7 @@ export type UserCreateWithoutActivitiesInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
@@ -3611,6 +3660,7 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
@@ -3701,6 +3751,7 @@ export type UserUpdateWithoutActivitiesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
@@ -3775,6 +3826,7 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
@@ -3849,6 +3901,7 @@ export type UserCreateWithoutDailyFitnessInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -3923,6 +3976,7 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -4013,6 +4067,7 @@ export type UserUpdateWithoutDailyFitnessInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -4087,6 +4142,7 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -4161,6 +4217,7 @@ export type UserCreateWithoutSupplementStacksInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -4235,6 +4292,7 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -4325,6 +4383,7 @@ export type UserUpdateWithoutSupplementStacksInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -4399,6 +4458,7 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -4473,6 +4533,7 @@ export type UserCreateWithoutSupplementsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -4547,6 +4608,7 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -4637,6 +4699,7 @@ export type UserUpdateWithoutSupplementsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -4711,6 +4774,7 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -4785,6 +4849,7 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -4859,6 +4924,7 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -4949,6 +5015,7 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -5023,6 +5090,7 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -5097,6 +5165,7 @@ export type UserCreateWithoutGoalsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -5171,6 +5240,7 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -5261,6 +5331,7 @@ export type UserUpdateWithoutGoalsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -5335,6 +5406,7 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -5409,6 +5481,7 @@ export type UserCreateWithoutNotificationsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -5483,6 +5556,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -5573,6 +5647,7 @@ export type UserUpdateWithoutNotificationsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -5647,6 +5722,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -5721,6 +5797,7 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -5795,6 +5872,7 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -5885,6 +5963,7 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -5959,6 +6038,7 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -6033,6 +6113,7 @@ export type UserCreateWithoutReminderSettingsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -6107,6 +6188,7 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -6197,6 +6279,7 @@ export type UserUpdateWithoutReminderSettingsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -6271,6 +6354,7 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -6345,6 +6429,7 @@ export type UserCreateWithoutApiKeyInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -6419,6 +6504,7 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -6509,6 +6595,7 @@ export type UserUpdateWithoutApiKeyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -6583,6 +6670,7 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -6657,6 +6745,7 @@ export type UserCreateWithoutChatMessagesInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -6731,6 +6820,7 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -6821,6 +6911,7 @@ export type UserUpdateWithoutChatMessagesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -6895,6 +6986,7 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -6969,6 +7061,7 @@ export type UserCreateWithoutChatSessionsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -7043,6 +7136,7 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -7133,6 +7227,7 @@ export type UserUpdateWithoutChatSessionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -7207,6 +7302,7 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -7281,6 +7377,7 @@ export type UserCreateWithoutUsageHistoryInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
@@ -7355,6 +7452,7 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
@@ -7445,6 +7543,7 @@ export type UserUpdateWithoutUsageHistoryInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
@@ -7519,6 +7618,7 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
@@ -7593,6 +7693,7 @@ export type UserCreateWithoutNutritionLogsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -7667,6 +7768,7 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -7757,6 +7859,7 @@ export type UserUpdateWithoutNutritionLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -7831,6 +7934,7 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -7905,6 +8009,7 @@ export type UserCreateWithoutNutritionTargetInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -7979,6 +8084,7 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -8069,6 +8175,7 @@ export type UserUpdateWithoutNutritionTargetInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -8143,6 +8250,7 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -8217,6 +8325,7 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -8291,6 +8400,7 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -8381,6 +8491,7 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -8455,6 +8566,7 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -8529,6 +8641,7 @@ export type UserCreateWithoutFastingSessionsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -8603,6 +8716,7 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -8693,6 +8807,7 @@ export type UserUpdateWithoutFastingSessionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -8767,6 +8882,7 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -8841,6 +8957,7 @@ export type UserCreateWithoutHealthInsightsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -8915,6 +9032,7 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -9005,6 +9123,7 @@ export type UserUpdateWithoutHealthInsightsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -9079,6 +9198,7 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -9153,6 +9273,7 @@ export type UserCreateWithoutSavedMealsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -9227,6 +9348,7 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -9317,6 +9439,7 @@ export type UserUpdateWithoutSavedMealsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -9391,6 +9514,7 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -9465,6 +9589,7 @@ export type UserCreateWithoutFoodFavoritesInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -9539,6 +9664,7 @@ export type UserUncheckedCreateWithoutFoodFavoritesInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -9629,6 +9755,7 @@ export type UserUpdateWithoutFoodFavoritesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -9703,6 +9830,7 @@ export type UserUncheckedUpdateWithoutFoodFavoritesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -9777,6 +9905,7 @@ export type UserCreateWithoutDeviceTokensInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -9851,6 +9980,7 @@ export type UserUncheckedCreateWithoutDeviceTokensInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -9941,6 +10071,7 @@ export type UserUpdateWithoutDeviceTokensInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -10015,6 +10146,7 @@ export type UserUncheckedUpdateWithoutDeviceTokensInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -10089,6 +10221,7 @@ export type UserCreateWithoutDailyReadinessRecordsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -10163,6 +10296,7 @@ export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -10253,6 +10387,7 @@ export type UserUpdateWithoutDailyReadinessRecordsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -10327,6 +10462,7 @@ export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -10401,6 +10537,7 @@ export type UserCreateWithoutReadinessBaselinesInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -10475,6 +10612,7 @@ export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -10565,6 +10703,7 @@ export type UserUpdateWithoutReadinessBaselinesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -10639,6 +10778,7 @@ export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -10713,6 +10853,7 @@ export type UserCreateWithoutAdaptedWorkoutsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -10787,6 +10928,7 @@ export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -10877,6 +11019,7 @@ export type UserUpdateWithoutAdaptedWorkoutsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -10951,6 +11094,7 @@ export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -11025,6 +11169,7 @@ export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -11099,6 +11244,7 @@ export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -11189,6 +11335,7 @@ export type UserUpdateWithoutWeeklyReconciliationRecordsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -11263,6 +11410,7 @@ export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -11337,6 +11485,7 @@ export type UserCreateWithoutWeekTemplatesInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -11411,6 +11560,7 @@ export type UserUncheckedCreateWithoutWeekTemplatesInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -11501,6 +11651,7 @@ export type UserUpdateWithoutWeekTemplatesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -11575,6 +11726,7 @@ export type UserUncheckedUpdateWithoutWeekTemplatesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -11649,6 +11801,7 @@ export type UserCreateWithoutGuidedPlanSessionsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -11723,6 +11876,7 @@ export type UserUncheckedCreateWithoutGuidedPlanSessionsInput = {
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: number
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -11813,6 +11967,7 @@ export type UserUpdateWithoutGuidedPlanSessionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -11887,6 +12042,7 @@ export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -12235,6 +12391,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   updatedAt?: boolean
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: boolean
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
   usageHistory?: boolean | Prisma.User$usageHistoryArgs<ExtArgs>
@@ -12311,6 +12468,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   updatedAt?: boolean
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -12354,6 +12512,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   updatedAt?: boolean
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: boolean
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -12397,9 +12556,10 @@ export type UserSelectScalar = {
   updatedAt?: boolean
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
+  tokenVersion?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin" | "tokenVersion", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
@@ -12515,6 +12675,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     updatedAt: Date
     healthTrackingEnabled: boolean
     isAdmin: boolean
+    tokenVersion: number
   }, ExtArgs["result"]["user"]>
   composites: {}
 }
@@ -13010,6 +13171,7 @@ export interface UserFieldRefs {
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly healthTrackingEnabled: Prisma.FieldRef<"User", 'Boolean'>
   readonly isAdmin: Prisma.FieldRef<"User", 'Boolean'>
+  readonly tokenVersion: Prisma.FieldRef<"User", 'Int'>
 }
     
 

@@ -103,7 +103,230 @@ export async function GET() {
                         }
                     },
                     orderBy: { createdAt: 'desc' }
-                }
+                },
+                nutritionLogs: {
+                    select: {
+                        date: true,
+                        mealType: true,
+                        quantity: true,
+                        calories: true,
+                        protein: true,
+                        carbs: true,
+                        fats: true,
+                        foodItem: {
+                            select: {
+                                name: true,
+                                calories: true,
+                                protein: true,
+                                carbs: true,
+                                fats: true,
+                                barcode: true,
+                            },
+                        },
+                    },
+                    orderBy: { date: 'desc' },
+                },
+                bodyMeasurements: {
+                    select: {
+                        date: true,
+                        weight: true,
+                        bodyFat: true,
+                        muscleMass: true,
+                        chest: true,
+                        waist: true,
+                        hips: true,
+                        arms: true,
+                        thighs: true,
+                    },
+                    orderBy: { date: 'desc' },
+                },
+                fastingSessions: {
+                    select: {
+                        startTime: true,
+                        endTime: true,
+                    },
+                    orderBy: { startTime: 'desc' },
+                },
+                healthInsights: {
+                    select: {
+                        date: true,
+                        content: true,
+                    },
+                    orderBy: { date: 'desc' },
+                },
+                dailyReadinessRecords: {
+                    select: {
+                        date: true,
+                        compositeScore: true,
+                        state: true,
+                        confidence: true,
+                        computedAt: true,
+                    },
+                    orderBy: { date: 'desc' },
+                },
+                readinessBaselines: {
+                    select: {
+                        rhrMedian30Day: true,
+                        sleepAverage28Day: true,
+                        lastUpdated: true,
+                    },
+                },
+                deviceTokens: {
+                    select: {
+                        platform: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    },
+                },
+                pushSubscriptions: {
+                    select: {
+                        endpoint: true,
+                        createdAt: true,
+                    },
+                },
+                savedMeals: {
+                    select: {
+                        name: true,
+                        totalCalories: true,
+                        totalProtein: true,
+                        totalCarbs: true,
+                        totalFats: true,
+                        items: {
+                            select: {
+                                name: true,
+                                estimatedGrams: true,
+                                calories: true,
+                                protein: true,
+                                carbs: true,
+                                fats: true,
+                            },
+                        },
+                    },
+                    orderBy: { createdAt: 'desc' },
+                },
+                foodFavorites: {
+                    select: {
+                        foodName: true,
+                        brand: true,
+                        calories: true,
+                        protein: true,
+                        carbs: true,
+                        fats: true,
+                        servingSize: true,
+                        barcode: true,
+                    },
+                    orderBy: { createdAt: 'desc' },
+                },
+                reminderSettings: true,
+                nutritionTarget: {
+                    select: {
+                        dailyCalories: true,
+                        proteinPercent: true,
+                        carbsPercent: true,
+                        fatsPercent: true,
+                        exerciseCalorieFactor: true,
+                        waterGoalMl: true,
+                        waterTrackingEnabled: true,
+                        exerciseCalorieSource: true,
+                        fastingEnabled: true,
+                        fastingGoalHours: true,
+                        aiInsightProvider: true,
+                    },
+                },
+                aiSettings: {
+                    select: {
+                        aiEnabled: true,
+                        usageTier: true,
+                        messagesUsedToday: true,
+                        messagesUsedThisMonth: true,
+                        lastUsageReset: true,
+                    },
+                },
+                consents: {
+                    select: {
+                        consentType: true,
+                        action: true,
+                        policyVersion: true,
+                        createdAt: true,
+                    },
+                    orderBy: { createdAt: 'desc' },
+                },
+                weekTemplates: {
+                    select: {
+                        name: true,
+                        description: true,
+                        days: true,
+                        isDefault: true,
+                        createdAt: true,
+                    },
+                    orderBy: { createdAt: 'desc' },
+                },
+                guidedPlanSessions: {
+                    select: {
+                        currentStep: true,
+                        responses: true,
+                        aiRecommendation: true,
+                        isComplete: true,
+                        createdAt: true,
+                    },
+                    orderBy: { createdAt: 'desc' },
+                },
+                notifications: {
+                    select: {
+                        message: true,
+                        read: true,
+                        createdAt: true,
+                    },
+                    orderBy: { createdAt: 'desc' },
+                },
+                feedbackJobs: {
+                    select: {
+                        status: true,
+                        priority: true,
+                        createdAt: true,
+                        completedAt: true,
+                    },
+                    orderBy: { createdAt: 'desc' },
+                },
+                adaptedWorkouts: {
+                    select: {
+                        date: true,
+                        originalType: true,
+                        adaptedType: true,
+                        adaptationType: true,
+                        originalTargetDistance: true,
+                        adaptedTargetDistance: true,
+                        originalTargetDuration: true,
+                        adaptedTargetDuration: true,
+                        reason: true,
+                        readinessScore: true,
+                        readinessState: true,
+                        isAccepted: true,
+                    },
+                    orderBy: { date: 'desc' },
+                },
+                weeklyReconciliationRecords: {
+                    select: {
+                        weekStartDate: true,
+                        plannedLoad: true,
+                        actualLoad: true,
+                        adaptedLoad: true,
+                        deficitPercent: true,
+                        surplusPercent: true,
+                        adjustmentDescription: true,
+                        isApplied: true,
+                    },
+                    orderBy: { weekStartDate: 'desc' },
+                },
+                apiKey: {
+                    select: {
+                        name: true,
+                        keyPrefix: true,
+                        createdAt: true,
+                        lastUsedAt: true,
+                        expiresAt: true,
+                    },
+                },
             },
         });
 
@@ -115,11 +338,17 @@ export async function GET() {
         const {
             passwordHash,
             isAdmin,
+            stravaAccessToken,
+            stravaRefreshToken,
+            stravaTokenExpiry,
             ...safeUserData
         } = user;
 
         void passwordHash;
         void isAdmin;
+        void stravaAccessToken;
+        void stravaRefreshToken;
+        void stravaTokenExpiry;
 
         const dateStr = new Date().toISOString().split('T')[0];
         const filename = `runflow-data-export-${dateStr}.json`;

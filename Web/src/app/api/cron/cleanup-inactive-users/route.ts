@@ -1,14 +1,32 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logging/logger';
+import crypto from 'crypto';
+
+/**
+ * Constant-time comparison of a Bearer Authorization header against the secret.
+ * Fails closed (returns false) if the secret is unset or the header is missing.
+ */
+function safeCompareBearer(authHeader: string | null, secret: string | null | undefined): boolean {
+    if (!secret) return false; // fail closed when secret unset
+    if (!authHeader) return false;
+    const expected = `Bearer ${secret}`;
+    const a = Buffer.from(authHeader);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length) return false;
+    try {
+        return crypto.timingSafeEqual(a, b);
+    } catch {
+        return false;
+    }
+}
 
 export async function GET(request: Request) {
     const cronSecret = process.env.CRON_SECRET;
     if (!cronSecret) {
         return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
     }
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    if (!safeCompareBearer(request.headers.get('authorization'), cronSecret)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

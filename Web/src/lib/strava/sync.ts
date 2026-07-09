@@ -312,10 +312,18 @@ export async function syncUserActivities(userId: string, range?: string): Promis
             await updateUserProfile(userId, { hrMax: currentHrMax });
         }
 
-        await updateSyncStatus(userId, {
-            lastSyncAt: new Date(),
-            syncInProgress: false,
-        });
+        // Only advance the sync cursor when every activity write succeeded.
+        // If any write failed (errors > 0), leave lastSyncAt unchanged so the
+        // failed activities are retried on the next sync rather than skipped.
+        if (errors > 0) {
+            logger.warn('Sync completed with errors; not advancing lastSyncAt so failed activities are retried', { userId, errors });
+            await updateSyncStatus(userId, { syncInProgress: false });
+        } else {
+            await updateSyncStatus(userId, {
+                lastSyncAt: new Date(),
+                syncInProgress: false,
+            });
+        }
 
         if (modifiedActivities.length > 0) {
             await calculateAndSaveFitnessMetrics(userId, modifiedActivities);

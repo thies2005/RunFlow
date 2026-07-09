@@ -3,8 +3,7 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { decryptToken } from '@/lib/crypto';
-import { validateBaseUrl, generateCompletion, type ChatMessage, type AiConfig } from '@/lib/ai/providers';
+import { validateBaseUrl, generateCompletion, tryDecryptAiKey, type ChatMessage, type AiConfig } from '@/lib/ai/providers';
 
 async function checkPremium(userId: string) {
     const user = await prisma.user.findUnique({
@@ -31,7 +30,7 @@ async function getPlanBuilderConfig(): Promise<{ config: AiConfig; maxTokens: nu
     }
 
     const provider = settings.activeProvider;
-    const decryptedKey = decryptToken(provider.apiKey);
+    const decryptedKey = tryDecryptAiKey(provider.apiKey, 'activeProvider', provider.id);
     if (!decryptedKey) return null;
 
     const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);

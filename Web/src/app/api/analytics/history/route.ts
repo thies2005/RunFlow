@@ -235,6 +235,7 @@ export async function GET(request: Request) {
                 hasHeartrate: true,
             },
             orderBy: { startDate: 'asc' },
+            take: 2000,
         });
 
         // Filter for View (Volume/Zones)

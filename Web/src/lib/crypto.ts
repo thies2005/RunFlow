@@ -69,9 +69,11 @@ export function decryptToken(encryptedToken: string): string {
     try {
         const combined = Buffer.from(encryptedToken, 'base64');
 
-        // Migration fallback: if data is too short to be encrypted, assume plaintext
+        // Fail closed: data shorter than IV + auth tag cannot be a value
+        // produced by encryptToken(). Treating such values as plaintext would
+        // silently expose plaintext-at-rest data; throw instead.
         if (combined.length < IV_LENGTH + AUTH_TAG_LENGTH) {
-            return encryptedToken;
+            throw new Error('Token decryption failed: value is too short to be encrypted (possible plaintext-at-rest data). Re-encrypt this token or run the migration.');
         }
 
         const iv = combined.subarray(0, IV_LENGTH);

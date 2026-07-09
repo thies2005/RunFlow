@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useTheme } from 'next-themes';
 import { toast, Toaster } from 'sonner';
 
 // Polling configuration
@@ -17,6 +18,7 @@ export function useNotifications() {
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const { data: session } = useSession();
+    const { resolvedTheme } = useTheme();
     const [isMounted, setIsMounted] = useState(false);
     const retryCountRef = useRef(0);
     const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -101,7 +103,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return (
         <>
             {children}
-            {isMounted ? <Toaster position="top-right" richColors theme="dark" /> : null}
+            {isMounted ? <Toaster position="top-right" richColors theme={resolvedTheme === 'dark' ? 'dark' : 'light'} /> : null}
         </>
     );
 }

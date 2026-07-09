@@ -1,8 +1,29 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@/generated/prisma/client';
+import { auth } from '@/auth';
+import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function GET(request: Request) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limiting (30 searches/minute per client)
+    const clientId = getClientIdentifier(request);
+    const rateLimitResult = await checkRateLimitAsync(clientId, {
+        limit: 30,
+        windowSeconds: 60,
+        prefix: 'nutrition-search',
+    });
+    if (!rateLimitResult.allowed) {
+        return NextResponse.json(
+            { error: 'Too many requests. Please try again later.' },
+            { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+        );
+    }
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
 

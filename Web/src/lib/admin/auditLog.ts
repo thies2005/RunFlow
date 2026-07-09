@@ -10,6 +10,7 @@ type AdminAction =
     | 'TOGGLE_AI_ACCESS'
     | 'MODIFY_AI_SETTINGS'
     | 'MODIFY_PROVIDERS'
+    | 'MODIFY_WORKOUT_TEMPLATES'
     | 'VIEW_BACKUPS'
     | 'UPLOAD_BACKUP'
     | 'DOWNLOAD_BACKUP'
@@ -21,7 +22,7 @@ type AdminAction =
     | 'IMPORT_MIGRATION_BUNDLE';
 
 interface AuditLogTarget {
-    type: 'USER' | 'BACKUP' | 'SETTINGS' | 'SYSTEM' | 'PROVIDER';
+    type: 'USER' | 'BACKUP' | 'SETTINGS' | 'SYSTEM' | 'PROVIDER' | 'WORKOUT_TEMPLATE';
     id?: string;
 }
 

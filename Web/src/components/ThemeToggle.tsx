@@ -27,6 +27,7 @@ export function ThemeToggle() {
             onClick={() => setTheme(nextTheme)}
             className="p-2 text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors flex items-center gap-2"
             title={`Current: ${theme}. Click to switch to ${nextTheme}.`}
+            aria-label={`Switch to ${nextTheme} theme`}
         >
             {theme === 'light' && <Sun className="w-5 h-5" />}
             {theme === 'dark' && <Moon className="w-5 h-5" />}

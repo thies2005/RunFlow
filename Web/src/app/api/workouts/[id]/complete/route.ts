@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
+import { adaptPlanAfterCompletion } from '@/lib/plans/adapt';
+import { logger } from '@/lib/logging/logger';
 
 export async function POST(
     request: Request,
@@ -26,6 +28,20 @@ export async function POST(
             where: { id },
             data: { isCompleted: true, completedAt: new Date() }
         });
+
+        // Adapt the plan in the background (fire-and-forget). A failure here
+        // must never break the workout-completion response. Adaptivity is
+        // conservative: it only re-derives paces for future, incomplete
+        // workouts when the runner's effective VDOT has shifted meaningfully.
+        if (workout.goalId) {
+            void adaptPlanAfterCompletion(workout.goalId, session.user.id).catch((err) => {
+                logger.error('Plan adaptivity failed after workout completion', {
+                    goalId: workout.goalId ?? undefined,
+                    workoutId: id,
+                    error: err instanceof Error ? err.message : String(err),
+                });
+            });
+        }
 
         return NextResponse.json(updated);
     } catch (error) {

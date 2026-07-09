@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
             fs.mkdirSync(BACKUPS_DIR, { recursive: true });
         }
 
-        // Create buffer and write file
+        // Create buffer
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const filePath = path.join(BACKUPS_DIR, sanitizedFilename);
@@ -80,6 +80,47 @@ export async function POST(request: NextRequest) {
                 { error: 'Invalid filename' },
                 { status: 400 }
             );
+        }
+
+        // Hard size cap: reject anything over 100MB. If a partial file somehow
+        // exists at the target path (e.g. from an interrupted prior attempt),
+        // remove it before bailing out.
+        const MAX_BACKUP_BYTES = 100 * 1024 * 1024;
+        if (buffer.length > MAX_BACKUP_BYTES) {
+            try {
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            } catch {
+                // Best-effort cleanup; the rejection below is the important part.
+            }
+            return NextResponse.json(
+                { error: 'Backup file too large (max 100MB)' },
+                { status: 413 }
+            );
+        }
+
+        // Validate actual content via magic bytes / header sniffing, not just the
+        // file extension. .sql.gz must start with the gzip magic bytes; plain
+        // .sql must start with typical SQL header text in the first 2KB.
+        const isGz = sanitizedFilename.toLowerCase().endsWith('.sql.gz');
+        if (isGz) {
+            if (buffer.length < 2 || buffer[0] !== 0x1f || buffer[1] !== 0x8b) {
+                return NextResponse.json(
+                    { error: 'Invalid backup file format' },
+                    { status: 415 }
+                );
+            }
+        } else {
+            // Plain .sql
+            const header = buffer.subarray(0, 2048).toString('utf8');
+            const sqlHeaderPattern = /^(--|\/\*|CREATE|COPY|INSERT|SET|SELECT|PostgreSQL)/m;
+            if (!sqlHeaderPattern.test(header)) {
+                return NextResponse.json(
+                    { error: 'Invalid backup file format' },
+                    { status: 415 }
+                );
+            }
         }
 
         fs.writeFileSync(filePath, buffer);

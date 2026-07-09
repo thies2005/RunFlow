@@ -56,7 +56,7 @@ const authConfig = {
         StravaProvider({
             clientId: process.env.STRAVA_CLIENT_ID!,
             clientSecret: process.env.STRAVA_CLIENT_SECRET!,
-            allowDangerousEmailAccountLinking: true,
+            allowDangerousEmailAccountLinking: false,
             authorization: {
                 params: {
                     scope: 'read,activity:read_all,profile:read_all',

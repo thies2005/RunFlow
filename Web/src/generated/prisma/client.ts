@@ -312,6 +312,11 @@ export type PlanSnapshot = Prisma.PlanSnapshotModel
  */
 export type WeekTemplate = Prisma.WeekTemplateModel
 /**
+ * Model WorkoutTemplate
+ * 
+ */
+export type WorkoutTemplate = Prisma.WorkoutTemplateModel
+/**
  * Model IntervalProgression
  * 
  */

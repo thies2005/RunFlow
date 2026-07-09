@@ -94,6 +94,7 @@ export async function GET(req: Request) {
                 workouts: {
                     where: Object.keys(workoutWhere).length > 0 ? workoutWhere : undefined,
                     orderBy: { scheduledDate: 'asc' },
+                    take: 400,
                     include: {
                         linkedActivity: {
                             select: activitySelect

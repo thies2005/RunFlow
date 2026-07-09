@@ -184,21 +184,25 @@ export async function middleware(request: NextRequest) {
         !request.nextUrl.pathname.startsWith('/api/webhooks') &&
         !request.nextUrl.pathname.startsWith('/api/health') &&
         !request.nextUrl.pathname.startsWith('/api/monitoring')) {
-        const trackingSecret = process.env.CRON_SECRET || 'internal-tracking';
-        const origin = request.nextUrl.origin;
-        fetch(`${origin}/api/monitoring/track`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${trackingSecret}`,
-            },
-            body: JSON.stringify({
-                routePath: request.nextUrl.pathname,
-                method: request.method,
-                statusCode: response.status,
-                responseTime: duration,
-            }),
-        }).catch(() => {});
+        // Fail closed: only self-track when CRON_SECRET is configured.
+        // The /api/monitoring/track endpoint rejects requests when the secret is unset.
+        const trackingSecret = process.env.CRON_SECRET;
+        if (trackingSecret) {
+            const origin = request.nextUrl.origin;
+            fetch(`${origin}/api/monitoring/track`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${trackingSecret}`,
+                },
+                body: JSON.stringify({
+                    routePath: request.nextUrl.pathname,
+                    method: request.method,
+                    statusCode: response.status,
+                    responseTime: duration,
+                }),
+            }).catch(() => {});
+        }
     }
 
     return addCorsHeaders(response, request);

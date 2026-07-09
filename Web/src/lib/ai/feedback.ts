@@ -9,6 +9,7 @@ import {
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
 import { logger } from '@/lib/logging/logger';
+import { fenceUntrusted } from '@/lib/ai/prompts';
 
 async function canAutoGenerateFeedback(userId: string): Promise<boolean> {
     const aiSettings = await prisma.userAiSettings.findUnique({
@@ -142,7 +143,7 @@ export async function enqueueFeedbackJobsForUser(userId: string, afterDate?: Dat
  */
 export function formatActivityForAi(ctx: NonNullable<Awaited<ReturnType<typeof buildActivityContext>>>): string {
     const a = ctx.activity;
-    let str = `Activity: ${a.name}\n`;
+    let str = `Activity: ${fenceUntrusted(a.name)}\n`;
     str += `Date: ${a.date}\n`;
     str += `Type: ${a.type}\n`;
     str += `Distance: ${(a.distance / 1000).toFixed(2)}km\n`;
@@ -162,7 +163,7 @@ export function formatActivityForAi(ctx: NonNullable<Awaited<ReturnType<typeof b
     if (ctx.plannedWorkout) {
         str += `\nPlanned workout for this day:\n`;
         str += `Type: ${ctx.plannedWorkout.type}\n`;
-        str += `Description: ${ctx.plannedWorkout.description}\n`;
+        str += `Description: ${fenceUntrusted(ctx.plannedWorkout.description)}\n`;
         if (ctx.plannedWorkout.targetDistance) str += `Target distance: ${(ctx.plannedWorkout.targetDistance / 1000).toFixed(1)}km\n`;
         if (ctx.plannedWorkout.targetPace) str += `Target pace: ${Math.floor(ctx.plannedWorkout.targetPace / 60)}:${Math.floor(ctx.plannedWorkout.targetPace % 60).toString().padStart(2, '0')}/km\n`;
     } else {

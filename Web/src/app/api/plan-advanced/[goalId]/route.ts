@@ -145,42 +145,44 @@ export async function DELETE(req: Request, ctx: RouteContext) {
 
         const now = new Date();
 
-        await prisma.workout.deleteMany({
-            where: {
-                goalId,
-                isCompleted: false,
-                scheduledDate: { gte: now },
-            },
-        });
-
-        const subGoals = await prisma.goal.findMany({
-            where: { parentGoalId: goalId, deletedAt: null },
-            select: { id: true },
-        });
-
-        if (subGoals.length > 0) {
-            const subGoalIds = subGoals.map(sg => sg.id);
-
-            await prisma.workout.deleteMany({
+        await prisma.$transaction(async (tx) => {
+            await tx.workout.deleteMany({
                 where: {
-                    subGoalId: { in: subGoalIds },
+                    goalId,
                     isCompleted: false,
                     scheduledDate: { gte: now },
                 },
             });
 
-            await prisma.goal.updateMany({
-                where: { id: { in: subGoalIds } },
-                data: { deletedAt: now, isActive: false },
+            const subGoals = await tx.goal.findMany({
+                where: { parentGoalId: goalId, deletedAt: null },
+                select: { id: true },
             });
-        }
 
-        await prisma.goal.update({
-            where: { id: goalId },
-            data: {
-                deletedAt: now,
-                isActive: false,
-            },
+            if (subGoals.length > 0) {
+                const subGoalIds = subGoals.map(sg => sg.id);
+
+                await tx.workout.deleteMany({
+                    where: {
+                        subGoalId: { in: subGoalIds },
+                        isCompleted: false,
+                        scheduledDate: { gte: now },
+                    },
+                });
+
+                await tx.goal.updateMany({
+                    where: { id: { in: subGoalIds } },
+                    data: { deletedAt: now, isActive: false },
+                });
+            }
+
+            await tx.goal.update({
+                where: { id: goalId },
+                data: {
+                    deletedAt: now,
+                    isActive: false,
+                },
+            });
         });
 
         return NextResponse.json({ success: true });

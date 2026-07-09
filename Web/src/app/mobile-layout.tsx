@@ -12,6 +12,7 @@ import {
     DragEndEvent,
     PointerSensor,
     TouchSensor,
+    KeyboardSensor,
 } from '@dnd-kit/core';
 
 import { X } from 'lucide-react';
@@ -89,6 +90,7 @@ export function MobileLayout() {
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
         useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } }),
+        useSensor(KeyboardSensor),
     );
 
     // === QUERIES ===

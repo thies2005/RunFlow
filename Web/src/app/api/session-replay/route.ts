@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
 import { requireAdmin } from '@/lib/admin/auth';
+import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,8 +15,25 @@ interface SessionReplayData {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting (30 replays/minute per client)
+    const clientId = getClientIdentifier(request);
+    const rateLimitResult = await checkRateLimitAsync(clientId, {
+      limit: 30,
+      windowSeconds: 60,
+      prefix: 'session-replay',
+    });
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+      );
+    }
+
     const session = await auth();
-    const userId = session?.user?.id;
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const userId = session.user.id;
 
     const data: SessionReplayData = await request.json();
 

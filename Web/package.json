@@ -27,6 +27,7 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
+    "seed:templates": "ts-node --transpile-only --compiler-options '{\"module\":\"commonjs\"}' prisma/seed-templates.ts",
     "mobile:init": "cap init",
     "mobile:sync": "cap sync",
     "mobile:run": "cap run android",

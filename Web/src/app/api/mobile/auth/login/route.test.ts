@@ -39,7 +39,7 @@ describe('POST /api/mobile/auth/login', () => {
     it('should use providedRedirectUri if present', async () => {
         const body = {
             code: 'auth-code',
-            redirectUri: 'custom-uri'
+            redirectUri: 'http://localhost:3000/api/auth/strava/callback'
         };
         const req = new NextRequest('http://localhost/api/mobile/auth/login', {
             method: 'POST',
@@ -50,8 +50,26 @@ describe('POST /api/mobile/auth/login', () => {
 
         expect(mockExchangeStravaCodeForTokens).toHaveBeenCalledWith(
             'auth-code',
-            'custom-uri'
+            'http://localhost:3000/api/auth/strava/callback'
         );
+    });
+
+    it('should return 400 if providedRedirectUri is not in the allowlist', async () => {
+        const body = {
+            code: 'auth-code',
+            redirectUri: 'https://evil.example.com/api/auth/strava/callback'
+        };
+        const req = new NextRequest('http://localhost/api/mobile/auth/login', {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+
+        const res = await POST(req);
+
+        expect(res.status).toBe(400);
+        const json = await res.json();
+        expect(json.error).toBe('Invalid redirect URI');
+        expect(mockExchangeStravaCodeForTokens).not.toHaveBeenCalled();
     });
 
     it('should use process.env.NEXT_PUBLIC_APP_URL if providedRedirectUri is missing', async () => {

@@ -105,6 +105,7 @@ export const ModelName = {
   WeeklyReconciliationRecord: 'WeeklyReconciliationRecord',
   PlanSnapshot: 'PlanSnapshot',
   WeekTemplate: 'WeekTemplate',
+  WorkoutTemplate: 'WorkoutTemplate',
   IntervalProgression: 'IntervalProgression',
   AiPlanAnalysis: 'AiPlanAnalysis',
   PlanPaceProfile: 'PlanPaceProfile',
@@ -167,7 +168,8 @@ export const UserScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   healthTrackingEnabled: 'healthTrackingEnabled',
-  isAdmin: 'isAdmin'
+  isAdmin: 'isAdmin',
+  tokenVersion: 'tokenVersion'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -633,7 +635,8 @@ export const WorkoutScalarFieldEnum = {
   subGoalId: 'subGoalId',
   sport: 'sport',
   displayDesc: 'displayDesc',
-  intensityZone: 'intensityZone'
+  intensityZone: 'intensityZone',
+  plannedTss: 'plannedTss'
 } as const
 
 export type WorkoutScalarFieldEnum = (typeof WorkoutScalarFieldEnum)[keyof typeof WorkoutScalarFieldEnum]
@@ -681,6 +684,7 @@ export const ReminderSettingsScalarFieldEnum = {
   foodDinnerTime: 'foodDinnerTime',
   workoutReminderEnabled: 'workoutReminderEnabled',
   workoutReminderMinutes: 'workoutReminderMinutes',
+  workoutEmailEnabled: 'workoutEmailEnabled',
   timezone: 'timezone',
   lastSupplementMorningSent: 'lastSupplementMorningSent',
   lastSupplementNoonSent: 'lastSupplementNoonSent',
@@ -689,6 +693,7 @@ export const ReminderSettingsScalarFieldEnum = {
   lastFoodBreakfastSent: 'lastFoodBreakfastSent',
   lastFoodLunchSent: 'lastFoodLunchSent',
   lastFoodDinnerSent: 'lastFoodDinnerSent',
+  lastWorkoutEmailSent: 'lastWorkoutEmailSent',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1141,6 +1146,28 @@ export const WeekTemplateScalarFieldEnum = {
 } as const
 
 export type WeekTemplateScalarFieldEnum = (typeof WeekTemplateScalarFieldEnum)[keyof typeof WeekTemplateScalarFieldEnum]
+
+
+export const WorkoutTemplateScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  workoutType: 'workoutType',
+  sport: 'sport',
+  targetDistance: 'targetDistance',
+  targetDuration: 'targetDuration',
+  targetPace: 'targetPace',
+  structuredSteps: 'structuredSteps',
+  difficulty: 'difficulty',
+  tags: 'tags',
+  category: 'category',
+  isPublished: 'isPublished',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WorkoutTemplateScalarFieldEnum = (typeof WorkoutTemplateScalarFieldEnum)[keyof typeof WorkoutTemplateScalarFieldEnum]
 
 
 export const IntervalProgressionScalarFieldEnum = {

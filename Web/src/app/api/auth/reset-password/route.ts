@@ -50,6 +50,8 @@ export async function POST(request: NextRequest) {
             where: { email },
             data: {
                 passwordHash,
+                // Bump tokenVersion to invalidate all existing mobile refresh+access tokens
+                tokenVersion: { increment: 1 },
                 // Also verify email if not already verified, as they proved ownership via email code
                 emailVerified: new Date()
             }

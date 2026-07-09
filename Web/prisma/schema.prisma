@@ -49,6 +49,7 @@ model User {
   updatedAt             DateTime             @updatedAt
   healthTrackingEnabled Boolean              @default(false)
   isAdmin               Boolean              @default(false)
+  tokenVersion          Int                  @default(0)
   accounts              Account[]
   activities            Activity[]
   usageHistory          AiUsageHistory[]
@@ -586,6 +587,7 @@ model Workout {
   sport                   String                @default("RUN")
   displayDesc             String?
   intensityZone           String?
+  plannedTss              Float?
   goal                    Goal                  @relation(fields: [goalId], references: [id], onDelete: Cascade)
   linkedActivity          Activity?             @relation(fields: [linkedActivityId], references: [id])
   subGoal                 Goal?                 @relation("WorkoutSubGoal", fields: [subGoalId], references: [id])
@@ -637,6 +639,7 @@ model ReminderSettings {
   foodDinnerTime            String    @default("19:00")
   workoutReminderEnabled    Boolean   @default(false)
   workoutReminderMinutes    Int       @default(60)
+  workoutEmailEnabled       Boolean   @default(false)
   timezone                  String    @default("UTC")
   lastSupplementMorningSent DateTime?
   lastSupplementNoonSent    DateTime?
@@ -645,6 +648,7 @@ model ReminderSettings {
   lastFoodBreakfastSent     DateTime?
   lastFoodLunchSent         DateTime?
   lastFoodDinnerSent        DateTime?
+  lastWorkoutEmailSent      DateTime?
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
   user                      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1216,6 +1220,31 @@ model WeekTemplate {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// Global, admin-seeded shared workout library (audit G8).
+// Unlike WeekTemplate (per-user), these are system-wide templates users can browse + apply.
+model WorkoutTemplate {
+  id              String      @id @default(cuid())
+  name            String      @unique
+  description     String?     @db.Text
+  workoutType     WorkoutType
+  sport           String      @default("RUN")
+  targetDistance  Float?
+  targetDuration  Int?
+  targetPace      Float?
+  structuredSteps Json?
+  difficulty      String?     // e.g. 'beginner' | 'intermediate' | 'advanced'
+  tags            String[]    @default([])
+  category        String?     // e.g. 'speed' | 'endurance' | 'recovery' | 'threshold' | 'long'
+  isPublished     Boolean     @default(true)
+  createdById     String?     // admin/author (nullable for system-seeded)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([workoutType])
+  @@index([category])
+  @@index([isPublished])
 }
 
 model IntervalProgression {

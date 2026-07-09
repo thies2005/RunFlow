@@ -80,12 +80,13 @@ export async function POST(request: NextRequest) {
                 id: true,
                 email: true,
                 name: true,
-                image: true
+                image: true,
+                tokenVersion: true
             }
         });
 
         // Generate JWT tokens
-        const tokens = await generateTokenPair(user.id);
+        const tokens = await generateTokenPair(user.id, user.tokenVersion);
 
         return NextResponse.json({
             ...tokens,

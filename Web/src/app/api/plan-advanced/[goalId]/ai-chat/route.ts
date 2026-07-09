@@ -10,9 +10,9 @@ import { NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { decryptToken } from '@/lib/crypto';
-import { validateBaseUrl, type ChatMessage, type AiConfig } from '@/lib/ai/providers';
+import { validateBaseUrl, tryDecryptAiKey, type ChatMessage, type AiConfig } from '@/lib/ai/providers';
 import { streamChat } from '@/lib/ai';
+import { fenceUntrusted } from '@/lib/ai/prompts';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +41,7 @@ async function getPlanBuilderConfig(): Promise<{ config: AiConfig; maxTokens: nu
     }
 
     const provider = settings.activeProvider;
-    const decryptedKey = decryptToken(provider.apiKey);
+    const decryptedKey = tryDecryptAiKey(provider.apiKey, 'activeProvider', provider.id);
     if (!decryptedKey) return null;
 
     const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
@@ -104,11 +104,11 @@ Distance is in meters, duration in seconds.
 function buildPlanContext(goal: Record<string, unknown>, workouts: Array<Record<string, unknown>>): string {
     const workoutSummary = workouts.map(w => {
         const date = w.scheduledDate instanceof Date ? w.scheduledDate.toISOString().split('T')[0] : String(w.scheduledDate);
-        return `  - ${date} | ${w.workoutType} | ${w.targetDistance != null ? `${w.targetDistance}m` : '-'} | ${w.targetDuration != null ? `${Math.round(Number(w.targetDuration) / 60)}min` : '-'} | phase:${w.phase || 'BASE'} | name:"${w.customName || ''}" | "${w.description || ''}" | id:${w.id}`;
+        return `  - ${date} | ${w.workoutType} | ${w.targetDistance != null ? `${w.targetDistance}m` : '-'} | ${w.targetDuration != null ? `${Math.round(Number(w.targetDuration) / 60)}min` : '-'} | phase:${w.phase || 'BASE'} | name:${fenceUntrusted(w.customName as string | undefined)} | ${fenceUntrusted(w.description as string | undefined)} | id:${w.id}`;
     }).join('\n');
 
     return `## Current Plan Context
-Plan: ${goal.name}
+Plan: ${fenceUntrusted(goal.name as string | undefined)}
 Sport: ${goal.sport}
 Race Type: ${goal.raceType || 'Not specified'}
 Race Date: ${goal.raceDate instanceof Date ? goal.raceDate.toISOString().split('T')[0] : String(goal.raceDate || 'Not set')}
@@ -214,7 +214,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
                         }
                     }, 15000);
 
-                    const stream = await streamChat(builderConfig.config, messages);
+                    const stream = await streamChat(builderConfig.config, messages, { signal: req.signal });
 
                     for await (const token of stream) {
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));

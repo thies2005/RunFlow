@@ -4,6 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import {
@@ -24,9 +25,88 @@ import type { ChatMessage } from '@/lib/ai';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
 import { logger } from '@/lib/logging/logger';
+import { fenceUntrusted } from '@/lib/ai/prompts';
 
 interface UserAiSettingsAccess {
     accessAllActivities?: boolean;
+}
+
+// AI-H1: Range-bounded validation schemas for AI-emitted widget payloads.
+// The AI output is untrusted; clamp values to sane ranges before persisting.
+const mealWidgetItemSchema = z.object({
+    name: z.string().max(120).optional().default('Unknown Food'),
+    calories: z.number().finite().min(0).max(5000).optional().default(0),
+    protein: z.number().finite().min(0).max(500).optional().default(0),
+    carbs: z.number().finite().min(0).max(500).optional().default(0),
+    fats: z.number().finite().min(0).max(500).optional().default(0),
+    estimatedGrams: z.number().finite().min(0).max(5000).optional(),
+});
+const mealWidgetSchema = z.object({
+    items: z.array(mealWidgetItemSchema).max(20).optional(),
+    name: z.string().max(120).optional(),
+    calories: z.number().finite().min(0).max(5000).optional(),
+    protein: z.number().finite().min(0).max(500).optional(),
+    carbs: z.number().finite().min(0).max(500).optional(),
+    fats: z.number().finite().min(0).max(500).optional(),
+});
+const waterWidgetSchema = z.object({
+    amount: z.number().finite().min(0).max(5).optional().default(0.25), // liters, max 5L per log
+});
+
+/**
+ * AI-H1: Extract a JSON object payload following a widget marker using
+ * brace-matching (respecting string literals and escapes). This replaces the
+ * fragile non-greedy regex `\{[\s\S]*?\}` which would truncate any payload
+ * containing a nested `}` (e.g. items with nested objects).
+ *
+ * Returns the parsed JSON value, or `null` if no valid JSON object could be
+ * found after the marker.
+ */
+function extractWidgetJson(comment: string, marker: string): unknown | null {
+    const startIdx = comment.indexOf(marker);
+    if (startIdx === -1) return null;
+
+    // Find the first '{' after the marker.
+    let i = startIdx + marker.length;
+    while (i < comment.length && comment[i] !== '{') i++;
+    if (i >= comment.length) return null;
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    const jsonStart = i;
+
+    for (; i < comment.length; i++) {
+        const char = comment[i];
+        if (inString) {
+            if (escaped) {
+                escaped = false;
+            } else if (char === '\\') {
+                escaped = true;
+            } else if (char === '"') {
+                inString = false;
+            }
+            continue;
+        }
+        if (char === '"') {
+            inString = true;
+            continue;
+        }
+        if (char === '{') {
+            depth++;
+        } else if (char === '}') {
+            depth--;
+            if (depth === 0) {
+                const candidate = comment.slice(jsonStart, i + 1);
+                try {
+                    return JSON.parse(candidate);
+                } catch {
+                    return null;
+                }
+            }
+        }
+    }
+    return null;
 }
 
 export const dynamic = 'force-dynamic';
@@ -189,7 +269,7 @@ export async function POST(request: NextRequest) {
                         const activityContext = await buildActivityContext(activityId);
                         if (activityContext) {
                             contextString += `\n\n--- Current Activity ---\n`;
-                            contextString += `Activity: ${activityContext.activity.name} on ${activityContext.activity.date}\n`;
+                            contextString += `Activity: ${fenceUntrusted(activityContext.activity.name)} on ${activityContext.activity.date}\n`;
                             contextString += `Type: ${activityContext.activity.type}\n`;
                             contextString += `Distance: ${(activityContext.activity.distance / 1000).toFixed(2)}km\n`;
                             contextString += `Duration: ${Math.floor(activityContext.activity.duration / 60)}:${(activityContext.activity.duration % 60).toString().padStart(2, '0')}\n`;
@@ -197,7 +277,7 @@ export async function POST(request: NextRequest) {
                             if (activityContext.activity.avgHr) contextString += `Avg HR: ${activityContext.activity.avgHr.toFixed(0)} bpm\n`;
                             if (activityContext.activity.elevationGain) contextString += `Elevation: +${activityContext.activity.elevationGain.toFixed(0)}m\n`;
                             if (activityContext.plannedWorkout) {
-                                contextString += `\nPlanned workout: ${activityContext.plannedWorkout.type} - ${activityContext.plannedWorkout.description}\n`;
+                                contextString += `\nPlanned workout: ${activityContext.plannedWorkout.type} - ${fenceUntrusted(activityContext.plannedWorkout.description)}\n`;
                             }
                         }
                     }
@@ -225,7 +305,7 @@ export async function POST(request: NextRequest) {
 
                     let stream;
                     try {
-                        stream = await streamChat(config, aiMessages);
+                        stream = await streamChat(config, aiMessages, { signal: request.signal });
                     } catch (primaryError) {
                         if (config.fallback) {
                             logger.warn('Primary provider failed, switching to fallback', {
@@ -235,7 +315,7 @@ export async function POST(request: NextRequest) {
                             });
                             // Use fallback config but keep same context
                             config = config.fallback;
-                            stream = await streamChat(config, aiMessages);
+                            stream = await streamChat(config, aiMessages, { signal: request.signal });
                         } else {
                             throw primaryError;
                         }
@@ -262,25 +342,55 @@ export async function POST(request: NextRequest) {
                     try {
                         // Check if the AI output contains meal or water logging payloads
                         if (fullResponse.includes('<!-- MEAL_LOGGED_WIDGET:')) {
-                            const match = fullResponse.match(/<!-- MEAL_LOGGED_WIDGET:\s*(\{[\s\S]*?\})\s*-->/);
-                            if (match) {
+                            const parsedRaw = extractWidgetJson(fullResponse, '<!-- MEAL_LOGGED_WIDGET:');
+                            if (parsedRaw != null) {
                                 try {
-                                    const parsed = JSON.parse(match[1]);
-                                    const todayStr = clientLocalDate && /^\d{4}-\d{2}-\d{2}$/.test(clientLocalDate)
-                                        ? clientLocalDate
-                                        : new Date().toISOString().split('T')[0];
-                                    
-                                    if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
-                                        // Log individual items
-                                        for (const item of parsed.items) {
+                                    const result = mealWidgetSchema.safeParse(parsedRaw);
+                                    if (!result.success) {
+                                        logger.warn('AI Chat: MEAL_LOGGED_WIDGET payload failed validation', { userId, sessionId, issues: result.error.issues });
+                                    } else {
+                                        const parsed = result.data;
+                                        const todayStr = clientLocalDate && /^\d{4}-\d{2}-\d{2}$/.test(clientLocalDate)
+                                            ? clientLocalDate
+                                            : new Date().toISOString().split('T')[0];
+
+                                        if (parsed.items && parsed.items.length > 0) {
+                                            // Log individual items (schema caps at 20)
+                                            for (const item of parsed.items) {
+                                                const dbFoodItem = await prisma.foodItem.create({
+                                                    data: {
+                                                        name: item.name,
+                                                        calories: item.calories,
+                                                        protein: item.protein,
+                                                        carbs: item.carbs,
+                                                        fats: item.fats,
+                                                        servingSize: item.estimatedGrams ? `${item.estimatedGrams}g` : '100g',
+                                                    }
+                                                });
+                                                await prisma.nutritionLog.create({
+                                                    data: {
+                                                        userId: userId!,
+                                                        date: todayStr,
+                                                        mealType: 'snack',
+                                                        quantity: 1.0,
+                                                        calories: dbFoodItem.calories,
+                                                        protein: dbFoodItem.protein,
+                                                        carbs: dbFoodItem.carbs,
+                                                        fats: dbFoodItem.fats,
+                                                        foodItemId: dbFoodItem.id,
+                                                    }
+                                                });
+                                            }
+                                        } else {
+                                            // Log as a single meal
                                             const dbFoodItem = await prisma.foodItem.create({
                                                 data: {
-                                                    name: item.name || 'Unknown Food',
-                                                    calories: parseFloat(String(item.calories || 0)),
-                                                    protein: parseFloat(String(item.protein || 0)),
-                                                    carbs: parseFloat(String(item.carbs || 0)),
-                                                    fats: parseFloat(String(item.fats || item.fat || 0)),
-                                                    servingSize: item.estimatedGrams ? `${item.estimatedGrams}g` : '100g',
+                                                    name: parsed.name || 'Logged Meal',
+                                                    calories: parsed.calories ?? 0,
+                                                    protein: parsed.protein ?? 0,
+                                                    carbs: parsed.carbs ?? 0,
+                                                    fats: parsed.fats ?? 0,
+                                                    servingSize: '1 serving',
                                                 }
                                             });
                                             await prisma.nutritionLog.create({
@@ -297,33 +407,8 @@ export async function POST(request: NextRequest) {
                                                 }
                                             });
                                         }
-                                    } else {
-                                        // Log as a single meal
-                                        const dbFoodItem = await prisma.foodItem.create({
-                                            data: {
-                                                name: parsed.name || 'Logged Meal',
-                                                calories: parseFloat(String(parsed.calories || 0)),
-                                                protein: parseFloat(String(parsed.protein || 0)),
-                                                carbs: parseFloat(String(parsed.carbs || 0)),
-                                                fats: parseFloat(String(parsed.fats || parsed.fat || 0)),
-                                                servingSize: '1 serving',
-                                            }
-                                        });
-                                        await prisma.nutritionLog.create({
-                                            data: {
-                                                userId: userId!,
-                                                date: todayStr,
-                                                mealType: 'snack',
-                                                quantity: 1.0,
-                                                calories: dbFoodItem.calories,
-                                                protein: dbFoodItem.protein,
-                                                carbs: dbFoodItem.carbs,
-                                                fats: dbFoodItem.fats,
-                                                foodItemId: dbFoodItem.id,
-                                            }
-                                        });
+                                        logger.info('AI Chat: Handled conversational food logging successfully', { userId, sessionId });
                                     }
-                                    logger.info('AI Chat: Handled conversational food logging successfully', { userId, sessionId });
                                 } catch (e) {
                                     logger.error('AI Chat: Failed to parse conversational food log JSON', { error: String(e) });
                                 }
@@ -331,44 +416,50 @@ export async function POST(request: NextRequest) {
                         }
 
                         if (fullResponse.includes('<!-- WATER_LOGGED_WIDGET:')) {
-                            const match = fullResponse.match(/<!-- WATER_LOGGED_WIDGET:\s*(\{[\s\S]*?\})\s*-->/);
-                            if (match) {
+                            const parsedRaw = extractWidgetJson(fullResponse, '<!-- WATER_LOGGED_WIDGET:');
+                            if (parsedRaw != null) {
                                 try {
-                                    const parsed = JSON.parse(match[1]);
-                                    const amountLiters = parseFloat(String(parsed.amount || 0.25));
-                                    // Convert liters to milliliters since waterIntake is Int (stored in mL)
-                                    const amountMl = Math.round(amountLiters * 1000);
-                                    let date: Date;
-                                    if (clientLocalDate && /^\d{4}-\d{2}-\d{2}$/.test(clientLocalDate)) {
-                                        const [yr, mo, dy] = clientLocalDate.split('-').map(Number);
-                                        date = new Date(Date.UTC(yr, mo - 1, dy));
+                                    const result = waterWidgetSchema.safeParse(parsedRaw);
+                                    if (!result.success) {
+                                        logger.warn('AI Chat: WATER_LOGGED_WIDGET payload failed validation', { userId, sessionId, issues: result.error.issues });
                                     } else {
-                                        const today = new Date();
-                                        date = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+                                        const amountLiters = result.data.amount ?? 0.25;
+                                        // Convert liters to milliliters since waterIntake is Int (stored in mL)
+                                        // AI-H1: clamp each add to a sane per-log max (8L) to bound cost/abuse.
+                                        const amountMl = Math.min(Math.round(amountLiters * 1000), 8000);
+                                        let date: Date;
+                                        if (clientLocalDate && /^\d{4}-\d{2}-\d{2}$/.test(clientLocalDate)) {
+                                            const [yr, mo, dy] = clientLocalDate.split('-').map(Number);
+                                            date = new Date(Date.UTC(yr, mo - 1, dy));
+                                        } else {
+                                            const today = new Date();
+                                            date = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+                                        }
+
+                                        const existing = await prisma.dailyHealthLog.findUnique({
+                                            where: {
+                                                userId_date: { userId: userId!, date }
+                                            }
+                                        });
+
+                                        // AI-H1: cap total daily water at 8000mL.
+                                        const newAmount = Math.min(8000, Math.max(0, (existing?.waterIntake || 0) + amountMl));
+
+                                        await prisma.dailyHealthLog.upsert({
+                                            where: {
+                                                userId_date: { userId: userId!, date }
+                                            },
+                                            update: {
+                                                waterIntake: newAmount
+                                            },
+                                            create: {
+                                                userId: userId!,
+                                                date,
+                                                waterIntake: newAmount
+                                            }
+                                        });
+                                        logger.info('AI Chat: Handled conversational water logging successfully', { userId, sessionId, amount: newAmount });
                                     }
-
-                                    const existing = await prisma.dailyHealthLog.findUnique({
-                                        where: {
-                                            userId_date: { userId: userId!, date }
-                                        }
-                                    });
-
-                                    const newAmount = Math.max(0, (existing?.waterIntake || 0) + amountMl);
-
-                                    await prisma.dailyHealthLog.upsert({
-                                        where: {
-                                            userId_date: { userId: userId!, date }
-                                        },
-                                        update: {
-                                            waterIntake: newAmount
-                                        },
-                                        create: {
-                                            userId: userId!,
-                                            date,
-                                            waterIntake: newAmount
-                                        }
-                                    });
-                                    logger.info('AI Chat: Handled conversational water logging successfully', { userId, sessionId, amount: newAmount });
                                 } catch (e) {
                                     logger.error('AI Chat: Failed to parse water log JSON', { error: String(e) });
                                 }

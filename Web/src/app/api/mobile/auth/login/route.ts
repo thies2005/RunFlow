@@ -11,6 +11,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exchangeStravaCodeForTokens } from '@/lib/mobile/auth';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
 
+// Allowlist of valid Strava OAuth callback redirect URIs.
+// The redirectUri is sent to Strava during the code exchange and must be
+// registered there, so we restrict it to known values rather than accepting
+// any caller-supplied URI.
+const ALLOWED_REDIRECT_URIS = [
+    'https://runflow.schuelken.uk/api/auth/strava/callback',
+    ...(process.env.NEXT_PUBLIC_APP_URL ? [`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/strava/callback`] : []),
+    // localhost dev
+    'http://localhost:3000/api/auth/strava/callback',
+];
+
 export async function POST(request: NextRequest) {
     try {
         // Rate limiting - use stricter settings for auth endpoints
@@ -39,11 +50,20 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const redirectUri = providedRedirectUri 
-            ? providedRedirectUri 
+        const redirectUri = providedRedirectUri
+            ? providedRedirectUri
             : (process.env.NEXT_PUBLIC_APP_URL
                 ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/strava/callback`
                 : 'https://runflow.schuelken.uk/api/auth/strava/callback');
+
+        // Validate caller-supplied redirectUri against an allowlist to prevent
+        // open-redirect / token-redirect attacks via arbitrary callback URIs.
+        if (providedRedirectUri && !ALLOWED_REDIRECT_URIS.includes(providedRedirectUri)) {
+            return NextResponse.json(
+                { error: 'Invalid redirect URI' },
+                { status: 400 }
+            );
+        }
 
         // Exchange the Strava code for our tokens
         const result = await exchangeStravaCodeForTokens(code, redirectUri);

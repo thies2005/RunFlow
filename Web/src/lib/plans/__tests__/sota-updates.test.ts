@@ -168,9 +168,6 @@ describe('SOTA Audit Implementation Tests', () => {
     describe('Ultra Scheduling and Phase Budgets', () => {
         it('does not over-allocate backyard mental prep in short plans', () => {
             const phases = resolvePhaseBudget(8, {
-                vdot: 50,
-                raceType: 'BACKYARD_ULTRA' as RaceType,
-                raceDate: new Date('2026-06-01'),
                 taperWeeks: 3,
             }, {
                 isUltra: true,

@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
             include: {
                 workouts: {
                     orderBy: { scheduledDate: 'asc' },
+                    take: 400,
                 },
                 subGoals: {
                     where: { deletedAt: null },

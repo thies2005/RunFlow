@@ -80,12 +80,12 @@ export type PrismaVersion = {
 }
 
 /**
- * Prisma Client JS version: 7.6.0
- * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 export const prismaVersion: PrismaVersion = {
-  client: "7.6.0",
-  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 /**
@@ -438,6 +438,7 @@ export const ModelName = {
   WeeklyReconciliationRecord: 'WeeklyReconciliationRecord',
   PlanSnapshot: 'PlanSnapshot',
   WeekTemplate: 'WeekTemplate',
+  WorkoutTemplate: 'WorkoutTemplate',
   IntervalProgression: 'IntervalProgression',
   AiPlanAnalysis: 'AiPlanAnalysis',
   PlanPaceProfile: 'PlanPaceProfile',
@@ -457,7 +458,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "foodFavorite" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord" | "planSnapshot" | "weekTemplate" | "intervalProgression" | "aiPlanAnalysis" | "planPaceProfile" | "guidedPlanSession"
+    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "foodFavorite" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord" | "planSnapshot" | "weekTemplate" | "workoutTemplate" | "intervalProgression" | "aiPlanAnalysis" | "planPaceProfile" | "guidedPlanSession"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4457,6 +4458,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    WorkoutTemplate: {
+      payload: Prisma.$WorkoutTemplatePayload<ExtArgs>
+      fields: Prisma.WorkoutTemplateFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WorkoutTemplateFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WorkoutTemplateFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload>
+        }
+        findFirst: {
+          args: Prisma.WorkoutTemplateFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WorkoutTemplateFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload>
+        }
+        findMany: {
+          args: Prisma.WorkoutTemplateFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload>[]
+        }
+        create: {
+          args: Prisma.WorkoutTemplateCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload>
+        }
+        createMany: {
+          args: Prisma.WorkoutTemplateCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WorkoutTemplateCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload>[]
+        }
+        delete: {
+          args: Prisma.WorkoutTemplateDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload>
+        }
+        update: {
+          args: Prisma.WorkoutTemplateUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload>
+        }
+        deleteMany: {
+          args: Prisma.WorkoutTemplateDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WorkoutTemplateUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WorkoutTemplateUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload>[]
+        }
+        upsert: {
+          args: Prisma.WorkoutTemplateUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkoutTemplatePayload>
+        }
+        aggregate: {
+          args: Prisma.WorkoutTemplateAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWorkoutTemplate>
+        }
+        groupBy: {
+          args: Prisma.WorkoutTemplateGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WorkoutTemplateGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WorkoutTemplateCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WorkoutTemplateCountAggregateOutputType> | number
+        }
+      }
+    }
     IntervalProgression: {
       payload: Prisma.$IntervalProgressionPayload<ExtArgs>
       fields: Prisma.IntervalProgressionFieldRefs
@@ -4832,7 +4907,8 @@ export const UserScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   healthTrackingEnabled: 'healthTrackingEnabled',
-  isAdmin: 'isAdmin'
+  isAdmin: 'isAdmin',
+  tokenVersion: 'tokenVersion'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -5298,7 +5374,8 @@ export const WorkoutScalarFieldEnum = {
   subGoalId: 'subGoalId',
   sport: 'sport',
   displayDesc: 'displayDesc',
-  intensityZone: 'intensityZone'
+  intensityZone: 'intensityZone',
+  plannedTss: 'plannedTss'
 } as const
 
 export type WorkoutScalarFieldEnum = (typeof WorkoutScalarFieldEnum)[keyof typeof WorkoutScalarFieldEnum]
@@ -5346,6 +5423,7 @@ export const ReminderSettingsScalarFieldEnum = {
   foodDinnerTime: 'foodDinnerTime',
   workoutReminderEnabled: 'workoutReminderEnabled',
   workoutReminderMinutes: 'workoutReminderMinutes',
+  workoutEmailEnabled: 'workoutEmailEnabled',
   timezone: 'timezone',
   lastSupplementMorningSent: 'lastSupplementMorningSent',
   lastSupplementNoonSent: 'lastSupplementNoonSent',
@@ -5354,6 +5432,7 @@ export const ReminderSettingsScalarFieldEnum = {
   lastFoodBreakfastSent: 'lastFoodBreakfastSent',
   lastFoodLunchSent: 'lastFoodLunchSent',
   lastFoodDinnerSent: 'lastFoodDinnerSent',
+  lastWorkoutEmailSent: 'lastWorkoutEmailSent',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -5808,6 +5887,28 @@ export const WeekTemplateScalarFieldEnum = {
 export type WeekTemplateScalarFieldEnum = (typeof WeekTemplateScalarFieldEnum)[keyof typeof WeekTemplateScalarFieldEnum]
 
 
+export const WorkoutTemplateScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  workoutType: 'workoutType',
+  sport: 'sport',
+  targetDistance: 'targetDistance',
+  targetDuration: 'targetDuration',
+  targetPace: 'targetPace',
+  structuredSteps: 'structuredSteps',
+  difficulty: 'difficulty',
+  tags: 'tags',
+  category: 'category',
+  isPublished: 'isPublished',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WorkoutTemplateScalarFieldEnum = (typeof WorkoutTemplateScalarFieldEnum)[keyof typeof WorkoutTemplateScalarFieldEnum]
+
+
 export const IntervalProgressionScalarFieldEnum = {
   id: 'id',
   goalId: 'goalId',
@@ -6245,6 +6346,21 @@ export type PrismaClientOptions = ({
    * ```
    */
   comments?: runtime.SqlCommenterPlugin[]
+  /**
+   * Optional maximum size for the query plan cache. If not provided, a default size will be used.
+   * A value of `0` can be used to disable the cache entirely. A higher cache size can improve
+   * performance for applications that execute a large number of unique queries, while a smaller
+   * cache size can reduce memory usage.
+   * 
+   * @example
+   * ```
+   * const prisma = new PrismaClient({
+   *   adapter,
+   *   queryPlanCacheMaxSize: 100,
+   * })
+   * ```
+   */
+  queryPlanCacheMaxSize?: number
 }
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
@@ -6301,6 +6417,7 @@ export type GlobalOmitConfig = {
   weeklyReconciliationRecord?: Prisma.WeeklyReconciliationRecordOmit
   planSnapshot?: Prisma.PlanSnapshotOmit
   weekTemplate?: Prisma.WeekTemplateOmit
+  workoutTemplate?: Prisma.WorkoutTemplateOmit
   intervalProgression?: Prisma.IntervalProgressionOmit
   aiPlanAnalysis?: Prisma.AiPlanAnalysisOmit
   planPaceProfile?: Prisma.PlanPaceProfileOmit

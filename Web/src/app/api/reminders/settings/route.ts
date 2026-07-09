@@ -35,6 +35,7 @@ export async function GET() {
                 foodDinnerTime: '19:00',
                 workoutReminderEnabled: false,
                 workoutReminderMinutes: 60,
+                workoutEmailEnabled: false,
                 timezone: 'UTC',
                 lastSupplementMorningSent: null,
                 lastSupplementNoonSent: null,
@@ -43,6 +44,7 @@ export async function GET() {
                 lastFoodBreakfastSent: null,
                 lastFoodLunchSent: null,
                 lastFoodDinnerSent: null,
+                lastWorkoutEmailSent: null,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             };
@@ -83,6 +85,7 @@ export async function PUT(request: NextRequest) {
             'weightReminderEnabled',
             'foodBreakfastEnabled', 'foodLunchEnabled', 'foodDinnerEnabled',
             'workoutReminderEnabled',
+            'workoutEmailEnabled',
         ];
         const allowedStrings = [
             'supplementMorningTime', 'supplementNoonTime', 'supplementEveningTime',

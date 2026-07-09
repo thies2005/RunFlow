@@ -43,6 +43,13 @@ export function DraggableWorkout({
         }
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            onClick(workout);
+        }
+    };
+
     if (isDragging) {
         return (
             <div ref={setNodeRef} style={dragStyle} className="bg-surface p-4 rounded-lg shadow-xl border border-glass-border flex items-center gap-4">
@@ -68,12 +75,19 @@ export function DraggableWorkout({
 
             <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center bg-background-tertiary ${style.color} cursor-pointer`}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open ${style.label} workout details`}
                 onClick={handleClick}
+                onKeyDown={handleKeyDown}
             >
                 <Icon className="w-4 h-4" />
             </div>
 
-            <div className="flex-1 cursor-pointer min-w-0" onClick={handleClick}>
+            <div
+                className="flex-1 cursor-pointer min-w-0"
+                onClick={handleClick}
+            >
                 <div className="flex items-center justify-between">
                     <h4 className={`text-sm font-medium truncate ${workout.isCompleted ? 'text-foreground-muted line-through' : 'text-foreground'}`}>
                         {style.label}

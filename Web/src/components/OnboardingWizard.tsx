@@ -4,11 +4,45 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, RefreshCw, Calendar, Link2, Zap } from 'lucide-react';
+import { ArrowRight, ArrowLeft, RefreshCw, Calendar, Link2, Zap } from 'lucide-react';
+import { toast } from 'sonner';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import PlanSetupForm from './PlanSetupForm';
 import SyncPlatformSelector from './SyncPlatformSelector';
 import { useEffect } from 'react';
+
+const ONBOARDING_STATE_KEY = 'runflow_onboarding_state';
+
+interface OnboardingState {
+    step: number;
+    experienceLevel: string;
+}
+
+function loadOnboardingState(): OnboardingState | null {
+    // Guard for SSR (useState initializers run on the server during build/render).
+    if (typeof window === 'undefined') return null;
+    try {
+        const raw = localStorage.getItem(ONBOARDING_STATE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (typeof parsed?.step !== 'number') return null;
+        return {
+            step: parsed.step,
+            experienceLevel: typeof parsed.experienceLevel === 'string' ? parsed.experienceLevel : 'INTERMEDIATE',
+        };
+    } catch {
+        return null;
+    }
+}
+
+function clearOnboardingState() {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.removeItem(ONBOARDING_STATE_KEY);
+    } catch {
+        // ignore
+    }
+}
 
 export default function OnboardingWizard() {
     const router = useRouter();
@@ -19,13 +53,36 @@ export default function OnboardingWizard() {
 
     const [step, setStep] = useState(() => {
         const p = searchParams.get('step');
-        if (p) return parseInt(p);
+        if (p) {
+            const n = parseInt(p);
+            if (!Number.isNaN(n)) return Math.min(Math.max(n, 0), 4);
+        }
+        // Restore persisted step on mount (clamp to valid range 0-4)
+        const persisted = loadOnboardingState();
+        if (persisted && persisted.step >= 0 && persisted.step <= 4) {
+            return persisted.step;
+        }
         // If user has Strava, start at step 1 (sync), otherwise step 0 (platform selection)
         return hasStrava ? 1 : 0;
     });
 
-    const [experienceLevel, setExperienceLevel] = useState<string>('INTERMEDIATE');
+    const [experienceLevel, setExperienceLevel] = useState<string>(() => {
+        const persisted = loadOnboardingState();
+        return persisted?.experienceLevel || 'INTERMEDIATE';
+    });
     const [adjustDefaults] = useState<((level: string) => void) | null>(null);
+
+    // Persist step + experience level to localStorage so refresh keeps progress
+    useEffect(() => {
+        try {
+            localStorage.setItem(
+                ONBOARDING_STATE_KEY,
+                JSON.stringify({ step, experienceLevel })
+            );
+        } catch {
+            // ignore persistence errors
+        }
+    }, [step, experienceLevel]);
 
     // Update step when session loads
     useEffect(() => {
@@ -51,7 +108,10 @@ export default function OnboardingWizard() {
         }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sync-status'] });
-        }
+        },
+        onError: () => {
+            toast.error('Failed to sync activities from Strava. You can continue without them or retry.');
+        },
     });
 
     // Auto-advance to step 2 when sync completes
@@ -99,6 +159,24 @@ export default function OnboardingWizard() {
             </div>
 
             <div className="flex-1 max-w-5xl mx-auto w-full p-6 flex flex-col justify-center">
+                {/* Header: Back button + step indicator */}
+                <div className="flex items-center justify-between mb-4">
+                    {step > 0 ? (
+                        <button
+                            onClick={() => setStep(Math.max(0, step - 1))}
+                            className="btn-secondary flex items-center gap-2 px-4 py-2"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back
+                        </button>
+                    ) : (
+                        <div />
+                    )}
+                    <span className="text-sm text-gray-400">
+                        Step {step + 1} of 5
+                    </span>
+                </div>
+
                 {/* Step 0: Sync Platform Selection (for email users) */}
                 {step === 0 && (
                     <div className="max-w-2xl mx-auto animate-fade-in">
@@ -279,7 +357,10 @@ export default function OnboardingWizard() {
                         <div className="glass-card p-6">
                             <PlanSetupForm
                                 mode="onboarding"
-                                onSuccess={() => router.push('/')}
+                                onSuccess={() => {
+                                    clearOnboardingState();
+                                    router.push('/');
+                                }}
                                 effectiveVO2max={effectiveVO2max}
                                 shapePercent={shapePercent}
                                 initialExperienceLevel={experienceLevel}

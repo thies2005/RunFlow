@@ -50,6 +50,7 @@ const REFRESH_TOKEN_EXPIRY = process.env.JWT_REFRESH_EXPIRY || '30d';
 export interface RunFlowJWTPayload extends JWTPayload {
     userId: string;
     type: 'access' | 'refresh';
+    tokenVersion?: number;
 }
 
 /**
@@ -66,8 +67,8 @@ export interface AuthenticatedUser {
 /**
  * Sign a new access token for the given user
  */
-export async function signAccessToken(userId: string): Promise<string> {
-    return new SignJWT({ userId, type: 'access' as const })
+export async function signAccessToken(userId: string, tokenVersion: number): Promise<string> {
+    return new SignJWT({ userId, type: 'access' as const, tokenVersion })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuer(JWT_ISSUER)
         .setAudience(JWT_AUDIENCE)
@@ -79,8 +80,8 @@ export async function signAccessToken(userId: string): Promise<string> {
 /**
  * Sign a new refresh token for the given user
  */
-export async function signRefreshToken(userId: string): Promise<string> {
-    return new SignJWT({ userId, type: 'refresh' as const })
+export async function signRefreshToken(userId: string, tokenVersion: number): Promise<string> {
+    return new SignJWT({ userId, type: 'refresh' as const, tokenVersion })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuer(JWT_ISSUER)
         .setAudience(JWT_AUDIENCE)
@@ -137,10 +138,16 @@ export async function getAuthenticatedUser(
             // Verify user exists in database
             const user = await prisma.user.findUnique({
                 where: { id: payload.userId },
-                select: { id: true, email: true, name: true, image: true, emailVerified: true }
+                select: { id: true, email: true, name: true, image: true, emailVerified: true, tokenVersion: true }
             });
 
             if (user) {
+                // Enforce token-version-based revocation: if the token's version
+                // does not match the user's current version, it has been revoked.
+                if (payload.tokenVersion !== undefined && user.tokenVersion !== payload.tokenVersion) {
+                    return null;
+                }
+
                 return {
                     id: user.id,
                     email: user.email,
@@ -176,14 +183,14 @@ export async function getAuthenticatedUser(
 /**
  * Generate both access and refresh tokens for a user
  */
-export async function generateTokenPair(userId: string): Promise<{
+export async function generateTokenPair(userId: string, tokenVersion: number): Promise<{
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
 }> {
     const [accessToken, refreshToken] = await Promise.all([
-        signAccessToken(userId),
-        signRefreshToken(userId)
+        signAccessToken(userId, tokenVersion),
+        signRefreshToken(userId, tokenVersion)
     ]);
 
     // Parse expiry to seconds
@@ -231,7 +238,7 @@ export async function exchangeStravaCodeForTokens(
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
-    user: { id: string; name: string | null; email: string | null; image: string | null; emailVerified: Date | null };
+    user: { id: string; name: string | null; email: string | null; image: string | null; emailVerified: Date | null; tokenVersion: number };
 } | { error: string }> {
     try {
         if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
@@ -275,7 +282,7 @@ export async function exchangeStravaCodeForTokens(
         // First try: Find by User.stravaId (mobile-created users)
         let user = await prisma.user.findUnique({
             where: { stravaId },
-            select: { id: true, name: true, email: true, image: true, emailVerified: true }
+            select: { id: true, name: true, email: true, image: true, emailVerified: true, tokenVersion: true }
         });
 
         // Second try: Find by Account.providerAccountId (web-created users via NextAuth)
@@ -288,7 +295,7 @@ export async function exchangeStravaCodeForTokens(
                 select: {
                     userId: true,
                     user: {
-                        select: { id: true, name: true, email: true, image: true, emailVerified: true }
+                        select: { id: true, name: true, email: true, image: true, emailVerified: true, tokenVersion: true }
                     }
                 }
             });
@@ -316,7 +323,7 @@ export async function exchangeStravaCodeForTokens(
                     stravaRefreshToken: encryptToken(refresh_token),
                     stravaTokenExpiry: new Date(expires_at * 1000)
                 },
-                select: { id: true, name: true, email: true, image: true, emailVerified: true }
+                select: { id: true, name: true, email: true, image: true, emailVerified: true, tokenVersion: true }
             });
 
             // Create Account record for NextAuth compatibility
@@ -365,7 +372,7 @@ export async function exchangeStravaCodeForTokens(
         }
 
         // Generate our JWT tokens
-        const tokens = await generateTokenPair(user.id);
+        const tokens = await generateTokenPair(user.id, user.tokenVersion);
 
         return {
             ...tokens,

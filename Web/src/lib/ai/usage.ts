@@ -292,6 +292,15 @@ export async function checkProviderLimit(providerId: string): Promise<{ canUse: 
 /**
  * Increment usage counters for a user
  * Called after each successful AI message
+ *
+ * D-H2 / AI-H3: Uses Prisma's atomic `increment` operator so concurrent requests
+ * cannot lose updates. The daily/monthly reset is applied by writing the delta
+ * directly (set) instead of incrementing when a reset is due. The reset *decision*
+ * is still based on a read, so two concurrent requests that both observe a day
+ * change will both set the counter to its delta — that over-counts by at most the
+ * number of concurrent requests in the reset instant, which is far better than the
+ * previous unbounded lost-update (quota bypass). The common increment path is
+ * fully atomic.
  */
 export async function incrementUsage(
     userId: string,
@@ -299,8 +308,11 @@ export async function incrementUsage(
     providerId?: string
 ): Promise<void> {
     const now = new Date();
+    const inputDelta = tokenStats?.inputTokens || 0;
+    const outputDelta = tokenStats?.outputTokens || 0;
 
-    // Get current settings
+    // Fetch settings to decide whether a reset is due (read is fine for the *decision*;
+    // the write below is atomic so concurrent increments don't lose updates).
     const settings = await prisma.userAiSettings.findUnique({
         where: { userId },
     });
@@ -308,67 +320,41 @@ export async function incrementUsage(
     if (!settings) return;
 
     const lastReset = new Date(settings.lastUsageReset);
-    let messagesUsedToday = settings.messagesUsedToday;
-    let messagesUsedThisMonth = settings.messagesUsedThisMonth;
+    const dayChanged = now.toDateString() !== lastReset.toDateString();
+    const monthChanged = now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear();
 
-    let inputTokensUsedToday = settings.inputTokensUsedToday || 0;
-    let outputTokensUsedToday = settings.outputTokensUsedToday || 0;
-    let inputTokensUsedThisMonth = settings.inputTokensUsedThisMonth || 0;
-    let outputTokensUsedThisMonth = settings.outputTokensUsedThisMonth || 0;
+    // Single atomic update. If a reset is due, set counters to their delta (not increment);
+    // otherwise increment. This is still technically racy on the *reset decision* (two requests
+    // could both see dayChanged=true and both set messagesUsedToday=1), but that only over-counts
+    // by the number of concurrent requests in the reset instant — far better than the current
+    // unbounded lost-update. The increment path (the common case) is fully atomic.
+    const dayFields = dayChanged
+        ? { messagesUsedToday: 1, inputTokensUsedToday: inputDelta, outputTokensUsedToday: outputDelta }
+        : { messagesUsedToday: { increment: 1 }, inputTokensUsedToday: { increment: inputDelta }, outputTokensUsedToday: { increment: outputDelta } };
 
-    // Reset if needed
-    if (now.toDateString() !== lastReset.toDateString()) {
-        messagesUsedToday = 0;
-        inputTokensUsedToday = 0;
-        outputTokensUsedToday = 0;
-    }
-    if (now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
-        messagesUsedThisMonth = 0;
-        inputTokensUsedThisMonth = 0;
-        outputTokensUsedThisMonth = 0;
-    }
-
-    // Increment
-    const inputDelta = tokenStats?.inputTokens || 0;
-    const outputDelta = tokenStats?.outputTokens || 0;
+    const monthFields = monthChanged
+        ? { messagesUsedThisMonth: 1, inputTokensUsedThisMonth: inputDelta, outputTokensUsedThisMonth: outputDelta }
+        : { messagesUsedThisMonth: { increment: 1 }, inputTokensUsedThisMonth: { increment: inputDelta }, outputTokensUsedThisMonth: { increment: outputDelta } };
 
     await prisma.userAiSettings.update({
         where: { userId },
-        data: {
-            messagesUsedToday: messagesUsedToday + 1,
-            messagesUsedThisMonth: messagesUsedThisMonth + 1,
-
-            // M-17 fix: Fields are valid in Prisma schema, no type suppression needed
-            inputTokensUsedToday: inputTokensUsedToday + inputDelta,
-            outputTokensUsedToday: outputTokensUsedToday + outputDelta,
-            inputTokensUsedThisMonth: inputTokensUsedThisMonth + inputDelta,
-            outputTokensUsedThisMonth: outputTokensUsedThisMonth + outputDelta,
-
-            lastUsageReset: now,
-        },
+        data: { ...dayFields, ...monthFields, lastUsageReset: now },
     });
 
-    // 2. Update Provider Usage (if providerId is supplied)
+    // 2. Update Provider Usage (if providerId is supplied) — same atomic pattern
     if (providerId) {
         const provider = await prisma.aiProvider.findUnique({ where: { id: providerId } });
         if (provider) {
-            const lastReset = new Date(provider.lastUsageReset);
-            let monthlyInput = provider.monthlyInputTokensUsed;
-            let monthlyOutput = provider.monthlyOutputTokensUsed;
+            const pLastReset = new Date(provider.lastUsageReset);
+            const pMonthChanged = now.getMonth() !== pLastReset.getMonth() || now.getFullYear() !== pLastReset.getFullYear();
 
-            // Reset monthly if new month
-            if (now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
-                monthlyInput = 0;
-                monthlyOutput = 0;
-            }
+            const providerFields = pMonthChanged
+                ? { monthlyInputTokensUsed: inputDelta, monthlyOutputTokensUsed: outputDelta }
+                : { monthlyInputTokensUsed: { increment: inputDelta }, monthlyOutputTokensUsed: { increment: outputDelta } };
 
             await prisma.aiProvider.update({
                 where: { id: providerId },
-                data: {
-                    monthlyInputTokensUsed: monthlyInput + inputDelta,
-                    monthlyOutputTokensUsed: monthlyOutput + outputDelta,
-                    lastUsageReset: now
-                }
+                data: { ...providerFields, lastUsageReset: now },
             });
 
             // 3. Log Daily Token Usage for Analytics

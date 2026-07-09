@@ -25,11 +25,15 @@ export async function DELETE(request: NextRequest) {
 
         const userId = session.user.id;
 
-        // Delete user - cascade will handle related data (activities, goals, etc.)
-        // Verified cascade in schema for: Account, Session, Activity, Goal, DailyFitness
-        await prisma.user.delete({
-            where: { id: userId },
-        });
+        // Delete user - cascade will handle related data with FK + onDelete (activities, goals, etc.).
+        // ApiRouteMetric, ErrorLog, and SessionReplay have a `userId` column WITHOUT a foreign key,
+        // so they are NOT cascaded and must be cleaned up explicitly to avoid orphaned rows.
+        await prisma.$transaction([
+            prisma.apiRouteMetric.deleteMany({ where: { userId } }),
+            prisma.errorLog.deleteMany({ where: { userId } }),
+            prisma.sessionReplay.deleteMany({ where: { userId } }),
+            prisma.user.delete({ where: { id: userId } }),
+        ]);
 
         return NextResponse.json({ success: true });
     } catch (error) {

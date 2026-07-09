@@ -3,14 +3,36 @@ import { recordTrackedRequest } from '@/lib/monitoring/request-tracker';
 import { trackApiMetric } from '@/lib/middleware/api-tracker';
 import { recordMetric } from '@/lib/monitoring/health';
 import { trackError } from '@/lib/monitoring/error-tracker';
+import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-const TRACKING_SECRET = process.env.CRON_SECRET || 'internal-tracking';
+const TRACKING_SECRET = process.env.CRON_SECRET;
+
+/**
+ * Constant-time comparison of a Bearer Authorization header against the secret.
+ * Fails closed (returns false) if the secret is unset or the header is missing.
+ */
+function safeCompareBearer(authHeader: string | null, secret: string | null): boolean {
+    if (!secret) return false; // fail closed when secret unset
+    if (!authHeader) return false;
+    const expected = `Bearer ${secret}`;
+    const a = Buffer.from(authHeader);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length) return false;
+    try {
+        return crypto.timingSafeEqual(a, b);
+    } catch {
+        return false;
+    }
+}
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${TRACKING_SECRET}`) {
+  if (!TRACKING_SECRET) {
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+  }
+  if (!safeCompareBearer(authHeader, TRACKING_SECRET)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

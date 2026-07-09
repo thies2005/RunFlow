@@ -838,9 +838,6 @@ describe('Training Plan Generation', () => {
 
         it('honors explicit ultra peak and build phase counts', () => {
             const phases = resolvePhaseBudget(18, {
-                vdot: 50,
-                raceType: 'FIFTY_MILE',
-                raceDate: new Date('2026-09-01'),
                 taperWeeks: 2,
                 peakWeeks: 4,
                 buildWeeks: 6,

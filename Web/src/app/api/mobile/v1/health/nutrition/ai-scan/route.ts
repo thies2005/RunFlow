@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
-import { safeFetch } from '@/lib/ai/providers';
+import { safeFetch, tryDecryptAiKey } from '@/lib/ai/providers';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { detectImageMime } from '@/lib/utils/imageMagic';
 
 export async function POST(request: NextRequest) {
     try {
@@ -36,8 +36,26 @@ export async function POST(request: NextRequest) {
         let imageBase64: string | undefined;
         if (imageFile) {
             const buffer = Buffer.from(await imageFile.arrayBuffer());
-            const mimeType = imageFile.type || 'image/jpeg';
-            imageBase64 = `data:${mimeType};base64,${buffer.toString('base64')}`;
+
+            const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+            if (buffer.length > MAX_IMAGE_BYTES) {
+                return NextResponse.json(
+                    { error: 'Image too large (max 10MB)' },
+                    { status: 413 }
+                );
+            }
+
+            // Derive the MIME type from the magic bytes rather than trusting the
+            // client-supplied imageFile.type, which can be spoofed.
+            const detectedMime = detectImageMime(buffer);
+            if (!detectedMime) {
+                return NextResponse.json(
+                    { error: 'Invalid image format' },
+                    { status: 415 }
+                );
+            }
+
+            imageBase64 = `data:${detectedMime};base64,${buffer.toString('base64')}`;
         }
 
         const userSettings = await prisma.userAiSettings.findUnique({
@@ -110,7 +128,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const rawDecryptedKey = decryptToken(googleProvider.apiKey);
+        const rawDecryptedKey = tryDecryptAiKey(googleProvider.apiKey, 'googleProvider', googleProvider.id);
         if (!rawDecryptedKey) {
             return NextResponse.json(
                 { error: 'Failed to decrypt Google AI provider API key' },
@@ -188,11 +206,14 @@ Confidence should be "high", "medium", or "low" based on ${imageBase64 ? 'image 
 
         for (let i = 0; i < apiKeys.length; i++) {
             const currentKey = apiKeys[i];
-            const url = `${googleProvider.baseUrl}/v1beta/models/${model}:generateContent?key=${currentKey}`;
+            const url = `${googleProvider.baseUrl}/v1beta/models/${model}:generateContent`;
 
             response = await safeFetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': currentKey,
+                },
                 allowedUrls: [googleProvider.baseUrl],
                 body: JSON.stringify({
                     contents: [{

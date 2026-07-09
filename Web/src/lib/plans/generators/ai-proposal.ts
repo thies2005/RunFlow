@@ -1,5 +1,6 @@
 import { RaceType } from '@/generated/prisma/browser';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
+import { safeFetch } from '@/lib/ai/providers';
 import { PLAN_CONSTANTS } from '../index';
 
 export type AiPlanProposal = {
@@ -82,7 +83,7 @@ Return a JSON array with exactly 3 proposals. Each proposal must have these fiel
 
 Respond ONLY with valid JSON, no markdown formatting.`;
 
-    const response = await fetch(`${providerConfig.baseUrl}/chat/completions`, {
+    const response = await safeFetch(`${providerConfig.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -97,6 +98,7 @@ Respond ONLY with valid JSON, no markdown formatting.`;
             temperature: 0.7,
             max_tokens: 2000,
         }),
+        allowedUrls: [providerConfig.baseUrl],
     });
 
     if (!response.ok) return null;

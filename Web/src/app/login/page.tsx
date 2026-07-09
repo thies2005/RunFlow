@@ -216,9 +216,13 @@ export default function LoginPage() {
                     {authMode === 'email' && (
                         <form onSubmit={handleEmailLogin} className="space-y-4 animate-fade-in">
                             <div className="relative">
+                                <label htmlFor="login-email" className="sr-only">Email</label>
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
                                 <input
+                                    id="login-email"
+                                    name="email"
                                     type="email"
+                                    autoComplete="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Email address"
@@ -227,9 +231,13 @@ export default function LoginPage() {
                                 />
                             </div>
                             <div className="relative">
+                                <label htmlFor="login-password" className="sr-only">Password</label>
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
                                 <input
+                                    id="login-password"
+                                    name="password"
                                     type="password"
+                                    autoComplete="current-password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Password"

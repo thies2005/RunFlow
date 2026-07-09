@@ -36,6 +36,7 @@ export type WorkoutAvgAggregateOutputType = {
   targetHrMaxBpm: number | null
   targetPaceMinSecondsPerKm: number | null
   targetPaceMaxSecondsPerKm: number | null
+  plannedTss: number | null
 }
 
 export type WorkoutSumAggregateOutputType = {
@@ -48,6 +49,7 @@ export type WorkoutSumAggregateOutputType = {
   targetHrMaxBpm: number | null
   targetPaceMinSecondsPerKm: number | null
   targetPaceMaxSecondsPerKm: number | null
+  plannedTss: number | null
 }
 
 export type WorkoutMinAggregateOutputType = {
@@ -82,6 +84,7 @@ export type WorkoutMinAggregateOutputType = {
   sport: string | null
   displayDesc: string | null
   intensityZone: string | null
+  plannedTss: number | null
 }
 
 export type WorkoutMaxAggregateOutputType = {
@@ -116,6 +119,7 @@ export type WorkoutMaxAggregateOutputType = {
   sport: string | null
   displayDesc: string | null
   intensityZone: string | null
+  plannedTss: number | null
 }
 
 export type WorkoutCountAggregateOutputType = {
@@ -151,6 +155,7 @@ export type WorkoutCountAggregateOutputType = {
   sport: number
   displayDesc: number
   intensityZone: number
+  plannedTss: number
   _all: number
 }
 
@@ -165,6 +170,7 @@ export type WorkoutAvgAggregateInputType = {
   targetHrMaxBpm?: true
   targetPaceMinSecondsPerKm?: true
   targetPaceMaxSecondsPerKm?: true
+  plannedTss?: true
 }
 
 export type WorkoutSumAggregateInputType = {
@@ -177,6 +183,7 @@ export type WorkoutSumAggregateInputType = {
   targetHrMaxBpm?: true
   targetPaceMinSecondsPerKm?: true
   targetPaceMaxSecondsPerKm?: true
+  plannedTss?: true
 }
 
 export type WorkoutMinAggregateInputType = {
@@ -211,6 +218,7 @@ export type WorkoutMinAggregateInputType = {
   sport?: true
   displayDesc?: true
   intensityZone?: true
+  plannedTss?: true
 }
 
 export type WorkoutMaxAggregateInputType = {
@@ -245,6 +253,7 @@ export type WorkoutMaxAggregateInputType = {
   sport?: true
   displayDesc?: true
   intensityZone?: true
+  plannedTss?: true
 }
 
 export type WorkoutCountAggregateInputType = {
@@ -280,6 +289,7 @@ export type WorkoutCountAggregateInputType = {
   sport?: true
   displayDesc?: true
   intensityZone?: true
+  plannedTss?: true
   _all?: true
 }
 
@@ -402,6 +412,7 @@ export type WorkoutGroupByOutputType = {
   sport: string
   displayDesc: string | null
   intensityZone: string | null
+  plannedTss: number | null
   _count: WorkoutCountAggregateOutputType | null
   _avg: WorkoutAvgAggregateOutputType | null
   _sum: WorkoutSumAggregateOutputType | null
@@ -460,6 +471,7 @@ export type WorkoutWhereInput = {
   sport?: Prisma.StringFilter<"Workout"> | string
   displayDesc?: Prisma.StringNullableFilter<"Workout"> | string | null
   intensityZone?: Prisma.StringNullableFilter<"Workout"> | string | null
+  plannedTss?: Prisma.FloatNullableFilter<"Workout"> | number | null
   intervalProgression?: Prisma.XOR<Prisma.IntervalProgressionNullableScalarRelationFilter, Prisma.IntervalProgressionWhereInput> | null
   goal?: Prisma.XOR<Prisma.GoalScalarRelationFilter, Prisma.GoalWhereInput>
   linkedActivity?: Prisma.XOR<Prisma.ActivityNullableScalarRelationFilter, Prisma.ActivityWhereInput> | null
@@ -499,6 +511,7 @@ export type WorkoutOrderByWithRelationInput = {
   sport?: Prisma.SortOrder
   displayDesc?: Prisma.SortOrderInput | Prisma.SortOrder
   intensityZone?: Prisma.SortOrderInput | Prisma.SortOrder
+  plannedTss?: Prisma.SortOrderInput | Prisma.SortOrder
   intervalProgression?: Prisma.IntervalProgressionOrderByWithRelationInput
   goal?: Prisma.GoalOrderByWithRelationInput
   linkedActivity?: Prisma.ActivityOrderByWithRelationInput
@@ -541,6 +554,7 @@ export type WorkoutWhereUniqueInput = Prisma.AtLeast<{
   sport?: Prisma.StringFilter<"Workout"> | string
   displayDesc?: Prisma.StringNullableFilter<"Workout"> | string | null
   intensityZone?: Prisma.StringNullableFilter<"Workout"> | string | null
+  plannedTss?: Prisma.FloatNullableFilter<"Workout"> | number | null
   intervalProgression?: Prisma.XOR<Prisma.IntervalProgressionNullableScalarRelationFilter, Prisma.IntervalProgressionWhereInput> | null
   goal?: Prisma.XOR<Prisma.GoalScalarRelationFilter, Prisma.GoalWhereInput>
   linkedActivity?: Prisma.XOR<Prisma.ActivityNullableScalarRelationFilter, Prisma.ActivityWhereInput> | null
@@ -580,6 +594,7 @@ export type WorkoutOrderByWithAggregationInput = {
   sport?: Prisma.SortOrder
   displayDesc?: Prisma.SortOrderInput | Prisma.SortOrder
   intensityZone?: Prisma.SortOrderInput | Prisma.SortOrder
+  plannedTss?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.WorkoutCountOrderByAggregateInput
   _avg?: Prisma.WorkoutAvgOrderByAggregateInput
   _max?: Prisma.WorkoutMaxOrderByAggregateInput
@@ -623,6 +638,7 @@ export type WorkoutScalarWhereWithAggregatesInput = {
   sport?: Prisma.StringWithAggregatesFilter<"Workout"> | string
   displayDesc?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
   intensityZone?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
+  plannedTss?: Prisma.FloatNullableWithAggregatesFilter<"Workout"> | number | null
 }
 
 export type WorkoutCreateInput = {
@@ -654,6 +670,7 @@ export type WorkoutCreateInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
   intervalProgression?: Prisma.IntervalProgressionCreateNestedOneWithoutWorkoutsInput
   goal: Prisma.GoalCreateNestedOneWithoutWorkoutsInput
   linkedActivity?: Prisma.ActivityCreateNestedOneWithoutLinkedWorkoutsInput
@@ -693,6 +710,7 @@ export type WorkoutUncheckedCreateInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
 }
 
 export type WorkoutUpdateInput = {
@@ -724,6 +742,7 @@ export type WorkoutUpdateInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   intervalProgression?: Prisma.IntervalProgressionUpdateOneWithoutWorkoutsNestedInput
   goal?: Prisma.GoalUpdateOneRequiredWithoutWorkoutsNestedInput
   linkedActivity?: Prisma.ActivityUpdateOneWithoutLinkedWorkoutsNestedInput
@@ -763,6 +782,7 @@ export type WorkoutUncheckedUpdateInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 export type WorkoutCreateManyInput = {
@@ -798,6 +818,7 @@ export type WorkoutCreateManyInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
 }
 
 export type WorkoutUpdateManyMutationInput = {
@@ -829,6 +850,7 @@ export type WorkoutUpdateManyMutationInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 export type WorkoutUncheckedUpdateManyInput = {
@@ -864,6 +886,7 @@ export type WorkoutUncheckedUpdateManyInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 export type WorkoutListRelationFilter = {
@@ -909,6 +932,7 @@ export type WorkoutCountOrderByAggregateInput = {
   sport?: Prisma.SortOrder
   displayDesc?: Prisma.SortOrder
   intensityZone?: Prisma.SortOrder
+  plannedTss?: Prisma.SortOrder
 }
 
 export type WorkoutAvgOrderByAggregateInput = {
@@ -921,6 +945,7 @@ export type WorkoutAvgOrderByAggregateInput = {
   targetHrMaxBpm?: Prisma.SortOrder
   targetPaceMinSecondsPerKm?: Prisma.SortOrder
   targetPaceMaxSecondsPerKm?: Prisma.SortOrder
+  plannedTss?: Prisma.SortOrder
 }
 
 export type WorkoutMaxOrderByAggregateInput = {
@@ -955,6 +980,7 @@ export type WorkoutMaxOrderByAggregateInput = {
   sport?: Prisma.SortOrder
   displayDesc?: Prisma.SortOrder
   intensityZone?: Prisma.SortOrder
+  plannedTss?: Prisma.SortOrder
 }
 
 export type WorkoutMinOrderByAggregateInput = {
@@ -989,6 +1015,7 @@ export type WorkoutMinOrderByAggregateInput = {
   sport?: Prisma.SortOrder
   displayDesc?: Prisma.SortOrder
   intensityZone?: Prisma.SortOrder
+  plannedTss?: Prisma.SortOrder
 }
 
 export type WorkoutSumOrderByAggregateInput = {
@@ -1001,6 +1028,7 @@ export type WorkoutSumOrderByAggregateInput = {
   targetHrMaxBpm?: Prisma.SortOrder
   targetPaceMinSecondsPerKm?: Prisma.SortOrder
   targetPaceMaxSecondsPerKm?: Prisma.SortOrder
+  plannedTss?: Prisma.SortOrder
 }
 
 export type WorkoutCreateNestedManyWithoutLinkedActivityInput = {
@@ -1208,6 +1236,7 @@ export type WorkoutCreateWithoutLinkedActivityInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
   intervalProgression?: Prisma.IntervalProgressionCreateNestedOneWithoutWorkoutsInput
   goal: Prisma.GoalCreateNestedOneWithoutWorkoutsInput
   subGoal?: Prisma.GoalCreateNestedOneWithoutTaggedWorkoutsInput
@@ -1245,6 +1274,7 @@ export type WorkoutUncheckedCreateWithoutLinkedActivityInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
 }
 
 export type WorkoutCreateOrConnectWithoutLinkedActivityInput = {
@@ -1309,6 +1339,7 @@ export type WorkoutScalarWhereInput = {
   sport?: Prisma.StringFilter<"Workout"> | string
   displayDesc?: Prisma.StringNullableFilter<"Workout"> | string | null
   intensityZone?: Prisma.StringNullableFilter<"Workout"> | string | null
+  plannedTss?: Prisma.FloatNullableFilter<"Workout"> | number | null
 }
 
 export type WorkoutCreateWithoutGoalInput = {
@@ -1340,6 +1371,7 @@ export type WorkoutCreateWithoutGoalInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
   intervalProgression?: Prisma.IntervalProgressionCreateNestedOneWithoutWorkoutsInput
   linkedActivity?: Prisma.ActivityCreateNestedOneWithoutLinkedWorkoutsInput
   subGoal?: Prisma.GoalCreateNestedOneWithoutTaggedWorkoutsInput
@@ -1377,6 +1409,7 @@ export type WorkoutUncheckedCreateWithoutGoalInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
 }
 
 export type WorkoutCreateOrConnectWithoutGoalInput = {
@@ -1418,6 +1451,7 @@ export type WorkoutCreateWithoutSubGoalInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
   intervalProgression?: Prisma.IntervalProgressionCreateNestedOneWithoutWorkoutsInput
   goal: Prisma.GoalCreateNestedOneWithoutWorkoutsInput
   linkedActivity?: Prisma.ActivityCreateNestedOneWithoutLinkedWorkoutsInput
@@ -1455,6 +1489,7 @@ export type WorkoutUncheckedCreateWithoutSubGoalInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
 }
 
 export type WorkoutCreateOrConnectWithoutSubGoalInput = {
@@ -1528,6 +1563,7 @@ export type WorkoutCreateWithoutIntervalProgressionInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
   goal: Prisma.GoalCreateNestedOneWithoutWorkoutsInput
   linkedActivity?: Prisma.ActivityCreateNestedOneWithoutLinkedWorkoutsInput
   subGoal?: Prisma.GoalCreateNestedOneWithoutTaggedWorkoutsInput
@@ -1565,6 +1601,7 @@ export type WorkoutUncheckedCreateWithoutIntervalProgressionInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
 }
 
 export type WorkoutCreateOrConnectWithoutIntervalProgressionInput = {
@@ -1625,6 +1662,7 @@ export type WorkoutCreateManyLinkedActivityInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
 }
 
 export type WorkoutUpdateWithoutLinkedActivityInput = {
@@ -1656,6 +1694,7 @@ export type WorkoutUpdateWithoutLinkedActivityInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   intervalProgression?: Prisma.IntervalProgressionUpdateOneWithoutWorkoutsNestedInput
   goal?: Prisma.GoalUpdateOneRequiredWithoutWorkoutsNestedInput
   subGoal?: Prisma.GoalUpdateOneWithoutTaggedWorkoutsNestedInput
@@ -1693,6 +1732,7 @@ export type WorkoutUncheckedUpdateWithoutLinkedActivityInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 export type WorkoutUncheckedUpdateManyWithoutLinkedActivityInput = {
@@ -1727,6 +1767,7 @@ export type WorkoutUncheckedUpdateManyWithoutLinkedActivityInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 export type WorkoutCreateManyGoalInput = {
@@ -1761,6 +1802,7 @@ export type WorkoutCreateManyGoalInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
 }
 
 export type WorkoutCreateManySubGoalInput = {
@@ -1795,6 +1837,7 @@ export type WorkoutCreateManySubGoalInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
 }
 
 export type WorkoutUpdateWithoutGoalInput = {
@@ -1826,6 +1869,7 @@ export type WorkoutUpdateWithoutGoalInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   intervalProgression?: Prisma.IntervalProgressionUpdateOneWithoutWorkoutsNestedInput
   linkedActivity?: Prisma.ActivityUpdateOneWithoutLinkedWorkoutsNestedInput
   subGoal?: Prisma.GoalUpdateOneWithoutTaggedWorkoutsNestedInput
@@ -1863,6 +1907,7 @@ export type WorkoutUncheckedUpdateWithoutGoalInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 export type WorkoutUncheckedUpdateManyWithoutGoalInput = {
@@ -1897,6 +1942,7 @@ export type WorkoutUncheckedUpdateManyWithoutGoalInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 export type WorkoutUpdateWithoutSubGoalInput = {
@@ -1928,6 +1974,7 @@ export type WorkoutUpdateWithoutSubGoalInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   intervalProgression?: Prisma.IntervalProgressionUpdateOneWithoutWorkoutsNestedInput
   goal?: Prisma.GoalUpdateOneRequiredWithoutWorkoutsNestedInput
   linkedActivity?: Prisma.ActivityUpdateOneWithoutLinkedWorkoutsNestedInput
@@ -1965,6 +2012,7 @@ export type WorkoutUncheckedUpdateWithoutSubGoalInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 export type WorkoutUncheckedUpdateManyWithoutSubGoalInput = {
@@ -1999,6 +2047,7 @@ export type WorkoutUncheckedUpdateManyWithoutSubGoalInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 export type WorkoutCreateManyIntervalProgressionInput = {
@@ -2033,6 +2082,7 @@ export type WorkoutCreateManyIntervalProgressionInput = {
   sport?: string
   displayDesc?: string | null
   intensityZone?: string | null
+  plannedTss?: number | null
 }
 
 export type WorkoutUpdateWithoutIntervalProgressionInput = {
@@ -2064,6 +2114,7 @@ export type WorkoutUpdateWithoutIntervalProgressionInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   goal?: Prisma.GoalUpdateOneRequiredWithoutWorkoutsNestedInput
   linkedActivity?: Prisma.ActivityUpdateOneWithoutLinkedWorkoutsNestedInput
   subGoal?: Prisma.GoalUpdateOneWithoutTaggedWorkoutsNestedInput
@@ -2101,6 +2152,7 @@ export type WorkoutUncheckedUpdateWithoutIntervalProgressionInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 export type WorkoutUncheckedUpdateManyWithoutIntervalProgressionInput = {
@@ -2135,6 +2187,7 @@ export type WorkoutUncheckedUpdateManyWithoutIntervalProgressionInput = {
   sport?: Prisma.StringFieldUpdateOperationsInput | string
   displayDesc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   intensityZone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plannedTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
 }
 
 
@@ -2172,6 +2225,7 @@ export type WorkoutSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   sport?: boolean
   displayDesc?: boolean
   intensityZone?: boolean
+  plannedTss?: boolean
   intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
   linkedActivity?: boolean | Prisma.Workout$linkedActivityArgs<ExtArgs>
@@ -2211,6 +2265,7 @@ export type WorkoutSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   sport?: boolean
   displayDesc?: boolean
   intensityZone?: boolean
+  plannedTss?: boolean
   intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
   linkedActivity?: boolean | Prisma.Workout$linkedActivityArgs<ExtArgs>
@@ -2250,6 +2305,7 @@ export type WorkoutSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   sport?: boolean
   displayDesc?: boolean
   intensityZone?: boolean
+  plannedTss?: boolean
   intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
   linkedActivity?: boolean | Prisma.Workout$linkedActivityArgs<ExtArgs>
@@ -2289,9 +2345,10 @@ export type WorkoutSelectScalar = {
   sport?: boolean
   displayDesc?: boolean
   intensityZone?: boolean
+  plannedTss?: boolean
 }
 
-export type WorkoutOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "goalId" | "scheduledDate" | "workoutType" | "description" | "phase" | "order" | "notes" | "targetDistance" | "targetDuration" | "targetPace" | "targetHrZone" | "targetHrZoneLabel" | "targetHrMinBpm" | "targetHrMaxBpm" | "targetPaceZoneLabel" | "targetPaceMinSecondsPerKm" | "targetPaceMaxSecondsPerKm" | "isCompleted" | "completedAt" | "linkedActivityId" | "createdAt" | "updatedAt" | "customName" | "color" | "intervalProgressionId" | "structuredSteps" | "groupId" | "subGoalId" | "sport" | "displayDesc" | "intensityZone", ExtArgs["result"]["workout"]>
+export type WorkoutOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "goalId" | "scheduledDate" | "workoutType" | "description" | "phase" | "order" | "notes" | "targetDistance" | "targetDuration" | "targetPace" | "targetHrZone" | "targetHrZoneLabel" | "targetHrMinBpm" | "targetHrMaxBpm" | "targetPaceZoneLabel" | "targetPaceMinSecondsPerKm" | "targetPaceMaxSecondsPerKm" | "isCompleted" | "completedAt" | "linkedActivityId" | "createdAt" | "updatedAt" | "customName" | "color" | "intervalProgressionId" | "structuredSteps" | "groupId" | "subGoalId" | "sport" | "displayDesc" | "intensityZone" | "plannedTss", ExtArgs["result"]["workout"]>
 export type WorkoutInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
@@ -2352,6 +2409,7 @@ export type $WorkoutPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     sport: string
     displayDesc: string | null
     intensityZone: string | null
+    plannedTss: number | null
   }, ExtArgs["result"]["workout"]>
   composites: {}
 }
@@ -2811,6 +2869,7 @@ export interface WorkoutFieldRefs {
   readonly sport: Prisma.FieldRef<"Workout", 'String'>
   readonly displayDesc: Prisma.FieldRef<"Workout", 'String'>
   readonly intensityZone: Prisma.FieldRef<"Workout", 'String'>
+  readonly plannedTss: Prisma.FieldRef<"Workout", 'Float'>
 }
     
 

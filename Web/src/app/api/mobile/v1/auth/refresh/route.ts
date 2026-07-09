@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         // Verify user still exists
         const user = await prisma.user.findUnique({
             where: { id: payload.userId },
-            select: { id: true }
+            select: { id: true, tokenVersion: true }
         });
 
         if (!user) {
@@ -62,8 +62,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Enforce token-version-based revocation: if the refresh token carries a
+        // tokenVersion that no longer matches the user's current version, it has
+        // been revoked (e.g. via logout or password change).
+        if (payload.tokenVersion !== undefined && user.tokenVersion !== payload.tokenVersion) {
+            return NextResponse.json(
+                { error: 'Token has been revoked' },
+                { status: 401 }
+            );
+        }
+
         // Generate new token pair
-        const tokens = await generateTokenPair(user.id);
+        const tokens = await generateTokenPair(user.id, user.tokenVersion);
 
         return NextResponse.json({
             accessToken: tokens.accessToken,

@@ -54,9 +54,11 @@ describe('Token Encryption', () => {
             expect(decryptToken(encrypted2)).toBe(token);
         });
 
-        it('should return raw value for data too short to be encrypted (migration fallback)', () => {
+        it('should throw on data too short to be encrypted (fail closed — no plaintext fallback)', () => {
             const shortData = 'plaintext-token';
-            expect(decryptToken(shortData)).toBe(shortData);
+            // Security: short values must NOT be treated as valid plaintext tokens.
+            // Fail closed to force re-encryption / migration of any historical plaintext.
+            expect(() => decryptToken(shortData)).toThrow(/too short to be encrypted|Token decryption failed/);
         });
 
         it('should throw on decryption with wrong key', () => {

@@ -20,6 +20,7 @@ export function UserMenu({
     const [isOpen, setIsOpen] = useState(false);
     const { theme, setTheme } = useTheme();
     const menuRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -31,24 +32,38 @@ export function UserMenu({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const handleTriggerKeydown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape' && isOpen) {
+            e.preventDefault();
+            setIsOpen(false);
+            triggerRef.current?.focus();
+        }
+    };
+
     if (!session?.user) return null;
 
     return (
         <div className="relative" ref={menuRef}>
-            <div onClick={() => setIsOpen(!isOpen)} className={trigger ? "cursor-pointer" : ""}>
+            <button
+                ref={triggerRef}
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                onKeyDown={handleTriggerKeydown}
+                aria-haspopup="menu"
+                aria-expanded={isOpen}
+                className={`flex items-center gap-2 p-1 rounded-full transition-colors border border-transparent hover:bg-surface-hover hover:border-glass-border ${trigger ? "cursor-pointer" : ""}`}
+            >
                 {trigger || (
-                    <button
-                        className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-hover transition-colors border border-transparent hover:border-glass-border"
-                    >
+                    <>
                         <UserAvatar
                             image={session.user.image}
                             name={session.user.name}
                             className="w-8 h-8 border border-glass-border"
                         />
                         <ChevronDown className={`w-4 h-4 text-foreground-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                    </button>
+                    </>
                 )}
-            </div>
+            </button>
 
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-56 glass-card shadow-2xl z-[100] overflow-hidden animate-in slide-in-from-top-2 duration-200">

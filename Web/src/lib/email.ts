@@ -82,3 +82,93 @@ export async function sendPasswordResetEmail(email: string, code: string) {
         throw error;
     }
 }
+
+export interface WorkoutEmailData {
+    name?: string;
+    workoutType: string;
+    description?: string;
+    targetDistance?: number | null;
+    targetDuration?: number | null;
+    scheduledDate: Date;
+    appUrl: string;
+}
+
+/** Format a target distance (meters) as "X.X km" when > 1000, otherwise meters. */
+function formatDistance(meters: number): string {
+    return meters > 1000
+        ? `${(meters / 1000).toFixed(1)} km`
+        : `${Math.round(meters)} m`;
+}
+
+/** Format a target duration (seconds) as a human-readable duration. */
+function formatDuration(seconds: number): string {
+    const totalMinutes = Math.round(seconds / 60);
+    if (totalMinutes < 60) return `${totalMinutes} min`;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return minutes > 0 ? `${hours} hr ${minutes} min` : `${hours} hr`;
+}
+
+export async function sendWorkoutReminderEmail(email: string, workout: WorkoutEmailData): Promise<unknown> {
+    logger.info('Attempting to send workout reminder email', { email });
+    try {
+        const title = workout.name || workout.workoutType.replace(/_/g, ' ');
+        const planUrl = `${workout.appUrl}/plan`;
+
+        const detailLines: string[] = [];
+        if (workout.targetDistance) detailLines.push(`Distance: ${formatDistance(workout.targetDistance)}`);
+        if (workout.targetDuration) detailLines.push(`Duration: ${formatDuration(workout.targetDuration)}`);
+        const detailsText = detailLines.join(' • ');
+
+        // Escape all user-controlled fields before interpolating into HTML to prevent
+        // markup/script injection in the email body. (title comes from workout.customName,
+        // description from workout.description — both freely settable by the user.)
+        const safeTitle = escapeHtml(title);
+        const safeDetails = escapeHtml(detailsText);
+        const safeDescription = workout.description ? escapeHtml(workout.description) : '';
+
+        const info = await transporter.sendMail({
+            from: DEFAULT_FROM,
+            to: email,
+            subject: `Tomorrow's workout: ${title}`,
+            text: `Here's tomorrow's workout:\n\n${title}${detailsText ? `\n${detailsText}` : ''}${workout.description ? `\n\n${workout.description}` : ''}\n\nView your plan: ${planUrl}`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h1>Tomorrow's workout</h1>
+                    <p>Here's tomorrow's workout:</p>
+                    <div style="background-color: #f4f4f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <p style="margin: 0; font-size: 20px; font-weight: bold; text-transform: capitalize;">${safeTitle}</p>
+                        ${safeDetails ? `<p style="margin: 8px 0 0 0; color: #666;">${safeDetails}</p>` : ''}
+                    </div>
+                    ${safeDescription ? `<p>${safeDescription}</p>` : ''}
+                    <div style="text-align: center; margin: 20px 0;">
+                        <a href="${planUrl}" style="display: inline-block; background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500;">
+                            View your plan
+                        </a>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">
+                        You're receiving this because you enabled workout email reminders in RunFlow.
+                    </p>
+                </div>
+            `
+        });
+        logger.info('Workout reminder email sent successfully', { email, messageId: info.messageId });
+        return info;
+    } catch (error) {
+        logger.error('Failed to send workout reminder email', { email, error: error instanceof Error ? error.message : String(error) });
+        throw error;
+    }
+}
+
+/**
+ * Escape a string for safe interpolation into HTML email bodies.
+ * Defends against markup/script injection from user-controlled workout fields.
+ */
+function escapeHtml(s: string): string {
+    return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}

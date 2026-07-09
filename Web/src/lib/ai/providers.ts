@@ -7,6 +7,28 @@ import { prisma } from '@/lib/db';
 import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 
+/**
+ * Decrypt an AI provider key, falling back to plaintext for historical data.
+ *
+ * Mirrors `tryDecryptOrPlaintext` in lib/strava/oauth.ts so legacy plaintext
+ * keys keep working (with a logged warning) while correctly-encrypted keys are
+ * decrypted. decryptToken now throws on short/corrupt values (fail-closed), so
+ * callers must wrap it; AI features should degrade gracefully rather than crash.
+ */
+export function tryDecryptAiKey(storedKey: string, keyType: string, contextId?: string): string | null {
+    if (!storedKey) return null;
+    try {
+        return decryptToken(storedKey);
+    } catch (error) {
+        logger.warn('Falling back to legacy plaintext AI provider key', {
+            keyType,
+            contextId,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        return storedKey;
+    }
+}
+
 export interface ChatMessage {
     role: 'system' | 'user' | 'assistant';
     content: string;
@@ -180,7 +202,7 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
 
     // If user has custom API key AND is in BYOK mode ('none'), use their config
     if (userSettings.customApiKey && userSettings.usageTier === 'none') {
-        const decryptedKey = decryptToken(userSettings.customApiKey);
+        const decryptedKey = tryDecryptAiKey(userSettings.customApiKey, 'customApiKey', userId);
         if (decryptedKey) {
             const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
             const baseUrl = userSettings.customBaseUrl || 'https://api.openai.com/v1';
@@ -210,7 +232,7 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
 
     // 1. Use Active Provider if set
     if (globalSettings?.activeProvider) {
-        const decryptedKey = decryptToken(globalSettings.activeProvider.apiKey);
+        const decryptedKey = tryDecryptAiKey(globalSettings.activeProvider.apiKey, 'activeProvider', globalSettings.activeProvider.id);
         if (decryptedKey) {
             const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
             const baseUrl = globalSettings.activeProvider.baseUrl;
@@ -221,7 +243,7 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
 
             let fallbackAiConfig: AiConfig | undefined;
             if (globalSettings.fallbackProvider) {
-                const fbDecryptedKey = decryptToken(globalSettings.fallbackProvider.apiKey);
+                const fbDecryptedKey = tryDecryptAiKey(globalSettings.fallbackProvider.apiKey, 'fallbackProvider', globalSettings.fallbackProvider.id);
                 if (fbDecryptedKey) {
                     const fbApiKeys = fbDecryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
                     if (fbApiKeys.length > 0 && validateBaseUrl(globalSettings.fallbackProvider.baseUrl, [globalSettings.fallbackProvider.baseUrl])) {
@@ -252,7 +274,7 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
 
     // 2. Fallback to Legacy Global Config
     if (globalSettings?.defaultApiKey) {
-        const decryptedKey = decryptToken(globalSettings.defaultApiKey);
+        const decryptedKey = tryDecryptAiKey(globalSettings.defaultApiKey, 'defaultApiKey');
         if (decryptedKey) {
             const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
             const baseUrl = globalSettings.defaultBaseUrl;
@@ -321,7 +343,7 @@ export async function getAiConfigForModel(userId: string, targetModel: string): 
     }
 
     if (matchingProvider) {
-        const decryptedKey = decryptToken(matchingProvider.apiKey);
+        const decryptedKey = tryDecryptAiKey(matchingProvider.apiKey, 'matchingProvider', matchingProvider.id);
         if (decryptedKey) {
             const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
             if (apiKeys.length > 0 && validateBaseUrl(matchingProvider.baseUrl, [matchingProvider.baseUrl])) {

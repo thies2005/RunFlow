@@ -6,9 +6,10 @@ describe('formatContextForAi', () => {
         expect(formatContextForAi(context)).toBe('');
     });
 
-    it('should format name correctly', () => {
+    it('should format name correctly (fenced as untrusted data)', () => {
         const context: UserContext = { name: 'John Doe' };
-        expect(formatContextForAi(context)).toBe('Athlete: John Doe');
+        // Name is wrapped as untrusted data to prevent prompt injection via athlete name.
+        expect(formatContextForAi(context)).toBe('Athlete: [untrusted user data: John Doe]');
     });
 
     it('should format biometrics correctly', () => {
@@ -102,8 +103,8 @@ describe('formatContextForAi', () => {
         };
 
         const result = formatContextForAi(context);
-        // 10 days away
-        expect(result).toContain('Goals: Marathon (running, 10 days away, target: 4:00:00)');
+        // 10 days away. Goal name is fenced as untrusted data (prompt-injection hardening).
+        expect(result).toContain('Goals: [untrusted user data: Marathon] (running, 10 days away, target: 4:00:00)');
 
         // Restore Date.now
         global.Date.now = realDateNow;
@@ -186,7 +187,7 @@ describe('formatContextForAi', () => {
         const result = formatContextForAi(context);
         const lines = result.split('\n');
 
-        expect(lines).toContain('Athlete: Jane Doe');
+        expect(lines).toContain('Athlete: [untrusted user data: Jane Doe]');
         expect(lines).toContain('Profile: 28 years old, f');
         expect(lines).toContain('Current Fitness: CTL 50.0, ATL 40.0, TSB 10.0 (Form: Balanced)');
         expect(lines).toContain('Max HR: 195');

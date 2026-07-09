@@ -4,6 +4,7 @@
 
 import { prisma } from '@/lib/db';
 import { DAY_MS } from '@/lib/constants';
+import { fenceUntrusted } from '@/lib/ai/prompts';
 
 export interface UserContext {
     // Basic info
@@ -448,7 +449,7 @@ export function formatContextForAi(context: UserContext): string {
     const parts: string[] = [];
 
     if (context.name) {
-        parts.push(`Athlete: ${context.name}`);
+        parts.push(`Athlete: ${fenceUntrusted(context.name)}`);
     }
 
     if (context.biometrics) {
@@ -481,7 +482,7 @@ export function formatContextForAi(context: UserContext): string {
         const goalStrs = context.goals.map((g) => {
             const daysUntil = g.raceDate ? Math.ceil((new Date(g.raceDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
             const raceStr = g.raceType ? `${g.raceType}${daysUntil !== null ? `, ${daysUntil} days away` : ''}` : '';
-            return `${g.name} (${raceStr}${g.targetTime ? `, target: ${formatTime(g.targetTime)}` : ''})`;
+            return `${fenceUntrusted(g.name)} (${raceStr}${g.targetTime ? `, target: ${formatTime(g.targetTime)}` : ''})`;
         });
         parts.push(`Goals: ${goalStrs.join('; ')}`);
     }
@@ -536,7 +537,7 @@ export function formatContextForAi(context: UserContext): string {
         const dist = (a.distance / 1000).toFixed(1);
         const paceMin = Math.floor(a.pace / 60);
         const paceSec = Math.floor(a.pace % 60).toString().padStart(2, '0');
-        parts.push(`Today's Activity: ${a.name} (${a.type}) - ${dist}km at ${paceMin}:${paceSec}/km${a.avgHr ? ` | ${Math.round(a.avgHr)}bpm` : ''}`);
+        parts.push(`Today's Activity: ${fenceUntrusted(a.name)} (${a.type}) - ${dist}km at ${paceMin}:${paceSec}/km${a.avgHr ? ` | ${Math.round(a.avgHr)}bpm` : ''}`);
     }
 
     return parts.join('\n');

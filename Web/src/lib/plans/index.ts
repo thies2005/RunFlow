@@ -65,7 +65,7 @@ export const PLAN_CONSTANTS = {
     MAX_TIME_ON_FEET_SECONDS: 12600,
 };
 
-const TAPER_FRACTIONS: Partial<Record<RaceType, number[]>> = {
+export const TAPER_FRACTIONS: Partial<Record<RaceType, number[]>> = {
     FIVE_K: [0.75],
     TEN_K: [0.80, 0.60],
     HALF_MARATHON: [0.75, 0.55],
@@ -86,6 +86,22 @@ export function classifyCustomRunDistance(customDistanceM: number): RaceType {
     return 'MARATHON';
 }
 
+/**
+ * Default taper length for a standard (non-ultra, non-tri) run plan, derived
+ * from {@link TAPER_FRACTIONS}. Mirrors the value the standard generator passes
+ * to {@link resolvePhaseBudget}, so callers that need to reproduce the generator's
+ * phase budget (e.g. the regenerate route) get identical phase boundaries.
+ */
+export function getDefaultRunTaperWeeks(raceType: RaceType | null, customDistanceM?: number | null): number {
+    if (raceType === 'CUSTOM_DISTANCE' && customDistanceM && customDistanceM > 0) {
+        return TAPER_FRACTIONS[classifyCustomRunDistance(customDistanceM)]?.length || 2;
+    }
+    if (raceType) {
+        return TAPER_FRACTIONS[raceType]?.length || 2;
+    }
+    return 2;
+}
+
 export interface PhaseBudget {
     taperWeeks: number;
     peakWeeks: number;
@@ -95,9 +111,19 @@ export interface PhaseBudget {
     mentalPrepWeeks?: number;
 }
 
+/**
+ * Minimal subset of {@link PlanConfig} that {@link resolvePhaseBudget} reads.
+ * Accepting this narrower type lets callers that only need to reproduce the
+ * generator's phase boundaries (e.g. the regenerate route, which re-tags
+ * existing workouts without re-running the full generator) build a small
+ * config object instead of the full {@link PlanConfig}. A full {@link PlanConfig}
+ * still satisfies this type, so existing callers are unaffected.
+ */
+export type PhaseBudgetConfig = Pick<PlanConfig, 'taperWeeks' | 'peakWeeks' | 'buildWeeks'>;
+
 export function resolvePhaseBudget(
     totalWeeks: number,
-    config: PlanConfig,
+    config: PhaseBudgetConfig,
     options: {
         isTriathlon?: boolean;
         isUltra?: boolean;
@@ -293,15 +319,18 @@ function resolvePhaseVdot(currentVdot: number, targetVdot: number | undefined | 
     if (!targetVdot || targetVdot <= currentVdot) return currentVdot;
     const gap = targetVdot - currentVdot;
     const maxVdot = Math.round((currentVdot * 1.05) * 10) / 10;
+    // Taper physiologically HOLDS peak fitness rather than progressing it, so
+    // it should use exactly the VDOT PEAK would produce (no further gap
+    // closure). Reuse the PEAK computation instead of progressing further.
+    if (phase === 'TAPER') {
+        return resolvePhaseVdot(currentVdot, targetVdot, 'PEAK');
+    }
     let progressionVdot: number;
     switch (phase) {
         case 'BUILD':
             progressionVdot = currentVdot + gap * 0.5;
             break;
         case 'PEAK':
-            progressionVdot = currentVdot + gap * 0.75;
-            break;
-        case 'TAPER':
             progressionVdot = currentVdot + gap * 0.75;
             break;
         default:
@@ -452,7 +481,14 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
                 if (w.type !== WorkoutType.RACE) {
                     specificDate.setDate(specificDate.getDate() + w.dayOffset);
                 }
-                if (specificDate < startDate) return;
+                // B6: a very short plan can start inside race week, which used
+                // to drop every pre-race shakeout/stride (specificDate < startDate).
+                // Clamp to the plan start instead so the athlete still gets a
+                // shakeout. The RACE itself is always on or after startDate
+                // (it is the plan terminus), so it is unaffected.
+                if (specificDate < startDate) {
+                    specificDate.setTime(startDate.getTime());
+                }
                 workouts.push({
                     date: specificDate,
                     type: w.type,
@@ -554,7 +590,16 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     return result;
 }
 
-function getPhase(
+/**
+ * Canonical per-week phase resolver. Maps a week's `weeksUntilRace` to a
+ * {@link Phase} using the budget produced by {@link resolvePhaseBudget}.
+ *
+ * Exported so the regenerate route can re-tag existing workouts' phases
+ * without re-running the full plan generator (which would also recompute
+ * distances/volumes). Keeping this as the single source of truth guarantees
+ * the regenerate route's phase boundaries match the generator exactly.
+ */
+export function getPhase(
     weeksUntilRace: number,
     options?: { taperWeeks?: number; peakWeeks?: number; buildWeeks?: number }
 ): Phase {
@@ -562,6 +607,7 @@ function getPhase(
     const peakWeeks = options?.peakWeeks ?? 0;
     const buildWeeks = options?.buildWeeks ?? 0;
 
+    if (weeksUntilRace <= 0) return 'BASE';
     if (weeksUntilRace === 1) return 'RACE_WEEK';
     if (taperWeeks > 0 && weeksUntilRace <= taperWeeks) return 'TAPER';
     if (peakWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks) return 'PEAK';

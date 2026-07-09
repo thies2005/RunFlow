@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
+import { prisma } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
     try {
@@ -29,6 +30,13 @@ export async function POST(request: NextRequest) {
         // - Add the token to a blacklist
         // - Clear any server-side user state
         // - Log the logout event
+
+        // Bump tokenVersion to invalidate all existing refresh+access tokens
+        // issued for this user (token-version-based revocation).
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { tokenVersion: { increment: 1 } }
+        });
 
         return NextResponse.json({
             success: true,

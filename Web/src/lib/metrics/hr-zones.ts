@@ -29,13 +29,44 @@ const HR_ZONE_LABELS: Record<number, string> = {
     7: 'Z7 Neuromuscular',
 };
 
-function normalizeZoneValue(value: number | null | undefined, hrMax?: number | null): number | null {
+/**
+ * Normalizes a raw HR-zone boundary value into an absolute BPM number.
+ *
+ * Backwards-compatible heuristic: a value <= 100 is treated as a PERCENTAGE of
+ * `hrMax` (when `hrMax` is provided), because the legacy CUSTOM zone inputs
+ * historically accepted percentages. A value > 100 is treated as an absolute
+ * BPM.
+ *
+ * Bug B5: this heuristic silently misreads a low literal BPM (e.g. a Z1 max of
+ * 95 BPM) as "95% of hrMax". The opt-in flags below let callers that *know*
+ * their unit bypass the heuristic:
+ *  - `{ asPercent: true }`  -> always interpret as a percentage of hrMax
+ *  - `{ asBpm: true }`      -> always interpret as an absolute BPM
+ *
+ * Existing callers pass no opts and keep the legacy behaviour; new callers can
+ * opt into unambiguous handling.
+ */
+function normalizeZoneValue(
+    value: number | null | undefined,
+    hrMax?: number | null,
+    opts?: { asPercent?: boolean; asBpm?: boolean },
+): number | null {
     if (value == null) return null;
     const rounded = Math.round(value);
     if (rounded <= 0) return null;
-    if (rounded <= 100 && hrMax && hrMax >= 100) {
+
+    // Explicit BPM: treat every value as absolute, regardless of magnitude.
+    if (opts?.asBpm) {
+        return rounded;
+    }
+
+    // Explicit percent (or the legacy <=100 heuristic): scale against hrMax.
+    const interpretAsPercent = opts?.asPercent === true
+        || (opts?.asPercent === undefined && rounded <= 100 && hrMax != null && hrMax >= 100);
+    if (interpretAsPercent && hrMax != null && hrMax >= 100) {
         return Math.round(hrMax * (rounded / 100));
     }
+
     return rounded;
 }
 

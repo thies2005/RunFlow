@@ -5,6 +5,8 @@ export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { createSnapshot } from '@/lib/plan/snapshot';
 import { checkFieldConsistency, deriveMissingField } from '@/lib/plans/validate-workout';
+import { adaptPlanAfterCompletion } from '@/lib/plans/adapt';
+import { logger } from '@/lib/logging/logger';
 
 type RouteContext = { params: Promise<{ goalId: string; workoutId: string }> };
 
@@ -97,6 +99,22 @@ export async function PATCH(req: Request, ctx: RouteContext) {
             where: { id: workoutId },
             data: updateData,
         });
+
+        // When a workout is being marked complete, adapt the plan in the
+        // background (fire-and-forget). Adaptivity is conservative: it only
+        // re-derives paces for future, incomplete workouts when the runner's
+        // effective VDOT has shifted meaningfully. Failures are logged but
+        // never break the update response.
+        const justCompleted = body.isCompleted === true && !workout.isCompleted;
+        if (justCompleted) {
+            void adaptPlanAfterCompletion(goalId, session.user.id).catch((err) => {
+                logger.error('Plan adaptivity failed after workout completion', {
+                    goalId,
+                    workoutId,
+                    error: err instanceof Error ? err.message : String(err),
+                });
+            });
+        }
 
         return NextResponse.json({ workout: updated, warnings });
     } catch (error) {

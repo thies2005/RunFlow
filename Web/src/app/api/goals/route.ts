@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
                         },
                     },
                     orderBy: { scheduledDate: 'asc' },
+                    take: 400,
                 },
             },
         });

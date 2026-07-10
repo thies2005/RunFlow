@@ -3,29 +3,25 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { MobileBottomNav } from './MobileBottomNav';
-import { Home, Calendar, BarChart3, Bot, Heart } from 'lucide-react';
+import { Home, CalendarDays, BarChart3, CalendarRange } from 'lucide-react';
 import StravaPoweredFooter from '@/components/StravaPoweredFooter';
 
 interface MobileSwipeLayoutProps {
     children: React.ReactNode[];
     onPageChange?: (_index: number) => void;
     onPathChange?: (_path: string) => void;
-    showAiChat?: boolean;
-    showHealth?: boolean;
-    onChatTabClick?: () => void;
 }
 
-const _BASE_PATHS = ['/', '/plan', '/analytics'];
+const _BASE_PATHS = ['/', '/plan', '/analytics', '/calendar'];
 
-export function MobileSwipeLayout({ children, onPageChange, onPathChange, showAiChat = true, showHealth = false, onChatTabClick }: MobileSwipeLayoutProps) {
+export function MobileSwipeLayout({ children, onPageChange, onPathChange }: MobileSwipeLayoutProps) {
 
     const tabs = useMemo(() => [
         { icon: Home, label: 'Home', path: '/' },
-        { icon: Calendar, label: 'Plan', path: '/plan' },
+        { icon: CalendarDays, label: 'Plan', path: '/plan' },
         { icon: BarChart3, label: 'Analytics', path: '/analytics' },
-        ...(showHealth ? [{ icon: Heart, label: 'Health', path: '/health' }] : []),
-        ...(showAiChat ? [{ icon: Bot, label: 'Coach', path: '/chat' }] : []),
-    ], [showAiChat, showHealth]);
+        { icon: CalendarRange, label: 'Calendar', path: '/calendar' },
+    ], []);
 
     const paths = useMemo(() => tabs.map(t => t.path), [tabs]);
 
@@ -60,16 +56,10 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange, showAi
 
     // Simplified navigation - no swiping, no sliding
     const handleTabChange = useCallback((index: number) => {
-        // Allow re-clicking the Chat tab to reset it (navigate to base /chat)
-        const isChatTab = paths[index] === '/chat';
-        if (index >= 0 && index < paths.length && (index !== activeIndex || isChatTab)) {
+        if (index >= 0 && index < paths.length && index !== activeIndex) {
             setActiveIndex(index);
             window.history.replaceState(null, '', paths[index]);
             onPageChange?.(index);
-
-            if (isChatTab && onChatTabClick) {
-                onChatTabClick();
-            }
 
             // If navigating to Plan page, scroll to today
             if (paths[index] === '/plan') {
@@ -82,10 +72,7 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange, showAi
                 }, 100);
             }
         }
-    }, [activeIndex, onPageChange, paths, onChatTabClick]);
-
-    // Derive from activeIndex, not pathname, since we use replaceState
-    const isChat = paths[activeIndex] === '/chat';
+    }, [activeIndex, onPageChange, paths]);
 
     return (
         <div
@@ -93,7 +80,7 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange, showAi
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
             {/* Content Container - No swipe, simple fade */}
-            <div className={`h-full w-full overflow-hidden ${isChat ? 'pb-[calc(90px+env(safe-area-inset-bottom))]' : 'pb-[calc(80px+env(safe-area-inset-bottom))]'}`}>
+            <div className="h-full w-full overflow-hidden pb-[calc(80px+env(safe-area-inset-bottom))]">
                 <motion.div
                     key={activeIndex}
                     initial={{ opacity: 0 }}
@@ -101,16 +88,14 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange, showAi
                     transition={{ duration: 0.2 }}
                     className="h-full w-full"
                 >
-                    <div className={`h-full w-full ${isChat ? 'overflow-hidden' : 'overflow-y-auto overscroll-y-contain'}`}>
-                        <div className={isChat ? 'h-full' : 'min-h-full'}>
+                    <div className="h-full w-full overflow-y-auto overscroll-y-contain">
+                        <div className="min-h-full">
                             {/* Only render children that match current config */}
                             {children[activeIndex]}
-                            {/* Strava footer at bottom - hide on chat */}
-                            {!isChat && (
-                                <div className="py-6 px-4">
-                                    <StravaPoweredFooter />
-                                </div>
-                            )}
+                            {/* Strava footer at bottom */}
+                            <div className="py-6 px-4">
+                                <StravaPoweredFooter />
+                            </div>
                         </div>
                     </div>
                 </motion.div>

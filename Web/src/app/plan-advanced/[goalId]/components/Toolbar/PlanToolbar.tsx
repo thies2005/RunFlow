@@ -4,21 +4,22 @@ import { UndoRedoButtons } from './UndoRedoButtons';
 import { ViewModeToggle } from './ViewModeToggle';
 import { ModeToggle } from './ModeToggle';
 import { PlanActionsMenu } from './PlanActionsMenu';
-import { Pencil, Check, MessageSquare } from 'lucide-react';
+import { Pencil, Check, MessageSquare, ArrowLeft } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import type { PlanCreationMode } from '../../hooks/usePlanMode';
 
 interface PlanToolbarProps {
     goalId: string;
     planName: string;
     mode: PlanCreationMode;
-    onModeChange: (mode: PlanCreationMode) => void;
-    onNameChange?: (name: string) => void;
+    onModeChange: (_mode: PlanCreationMode) => void;
+    onNameChange?: (_name: string) => void;
     onImportCsv?: () => void;
     onExportCsv?: () => void;
     /** Replaces the old onAnalyzePlan — drives the Calendar/Analysis view toggle */
     viewMode?: 'calendar' | 'analysis';
-    onViewModeChange?: (mode: 'calendar' | 'analysis') => void;
+    onViewModeChange?: (_mode: 'calendar' | 'analysis') => void;
     onToggleChat?: () => void;
     chatOpen?: boolean;
     isPremium?: boolean;
@@ -41,6 +42,7 @@ export function PlanToolbar({
     const [isEditingName, setIsEditingName] = useState(false);
     const [editName, setEditName] = useState(planName);
     const inputRef = useRef<HTMLInputElement>(null);
+    const router = useRouter();
 
     useEffect(() => {
         if (isEditingName) inputRef.current?.focus();
@@ -58,6 +60,17 @@ export function PlanToolbar({
 
     return (
         <div className="h-14 border-b border-zinc-800 flex items-center px-4 gap-3 shrink-0">
+            <button
+                type="button"
+                onClick={() => router.push('/plan-advanced')}
+                className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+                title="Back to Plans"
+            >
+                <ArrowLeft className="w-4 h-4" />
+            </button>
+
+            <div className="w-px h-6 bg-zinc-800 shrink-0" />
+
             <UndoRedoButtons goalId={goalId} />
 
             <ModeToggle mode={mode} onModeChange={onModeChange} isPremium={isPremium} />

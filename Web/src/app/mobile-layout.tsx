@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { format, isSameDay } from 'date-fns';
@@ -14,8 +14,6 @@ import {
     TouchSensor,
     KeyboardSensor,
 } from '@dnd-kit/core';
-
-import { X } from 'lucide-react';
 
 import { MobileSwipeLayout } from '@/components/navigation';
 import { useAnalyticsMetrics } from '@/hooks/useAnalyticsMetrics';
@@ -37,24 +35,19 @@ const AnalyticsView = dynamic(() => import('@/components/views/AnalyticsView'), 
     ssr: false,
     loading: () => <div className="h-full w-full animate-pulse bg-background" />,
 });
-const HealthView = dynamic(() => import('@/components/views/HealthView'), {
+const CalendarView = dynamic(() => import('@/components/views/CalendarView').then(m => ({ default: m.CalendarView })), {
     ssr: false,
     loading: () => <div className="h-full w-full animate-pulse bg-background" />,
 });
-const ChatSidebar = dynamic(() => import('@/components/ChatSidebar'), { ssr: false, loading: () => null });
 const SettingsModal = dynamic(() => import('@/components/SettingsModal'), { ssr: false, loading: () => null });
 const EditWorkoutModal = dynamic(() => import('@/components/EditWorkoutModal'), { ssr: false, loading: () => null });
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false, loading: () => null });
 const ActivityDetailsModal = dynamic(() => import('@/components/ActivityDetailsModal'), { ssr: false, loading: () => null });
 const ShapeCalibrationModal = dynamic(() => import('@/components/ShapeCalibrationModal'), { ssr: false, loading: () => null });
-const AiSettingsModal = dynamic(() => import('@/components/AiSettingsModal'), { ssr: false, loading: () => null });
-const AiChat = dynamic(() => import('@/components/AiChat'), { ssr: false });
 
 export function MobileLayout() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const sessionId = searchParams.get('sessionId') || undefined;
     const queryClient = useQueryClient();
 
     // Modals State
@@ -67,10 +60,6 @@ export function MobileLayout() {
     // M-06 fix: Use proper ActivityListItem type (matches ActivityDetailsModal props)
     const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
-    const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
-    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-    const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
-    const [aiChatResetKey, setAiChatResetKey] = useState(0);
     const [activePath, setActivePath] = useState(() => (typeof window !== 'undefined' ? window.location.pathname : '/'));
 
     // Plan State
@@ -82,8 +71,7 @@ export function MobileLayout() {
 
     const isPlanPath = activePath === '/plan';
     const isAnalyticsPath = activePath === '/analytics';
-    const isHealthPath = activePath === '/health';
-    const isChatPath = activePath === '/chat';
+    const isCalendarPath = activePath === '/calendar';
 
     // DnD Sensors for Plan
     // DnD Sensors for Plan
@@ -165,22 +153,9 @@ export function MobileLayout() {
         enabled: status === 'authenticated' && isAnalyticsPath,
     });
 
-    // AI Settings Query
-    const { data: aiSettingsData } = useQuery({
-        queryKey: ['ai-settings'],
-        queryFn: async () => {
-            const res = await fetch('/api/ai/settings');
-            if (!res.ok) throw new Error('Failed to fetch AI settings');
-            return res.json();
-        },
-        enabled: status === 'authenticated',
-    });
-
-    // Determine if AI chat should be shown
-    const showAiChat = aiSettingsData?.settings?.adminAllowed;
-
     // Determine if Health should be shown
     const showHealth = userData?.healthTrackingEnabled === true;
+    void showHealth; // Health tab temporarily hidden from nav; retained for re-enable
 
     // Analytics History Query
     const { data: historyData } = useQuery({
@@ -319,20 +294,24 @@ export function MobileLayout() {
     }, []);
 
     // === AUTH GUARDS ===
+    // Redirects must run in an effect — calling router.push() during render
+    // triggers a "Cannot update a component while rendering a different
+    // component" error (Router state update inside MobileLayout render).
+    const shouldRedirectToLogin = status === 'unauthenticated';
+    const shouldRedirectToOnboarding =
+        status === 'authenticated' && !isDashboardLoading && !activeGoal && !incompleteGoal &&
+        (typeof window === 'undefined' || localStorage.getItem('runflow_onboarding_dismissed') !== 'true');
 
-
-
-    if (status === 'unauthenticated') {
-        router.push('/login');
-        return null;
-    }
-
-    if (status === 'authenticated' && !isDashboardLoading && !activeGoal && !incompleteGoal) {
-        const dismissed = typeof window !== 'undefined' && localStorage.getItem('runflow_onboarding_dismissed') === 'true';
-        if (!dismissed) {
+    useEffect(() => {
+        if (shouldRedirectToLogin) {
+            router.push('/login');
+        } else if (shouldRedirectToOnboarding) {
             router.push('/onboarding');
-            return null;
         }
+    }, [router, shouldRedirectToLogin, shouldRedirectToOnboarding]);
+
+    if (shouldRedirectToLogin || shouldRedirectToOnboarding) {
+        return null;
     }
 
     // === RENDER ===
@@ -340,10 +319,7 @@ export function MobileLayout() {
     return (
         <Suspense fallback={<div className="fixed inset-0 bg-background" />}>
             <MobileSwipeLayout
-                showAiChat={showAiChat}
-                showHealth={showHealth}
                 onPathChange={setActivePath}
-                onChatTabClick={() => setAiChatResetKey(prev => prev + 1)}
             >
                 {/* Dashboard View - always index 0 */}
                 {activePath === '/' ? (
@@ -405,72 +381,10 @@ export function MobileLayout() {
                     />
                 ) : <div className="h-full w-full" />}
 
-                {/* Health View — index 3, ONLY rendered when health is enabled so tabs align */}
-                {showHealth && isHealthPath && (
-                    <HealthView
-                        showHeader={false}
-                    />
-                )}
-
-                {/* Chat View — always LAST; index depends on whether Health tab is present */}
-                {showAiChat && isChatPath && (
-                    <div className="h-full flex flex-col min-h-0 bg-background relative">
-                        <AiChat
-                            key={aiChatResetKey}
-                            sessionId={sessionId}
-                            onOpenSettings={() => setIsAiSettingsOpen(true)}
-                            isPromptLibraryOpen={isPromptLibraryOpen}
-                            onClosePromptLibrary={() => setIsPromptLibraryOpen(false)}
-                            onOpenPromptLibrary={() => setIsPromptLibraryOpen(true)}
-                            onOpenHistory={() => setIsMobileSidebarOpen(true)}
-                            onNewChat={() => {
-                                // Close sidebar if open from New Chat click inside it
-                                setIsMobileSidebarOpen(false);
-                                // Increment key to force AiChat to unmount and remount (resetting history & sessionId)
-                                setAiChatResetKey(prev => prev + 1);
-                                // Ensure we navigate without existing sessionId
-                                router.push('/chat');
-                            }}
-                        />
-
-                        {/* Mobile Sidebar Overlay */}
-                        {isMobileSidebarOpen && (
-                            <div className="fixed inset-0 z-[60] flex">
-                                {/* Backdrop */}
-                                <div
-                                    className="absolute inset-0 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-xs"
-                                    onClick={() => setIsMobileSidebarOpen(false)}
-                                />
-                                {/* Sidebar */}
-                                <div className="relative w-[80%] max-w-sm h-full bg-[#1c1c1e] shadow-xl animate-in slide-in-from-left duration-200">
-                                    <div className="flex items-center justify-between p-4 border-b border-white/5">
-                                        <span className="font-semibold text-white">Chat History</span>
-                                        <button
-                                            onClick={() => setIsMobileSidebarOpen(false)}
-                                            className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
-                                        >
-                                            <X className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                    <div className="h-[calc(100%-60px)]">
-                                        <ChatSidebar
-                                            sessionId={sessionId}
-                                            className="border-none w-full"
-                                            onCloseMobile={() => setIsMobileSidebarOpen(false)}
-                                            onNewChat={() => {
-                                                setIsMobileSidebarOpen(false);
-                                                // Increment key to force AiChat to remount with fresh state
-                                                setAiChatResetKey(prev => prev + 1);
-                                                // Navigate to base chat path to clear session
-                                                router.push('/chat');
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
+                {/* Calendar View - always index 3 */}
+                {isCalendarPath ? (
+                    <CalendarView showHeader={false} />
+                ) : <div className="h-full w-full" />}
             </MobileSwipeLayout>
 
             {/* Modals */}
@@ -510,11 +424,6 @@ export function MobileLayout() {
                 vdotCorrectionFactor={analyticsMetrics.runalyzeMetrics.vdotCorrectionFactor}
                 shapePercent={analyticsMetrics.runalyzeMetrics.shape}
                 activities={activitiesData?.activities || []}
-            />
-
-            <AiSettingsModal
-                isOpen={isAiSettingsOpen}
-                onClose={() => setIsAiSettingsOpen(false)}
             />
         </Suspense>
     );

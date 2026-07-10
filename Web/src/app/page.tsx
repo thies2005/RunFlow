@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, AlertCircle, BarChart3, MessageSquare, Hand, Heart, Target } from 'lucide-react';
+import { RefreshCw, AlertCircle, BarChart3, CalendarRange, Hand, Target } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -50,19 +50,6 @@ export default function Dashboard() {
         enabled: status === 'authenticated',
         refetchInterval: (query) => query.state.data?.syncStatus?.syncInProgress ? 2000 : false,
     });
-
-    // AI Settings Query
-    const { data: aiSettingsData } = useQuery({
-        queryKey: ['ai-settings'],
-        queryFn: async () => {
-            const res = await fetch('/api/ai/settings');
-            if (!res.ok) throw new Error('Failed to fetch AI settings');
-            return res.json();
-        },
-        enabled: status === 'authenticated',
-    });
-
-    const showAiCoach = aiSettingsData?.settings?.adminAllowed;
 
     const syncMutation = useMutation({
         mutationFn: async () => {
@@ -176,18 +163,10 @@ export default function Dashboard() {
                                         <BarChart3 className="w-5 h-5" />
                                         <span className="hidden sm:inline">Analytics</span>
                                     </button>
-                                    {statsData?.healthTrackingEnabled && (
-                                        <button onClick={() => router.push('/health')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
-                                            <Heart className="w-5 h-5" />
-                                            <span className="hidden sm:inline">Health</span>
-                                        </button>
-                                    )}
-                                    {showAiCoach && (
-                                        <button onClick={() => router.push('/chat')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
-                                            <MessageSquare className="w-5 h-5" />
-                                            <span className="hidden sm:inline">AI Coach</span>
-                                        </button>
-                                    )}
+                                    <button onClick={() => router.push('/calendar')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
+                                        <CalendarRange className="w-5 h-5" />
+                                        <span className="hidden sm:inline">Calendar</span>
+                                    </button>
                                     <div className="flex items-center gap-3">
                                         <MinimalistPillsMenu />
                                     </div>

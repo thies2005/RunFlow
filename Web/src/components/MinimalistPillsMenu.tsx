@@ -776,7 +776,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                     <button
                         type="button"
                         onClick={() => setIncludeCrossTraining(!includeCrossTraining)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeCrossTraining ? 'bg-accent-orange' : 'bg-white/20'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeCrossTraining ? 'bg-accent-orange' : 'bg-foreground/20'}`}
                     >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeCrossTraining ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
@@ -793,7 +793,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                     <button
                         type="button"
                         onClick={() => setUseImperial(!useImperial)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${useImperial ? 'bg-accent-orange' : 'bg-white/20'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${useImperial ? 'bg-accent-orange' : 'bg-foreground/20'}`}
                     >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useImperial ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
@@ -811,7 +811,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                         type="button"
                         onClick={() => healthToggleMutation.mutate(!healthTrackingEnabled)}
                         disabled={healthToggleMutation.isPending}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${healthTrackingEnabled ? 'bg-green-500' : 'bg-white/20'} ${healthToggleMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${healthTrackingEnabled ? 'bg-green-500' : 'bg-foreground/20'} ${healthToggleMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${healthTrackingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
@@ -1201,7 +1201,7 @@ function DangerShortcut() {
                         Are you sure? This will permanently delete your account, activities, and goals.
                     </p>
                     <div className="flex gap-3">
-                        <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2 bg-white/5 text-white text-xs rounded-lg hover:bg-white/10">Cancel</button>
+                        <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2 bg-foreground/5 text-foreground text-xs rounded-lg hover:bg-foreground/10">Cancel</button>
                         <button
                             onClick={() => { setIsDeleting(true); deleteMutation.mutate(); }}
                             disabled={isDeleting}
@@ -1281,7 +1281,7 @@ function ApiSection({ onBack }: { onBack: () => void }) {
                         <Key className="w-3 h-3" /> Your API Key (copy now):
                     </p>
                     <div className="flex items-center gap-2">
-                        <code className="flex-1 bg-black/30 px-3 py-2 rounded-lg text-xs text-green-400 font-mono break-all">{generatedApiKey}</code>
+                        <code className="flex-1 bg-foreground/10 px-3 py-2 rounded-lg text-xs text-green-600 font-mono break-all">{generatedApiKey}</code>
                         <button onClick={() => { navigator.clipboard.writeText(generatedApiKey); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="p-2 bg-green-500/20 rounded-lg hover:bg-green-500/30">
                             {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-green-400" />}
                         </button>
@@ -1311,7 +1311,7 @@ function ApiSection({ onBack }: { onBack: () => void }) {
                     </button>
                 ) : (
                     <div className="flex gap-2">
-                        <button onClick={() => setShowRevokeConfirm(false)} className="flex-1 py-2 bg-white/5 text-white text-xs rounded-lg hover:bg-white/10">Cancel</button>
+                        <button onClick={() => setShowRevokeConfirm(false)} className="flex-1 py-2 bg-foreground/5 text-foreground text-xs rounded-lg hover:bg-foreground/10">Cancel</button>
                         <button onClick={() => revokeMutation.mutate()} disabled={revokeMutation.isPending} className="flex-1 py-2 bg-accent-orange hover:bg-orange-600 text-white text-xs rounded-lg flex items-center justify-center gap-1">
                             {revokeMutation.isPending ? 'Revoking...' : 'Confirm'}
                         </button>
@@ -1377,7 +1377,7 @@ function PrivacySection({ healthTrackingEnabled: initialHealth, onBack }: { heal
                             <strong>Warning:</strong> Withdrawing health data consent will permanently delete all your activities, fitness metrics, health logs, supplements, and nutrition data.
                         </p>
                         <div className="flex gap-2">
-                            <button onClick={() => setShowWithdrawConfirm(false)} className="flex-1 py-2 bg-white/5 text-white text-xs rounded-lg hover:bg-white/10">Cancel</button>
+                            <button onClick={() => setShowWithdrawConfirm(false)} className="flex-1 py-2 bg-foreground/5 text-foreground text-xs rounded-lg hover:bg-foreground/10">Cancel</button>
                             <button
                                 onClick={async () => {
                                     setIsWithdrawing(true);

@@ -21,7 +21,7 @@ const DESCRIPTIONS: Record<GoalPriority, string> = {
 export function PrioritySelector({ value, onChange, hasPrimary }: PrioritySelectorProps) {
     return (
         <div className="space-y-1.5">
-            <label className="text-xs text-zinc-400">Priority</label>
+            <label className="text-xs text-foreground-secondary">Priority</label>
             <div className="grid grid-cols-2 gap-1.5">
                 {PRIORITIES.map((p) => {
                     const config = PRIORITY_CONFIG[p];
@@ -36,14 +36,14 @@ export function PrioritySelector({ value, onChange, hasPrimary }: PrioritySelect
                             disabled={isDisabled}
                             className={`flex flex-col items-start px-2.5 py-2 rounded-lg border text-left transition-colors ${
                                 isDisabled
-                                    ? 'opacity-30 cursor-not-allowed border-zinc-800'
+                                    ? 'opacity-30 cursor-not-allowed border-glass-border'
                                     : isSelected
                                         ? config.color
-                                        : 'border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-zinc-300'
+                                        : 'border-foreground/20 hover:border-foreground/25 text-foreground-secondary hover:text-foreground-secondary'
                             }`}
                         >
                             <div className="flex items-center gap-1.5">
-                                <div className={`w-2 h-2 rounded-full ${isDisabled ? 'bg-zinc-600' : config.dotColor}`} />
+                                <div className={`w-2 h-2 rounded-full ${isDisabled ? 'bg-foreground/20' : config.dotColor}`} />
                                 <span className="text-xs font-medium">{config.label}</span>
                             </div>
                             <span className="text-[10px] mt-0.5 opacity-70">{DESCRIPTIONS[p]}</span>

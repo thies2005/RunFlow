@@ -88,15 +88,15 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                 {step === 'CODE_PASSWORD' && (
                     <button
                         onClick={() => setStep('EMAIL')}
-                        className="text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 mb-2 flex items-center gap-1 text-sm transition-colors"
+                        className="text-foreground-muted hover:text-foreground mb-2 flex items-center gap-1 text-sm transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" /> Back
                     </button>
                 )}
-                <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">
+                <h2 className="text-2xl font-bold text-foreground">
                     {step === 'EMAIL' ? 'Reset Password' : 'New Password'}
                 </h2>
-                <p className="text-zinc-500 dark:text-zinc-400 mt-2 text-sm">
+                <p className="text-foreground-secondary mt-2 text-sm">
                     {step === 'EMAIL'
                         ? "Enter your email address and we'll send you a verification code."
                         : "Enter the code sent to your email and your new password."
@@ -107,12 +107,12 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
             {step === 'EMAIL' ? (
                 <form onSubmit={handleSendCode} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Email</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Email</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden transition-all"
+                            className="w-full px-3 py-2 bg-background border border-glass-border rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden transition-all"
                             placeholder="you@example.com"
                             required
                         />
@@ -121,7 +121,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-2 px-4 text-sm font-medium text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"
+                            className="flex-1 py-2 px-4 text-sm font-medium text-foreground bg-background-tertiary hover:bg-foreground/15 rounded-lg transition-colors"
                         >
                             Cancel
                         </button>
@@ -138,24 +138,24 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
             ) : (
                 <form onSubmit={handleResetPassword} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Verification Code</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Verification Code</label>
                         <input
                             type="text"
                             value={code}
                             onChange={(e) => setCode(e.target.value.toUpperCase())}
-                            className="w-full text-center font-mono tracking-widest px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden uppercase"
+                            className="w-full text-center font-mono tracking-widest px-3 py-2 bg-background border border-glass-border rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden uppercase"
                             placeholder="XCV123"
                             maxLength={6}
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">New Password</label>
+                        <label className="block text-sm font-medium text-foreground-secondary mb-1">New Password</label>
                         <input
                             type="password"
                             value={newPassword}
                             onChange={handlePasswordChange}
-                            className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden transition-all"
+                            className="w-full px-3 py-2 bg-background border border-glass-border rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden transition-all"
                             placeholder="••••••••"
                             required
                         />
@@ -170,12 +170,12 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                                                     : passwordStrength < 3 ? 'bg-yellow-500'
                                                         : passwordStrength < 4 ? 'bg-blue-500'
                                                             : 'bg-green-500')
-                                                : 'bg-zinc-200 dark:bg-zinc-800'
+                                                : 'bg-background-tertiary'
                                                 }`}
                                         />
                                     ))}
                                 </div>
-                                <p className="text-xs text-zinc-500 mt-1 font-medium">
+                                <p className="text-xs text-foreground-muted mt-1 font-medium">
                                     {passwordStrength === 0 ? 'Too short' : passwordStrength < 2 ? 'Weak' : passwordStrength < 3 ? 'Fair' : passwordStrength < 4 ? 'Good' : 'Strong'}
                                 </p>
                             </div>
@@ -185,7 +185,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-2 px-4 text-sm font-medium text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"
+                            className="flex-1 py-2 px-4 text-sm font-medium text-foreground bg-background-tertiary hover:bg-foreground/15 rounded-lg transition-colors"
                         >
                             Cancel
                         </button>

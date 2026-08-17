@@ -90,7 +90,7 @@ const TimeRangeButtons = memo(({
                     key={range}
                     onClick={() => onTimeRangeChange(range)}
                     className={`px-3 py-1 text-xs font-medium rounded transition-all ${timeRange === range
-                        ? 'bg-zinc-700 text-white shadow-xs'
+                        ? 'bg-foreground/15 text-foreground shadow-xs'
                         : 'text-foreground-muted hover:text-foreground'
                         }`}
                     style={timeRange === range ? { backgroundColor: 'var(--accent-purple)' } : {}}

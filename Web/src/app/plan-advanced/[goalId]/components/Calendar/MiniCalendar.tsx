@@ -64,7 +64,7 @@ export function MiniCalendar({ workouts, raceDate, onDayClick }: MiniCalendarPro
             <div className="px-2">
                 <div className="grid grid-cols-7 gap-0.5 mb-0.5">
                     {dayLabels.map((d) => (
-                        <div key={d} className="text-center text-[10px] text-zinc-600 font-medium py-0.5">
+                        <div key={d} className="text-center text-[10px] text-foreground-muted font-medium py-0.5">
                             {d}
                         </div>
                     ))}

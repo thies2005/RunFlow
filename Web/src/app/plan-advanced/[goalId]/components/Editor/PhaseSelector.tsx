@@ -14,7 +14,7 @@ const PHASE_COLORS: Record<PlanPhase, string> = {
     TAPER: 'bg-cyan-500/20 text-cyan-400',
     RACE_WEEK: 'bg-green-500/20 text-green-400',
     RECOVERY: 'bg-teal-500/20 text-teal-400',
-    OFF: 'bg-zinc-500/20 text-zinc-400',
+    OFF: 'bg-foreground/20 text-foreground-secondary',
 };
 
 interface PhaseSelectorProps {
@@ -56,7 +56,7 @@ export function PhaseSelector({ currentPhase, goalId, weekIndex, onPhaseChange }
                 <ChevronDown className="w-3 h-3 opacity-60" />
             </button>
             {isOpen && (
-                <div className="absolute left-0 top-full mt-1 z-50 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl py-1 min-w-[120px]">
+                <div className="absolute left-0 top-full mt-1 z-50 bg-background-secondary border border-foreground/20 rounded-lg shadow-xl py-1 min-w-[120px]">
                     {PHASES.map((p) => (
                         <button
                             key={p}
@@ -64,8 +64,8 @@ export function PhaseSelector({ currentPhase, goalId, weekIndex, onPhaseChange }
                             onClick={() => handleSelect(p)}
                             className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
                                 p === currentPhase
-                                    ? 'text-zinc-100 bg-zinc-800'
-                                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+                                    ? 'text-foreground bg-background-tertiary'
+                                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-tertiary/60'
                             }`}
                         >
                             {p}

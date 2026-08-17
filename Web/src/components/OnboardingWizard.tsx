@@ -149,9 +149,9 @@ export default function OnboardingWizard() {
     });
 
     return (
-        <div className="min-h-screen bg-background text-white flex flex-col">
+        <div className="min-h-screen bg-background text-foreground flex flex-col">
             {/* Progress Bar */}
-            <div className="w-full h-1 bg-gray-800">
+            <div className="w-full h-1 bg-background-tertiary">
                 <div
                     className="h-full bg-accent-orange transition-all duration-500 ease-out"
                     style={{ width: `${((step + 1) / 5) * 100}%` }}
@@ -172,7 +172,7 @@ export default function OnboardingWizard() {
                     ) : (
                         <div />
                     )}
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-foreground-muted">
                         Step {step + 1} of 5
                     </span>
                 </div>
@@ -206,13 +206,13 @@ export default function OnboardingWizard() {
                         </div>
 
                         <h1 className="text-3xl font-bold">Import your history</h1>
-                        <p className="text-gray-400">
+                        <p className="text-foreground-muted">
                             RunFlow needs your Strava history to start your adaptive training plan.
                         </p>
 
                         <div className="glass-card p-6">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="text-gray-300">Activities found</span>
+                                <span className="text-foreground-muted">Activities found</span>
                                 <span className="text-2xl font-bold">{syncStatus?.totalActivities || 0}</span>
                             </div>
                             {syncStatus?.syncInProgress && (
@@ -225,11 +225,11 @@ export default function OnboardingWizard() {
                         {!syncStatus?.syncInProgress && (
                             <div className="space-y-4">
                                 <div className="text-left">
-                                    <label className="block text-sm font-medium text-gray-400 mb-1 ml-1">Import Range</label>
+                                    <label className="block text-sm font-medium text-foreground-muted mb-1 ml-1">Import Range</label>
                                     <select
                                         value={importRange}
                                         onChange={(e) => setImportRange(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg p-3 text-foreground focus:ring-2 focus:ring-accent-orange outline-hidden"
                                     >
                                         <option value="1_MONTH">Last Month</option>
                                         <option value="3_MONTHS">Last 3 Months</option>
@@ -261,7 +261,7 @@ export default function OnboardingWizard() {
                                 ) : (
                                     <button
                                         onClick={() => setStep(2)}
-                                        className="w-full py-3 flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-colors"
+                                        className="w-full py-3 flex items-center justify-center gap-2 text-foreground-muted hover:text-foreground transition-colors"
                                     >
                                         Continue without activities <ArrowRight className="w-4 h-4" />
                                     </button>
@@ -277,9 +277,9 @@ export default function OnboardingWizard() {
                         <div className="text-center mb-8">
                             <h1 className="text-3xl font-bold mb-2">Your Running Profile</h1>
                             {(activitiesData?.activities?.length || 0) > 0 ? (
-                                <p className="text-gray-400">Based on your last {activitiesData?.activities?.length} activities</p>
+                                <p className="text-foreground-muted">Based on your last {activitiesData?.activities?.length} activities</p>
                             ) : (
-                                <p className="text-gray-400">No activities found yet. We&apos;ll use default values to get you started.</p>
+                                <p className="text-foreground-muted">No activities found yet. We&apos;ll use default values to get you started.</p>
                             )}
                         </div>
 
@@ -308,7 +308,7 @@ export default function OnboardingWizard() {
                         </div>
 
                         <h1 className="text-3xl font-bold">Experience Level</h1>
-                        <p className="text-gray-400">
+                        <p className="text-foreground-muted">
                             Tell us about your running experience so we can tailor your plan.
                         </p>
 
@@ -324,7 +324,7 @@ export default function OnboardingWizard() {
                                     className={`w-full p-4 rounded-xl border text-left transition-all ${
                                         experienceLevel === value
                                             ? 'border-accent-orange bg-accent-orange/10 text-white'
-                                            : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20'
+                                            : 'border-foreground/10 bg-foreground/5 text-foreground-muted hover:border-foreground/20'
                                     }`}
                                 >
                                     <div className="font-semibold">{label}</div>
@@ -351,7 +351,7 @@ export default function OnboardingWizard() {
                         <div className="text-center mb-8">
                             <Calendar className="w-12 h-12 text-accent-orange mx-auto mb-4" />
                             <h1 className="text-3xl font-bold mb-2">Build Your Plan</h1>
-                            <p className="text-gray-400">Set up your race goal and training preferences.</p>
+                            <p className="text-foreground-muted">Set up your race goal and training preferences.</p>
                         </div>
 
                         <div className="glass-card p-6">

@@ -40,13 +40,13 @@ export function RaceReadinessCard({ predictedTime, confidence, trajectory, targe
     if (diff != null) {
         if (diff > 0) diffColor = 'text-red-400';
         else if (diff < 0) diffColor = 'text-green-400';
-        else diffColor = 'text-zinc-400';
+        else diffColor = 'text-foreground-secondary';
     }
 
     return (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 space-y-3">
+        <div className="rounded-lg border border-glass-border bg-background-secondary p-4 space-y-3">
             <div className="flex items-center justify-between">
-                <h4 className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-foreground-secondary flex items-center gap-1.5">
                     <Target className="w-3.5 h-3.5" />
                     Race Readiness
                 </h4>
@@ -58,15 +58,15 @@ export function RaceReadinessCard({ predictedTime, confidence, trajectory, targe
 
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Predicted</p>
-                    <p className="text-lg font-bold text-zinc-100">
+                    <p className="text-[10px] text-foreground-muted uppercase tracking-wide">Predicted</p>
+                    <p className="text-lg font-bold text-foreground">
                         {predictedTime != null ? formatTime(predictedTime) : '--:--'}
                     </p>
                 </div>
                 {targetTime != null && (
                     <div>
-                        <p className="text-[10px] text-zinc-600 uppercase tracking-wide">Target</p>
-                        <p className="text-lg font-bold text-zinc-100">{formatTime(targetTime)}</p>
+                        <p className="text-[10px] text-foreground-muted uppercase tracking-wide">Target</p>
+                        <p className="text-lg font-bold text-foreground">{formatTime(targetTime)}</p>
                     </div>
                 )}
             </div>
@@ -79,10 +79,10 @@ export function RaceReadinessCard({ predictedTime, confidence, trajectory, targe
 
             <div>
                 <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] text-zinc-500">Confidence</span>
-                    <span className="text-[10px] text-zinc-400">{Math.round(confidence)}%</span>
+                    <span className="text-[10px] text-foreground-muted">Confidence</span>
+                    <span className="text-[10px] text-foreground-secondary">{Math.round(confidence)}%</span>
                 </div>
-                <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden">
                     <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{

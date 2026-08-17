@@ -111,9 +111,9 @@ export function AiAnalysisPanel({ goalId, isOpen, onClose, isNoRace }: AiAnalysi
     if (!isOpen) return null;
 
     return (
-        <div className="w-80 border-l border-zinc-800 bg-zinc-950 flex flex-col overflow-hidden shrink-0">
-            <div className="h-10 border-b border-zinc-800 flex items-center justify-between px-3 shrink-0">
-                <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+        <div className="w-80 border-l border-glass-border bg-background flex flex-col overflow-hidden shrink-0">
+            <div className="h-10 border-b border-glass-border flex items-center justify-between px-3 shrink-0">
+                <span className="text-xs font-semibold text-foreground-secondary flex items-center gap-1.5">
                     <Brain className="w-3.5 h-3.5 text-purple-400" />
                     AI Analysis
                 </span>
@@ -122,7 +122,7 @@ export function AiAnalysisPanel({ goalId, isOpen, onClose, isNoRace }: AiAnalysi
                         type="button"
                         onClick={() => analyzeMutation.mutate()}
                         disabled={analyzeMutation.isPending}
-                        className="p-1 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                        className="p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                         title="Re-analyze"
                     >
                         {analyzeMutation.isPending ? (
@@ -134,7 +134,7 @@ export function AiAnalysisPanel({ goalId, isOpen, onClose, isNoRace }: AiAnalysi
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-1 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                        className="p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                     >
                         <X className="w-3.5 h-3.5" />
                     </button>
@@ -145,12 +145,12 @@ export function AiAnalysisPanel({ goalId, isOpen, onClose, isNoRace }: AiAnalysi
                 {analyzeMutation.isPending && !analysis ? (
                     <div className="flex flex-col items-center justify-center py-12 gap-3">
                         <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
-                        <p className="text-xs text-zinc-500">Analyzing your plan...</p>
+                        <p className="text-xs text-foreground-muted">Analyzing your plan...</p>
                     </div>
                 ) : !analysis ? (
                     <div className="flex flex-col items-center justify-center py-12 gap-3">
-                        <Brain className="w-8 h-8 text-zinc-700" />
-                        <p className="text-xs text-zinc-500 text-center">
+                        <Brain className="w-8 h-8 text-foreground-muted" />
+                        <p className="text-xs text-foreground-muted text-center">
                             No analysis yet. Click the button below to analyze your plan.
                         </p>
                         <button
@@ -172,14 +172,14 @@ export function AiAnalysisPanel({ goalId, isOpen, onClose, isNoRace }: AiAnalysi
                         )}
 
                         {analysis.overallSummary && (
-                            <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
-                                <p className="text-[11px] text-zinc-400 leading-relaxed">{analysis.overallSummary}</p>
+                            <div className="rounded-lg border border-glass-border bg-background-secondary p-3">
+                                <p className="text-[11px] text-foreground-secondary leading-relaxed">{analysis.overallSummary}</p>
                             </div>
                         )}
 
                         {riskFlags.length > 0 && (
                             <div className="space-y-2">
-                                <h4 className="text-[10px] text-zinc-500 uppercase tracking-wide font-medium flex items-center gap-1">
+                                <h4 className="text-[10px] text-foreground-muted uppercase tracking-wide font-medium flex items-center gap-1">
                                     <AlertTriangle className="w-3 h-3" />
                                     Risk Flags ({highRiskCount} high, {medRiskCount} medium)
                                 </h4>
@@ -209,7 +209,7 @@ export function AiAnalysisPanel({ goalId, isOpen, onClose, isNoRace }: AiAnalysi
 
                         {weekAnalyses.length > 0 && (
                             <div className="space-y-2">
-                                <h4 className="text-[10px] text-zinc-500 uppercase tracking-wide font-medium">
+                                <h4 className="text-[10px] text-foreground-muted uppercase tracking-wide font-medium">
                                     Week-by-Week Analysis
                                 </h4>
                                 <div className="space-y-1.5">
@@ -233,12 +233,12 @@ export function AiAnalysisPanel({ goalId, isOpen, onClose, isNoRace }: AiAnalysi
                                                         <button
                                                             type="button"
                                                             onClick={() => toggleWeek(weekNum)}
-                                                            className="w-full flex items-center gap-1 px-1 py-1 text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                                                            className="w-full flex items-center gap-1 px-1 py-1 text-[10px] text-foreground-muted hover:text-foreground-secondary transition-colors"
                                                         >
                                                             {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                                                             Week {wa.weekIndex}
                                                             {wa.score != null && (
-                                                                <span className="text-zinc-600">({wa.score}pts)</span>
+                                                                <span className="text-foreground-muted">({wa.score}pts)</span>
                                                             )}
                                                         </button>
                                                         {isExpanded && (
@@ -261,20 +261,20 @@ export function AiAnalysisPanel({ goalId, isOpen, onClose, isNoRace }: AiAnalysi
 
                         {suggestions.length > 0 && (
                             <div className="space-y-2">
-                                <h4 className="text-[10px] text-zinc-500 uppercase tracking-wide font-medium">
+                                <h4 className="text-[10px] text-foreground-muted uppercase tracking-wide font-medium">
                                     Suggestions ({suggestions.length})
                                 </h4>
                                 <div className="space-y-1.5">
                                     {suggestions.map((s, i) => (
-                                        <div key={i} className="rounded-lg border border-zinc-800 bg-zinc-900 p-2.5">
+                                        <div key={i} className="rounded-lg border border-glass-border bg-background-secondary p-2.5">
                                             <div className="flex items-center gap-2">
                                                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                                    s.priority === 'high' ? 'bg-red-400' : s.priority === 'medium' ? 'bg-amber-400' : 'bg-zinc-500'
+                                                    s.priority === 'high' ? 'bg-red-400' : s.priority === 'medium' ? 'bg-amber-400' : 'bg-foreground/25'
                                                 }`} />
-                                                <span className="text-[11px] font-medium text-zinc-300">{s.title}</span>
+                                                <span className="text-[11px] font-medium text-foreground-secondary">{s.title}</span>
                                             </div>
-                                            <p className="text-[10px] text-zinc-500 mt-1 leading-relaxed">{s.description}</p>
-                                            <span className="text-[10px] text-zinc-600 mt-1 inline-block">{s.category}</span>
+                                            <p className="text-[10px] text-foreground-muted mt-1 leading-relaxed">{s.description}</p>
+                                            <span className="text-[10px] text-foreground-muted mt-1 inline-block">{s.category}</span>
                                         </div>
                                     ))}
                                 </div>

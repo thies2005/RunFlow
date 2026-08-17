@@ -295,15 +295,15 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                             <div className={`p-4 rounded-xl border-2 transition-all ${data?.settings?.adminAllowed
                                 ? aiEnabled
                                     ? 'bg-accent-purple/10 border-accent-purple/50'
-                                    : 'bg-gray-800/50 border-gray-700'
+                                    : 'bg-background-tertiary/50 border-foreground/20'
                                 : 'bg-red-500/5 border-red-500/20 grayscale'
                                 }`}>
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex-1">
-                                        <h3 className={`font-semibold ${!data?.settings?.adminAllowed ? 'text-gray-500' : 'text-white'}`}>
+                                        <h3 className={`font-semibold ${!data?.settings?.adminAllowed ? 'text-foreground-muted' : 'text-foreground'}`}>
                                             Enable AI Features
                                         </h3>
-                                        <p className="text-xs text-gray-500 mt-1">
+                                        <p className="text-xs text-foreground-muted mt-1">
                                             {data?.settings?.adminAllowed
                                                 ? 'Toggle all AI coaching and activity analysis features'
                                                 : 'AI access has not been granted by an administrator.'}
@@ -312,7 +312,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     <button
                                         onClick={() => setAiEnabled(!aiEnabled)}
                                         disabled={!data?.settings?.adminAllowed}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-hidden ${aiEnabled ? 'bg-accent-purple' : 'bg-gray-700'
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-hidden ${aiEnabled ? 'bg-accent-purple' : 'bg-foreground/15'
                                             } ${!data?.settings?.adminAllowed ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                     >
                                         <span
@@ -334,18 +334,18 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
 
                                 {/* Usage Stats (if enabled and not using own key) */}
                                 {data?.settings?.aiEnabled && !data?.settings?.hasCustomApiKey && data?.usage && (
-                                    <div className="bg-gray-800/50 rounded-lg p-4">
-                                        <h3 className="text-sm font-medium text-gray-300 mb-2">Usage</h3>
+                                    <div className="bg-background-tertiary/50 rounded-lg p-4">
+                                        <h3 className="text-sm font-medium text-foreground-muted mb-2">Usage</h3>
                                         <div className="grid grid-cols-2 gap-4 text-sm">
                                             <div>
-                                                <p className="text-gray-500">Today</p>
-                                                <p className="text-white">
+                                                <p className="text-foreground-muted">Today</p>
+                                                <p className="text-foreground">
                                                     {data?.usage.messagesUsedToday} / {data?.usage.dailyLimit}
                                                 </p>
                                             </div>
                                             <div>
-                                                <p className="text-gray-500">This Month</p>
-                                                <p className="text-white">
+                                                <p className="text-foreground-muted">This Month</p>
+                                                <p className="text-foreground">
                                                     {data?.usage.messagesUsedThisMonth} / {data?.usage.monthlyLimit}
                                                 </p>
                                             </div>
@@ -355,11 +355,11 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
 
                                 {/* API Key Section */}
                                 <div className="space-y-3">
-                                    <h3 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                    <h3 className="text-sm font-medium text-foreground-muted flex items-center gap-2">
                                         <Key className="w-4 h-4" />
                                         Your API Key (Optional)
                                     </h3>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-foreground-muted">
                                         Add your own OpenAI-compatible API key for unlimited usage
                                     </p>
 
@@ -371,7 +371,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                     setCustomBaseUrl('https://api.openai.com/v1');
                                                     setCustomModel('gpt-4o-mini');
                                                 }}
-                                                className="text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded border border-gray-700 transition"
+                                                className="text-[10px] px-2 py-0.5 bg-background-tertiary hover:bg-foreground/15 text-foreground-muted rounded border border-foreground/20 transition"
                                             >
                                                 OpenAI Preset
                                             </button>
@@ -381,7 +381,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                     setCustomBaseUrl('https://integrate.api.nvidia.com/v1');
                                                     setCustomModel('moonshotai/kimi-k2.5');
                                                 }}
-                                                className="text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded border border-gray-700 transition"
+                                                className="text-[10px] px-2 py-0.5 bg-background-tertiary hover:bg-foreground/15 text-foreground-muted rounded border border-foreground/20 transition"
                                             >
                                                 NVIDIA (Kimi) Preset
                                             </button>
@@ -391,7 +391,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                     setCustomBaseUrl('https://open.bigmodel.cn/api/paas/v4');
                                                     setCustomModel('glm-4-plus');
                                                 }}
-                                                className="text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded border border-gray-700 transition"
+                                                className="text-[10px] px-2 py-0.5 bg-background-tertiary hover:bg-foreground/15 text-foreground-muted rounded border border-foreground/20 transition"
                                             >
                                                 Zhipu AI (GLM) Preset
                                             </button>
@@ -401,7 +401,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                     setCustomBaseUrl('https://openrouter.ai/api/v1');
                                                     setCustomModel('deepseek/deepseek-r1:free');
                                                 }}
-                                                className="text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded border border-gray-700 transition"
+                                                className="text-[10px] px-2 py-0.5 bg-background-tertiary hover:bg-foreground/15 text-foreground-muted rounded border border-foreground/20 transition"
                                             >
                                                 OpenRouter Preset
                                             </button>
@@ -413,7 +413,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             placeholder="Base URL (default: https://api.openai.com/v1)"
                                             value={customBaseUrl}
                                             onChange={(e) => setCustomBaseUrl(e.target.value)}
-                                            className="!bg-gray-800 border-gray-700"
+                                            className="!bg-background-tertiary border-foreground/20"
                                         />
 
                                         <div className="relative">
@@ -424,12 +424,12 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                 placeholder={data?.settings?.hasCustomApiKey ? '••••••••••••••••' : 'API Key'}
                                                 value={customApiKey}
                                                 onChange={(e) => setCustomApiKey(e.target.value)}
-                                                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 pr-10 text-white text-sm focus:border-accent-purple focus:outline-hidden"
+                                                className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 pr-10 text-foreground text-sm focus:border-accent-purple focus:outline-hidden"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowApiKey(!showApiKey)}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground-muted"
                                             >
                                                 {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                             </button>
@@ -441,14 +441,14 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             placeholder="Model (default: gpt-4o-mini)"
                                             value={customModel}
                                             onChange={(e) => setCustomModel(e.target.value)}
-                                            className="!bg-gray-800 border-gray-700"
+                                            className="!bg-background-tertiary border-foreground/20"
                                         />
 
                                         {/* Test API Key Button */}
                                         <button
                                             onClick={handleTestApiKey}
                                             disabled={testingKey || !customApiKey}
-                                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-accent-purple hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition"
+                                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-accent-purple hover:bg-purple-700 disabled:bg-foreground/15 disabled:text-foreground-muted text-white rounded-lg text-sm font-medium transition"
                                         >
                                             {testingKey ? (
                                                 <>
@@ -492,7 +492,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                 {/* Data Access Section */}
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-medium text-gray-300">Data Access</h3>
+                                        <h3 className="text-sm font-medium text-foreground-muted">Data Access</h3>
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => toggleAllAccess(true)}
@@ -500,16 +500,16 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             >
                                                 Enable All
                                             </button>
-                                            <span className="text-gray-600">|</span>
+                                            <span className="text-foreground-secondary">|</span>
                                             <button
                                                 onClick={() => toggleAllAccess(false)}
-                                                className="text-xs text-gray-400 hover:text-gray-300"
+                                                className="text-xs text-foreground-muted hover:text-foreground-muted"
                                             >
                                                 Disable All
                                             </button>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-foreground-muted">
                                         Choose what data the AI coach can access
                                     </p>
 
@@ -517,7 +517,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         {DATA_ACCESS_OPTIONS.map((option) => (
                                             <label
                                                 key={option.key}
-                                                className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-800/50 cursor-pointer"
+                                                className="flex items-start gap-3 p-2 rounded-lg hover:bg-background-tertiary/50 cursor-pointer"
                                             >
                                                 <input
                                                     type="checkbox"
@@ -528,11 +528,11 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                             [option.key]: e.target.checked,
                                                         }))
                                                     }
-                                                    className="mt-1 w-4 h-4 rounded border-gray-600 bg-gray-800 text-accent-purple focus:ring-accent-purple focus:ring-offset-gray-900"
+                                                    className="mt-1 w-4 h-4 rounded border-foreground/25 bg-background-tertiary text-accent-purple focus:ring-accent-purple focus:ring-offset-gray-900"
                                                 />
                                                 <div>
-                                                    <p className="text-sm text-white">{option.label}</p>
-                                                    <p className="text-xs text-gray-500">{option.description}</p>
+                                                    <p className="text-sm text-foreground">{option.label}</p>
+                                                    <p className="text-xs text-foreground-muted">{option.description}</p>
                                                 </div>
                                             </label>
                                         ))}
@@ -541,8 +541,8 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
 
                                 {/* Feedback Mode Section */}
                                 <div className="space-y-3">
-                                    <h3 className="text-sm font-medium text-gray-300">Activity Feedback</h3>
-                                    <p className="text-xs text-gray-500">
+                                    <h3 className="text-sm font-medium text-foreground-muted">Activity Feedback</h3>
+                                    <p className="text-xs text-foreground-muted">
                                         When should AI analyze your activities?
                                     </p>
 
@@ -553,14 +553,14 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                 onClick={() => setFeedbackMode(mode.value)}
                                                 className={`p-3 rounded-lg border text-left transition-colors ${feedbackMode === mode.value
                                                     ? 'border-accent-purple bg-accent-purple/10'
-                                                    : 'border-gray-700 hover:border-gray-600'
+                                                    : 'border-foreground/20 hover:border-foreground/25'
                                                     }`}
                                             >
-                                                <p className={`text-sm font-medium ${feedbackMode === mode.value ? 'text-accent-purple' : 'text-white'
+                                                <p className={`text-sm font-medium ${feedbackMode === mode.value ? 'text-accent-purple' : 'text-foreground'
                                                     }`}>
                                                     {mode.label}
                                                 </p>
-                                                <p className="text-xs text-gray-500">{mode.description}</p>
+                                                <p className="text-xs text-foreground-muted">{mode.description}</p>
                                             </button>
                                         ))}
                                     </div>
@@ -568,11 +568,11 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
 
                                 {/* Custom Prompt Section */}
                                 <div className="space-y-3">
-                                    <h3 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                    <h3 className="text-sm font-medium text-foreground-muted flex items-center gap-2">
                                         Custom Instructions
-                                        <Info className="w-4 h-4 text-gray-500" />
+                                        <Info className="w-4 h-4 text-foreground-muted" />
                                     </h3>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-foreground-muted">
                                         Add context about your training (e.g., injuries, preferences)
                                     </p>
                                     <Textarea
@@ -581,7 +581,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         onChange={(e) => setCustomPrompt(e.target.value)}
                                         placeholder="I'm recovering from a knee injury and should avoid high-intensity work..."
                                         rows={3}
-                                        className="!bg-gray-800 border-gray-700"
+                                        className="!bg-background-tertiary border-foreground/20"
                                     />
                                 </div>
 
@@ -604,10 +604,10 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                 </div>
 
                 {/* Footer */}
-                <div className="pt-4 mt-6 border-t border-gray-800 flex justify-end gap-3">
+                <div className="pt-4 mt-6 border-t border-glass-border flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                        className="px-4 py-2 text-foreground-muted hover:text-foreground transition-colors"
                     >
                         Cancel
                     </button>

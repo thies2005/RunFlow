@@ -23,14 +23,14 @@ export default function AnalyticsTab() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Loading analytics...</div>;
-    if (!data) return <div className="p-8 text-center text-gray-500">Failed to load data</div>;
+    if (loading) return <div className="p-8 text-center text-foreground-muted">Loading analytics...</div>;
+    if (!data) return <div className="p-8 text-center text-foreground-muted">Failed to load data</div>;
 
     return (
         <div className="space-y-6">
             {/* Daily Token Usage Chart */}
-            <div className="bg-white p-6 rounded-xl shadow-xs border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Daily Token Usage (Last 30 Days)</h3>
+            <div className="bg-background-secondary p-6 rounded-xl shadow-xs border border-glass-border">
+                <h3 className="text-lg font-bold text-foreground mb-4">Daily Token Usage (Last 30 Days)</h3>
                 <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={data.dailyUsage}>
@@ -51,13 +51,13 @@ export default function AnalyticsTab() {
             </div>
 
             {/* Top Users Table */}
-            <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100">
-                    <h3 className="text-lg font-bold text-gray-800">Top Users (This Month)</h3>
+            <div className="bg-background-secondary rounded-xl shadow-xs border border-glass-border overflow-hidden">
+                <div className="p-6 border-b border-glass-border">
+                    <h3 className="text-lg font-bold text-foreground">Top Users (This Month)</h3>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
+                        <thead className="text-xs text-foreground-muted uppercase bg-background-secondary border-b border-glass-border">
                             <tr>
                                 <th className="px-6 py-3">User</th>
                                 <th className="px-6 py-3">Tier</th>
@@ -66,32 +66,32 @@ export default function AnalyticsTab() {
                                 <th className="px-6 py-3">Total Tokens</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-glass-border">
                             {data.topUsers.map((user: any) => (
-                                <tr key={user.id} className="hover:bg-gray-50/50">
-                                    <td className="px-6 py-4 font-medium text-gray-900">
+                                <tr key={user.id} className="hover:bg-background-secondary/50">
+                                    <td className="px-6 py-4 font-medium text-foreground">
                                         <div>{user.name}</div>
-                                        <div className="text-xs text-gray-500">{user.email}</div>
+                                        <div className="text-xs text-foreground-muted">{user.email}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.tier === 'tier3' ? 'bg-purple-100 text-purple-700' :
                                             user.tier === 'tier2' ? 'bg-blue-100 text-blue-700' :
                                                 user.tier === 'tier1' ? 'bg-green-100 text-green-700' :
-                                                    'bg-gray-100 text-gray-600'
+                                                    'bg-background-tertiary text-foreground-secondary'
                                             }`}>
                                             {user.tier === 'tier3' ? 'Premium' : user.tier === 'tier2' ? 'Standard' : user.tier === 'tier1' ? 'Basic' : user.tier}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-gray-600">{user.messages.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-gray-600">
-                                        {user.inputTokens.toLocaleString()} <span className="text-gray-400">/</span> {user.outputTokens.toLocaleString()}
+                                    <td className="px-6 py-4 text-foreground-secondary">{user.messages.toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-foreground-secondary">
+                                        {user.inputTokens.toLocaleString()} <span className="text-foreground-muted">/</span> {user.outputTokens.toLocaleString()}
                                     </td>
-                                    <td className="px-6 py-4 font-medium text-gray-900">{user.totalTokens.toLocaleString()}</td>
+                                    <td className="px-6 py-4 font-medium text-foreground">{user.totalTokens.toLocaleString()}</td>
                                 </tr>
                             ))}
                             {data.topUsers.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">No active users this month</td>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-foreground-muted">No active users this month</td>
                                 </tr>
                             )}
                         </tbody>

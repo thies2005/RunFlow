@@ -89,11 +89,11 @@ const PHASE_COLORS: Record<string, { bg: string; text: string; border: string }>
     RACE_WEEK: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30' },
     RECOVERY: { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' },
     ENDURANCE: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30' },
-    MAINTAIN: { bg: 'bg-gray-500/20', text: 'text-gray-400', border: 'border-gray-500/30' },
+    MAINTAIN: { bg: 'bg-foreground/20', text: 'text-foreground-muted', border: 'border-foreground/30' },
 };
 
 const TYPE_COLORS: Record<string, string> = {
-    EASY: 'bg-gray-500/20 text-gray-300',
+    EASY: 'bg-foreground/20 text-foreground-muted',
     LONG_RUN: 'bg-purple-500/20 text-purple-300',
     TEMPO: 'bg-orange-500/20 text-orange-300',
     INTERVALS: 'bg-red-500/20 text-red-300',
@@ -457,7 +457,7 @@ export default function PlanGeneratorPage() {
                                                             <div className="w-12 flex-shrink-0 text-foreground-muted text-xs pt-0.5">
                                                                 {w.dayOfWeek}
                                                             </div>
-                                                            <span className={`px-1.5 py-0.5 rounded text-[11px] font-semibold flex-shrink-0 ${TYPE_COLORS[w.type] || 'bg-gray-500/20 text-gray-300'}`}>
+                                                            <span className={`px-1.5 py-0.5 rounded text-[11px] font-semibold flex-shrink-0 ${TYPE_COLORS[w.type] || 'bg-foreground/20 text-foreground-muted'}`}>
                                                                 {w.type.replace(/_/g, ' ')}
                                                             </span>
                                                             <div className="flex-1 min-w-0">

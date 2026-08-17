@@ -98,7 +98,7 @@ function TimeInputGroup({
     onChange: (_next: TimeParts) => void;
     placeholder?: string;
 }) {
-    const inputClass = 'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 outline-hidden focus:ring-2 focus:ring-accent-orange transition-all';
+    const inputClass = 'w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-foreground text-sm placeholder-foreground-muted outline-hidden focus:ring-2 focus:ring-accent-orange transition-all';
 
     return (
         <div>
@@ -114,7 +114,7 @@ function TimeInputGroup({
                         placeholder="hh"
                         className={inputClass}
                     />
-                    <p className="text-[10px] text-gray-500 mt-1 text-center">hours</p>
+                    <p className="text-[10px] text-foreground-muted mt-1 text-center">hours</p>
                 </div>
                 <div>
                     <input
@@ -126,7 +126,7 @@ function TimeInputGroup({
                         placeholder="mm"
                         className={inputClass}
                     />
-                    <p className="text-[10px] text-gray-500 mt-1 text-center">minutes</p>
+                    <p className="text-[10px] text-foreground-muted mt-1 text-center">minutes</p>
                 </div>
                 <div>
                     <input
@@ -138,10 +138,10 @@ function TimeInputGroup({
                         placeholder="ss"
                         className={inputClass}
                     />
-                    <p className="text-[10px] text-gray-500 mt-1 text-center">seconds</p>
+                    <p className="text-[10px] text-foreground-muted mt-1 text-center">seconds</p>
                 </div>
             </div>
-            {placeholder && <p className="text-[10px] text-gray-500 mt-1">{placeholder}</p>}
+            {placeholder && <p className="text-[10px] text-foreground-muted mt-1">{placeholder}</p>}
         </div>
     );
 }
@@ -264,35 +264,35 @@ export default function RaceResultModal({
                             <p className="text-sm text-accent-orange font-medium mb-1">
                                 We found a run near your race date!
                             </p>
-                            <p className="text-xs text-gray-400">Is this your race?</p>
+                            <p className="text-xs text-foreground-muted">Is this your race?</p>
                         </div>
 
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                        <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
-                                    <Trophy className="w-5 h-5 text-white" />
+                                    <Trophy className="w-5 h-5 text-foreground" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-white truncate">{suggestedActivity.name}</p>
-                                    <p className="text-xs text-gray-400">{format(new Date(suggestedActivity.startDate), 'EEEE, MMMM d, yyyy')}</p>
+                                    <p className="font-medium text-foreground truncate">{suggestedActivity.name}</p>
+                                    <p className="text-xs text-foreground-muted">{format(new Date(suggestedActivity.startDate), 'EEEE, MMMM d, yyyy')}</p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 gap-3 text-center">
-                                <div className="bg-white/5 rounded-lg p-2">
-                                    <p className="text-lg font-bold text-white">{formatDistanceWithUnit(suggestedActivity.distance, useImperial, 1)}</p>
-                                    <p className="text-[10px] text-gray-400">distance</p>
+                                <div className="bg-foreground/5 rounded-lg p-2">
+                                    <p className="text-lg font-bold text-foreground">{formatDistanceWithUnit(suggestedActivity.distance, useImperial, 1)}</p>
+                                    <p className="text-[10px] text-foreground-muted">distance</p>
                                 </div>
-                                <div className="bg-white/5 rounded-lg p-2">
-                                    <p className="text-lg font-bold text-white">{formatTime(suggestedActivity.movingTime)}</p>
-                                    <p className="text-[10px] text-gray-400">time</p>
+                                <div className="bg-foreground/5 rounded-lg p-2">
+                                    <p className="text-lg font-bold text-foreground">{formatTime(suggestedActivity.movingTime)}</p>
+                                    <p className="text-[10px] text-foreground-muted">time</p>
                                 </div>
-                                <div className="bg-white/5 rounded-lg p-2">
-                                    <p className="text-lg font-bold text-white">
+                                <div className="bg-foreground/5 rounded-lg p-2">
+                                    <p className="text-lg font-bold text-foreground">
                                         {suggestedActivity.averageSpeed
                                             ? formatPaceWithUnits(1000 / suggestedActivity.averageSpeed, useImperial)
                                             : '-'}
                                     </p>
-                                    <p className="text-[10px] text-gray-400">pace</p>
+                                    <p className="text-[10px] text-foreground-muted">pace</p>
                                 </div>
                             </div>
                         </div>
@@ -307,7 +307,7 @@ export default function RaceResultModal({
                             </button>
                             <button
                                 onClick={() => setMode('pick')}
-                                className="flex-1 py-3 border border-white/10 text-gray-300 rounded-lg hover:bg-white/5 transition-colors text-sm"
+                                className="flex-1 py-3 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 transition-colors text-sm"
                             >
                                 Pick a different run
                             </button>
@@ -315,7 +315,7 @@ export default function RaceResultModal({
 
                         <button
                             onClick={onClose}
-                            className="w-full text-xs text-gray-500 hover:text-gray-300 transition-colors py-1"
+                            className="w-full text-xs text-foreground-muted hover:text-foreground-muted transition-colors py-1"
                         >
                             I didn&apos;t race / Skip for now
                         </button>
@@ -326,9 +326,9 @@ export default function RaceResultModal({
                 {mode === 'suggest' && !suggestedActivity && (
                     <div className="space-y-4">
                         <div className="text-center py-4">
-                            <Trophy className="w-12 h-12 mx-auto text-gray-500 mb-3" />
-                            <p className="text-gray-300 mb-1">No matching run found near {goal.raceDate ? format(new Date(goal.raceDate), 'MMM d') : 'your race date'}</p>
-                            <p className="text-xs text-gray-500">Your race activity might not have synced yet, or was on a different date.</p>
+                            <Trophy className="w-12 h-12 mx-auto text-foreground-muted mb-3" />
+                            <p className="text-foreground-muted mb-1">No matching run found near {goal.raceDate ? format(new Date(goal.raceDate), 'MMM d') : 'your race date'}</p>
+                            <p className="text-xs text-foreground-muted">Your race activity might not have synced yet, or was on a different date.</p>
                         </div>
 
                         <div className="flex gap-2">
@@ -340,7 +340,7 @@ export default function RaceResultModal({
                             </button>
                             <button
                                 onClick={onClose}
-                                className="flex-1 py-3 border border-white/10 text-gray-300 rounded-lg hover:bg-white/5 transition-colors text-sm"
+                                className="flex-1 py-3 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 transition-colors text-sm"
                             >
                                 Skip for now
                             </button>
@@ -368,7 +368,7 @@ export default function RaceResultModal({
                             </button>
                             <button
                                 onClick={() => setMode('suggest')}
-                                className="flex-1 py-3 border border-white/10 text-gray-300 rounded-lg hover:bg-white/5 transition-colors text-sm"
+                                className="flex-1 py-3 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 transition-colors text-sm"
                             >
                                 Back
                             </button>
@@ -381,22 +381,22 @@ export default function RaceResultModal({
                     <div className="space-y-4">
                         {/* Time Comparison */}
                         {goal.targetTime && actualTimeSeconds !== null && (
-                            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                                <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 text-center">Race Result</p>
+                            <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
+                                <p className="text-xs text-foreground-muted uppercase tracking-wider mb-3 text-center">Race Result</p>
                                 <div className="grid grid-cols-3 gap-3">
                                     <div className="text-center">
                                         <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
-                                            <Clock className="w-5 h-5 text-white" />
+                                            <Clock className="w-5 h-5 text-foreground" />
                                         </div>
-                                        <p className="text-[10px] text-gray-400 uppercase">Goal Time</p>
-                                        <p className="text-xl font-bold text-white">{formatTime(goal.targetTime)}</p>
+                                        <p className="text-[10px] text-foreground-muted uppercase">Goal Time</p>
+                                        <p className="text-xl font-bold text-foreground">{formatTime(goal.targetTime)}</p>
                                     </div>
                                     <div className="text-center">
                                         <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
-                                            <Trophy className="w-5 h-5 text-white" />
+                                            <Trophy className="w-5 h-5 text-foreground" />
                                         </div>
-                                        <p className="text-[10px] text-gray-400 uppercase">Actual Time</p>
-                                        <p className="text-xl font-bold text-white">{formatTime(actualTimeSeconds)}</p>
+                                        <p className="text-[10px] text-foreground-muted uppercase">Actual Time</p>
+                                        <p className="text-xl font-bold text-foreground">{formatTime(actualTimeSeconds)}</p>
                                     </div>
                                     <div className="text-center">
                                         <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center ${!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive
@@ -410,7 +410,7 @@ export default function RaceResultModal({
                                                 {!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive ? '-' : '+'}
                                             </span>
                                         </div>
-                                        <p className="text-[10px] text-gray-400 uppercase">Difference</p>
+                                        <p className="text-[10px] text-foreground-muted uppercase">Difference</p>
                                         <p className={`text-xl font-bold ${!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive
                                                 ? 'text-green-400'
                                                 : 'text-red-400'
@@ -441,24 +441,24 @@ export default function RaceResultModal({
                         </div>
 
                         {/* Expandable Race Details */}
-                        <div className="border border-white/10 rounded-xl overflow-hidden">
+                        <div className="border border-foreground/10 rounded-xl overflow-hidden">
                             <button
                                 type="button"
                                 onClick={() => setShowDetails(!showDetails)}
-                                className="w-full flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 transition-colors"
+                                className="w-full flex items-center justify-between p-3 bg-foreground/5 hover:bg-foreground/10 transition-colors"
                             >
                                 <div className="flex items-center gap-2">
                                     <Edit3 className="w-4 h-4 text-accent-orange" />
-                                    <span className="text-sm font-medium text-white">Race Details</span>
+                                    <span className="text-sm font-medium text-foreground">Race Details</span>
                                 </div>
                                 {showDetails
-                                    ? <ChevronUp className="w-4 h-4 text-gray-400" />
-                                    : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                                    ? <ChevronUp className="w-4 h-4 text-foreground-muted" />
+                                    : <ChevronDown className="w-4 h-4 text-foreground-muted" />}
                             </button>
 
                             {showDetails && (
-                                <div className="p-3 space-y-3 border-t border-white/5">
-                                    <p className="text-[10px] text-gray-500">Add details about your race. You can edit these later in your Profile.</p>
+                                <div className="p-3 space-y-3 border-t border-foreground/5">
+                                    <p className="text-[10px] text-foreground-muted">Add details about your race. You can edit these later in your Profile.</p>
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <Input
@@ -528,7 +528,7 @@ export default function RaceResultModal({
                                                 onChange={e => setFeltLike(e.target.value)}
                                                 className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-accent-orange"
                                             />
-                                            <div className="flex justify-between text-[10px] text-gray-500">
+                                            <div className="flex justify-between text-[10px] text-foreground-muted">
                                                 <span>Easy</span>
                                                 <span>Hard</span>
                                             </div>
@@ -542,7 +542,7 @@ export default function RaceResultModal({
                                             onChange={e => setNotes(e.target.value)}
                                             placeholder="How did the race go? What went well? What would you change?"
                                             rows={3}
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white text-sm placeholder-gray-500 outline-hidden focus:ring-2 focus:ring-accent-orange transition-all resize-none"
+                                            className="w-full bg-foreground/5 border border-foreground/10 rounded-lg p-3 text-foreground text-sm placeholder-foreground-muted outline-hidden focus:ring-2 focus:ring-accent-orange transition-all resize-none"
                                         />
                                     </div>
                                 </div>
@@ -550,22 +550,22 @@ export default function RaceResultModal({
                         </div>
 
                         {/* Training Summary */}
-                        <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                            <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Training Summary</p>
+                        <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
+                            <p className="text-xs text-foreground-muted uppercase tracking-wider mb-2">Training Summary</p>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-lg font-bold text-white">{workoutStats.completed}/{workoutStats.total}</p>
-                                    <p className="text-xs text-gray-400">workouts completed</p>
+                                    <p className="text-lg font-bold text-foreground">{workoutStats.completed}/{workoutStats.total}</p>
+                                    <p className="text-xs text-foreground-muted">workouts completed</p>
                                 </div>
                                 <div className="text-right">
                                     <p className={`text-lg font-bold ${completionRate >= 80 ? 'text-green-400' : completionRate >= 60 ? 'text-yellow-400' : 'text-red-400'
                                         }`}>
                                         {completionRate}%
                                     </p>
-                                    <p className="text-xs text-gray-400">completion rate</p>
+                                    <p className="text-xs text-foreground-muted">completion rate</p>
                                 </div>
                             </div>
-                            <div className="mt-2 h-2 bg-white/5 rounded-full overflow-hidden">
+                            <div className="mt-2 h-2 bg-foreground/5 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full rounded-full transition-all ${completionRate >= 80 ? 'bg-green-500' : completionRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                                         }`}
@@ -574,7 +574,7 @@ export default function RaceResultModal({
                             </div>
                         </div>
 
-                        <p className="text-[10px] text-gray-500 text-center">
+                        <p className="text-[10px] text-foreground-muted text-center">
                             You can edit race details later in your Profile &rarr; Past Races
                         </p>
 
@@ -588,7 +588,7 @@ export default function RaceResultModal({
                         <div className="flex gap-2">
                             <button
                                 onClick={onClose}
-                                className="flex-1 py-3 border border-white/10 text-gray-300 rounded-lg hover:bg-white/5 transition-colors text-sm"
+                                className="flex-1 py-3 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 transition-colors text-sm"
                             >
                                 Cancel
                             </button>

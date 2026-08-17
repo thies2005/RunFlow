@@ -316,21 +316,21 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
 
     return (
         <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+            <div className="bg-background-secondary w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-white/10 shrink-0">
+                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-foreground/10 shrink-0">
                     <div className="flex items-center gap-2">
                         {selectedFood && (
-                            <button onClick={() => setSelectedFood(null)} className="p-1 -ml-2 text-gray-400 hover:text-white">
+                            <button onClick={() => setSelectedFood(null)} className="p-1 -ml-2 text-foreground-muted hover:text-foreground">
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
                         )}
-                        <h2 className="text-lg font-bold text-white">
+                        <h2 className="text-lg font-bold text-foreground">
                             {selectedFood ? 'Log Food' : 'Add Food'}
                         </h2>
                     </div>
-                    <button onClick={handleClose} className="p-2 -mr-2 text-gray-400 hover:text-white">
+                    <button onClick={handleClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -338,16 +338,16 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                 {!selectedFood ? (
                     <>
                         {/* Tabs */}
-                        <div className="flex border-b border-white/10 shrink-0">
+                        <div className="flex border-b border-foreground/10 shrink-0">
                             <button
                                 onClick={() => setActiveTab('search')}
-                                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'search' ? 'text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-gray-300'}`}
+                                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'search' ? 'text-foreground border-b-2 border-blue-500' : 'text-foreground-muted hover:text-foreground-muted'}`}
                             >
                                 Search DB
                             </button>
                             <button
                                 onClick={() => setActiveTab('custom')}
-                                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'custom' ? 'text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-gray-300'}`}
+                                className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'custom' ? 'text-foreground border-b-2 border-blue-500' : 'text-foreground-muted hover:text-foreground-muted'}`}
                             >
                                 Custom Entry
                             </button>
@@ -362,7 +362,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                         value={query}
                                         onChange={e => setQuery(e.target.value)}
                                         placeholder="Search bananas, apples..."
-                                        className="flex-1 !bg-white/5 border-white/10"
+                                        className="flex-1 !bg-foreground/5 border-foreground/10"
                                     />
                                     <button
                                         type="submit"
@@ -375,31 +375,31 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
 
                                 <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
                                     {!query.trim() && isRecentLoading && (
-                                        <div className="flex items-center justify-center py-8 text-gray-500">
+                                        <div className="flex items-center justify-center py-8 text-foreground-muted">
                                             <Loader2 className="w-5 h-5 animate-spin" />
                                         </div>
                                     )}
 
                                     {!query.trim() && (recentFrequent?.recent?.length ?? 0) > 0 && (
                                         <div className="mb-6">
-                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-1.5 px-1"><History className="w-3.5 h-3.5"/> Recent Foods</h3>
+                                            <h3 className="text-xs font-bold text-foreground-muted uppercase tracking-widest mb-3 flex items-center gap-1.5 px-1"><History className="w-3.5 h-3.5"/> Recent Foods</h3>
                                             <div className="space-y-2">
                                                 {recentFrequent?.recent?.map((food: any, i: number) => (
                                                     <button
                                                         key={`recent-${food.id || i}`}
                                                         onClick={() => handleSelectFood(food)}
-                                                        className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex justify-between items-center"
+                                                        className="w-full text-left p-3 rounded-lg bg-foreground/5 border border-foreground/10 hover:bg-foreground/10 transition-colors flex justify-between items-center"
                                                     >
                                                         <div>
-                                                            <p className="font-medium text-white line-clamp-1">{food.name}</p>
-                                                            <p className="text-xs text-gray-400">
+                                                            <p className="font-medium text-foreground line-clamp-1">{food.name}</p>
+                                                            <p className="text-xs text-foreground-muted">
                                                                 {food.brand ? `${food.brand} • ` : ''}
                                                                 {food.servingSize}
                                                             </p>
                                                         </div>
                                                         <div className="text-right shrink-0 ml-2">
                                                             <p className="text-sm font-bold text-blue-400">{Math.round(food.calories)}</p>
-                                                            <p className="text-[10px] text-gray-500 uppercase">kcal</p>
+                                                            <p className="text-[10px] text-foreground-muted uppercase">kcal</p>
                                                         </div>
                                                     </button>
                                                 ))}
@@ -409,24 +409,24 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
 
                                     {!query.trim() && (recentFrequent?.frequent?.length ?? 0) > 0 && (
                                         <div className="mb-6">
-                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-1.5 px-1"><Star className="w-3.5 h-3.5 text-yellow-500/80"/> Frequent Foods</h3>
+                                            <h3 className="text-xs font-bold text-foreground-muted uppercase tracking-widest mb-3 flex items-center gap-1.5 px-1"><Star className="w-3.5 h-3.5 text-yellow-500/80"/> Frequent Foods</h3>
                                             <div className="space-y-2">
                                                 {recentFrequent?.frequent?.map((food: any, i: number) => (
                                                     <button
                                                         key={`freq-${food.id || i}`}
                                                         onClick={() => handleSelectFood(food)}
-                                                        className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex justify-between items-center"
+                                                        className="w-full text-left p-3 rounded-lg bg-foreground/5 border border-foreground/10 hover:bg-foreground/10 transition-colors flex justify-between items-center"
                                                     >
                                                         <div>
-                                                            <p className="font-medium text-white line-clamp-1">{food.name}</p>
-                                                            <p className="text-xs text-gray-400">
+                                                            <p className="font-medium text-foreground line-clamp-1">{food.name}</p>
+                                                            <p className="text-xs text-foreground-muted">
                                                                 {food.brand ? `${food.brand} • ` : ''}
                                                                 {food.servingSize}
                                                             </p>
                                                         </div>
                                                         <div className="text-right shrink-0 ml-2">
                                                             <p className="text-sm font-bold text-blue-400">{Math.round(food.calories)}</p>
-                                                            <p className="text-[10px] text-gray-500 uppercase">kcal</p>
+                                                            <p className="text-[10px] text-foreground-muted uppercase">kcal</p>
                                                         </div>
                                                     </button>
                                                 ))}
@@ -435,17 +435,17 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                     )}
 
                                     {searchResults.length === 0 && !isSearching && !isOffSearching && !isFsSearching && query.trim() && (
-                                        <p className="text-center text-gray-400 mt-8 text-sm">No results found.</p>
+                                        <p className="text-center text-foreground-muted mt-8 text-sm">No results found.</p>
                                     )}
                                     {searchResults.map((food, i) => (
                                         <button
                                             key={food.id || i}
                                             onClick={() => handleSelectFood(food)}
-                                            className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex justify-between items-center"
+                                            className="w-full text-left p-3 rounded-lg bg-foreground/5 border border-foreground/10 hover:bg-foreground/10 transition-colors flex justify-between items-center"
                                         >
                                             <div>
-                                                <p className="font-medium text-white line-clamp-1">{food.name}</p>
-                                                <p className="text-xs text-gray-400">
+                                                <p className="font-medium text-foreground line-clamp-1">{food.name}</p>
+                                                <p className="text-xs text-foreground-muted">
                                                     {food.brand ? `${food.brand} • ` : ''}
                                                     {food.servingSize}
                                                     {food.source === 'off' ? ' (OFF)' : food.source === 'fs' ? ' (FatSecret)' : ''}
@@ -453,12 +453,12 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                             </div>
                                             <div className="text-right shrink-0 ml-2">
                                                 <p className="text-sm font-bold text-blue-400">{Math.round(food.calories)}</p>
-                                                <p className="text-[10px] text-gray-500 uppercase">kcal</p>
+                                                <p className="text-[10px] text-foreground-muted uppercase">kcal</p>
                                             </div>
                                         </button>
                                     ))}
                                     {(isOffSearching || isFsSearching) && (
-                                        <div className="flex items-center justify-center gap-2 py-4 text-gray-500">
+                                        <div className="flex items-center justify-center gap-2 py-4 text-foreground-muted">
                                             <Loader2 className="w-4 h-4 animate-spin" />
                                             <span className="text-xs">
                                                 Searching {isOffSearching && isFsSearching ? 'external databases...' : isOffSearching ? 'Open Food Facts...' : 'FatSecret...'}
@@ -473,26 +473,26 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                         {activeTab === 'custom' && (
                             <form onSubmit={handleCustomSubmit} className="flex-1 overflow-y-auto p-4 space-y-4">
                                 <div>
-                                    <Input required label="Food Name *" type="text" value={customName} onChange={e => setCustomName(e.target.value)} className="!bg-white/5 border-white/10" placeholder="e.g. Homemade Pasta" />
+                                    <Input required label="Food Name *" type="text" value={customName} onChange={e => setCustomName(e.target.value)} className="!bg-foreground/5 border-foreground/10" placeholder="e.g. Homemade Pasta" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <Input required label="Calories (kcal) *" type="number" step="any" value={customCalories} onChange={e => setCustomCalories(e.target.value)} className="!bg-white/5 border-white/10" placeholder="0" />
+                                        <Input required label="Calories (kcal) *" type="number" step="any" value={customCalories} onChange={e => setCustomCalories(e.target.value)} className="!bg-foreground/5 border-foreground/10" placeholder="0" />
                                     </div>
                                     <div>
-                                        <Input label="Serving Size" type="text" value={customServingSize} onChange={e => setCustomServingSize(e.target.value)} className="!bg-white/5 border-white/10" placeholder="e.g. 100g or 1 piece" />
+                                        <Input label="Serving Size" type="text" value={customServingSize} onChange={e => setCustomServingSize(e.target.value)} className="!bg-foreground/5 border-foreground/10" placeholder="e.g. 100g or 1 piece" />
                                     </div>
                                     <div>
-                                        <Input label="Protein (g)" type="number" step="any" value={customProtein} onChange={e => setCustomProtein(e.target.value)} className="!bg-white/5 border-white/10" placeholder="0" />
+                                        <Input label="Protein (g)" type="number" step="any" value={customProtein} onChange={e => setCustomProtein(e.target.value)} className="!bg-foreground/5 border-foreground/10" placeholder="0" />
                                     </div>
                                     <div>
-                                        <Input label="Carbs (g)" type="number" step="any" value={customCarbs} onChange={e => setCustomCarbs(e.target.value)} className="!bg-white/5 border-white/10" placeholder="0" />
+                                        <Input label="Carbs (g)" type="number" step="any" value={customCarbs} onChange={e => setCustomCarbs(e.target.value)} className="!bg-foreground/5 border-foreground/10" placeholder="0" />
                                     </div>
                                     <div>
-                                        <Input label="Fats (g)" type="number" step="any" value={customFats} onChange={e => setCustomFats(e.target.value)} className="!bg-white/5 border-white/10" placeholder="0" />
+                                        <Input label="Fats (g)" type="number" step="any" value={customFats} onChange={e => setCustomFats(e.target.value)} className="!bg-foreground/5 border-foreground/10" placeholder="0" />
                                     </div>
                                 </div>
-                                <button type="submit" disabled={!customName || !customCalories} className="w-full mt-2 bg-blue-600 disabled:bg-gray-600 text-white font-semibold py-3 flex items-center justify-center gap-2 rounded-xl transition-colors">
+                                <button type="submit" disabled={!customName || !customCalories} className="w-full mt-2 bg-blue-600 disabled:bg-foreground/20 text-white font-semibold py-3 flex items-center justify-center gap-2 rounded-xl transition-colors">
                                     Next <ArrowLeft className="w-4 h-4 rotate-180" />
                                 </button>
                             </form>
@@ -501,26 +501,26 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                 ) : (
                     /* Step 2: Logging Details */
                     <div className="flex-1 flex flex-col p-4 overflow-y-auto">
-                        <div className="bg-white/5 border border-white/10 p-4 rounded-xl mb-6">
-                            <h3 className="text-xl font-bold text-white mb-1">{selectedFood.name}</h3>
-                            <p className="text-sm text-gray-400 mb-4">{selectedFood.brand ? `${selectedFood.brand} • ` : ''}{selectedFood.servingSize}</p>
+                        <div className="bg-foreground/5 border border-foreground/10 p-4 rounded-xl mb-6">
+                            <h3 className="text-xl font-bold text-foreground mb-1">{selectedFood.name}</h3>
+                            <p className="text-sm text-foreground-muted mb-4">{selectedFood.brand ? `${selectedFood.brand} • ` : ''}{selectedFood.servingSize}</p>
 
                             <div className="grid grid-cols-4 gap-2 text-center">
-                                <div className="bg-black/50 p-2 rounded-lg">
-                                    <p className="text-[10px] text-gray-400 uppercase mb-1">Cals</p>
+                                <div className="bg-background-tertiary p-2 rounded-lg">
+                                    <p className="text-[10px] text-foreground-muted uppercase mb-1">Cals</p>
                                     <p className="font-bold text-blue-400">{Math.round(selectedFood.calories)}</p>
                                 </div>
-                                <div className="bg-black/50 p-2 rounded-lg">
-                                    <p className="text-[10px] text-gray-400 uppercase mb-1">Pro</p>
-                                    <p className="font-medium text-white">{Math.round(selectedFood.protein)}g</p>
+                                <div className="bg-background-tertiary p-2 rounded-lg">
+                                    <p className="text-[10px] text-foreground-muted uppercase mb-1">Pro</p>
+                                    <p className="font-medium text-foreground">{Math.round(selectedFood.protein)}g</p>
                                 </div>
-                                <div className="bg-black/50 p-2 rounded-lg">
-                                    <p className="text-[10px] text-gray-400 uppercase mb-1">Carb</p>
-                                    <p className="font-medium text-white">{Math.round(selectedFood.carbs)}g</p>
+                                <div className="bg-background-tertiary p-2 rounded-lg">
+                                    <p className="text-[10px] text-foreground-muted uppercase mb-1">Carb</p>
+                                    <p className="font-medium text-foreground">{Math.round(selectedFood.carbs)}g</p>
                                 </div>
-                                <div className="bg-black/50 p-2 rounded-lg">
-                                    <p className="text-[10px] text-gray-400 uppercase mb-1">Fat</p>
-                                    <p className="font-medium text-white">{Math.round(selectedFood.fats)}g</p>
+                                <div className="bg-background-tertiary p-2 rounded-lg">
+                                    <p className="text-[10px] text-foreground-muted uppercase mb-1">Fat</p>
+                                    <p className="font-medium text-foreground">{Math.round(selectedFood.fats)}g</p>
                                 </div>
                             </div>
                         </div>
@@ -533,7 +533,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                     step="0.1"
                                     value={quantity}
                                     onChange={e => setQuantity(e.target.value)}
-                                    className="!bg-white/5 border-white/10"
+                                    className="!bg-foreground/5 border-foreground/10"
                                 />
                             </div>
 
@@ -542,7 +542,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                     label="Meal Type"
                                     value={mealType}
                                     onChange={e => setMealType(e.target.value)}
-                                    className="!bg-white/5 border-white/10"
+                                    className="!bg-foreground/5 border-foreground/10"
                                 >
                                     <option value="BREAKFAST">Breakfast</option>
                                     <option value="LUNCH">Lunch</option>
@@ -556,7 +556,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                             <button
                                 onClick={handleSaveToLibrary}
                                 disabled={isSaving || !!savedMessage || !quantity}
-                                className="flex-shrink-0 bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-xl px-4 py-3 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                                className="flex-shrink-0 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 transition-colors rounded-xl px-4 py-3 flex items-center justify-center gap-1.5 disabled:opacity-50"
                             >
                                 {isSaving ? (
                                     <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
@@ -565,14 +565,14 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                 ) : (
                                     <>
                                         <Bookmark className="w-4 h-4 text-amber-400" />
-                                        <span className="text-xs text-gray-300 font-medium">Save</span>
+                                        <span className="text-xs text-foreground-muted font-medium">Save</span>
                                     </>
                                 )}
                             </button>
                             <button
                                 onClick={() => logMutation.mutate()}
                                 disabled={logMutation.isPending || !quantity}
-                                className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                                className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-foreground/15 disabled:opacity-50 transition-colors"
                             >
                                 {logMutation.isPending ? (
                                     <><Loader2 className="w-4 h-4 animate-spin" /> Logging...</>

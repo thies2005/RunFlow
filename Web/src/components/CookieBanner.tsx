@@ -23,9 +23,9 @@ export default function CookieBanner() {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-[#12121a] border-t border-white/10 shadow-2xl animate-slide-up">
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-background-secondary border-t border-foreground/10 shadow-2xl animate-slide-up">
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex-1 text-sm text-gray-300">
+                <div className="flex-1 text-sm text-foreground-muted">
                     <p>
                         We use strictly necessary cookies to keep you logged in and secure your session.
                         By using RunFlow, you agree to our use of these essential cookies.
@@ -41,7 +41,7 @@ export default function CookieBanner() {
                     </button>
                     <button
                         onClick={handleAcknowledge}
-                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        className="p-2 text-foreground-muted hover:text-foreground transition-colors"
                         aria-label="Close banner"
                     >
                         <X className="w-5 h-5" />

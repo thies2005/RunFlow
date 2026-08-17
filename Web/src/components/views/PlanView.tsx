@@ -86,7 +86,7 @@ function PlanViewComponent({
     }, [data]);
 
     if (isLoading) {
-        return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading plan...</div>;
+        return <div className="min-h-screen flex items-center justify-center text-foreground-muted">Loading plan...</div>;
     }
 
     if (!goal) {

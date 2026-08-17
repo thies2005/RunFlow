@@ -47,7 +47,7 @@ export function RiskFlagBadge({ type, severity, message, weekIndex }: RiskFlagBa
                 )}
             </div>
             {showTooltip && (
-                <div className="absolute left-0 top-full mt-1 z-50 w-56 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-700 shadow-xl text-[11px] text-zinc-300 leading-relaxed">
+                <div className="absolute left-0 top-full mt-1 z-50 w-56 px-3 py-2 rounded-lg bg-background-secondary border border-foreground/20 shadow-xl text-[11px] text-foreground-secondary leading-relaxed">
                     {message}
                 </div>
             )}

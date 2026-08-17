@@ -165,14 +165,14 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
 
     return (
         <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+            <div className="bg-background-secondary w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-white/10 shrink-0">
+                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-foreground/10 shrink-0">
                     <div className="flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-pink-400" />
-                        <h2 className="text-lg font-bold text-white">Food History</h2>
+                        <h2 className="text-lg font-bold text-foreground">Food History</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/10">
+                    <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors rounded-full hover:bg-foreground/10">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -180,14 +180,14 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                 <div className="flex-1 overflow-y-auto p-4">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12">
-                            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                            <Loader2 className="w-6 h-6 animate-spin text-foreground-muted" />
                         </div>
                     ) : sortedDates.length === 0 ? (
                         <div className="text-center py-12">
-                            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-                                <Calendar className="w-8 h-8 text-gray-600" />
+                            <div className="w-16 h-16 rounded-full bg-foreground/5 flex items-center justify-center mx-auto mb-4">
+                                <Calendar className="w-8 h-8 text-foreground-secondary" />
                             </div>
-                            <p className="text-gray-400 font-medium mb-1">No food logged yet</p>
+                            <p className="text-foreground-muted font-medium mb-1">No food logged yet</p>
                         </div>
                     ) : (
                         <div className="space-y-6">
@@ -198,7 +198,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
 
                                 return (
                                     <div key={dateStr} className="space-y-2">
-                                        <h3 className="text-sm font-semibold text-gray-400 sticky top-0 bg-[#1c1c1e] py-1 z-10">
+                                        <h3 className="text-sm font-semibold text-foreground-muted sticky top-0 bg-background-secondary py-1 z-10">
                                             {isToday ? 'Today' : format(dateObj, 'EEEE, MMM do')}
                                         </h3>
                                         <div className="space-y-2">
@@ -206,32 +206,32 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                 const isEditing = editingId === log.id;
 
                                                 return (
-                                                    <div key={log.id} className={`bg-white/5 border ${isEditing ? 'border-pink-500/50 block shadow-[0_0_15px_rgba(236,72,153,0.15)]' : 'border-white/10'} rounded-xl overflow-hidden transition-all duration-200`}>
+                                                    <div key={log.id} className={`bg-foreground/5 border ${isEditing ? 'border-pink-500/50 block shadow-[0_0_15px_rgba(236,72,153,0.15)]' : 'border-foreground/10'} rounded-xl overflow-hidden transition-all duration-200`}>
                                                         <div className="p-3">
                                                             <div className="flex justify-between items-start mb-2">
                                                                 <div className="flex-1 pr-3">
-                                                                    <p className="text-sm font-medium text-white line-clamp-2">{log.foodItem?.name || log.mealType}</p>
+                                                                    <p className="text-sm font-medium text-foreground line-clamp-2">{log.foodItem?.name || log.mealType}</p>
                                                                     {log.foodItem?.brand && (
-                                                                        <p className="text-[11px] text-gray-400">{log.foodItem.brand}</p>
+                                                                        <p className="text-[11px] text-foreground-muted">{log.foodItem.brand}</p>
                                                                     )}
                                                                     {!isEditing && (
-                                                                        <p className="text-xs text-gray-400 mt-1">
-                                                                            <span className="text-white font-medium">{log.quantity}x</span> {log.mealType || 'SNACK'}
+                                                                        <p className="text-xs text-foreground-muted mt-1">
+                                                                            <span className="text-foreground font-medium">{log.quantity}x</span> {log.mealType || 'SNACK'}
                                                                             {log.foodItem?.servingSize ? ` (${log.foodItem.servingSize})` : ''}
                                                                         </p>
                                                                     )}
                                                                 </div>
                                                                 <div className="text-right shrink-0">
                                                                     <p className="text-sm font-bold text-pink-400">{Math.round(log.calories)} kcal</p>
-                                                                    <p className="text-[10px] text-gray-500 mt-0.5">{Math.round(log.protein)}g P · {Math.round(log.carbs)}g C · {Math.round(log.fats)}g F</p>
+                                                                    <p className="text-[10px] text-foreground-muted mt-0.5">{Math.round(log.protein)}g P · {Math.round(log.carbs)}g C · {Math.round(log.fats)}g F</p>
                                                                 </div>
                                                             </div>
 
                                                             {isEditing && (
-                                                                <div className="mt-3 bg-black/20 rounded-lg p-3 border border-white/5">
+                                                                <div className="mt-3 bg-foreground/5 rounded-lg p-3 border border-foreground/5">
                                                                     <div className="flex items-center gap-3">
                                                                         <div className="flex-1">
-                                                                            <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Quantity</label>
+                                                                            <label className="text-[10px] text-foreground-muted uppercase tracking-wider font-semibold mb-1 block">Quantity</label>
                                                                             <div className="flex">
                                                                                 <input
                                                                                     type="number"
@@ -239,24 +239,24 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                                     step="0.1"
                                                                                     value={editQuantity}
                                                                                     onChange={(e) => setEditQuantity(e.target.value)}
-                                                                                    className="w-full bg-white/5 border border-white/10 rounded-l-lg px-3 py-1.5 text-sm text-white focus:outline-hidden focus:border-pink-500/50"
+                                                                                    className="w-full bg-foreground/5 border border-foreground/10 rounded-l-lg px-3 py-1.5 text-sm text-foreground focus:outline-hidden focus:border-pink-500/50"
                                                                                 />
-                                                                                <div className="bg-white/10 border border-white/10 border-l-0 rounded-r-lg px-3 py-1.5 flex items-center justify-center text-xs text-gray-400">
+                                                                                <div className="bg-foreground/10 border border-foreground/10 border-l-0 rounded-r-lg px-3 py-1.5 flex items-center justify-center text-xs text-foreground-muted">
                                                                                     srv
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                         <div className="flex-1">
-                                                                            <label className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1 block">Meal</label>
+                                                                            <label className="text-[10px] text-foreground-muted uppercase tracking-wider font-semibold mb-1 block">Meal</label>
                                                                             <select
                                                                                 value={editMealType}
                                                                                 onChange={(e) => setEditMealType(e.target.value)}
-                                                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-hidden focus:border-pink-500/50"
+                                                                                className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-2 py-1.5 text-sm text-foreground focus:outline-hidden focus:border-pink-500/50"
                                                                             >
-                                                                                <option value="BREAKFAST" className="bg-[#1c1c1e]">Breakfast</option>
-                                                                                <option value="LUNCH" className="bg-[#1c1c1e]">Lunch</option>
-                                                                                <option value="DINNER" className="bg-[#1c1c1e]">Dinner</option>
-                                                                                <option value="SNACK" className="bg-[#1c1c1e]">Snack</option>
+                                                                                <option value="BREAKFAST" className="bg-background-secondary">Breakfast</option>
+                                                                                <option value="LUNCH" className="bg-background-secondary">Lunch</option>
+                                                                                <option value="DINNER" className="bg-background-secondary">Dinner</option>
+                                                                                <option value="SNACK" className="bg-background-secondary">Snack</option>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -264,12 +264,12 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                             )}
                                                         </div>
 
-                                                        <div className="border-t border-white/5 px-2 py-1.5 flex justify-between items-center bg-black/20">
+                                                        <div className="border-t border-foreground/5 px-2 py-1.5 flex justify-between items-center bg-foreground/5">
                                                             {isEditing ? (
                                                                 <>
                                                                     <button
                                                                         onClick={() => setEditingId(null)}
-                                                                        className="text-[11px] text-gray-400 hover:text-white px-2 py-1 transition-colors"
+                                                                        className="text-[11px] text-foreground-muted hover:text-foreground px-2 py-1 transition-colors"
                                                                     >
                                                                         Cancel
                                                                     </button>
@@ -284,7 +284,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <span className="text-[10px] text-gray-500 pl-1">{format(parseISO(log.createdAt), 'h:mm a')}</span>
+                                                                    <span className="text-[10px] text-foreground-muted pl-1">{format(parseISO(log.createdAt), 'h:mm a')}</span>
                                                                     <div className="flex gap-1">
                                                                         <button
                                                                             onClick={() => {
@@ -293,7 +293,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                                 }
                                                                             }}
                                                                             disabled={savingMealId === log.id || savedMealIds.has(log.id)}
-                                                                            className="text-[11px] text-amber-400/80 hover:text-amber-400 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-white/5 disabled:opacity-50"
+                                                                            className="text-[11px] text-amber-400/80 hover:text-amber-400 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-foreground/5 disabled:opacity-50"
                                                                         >
                                                                             {savingMealId === log.id ? (
                                                                                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -306,7 +306,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                         </button>
                                                                         <button
                                                                             onClick={() => startEditing(log)}
-                                                                            className="text-[11px] text-gray-400 hover:text-white flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-white/5"
+                                                                            className="text-[11px] text-foreground-muted hover:text-foreground flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-foreground/5"
                                                                         >
                                                                             <Edit2 className="w-3 h-3" />
                                                                             Edit
@@ -318,7 +318,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                                 }
                                                                             }}
                                                                             disabled={deletingId === log.id}
-                                                                            className="text-[11px] text-red-400/70 hover:text-red-400 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-white/5 disabled:opacity-50"
+                                                                            className="text-[11px] text-red-400/70 hover:text-red-400 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-foreground/5 disabled:opacity-50"
                                                                         >
                                                                             {deletingId === log.id ? (
                                                                                 <Loader2 className="w-3 h-3 animate-spin" />

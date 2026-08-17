@@ -97,7 +97,7 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
           Error Analytics
         </h3>
@@ -114,22 +114,22 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
         </div>
       </div>
 
-      <div className="bg-gray-50 p-4 rounded-lg">
+      <div className="bg-background-secondary p-4 rounded-lg">
         <div className="flex gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-muted w-4 h-4" />
             <input
               type="text"
               placeholder="Search by route..."
               value={filters.route}
               onChange={(e) => setFilters({ ...filters, route: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-foreground/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           <select
             value={filters.resolved}
             onChange={(e) => setFilters({ ...filters, resolved: e.target.value as '' | 'true' | 'false' })}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-foreground/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">All Errors</option>
             <option value="false">Unresolved</option>
@@ -138,16 +138,16 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100">
-          <h4 className="font-medium text-gray-800">Error Groups</h4>
+      <div className="bg-background-secondary rounded-xl shadow-xs border border-glass-border overflow-hidden">
+        <div className="p-4 border-b border-glass-border">
+          <h4 className="font-medium text-foreground">Error Groups</h4>
         </div>
         <div className="max-h-96 overflow-y-auto">
           {errorGroups.length === 0 ? (
             <div className="p-8 text-center">
               <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-              <p className="text-gray-600 font-medium">No errors found</p>
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-foreground-secondary font-medium">No errors found</p>
+              <p className="text-foreground-muted text-sm mt-1">
                 Errors from API routes (status 400+) will automatically appear here when they occur.
               </p>
             </div>
@@ -193,7 +193,7 @@ interface ErrorGroupItemProps {
 function ErrorGroupItem({ group, onClick, onResolve }: ErrorGroupItemProps) {
   return (
     <div
-      className="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+      className="p-4 border-b border-glass-border hover:bg-background-secondary cursor-pointer transition-colors"
       onClick={onClick}
     >
       <div className="flex items-start justify-between">
@@ -203,10 +203,10 @@ function ErrorGroupItem({ group, onClick, onResolve }: ErrorGroupItemProps) {
               {group.resolved ? 'Resolved' : 'Unresolved'}
             </Badge>
             <Badge variant="outline">{group.method}</Badge>
-            <span className="text-xs text-gray-500">{group.count} occurrences</span>
+            <span className="text-xs text-foreground-muted">{group.count} occurrences</span>
           </div>
-          <p className="text-sm font-medium text-gray-800 mb-1">{group.errorMessage}</p>
-          <p className="text-xs text-gray-500 font-mono">{group.routePath}</p>
+          <p className="text-sm font-medium text-foreground mb-1">{group.errorMessage}</p>
+          <p className="text-xs text-foreground-muted font-mono">{group.routePath}</p>
         </div>
         {!group.resolved && (
           <Button
@@ -222,7 +222,7 @@ function ErrorGroupItem({ group, onClick, onResolve }: ErrorGroupItemProps) {
           </Button>
         )}
       </div>
-      <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+      <div className="flex items-center gap-4 mt-2 text-xs text-foreground-muted">
         <span>First: {new Date(group.firstSeen).toLocaleString()}</span>
         <span>Last: {new Date(group.lastSeen).toLocaleString()}</span>
       </div>
@@ -239,12 +239,12 @@ interface ErrorDetailModalProps {
 function ErrorDetailModal({ error, onClose, onResolve }: ErrorDetailModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-800">Error Details</h3>
+      <div className="bg-background-secondary rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+        <div className="p-6 border-b border-glass-border flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-foreground">Error Details</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-foreground-muted hover:text-foreground-secondary"
           >
             ×
           </button>
@@ -252,32 +252,32 @@ function ErrorDetailModal({ error, onClose, onResolve }: ErrorDetailModalProps) 
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-600">Message</label>
-              <p className="mt-1 text-gray-800">{error.errorMessage}</p>
+              <label className="text-sm font-medium text-foreground-secondary">Message</label>
+              <p className="mt-1 text-foreground">{error.errorMessage}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Route</label>
-              <p className="mt-1 font-mono text-sm bg-gray-50 p-2 rounded">{error.routePath}</p>
+              <label className="text-sm font-medium text-foreground-secondary">Route</label>
+              <p className="mt-1 font-mono text-sm bg-background-secondary p-2 rounded">{error.routePath}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Method</label>
+              <label className="text-sm font-medium text-foreground-secondary">Method</label>
               <Badge className="mt-1">{error.method}</Badge>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Timestamp</label>
-              <p className="mt-1 text-sm text-gray-600">{new Date(error.timestamp).toLocaleString()}</p>
+              <label className="text-sm font-medium text-foreground-secondary">Timestamp</label>
+              <p className="mt-1 text-sm text-foreground-secondary">{new Date(error.timestamp).toLocaleString()}</p>
             </div>
             {error.stackTrace && (
               <div>
-                <label className="text-sm font-medium text-gray-600">Stack Trace</label>
-                <pre className="mt-1 text-xs bg-gray-50 p-2 rounded overflow-x-auto">
+                <label className="text-sm font-medium text-foreground-secondary">Stack Trace</label>
+                <pre className="mt-1 text-xs bg-background-secondary p-2 rounded overflow-x-auto">
                   {error.stackTrace}
                 </pre>
               </div>
             )}
             {error.userId && (
               <div>
-                <label className="text-sm font-medium text-gray-600">User ID</label>
+                <label className="text-sm font-medium text-foreground-secondary">User ID</label>
                 <p className="mt-1 text-sm">{error.userId}</p>
               </div>
             )}

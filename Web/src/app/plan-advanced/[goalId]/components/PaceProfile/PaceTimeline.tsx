@@ -93,7 +93,7 @@ export function PaceTimeline({ profiles, planWeeks }: PaceTimelineProps) {
                         <div
                             key={week}
                             className={`flex flex-col items-center min-w-[8px] ${
-                                hasAdjustment ? 'border-l border-dashed border-zinc-700 pl-0.5 ml-0.5' : ''
+                                hasAdjustment ? 'border-l border-dashed border-foreground/20 pl-0.5 ml-0.5' : ''
                             }`}
                             title={
                                 phase
@@ -101,8 +101,8 @@ export function PaceTimeline({ profiles, planWeeks }: PaceTimelineProps) {
                                     : `Week ${week}`
                             }
                         >
-                            <div className="w-2 h-8 bg-zinc-800 rounded-sm" />
-                            <span className="text-[7px] text-zinc-600 mt-0.5">{week}</span>
+                            <div className="w-2 h-8 bg-background-tertiary rounded-sm" />
+                            <span className="text-[7px] text-foreground-muted mt-0.5">{week}</span>
                         </div>
                     );
                 })}
@@ -117,8 +117,8 @@ export function PaceTimeline({ profiles, planWeeks }: PaceTimelineProps) {
 
                     return (
                         <div key={paceKey} className="flex items-center gap-2">
-                            <span className="text-[9px] text-zinc-500 w-14">{label}</span>
-                            <Sparkline values={values} color={PACE_COLORS[paceKey] || 'text-zinc-400'} />
+                            <span className="text-[9px] text-foreground-muted w-14">{label}</span>
+                            <Sparkline values={values} color={PACE_COLORS[paceKey] || 'text-foreground-secondary'} />
                         </div>
                     );
                 })}

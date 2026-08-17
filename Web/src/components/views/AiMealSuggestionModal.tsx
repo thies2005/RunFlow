@@ -121,15 +121,15 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
 
     return (
         <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center p-4">
-            <div className="bg-[#1c1c1e] w-full max-w-md rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-white/10 animate-in zoom-in-95">
+            <div className="bg-background-secondary w-full max-w-md rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-foreground/10 animate-in zoom-in-95">
                 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
-                    <div className="flex items-center gap-2 text-white">
+                <div className="flex items-center justify-between p-4 border-b border-foreground/10 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
+                    <div className="flex items-center gap-2 text-foreground">
                         <Sparkles className="w-5 h-5 text-amber-400" />
                         <h2 className="text-lg font-bold">What should I eat?</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/10">
+                    <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors rounded-full hover:bg-foreground/10">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -143,10 +143,10 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                                         <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-500 animate-spin"></div>
                                         <Sparkles className="w-8 h-8 text-blue-400 animate-pulse" />
                                     </div>
-                                    <h3 className="text-white font-semibold flex items-center gap-2">
+                                    <h3 className="text-foreground font-semibold flex items-center gap-2">
                                         Analyzing your macros...
                                     </h3>
-                                    <p className="text-sm text-gray-400 mt-2 max-w-[250px]">
+                                    <p className="text-sm text-foreground-muted mt-2 max-w-[250px]">
                                         Looking through your library and common foods for the perfect match.
                                     </p>
                                 </>
@@ -155,8 +155,8 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                                     <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mb-4">
                                         <Sparkles className="w-8 h-8 text-amber-400" />
                                     </div>
-                                    <h3 className="text-white font-semibold mb-2">Find the Perfect Meal</h3>
-                                    <p className="text-sm text-gray-400 max-w-[280px]">
+                                    <h3 className="text-foreground font-semibold mb-2">Find the Perfect Meal</h3>
+                                    <p className="text-sm text-foreground-muted max-w-[280px]">
                                         Let AI suggest a meal from your recipes or history that perfectly fits your remaining {Math.round(remainingMacros.calories)} calories.
                                     </p>
                                     <button 
@@ -171,34 +171,34 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                         </div>
                     ) : (
                         <div className="flex flex-col gap-4 animate-in slide-in-from-bottom-4 fade-in">
-                            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                                <h3 className="text-xl font-bold text-white mb-2">{suggestion.suggestionName}</h3>
-                                <p className="text-sm text-gray-300 italic mb-4">&ldquo;{suggestion.reasoning}&rdquo;</p>
+                            <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
+                                <h3 className="text-xl font-bold text-foreground mb-2">{suggestion.suggestionName}</h3>
+                                <p className="text-sm text-foreground-muted italic mb-4">&ldquo;{suggestion.reasoning}&rdquo;</p>
                                 
                                 <div className="grid grid-cols-4 gap-2 mb-4">
-                                    <div className="bg-black/40 rounded-lg p-2 text-center">
-                                        <div className="text-[10px] uppercase text-gray-500 font-bold mb-1">Cals</div>
-                                        <div className="text-white font-bold">{suggestion.totalCalories}</div>
+                                    <div className="bg-foreground/10 rounded-lg p-2 text-center">
+                                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-1">Cals</div>
+                                        <div className="text-foreground font-bold">{suggestion.totalCalories}</div>
                                     </div>
-                                    <div className="bg-black/40 rounded-lg p-2 text-center border-b-2 border-pink-500">
-                                        <div className="text-[10px] uppercase text-gray-500 font-bold mb-1">Pro</div>
-                                        <div className="text-white font-bold">{suggestion.totalProtein}</div>
+                                    <div className="bg-foreground/10 rounded-lg p-2 text-center border-b-2 border-pink-500">
+                                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-1">Pro</div>
+                                        <div className="text-foreground font-bold">{suggestion.totalProtein}</div>
                                     </div>
-                                    <div className="bg-black/40 rounded-lg p-2 text-center border-b-2 border-blue-500">
-                                        <div className="text-[10px] uppercase text-gray-500 font-bold mb-1">Carb</div>
-                                        <div className="text-white font-bold">{suggestion.totalCarbs}</div>
+                                    <div className="bg-foreground/10 rounded-lg p-2 text-center border-b-2 border-blue-500">
+                                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-1">Carb</div>
+                                        <div className="text-foreground font-bold">{suggestion.totalCarbs}</div>
                                     </div>
-                                    <div className="bg-black/40 rounded-lg p-2 text-center border-b-2 border-orange-500">
-                                        <div className="text-[10px] uppercase text-gray-500 font-bold mb-1">Fat</div>
-                                        <div className="text-white font-bold">{suggestion.totalFats}</div>
+                                    <div className="bg-foreground/10 rounded-lg p-2 text-center border-b-2 border-orange-500">
+                                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-1">Fat</div>
+                                        <div className="text-foreground font-bold">{suggestion.totalFats}</div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
                                     {suggestion.items?.map((item: any, i: number) => (
-                                        <div key={i} className="flex justify-between text-sm py-1 border-b border-white/5 last:border-0">
-                                            <span className="text-gray-300">{item.name}</span>
-                                            <span className="text-gray-500">{item.calories} kcal</span>
+                                        <div key={i} className="flex justify-between text-sm py-1 border-b border-foreground/5 last:border-0">
+                                            <span className="text-foreground-muted">{item.name}</span>
+                                            <span className="text-foreground-muted">{item.calories} kcal</span>
                                         </div>
                                     ))}
                                 </div>
@@ -214,7 +214,7 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                             
                             <button 
                                 onClick={() => setSuggestion(null)}
-                                className="w-full py-2 text-sm text-gray-400 hover:text-white transition-colors"
+                                className="w-full py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
                             >
                                 Try another suggestion
                             </button>

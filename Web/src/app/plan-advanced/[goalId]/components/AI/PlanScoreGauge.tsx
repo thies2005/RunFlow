@@ -39,7 +39,7 @@ export function PlanScoreGauge({ score }: PlanScoreGaugeProps) {
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="8"
-                        className="text-zinc-800"
+                        className="text-foreground/15"
                     />
                     <circle
                         cx="64"
@@ -55,12 +55,12 @@ export function PlanScoreGauge({ score }: PlanScoreGaugeProps) {
                     />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold text-zinc-100">{Math.round(clampedScore)}</span>
-                    <span className="text-[10px] text-zinc-500">/ 100</span>
+                    <span className="text-2xl font-bold text-foreground">{Math.round(clampedScore)}</span>
+                    <span className="text-[10px] text-foreground-muted">/ 100</span>
                 </div>
             </div>
             <span className="text-xs font-medium mt-1" style={{ color }}>{label}</span>
-            <span className="text-[10px] text-zinc-600">Plan Quality</span>
+            <span className="text-[10px] text-foreground-muted">Plan Quality</span>
         </div>
     );
 }

@@ -150,7 +150,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                         title={`${zone.name} ${zone.label}: ${formatZoneTime(zone.time)} (${Math.round(pct)}%)`}
                                     >
                                         {pct >= 8 && (
-                                            <span className="text-xs font-bold text-white drop-shadow-md">{zone.name}</span>
+                                            <span className="text-xs font-bold text-foreground drop-shadow-md">{zone.name}</span>
                                         )}
                                     </div>
                                 );
@@ -162,7 +162,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                             {activeZones.map((zone, i) => {
                                 const pct = (zone.time / total) * 100;
                                 return (
-                                    <div key={i} className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
+                                    <div key={i} className="flex items-center gap-2 p-2 bg-foreground/5 rounded-lg">
                                         <div className={`w-3 h-3 rounded-xs ${zone.color}`} />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-1">

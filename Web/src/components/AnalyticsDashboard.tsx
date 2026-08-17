@@ -50,7 +50,7 @@ const formatZoneTime = (minutes: number) => {
 // Zone Trend Chart
 const ZoneTrendChart = memo(({ data }: { data: HistoryResponse['zoneTrend'] }) => (
     <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Training Zone Trend</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Training Zone Trend</h3>
         <div className="h-64" role="img" aria-label="Training Zone Trend Chart">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data}>
@@ -83,7 +83,7 @@ ZoneTrendChart.displayName = 'ZoneTrendChart';
 // Weekly Volume Chart
 const WeeklyVolumeChart = memo(({ data }: { data: HistoryResponse['weeklyVolume'] }) => (
     <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Weekly Volume</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Weekly Volume</h3>
         <div className="h-64" role="img" aria-label="Weekly Volume Chart">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data}>
@@ -131,7 +131,7 @@ const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTren
 
     return (
         <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Time in Zones Distribution</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Time in Zones Distribution</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Pie Chart */}
                 <div className="h-64" role="img" aria-label="Time in Zones Distribution Pie Chart">
@@ -164,21 +164,21 @@ const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTren
                     {pieData.map((zone, i) => {
                         const pct = (zone.value / total) * 100;
                         return (
-                            <div key={i} className="flex items-center justify-between p-2 hover:bg-white/5 rounded">
+                            <div key={i} className="flex items-center justify-between p-2 hover:bg-foreground/5 rounded">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-xs" style={{ backgroundColor: zone.color }} />
-                                    <span className="text-gray-300 text-sm">{zone.name}</span>
+                                    <span className="text-foreground-muted text-sm">{zone.name}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-white font-mono text-sm">{formatZoneTime(zone.value)}</span>
-                                    <span className="text-gray-500 text-xs w-12 text-right">{Math.round(pct)}%</span>
+                                    <span className="text-foreground font-mono text-sm">{formatZoneTime(zone.value)}</span>
+                                    <span className="text-foreground-muted text-xs w-12 text-right">{Math.round(pct)}%</span>
                                 </div>
                             </div>
                         );
                     })}
-                    <div className="border-t border-gray-700 pt-2 mt-2 flex justify-between">
-                        <span className="text-gray-400 text-sm">Total</span>
-                        <span className="text-white font-mono text-sm">{formatZoneTime(total)}</span>
+                    <div className="border-t border-foreground/20 pt-2 mt-2 flex justify-between">
+                        <span className="text-foreground-muted text-sm">Total</span>
+                        <span className="text-foreground font-mono text-sm">{formatZoneTime(total)}</span>
                     </div>
                 </div>
             </div>
@@ -190,7 +190,7 @@ ZonePieChart.displayName = 'ZonePieChart';
 // VDOT Trend Chart
 const VDOTTrendChart = memo(({ data }: { data: HistoryResponse['vdotTrend'] }) => (
     <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">VDOT Trend</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">VDOT Trend</h3>
         <div className="h-64" role="img" aria-label="VDOT Trend Line Chart">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
@@ -209,7 +209,7 @@ VDOTTrendChart.displayName = 'VDOTTrendChart';
 // Fitness Trend Chart
 const FitnessTrendChart = memo(({ data }: { data: HistoryResponse['fitnessTrend'] }) => (
     <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Fitness Tracking (Impulse-Response)</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Fitness Tracking (Impulse-Response)</h3>
         <div className="h-64" role="img" aria-label="Fitness Tracking Chart showing CTL, ATL, and TSB">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
@@ -231,22 +231,22 @@ FitnessTrendChart.displayName = 'FitnessTrendChart';
 const StatsGrid = memo(({ currentVdot, totals }: { currentVdot: number | null; totals: HistoryResponse['totals'] }) => (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass-card p-4 text-center">
-            <p className="text-gray-400 text-sm mb-1">Current VDOT</p>
-            <p className="text-xl sm:text-3xl font-bold text-white">{currentVdot?.toFixed(1) || '-'}</p>
+            <p className="text-foreground-muted text-sm mb-1">Current VDOT</p>
+            <p className="text-xl sm:text-3xl font-bold text-foreground">{currentVdot?.toFixed(1) || '-'}</p>
         </div>
         <div className="glass-card p-4 text-center">
-            <p className="text-gray-400 text-sm mb-1">Total Distance</p>
-            <p className="text-xl sm:text-3xl font-bold text-white">
-                {totals?.distance || 0}<span className="text-sm text-gray-500 font-normal ml-1">km</span>
+            <p className="text-foreground-muted text-sm mb-1">Total Distance</p>
+            <p className="text-xl sm:text-3xl font-bold text-foreground">
+                {totals?.distance || 0}<span className="text-sm text-foreground-muted font-normal ml-1">km</span>
             </p>
         </div>
         <div className="glass-card p-4 text-center">
-            <p className="text-gray-400 text-sm mb-1">Total Activities</p>
-            <p className="text-xl sm:text-3xl font-bold text-white">{totals?.activities || 0}</p>
+            <p className="text-foreground-muted text-sm mb-1">Total Activities</p>
+            <p className="text-xl sm:text-3xl font-bold text-foreground">{totals?.activities || 0}</p>
         </div>
         <div className="glass-card p-4 text-center">
-            <p className="text-gray-400 text-sm mb-1">Avg Pace</p>
-            <p className="text-xl sm:text-3xl font-bold text-white">
+            <p className="text-foreground-muted text-sm mb-1">Avg Pace</p>
+            <p className="text-xl sm:text-3xl font-bold text-foreground">
                 {totals?.averagePace ? formatPace(totals.averagePace).replace('/km', '') : '-'}
             </p>
         </div>
@@ -286,12 +286,12 @@ const RacePredictions = memo(({ currentVdot, effectiveVO2max, shapePercent }: {
 
     return (
         <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Race Predictions ({label})</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Race Predictions ({label})</h3>
             <div className="grid grid-cols-4 gap-4">
                 {racePredictions.map(p => (
                     <div key={p.race} className="text-center">
-                        <p className="text-gray-400 text-sm">{p.race}</p>
-                        <p className="text-2xl font-bold text-white">{p.time}</p>
+                        <p className="text-foreground-muted text-sm">{p.race}</p>
+                        <p className="text-2xl font-bold text-foreground">{p.time}</p>
                     </div>
                 ))}
             </div>
@@ -320,7 +320,7 @@ function AnalyticsDashboardInner({ currentVdot, effectiveVO2max, shapePercent }:
     });
 
     if (isLoading) {
-        return <div className="animate-pulse h-96 bg-gray-800/50 rounded-xl"></div>;
+        return <div className="animate-pulse h-96 bg-background-tertiary/50 rounded-xl"></div>;
     }
 
     if (!data) return null;
@@ -333,7 +333,7 @@ function AnalyticsDashboardInner({ currentVdot, effectiveVO2max, shapePercent }:
                 <select
                     value={timeRange}
                     onChange={(e) => setTimeRange(e.target.value)}
-                    className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-hidden"
+                    className="bg-background-tertiary border border-foreground/20 rounded-lg p-2 text-sm text-foreground focus:ring-2 focus:ring-blue-500 outline-hidden"
                 >
                     {RANGES.map(r => (
                         <option key={r.value} value={r.value}>{r.label}</option>

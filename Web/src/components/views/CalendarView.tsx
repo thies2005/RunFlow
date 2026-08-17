@@ -188,7 +188,7 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
     const hasAnyData = activities.length > 0 || workouts.length > 0;
 
     return (
-        <div className="h-full flex flex-col bg-zinc-950 text-zinc-100">
+        <div className="h-full flex flex-col bg-background text-foreground">
             <CalendarToolbar
                 mode={mode}
                 onModeChange={setMode}
@@ -201,14 +201,14 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
 
             <div className="flex-1 overflow-auto">
                 {activitiesLoading && !hasAnyData ? (
-                    <div className="flex items-center justify-center h-full text-zinc-600 text-sm">
-                        <div className="w-5 h-5 border-2 border-zinc-700 border-t-zinc-300 rounded-full animate-spin mr-2" />
+                    <div className="flex items-center justify-center h-full text-foreground-muted text-sm">
+                        <div className="w-5 h-5 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin mr-2" />
                         Loading your training history…
                     </div>
                 ) : !hasAnyData ? (
-                    <div className="flex flex-col items-center justify-center h-full text-zinc-600 text-sm gap-2 px-6 text-center">
+                    <div className="flex flex-col items-center justify-center h-full text-foreground-muted text-sm gap-2 px-6 text-center">
                         <p>No activities or planned workouts found for this period.</p>
-                        <p className="text-xs text-zinc-700">
+                        <p className="text-xs text-foreground-muted">
                             Sync your Strava activities or create a training plan to populate the calendar.
                         </p>
                     </div>

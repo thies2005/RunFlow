@@ -41,7 +41,7 @@ export function FastingWidget() {
     if (isLoading) {
         return (
             <div className="glass-card border border-glass-border rounded-2xl p-5 flex items-center justify-center h-[200px]">
-                <div className="animate-pulse text-gray-500 flex flex-col items-center">
+                <div className="animate-pulse text-foreground-muted flex flex-col items-center">
                     <Clock className="w-6 h-6 mb-2 opacity-50" />
                     <span className="text-xs">Loading Timer...</span>
                 </div>
@@ -89,11 +89,11 @@ export function FastingWidget() {
             
             <div className="relative z-10">
                 <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2 text-white font-bold text-sm">
+                    <div className="flex items-center gap-2 text-foreground font-bold text-sm">
                         {isFasting ? <Zap className="w-4 h-4 text-blue-400" /> : <Utensils className="w-4 h-4 text-orange-400" />}
                         {isFasting ? 'Fasting' : 'Eating Window'}
                     </div>
-                     <div className="text-xs font-semibold text-gray-400 bg-white/5 px-2 py-0.5 rounded-md">
+                     <div className="text-xs font-semibold text-foreground-muted bg-foreground/5 px-2 py-0.5 rounded-md">
                         {goalHours}h Goal
                     </div>
                 </div>
@@ -119,10 +119,10 @@ export function FastingWidget() {
                                     />
                                 </svg>
                                 <div className="text-center">
-                                    <span className="block text-xl font-bold text-white tracking-tight tabular-nums mt-1">
+                                    <span className="block text-xl font-bold text-foreground tracking-tight tabular-nums mt-1">
                                         {formatTime(elapsedSeconds)}
                                     </span>
-                                    <span className={`block text-[10px] font-bold uppercase mt-0.5 ${progressPct >= 100 ? 'text-green-400' : 'text-gray-400'}`}>
+                                    <span className={`block text-[10px] font-bold uppercase mt-0.5 ${progressPct >= 100 ? 'text-green-400' : 'text-foreground-muted'}`}>
                                         {progressPct >= 100 ? 'Goal Reached' : 'Elapsed'}
                                     </span>
                                 </div>
@@ -139,8 +139,8 @@ export function FastingWidget() {
                         {isFasting ? (
                             <>
                                 <div className="text-right mb-1">
-                                    <div className="text-xs text-gray-400 font-medium">Remaining</div>
-                                    <div className="text-sm font-bold text-white tabular-nums">
+                                    <div className="text-xs text-foreground-muted font-medium">Remaining</div>
+                                    <div className="text-sm font-bold text-foreground tabular-nums">
                                         {remainingMinutes > 0 ? `${Math.floor(remainingMinutes / 60)}h ${remainingMinutes % 60}m` : '0h 0m'}
                                     </div>
                                 </div>
@@ -156,7 +156,7 @@ export function FastingWidget() {
                                 <button 
                                     onClick={() => actionMutation.mutate('cancel')}
                                     disabled={actionMutation.isPending}
-                                    className="text-[10px] text-gray-500 hover:text-red-400 transition-colors uppercase font-bold tracking-wider"
+                                    className="text-[10px] text-foreground-muted hover:text-red-400 transition-colors uppercase font-bold tracking-wider"
                                 >
                                     Cancel
                                 </button>
@@ -164,7 +164,7 @@ export function FastingWidget() {
                         ) : (
                             <>
                                 <div className="text-right mb-2">
-                                    <div className="text-sm text-gray-300 leading-tight">Ready to begin your<br/>next fast?</div>
+                                    <div className="text-sm text-foreground-muted leading-tight">Ready to begin your<br/>next fast?</div>
                                 </div>
                                 <button
                                     onClick={() => actionMutation.mutate('start')}

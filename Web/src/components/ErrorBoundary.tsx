@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                     <h3 className="text-sm font-medium text-red-400 mb-1">
                         {componentName ? `${componentName} failed to load` : 'Something went wrong'}
                     </h3>
-                    <p className="text-xs text-gray-500 mb-3 max-w-xs">
+                    <p className="text-xs text-foreground-muted mb-3 max-w-xs">
                         {error?.message || 'An unexpected error occurred while rendering this component.'}
                     </p>
                     {showRetry && (
@@ -100,10 +100,10 @@ export function ChartErrorBoundary({
             componentName={chartName}
             showRetry
             fallback={
-                <div className="h-full min-h-[200px] flex items-center justify-center bg-gray-800/50 rounded-lg">
+                <div className="h-full min-h-[200px] flex items-center justify-center bg-background-tertiary/50 rounded-lg">
                     <div className="text-center">
-                        <AlertCircle className="w-6 h-6 text-gray-500 mx-auto mb-2" />
-                        <p className="text-xs text-gray-500">
+                        <AlertCircle className="w-6 h-6 text-foreground-muted mx-auto mb-2" />
+                        <p className="text-xs text-foreground-muted">
                             Unable to render {chartName}
                         </p>
                     </div>

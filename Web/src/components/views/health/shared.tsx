@@ -24,12 +24,12 @@ export const MacroRing = ({ value, target, color, label }: { value: number, targ
                     />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none mt-px">
-                    <span className="text-[9px] font-bold text-white leading-none">{Math.round(value)}</span>
+                    <span className="text-[9px] font-bold text-foreground leading-none">{Math.round(value)}</span>
                 </div>
             </div>
             <div className="flex flex-col justify-center">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none mb-1">{label}</span>
-                <span className="text-[9px] text-gray-500 leading-none">{Math.round(target)}g</span>
+                <span className="text-[10px] font-bold text-foreground-muted uppercase tracking-wider leading-none mb-1">{label}</span>
+                <span className="text-[9px] text-foreground-muted leading-none">{Math.round(target)}g</span>
             </div>
         </div>
     );

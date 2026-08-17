@@ -23,37 +23,37 @@ export function SupplementItem({
 }: SupplementItemProps) {
     if (variant === 'stack-item') {
         return (
-            <div className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors group/item">
+            <div className="flex items-center justify-between p-2 rounded-lg hover:bg-foreground/5 transition-colors group/item">
                 <button
                     type="button"
                     className="flex-1 pr-4 text-left"
                     onClick={() => onEdit(supplement)}
                 >
-                    <p className="text-xs font-medium text-gray-300 group-hover/item:text-blue-300 transition-colors">{supplement.name}</p>
-                    <p className="text-[10px] text-gray-500">{supplement.amount} {supplement.unit}</p>
+                    <p className="text-xs font-medium text-foreground-muted group-hover/item:text-blue-300 transition-colors">{supplement.name}</p>
+                    <p className="text-[10px] text-foreground-muted">{supplement.amount} {supplement.unit}</p>
                 </button>
 
                 <button
                     onClick={(e) => onToggle(supplement.id, !isTaken, e)}
                     aria-label={`${isTaken ? 'Mark as not taken' : 'Mark as taken'}: ${supplement.name}`}
                     disabled={isPending}
-                    className={`w-5 h-5 rounded flex items-center justify-center transition-colors shrink-0 ${isTaken ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)] border border-green-500' : 'bg-transparent border border-gray-500'} disabled:opacity-50`}
+                    className={`w-5 h-5 rounded flex items-center justify-center transition-colors shrink-0 ${isTaken ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)] border border-green-500' : 'bg-transparent border border-foreground/30'} disabled:opacity-50`}
                 >
-                    {isTaken && <HeartPulse className="w-2.5 h-2.5 text-white" />}
+                    {isTaken && <HeartPulse className="w-2.5 h-2.5 text-foreground" />}
                 </button>
             </div>
         );
     }
 
     return (
-        <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 mb-2 group">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-foreground/5 border border-foreground/10 mb-2 group">
             <button
                 type="button"
                 className="flex-1 pr-4 text-left"
                 onClick={() => onEdit(supplement)}
             >
-                <p className="text-sm font-medium text-white group-hover:text-blue-400 transition-colors">{supplement.name}</p>
-                <p className="text-xs text-gray-500">{supplement.amount} {supplement.unit}</p>
+                <p className="text-sm font-medium text-foreground group-hover:text-blue-400 transition-colors">{supplement.name}</p>
+                <p className="text-xs text-foreground-muted">{supplement.amount} {supplement.unit}</p>
             </button>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -61,18 +61,18 @@ export function SupplementItem({
                     <button
                         onClick={(e) => onShowStats(supplement.id, supplement.name, e)}
                         aria-label={`View stats for ${supplement.name}`}
-                        className="w-6 h-6 rounded flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20"
+                        className="w-6 h-6 rounded flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-foreground/10 hover:bg-foreground/20"
                     >
-                        <BarChart3 className="w-3 h-3 text-gray-400" />
+                        <BarChart3 className="w-3 h-3 text-foreground-muted" />
                     </button>
                 )}
                 <button
                     onClick={(e) => onToggle(supplement.id, !isTaken, e)}
                     aria-label={`${isTaken ? 'Mark as not taken' : 'Mark as taken'}: ${supplement.name}`}
                     disabled={isPending}
-                    className={`w-6 h-6 rounded border flex items-center justify-center transition-colors ${isTaken ? 'bg-green-500 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'bg-transparent border-gray-500'} disabled:opacity-50`}
+                    className={`w-6 h-6 rounded border flex items-center justify-center transition-colors ${isTaken ? 'bg-green-500 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'bg-transparent border-foreground/30'} disabled:opacity-50`}
                 >
-                    {isTaken && <HeartPulse className="w-3 h-3 text-white" />}
+                    {isTaken && <HeartPulse className="w-3 h-3 text-foreground" />}
                 </button>
             </div>
         </div>

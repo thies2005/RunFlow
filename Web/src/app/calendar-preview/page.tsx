@@ -13,7 +13,7 @@ import { Footer } from '@/components/Footer';
  */
 export default function CalendarPreviewPage() {
     return (
-        <div className="h-screen flex flex-col bg-zinc-950 text-zinc-100">
+        <div className="h-screen flex flex-col bg-background text-foreground">
             <CalendarPreviewHeader />
             <div className="flex-1 flex flex-col min-h-0">
                 <CalendarView showHeader={false} />

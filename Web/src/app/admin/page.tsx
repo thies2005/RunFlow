@@ -23,14 +23,14 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, subtext, icon: Icon }: StatCardProps) => (
-    <div className="bg-white p-6 rounded-xl shadow-xs border border-gray-200 flex items-start space-x-4">
+    <div className="bg-background-secondary p-6 rounded-xl shadow-xs border border-glass-border flex items-start space-x-4">
         <div className="bg-blue-50 text-blue-600 rounded-lg p-3">
             <Icon className="w-6 h-6" />
         </div>
         <div>
-            <p className="text-gray-500 text-sm">{title}</p>
-            <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
-            {subtext && <p className="text-xs text-gray-400 mt-1">{subtext}</p>}
+            <p className="text-foreground-muted text-sm">{title}</p>
+            <h3 className="text-2xl font-bold text-foreground">{value}</h3>
+            {subtext && <p className="text-xs text-foreground-muted mt-1">{subtext}</p>}
         </div>
     </div>
 );
@@ -53,7 +53,7 @@ const DashboardWidget = ({ title, icon: Icon, value, change, subtext, onClick, c
     return (
         <button
             onClick={onClick}
-            className="bg-white p-6 rounded-xl shadow-xs border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all text-left group"
+            className="bg-background-secondary p-6 rounded-xl shadow-xs border border-glass-border hover:shadow-md hover:border-foreground/20 transition-all text-left group"
         >
             <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
@@ -61,16 +61,16 @@ const DashboardWidget = ({ title, icon: Icon, value, change, subtext, onClick, c
                         <Icon className="w-6 h-6" />
                     </div>
                     <div>
-                        <p className="text-gray-500 text-sm font-medium">{title}</p>
-                        <h3 className="text-2xl font-bold text-gray-800 mt-1">{value}</h3>
+                        <p className="text-foreground-muted text-sm font-medium">{title}</p>
+                        <h3 className="text-2xl font-bold text-foreground mt-1">{value}</h3>
                     </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                <ArrowRight className="w-5 h-5 text-foreground-muted group-hover:text-foreground-secondary transition-colors" />
             </div>
             <div className="mt-4 flex items-center justify-between">
-                {subtext && <p className="text-xs text-gray-500">{subtext}</p>}
+                {subtext && <p className="text-xs text-foreground-muted">{subtext}</p>}
                 {changeText && (
-                    <div className={`flex items-center text-xs font-medium ${isPositive ? 'text-emerald-600' : isNegative ? 'text-red-600' : 'text-gray-500'}`}>
+                    <div className={`flex items-center text-xs font-medium ${isPositive ? 'text-emerald-600' : isNegative ? 'text-red-600' : 'text-foreground-muted'}`}>
                         {isPositive && <TrendingUp className="w-3 h-3 mr-1" />}
                         {isNegative && <TrendingDown className="w-3 h-3 mr-1" />}
                         {changeText} vs avg
@@ -217,7 +217,7 @@ function DashboardContent() {
         <div className="space-y-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">
+                    <h1 className="text-2xl font-bold text-foreground">
                         {activeTab ? (
                             {
                                 users: 'User Management',
@@ -232,7 +232,7 @@ function DashboardContent() {
                         ) : 'Dashboard Overview'}
                     </h1>
                     {!activeTab && (
-                        <p className="text-sm text-gray-500 mt-1">Key metrics and system overview</p>
+                        <p className="text-sm text-foreground-muted mt-1">Key metrics and system overview</p>
                     )}
                 </div>
                 <div className="flex items-center space-x-2 w-full sm:w-auto">
@@ -246,7 +246,7 @@ function DashboardContent() {
                     </button>
                     <button
                         onClick={fetchAllData}
-                        className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition"
+                        className="p-2 text-foreground-muted hover:bg-background-tertiary rounded-lg transition"
                         title="Refresh Data"
                     >
                         <RefreshCw className="w-5 h-5" />
@@ -339,7 +339,7 @@ function DashboardContent() {
             )}
 
             {activeTab && (
-                <div className="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
+                <div className="bg-background-secondary rounded-xl shadow-xs border border-glass-border overflow-hidden">
                     <div className="p-4 sm:p-6">
                         {activeTab === 'users' && (
                             <UsersTab

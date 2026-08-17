@@ -12,12 +12,12 @@ export const WORKOUT_COLORS: Record<string, { bg: string; text: string; dot: str
     REPETITIONS:  { bg: 'bg-red-500/20',    text: 'text-red-400',    dot: 'bg-red-400' },
     RECOVERY:     { bg: 'bg-cyan-500/20',   text: 'text-cyan-400',   dot: 'bg-cyan-400' },
     RACE:         { bg: 'bg-purple-500/20', text: 'text-purple-400', dot: 'bg-purple-400' },
-    REST:         { bg: 'bg-gray-500/20',   text: 'text-gray-400',   dot: 'bg-gray-400' },
+    REST:         { bg: 'bg-foreground/20',   text: 'text-foreground-muted',   dot: 'bg-foreground/30' },
     RIDE:         { bg: 'bg-teal-500/20',   text: 'text-teal-400',   dot: 'bg-teal-400' },
     SWIM:         { bg: 'bg-indigo-500/20', text: 'text-indigo-400', dot: 'bg-indigo-400' },
     STRENGTH:     { bg: 'bg-pink-500/20',   text: 'text-pink-400',   dot: 'bg-pink-400' },
     BRICK:        { bg: 'bg-violet-500/20', text: 'text-violet-400', dot: 'bg-violet-400' },
-    OTHER:        { bg: 'bg-slate-500/20',  text: 'text-slate-400',  dot: 'bg-slate-400' },
+    OTHER:        { bg: 'bg-foreground/20',  text: 'text-foreground-muted',  dot: 'bg-foreground/30' },
 };
 
 export function colorsFor(type: string) {
@@ -31,7 +31,7 @@ export const PHASE_COLORS: Record<string, string> = {
     TAPER: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
     RACE_WEEK: 'bg-green-500/20 text-green-400 border-green-500/30',
     RECOVERY: 'bg-teal-500/20 text-teal-400 border-teal-500/30',
-    OFF: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
+    OFF: 'bg-foreground/20 text-foreground-secondary border-foreground/30',
 };
 
 export function phaseColor(phase: string): string {

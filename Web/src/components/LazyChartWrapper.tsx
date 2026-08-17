@@ -48,7 +48,7 @@ function LazyChartWrapperComponent({
             {isVisible ? children : (
                 placeholder || (
                     <div
-                        className="animate-pulse bg-gray-800/50 rounded-xl w-full"
+                        className="animate-pulse bg-background-tertiary/50 rounded-xl w-full"
                         style={{ height }}
                     />
                 )

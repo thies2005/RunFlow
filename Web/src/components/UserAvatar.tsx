@@ -24,7 +24,7 @@ export function UserAvatar({ name, image, className = "" }: UserAvatarProps) {
 
     // Use a simple div placeholder during SSR/multration to match dimensions
     if (!mounted) {
-        return <div className={`bg-white/10 animate-pulse rounded-full ${className}`} />;
+        return <div className={`bg-foreground/10 animate-pulse rounded-full ${className}`} />;
     }
 
     if (image && !imageError) {
@@ -60,7 +60,7 @@ export function UserAvatar({ name, image, className = "" }: UserAvatarProps) {
     const bgColor = colors[colorIndex % colors.length];
 
     return (
-        <div className={`flex items-center justify-center text-white font-medium rounded-full ${bgColor} ${className}`}>
+        <div className={`flex items-center justify-center text-foreground font-medium rounded-full ${bgColor} ${className}`}>
             {initials ? (
                 <span className="text-xs sm:text-sm">{initials}</span>
             ) : (

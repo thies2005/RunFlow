@@ -325,7 +325,7 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
     }, [timelineStart]);
 
     return (
-        <div className="h-screen flex flex-col bg-zinc-950 text-zinc-100">
+        <div className="h-screen flex flex-col bg-background text-foreground">
             <PlanToolbar
                 goalId={goalId}
                 planName={planName}
@@ -361,7 +361,7 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
                 {viewMode === 'calendar' ? (
                     <>
                         {calendarOpen && (
-                            <div className="w-64 border-r border-zinc-800 overflow-y-auto shrink-0">
+                            <div className="w-64 border-r border-glass-border overflow-y-auto shrink-0">
                                 <MiniCalendar workouts={workouts} raceDate={raceDate} onDayClick={handleDayClick} />
                             </div>
                         )}
@@ -374,7 +374,7 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
                                 className="h-full"
                             />
                             {weeks.length === 0 && (
-                                <div className="flex items-center justify-center h-full text-zinc-600 text-sm">
+                                <div className="flex items-center justify-center h-full text-foreground-muted text-sm">
                                     No workouts yet. Start by adding workouts to your plan.
                                 </div>
                             )}
@@ -383,7 +383,7 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
                 ) : (
                     <Suspense fallback={
                         <div className="flex-1 flex items-center justify-center">
-                            <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-100 rounded-full animate-spin" />
+                            <div className="w-6 h-6 border-2 border-foreground/25 border-t-foreground rounded-full animate-spin" />
                         </div>
                     }>
                         <AnalysisView

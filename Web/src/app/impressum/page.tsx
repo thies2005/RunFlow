@@ -8,13 +8,13 @@ export const metadata: Metadata = {
 
 export default function ImpressumPage() {
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white py-16 px-4">
-            <div className="container mx-auto max-w-3xl prose prose-invert prose-orange">
+        <div className="min-h-screen bg-background text-foreground py-16 px-4">
+            <div className="container mx-auto max-w-3xl prose dark:prose-invert prose-orange">
                 <Link href="/" className="text-orange-500 hover:text-orange-400 no-underline mb-8 inline-block transition-colors">
                     &larr; Back to Home
                 </Link>
                 <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-500">Impressum</h1>
-                <p className="text-gray-400 text-sm mb-8">Legal Notice required under TMG §5 / DDG §5</p>
+                <p className="text-foreground-muted text-sm mb-8">Legal Notice required under TMG §5 / DDG §5</p>
 
                 <h2>Site Operator</h2>
                 <p>

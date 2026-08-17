@@ -73,7 +73,7 @@ export function UndoRedoButtons({ goalId }: UndoRedoButtonsProps) {
                 type="button"
                 onClick={() => undoMutation.mutate()}
                 disabled={!canUndo || undoMutation.isPending}
-                className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-md text-foreground-secondary hover:text-foreground hover:bg-background-tertiary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 title="Undo"
             >
                 <Undo2 className="w-4 h-4" />
@@ -81,7 +81,7 @@ export function UndoRedoButtons({ goalId }: UndoRedoButtonsProps) {
             <button
                 type="button"
                 disabled
-                className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-1.5 rounded-md text-foreground-muted hover:text-foreground hover:bg-background-tertiary disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 title="Redo (coming soon)"
             >
                 <Redo2 className="w-4 h-4" />
@@ -91,20 +91,20 @@ export function UndoRedoButtons({ goalId }: UndoRedoButtonsProps) {
                     <button
                         type="button"
                         onClick={() => setIsOpen(!isOpen)}
-                        className="p-1 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                        className="p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                     >
                         <ChevronDown className="w-3 h-3" />
                     </button>
                     {isOpen && (
-                        <div className="absolute left-0 top-full mt-1 w-64 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 py-1 max-h-48 overflow-y-auto">
+                        <div className="absolute left-0 top-full mt-1 w-64 bg-background-secondary border border-foreground/20 rounded-lg shadow-xl z-50 py-1 max-h-48 overflow-y-auto">
                             {snapshots.map((s: { id: string; description: string; createdAt: string }) => (
                                 <div
                                     key={s.id}
-                                    className="px-3 py-2 text-xs text-zinc-400 hover:bg-zinc-800 cursor-pointer"
+                                    className="px-3 py-2 text-xs text-foreground-secondary hover:bg-background-tertiary cursor-pointer"
                                     onClick={() => revertMutation.mutate(s.id)}
                                 >
-                                    <span className="text-zinc-300">{s.description}</span>
-                                    <span className="block text-zinc-600 mt-0.5">
+                                    <span className="text-foreground-secondary">{s.description}</span>
+                                    <span className="block text-foreground-muted mt-0.5">
                                         {new Date(s.createdAt).toLocaleString()}
                                     </span>
                                 </div>

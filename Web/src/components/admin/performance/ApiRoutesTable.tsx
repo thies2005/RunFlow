@@ -64,9 +64,9 @@ export default function ApiRoutesTable({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
-      <div className="p-6 border-b border-gray-100">
-        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+    <div className="bg-background-secondary rounded-xl shadow-xs border border-glass-border overflow-hidden">
+      <div className="p-6 border-b border-glass-border">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Zap className="w-5 h-5" />
           API Routes
         </h3>
@@ -76,31 +76,31 @@ export default function ApiRoutesTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => onSort?.('routePath')}>
+              <TableHead className="cursor-pointer hover:bg-background-secondary" onClick={() => onSort?.('routePath')}>
                 Route <ArrowUpDown className="w-4 h-4 inline ml-1" />
               </TableHead>
-              <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => onSort?.('method')}>
+              <TableHead className="cursor-pointer hover:bg-background-secondary" onClick={() => onSort?.('method')}>
                 Method
               </TableHead>
-              <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => onSort?.('requestCount')}>
+              <TableHead className="cursor-pointer hover:bg-background-secondary" onClick={() => onSort?.('requestCount')}>
                 Requests <ArrowUpDown className="w-4 h-4 inline ml-1" />
               </TableHead>
-              <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => onSort?.('avgResponseTime')}>
+              <TableHead className="cursor-pointer hover:bg-background-secondary" onClick={() => onSort?.('avgResponseTime')}>
                 Avg Time <ArrowUpDown className="w-4 h-4 inline ml-1" />
               </TableHead>
-              <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => onSort?.('p95ResponseTime')}>
+              <TableHead className="cursor-pointer hover:bg-background-secondary" onClick={() => onSort?.('p95ResponseTime')}>
                 P95 <ArrowUpDown className="w-4 h-4 inline ml-1" />
               </TableHead>
-              <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => onSort?.('p99ResponseTime')}>
+              <TableHead className="cursor-pointer hover:bg-background-secondary" onClick={() => onSort?.('p99ResponseTime')}>
                 P99 <ArrowUpDown className="w-4 h-4 inline ml-1" />
               </TableHead>
-              <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => onSort?.('errorCount')}>
+              <TableHead className="cursor-pointer hover:bg-background-secondary" onClick={() => onSort?.('errorCount')}>
                 Errors <ArrowUpDown className="w-4 h-4 inline ml-1" />
               </TableHead>
-              <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => onSort?.('avgCpuUsage')}>
+              <TableHead className="cursor-pointer hover:bg-background-secondary" onClick={() => onSort?.('avgCpuUsage')}>
                 CPU <ArrowUpDown className="w-4 h-4 inline ml-1" />
               </TableHead>
-              <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => onSort?.('avgMemoryUsage')}>
+              <TableHead className="cursor-pointer hover:bg-background-secondary" onClick={() => onSort?.('avgMemoryUsage')}>
                 Memory <ArrowUpDown className="w-4 h-4 inline ml-1" />
               </TableHead>
               <TableHead>Status</TableHead>
@@ -109,7 +109,7 @@ export default function ApiRoutesTable({
           <TableBody>
             {routes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center text-gray-500 py-8">
+                <TableCell colSpan={10} className="text-center text-foreground-muted py-8">
                   No data available
                 </TableCell>
               </TableRow>
@@ -121,7 +121,7 @@ export default function ApiRoutesTable({
                 return (
                   <TableRow
                     key={route.id}
-                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="cursor-pointer hover:bg-background-secondary transition-colors"
                     onClick={() => onRouteClick?.(route)}
                   >
                     <TableCell className="font-mono text-sm">
@@ -146,7 +146,7 @@ export default function ApiRoutesTable({
                         <span className={route.errorCount > 0 ? 'text-red-600 font-medium' : ''}>
                           {route.errorCount}
                         </span>
-                        <span className="text-gray-400">({errorRate}%)</span>
+                        <span className="text-foreground-muted">({errorRate}%)</span>
                       </div>
                     </TableCell>
                     <TableCell>{(route.avgCpuUsage ?? 0).toFixed(1)}%</TableCell>

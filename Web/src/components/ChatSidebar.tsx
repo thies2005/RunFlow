@@ -75,7 +75,7 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
     };
 
     return (
-        <div className={`flex flex-col h-full bg-[#1c1c1e] border-r border-white/5 ${className}`}>
+        <div className={`flex flex-col h-full bg-background-secondary border-r border-foreground/5 ${className}`}>
             <div className="p-4">
                 <button
                     onClick={() => {
@@ -96,10 +96,10 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
             <div className="flex-1 overflow-y-auto px-2 space-y-1">
                 {isLoading ? (
                     <div className="flex justify-center p-4">
-                        <Loader2 className="w-6 h-6 text-gray-500 animate-spin" />
+                        <Loader2 className="w-6 h-6 text-foreground-muted animate-spin" />
                     </div>
                 ) : sessions.length === 0 ? (
-                    <div className="text-center text-gray-500 p-4 text-sm">
+                    <div className="text-center text-foreground-muted p-4 text-sm">
                         No recent chats
                     </div>
                 ) : (
@@ -109,12 +109,12 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
                             href={`/chat?sessionId=${session.id}`}
                             onClick={onCloseMobile}
                             className={`group flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${sessionId === session.id
-                                ? 'bg-white/10 text-white'
-                                : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                                ? 'bg-foreground/10 text-foreground'
+                                : 'text-foreground-muted hover:bg-foreground/5 hover:text-foreground-secondary'
                                 }`}
                         >
                             <div className="flex items-center gap-3 overflow-hidden">
-                                <MessageSquare className={`w-4 h-4 flex-shrink-0 ${sessionId === session.id ? 'text-purple-400' : 'text-gray-500'
+                                <MessageSquare className={`w-4 h-4 flex-shrink-0 ${sessionId === session.id ? 'text-purple-400' : 'text-foreground-muted'
                                     }`} />
                                 <span className="truncate">{session.title}</span>
                             </div>
@@ -135,7 +135,7 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
                 )}
             </div>
 
-            <div className="p-4 border-t border-white/5">
+            <div className="p-4 border-t border-foreground/5">
                 <button
                     onClick={handleDeleteAll}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"

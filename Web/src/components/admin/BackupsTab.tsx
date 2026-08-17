@@ -89,10 +89,10 @@ export default function BackupsTab({
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg border border-gray-100">
+            <div className="flex justify-between items-center bg-background-secondary p-4 rounded-lg border border-glass-border">
                 <div>
-                    <h3 className="font-semibold text-gray-800">Manage Backups</h3>
-                    <p className="text-sm text-gray-500">Create new snapshots or upload existing backup files.</p>
+                    <h3 className="font-semibold text-foreground">Manage Backups</h3>
+                    <p className="text-sm text-foreground-muted">Create new snapshots or upload existing backup files.</p>
                 </div>
                 <div className="flex space-x-2">
                     {/* Hidden file input */}
@@ -128,17 +128,17 @@ export default function BackupsTab({
             </div>
 
             <div className="space-y-4">
-                <h3 className="font-semibold text-gray-800">Available Backups</h3>
+                <h3 className="font-semibold text-foreground">Available Backups</h3>
                 <div className="space-y-2">
                     {backups.map((backup: AdminBackup) => (
-                        <div key={backup.name} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:border-gray-200 transition">
+                        <div key={backup.name} className="flex items-center justify-between p-4 bg-background-secondary border border-glass-border rounded-lg hover:border-glass-border transition">
                             <div className="flex items-center space-x-3">
                                 <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
                                     <Database className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-gray-900">{backup.name}</p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="font-medium text-foreground">{backup.name}</p>
+                                    <p className="text-xs text-foreground-muted">
                                         {new Date(backup.createdAt).toLocaleString()} • {backup.sizeFormatted}
                                     </p>
                                 </div>
@@ -146,7 +146,7 @@ export default function BackupsTab({
                             <div className="flex items-center space-x-2">
                                 <a
                                     href={`/api/admin/backups/${backup.name}`}
-                                    className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 border border-gray-200 rounded-lg transition flex items-center"
+                                    className="px-3 py-1.5 text-xs font-medium text-foreground-secondary hover:bg-background-secondary border border-glass-border rounded-lg transition flex items-center"
                                     title="Download Backup"
                                 >
                                     <Download className="w-3 h-3 mr-1" />
@@ -163,7 +163,7 @@ export default function BackupsTab({
                         </div>
                     ))}
                     {backups.length === 0 && (
-                        <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                        <div className="text-center py-8 text-foreground-muted bg-background-secondary rounded-lg">
                             No backups available. Create one to get started.
                         </div>
                     )}

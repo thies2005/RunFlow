@@ -114,14 +114,14 @@ export function PaceProfileEditor({ goalId, baseVdot, profile }: PaceProfileEdit
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-sm font-semibold text-zinc-100">Pace Profile</h3>
-                    <p className="text-[10px] text-zinc-500">Base VDOT: {baseVdot}</p>
+                    <h3 className="text-sm font-semibold text-foreground">Pace Profile</h3>
+                    <p className="text-[10px] text-foreground-muted">Base VDOT: {baseVdot}</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
                         onClick={autoFillAll}
-                        className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] text-foreground-secondary hover:text-foreground hover:bg-background-tertiary transition-colors"
                     >
                         <RotateCcw className="w-3 h-3" />
                         Auto-fill all from VDOT
@@ -149,26 +149,26 @@ export function PaceProfileEditor({ goalId, baseVdot, profile }: PaceProfileEdit
                     const isExpanded = expandedPhase === phase.phaseName;
 
                     return (
-                        <div key={phase.phaseName} className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+                        <div key={phase.phaseName} className="bg-background-secondary border border-glass-border rounded-lg overflow-hidden">
                             <button
                                 type="button"
                                 onClick={() => setExpandedPhase(isExpanded ? null : phase.phaseName)}
                                 className="w-full flex items-center justify-between px-3 py-2.5 text-left"
                             >
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-medium text-zinc-200">{phase.phaseName}</span>
-                                    <span className="text-[10px] text-zinc-500">
+                                    <span className="text-xs font-medium text-foreground">{phase.phaseName}</span>
+                                    <span className="text-[10px] text-foreground-muted">
                                         Weeks {phase.startWeek}-{phase.endWeek}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className={`text-[10px] font-mono ${
-                                        phase.vdotAdjustment > 0 ? 'text-green-400' : phase.vdotAdjustment < 0 ? 'text-red-400' : 'text-zinc-500'
+                                        phase.vdotAdjustment > 0 ? 'text-green-400' : phase.vdotAdjustment < 0 ? 'text-red-400' : 'text-foreground-muted'
                                     }`}>
                                         VDOT {phase.vdotAdjustment > 0 ? '+' : ''}{phase.vdotAdjustment.toFixed(1)}
                                     </span>
                                     <svg
-                                        className={`w-4 h-4 text-zinc-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                        className={`w-4 h-4 text-foreground-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         stroke="currentColor"
@@ -179,14 +179,14 @@ export function PaceProfileEditor({ goalId, baseVdot, profile }: PaceProfileEdit
                             </button>
 
                             {isExpanded && (
-                                <div className="px-3 pb-3 space-y-3 border-t border-zinc-800">
+                                <div className="px-3 pb-3 space-y-3 border-t border-glass-border">
                                     <div className="pt-3">
                                         <div className="flex items-center justify-between mb-1">
-                                            <label className="text-[10px] text-zinc-400">VDOT Adjustment</label>
+                                            <label className="text-[10px] text-foreground-secondary">VDOT Adjustment</label>
                                             <button
                                                 type="button"
                                                 onClick={() => autoFillPhase(index)}
-                                                className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                                                className="text-[10px] text-foreground-muted hover:text-foreground-secondary transition-colors"
                                             >
                                                 Auto-fill from VDOT
                                             </button>
@@ -205,7 +205,7 @@ export function PaceProfileEditor({ goalId, baseVdot, profile }: PaceProfileEdit
                                                 }
                                                 className="flex-1 accent-blue-500"
                                             />
-                                            <span className="text-xs font-mono text-zinc-300 w-12 text-right">
+                                            <span className="text-xs font-mono text-foreground-secondary w-12 text-right">
                                                 {phase.vdotAdjustment > 0 ? '+' : ''}{phase.vdotAdjustment.toFixed(1)}
                                             </span>
                                         </div>
@@ -217,7 +217,7 @@ export function PaceProfileEditor({ goalId, baseVdot, profile }: PaceProfileEdit
                                     <PaceRow label="Repetition" color="text-yellow-400" pace={phase.repetitionPace} phaseIndex={index} field="repetitionPace" updatePhase={updatePhase} />
                                     <PaceRow label="Long Run" color="text-green-400" pace={phase.longRunPace} phaseIndex={index} field="longRunPace" updatePhase={updatePhase} />
 
-                                    <div className="border-t border-zinc-800 pt-2">
+                                    <div className="border-t border-glass-border pt-2">
                                         <HrZoneEditor
                                             defaultZones={DEFAULT_HR_ZONES}
                                             overrides={Object.fromEntries(
@@ -264,10 +264,10 @@ function PaceRow({
                         [field]: { min: Number(e.target.value), max: pace?.max ?? 0 },
                     })
                 }
-                className="w-16 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-[10px] text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                className="w-16 bg-background-tertiary border border-foreground/20 rounded px-1.5 py-0.5 text-[10px] text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                 placeholder="min"
             />
-            <span className="text-[10px] text-zinc-600">-</span>
+            <span className="text-[10px] text-foreground-muted">-</span>
             <input
                 type="number"
                 min={180}
@@ -278,12 +278,12 @@ function PaceRow({
                         [field]: { min: pace?.min ?? 0, max: Number(e.target.value) },
                     })
                 }
-                className="w-16 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-[10px] text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                className="w-16 bg-background-tertiary border border-foreground/20 rounded px-1.5 py-0.5 text-[10px] text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                 placeholder="max"
             />
-            <span className="text-[10px] text-zinc-500">sec/km</span>
+            <span className="text-[10px] text-foreground-muted">sec/km</span>
             {pace && pace.min > 0 && pace.max > 0 && (
-                <span className="text-[10px] text-zinc-600 ml-auto">
+                <span className="text-[10px] text-foreground-muted ml-auto">
                     {paceRangeFromSec(pace.min, pace.max)}
                 </span>
             )}

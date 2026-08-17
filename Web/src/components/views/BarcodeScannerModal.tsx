@@ -158,9 +158,9 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStre
             )}
 
             <div className="flex justify-between items-center p-4 pt-12 relative z-10">
-                <h2 className="text-white font-bold text-lg">Scan Barcode</h2>
-                <button onClick={onClose} className="p-2 bg-white/10 rounded-full">
-                    <X className="w-6 h-6 text-white" />
+                <h2 className="text-foreground font-bold text-lg">Scan Barcode</h2>
+                <button onClick={onClose} className="p-2 bg-foreground/10 rounded-full">
+                    <X className="w-6 h-6 text-foreground" />
                 </button>
             </div>
 
@@ -168,10 +168,10 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStre
                 {error ? (
                     <div className="flex flex-col items-center gap-4 p-6 max-w-xs text-center">
                         <AlertTriangle className="w-12 h-12 text-yellow-400" />
-                        <p className="text-white text-sm">{error}</p>
+                        <p className="text-foreground text-sm">{error}</p>
                         <button
                             onClick={onClose}
-                            className="mt-2 px-6 py-2 bg-white/15 hover:bg-white/25 text-white rounded-full text-sm transition-colors"
+                            className="mt-2 px-6 py-2 bg-foreground/15 hover:bg-foreground/25 text-foreground rounded-full text-sm transition-colors"
                         >
                             Close
                         </button>
@@ -184,7 +184,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStre
             </div>
 
             {!error && (
-                <div className="p-8 text-center text-gray-300">
+                <div className="p-8 text-center text-foreground-muted">
                     Position the barcode inside the frame. It will scan automatically.
                 </div>
             )}

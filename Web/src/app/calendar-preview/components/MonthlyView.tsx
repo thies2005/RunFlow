@@ -30,11 +30,11 @@ export function MonthlyView({ month, days }: MonthlyViewProps) {
     return (
         <div className="flex flex-col h-full">
             {/* weekday header */}
-            <div className="grid grid-cols-7 border-b border-zinc-800 sticky top-0 bg-zinc-950 z-10">
+            <div className="grid grid-cols-7 border-b border-glass-border sticky top-0 bg-background z-10">
                 {DAY_LABELS.map((d) => (
                     <div
                         key={d}
-                        className="text-center text-[11px] font-medium text-zinc-500 uppercase tracking-wide py-1.5"
+                        className="text-center text-[11px] font-medium text-foreground-muted uppercase tracking-wide py-1.5"
                     >
                         {d}
                     </div>
@@ -71,8 +71,8 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
     return (
         <div
             className={`
-                relative flex flex-col p-1 border-b border-r border-zinc-800/60 min-h-[78px]
-                ${inMonth ? fill : 'bg-zinc-950/60'}
+                relative flex flex-col p-1 border-b border-r border-glass-border min-h-[78px]
+                ${inMonth ? fill : 'bg-background/60'}
                 ${today ? 'ring-1 ring-inset ring-orange-400/60' : ''}
                 hover:brightness-110 transition-[filter]
             `}
@@ -80,12 +80,12 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
         >
             <div className="flex items-center justify-between">
                 <span
-                    className={`text-[11px] leading-none ${today ? 'text-orange-400 font-bold' : inMonth ? 'text-zinc-400' : 'text-zinc-700'}`}
+                    className={`text-[11px] leading-none ${today ? 'text-orange-400 font-bold' : inMonth ? 'text-foreground-secondary' : 'text-foreground-muted'}`}
                 >
                     {format(day, 'd')}
                 </span>
                 {trimp > 0 && inMonth && (
-                    <span className="text-[9px] text-zinc-500 font-medium">{trimp.toFixed(0)}</span>
+                    <span className="text-[9px] text-foreground-muted font-medium">{trimp.toFixed(0)}</span>
                 )}
             </div>
 
@@ -112,7 +112,7 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
                         return (
                             <div
                                 key={w.id}
-                                className={`flex items-center gap-1 px-1 py-0.5 rounded text-[9px] leading-none border border-dashed border-zinc-700 ${c.bg} ${c.text} opacity-70 truncate`}
+                                className={`flex items-center gap-1 px-1 py-0.5 rounded text-[9px] leading-none border border-dashed border-foreground/20 ${c.bg} ${c.text} opacity-70 truncate`}
                             >
                                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
                                 <span className="truncate">{w.name}</span>
@@ -125,7 +125,7 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
 
             {/* leftover count */}
             {inMonth && entry && completedActivities.length + plannedWorkouts.filter((w) => !w.completed).length > 5 && (
-                <span className="text-[8px] text-zinc-600 mt-0.5">
+                <span className="text-[8px] text-foreground-muted mt-0.5">
                     +{completedActivities.length + plannedWorkouts.filter((w) => !w.completed).length - 5}
                 </span>
             )}
@@ -140,7 +140,7 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
 
 /** daily-load background ramp (Runalyze red-intensity style, adapted for dark) */
 function trimpFillBg(trimp: number): string {
-    if (trimp <= 0) return 'bg-zinc-900/50';
+    if (trimp <= 0) return 'bg-background-secondary/50';
     if (trimp < 20) return 'bg-emerald-500/10';
     if (trimp < 40) return 'bg-emerald-500/15';
     if (trimp < 70) return 'bg-yellow-500/15';

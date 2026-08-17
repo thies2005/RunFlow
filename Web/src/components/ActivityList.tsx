@@ -164,12 +164,12 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                     {(activity.trimp || activity.runningTss) && (
                         <div className="flex items-center gap-4 mt-2">
                             {activity.trimp && (
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-foreground-muted">
                                     TRIMP: <span className="text-cyan-400">{activity.trimp.toFixed(0)}</span>
                                 </span>
                             )}
                             {activity.runningTss && (
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-foreground-muted">
                                     rTSS: <span className="text-orange-400">{activity.runningTss.toFixed(0)}</span>
                                 </span>
                             )}
@@ -258,7 +258,7 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
     if (activities.length === 0) {
         return (
             <div className="glass-card p-8 text-center">
-                <Activity className="w-16 h-16 mx-auto text-gray-400 mb-4 block" />
+                <Activity className="w-16 h-16 mx-auto text-foreground-muted mb-4 block" />
                 <p className="text-foreground-muted">No activities yet</p>
                 <p className="text-sm text-foreground-muted mt-2">
                     Connect Strava and sync your activities to get started

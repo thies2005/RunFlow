@@ -78,7 +78,7 @@ export default function ReconsentBanner() {
     const allAccepted = termsAccepted && privacyAccepted && healthAccepted && ageAccepted;
 
     return (
-        <div className="fixed inset-x-0 bottom-0 z-50 p-4 pb-safe bg-background/95 backdrop-blur-md border-t border-white/10 shadow-2xl animate-slide-up">
+        <div className="fixed inset-x-0 bottom-0 z-50 p-4 pb-safe bg-background/95 backdrop-blur-md border-t border-foreground/10 shadow-2xl animate-slide-up">
             <div className="max-w-4xl mx-auto">
                 <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
 
@@ -95,17 +95,17 @@ export default function ReconsentBanner() {
                         )}
                     </div>
 
-                    <div className="flex-1 w-full space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
+                    <div className="flex-1 w-full space-y-3 bg-foreground/5 p-4 rounded-xl border border-foreground/10">
                         <label className="flex items-start gap-3 cursor-pointer group">
                             <div className="relative flex items-start pt-0.5">
                                 <input type="checkbox" className="peer sr-only" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
-                                <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                    <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                    <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
                             </div>
-                            <span className="text-xs text-gray-300 leading-tight">
+                            <span className="text-xs text-foreground-muted leading-tight">
                                 I accept the updated <Link href="/terms" className="text-orange-500 hover:underline">Terms of Service</Link>.
                             </span>
                         </label>
@@ -113,13 +113,13 @@ export default function ReconsentBanner() {
                         <label className="flex items-start gap-3 cursor-pointer group">
                             <div className="relative flex items-start pt-0.5">
                                 <input type="checkbox" className="peer sr-only" checked={privacyAccepted} onChange={(e) => setPrivacyAccepted(e.target.checked)} />
-                                <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                    <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                    <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
                             </div>
-                            <span className="text-xs text-gray-300 leading-tight">
+                            <span className="text-xs text-foreground-muted leading-tight">
                                 I accept the updated <Link href="/privacy" className="text-orange-500 hover:underline">Privacy Policy</Link>.
                             </span>
                         </label>
@@ -127,13 +127,13 @@ export default function ReconsentBanner() {
                         <label className="flex items-start gap-3 cursor-pointer group">
                             <div className="relative flex items-start pt-0.5">
                                 <input type="checkbox" className="peer sr-only" checked={healthAccepted} onChange={(e) => setHealthAccepted(e.target.checked)} />
-                                <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                    <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                    <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
                             </div>
-                            <span className="text-xs text-gray-300 leading-tight">
+                            <span className="text-xs text-foreground-muted leading-tight">
                                 I consent to the processing of my health and fitness data (GDPR Art. 9) for analytics.
                             </span>
                         </label>
@@ -141,13 +141,13 @@ export default function ReconsentBanner() {
                         <label className="flex items-start gap-3 cursor-pointer group">
                             <div className="relative flex items-start pt-0.5">
                                 <input type="checkbox" className="peer sr-only" checked={ageAccepted} onChange={(e) => setAgeAccepted(e.target.checked)} />
-                                <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                    <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                    <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
                             </div>
-                            <span className="text-xs text-gray-300 leading-tight">
+                            <span className="text-xs text-foreground-muted leading-tight">
                                 I confirm I am at least 16 years old.
                             </span>
                         </label>
@@ -168,7 +168,7 @@ export default function ReconsentBanner() {
             </div>
 
             {/* Blocking overlay that sits beneath the banner but blocks interaction with the rest of the app */}
-            <div className="fixed inset-0 bg-black/40 z-[-1] backdrop-blur-[2px]" />
+            <div className="fixed inset-0 bg-black/20 dark:bg-black/40 z-[-1] backdrop-blur-[2px]" />
         </div>
     );
 }

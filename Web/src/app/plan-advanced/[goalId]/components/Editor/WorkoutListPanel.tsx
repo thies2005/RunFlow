@@ -102,7 +102,7 @@ export function WorkoutListPanel({ week, goalId, focusGoal, onWorkoutClick, onPh
     const allWorkoutsSelected = week.workouts.length > 0 && week.workouts.every((w) => isSelected(w.id));
 
     return (
-        <div className="mx-4 mb-3 rounded-xl border border-zinc-800 bg-zinc-900 overflow-hidden">
+        <div className="mx-4 mb-3 rounded-xl border border-glass-border bg-background-secondary overflow-hidden">
             <WeekSummaryBar
                 weekIndex={week.weekNumber}
                 phase={weekPhase}
@@ -119,26 +119,26 @@ export function WorkoutListPanel({ week, goalId, focusGoal, onWorkoutClick, onPh
                     type="checkbox"
                     checked={allWorkoutsSelected}
                     onChange={() => selectAllInWeek(week.workouts)}
-                    className="w-3.5 h-3.5 rounded border-zinc-600 bg-zinc-800 text-zinc-300 focus:ring-zinc-500"
+                    className="w-3.5 h-3.5 rounded border-foreground/25 bg-background-tertiary text-foreground-secondary focus:ring-foreground-muted"
                 />
-                <span className="text-[10px] text-zinc-600 uppercase tracking-wide">Select all in week</span>
+                <span className="text-[10px] text-foreground-muted uppercase tracking-wide">Select all in week</span>
             </div>
 
-            <div className="divide-y divide-zinc-800/50">
+            <div className="divide-y divide-glass-border">
                 {days.map((day, dayIdx) => {
                     const dayWorkouts = week.workouts.filter((w) =>
                         isSameDay(new Date(w.scheduledDate), day),
                     );
 
                     return (
-                        <div key={day.toISOString()} className="flex items-center px-4 py-2 hover:bg-zinc-800/40 transition-colors group">
+                        <div key={day.toISOString()} className="flex items-center px-4 py-2 hover:bg-background-tertiary/40 transition-colors group">
                             <div className="w-16 shrink-0">
-                                <span className="text-xs text-zinc-500">{DAY_NAMES[dayIdx]}</span>
-                                <span className="text-xs text-zinc-300 ml-1.5">{format(day, 'd')}</span>
+                                <span className="text-xs text-foreground-muted">{DAY_NAMES[dayIdx]}</span>
+                                <span className="text-xs text-foreground-secondary ml-1.5">{format(day, 'd')}</span>
                             </div>
                             <div className="flex-1 flex flex-wrap gap-1.5">
                                 {dayWorkouts.length === 0 ? (
-                                    <span className="text-xs text-zinc-600 italic">Rest</span>
+                                    <span className="text-xs text-foreground-muted italic">Rest</span>
                                 ) : (
                                     dayWorkouts.map((w) => {
                                         const colors = WORKOUT_COLORS[w.workoutType] || WORKOUT_COLORS.OTHER;
@@ -151,20 +151,20 @@ export function WorkoutListPanel({ week, goalId, focusGoal, onWorkoutClick, onPh
                                                 onClick={(e) => handleWorkoutClick(w, e)}
                                                 className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs cursor-pointer transition-colors ${
                                                     selected
-                                                        ? `${colors.bg} ring-1 ring-zinc-500`
+                                                        ? `${colors.bg} ring-1 ring-foreground-muted`
                                                         : `${colors.bg} hover:brightness-125`
                                                 } ${dragId === w.id ? 'opacity-40' : ''}`}
                                             >
-                                                <GripVertical className="w-3 h-3 text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 cursor-grab" />
+                                                <GripVertical className="w-3 h-3 text-foreground-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0 cursor-grab" />
                                                 <div className={`w-2 h-2 rounded-full shrink-0 ${colors.dot}`} />
                                                 <span className={`truncate max-w-[100px] ${colors.text}`}>{name}</span>
                                                 {w.description && (
-                                                    <span className="text-zinc-500 truncate max-w-[120px] hidden sm:inline">
+                                                    <span className="text-foreground-muted truncate max-w-[120px] hidden sm:inline">
                                                         {w.description}
                                                     </span>
                                                 )}
                                                 {w.targetDistance != null && w.targetDistance > 0 && (
-                                                    <span className="text-zinc-500 shrink-0">
+                                                    <span className="text-foreground-muted shrink-0">
                                                         {w.targetDistance >= 1000
                                                             ? `${(w.targetDistance / 1000).toFixed(1)}k`
                                                             : `${w.targetDistance}m`}
@@ -175,7 +175,7 @@ export function WorkoutListPanel({ week, goalId, focusGoal, onWorkoutClick, onPh
                                                         type="checkbox"
                                                         checked
                                                         readOnly
-                                                        className="w-3 h-3 rounded border-zinc-500 bg-zinc-700 text-zinc-300 shrink-0"
+                                                        className="w-3 h-3 rounded border-foreground/30 bg-foreground/15 text-foreground-secondary shrink-0"
                                                     />
                                                 )}
                                             </div>
@@ -186,7 +186,7 @@ export function WorkoutListPanel({ week, goalId, focusGoal, onWorkoutClick, onPh
                             <button
                                 type="button"
                                 onClick={() => createWorkoutMutation.mutate(day)}
-                                className="ml-auto p-1 rounded text-zinc-700 hover:text-zinc-400 hover:bg-zinc-800 opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                                className="ml-auto p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary opacity-0 group-hover:opacity-100 transition-all shrink-0"
                                 title="Add workout"
                             >
                                 <Plus className="w-3.5 h-3.5" />

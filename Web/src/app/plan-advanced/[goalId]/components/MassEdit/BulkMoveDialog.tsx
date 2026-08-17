@@ -48,21 +48,21 @@ export function BulkMoveDialog({ goalId, workoutIds, onClose, onComplete }: Bulk
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
-                <h3 className="text-sm font-semibold text-zinc-100 mb-4 flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4 text-zinc-400" />
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
+                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4 text-foreground-secondary" />
                     Move Workouts
                 </h3>
 
                 <div className="mb-4">
-                    <label className="block text-xs text-zinc-500 mb-1">
+                    <label className="block text-xs text-foreground-muted mb-1">
                         Shift by ({direction})
                     </label>
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
                             onClick={() => setDays((d) => d - 1)}
-                            className="w-8 h-8 rounded-md bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors text-sm font-bold"
+                            className="w-8 h-8 rounded-md bg-background-tertiary text-foreground-secondary hover:bg-foreground/15 transition-colors text-sm font-bold"
                         >
                             &minus;
                         </button>
@@ -70,17 +70,17 @@ export function BulkMoveDialog({ goalId, workoutIds, onClose, onComplete }: Bulk
                             type="number"
                             value={days}
                             onChange={(e) => setDays(Number(e.target.value))}
-                            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm text-zinc-100 text-center focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                            className="flex-1 bg-background-tertiary border border-foreground/20 rounded-md px-3 py-1.5 text-sm text-foreground text-center focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                         />
                         <button
                             type="button"
                             onClick={() => setDays((d) => d + 1)}
-                            className="w-8 h-8 rounded-md bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors text-sm font-bold"
+                            className="w-8 h-8 rounded-md bg-background-tertiary text-foreground-secondary hover:bg-foreground/15 transition-colors text-sm font-bold"
                         >
                             +
                         </button>
                     </div>
-                    <p className="text-xs text-zinc-500 mt-1">
+                    <p className="text-xs text-foreground-muted mt-1">
                         {days === 0
                             ? 'No change'
                             : `${absDays} day${absDays !== 1 ? 's' : ''} ${direction}`}
@@ -88,10 +88,10 @@ export function BulkMoveDialog({ goalId, workoutIds, onClose, onComplete }: Bulk
                 </div>
 
                 {days !== 0 && (
-                    <div className="mb-4 p-2 rounded-md bg-zinc-800/50 border border-zinc-800">
-                        <span className="text-xs text-zinc-500">
+                    <div className="mb-4 p-2 rounded-md bg-background-tertiary/50 border border-glass-border">
+                        <span className="text-xs text-foreground-muted">
                             Example: today &rarr;{' '}
-                            <span className="text-zinc-300">{format(previewDate, 'MMM d, yyyy')}</span>
+                            <span className="text-foreground-secondary">{format(previewDate, 'MMM d, yyyy')}</span>
                         </span>
                     </div>
                 )}
@@ -100,7 +100,7 @@ export function BulkMoveDialog({ goalId, workoutIds, onClose, onComplete }: Bulk
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-3 py-1.5 rounded-md bg-zinc-800 text-zinc-300 text-xs hover:bg-zinc-700 transition-colors"
+                        className="px-3 py-1.5 rounded-md bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 transition-colors"
                     >
                         Cancel
                     </button>
@@ -108,7 +108,7 @@ export function BulkMoveDialog({ goalId, workoutIds, onClose, onComplete }: Bulk
                         type="button"
                         onClick={() => mutation.mutate()}
                         disabled={mutation.isPending || days === 0}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-zinc-700 text-zinc-200 text-xs hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-foreground/15 text-foreground text-xs hover:bg-foreground/20 disabled:opacity-50 transition-colors"
                     >
                         {mutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                         Move

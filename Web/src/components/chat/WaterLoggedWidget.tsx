@@ -22,8 +22,8 @@ export default function WaterLoggedWidget({ amount }: WaterLoggedWidgetProps) {
                             <Droplets className="w-5 h-5 text-cyan-400" />
                         </div>
                         <div>
-                            <h3 className="font-semibold text-white">Water Intake Logged</h3>
-                            <p className="text-xs text-gray-400">Added to today&apos;s totals</p>
+                            <h3 className="font-semibold text-foreground">Water Intake Logged</h3>
+                            <p className="text-xs text-foreground-muted">Added to today&apos;s totals</p>
                         </div>
                     </div>
                     <div className="bg-cyan-500/20 border border-cyan-500/30 rounded-lg px-3 py-1.5">
@@ -32,8 +32,8 @@ export default function WaterLoggedWidget({ amount }: WaterLoggedWidgetProps) {
                 </div>
             </div>
 
-            <div className="bg-black/30 p-2 text-center border-t border-white/5">
-                <p className="text-xs text-gray-400">View this in your <a href="/nutrition" className="text-cyan-400 hover:underline">Nutrition Log</a></p>
+            <div className="bg-foreground/5 p-2 text-center border-t border-foreground/5">
+                <p className="text-xs text-foreground-muted">View this in your <a href="/nutrition" className="text-cyan-400 hover:underline">Nutrition Log</a></p>
             </div>
         </div>
     );

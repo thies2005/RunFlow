@@ -47,7 +47,7 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-8 text-gray-400">
+            <div className="flex items-center justify-center py-8 text-foreground-muted">
                 <Loader2 className="w-5 h-5 animate-spin mr-2" />
                 Loading activities...
             </div>
@@ -56,7 +56,7 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
 
     if (error || !data?.activities?.length) {
         return (
-            <div className="text-center py-6 text-gray-500">
+            <div className="text-center py-6 text-foreground-muted">
                 <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p>No recent activities found</p>
             </div>
@@ -70,7 +70,7 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
 
     return (
         <div className="space-y-2">
-            <label className="block text-xs text-gray-400 mb-2 uppercase">
+            <label className="block text-xs text-foreground-muted mb-2 uppercase">
                 Link to Activity (optional)
             </label>
 
@@ -80,16 +80,16 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
                 onClick={() => onSelect(null)}
                 className={`w-full p-3 rounded-lg border text-left transition-all ${selectedId === null
                     ? 'border-accent-orange bg-accent-orange/10'
-                    : 'border-white/10 bg-white/5 hover:bg-white/10'
+                    : 'border-foreground/10 bg-foreground/5 hover:bg-foreground/10'
                     }`}
             >
                 <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedId === null ? 'bg-accent-orange/20 text-accent-orange' : 'bg-white/10 text-gray-400'
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedId === null ? 'bg-accent-orange/20 text-accent-orange' : 'bg-foreground/10 text-foreground-muted'
                         }`}>
                         <Check className="w-4 h-4" />
                     </div>
                     <div>
-                        <p className={`text-sm font-medium ${selectedId === null ? 'text-accent-orange' : 'text-white'}`}>
+                        <p className={`text-sm font-medium ${selectedId === null ? 'text-accent-orange' : 'text-foreground'}`}>
                             Skip - Mark complete without linking
                         </p>
                     </div>
@@ -104,19 +104,19 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
                     onClick={() => onSelect(activity.id)}
                     className={`w-full p-3 rounded-lg border text-left transition-all ${selectedId === activity.id
                         ? 'border-accent-orange bg-accent-orange/10'
-                        : 'border-white/10 bg-white/5 hover:bg-white/10'
+                        : 'border-foreground/10 bg-foreground/5 hover:bg-foreground/10'
                         }`}
                 >
                     <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedId === activity.id ? 'bg-accent-orange/20 text-accent-orange' : 'bg-white/10 text-gray-400'
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedId === activity.id ? 'bg-accent-orange/20 text-accent-orange' : 'bg-foreground/10 text-foreground-muted'
                             }`}>
                             <Activity className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium truncate ${selectedId === activity.id ? 'text-accent-orange' : 'text-white'}`}>
+                            <p className={`text-sm font-medium truncate ${selectedId === activity.id ? 'text-accent-orange' : 'text-foreground'}`}>
                                 {activity.name}
                             </p>
-                            <div className="flex items-center gap-3 text-xs text-gray-400">
+                            <div className="flex items-center gap-3 text-xs text-foreground-muted">
                                 <span>{format(new Date(activity.startDate), 'MMM d')}</span>
                                 <span>{(activity.distance / 1000).toFixed(1)} km</span>
                                 <span>{formatDuration(activity.movingTime)}</span>

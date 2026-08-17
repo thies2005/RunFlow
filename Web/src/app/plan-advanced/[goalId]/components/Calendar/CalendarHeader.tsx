@@ -15,17 +15,17 @@ export function CalendarHeader({ month, onPrevMonth, onNextMonth }: CalendarHead
             <button
                 type="button"
                 onClick={onPrevMonth}
-                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+                className="p-1 rounded hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
             >
                 <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-xs font-semibold text-zinc-300 uppercase tracking-wide">
+            <span className="text-xs font-semibold text-foreground-secondary uppercase tracking-wide">
                 {format(month, 'MMMM yyyy')}
             </span>
             <button
                 type="button"
                 onClick={onNextMonth}
-                className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+                className="p-1 rounded hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
             >
                 <ChevronRight className="w-4 h-4" />
             </button>

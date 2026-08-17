@@ -11,9 +11,9 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
     if (!active || !payload?.length) return null;
     const d = payload[0].payload;
     return (
-        <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 shadow-xl">
-            <p className="text-sm font-medium text-zinc-100">{d.type}</p>
-            <p className="text-xs text-zinc-400">{d.count} sessions ({d.pct}%)</p>
+        <div className="bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 shadow-xl">
+            <p className="text-sm font-medium text-foreground">{d.type}</p>
+            <p className="text-xs text-foreground-secondary">{d.count} sessions ({d.pct}%)</p>
         </div>
     );
 };
@@ -39,7 +39,7 @@ export function WorkoutTypeDonut({ data }: WorkoutTypeDonutProps) {
                         dataKey="count"
                         nameKey="type"
                         label={renderLabel}
-                        labelLine={{ stroke: '#3f3f46' }}
+                        labelLine={{ stroke: 'rgba(128,128,140,0.45)' }}
                         isAnimationActive={false}
                     >
                         {data.map((entry, i) => (
@@ -50,8 +50,8 @@ export function WorkoutTypeDonut({ data }: WorkoutTypeDonutProps) {
                 </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ top: -20 }}>
-                <span className="text-xl font-bold text-zinc-100">{totalCount}</span>
-                <span className="text-[10px] text-zinc-500">sessions</span>
+                <span className="text-xl font-bold text-foreground">{totalCount}</span>
+                <span className="text-[10px] text-foreground-muted">sessions</span>
             </div>
         </div>
     );

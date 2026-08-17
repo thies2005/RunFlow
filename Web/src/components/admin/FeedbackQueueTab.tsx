@@ -79,11 +79,11 @@ export default function FeedbackQueueTab() {
 
     const getStatusStyles = (status: string) => {
         switch (status) {
-            case 'PENDING': return 'bg-gray-100 text-gray-600 border-gray-200';
+            case 'PENDING': return 'bg-background-tertiary text-foreground-secondary border-glass-border';
             case 'PROCESSING': return 'bg-blue-100 text-blue-600 border-blue-200 animate-pulse';
             case 'DONE': return 'bg-green-100 text-green-600 border-green-200';
             case 'FAILED': return 'bg-red-100 text-red-600 border-red-200';
-            default: return 'bg-gray-50 text-gray-400';
+            default: return 'bg-background-secondary text-foreground-muted';
         }
     };
 
@@ -97,9 +97,9 @@ export default function FeedbackQueueTab() {
             {/* Header Actions */}
             <div className="flex justify-between items-center">
                 <div className="flex gap-4">
-                    <div className="bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                        <span className="text-sm text-gray-500 mr-2">Pending:</span>
-                        <span className="font-bold text-gray-800">{statMap['PENDING'] || 0}</span>
+                    <div className="bg-background-secondary px-4 py-2 rounded-xl border border-glass-border">
+                        <span className="text-sm text-foreground-muted mr-2">Pending:</span>
+                        <span className="font-bold text-foreground">{statMap['PENDING'] || 0}</span>
                     </div>
                     <div className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
                         <span className="text-sm text-blue-500 mr-2">Processing:</span>
@@ -138,7 +138,7 @@ export default function FeedbackQueueTab() {
                     </button>
                     <button
                         onClick={fetchData}
-                        className="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl transition"
+                        className="p-2.5 bg-background-tertiary hover:bg-foreground/15 text-foreground-secondary rounded-xl transition"
                     >
                         {loading && !actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
                     </button>
@@ -146,28 +146,28 @@ export default function FeedbackQueueTab() {
             </div>
 
             {/* Jobs Table */}
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs">
+            <div className="bg-background-secondary rounded-2xl border border-glass-border overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50/50 border-b border-gray-100">
+                        <thead className="bg-background-secondary/50 border-b border-glass-border">
                             <tr>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">User</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Activity</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Updated</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Details</th>
+                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">User</th>
+                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Activity</th>
+                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Updated</th>
+                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Details</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-glass-border">
                             {jobs.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                                    <td colSpan={5} className="px-6 py-12 text-center text-foreground-muted">
                                         No recent queue activity.
                                     </td>
                                 </tr>
                             ) : (
                                 jobs.map((job) => (
-                                    <tr key={job.id} className="hover:bg-gray-50/50 transition-colors">
+                                    <tr key={job.id} className="hover:bg-background-secondary/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${getStatusStyles(job.status)}`}>
                                                 {job.status}
@@ -175,12 +175,12 @@ export default function FeedbackQueueTab() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center">
-                                                    <User className="w-4 h-4 text-gray-500" />
+                                                <div className="w-8 h-8 rounded-full bg-background-tertiary border border-glass-border flex items-center justify-center">
+                                                    <User className="w-4 h-4 text-foreground-muted" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-semibold text-gray-800">{job.user.name || 'Anonymous'}</div>
-                                                    <div className="text-[10px] text-gray-400 font-mono tracking-tighter">{job.user.email}</div>
+                                                    <div className="text-sm font-semibold text-foreground">{job.user.name || 'Anonymous'}</div>
+                                                    <div className="text-[10px] text-foreground-muted font-mono tracking-tighter">{job.user.email}</div>
                                                 </div>
                                             </div>
                                         </td>
@@ -188,13 +188,13 @@ export default function FeedbackQueueTab() {
                                             <div className="flex items-center gap-3">
                                                 <ActivityIcon className="w-4 h-4 text-emerald-500" />
                                                 <div>
-                                                    <div className="text-sm text-gray-600 font-medium truncate max-w-[200px]">{job.activity.name}</div>
-                                                    <div className="text-[10px] text-gray-400">{new Date(job.activity.startDate).toLocaleDateString()}</div>
+                                                    <div className="text-sm text-foreground-secondary font-medium truncate max-w-[200px]">{job.activity.name}</div>
+                                                    <div className="text-[10px] text-foreground-muted">{new Date(job.activity.startDate).toLocaleDateString()}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                            <div className="flex items-center gap-2 text-xs text-foreground-muted">
                                                 <Clock className="w-3.5 h-3.5" />
                                                 {formatDistanceToNow(new Date(job.updatedAt), { addSuffix: true })}
                                             </div>
@@ -215,7 +215,7 @@ export default function FeedbackQueueTab() {
                                                     Working...
                                                 </div>
                                             ) : (
-                                                <div className="text-xs text-gray-400 italic">
+                                                <div className="text-xs text-foreground-muted italic">
                                                     In Queue (Pri: {job.priority})
                                                 </div>
                                             )}

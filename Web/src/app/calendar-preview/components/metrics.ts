@@ -65,7 +65,7 @@ export interface MonthEntry {
  * visually communicates training stress at a glance (darker = harder day).
  */
 export function trimpFill(trimp: number): { bg: string; text: string; tier: string } {
-    if (trimp <= 0) return { bg: 'bg-zinc-900/40', text: 'text-zinc-600', tier: 'rest' };
+    if (trimp <= 0) return { bg: 'bg-background-secondary/40', text: 'text-foreground-muted', tier: 'rest' };
     if (trimp < 20) return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', tier: 'very easy' };
     if (trimp < 40) return { bg: 'bg-emerald-500/20', text: 'text-emerald-400', tier: 'easy' };
     if (trimp < 70) return { bg: 'bg-yellow-500/20', text: 'text-yellow-400', tier: 'moderate' };

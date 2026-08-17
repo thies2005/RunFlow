@@ -141,7 +141,7 @@ export default function PlanPage() {
         }
     }, [isLoading, data]);
 
-    if (isLoading) return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading plan...</div>;
+    if (isLoading) return <div className="min-h-screen flex items-center justify-center text-foreground-muted">Loading plan...</div>;
 
     if (!data?.goal) {
         return (
@@ -264,7 +264,7 @@ export default function PlanPage() {
                                             .bg-background { background: white !important; }
                                             button { display: none !important; }
                                             .text-foreground, .text-white { color: black !important; }
-                                            .text-foreground-muted, .text-gray-400, .text-gray-500 { color: #6b7280 !important; }
+                                            .text-foreground-muted, .text-foreground-muted, .text-foreground-muted { color: #6b7280 !important; }
                                             [draggable="true"] { cursor: default !important; }
                                         }
                                     `;
@@ -356,14 +356,14 @@ export default function PlanPage() {
                                                             <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded border border-green-500/20">
                                                                 Run: {(actualRunMileage / 1000).toFixed(1)}k
                                                             </span>
-                                                            <span className="text-gray-500 text-[10px]">
+                                                            <span className="text-foreground-muted text-[10px]">
                                                                 / {(plannedMileage / 1000).toFixed(1)}k planned
                                                             </span>
                                                         </div>
-                                                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                                                        <div className="flex items-center gap-2 text-xs text-foreground-muted">
                                                             <span>Time: {formatDuration(totalMovingTime)}</span>
                                                             {totalMovingTime > 0 && (
-                                                                <span className="text-gray-500 text-[10px]">
+                                                                <span className="text-foreground-muted text-[10px]">
                                                                     ({runTimePct}% Run / {crossTimePct}% Cross)
                                                                 </span>
                                                             )}

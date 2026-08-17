@@ -101,69 +101,69 @@ export function BodyCompositionTab() {
             {isLogging ? (
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-4">
-                        <button onClick={() => setIsLogging(false)} className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400">
+                        <button onClick={() => setIsLogging(false)} className="p-1.5 hover:bg-foreground/10 rounded-lg text-foreground-muted">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <h3 className="text-white font-semibold">Log Measurements</h3>
+                        <h3 className="text-foreground font-semibold">Log Measurements</h3>
                     </div>
 
-                    <div className="space-y-3 bg-white/5 rounded-xl p-4 border border-white/10">
+                    <div className="space-y-3 bg-foreground/5 rounded-xl p-4 border border-foreground/10">
                         <div>
-                            <label className="text-xs font-semibold text-gray-400 mb-1 block">Date</label>
+                            <label className="text-xs font-semibold text-foreground-muted mb-1 block">Date</label>
                             <input 
                                 type="date" 
                                 value={dateStr}
                                 onChange={(e) => setDateStr(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
+                                className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-xs font-semibold text-gray-400 mb-1 block">Weight (kg)</label>
+                                <label className="text-xs font-semibold text-foreground-muted mb-1 block">Weight (kg)</label>
                                 <input 
                                     type="number" step="0.1" value={weight} onChange={e => setWeight(e.target.value)}
                                     placeholder="e.g. 72.4"
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-gray-400 mb-1 block">Body Fat (%)</label>
+                                <label className="text-xs font-semibold text-foreground-muted mb-1 block">Body Fat (%)</label>
                                 <input 
                                     type="number" step="0.1" value={bodyFat} onChange={e => setBodyFat(e.target.value)}
                                     placeholder="e.g. 15.5"
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-gray-400 mb-1 block">Muscle Mass (kg)</label>
+                                <label className="text-xs font-semibold text-foreground-muted mb-1 block">Muscle Mass (kg)</label>
                                 <input 
                                     type="number" step="0.1" value={muscleMass} onChange={e => setMuscleMass(e.target.value)}
                                     placeholder="e.g. 35.2"
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-gray-400 mb-1 block">Waist (cm)</label>
+                                <label className="text-xs font-semibold text-foreground-muted mb-1 block">Waist (cm)</label>
                                 <input 
                                     type="number" step="0.5" value={waist} onChange={e => setWaist(e.target.value)}
                                     placeholder="e.g. 80"
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
                              <div>
-                                <label className="text-xs font-semibold text-gray-400 mb-1 block">Chest (cm)</label>
+                                <label className="text-xs font-semibold text-foreground-muted mb-1 block">Chest (cm)</label>
                                 <input 
                                     type="number" step="0.5" value={chest} onChange={e => setChest(e.target.value)}
                                     placeholder="e.g. 100"
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-gray-400 mb-1 block">Hips (cm)</label>
+                                <label className="text-xs font-semibold text-foreground-muted mb-1 block">Hips (cm)</label>
                                 <input 
                                     type="number" step="0.5" value={hips} onChange={e => setHips(e.target.value)}
                                     placeholder="e.g. 95"
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
                         </div>
@@ -179,7 +179,7 @@ export function BodyCompositionTab() {
             ) : (
                 <>
                     <div className="flex items-center justify-between mb-4">
-                        <div className="flex bg-white/5 rounded-lg p-1 border border-white/10 shrink-0 overflow-x-auto w-full max-w-[300px]">
+                        <div className="flex bg-foreground/5 rounded-lg p-1 border border-foreground/10 shrink-0 overflow-x-auto w-full max-w-[300px]">
                             {([
                                 { id: 'weight', label: 'Weight' },
                                 { id: 'bodyFat', label: 'Body Fat %' },
@@ -189,7 +189,7 @@ export function BodyCompositionTab() {
                                 <button
                                     key={m.id}
                                     onClick={() => setSelectedMetric(m.id)}
-                                    className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${selectedMetric === m.id ? 'bg-white/10 text-white shadow-xs' : 'text-gray-400 hover:text-gray-300'}`}
+                                    className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${selectedMetric === m.id ? 'bg-foreground/10 text-foreground shadow-xs' : 'text-foreground-muted hover:text-foreground-muted'}`}
                                 >
                                     {m.label}
                                 </button>
@@ -204,16 +204,16 @@ export function BodyCompositionTab() {
                         </button>
                     </div>
 
-                    <div className="flex-1 w-full relative min-h-[250px] bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="flex-1 w-full relative min-h-[250px] bg-foreground/5 border border-foreground/10 rounded-xl p-4">
                         {isLoading ? (
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="animate-pulse text-gray-500">Loading chart data...</div>
+                                <div className="animate-pulse text-foreground-muted">Loading chart data...</div>
                             </div>
                         ) : measurements.length === 0 ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                                <Ruler className="w-8 h-8 text-gray-500 mb-2 opacity-50" />
-                                <div className="text-gray-400 text-sm font-semibold mb-1">No measurements yet</div>
-                                <div className="text-gray-500 text-xs">Tap + Log to record your first entry</div>
+                                <Ruler className="w-8 h-8 text-foreground-muted mb-2 opacity-50" />
+                                <div className="text-foreground-muted text-sm font-semibold mb-1">No measurements yet</div>
+                                <div className="text-foreground-muted text-xs">Tap + Log to record your first entry</div>
                             </div>
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">

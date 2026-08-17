@@ -89,14 +89,14 @@ export const PlanWeek = memo(function PlanWeek({
                                 <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 rounded border border-green-500/20 whitespace-nowrap text-[10px] md:text-xs">
                                     {(actualRunMileage / 1000).toFixed(1)}k
                                 </span>
-                                <span className="text-gray-500 text-[10px] whitespace-nowrap hidden xs:inline">
+                                <span className="text-foreground-muted text-[10px] whitespace-nowrap hidden xs:inline">
                                     / {(plannedMileage / 1000).toFixed(1)}k
                                 </span>
                             </div>
-                            <div className="hidden sm:flex items-center gap-2 text-xs text-gray-400">
+                            <div className="hidden sm:flex items-center gap-2 text-xs text-foreground-muted">
                                 <span>Time: {formatDuration(totalMovingTime)}</span>
                                 {totalMovingTime > 0 && (
-                                    <span className="text-gray-500 text-[10px]">
+                                    <span className="text-foreground-muted text-[10px]">
                                         ({runTimePct}% Run / {crossTimePct}% Cross)
                                     </span>
                                 )}

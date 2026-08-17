@@ -23,16 +23,16 @@ export function CalendarToolbar({
     onToday,
 }: CalendarToolbarProps) {
     return (
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 bg-zinc-900/80 backdrop-blur shrink-0">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-glass-border bg-background-secondary/80 backdrop-blur shrink-0">
             <div className="flex items-center gap-2">
-                <div className="inline-flex rounded-md border border-zinc-800 overflow-hidden">
+                <div className="inline-flex rounded-md border border-glass-border overflow-hidden">
                     <button
                         type="button"
                         onClick={() => onModeChange('month')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
                             mode === 'month'
-                                ? 'bg-zinc-700 text-zinc-100'
-                                : 'bg-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
+                                ? 'bg-foreground/15 text-foreground'
+                                : 'bg-transparent text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary'
                         }`}
                         title="Monthly grid"
                     >
@@ -44,8 +44,8 @@ export function CalendarToolbar({
                         onClick={() => onModeChange('week')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
                             mode === 'week'
-                                ? 'bg-zinc-700 text-zinc-100'
-                                : 'bg-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
+                                ? 'bg-foreground/15 text-foreground'
+                                : 'bg-transparent text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary'
                         }`}
                         title="Weekly list"
                     >
@@ -59,18 +59,18 @@ export function CalendarToolbar({
                 <button
                     type="button"
                     onClick={onPrev}
-                    className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+                    className="p-1.5 rounded-md text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
                     title="Previous"
                 >
                     <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="text-sm font-semibold text-zinc-100 min-w-[140px] text-center">
+                <span className="text-sm font-semibold text-foreground min-w-[140px] text-center">
                     {label}
                 </span>
                 <button
                     type="button"
                     onClick={onNext}
-                    className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+                    className="p-1.5 rounded-md text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
                     title="Next"
                 >
                     <ChevronRight className="w-4 h-4" />
@@ -78,7 +78,7 @@ export function CalendarToolbar({
                 <button
                     type="button"
                     onClick={onToday}
-                    className="px-2.5 py-1 rounded-md text-xs text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 border border-zinc-800 transition-colors"
+                    className="px-2.5 py-1 rounded-md text-xs text-foreground-secondary hover:text-foreground hover:bg-background-tertiary border border-glass-border transition-colors"
                 >
                     Today
                 </button>
@@ -92,15 +92,15 @@ export function CalendarToolbar({
 /** Runalyze-style daily-load colour ramp legend. */
 function TrimpLegend() {
     const tiers: { label: string; cls: string }[] = [
-        { label: 'Rest', cls: 'bg-zinc-700/60' },
+        { label: 'Rest', cls: 'bg-foreground/15' },
         { label: 'Easy', cls: 'bg-emerald-500/30' },
         { label: 'Mod', cls: 'bg-yellow-500/30' },
         { label: 'Hard', cls: 'bg-orange-500/35' },
         { label: 'Max', cls: 'bg-red-600/45' },
     ];
     return (
-        <div className="hidden md:flex items-center gap-1.5 text-[10px] text-zinc-500">
-            <Activity className="w-3 h-3 text-zinc-600" />
+        <div className="hidden md:flex items-center gap-1.5 text-[10px] text-foreground-muted">
+            <Activity className="w-3 h-3 text-foreground-muted" />
             <span>Load</span>
             <div className="flex items-center gap-0.5">
                 {tiers.map((t) => (

@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 
 const HealthView = dynamic(() => import('@/components/views/HealthView'), {
-    loading: () => <div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-pulse text-gray-400">Loading health...</div></div>,
+    loading: () => <div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-pulse text-foreground-muted">Loading health...</div></div>,
     ssr: false,
 });
 

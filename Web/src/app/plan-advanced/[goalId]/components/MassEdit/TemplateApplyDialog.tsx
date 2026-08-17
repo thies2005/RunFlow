@@ -59,20 +59,20 @@ export function TemplateApplyDialog({ goalId, onClose, onComplete }: TemplateApp
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
-                <h3 className="text-sm font-semibold text-zinc-100 mb-4 flex items-center gap-2">
-                    <FileDown className="w-4 h-4 text-zinc-400" />
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
+                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <FileDown className="w-4 h-4 text-foreground-secondary" />
                     Apply Template
                 </h3>
 
                 <div className="space-y-4 mb-4">
                     <div>
-                        <label className="block text-xs text-zinc-500 mb-1">Template</label>
+                        <label className="block text-xs text-foreground-muted mb-1">Template</label>
                         {templates && templates.length > 0 ? (
                             <select
                                 value={selectedTemplateId}
                                 onChange={(e) => setSelectedTemplateId(e.target.value)}
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             >
                                 <option value="">Select a template...</option>
                                 {templates.map((t: { id: string; name: string }) => (
@@ -82,13 +82,13 @@ export function TemplateApplyDialog({ goalId, onClose, onComplete }: TemplateApp
                                 ))}
                             </select>
                         ) : (
-                            <p className="text-xs text-zinc-600 italic">No templates available</p>
+                            <p className="text-xs text-foreground-muted italic">No templates available</p>
                         )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs text-zinc-500 mb-1">Start Week</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Start Week</label>
                             <input
                                 type="number"
                                 min={1}
@@ -98,24 +98,24 @@ export function TemplateApplyDialog({ goalId, onClose, onComplete }: TemplateApp
                                     setStartWeek(v);
                                     if (endWeek < v) setEndWeek(v);
                                 }}
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-zinc-500 mb-1">End Week</label>
+                            <label className="block text-xs text-foreground-muted mb-1">End Week</label>
                             <input
                                 type="number"
                                 min={startWeek}
                                 value={endWeek}
                                 onChange={(e) => setEndWeek(Math.max(startWeek, Number(e.target.value)))}
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             />
                         </div>
                     </div>
 
                     {selectedTemplateId && weekCount > 0 && (
-                        <div className="p-2 rounded-md bg-zinc-800/50 border border-zinc-800">
-                            <span className="text-xs text-zinc-500">
+                        <div className="p-2 rounded-md bg-background-tertiary/50 border border-glass-border">
+                            <span className="text-xs text-foreground-muted">
                                 Template will be applied to {weekCount} week{weekCount !== 1 ? 's' : ''}
                                 {' '}(Week {startWeek}{startWeek !== endWeek ? ` - ${endWeek}` : ''})
                             </span>
@@ -127,7 +127,7 @@ export function TemplateApplyDialog({ goalId, onClose, onComplete }: TemplateApp
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-3 py-1.5 rounded-md bg-zinc-800 text-zinc-300 text-xs hover:bg-zinc-700 transition-colors"
+                        className="px-3 py-1.5 rounded-md bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 transition-colors"
                     >
                         Cancel
                     </button>
@@ -135,7 +135,7 @@ export function TemplateApplyDialog({ goalId, onClose, onComplete }: TemplateApp
                         type="button"
                         onClick={() => mutation.mutate()}
                         disabled={mutation.isPending || !selectedTemplateId}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-zinc-700 text-zinc-200 text-xs hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-foreground/15 text-foreground text-xs hover:bg-foreground/20 disabled:opacity-50 transition-colors"
                     >
                         {mutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                         Apply

@@ -66,8 +66,8 @@ function RacePredictionChart({
     if (effectiveVO2max <= 0) {
         return (
             <div className="glass-card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Race Predictions</h3>
-                <p className="text-gray-400">No VO2max data available</p>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Race Predictions</h3>
+                <p className="text-foreground-muted">No VO2max data available</p>
             </div>
         );
     }
@@ -83,13 +83,13 @@ function RacePredictionChart({
     return (
         <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                     Race Predictions
-                    <span className="text-xs font-normal text-gray-400 bg-white/10 px-2 py-1 rounded-full" title="Estimated performance if you raced today based on current fitness and shape">
+                    <span className="text-xs font-normal text-foreground-muted bg-foreground/10 px-2 py-1 rounded-full" title="Estimated performance if you raced today based on current fitness and shape">
                         Current Shape
                     </span>
                 </h3>
-                <div className="flex items-center gap-2 text-sm text-gray-400">
+                <div className="flex items-center gap-2 text-sm text-foreground-muted">
                     <span>VO2max:</span>
                     <input
                         type="number"
@@ -104,9 +104,9 @@ function RacePredictionChart({
             {/* Sliders Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {/* VO2 Max Slider */}
-                <div className="p-3 bg-white/5 rounded-lg">
+                <div className="p-3 bg-foreground/5 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs text-gray-400">Simulated VO2 Max</label>
+                        <label className="text-xs text-foreground-muted">Simulated VO2 Max</label>
                         <span className="text-base font-bold text-accent-orange">{simulatedVO2Max.toFixed(1)}</span>
                     </div>
                     <input
@@ -116,9 +116,9 @@ function RacePredictionChart({
                         step="0.1"
                         value={simulatedVO2Max}
                         onChange={(e) => setSimulatedVO2Max(parseFloat(e.target.value))}
-                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                        className="w-full h-2 bg-foreground/15 rounded-lg appearance-none cursor-pointer accent-accent-orange"
                     />
-                    <div className="flex justify-between text-[10px] text-gray-500 mt-1">
+                    <div className="flex justify-between text-[10px] text-foreground-muted mt-1">
                         <span>20 (Low)</span>
                         <span className="text-accent-orange">Current: {effectiveVO2max.toFixed(1)}</span>
                         <span>80 (Elite)</span>
@@ -126,9 +126,9 @@ function RacePredictionChart({
                 </div>
 
                 {/* Shape Slider */}
-                <div className="p-3 bg-white/5 rounded-lg">
+                <div className="p-3 bg-foreground/5 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs text-gray-400">Marathon Shape</label>
+                        <label className="text-xs text-foreground-muted">Marathon Shape</label>
                         <span className="text-base font-bold text-accent-cyan">{shapePercent}%</span>
                     </div>
                     <input
@@ -137,9 +137,9 @@ function RacePredictionChart({
                         max="100"
                         value={shapePercent}
                         onChange={(e) => setShapePercent(parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
+                        className="w-full h-2 bg-foreground/15 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
                     />
-                    <div className="flex justify-between text-[10px] text-gray-500 mt-1">
+                    <div className="flex justify-between text-[10px] text-foreground-muted mt-1">
                         <span>0% (Unfit)</span>
                         <span className="text-accent-cyan">Current: {currentShape}%</span>
                         <span>100% (Peak)</span>
@@ -150,10 +150,10 @@ function RacePredictionChart({
             {/* Prediction Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {predictions.map((p) => (
-                    <div key={p.name} className="text-center p-3 bg-white/5 rounded-lg border-l-4" style={{ borderColor: p.color }}>
-                        <p className="text-xs text-gray-400 mb-1">{p.name}</p>
-                        <p className="text-lg font-bold text-white">{p.predictedFormatted}</p>
-                        <p className="text-xs text-gray-500">
+                    <div key={p.name} className="text-center p-3 bg-foreground/5 rounded-lg border-l-4" style={{ borderColor: p.color }}>
+                        <p className="text-xs text-foreground-muted mb-1">{p.name}</p>
+                        <p className="text-lg font-bold text-foreground">{p.predictedFormatted}</p>
+                        <p className="text-xs text-foreground-muted">
                             Optimal: {p.optimalFormatted}
                         </p>
                         {parseFloat(p.diffPercent) > 0 && (
@@ -183,7 +183,7 @@ function RacePredictionChart({
                 </ResponsiveContainer>
             </div>
 
-            <p className="text-xs text-gray-500 text-center mt-4">
+            <p className="text-xs text-foreground-muted text-center mt-4">
                 Adjust the sliders to see how fitness and shape affect your race predictions
             </p>
         </div>

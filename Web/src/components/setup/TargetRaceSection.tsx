@@ -180,7 +180,7 @@ export default function TargetRaceSection({
             )}
 
             <div className="mt-4">
-                <label className="block text-xs text-gray-400 mb-1 uppercase">Plan Start Date</label>
+                <label className="block text-xs text-foreground-muted mb-1 uppercase">Plan Start Date</label>
                 <input
                     type="date"
                     value={planStartDate}
@@ -188,7 +188,7 @@ export default function TargetRaceSection({
                     className={`${inputClass} ${formErrors.planStartDate ? 'border-red-500 focus:ring-red-500' : ''}`}
                 />
                 {formErrors.planStartDate && <p className="text-red-400 text-xs mt-1">{formErrors.planStartDate}</p>}
-                <p className="text-xs text-gray-500 mt-1">When should your training plan begin?</p>
+                <p className="text-xs text-foreground-muted mt-1">When should your training plan begin?</p>
             </div>
         </div>
     );

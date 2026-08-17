@@ -72,18 +72,18 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
 
     return (
         <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-[#1c1c1e] w-full max-w-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+            <div className="bg-background-secondary w-full max-w-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
+                <div className="flex items-center justify-between p-4 border-b border-foreground/10 shrink-0">
                     <div>
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                             <ActivityIcon className="w-5 h-5 text-blue-400" />
                             Statistics
                         </h2>
-                        <p className="text-xs text-gray-400 mt-0.5">{targetName}</p>
+                        <p className="text-xs text-foreground-muted mt-0.5">{targetName}</p>
                     </div>
-                    <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors" type="button">
+                    <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors" type="button">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -91,14 +91,14 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
                 {/* Body */}
                 <div className="p-5 overflow-y-auto flex-1 space-y-6">
                     {/* Time Range Selector */}
-                    <div className="flex bg-white/5 p-1 rounded-lg border border-white/10 shrink-0 w-full sm:w-auto self-start sm:self-end">
+                    <div className="flex bg-foreground/5 p-1 rounded-lg border border-foreground/10 shrink-0 w-full sm:w-auto self-start sm:self-end">
                         {RANGES.map(range => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md transition-colors ${timeRange === range
-                                    ? 'bg-white/10 text-white shadow-xs'
-                                    : 'text-gray-400 hover:text-gray-300'
+                                    ? 'bg-foreground/10 text-foreground shadow-xs'
+                                    : 'text-foreground-muted hover:text-foreground-muted'
                                     }`}
                             >
                                 {range}
@@ -114,16 +114,16 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
                         <>
                             {/* Hero Stat */}
                             <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-5 flex flex-col items-center justify-center text-center">
-                                <span className="text-4xl font-black text-white mb-1">
+                                <span className="text-4xl font-black text-foreground mb-1">
                                     {statsData?.successRate || 0}<span className="text-xl text-blue-400">%</span>
                                 </span>
-                                <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">{timeRange} Adherence</span>
+                                <span className="text-xs font-semibold uppercase tracking-widest text-foreground-muted">{timeRange} Adherence</span>
                             </div>
 
                             {/* Chart Map */}
                             <div className="flex-1 w-full relative min-h-[200px]">
-                                <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-1.5">
-                                    <CalendarIcon className="w-4 h-4 text-gray-400" /> History Map
+                                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
+                                    <CalendarIcon className="w-4 h-4 text-foreground-muted" /> History Map
                                 </h3>
                                 <div className="h-[200px] w-full">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -162,9 +162,9 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 justify-end">
+                                <div className="flex items-center gap-4 mt-3 text-xs text-foreground-muted justify-end">
                                     <div className="flex items-center gap-1.5">
-                                        <div className="w-3 h-3 rounded bg-white/5 border border-white/5" /> Missed
+                                        <div className="w-3 h-3 rounded bg-foreground/5 border border-foreground/5" /> Missed
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <div className="w-3 h-3 rounded bg-green-500" /> Taken

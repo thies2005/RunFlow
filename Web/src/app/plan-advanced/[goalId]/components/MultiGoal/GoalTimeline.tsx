@@ -48,24 +48,24 @@ export function GoalTimeline({
     if (totalMs <= 0 || goals.length === 0) return null;
 
     return (
-        <div className="relative px-4 py-2 border-b border-zinc-800">
+        <div className="relative px-4 py-2 border-b border-glass-border">
             <div className="relative h-10">
-                <div className="absolute top-4 left-0 right-0 h-0.5 bg-zinc-800" />
+                <div className="absolute top-4 left-0 right-0 h-0.5 bg-background-tertiary" />
 
                 {phases.map((x, i) => (
                     <div
                         key={i}
-                        className="absolute top-4 w-px h-3 bg-zinc-700"
+                        className="absolute top-4 w-px h-3 bg-foreground/15"
                         style={{ left: `${x}%` }}
                     />
                 ))}
 
                 <div
-                    className="absolute top-1 w-px h-7 bg-zinc-500"
+                    className="absolute top-1 w-px h-7 bg-foreground/25"
                     style={{ left: `${currentX}%` }}
                 >
-                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-zinc-400" />
-                    <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[7px] text-zinc-500 whitespace-nowrap mt-2">
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-foreground/30" />
+                    <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[7px] text-foreground-muted whitespace-nowrap mt-2">
                         Now
                     </span>
                 </div>

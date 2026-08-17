@@ -170,17 +170,17 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
 
     return (
         <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+            <div className="bg-background-secondary w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-white/10 shrink-0">
+                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-foreground/10 shrink-0">
                     <div className="flex items-center gap-2">
-                        <button onClick={onClose} className="p-1 -ml-2 text-gray-400 hover:text-white">
+                        <button onClick={onClose} className="p-1 -ml-2 text-foreground-muted hover:text-foreground">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <ChefHat className="w-5 h-5 text-amber-400" />
-                        <h2 className="text-lg font-bold text-white">Meal Breakdown</h2>
+                        <h2 className="text-lg font-bold text-foreground">Meal Breakdown</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-white">
+                    <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -188,7 +188,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                 <div className="flex-1 flex flex-col overflow-y-auto">
                     {/* Meal Name + Confidence */}
                     <div className="p-4 pb-0">
-                        <h3 className="text-xl font-bold text-white mb-2">{result.mealName}</h3>
+                        <h3 className="text-xl font-bold text-foreground mb-2">{result.mealName}</h3>
                         <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${CONFIDENCE_COLORS[result.confidence]}`}>
                             {result.confidence === 'high' ? '✓' : result.confidence === 'medium' ? '~' : '!'} {result.confidence} confidence
                         </span>
@@ -201,20 +201,20 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                                 <div>
                                     <div className="flex items-center justify-center gap-1 mb-1">
                                         <Flame className="w-3 h-3 text-amber-400" />
-                                        <span className="text-[10px] text-gray-400 uppercase">Cals</span>
+                                        <span className="text-[10px] text-foreground-muted uppercase">Cals</span>
                                     </div>
                                     <p className="text-lg font-bold text-amber-400">{totals.calories}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-400 uppercase mb-1">Protein</p>
+                                    <p className="text-[10px] text-foreground-muted uppercase mb-1">Protein</p>
                                     <p className="text-lg font-bold text-blue-400">{totals.protein}g</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-400 uppercase mb-1">Carbs</p>
+                                    <p className="text-[10px] text-foreground-muted uppercase mb-1">Carbs</p>
                                     <p className="text-lg font-bold text-green-400">{totals.carbs}g</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-400 uppercase mb-1">Fats</p>
+                                    <p className="text-[10px] text-foreground-muted uppercase mb-1">Fats</p>
                                     <p className="text-lg font-bold text-pink-400">{totals.fats}g</p>
                                 </div>
                             </div>
@@ -223,28 +223,28 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
 
                     {/* Component List */}
                     <div className="px-4 pb-4">
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
+                        <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-widest mb-3">
                             Ingredients ({adjustedItems.length})
                         </h4>
                         <div className="space-y-2">
                             {adjustedItems.map((item, index) => (
                                 <div
                                     key={index}
-                                    className="bg-white/5 border border-white/10 rounded-xl p-3"
+                                    className="bg-foreground/5 border border-foreground/10 rounded-xl p-3"
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-white text-sm">{item.name}</p>
-                                            <p className="text-xs text-gray-400">{item.estimatedGrams}g</p>
+                                            <p className="font-medium text-foreground text-sm">{item.name}</p>
+                                            <p className="text-xs text-foreground-muted">{item.estimatedGrams}g</p>
                                         </div>
                                         <div className="text-right shrink-0 ml-2">
                                             <p className="text-sm font-bold text-amber-400">{item.calories}</p>
-                                            <p className="text-[10px] text-gray-500 uppercase">kcal</p>
+                                            <p className="text-[10px] text-foreground-muted uppercase">kcal</p>
                                         </div>
                                     </div>
 
                                     {/* Macros row */}
-                                    <div className="flex items-center gap-3 text-[11px] text-gray-400 mb-2">
+                                    <div className="flex items-center gap-3 text-[11px] text-foreground-muted mb-2">
                                         <span>P: <span className="text-blue-400 font-medium">{item.protein}g</span></span>
                                         <span>C: <span className="text-green-400 font-medium">{item.carbs}g</span></span>
                                         <span>F: <span className="text-pink-400 font-medium">{item.fats}g</span></span>
@@ -252,21 +252,21 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
 
                                     {/* Quantity adjuster */}
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[11px] text-gray-500">Portion:</span>
+                                        <span className="text-[11px] text-foreground-muted">Portion:</span>
                                         <button
                                             onClick={() => adjustMultiplier(index, -0.5)}
-                                            className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                                            className="w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 transition-colors"
                                         >
-                                            <Minus className="w-3 h-3 text-gray-300" />
+                                            <Minus className="w-3 h-3 text-foreground-muted" />
                                         </button>
-                                        <span className="text-sm font-medium text-white w-10 text-center">
+                                        <span className="text-sm font-medium text-foreground w-10 text-center">
                                             {multipliers[index]}x
                                         </span>
                                         <button
                                             onClick={() => adjustMultiplier(index, 0.5)}
-                                            className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                                            className="w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 transition-colors"
                                         >
-                                            <Plus className="w-3 h-3 text-gray-300" />
+                                            <Plus className="w-3 h-3 text-foreground-muted" />
                                         </button>
                                     </div>
                                 </div>
@@ -276,11 +276,11 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                 </div>
 
                 {/* Actions Footer */}
-                <div className="p-4 border-t border-white/10 shrink-0 space-y-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <div className="p-4 border-t border-foreground/10 shrink-0 space-y-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                     {/* Global Portion Slider */}
                     <div>
                         <div className="flex items-center justify-between mb-2">
-                            <label className="text-sm font-medium text-white">Overall Portion Size</label>
+                            <label className="text-sm font-medium text-foreground">Overall Portion Size</label>
                             <span className="text-sm font-bold text-amber-400">{globalMultiplier}x</span>
                         </div>
                         <input
@@ -290,9 +290,9 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                             step="0.25"
                             value={globalMultiplier}
                             onChange={(e) => setGlobalMultiplier(parseFloat(e.target.value))}
-                            className="w-full accent-amber-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                            className="w-full accent-amber-500 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer"
                         />
-                        <div className="flex justify-between text-[10px] text-gray-500 mt-1 px-1">
+                        <div className="flex justify-between text-[10px] text-foreground-muted mt-1 px-1">
                             <span>0.25x</span>
                             <span>1x</span>
                             <span>2x</span>
@@ -304,7 +304,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                     <select
                         value={mealType}
                         onChange={e => setMealType(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-hidden appearance-none text-sm"
+                        className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-3 py-2.5 text-foreground focus:outline-hidden appearance-none text-sm"
                     >
                         <option value="BREAKFAST">🌅 Breakfast</option>
                         <option value="LUNCH">☀️ Lunch</option>
@@ -317,7 +317,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                         <button
                             onClick={handleSaveMeal}
                             disabled={isSaving || !!savedMessage}
-                            className="flex-shrink-0 bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-xl px-4 py-3 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                            className="flex-shrink-0 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 transition-colors rounded-xl px-4 py-3 flex items-center justify-center gap-1.5 disabled:opacity-50"
                         >
                             {isSaving ? (
                                 <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
@@ -326,7 +326,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                             ) : (
                                 <>
                                     <Bookmark className="w-4 h-4 text-amber-400" />
-                                    <span className="text-xs text-gray-300 font-medium">Save</span>
+                                    <span className="text-xs text-foreground-muted font-medium">Save</span>
                                 </>
                             )}
                         </button>
@@ -335,7 +335,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                         <button
                             onClick={() => logMutation.mutate()}
                             disabled={logMutation.isPending}
-                            className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                            className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-foreground/15 disabled:opacity-50 transition-colors"
                         >
                             {logMutation.isPending ? (
                                 <><Loader2 className="w-4 h-4 animate-spin" /> Logging...</>

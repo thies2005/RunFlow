@@ -20,7 +20,7 @@ export function ProgressionTimeline({ progression, currentWeek, onWeekClick }: P
 
     return (
         <div className="space-y-2">
-            <h4 className="text-xs font-medium text-zinc-400">Volume Timeline</h4>
+            <h4 className="text-xs font-medium text-foreground-secondary">Volume Timeline</h4>
             <div className="flex items-end gap-1.5 h-32 px-1">
                 {weeks.map((week, i) => {
                     const dist = distances[i];
@@ -35,7 +35,7 @@ export function ProgressionTimeline({ progression, currentWeek, onWeekClick }: P
                             onClick={() => onWeekClick?.(i)}
                             className={`flex-1 flex flex-col items-center justify-end min-w-0 group ${onWeekClick ? 'cursor-pointer' : 'cursor-default'}`}
                         >
-                            <span className="text-[9px] text-zinc-500 mb-0.5 group-hover:text-zinc-300 transition-colors">
+                            <span className="text-[9px] text-foreground-muted mb-0.5 group-hover:text-foreground-secondary transition-colors">
                                 {dist >= 1000 ? `${(dist / 1000).toFixed(1)}` : `${dist}`}
                             </span>
                             <div className="w-full relative">
@@ -44,26 +44,26 @@ export function ProgressionTimeline({ progression, currentWeek, onWeekClick }: P
                                         isCurrent
                                             ? typeColor.dot
                                             : isDeload
-                                                ? 'bg-zinc-600'
+                                                ? 'bg-foreground/20'
                                                 : `${typeColor.dot} opacity-70`
                                     }`}
                                     style={{ height: `${Math.max(heightPct, 2)}px` }}
                                 />
                             </div>
-                            <span className={`text-[9px] mt-1 ${isCurrent ? 'text-zinc-200 font-medium' : 'text-zinc-600'}`}>
+                            <span className={`text-[9px] mt-1 ${isCurrent ? 'text-foreground font-medium' : 'text-foreground-muted'}`}>
                                 {week.weekOffset}
                             </span>
                         </button>
                     );
                 })}
             </div>
-            <div className="flex items-center gap-3 text-[10px] text-zinc-500">
+            <div className="flex items-center gap-3 text-[10px] text-foreground-muted">
                 <span className="flex items-center gap-1">
                     <div className={`w-2 h-2 rounded-sm ${typeColor.dot}`} />
                     {workoutType}
                 </span>
                 <span className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-sm bg-zinc-600" />
+                    <div className="w-2 h-2 rounded-sm bg-foreground/20" />
                     Deload
                 </span>
                 {currentWeek !== undefined && (

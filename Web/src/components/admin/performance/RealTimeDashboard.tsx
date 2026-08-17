@@ -91,11 +91,11 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Activity className="w-5 h-5" />
           Real-Time Metrics
         </h3>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-foreground-muted">
           <Clock className="w-4 h-4" />
           {new Date(metrics.timestamp).toLocaleTimeString()}
         </div>
@@ -152,8 +152,8 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
         />
       </div>
 
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-gray-600 mb-3">Trends (last 60 readings)</h4>
+      <div className="bg-background-secondary rounded-lg p-4">
+        <h4 className="text-sm font-medium text-foreground-secondary mb-3">Trends (last 60 readings)</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Sparkline
             label="Requests/sec"
@@ -196,15 +196,15 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, icon: Icon, color, change, inverse = false }: MetricCardProps) {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-xs border border-gray-100">
+    <div className="bg-background-secondary p-6 rounded-xl shadow-xs border border-glass-border">
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-4">
           <div className={`p-3 rounded-lg ${color}`}>
-            <Icon className="w-6 h-6 text-white" />
+            <Icon className="w-6 h-6 text-foreground" />
           </div>
           <div>
-            <p className="text-gray-500 text-sm font-medium">{title}</p>
-            <h3 className="text-2xl font-bold text-gray-800 mt-1">{value}</h3>
+            <p className="text-foreground-muted text-sm font-medium">{title}</p>
+            <h3 className="text-2xl font-bold text-foreground mt-1">{value}</h3>
             {change && (
               <div className={`flex items-center text-xs mt-1 ${
                 (change.positive && !inverse) || (!change.positive && inverse) ? 'text-red-500' : 'text-green-500'
@@ -231,7 +231,7 @@ function Sparkline({ label, data, color, height }: SparklineProps) {
   if (data.length < 2) {
     return (
       <div>
-        <p className="text-xs text-gray-500 mb-2">{label}</p>
+        <p className="text-xs text-foreground-muted mb-2">{label}</p>
         <div
           className="rounded-lg flex items-center justify-center"
           style={{
@@ -239,7 +239,7 @@ function Sparkline({ label, data, color, height }: SparklineProps) {
             height: `${height}px`,
           }}
         >
-          <span className="text-xs text-gray-400">Collecting data...</span>
+          <span className="text-xs text-foreground-muted">Collecting data...</span>
         </div>
       </div>
     );
@@ -263,7 +263,7 @@ function Sparkline({ label, data, color, height }: SparklineProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs text-gray-500">{label}</p>
+        <p className="text-xs text-foreground-muted">{label}</p>
         {data.length > 0 && (
           <span className="text-xs font-medium" style={{ color }}>
             {data[data.length - 1].value < 10

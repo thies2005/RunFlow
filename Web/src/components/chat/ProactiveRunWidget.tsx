@@ -39,11 +39,11 @@ export default function ProactiveRunWidget({ activity, onAutoFillChat }: Proacti
     const paceSec = Math.floor(paceSeconds % 60).toString().padStart(2, '0');
 
     return (
-        <div className="bg-gray-900/80 border border-gray-700/50 rounded-2xl p-4 shadow-lg hover:bg-gray-800/80 transition-colors group relative overflow-hidden">
+        <div className="bg-background-secondary/80 border border-foreground/25 rounded-2xl p-4 shadow-lg hover:bg-background-tertiary/80 transition-colors group relative overflow-hidden">
             <div className="flex items-start justify-between mb-5">
                 <div>
-                    <h4 className="text-lg font-bold text-white mb-1">{activity.name}</h4>
-                    <span className="text-sm text-gray-400">{getTimeAgo(activity.startDate)}</span>
+                    <h4 className="text-lg font-bold text-foreground mb-1">{activity.name}</h4>
+                    <span className="text-sm text-foreground-muted">{getTimeAgo(activity.startDate)}</span>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                     <TrendingUp className="w-5 h-5 text-blue-400" />
@@ -52,17 +52,17 @@ export default function ProactiveRunWidget({ activity, onAutoFillChat }: Proacti
 
             <div className="grid grid-cols-3 gap-2 mb-6">
                 <div>
-                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Distance</p>
-                    <p className="text-lg font-bold text-white">{distanceKm} <span className="text-sm text-gray-400 font-normal">km</span></p>
+                    <p className="text-[10px] font-bold text-foreground-muted uppercase tracking-widest mb-1">Distance</p>
+                    <p className="text-lg font-bold text-foreground">{distanceKm} <span className="text-sm text-foreground-muted font-normal">km</span></p>
                 </div>
                 <div>
-                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Avg Pace</p>
-                    <p className="text-lg font-bold text-white">{paceMin}:{paceSec} <span className="text-sm text-gray-400 font-normal">/km</span></p>
+                    <p className="text-[10px] font-bold text-foreground-muted uppercase tracking-widest mb-1">Avg Pace</p>
+                    <p className="text-lg font-bold text-foreground">{paceMin}:{paceSec} <span className="text-sm text-foreground-muted font-normal">/km</span></p>
                 </div>
                 <div>
-                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Avg HR</p>
+                    <p className="text-[10px] font-bold text-foreground-muted uppercase tracking-widest mb-1">Avg HR</p>
                     <p className="text-lg font-bold text-red-400">
-                        {activity.averageHr ? Math.round(activity.averageHr) : '-'} <span className="text-sm text-gray-400 font-normal">bpm</span>
+                        {activity.averageHr ? Math.round(activity.averageHr) : '-'} <span className="text-sm text-foreground-muted font-normal">bpm</span>
                     </p>
                 </div>
             </div>

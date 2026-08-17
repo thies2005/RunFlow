@@ -75,13 +75,13 @@ export function AddSubGoalDialog({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-5 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl p-5 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold text-zinc-100">Add Event</h3>
+                    <h3 className="text-sm font-semibold text-foreground">Add Event</h3>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-1 text-zinc-400 hover:text-zinc-200 transition-colors"
+                        className="p-1 text-foreground-secondary hover:text-foreground transition-colors"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -89,23 +89,23 @@ export function AddSubGoalDialog({
 
                 <div className="space-y-3">
                     <div className="space-y-1.5">
-                        <label className="text-xs text-zinc-400">Event Name</label>
+                        <label className="text-xs text-foreground-secondary">Event Name</label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g. Local Half Marathon"
-                            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                            className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                         />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <label className="text-xs text-zinc-400">Distance</label>
+                            <label className="text-xs text-foreground-secondary">Distance</label>
                             <select
                                 value={raceType}
                                 onChange={(e) => setRaceType(e.target.value)}
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             >
                                 <option value="">Select...</option>
                                 <optgroup label="Running">
@@ -136,24 +136,24 @@ export function AddSubGoalDialog({
                             </select>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs text-zinc-400">Event Date</label>
+                            <label className="text-xs text-foreground-secondary">Event Date</label>
                             <input
                                 type="date"
                                 value={raceDate}
                                 onChange={(e) => setRaceDate(e.target.value)}
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs text-zinc-400">Target Time (optional, HH:MM:SS)</label>
+                        <label className="text-xs text-foreground-secondary">Target Time (optional, HH:MM:SS)</label>
                         <input
                             type="text"
                             value={targetTime}
                             onChange={(e) => setTargetTime(e.target.value)}
                             placeholder="e.g. 1:45:00"
-                            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                            className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                         />
                     </div>
 
@@ -169,9 +169,9 @@ export function AddSubGoalDialog({
                             id="generateWorkouts"
                             checked={generateWorkouts}
                             onChange={(e) => setGenerateWorkouts(e.target.checked)}
-                            className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                            className="w-4 h-4 rounded border-foreground/25 bg-background-tertiary text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
                         />
-                        <label htmlFor="generateWorkouts" className="text-xs text-zinc-400">
+                        <label htmlFor="generateWorkouts" className="text-xs text-foreground-secondary">
                             Auto-generate workouts for this event
                         </label>
                     </div>
@@ -181,7 +181,7 @@ export function AddSubGoalDialog({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-xs hover:bg-zinc-700 transition-colors"
+                        className="px-4 py-2 rounded-lg bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 transition-colors"
                     >
                         Cancel
                     </button>

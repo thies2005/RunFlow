@@ -76,16 +76,16 @@ export function PlanActionsMenu({ goalId, onImportCsv, onExportCsv }: PlanAction
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+                className="p-1.5 rounded-md text-foreground-secondary hover:text-foreground hover:bg-background-tertiary transition-colors"
                 title="Plan actions"
             >
                 <MoreHorizontal className="w-4 h-4" />
             </button>
             {isOpen && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 py-1">
+                <div className="absolute right-0 top-full mt-1 w-44 bg-background-secondary border border-foreground/20 rounded-lg shadow-xl z-50 py-1">
                     {actions.map((action, i) => {
                         if ('separator' in action) {
-                            return <div key={i} className="border-t border-zinc-800 my-1" />;
+                            return <div key={i} className="border-t border-glass-border my-1" />;
                         }
                         const Icon = action.icon;
                         return (
@@ -96,7 +96,7 @@ export function PlanActionsMenu({ goalId, onImportCsv, onExportCsv }: PlanAction
                                 className={`w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
                                     'danger' in action && action.danger
                                         ? 'text-red-400 hover:bg-red-500/10'
-                                        : 'text-zinc-300 hover:bg-zinc-800'
+                                        : 'text-foreground-secondary hover:bg-background-tertiary'
                                 }`}
                             >
                                 <Icon className="w-3.5 h-3.5" />

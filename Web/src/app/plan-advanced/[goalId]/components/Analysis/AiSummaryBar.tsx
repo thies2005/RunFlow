@@ -76,7 +76,7 @@ export function AiSummaryBar({ goalId, isNoRace }: AiSummaryBarProps) {
     };
 
     return (
-        <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-4">
+        <div className="border border-glass-border bg-background-secondary rounded-xl p-4">
             <div className="flex items-center gap-6">
                 {analysis?.overallScore != null ? (
                     <div className="shrink-0">
@@ -84,14 +84,14 @@ export function AiSummaryBar({ goalId, isNoRace }: AiSummaryBarProps) {
                     </div>
                 ) : (
                     <div className="shrink-0 flex items-center gap-2">
-                        <Brain className="w-5 h-5 text-zinc-600" />
-                        <span className="text-xs text-zinc-500">No analysis yet</span>
+                        <Brain className="w-5 h-5 text-foreground-muted" />
+                        <span className="text-xs text-foreground-muted">No analysis yet</span>
                     </div>
                 )}
 
                 <div className="flex-1 min-w-0">
                     {analysis?.overallSummary && (
-                        <p className="text-sm text-zinc-400 leading-relaxed">{analysis.overallSummary}</p>
+                        <p className="text-sm text-foreground-secondary leading-relaxed">{analysis.overallSummary}</p>
                     )}
                     {riskFlags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
@@ -109,8 +109,8 @@ export function AiSummaryBar({ goalId, isNoRace }: AiSummaryBarProps) {
                     )}
                     {!isNoRace && analysis?.raceReadiness?.overallScore != null && (
                         <div className="mt-2 flex items-center gap-2">
-                            <span className="text-[10px] text-zinc-500 uppercase tracking-wide">Race Readiness</span>
-                            <div className="h-1.5 w-24 bg-zinc-800 rounded-full overflow-hidden">
+                            <span className="text-[10px] text-foreground-muted uppercase tracking-wide">Race Readiness</span>
+                            <div className="h-1.5 w-24 bg-background-tertiary rounded-full overflow-hidden">
                                 <div
                                     className="h-full rounded-full transition-all duration-500"
                                     style={{
@@ -124,7 +124,7 @@ export function AiSummaryBar({ goalId, isNoRace }: AiSummaryBarProps) {
                                     }}
                                 />
                             </div>
-                            <span className="text-[10px] text-zinc-400">
+                            <span className="text-[10px] text-foreground-secondary">
                                 {Math.round(analysis.raceReadiness.overallScore)}%
                             </span>
                         </div>

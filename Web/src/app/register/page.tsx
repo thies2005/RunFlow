@@ -135,7 +135,7 @@ export default function RegisterPage() {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Name (optional)"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                className="w-full bg-foreground/5 border border-foreground/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
                             />
                         </div>
 
@@ -151,7 +151,7 @@ export default function RegisterPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Email address"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                className="w-full bg-foreground/5 border border-foreground/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
                                 required
                             />
                         </div>
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Password"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                className="w-full bg-foreground/5 border border-foreground/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
                                 required
                             />
                         </div>
@@ -178,7 +178,7 @@ export default function RegisterPage() {
                             <div className="glass-card p-3 space-y-1">
                                 {passwordRequirements.map((req, idx) => (
                                     <div key={idx} className="flex items-center gap-2 text-sm">
-                                        <Check className={`w-4 h-4 ${req.met ? 'text-green-500' : 'text-gray-500'}`} />
+                                        <Check className={`w-4 h-4 ${req.met ? 'text-green-500' : 'text-foreground-muted'}`} />
                                         <span className={req.met ? 'text-green-400' : 'text-foreground-muted'}>
                                             {req.label}
                                         </span>
@@ -199,11 +199,11 @@ export default function RegisterPage() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="Confirm password"
-                                className={`w-full bg-white/5 border rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden ${confirmPassword.length > 0
+                                className={`w-full bg-foreground/5 border rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden ${confirmPassword.length > 0
                                     ? passwordsMatch
                                         ? 'border-green-500/50'
                                         : 'border-red-500/50'
-                                    : 'border-white/10'
+                                    : 'border-foreground/10'
                                     }`}
                                 required
                             />
@@ -213,7 +213,7 @@ export default function RegisterPage() {
                             <p className="text-red-400 text-sm text-center">{error}</p>
                         )}
 
-                        <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3 text-left">
+                        <div className="bg-foreground/5 p-4 rounded-xl border border-foreground/10 space-y-3 text-left">
                             <label className="flex items-start gap-3 cursor-pointer group">
                                 <div className="relative flex items-start pt-0.5">
                                     <input
@@ -222,13 +222,13 @@ export default function RegisterPage() {
                                         checked={termsAccepted}
                                         onChange={(e) => setTermsAccepted(e.target.checked)}
                                     />
-                                    <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                        <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                    <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
                                 </div>
-                                <span className="text-sm text-gray-300 leading-tight">
+                                <span className="text-sm text-foreground-muted leading-tight">
                                     I have read and agree to the <Link href="/terms" className="text-orange-500 hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-orange-500 hover:underline">Privacy Policy</Link>.
                                 </span>
                             </label>
@@ -241,13 +241,13 @@ export default function RegisterPage() {
                                         checked={healthAccepted}
                                         onChange={(e) => setHealthAccepted(e.target.checked)}
                                     />
-                                    <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                        <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                    <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
                                 </div>
-                                <span className="text-sm text-gray-300 leading-tight">
+                                <span className="text-sm text-foreground-muted leading-tight">
                                     I consent to the processing of my health and fitness data (GDPR Art. 9) for training analytics.
                                 </span>
                             </label>
@@ -260,13 +260,13 @@ export default function RegisterPage() {
                                         checked={isOver16}
                                         onChange={(e) => setIsOver16(e.target.checked)}
                                     />
-                                    <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                        <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                    <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
                                 </div>
-                                <span className="text-sm text-gray-300 leading-tight">
+                                <span className="text-sm text-foreground-muted leading-tight">
                                     I confirm that I am at least 16 years old.
                                 </span>
                             </label>

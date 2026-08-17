@@ -25,8 +25,8 @@ export function MassEditToolbar({ goalId, onOperationComplete }: MassEditToolbar
 
     return (
         <>
-            <div className="h-12 border-t border-zinc-800 flex items-center justify-between px-4 shrink-0 bg-zinc-900/95 backdrop-blur-sm z-20">
-                <span className="text-xs text-zinc-400">
+            <div className="h-12 border-t border-glass-border flex items-center justify-between px-4 shrink-0 bg-background-secondary/95 backdrop-blur-sm z-20">
+                <span className="text-xs text-foreground-secondary">
                     {selectedCount} workout{selectedCount !== 1 ? 's' : ''} selected
                 </span>
                 <div className="flex items-center gap-1">
@@ -38,7 +38,7 @@ export function MassEditToolbar({ goalId, onOperationComplete }: MassEditToolbar
                     <button
                         type="button"
                         onClick={clearSelection}
-                        className="ml-2 flex items-center gap-1 px-2 py-1 rounded-md text-xs text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                        className="ml-2 flex items-center gap-1 px-2 py-1 rounded-md text-xs text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                     >
                         <X className="w-3 h-3" />
                         Clear
@@ -122,7 +122,7 @@ function ToolbarButton({
         <button
             type="button"
             onClick={onClick}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-zinc-300 hover:bg-zinc-800 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs text-foreground-secondary hover:bg-background-tertiary transition-colors"
         >
             {icon}
             {label}

@@ -90,19 +90,19 @@ function SmallTimeInputGroup({
 }) {
     return (
         <div>
-            <label className="block text-[10px] text-gray-400 mb-1">{label}</label>
+            <label className="block text-[10px] text-foreground-muted mb-1">{label}</label>
             <div className="grid grid-cols-3 gap-2">
                 <div>
                     <input type="number" min="0" value={value.hours} onChange={e => onChange(updateTimePart(value, 'hours', e.target.value))} className={inputClass} placeholder="hh" />
-                    <p className="text-[10px] text-gray-500 mt-1 text-center">h</p>
+                    <p className="text-[10px] text-foreground-muted mt-1 text-center">h</p>
                 </div>
                 <div>
                     <input type="number" min="0" value={value.minutes} onChange={e => onChange(updateTimePart(value, 'minutes', e.target.value))} className={inputClass} placeholder="mm" />
-                    <p className="text-[10px] text-gray-500 mt-1 text-center">m</p>
+                    <p className="text-[10px] text-foreground-muted mt-1 text-center">m</p>
                 </div>
                 <div>
                     <input type="number" min="0" value={value.seconds} onChange={e => onChange(updateTimePart(value, 'seconds', e.target.value))} className={inputClass} placeholder="ss" />
-                    <p className="text-[10px] text-gray-500 mt-1 text-center">s</p>
+                    <p className="text-[10px] text-foreground-muted mt-1 text-center">s</p>
                 </div>
             </div>
         </div>
@@ -127,7 +127,7 @@ export default function PastRacesSection() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-6 text-gray-400">
+            <div className="flex items-center justify-center py-6 text-foreground-muted">
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 Loading past races...
             </div>
@@ -137,8 +137,8 @@ export default function PastRacesSection() {
     if (goals.length === 0) {
         return (
             <div className="text-center py-4">
-                <Trophy className="w-8 h-8 mx-auto text-gray-600 mb-2" />
-                <p className="text-sm text-gray-500">No completed training plans yet</p>
+                <Trophy className="w-8 h-8 mx-auto text-foreground-secondary mb-2" />
+                <p className="text-sm text-foreground-muted">No completed training plans yet</p>
             </div>
         );
     }
@@ -179,20 +179,20 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
         : null;
 
     return (
-        <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+        <div className="bg-foreground/5 border border-foreground/10 rounded-xl overflow-hidden">
             <button
                 type="button"
                 onClick={onToggle}
-                className="w-full p-3 text-left hover:bg-white/5 transition-colors"
+                className="w-full p-3 text-left hover:bg-foreground/5 transition-colors"
             >
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                         <span className="badge badge-run text-[10px]">{raceLabels[goal.raceType ?? 'MARATHON']}</span>
-                        <p className="text-sm font-medium text-white truncate">{goal.name}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{goal.name}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-gray-400">{goal.raceDate ? format(new Date(goal.raceDate), 'MMM d, yyyy') : ''}</span>
-                        {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                        <span className="text-xs text-foreground-muted">{goal.raceDate ? format(new Date(goal.raceDate), 'MMM d, yyyy') : ''}</span>
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-foreground-muted" /> : <ChevronDown className="w-4 h-4 text-foreground-muted" />}
                     </div>
                 </div>
 
@@ -201,8 +201,8 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                         {hasResult ? (
                             <>
                                 <div className="flex items-center gap-3 text-xs">
-                                    <span className="text-gray-400">Goal: <span className="text-white">{formatTime(goal.targetTime)}</span></span>
-                                    <span className="text-gray-400">Actual: <span className={beatGoal ? 'text-green-400' : 'text-accent-orange'}>{formatTime(rr?.actualTime)}</span></span>
+                                    <span className="text-foreground-muted">Goal: <span className="text-foreground">{formatTime(goal.targetTime)}</span></span>
+                                    <span className="text-foreground-muted">Actual: <span className={beatGoal ? 'text-green-400' : 'text-accent-orange'}>{formatTime(rr?.actualTime)}</span></span>
                                     {goal.targetTime && rr?.actualTime && (
                                         <span className={beatGoal ? 'text-green-400 font-medium' : 'text-accent-orange'}>
                                             {formatTimeDelta(goal.targetTime, rr.actualTime).text}
@@ -211,9 +211,9 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                                 </div>
                             </>
                         ) : (
-                            <span className="text-xs text-gray-500">No race result linked</span>
+                            <span className="text-xs text-foreground-muted">No race result linked</span>
                         )}
-                        <span className={`text-xs ml-auto ${goal.workoutStats.completionRate >= 80 ? 'text-green-400' : 'text-gray-500'}`}>
+                        <span className={`text-xs ml-auto ${goal.workoutStats.completionRate >= 80 ? 'text-green-400' : 'text-foreground-muted'}`}>
                             {goal.workoutStats.completed}/{goal.workoutStats.total} workouts
                         </span>
                     </div>
@@ -221,7 +221,7 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
             </button>
 
             {isExpanded && (
-                <div className="border-t border-white/5 p-3 space-y-4">
+                <div className="border-t border-foreground/5 p-3 space-y-4">
                     {/* Race Result */}
                     {hasResult ? (
                         <div className="space-y-3">
@@ -231,26 +231,26 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                                 </h4>
                                 <button
                                     onClick={onEdit}
-                                    className="text-xs text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+                                    className="text-xs text-foreground-muted hover:text-foreground flex items-center gap-1 transition-colors"
                                 >
                                     <Edit3 className="w-3 h-3" /> Edit
                                 </button>
                             </div>
 
                             <div className="grid grid-cols-3 gap-2">
-                                <div className="bg-white/5 rounded-lg p-2 text-center">
-                                    <p className="text-[10px] text-gray-400 uppercase">Goal</p>
-                                    <p className="text-sm font-bold text-white">{formatTime(goal.targetTime)}</p>
+                                <div className="bg-foreground/5 rounded-lg p-2 text-center">
+                                    <p className="text-[10px] text-foreground-muted uppercase">Goal</p>
+                                    <p className="text-sm font-bold text-foreground">{formatTime(goal.targetTime)}</p>
                                 </div>
-                                <div className="bg-white/5 rounded-lg p-2 text-center">
-                                    <p className="text-[10px] text-gray-400 uppercase">Actual</p>
+                                <div className="bg-foreground/5 rounded-lg p-2 text-center">
+                                    <p className="text-[10px] text-foreground-muted uppercase">Actual</p>
                                     <p className={`text-sm font-bold ${beatGoal ? 'text-green-400' : 'text-accent-orange'}`}>
                                         {formatTime(rr?.actualTime)}
                                     </p>
                                 </div>
-                                <div className="bg-white/5 rounded-lg p-2 text-center">
-                                    <p className="text-[10px] text-gray-400 uppercase">Chip</p>
-                                    <p className="text-sm font-bold text-white">{formatTime(rr?.chipTime)}</p>
+                                <div className="bg-foreground/5 rounded-lg p-2 text-center">
+                                    <p className="text-[10px] text-foreground-muted uppercase">Chip</p>
+                                    <p className="text-sm font-bold text-foreground">{formatTime(rr?.chipTime)}</p>
                                 </div>
                             </div>
 
@@ -266,52 +266,52 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                             {(rr?.placementOverall || rr?.placementGender || rr?.ageGroup || rr?.totalFinishers || rr?.weatherConditions || rr?.feltLike || rr?.notes) && (
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                     {rr.placementOverall && (
-                                        <div className="bg-white/5 rounded-lg p-2">
-                                            <span className="text-gray-400">Placement: </span>
-                                            <span className="text-white">{rr.placementOverall}{rr.totalFinishers ? `/${rr.totalFinishers}` : ''}</span>
+                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                            <span className="text-foreground-muted">Placement: </span>
+                                            <span className="text-foreground">{rr.placementOverall}{rr.totalFinishers ? `/${rr.totalFinishers}` : ''}</span>
                                         </div>
                                     )}
                                     {rr.placementGender && (
-                                        <div className="bg-white/5 rounded-lg p-2">
-                                            <span className="text-gray-400">Gender: </span>
-                                            <span className="text-white">{rr.placementGender}</span>
+                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                            <span className="text-foreground-muted">Gender: </span>
+                                            <span className="text-foreground">{rr.placementGender}</span>
                                         </div>
                                     )}
                                     {rr.ageGroup && (
-                                        <div className="bg-white/5 rounded-lg p-2">
-                                            <span className="text-gray-400">Age Group: </span>
-                                            <span className="text-white">{rr.ageGroup}</span>
+                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                            <span className="text-foreground-muted">Age Group: </span>
+                                            <span className="text-foreground">{rr.ageGroup}</span>
                                         </div>
                                     )}
                                     {rr.placementAgeGroup && (
-                                        <div className="bg-white/5 rounded-lg p-2">
-                                            <span className="text-gray-400">AG Place: </span>
-                                            <span className="text-white">{rr.placementAgeGroup}</span>
+                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                            <span className="text-foreground-muted">AG Place: </span>
+                                            <span className="text-foreground">{rr.placementAgeGroup}</span>
                                         </div>
                                     )}
                                     {rr.weatherConditions && (
-                                        <div className="bg-white/5 rounded-lg p-2">
-                                            <span className="text-gray-400">Weather: </span>
-                                            <span className="text-white">{rr.weatherConditions}</span>
+                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                            <span className="text-foreground-muted">Weather: </span>
+                                            <span className="text-foreground">{rr.weatherConditions}</span>
                                         </div>
                                     )}
                                     {rr.feltLike && (
-                                        <div className="bg-white/5 rounded-lg p-2">
-                                            <span className="text-gray-400">RPE: </span>
-                                            <span className="text-white">{rr.feltLike}/10</span>
+                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                            <span className="text-foreground-muted">RPE: </span>
+                                            <span className="text-foreground">{rr.feltLike}/10</span>
                                         </div>
                                     )}
                                 </div>
                             )}
 
                             {rr?.raceActivity && (
-                                <div className="bg-white/5 rounded-lg p-2 text-xs">
-                                    <div className="flex items-center gap-1 text-gray-400 mb-1">
+                                <div className="bg-foreground/5 rounded-lg p-2 text-xs">
+                                    <div className="flex items-center gap-1 text-foreground-muted mb-1">
                                         <Activity className="w-3 h-3" />
                                         <span>Linked Activity</span>
                                     </div>
-                                    <p className="text-white">{rr.raceActivity.name}</p>
-                                    <div className="flex items-center gap-2 text-gray-400 mt-0.5">
+                                    <p className="text-foreground">{rr.raceActivity.name}</p>
+                                    <div className="flex items-center gap-2 text-foreground-muted mt-0.5">
                                         <span>{format(new Date(rr.raceActivity.startDate), 'MMM d, yyyy')}</span>
                                         <span>{(rr.raceActivity.distance / 1000).toFixed(1)} km</span>
                                         <span>{formatTime(rr.raceActivity.movingTime)}</span>
@@ -320,36 +320,36 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                             )}
 
                             {rr?.notes && (
-                                <div className="bg-white/5 rounded-lg p-2 text-xs">
-                                    <span className="text-gray-400">Notes: </span>
-                                    <span className="text-gray-300">{rr.notes}</span>
+                                <div className="bg-foreground/5 rounded-lg p-2 text-xs">
+                                    <span className="text-foreground-muted">Notes: </span>
+                                    <span className="text-foreground-muted">{rr.notes}</span>
                                 </div>
                             )}
                         </div>
                     ) : (
                         <div className="text-center py-2">
-                            <p className="text-sm text-gray-500">No race result linked</p>
+                            <p className="text-sm text-foreground-muted">No race result linked</p>
                         </div>
                     )}
 
                     {/* Training Summary */}
                     <div>
-                        <h4 className="text-xs text-gray-400 uppercase font-semibold mb-2 flex items-center gap-1">
+                        <h4 className="text-xs text-foreground-muted uppercase font-semibold mb-2 flex items-center gap-1">
                             <Calendar className="w-3 h-3" /> Training Plan
                         </h4>
                         <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-gray-400">{goal.planWeeks} weeks, {goal.runsPerWeek}x/week</span>
+                            <span className="text-xs text-foreground-muted">{goal.planWeeks} weeks, {goal.runsPerWeek}x/week</span>
                             <span className={`text-xs font-medium ${goal.workoutStats.completionRate >= 80 ? 'text-green-400' : goal.workoutStats.completionRate >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>
                                 {Math.round(goal.workoutStats.completionRate * 100)}%
                             </span>
                         </div>
-                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-foreground/5 rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full ${goal.workoutStats.completionRate >= 0.8 ? 'bg-green-500' : goal.workoutStats.completionRate >= 0.6 ? 'bg-yellow-500' : 'bg-red-500'}`}
                                 style={{ width: `${Math.min(100, goal.workoutStats.completionRate * 100)}%` }}
                             />
                         </div>
-                        <p className="text-[10px] text-gray-500 mt-1">
+                        <p className="text-[10px] text-foreground-muted mt-1">
                             {goal.workoutStats.completed}/{goal.workoutStats.total} workouts completed
                         </p>
                     </div>
@@ -404,13 +404,13 @@ function EditRaceResult({ goal, onClose }: { goal: CompletedGoalSummary; onClose
         onError: () => setMessage('Error saving'),
     });
 
-    const inputClass = "bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
+    const inputClass = "bg-foreground/5 border border-foreground/10 rounded-lg p-2 text-foreground text-sm w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
-        <div className="bg-white/5 border border-accent-orange/30 rounded-xl p-3 space-y-3">
+        <div className="bg-foreground/5 border border-accent-orange/30 rounded-xl p-3 space-y-3">
             <div className="flex items-center justify-between">
                 <h4 className="text-xs text-accent-orange uppercase font-semibold">Edit Race Details</h4>
-                <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+                <button onClick={onClose} className="text-foreground-muted hover:text-foreground transition-colors">
                     <X className="w-4 h-4" />
                 </button>
             </div>
@@ -422,51 +422,51 @@ function EditRaceResult({ goal, onClose }: { goal: CompletedGoalSummary; onClose
 
             <div className="grid grid-cols-2 gap-2">
                 <div>
-                    <label className="block text-[10px] text-gray-400 mb-1">Overall Place</label>
+                    <label className="block text-[10px] text-foreground-muted mb-1">Overall Place</label>
                     <input type="number" value={placementOverall} onChange={e => setPlacementOverall(e.target.value)} className={inputClass} placeholder="e.g. 42" />
                 </div>
                 <div>
-                    <label className="block text-[10px] text-gray-400 mb-1">Gender Place</label>
+                    <label className="block text-[10px] text-foreground-muted mb-1">Gender Place</label>
                     <input type="number" value={placementGender} onChange={e => setPlacementGender(e.target.value)} className={inputClass} placeholder="e.g. 12" />
                 </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
                 <div>
-                    <label className="block text-[10px] text-gray-400 mb-1">Age Group Place</label>
+                    <label className="block text-[10px] text-foreground-muted mb-1">Age Group Place</label>
                     <input type="number" value={placementAgeGroup} onChange={e => setPlacementAgeGroup(e.target.value)} className={inputClass} placeholder="e.g. 5" />
                 </div>
                 <div>
-                    <label className="block text-[10px] text-gray-400 mb-1">Age Group</label>
+                    <label className="block text-[10px] text-foreground-muted mb-1">Age Group</label>
                     <input type="text" value={ageGroup} onChange={e => setAgeGroup(e.target.value)} className={inputClass} placeholder="e.g. M30-34" />
                 </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
                 <div>
-                    <label className="block text-[10px] text-gray-400 mb-1">Total Finishers</label>
+                    <label className="block text-[10px] text-foreground-muted mb-1">Total Finishers</label>
                     <input type="number" value={totalFinishers} onChange={e => setTotalFinishers(e.target.value)} className={inputClass} placeholder="e.g. 2500" />
                 </div>
                 <div>
-                    <label className="block text-[10px] text-gray-400 mb-1">Weather</label>
+                    <label className="block text-[10px] text-foreground-muted mb-1">Weather</label>
                     <input type="text" value={weatherConditions} onChange={e => setWeatherConditions(e.target.value)} className={inputClass} placeholder="15C, sunny" />
                 </div>
             </div>
 
             <div>
-                <label className="block text-[10px] text-gray-400 mb-1">RPE (1-10)</label>
+                <label className="block text-[10px] text-foreground-muted mb-1">RPE (1-10)</label>
                 <input type="range" min="1" max="10" value={feltLike || '5'} onChange={e => setFeltLike(e.target.value)} className="w-full accent-accent-orange" />
             </div>
 
             <div>
-                <label className="block text-[10px] text-gray-400 mb-1">Notes</label>
+                <label className="block text-[10px] text-foreground-muted mb-1">Notes</label>
                 <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className={inputClass + ' resize-none'} placeholder="How did the race go?" />
             </div>
 
             {message && <p className={`text-xs text-center ${message.includes('Error') ? 'text-red-400' : 'text-green-400'}`}>{message}</p>}
 
             <div className="flex gap-2">
-                <button onClick={onClose} className="flex-1 py-2 border border-white/10 text-gray-300 rounded-lg hover:bg-white/5 text-xs">Cancel</button>
+                <button onClick={onClose} className="flex-1 py-2 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 text-xs">Cancel</button>
                 <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="flex-1 py-2 bg-accent-orange text-white rounded-lg hover:bg-accent-orange/90 text-xs flex items-center justify-center gap-1 disabled:opacity-50">
                     {saveMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                     Save

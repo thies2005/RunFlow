@@ -24,7 +24,7 @@ export function GuidedTipCard({ type, title, body, actions, onDismiss }: GuidedT
                 <div className="mt-0.5 shrink-0">{icon}</div>
                 <div className="flex-1 min-w-0">
                     <h4 className="text-xs font-semibold text-blue-300">{title}</h4>
-                    <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed whitespace-pre-line">{body}</p>
+                    <p className="text-[11px] text-foreground-secondary mt-1 leading-relaxed whitespace-pre-line">{body}</p>
                     {actions && actions.length > 0 && (
                         <div className="flex items-center gap-2 mt-2.5">
                             {actions.map((action) => (
@@ -43,7 +43,7 @@ export function GuidedTipCard({ type, title, body, actions, onDismiss }: GuidedT
                 <button
                     type="button"
                     onClick={onDismiss}
-                    className="shrink-0 p-1 rounded text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/50 transition-colors"
+                    className="shrink-0 p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary/50 transition-colors"
                     title="Dismiss"
                 >
                     <X className="w-3.5 h-3.5" />

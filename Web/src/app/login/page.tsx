@@ -61,7 +61,7 @@ export default function LoginPage() {
     if (status === 'loading') {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-pulse text-gray-400">Loading...</div>
+                <div className="animate-pulse text-foreground-muted">Loading...</div>
             </div>
         );
     }
@@ -109,7 +109,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Auth Mode Tabs */}
-                    <div className="flex rounded-lg bg-white/5 p-1 mb-6">
+                    <div className="flex rounded-lg bg-foreground/5 p-1 mb-6">
                         <button
                             onClick={() => setAuthMode('strava')}
                             className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all ${authMode === 'strava'
@@ -133,7 +133,7 @@ export default function LoginPage() {
                     {/* Strava Login */}
                     {authMode === 'strava' && (
                         <div className="space-y-6 animate-fade-in">
-                            <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3 text-left">
+                            <div className="bg-foreground/5 p-4 rounded-xl border border-foreground/10 space-y-3 text-left">
                                 <label className="flex items-start gap-3 cursor-pointer group">
                                     <div className="relative flex items-start pt-0.5">
                                         <input
@@ -142,8 +142,8 @@ export default function LoginPage() {
                                             checked={stravaTermsAccepted}
                                             onChange={(e) => setStravaTermsAccepted(e.target.checked)}
                                         />
-                                        <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                            <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                        <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                            <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
                                         </div>
@@ -161,8 +161,8 @@ export default function LoginPage() {
                                             checked={stravaHealthAccepted}
                                             onChange={(e) => setStravaHealthAccepted(e.target.checked)}
                                         />
-                                        <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                            <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                        <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                            <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
                                         </div>
@@ -180,8 +180,8 @@ export default function LoginPage() {
                                             checked={stravaAgeAccepted}
                                             onChange={(e) => setStravaAgeAccepted(e.target.checked)}
                                         />
-                                        <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                            <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                        <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                            <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
                                         </div>
@@ -226,7 +226,7 @@ export default function LoginPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Email address"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                    className="w-full bg-foreground/5 border border-foreground/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
                                     required
                                 />
                             </div>
@@ -241,7 +241,7 @@ export default function LoginPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Password"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                    className="w-full bg-foreground/5 border border-foreground/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
                                     required
                                 />
                             </div>

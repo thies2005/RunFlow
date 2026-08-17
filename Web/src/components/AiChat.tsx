@@ -392,14 +392,14 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
 
     if (compact) {
         return (
-            <div className="bg-gray-800/50 rounded-xl p-4">
+            <div className="bg-background-tertiary/50 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-3">
                     <Bot className="w-5 h-5 text-purple-400" />
-                    <h3 className="text-sm font-medium text-white">Chat about this activity</h3>
+                    <h3 className="text-sm font-medium text-foreground">Chat about this activity</h3>
                 </div>
 
                 {!aiEnabled ? (
-                    <div className="text-sm text-gray-400">
+                    <div className="text-sm text-foreground-muted">
                         <button onClick={onOpenSettings} className="text-purple-400 hover:text-purple-300">
                             Enable AI features
                         </button>{' '}to chat about this activity.
@@ -409,7 +409,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                         {messages.length > 0 && (
                             <div className="space-y-3 mb-3 max-h-60 overflow-y-auto">
                                 {messages.map((msg, i) => (
-                                    <div key={i} className={`text-sm ${msg.role === 'user' ? 'text-gray-300' : 'text-white'}`}>
+                                    <div key={i} className={`text-sm ${msg.role === 'user' ? 'text-foreground-muted' : 'text-foreground'}`}>
                                         <span className="font-medium">{msg.role === 'user' ? 'You: ' : 'Coach: '}</span>
                                         <div className="inline-block align-top markdown-content">
                                             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{DOMPurify.sanitize(cleanContent(msg.content))}</ReactMarkdown>
@@ -427,10 +427,10 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask about this activity..."
                                 disabled={isStreaming}
-                                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:border-purple-500 focus:outline-hidden disabled:opacity-50"
+                                className="flex-1 bg-foreground/15 border border-foreground/25 rounded-lg px-3 py-2 text-sm text-foreground placeholder-foreground-muted focus:border-purple-500 focus:outline-hidden disabled:opacity-50"
                             />
                             <button onClick={handleSend} disabled={!input.trim() || isStreaming} className="p-2 bg-purple-600 hover:bg-purple-500 rounded-lg disabled:opacity-50">
-                                {isStreaming ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Send className="w-4 h-4 text-white" />}
+                                {isStreaming ? <Loader2 className="w-4 h-4 text-foreground animate-spin" /> : <Send className="w-4 h-4 text-foreground" />}
                             </button>
                         </div>
                     </>
@@ -451,11 +451,11 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     if (!aiEnabled) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                    <Bot className="w-8 h-8 text-gray-500" />
+                <div className="w-16 h-16 bg-background-tertiary rounded-full flex items-center justify-center mb-4">
+                    <Bot className="w-8 h-8 text-foreground-muted" />
                 </div>
-                <h2 className="text-xl font-semibold text-white mb-2">AI Coach</h2>
-                <p className="text-gray-400 mb-6 max-w-sm">Get personalized training advice, analyze your workouts, and ask questions about your fitness data.</p>
+                <h2 className="text-xl font-semibold text-foreground mb-2">AI Coach</h2>
+                <p className="text-foreground-muted mb-6 max-w-sm">Get personalized training advice, analyze your workouts, and ask questions about your fitness data.</p>
                 <button onClick={onOpenSettings} className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl flex items-center gap-2 transition-colors">
                     <Settings2 className="w-5 h-5" />
                     Enable AI Features
@@ -478,13 +478,13 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                     {messages.length === 0 ? (
                         <div className="flex flex-col p-4 sm:p-8">
                             <div className="mb-8 text-left">
-                                <p className="text-gray-400 text-lg mb-1">{(() => {
+                                <p className="text-foreground-muted text-lg mb-1">{(() => {
                                     const h = new Date().getHours();
                                     if (h < 12) return 'Good Morning';
                                     if (h < 18) return 'Good Afternoon';
                                     return 'Good Evening';
                                 })()},</p>
-                                <h2 className="text-3xl font-extrabold text-white leading-tight">How can I assist?</h2>
+                                <h2 className="text-3xl font-extrabold text-foreground leading-tight">How can I assist?</h2>
                             </div>
 
                             {/* Contextual Suggestions Timeline */}
@@ -499,7 +499,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
 
                                     {accessNutritionLogs && nutritionTargetData && (
                                         <TimelineNode dotColor="timeline-dot-gray" lineColor="var(--glass-border)">
-                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Post-Run Fuel</p>
+                                            <p className="text-xs font-bold text-foreground-muted uppercase tracking-widest mb-3">Post-Run Fuel</p>
                                             <ProactiveCalorieSnapWidget targetData={nutritionTargetData} onOpenScanner={() => setShowFoodScanner(true)} />
                                         </TimelineNode>
                                     )}
@@ -513,10 +513,10 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 const isThinking = isStreaming && i === messages.length - 1 && msg.role === 'assistant' && msg.content && !cleanedContent;
                                 return (
                                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] rounded-2xl px-5 py-3 shadow-xs ${msg.role === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-white border border-gray-700'}`}>
+                                        <div className={`max-w-[85%] rounded-2xl px-5 py-3 shadow-xs ${msg.role === 'user' ? 'bg-purple-600 text-white' : 'bg-background-tertiary text-foreground border border-foreground/20'}`}>
                                             <div className="text-sm sm:text-base leading-relaxed markdown-content">
                                                 {isThinking ? (
-                                                    <div className="flex items-center gap-2 text-gray-400 italic">
+                                                    <div className="flex items-center gap-2 text-foreground-muted italic">
                                                         <Loader2 className="w-3 h-3 animate-spin" />
                                                         <span>Thinking...</span>
                                                     </div>
@@ -531,7 +531,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                                                     remarkPlugins={[remarkGfm]}
                                                                     rehypePlugins={[rehypeSanitize]}
                                                                     components={{
-                                                                        h1: ({ node: _node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
+                                                                        h1: ({ node: _node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-foreground/20 pb-1" {...props} />,
                                                                         h2: ({ node: _node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
                                                                         h3: ({ node: _node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
                                                                         p: ({ node: _node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
@@ -541,21 +541,21 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                                                         code: ({ node: _node, inline, className, children, ...props }: React.HTMLAttributes<HTMLElement> & { node?: unknown; inline?: boolean }) => {
                                                                             const _match = /language-(\w+)/.exec(className || '');
                                                                             return !inline ? (
-                                                                                <pre className="bg-black/40 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">
+                                                                                <pre className="bg-foreground/10 p-3 rounded-lg my-3 overflow-x-auto border border-foreground/5">
                                                                                     <code className={className} {...props}>
                                                                                         {children}
                                                                                     </code>
                                                                                 </pre>
                                                                             ) : (
-                                                                                <code className="bg-black/30 rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
+                                                                                <code className="bg-foreground/10 rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
                                                                                     {children}
                                                                                 </code>
                                                                             );
                                                                         },
-                                                                        table: ({ node: _node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-gray-700 border border-gray-700 rounded-lg" {...props} /></div>,
-                                                                        thead: ({ node: _node, ...props }) => <thead className="bg-gray-800/50" {...props} />,
-                                                                        th: ({ node: _node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider" {...props} />,
-                                                                        td: ({ node: _node, ...props }) => <td className="px-3 py-2 text-sm text-gray-400 border-t border-gray-700" {...props} />,
+                                                                        table: ({ node: _node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-glass-border border border-foreground/20 rounded-lg" {...props} /></div>,
+                                                                        thead: ({ node: _node, ...props }) => <thead className="bg-background-tertiary/50" {...props} />,
+                                                                        th: ({ node: _node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider" {...props} />,
+                                                                        td: ({ node: _node, ...props }) => <td className="px-3 py-2 text-sm text-foreground-muted border-t border-foreground/20" {...props} />,
                                                                         blockquote: ({ node: _node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
                                                                         a: ({ node: _node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
                                                                     }}
@@ -570,7 +570,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                                 })()}
                                             </div>
                                             {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && !msg.content && (
-                                                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                                                <Loader2 className="w-4 h-4 animate-spin text-foreground-muted" />
                                             )}
                                             {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && cleanedContent && (
                                                 <span className="inline-block w-1 h-4 bg-purple-400 animate-pulse ml-1" />
@@ -593,23 +593,23 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
             )}
 
             <div className="z-20 pb-2 sm:pb-6 px-4 sm:px-0 mt-auto">
-                <div className="glass-card rounded-full p-1.5 flex items-center shadow-2xl max-w-5xl mx-auto backdrop-blur-md border border-white/10 shadow-purple-900/10">
+                <div className="glass-card rounded-full p-1.5 flex items-center shadow-2xl max-w-5xl mx-auto backdrop-blur-md border border-foreground/10 shadow-purple-900/10">
                     {!hideInputActions && (
                         <div className="relative">
                             <button
                                 onClick={() => setShowPlusMenu(!showPlusMenu)}
-                                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors flex-shrink-0"
+                                className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex-shrink-0"
                             >
                                 <Plus className="w-5 h-5" />
                             </button>
                             {showPlusMenu && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setShowPlusMenu(false)} />
-                                    <div className="absolute bottom-14 left-0 w-48 bg-gray-900 border border-gray-700/50 shadow-xl rounded-xl p-2 z-20 flex flex-col gap-1">
+                                    <div className="absolute bottom-14 left-0 w-48 bg-background-secondary border border-foreground/25 shadow-xl rounded-xl p-2 z-20 flex flex-col gap-1">
                                         {onNewChat && (
                                             <button
                                                 onClick={() => { onNewChat(); setShowPlusMenu(false); }}
-                                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-gray-300 transition-colors text-left"
+                                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
                                             >
                                                 <SquarePen className="w-4 h-4 text-purple-400" />
                                                 New Chat
@@ -617,14 +617,14 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                         )}
                                         <button
                                             onClick={() => { setShowFoodScanner(true); setShowPlusMenu(false); }}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-gray-300 transition-colors text-left"
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
                                         >
                                             <Camera className="w-4 h-4 text-purple-400" />
                                             Calorie Snap
                                         </button>
                                         <button
                                             onClick={() => { openLibrary(); setShowPlusMenu(false); }}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-gray-300 transition-colors text-left"
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
                                         >
                                             <Book className="w-4 h-4 text-purple-400" />
                                             Prompt Library
@@ -632,7 +632,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                         {onOpenHistory && (
                                             <button
                                                 onClick={() => { onOpenHistory(); setShowPlusMenu(false); }}
-                                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-gray-300 transition-colors text-left"
+                                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
                                             >
                                                 <Menu className="w-4 h-4 text-purple-400" />
                                                 Chat History
@@ -650,7 +650,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Message AI..."
-                        className="flex-1 min-w-0 bg-transparent px-4 py-2 text-white placeholder-gray-400 focus:outline-hidden"
+                        className="flex-1 min-w-0 bg-transparent px-4 py-2 text-foreground placeholder-foreground-muted focus:outline-hidden"
                     />
 
                     {(input.trim() || isStreaming) && (
@@ -659,7 +659,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                             disabled={!input.trim() || isStreaming}
                             className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center disabled:opacity-50 transition-colors flex-shrink-0 disabled:cursor-not-allowed hover:bg-purple-500"
                         >
-                            {isStreaming ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : <Send className="w-5 h-5 text-white" />}
+                            {isStreaming ? <Loader2 className="w-5 h-5 animate-spin text-foreground" /> : <Send className="w-5 h-5 text-foreground" />}
                         </button>
                     )}
                 </div>

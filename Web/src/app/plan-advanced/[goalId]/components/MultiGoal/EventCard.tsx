@@ -48,20 +48,20 @@ export function EventCard({ goal, isExpanded, onToggle }: EventCardProps) {
                 {goal.priority === 'PRIMARY' && (
                     <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 shrink-0" />
                 )}
-                <span className="text-xs text-zinc-200 font-medium truncate">{goal.name}</span>
+                <span className="text-xs text-foreground font-medium truncate">{goal.name}</span>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0 ${priorityConfig.color}`}>
                     {priorityConfig.label}
                 </span>
-                <SportIcon className="w-3 h-3 text-zinc-500 shrink-0 ml-auto" />
+                <SportIcon className="w-3 h-3 text-foreground-muted shrink-0 ml-auto" />
             </div>
 
             {isExpanded && (
                 <div className="mt-1.5 ml-5 space-y-0.5">
-                    <div className="flex items-center gap-2 text-[10px] text-zinc-500">
+                    <div className="flex items-center gap-2 text-[10px] text-foreground-muted">
                         <Calendar className="w-3 h-3" />
                         <span>{formatDate(goal.raceDate)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-zinc-500">
+                    <div className="flex items-center gap-2 text-[10px] text-foreground-muted">
                         <Clock className="w-3 h-3" />
                         <span>
                             {weeksUntil !== null
@@ -70,7 +70,7 @@ export function EventCard({ goal, isExpanded, onToggle }: EventCardProps) {
                         </span>
                     </div>
                     {goal.raceType && (
-                        <div className="text-[10px] text-zinc-500">
+                        <div className="text-[10px] text-foreground-muted">
                             {goal.raceType}
                         </div>
                     )}

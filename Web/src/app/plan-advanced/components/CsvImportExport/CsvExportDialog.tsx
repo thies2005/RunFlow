@@ -107,16 +107,16 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg mx-4 shadow-2xl max-h-[85vh] flex flex-col">
-                <div className="flex items-center justify-between p-4 border-b border-zinc-800 shrink-0">
-                    <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+            <div className="bg-background-secondary border border-glass-border rounded-xl w-full max-w-lg mx-4 shadow-2xl max-h-[85vh] flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-glass-border shrink-0">
+                    <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                         <Download className="w-4 h-4 text-orange-400" />
                         Export CSV
                     </h2>
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                        className="p-1 rounded-md text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -126,7 +126,7 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
                     <FormatSelector value={format} onChange={(f) => setFormat(f)} />
 
                     <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-2">Date Range</label>
+                        <label className="block text-xs font-medium text-foreground-secondary mb-2">Date Range</label>
                         <div className="flex gap-2 mb-2">
                             {(['full', 'custom'] as const).map((opt) => (
                                 <button
@@ -135,8 +135,8 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
                                     onClick={() => setDateRange(opt)}
                                     className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
                                         dateRange === opt
-                                            ? 'border-zinc-500 bg-zinc-800 text-zinc-100'
-                                            : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
+                                            ? 'border-foreground/30 bg-background-tertiary text-foreground'
+                                            : 'border-glass-border bg-background-secondary text-foreground-secondary hover:border-foreground/20'
                                     }`}
                                 >
                                     {opt === 'full' ? 'Full Plan' : 'Custom Range'}
@@ -149,13 +149,13 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="bg-zinc-800 border border-zinc-700 rounded-md px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                                    className="bg-background-tertiary border border-foreground/20 rounded-md px-2.5 py-1.5 text-xs text-foreground-secondary focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                                 />
                                 <input
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="bg-zinc-800 border border-zinc-700 rounded-md px-2.5 py-1.5 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                                    className="bg-background-tertiary border border-foreground/20 rounded-md px-2.5 py-1.5 text-xs text-foreground-secondary focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                                 />
                             </div>
                         )}
@@ -164,15 +164,15 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
                     {exportMutation.isPending && (
                         <div className="flex flex-col items-center py-6 gap-3">
                             <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
-                            <p className="text-xs text-zinc-500">Loading preview...</p>
+                            <p className="text-xs text-foreground-muted">Loading preview...</p>
                         </div>
                     )}
 
                     {!exportMutation.isPending && previewRows.length > 0 && (
                         <>
-                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 border border-zinc-800">
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background-tertiary/50 border border-glass-border">
                                 <FileSpreadsheet className="w-4 h-4 text-green-400 shrink-0" />
-                                <span className="text-xs text-zinc-300">
+                                <span className="text-xs text-foreground-secondary">
                                     Preview ready — first {previewRows.length} rows
                                 </span>
                             </div>
@@ -188,11 +188,11 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
                     )}
                 </div>
 
-                <div className="flex items-center justify-between p-4 border-t border-zinc-800 shrink-0">
+                <div className="flex items-center justify-between p-4 border-t border-glass-border shrink-0">
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="px-3 py-1.5 rounded-md text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+                        className="px-3 py-1.5 rounded-md text-xs text-foreground-secondary hover:text-foreground transition-colors"
                     >
                         Cancel
                     </button>
@@ -201,7 +201,7 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
                             type="button"
                             onClick={handlePreview}
                             disabled={exportMutation.isPending}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-700 text-zinc-200 text-xs font-medium hover:bg-zinc-600 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-foreground/15 text-foreground text-xs font-medium hover:bg-foreground/20 transition-colors disabled:opacity-50"
                         >
                             {exportMutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                             Preview

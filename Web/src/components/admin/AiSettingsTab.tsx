@@ -179,7 +179,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
         <div className="space-y-8">
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                <div className="bg-purple-500/10 p-4 rounded-lg border border-purple-500/30">
                     <p className="text-purple-600 text-sm font-medium">Total Users</p>
                     <p className="text-2xl font-bold text-purple-800">{stats?.totalUsers || 0}</p>
                 </div>
@@ -194,35 +194,35 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             </div>
 
             {/* Providers Section */}
-            <div className="bg-white p-6 rounded-lg border border-gray-100 space-y-4">
+            <div className="bg-background-secondary p-6 rounded-lg border border-glass-border space-y-4">
                 <div className="flex justify-between items-center">
-                    <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <h3 className="font-semibold text-foreground flex items-center gap-2">
                         <Bot className="w-5 h-5 text-purple-600" />
                         AI Providers
                     </h3>
                     <button
                         onClick={() => { setEditingProvider(null); setShowProviderForm(true); }}
-                        className="px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 text-sm font-medium flex items-center gap-1 transition"
+                        className="px-3 py-1.5 bg-purple-500/10 text-purple-600 rounded-lg hover:bg-purple-100 text-sm font-medium flex items-center gap-1 transition"
                     >
                         <Plus className="w-4 h-4" /> Add Provider
                     </button>
                 </div>
 
                 {providers.length === 0 ? (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                        <p className="text-gray-500">No providers configured.</p>
+                    <div className="text-center py-8 bg-background-secondary rounded-lg border border-dashed border-foreground/20">
+                        <p className="text-foreground-muted">No providers configured.</p>
                         <button onClick={() => setShowProviderForm(true)} className="text-purple-600 hover:underline mt-2 text-sm">Add one now</button>
                     </div>
                 ) : (
                     <div className="grid gap-4">
                         {providers.map(provider => (
-                            <div key={provider.id} className={`p-4 rounded-lg border flex items-center justify-between ${activeProviderId === provider.id ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500' : fallbackProviderId === provider.id ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500' : 'border-gray-200 bg-white'}`}>
+                            <div key={provider.id} className={`p-4 rounded-lg border flex items-center justify-between ${activeProviderId === provider.id ? 'border-purple-500 bg-purple-500/10 ring-1 ring-purple-500' : fallbackProviderId === provider.id ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500' : 'border-glass-border bg-background-secondary'}`}>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-3 h-3 rounded-full ${activeProviderId === provider.id ? 'bg-purple-600' : fallbackProviderId === provider.id ? 'bg-amber-500' : 'bg-gray-300'}`} />
+                                    <div className={`w-3 h-3 rounded-full ${activeProviderId === provider.id ? 'bg-purple-600' : fallbackProviderId === provider.id ? 'bg-amber-500' : 'bg-foreground/25'}`} />
                                     <div>
-                                        <h4 className="font-medium text-gray-900">{provider.name} {activeProviderId === provider.id && '(Active)'} {fallbackProviderId === provider.id && '(Fallback)'}</h4>
-                                        <p className="text-xs text-gray-500 flex gap-2">
-                                            <span className="uppercase bg-gray-100 px-1.5 rounded">{provider.type}</span>
+                                        <h4 className="font-medium text-foreground">{provider.name} {activeProviderId === provider.id && '(Active)'} {fallbackProviderId === provider.id && '(Fallback)'}</h4>
+                                        <p className="text-xs text-foreground-muted flex gap-2">
+                                            <span className="uppercase bg-background-tertiary px-1.5 rounded">{provider.type}</span>
                                             <span>{provider.models.join(', ')}</span>
                                         </p>
                                     </div>
@@ -246,13 +246,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                                     )}
                                     <button
                                         onClick={() => { setEditingProvider(provider); setShowProviderForm(true); }}
-                                        className="p-2 text-gray-400 hover:text-gray-600"
+                                        className="p-2 text-foreground-muted hover:text-foreground-secondary"
                                     >
                                         <Eye className="w-4 h-4" />
                                     </button>
                                     <button
                                         onClick={() => handleDeleteProvider(provider.id)}
-                                        className="p-2 text-gray-400 hover:text-red-500"
+                                        className="p-2 text-foreground-muted hover:text-red-500"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
@@ -264,8 +264,8 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             </div>
 
             {/* Global Limits & Prompt */}
-            <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 space-y-4">
-                <h3 className="font-semibold text-gray-800">Usage Limits & Persona</h3>
+            <div className="bg-background-secondary p-6 rounded-lg border border-glass-border space-y-4">
+                <h3 className="font-semibold text-foreground">Usage Limits & Persona</h3>
 
                 {/* Usage Tiers */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -274,54 +274,54 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     <TierInputGroup tier={3} formData={formData} setFormData={setFormData} />
                 </div>
 
-                <div className="pt-4 border-t border-gray-100">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">CalorieSnap (AI Food Scanner) Model ID</label>
+                <div className="pt-4 border-t border-glass-border">
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">CalorieSnap (AI Food Scanner) Model ID</label>
                     <input
                         type="text"
                         value={formData.calorieSnapModel}
                         onChange={(e) => setFormData({ ...formData, calorieSnapModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                         placeholder="e.g. gemini-1.5-flash"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-foreground-muted mt-1">
                         Must be a valid vision model from Google (e.g., `gemini-1.5-flash` or `gemini-1.5-pro`).
                     </p>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Meal Suggestions Model ID</label>
+                <div className="pt-4 border-t border-glass-border">
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Meal Suggestions Model ID</label>
                     <input
                         type="text"
                         value={formData.mealSuggestModel}
                         onChange={(e) => setFormData({ ...formData, mealSuggestModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                         placeholder="e.g. gemini-1.5-flash"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-foreground-muted mt-1">
                         Used for the &quot;What should I eat?&quot; meal suggestions feature. Any non-vision model works here.
                     </p>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Activity Feedback Model ID</label>
+                <div className="pt-4 border-t border-glass-border">
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Activity Feedback Model ID</label>
                     <input
                         type="text"
                         value={formData.activityFeedbackModel}
                         onChange={(e) => setFormData({ ...formData, activityFeedbackModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                         placeholder="e.g. gemini-1.5-flash"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-foreground-muted mt-1">
                         Used for post-activity AI coaching feedback and weekly nutrition insights. Any non-vision model works here.
                     </p>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">System Prompt</label>
+                <div className="pt-4 border-t border-glass-border">
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">System Prompt</label>
                     <textarea
                         value={formData.systemPrompt}
                         onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 h-32"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 h-32"
                     />
                 </div>
 
@@ -338,40 +338,40 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             </div>
 
             {/* Plan Builder AI Settings */}
-            <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 space-y-4">
-                <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+            <div className="bg-background-secondary p-6 rounded-lg border border-glass-border space-y-4">
+                <h3 className="font-semibold text-foreground flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-indigo-600" />
                     Plan Builder AI
                 </h3>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-foreground-muted">
                     Configure the AI model used for plan analysis, suggestions, and guided mode features. It will use the globally active AI provider.
                 </p>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Plan Builder Model</label>
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Plan Builder Model</label>
                     <input
                         type="text"
                         value={formData.planBuilderModel}
                         onChange={(e) => setFormData({ ...formData, planBuilderModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="e.g. gpt-4o"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-foreground-muted mt-1">
                         Model ID used for plan analysis and suggestions. Should support large context windows.
                     </p>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Tokens Per Analysis</label>
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Max Tokens Per Analysis</label>
                     <input
                         type="number"
                         value={formData.planMaxTokensPerAnalysis}
                         onChange={(e) => setFormData({ ...formData, planMaxTokensPerAnalysis: parseInt(e.target.value, 10) || 8000 })}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         min={1000}
                         max={16000}
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-foreground-muted mt-1">
                         Maximum output tokens per AI analysis request (default: 8000). Higher values give more detailed analysis.
                     </p>
                 </div>
@@ -380,8 +380,8 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             {/* Provider Modal/Form Overlay */}
             {showProviderForm && (
                 <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity)] flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
-                        <h3 className="text-lg font-bold text-gray-900">{editingProvider ? 'Edit Provider' : 'Add New Provider'}</h3>
+                    <div className="bg-background-secondary rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
+                        <h3 className="text-lg font-bold text-foreground">{editingProvider ? 'Edit Provider' : 'Add New Provider'}</h3>
                         <ProviderForm
                             initialData={editingProvider}
                             onClose={() => setShowProviderForm(false)}
@@ -493,22 +493,22 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Name</label>
                     <input
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted"
                         placeholder="e.g. OpenAI"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Slug</label>
                     <input
                         type="text"
                         value={formData.slug}
                         onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted"
                         placeholder="openai"
                     />
                 </div>
@@ -516,11 +516,11 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Type</label>
                     <select
                         value={formData.type}
                         onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     >
                         <option value="openai">OpenAI Compatible</option>
                         <option value="anthropic">Anthropic</option>
@@ -530,45 +530,45 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Token Limit</label>
+                    <label className="block text-sm font-medium text-foreground-secondary mb-1">Monthly Token Limit</label>
                     <input
                         type="number"
                         value={formData.monthlyTokenLimit}
                         onChange={(e) => setFormData({ ...formData, monthlyTokenLimit: e.target.value })}
                         placeholder="Optional (e.g. 1000000)"
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted"
                     />
                 </div>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
+                <label className="block text-sm font-medium text-foreground-secondary mb-1">Base URL</label>
                 <input
                     type="text"
                     value={formData.baseUrl}
                     onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-                    className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
+                    className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted"
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground-secondary mb-1">
                     API Key(s) {initialData && '(Leave blank to keep current)'}
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
+                <p className="text-xs text-foreground-muted mb-2">
                     Enter multiple keys separated by commas or newlines for automatic fallback on rate limits (429).
                 </p>
                 <div className="flex gap-2 items-start">
                     <textarea
                         value={formData.apiKey}
                         onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-                        className="flex-1 px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400 min-h-[80px] font-mono text-sm leading-relaxed"
+                        className="flex-1 px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted min-h-[80px] font-mono text-sm leading-relaxed"
                         placeholder="sk-key1,&#10;sk-key2..."
                     />
                     <button
                         onClick={handleTest}
                         disabled={testing || (!formData.apiKey && !initialData)}
-                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center gap-1 mt-1 shrink-0"
+                        className="px-3 py-2 bg-background-tertiary text-foreground-secondary rounded-lg hover:bg-foreground/15 text-sm font-medium flex items-center gap-1 mt-1 shrink-0"
                     >
                         {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                         Test
@@ -583,12 +583,12 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Models (comma separated)</label>
+                <label className="block text-sm font-medium text-foreground-secondary mb-1">Models (comma separated)</label>
                 <input
                     type="text"
                     value={formData.models}
                     onChange={(e) => setFormData({ ...formData, models: e.target.value })}
-                    className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
+                    className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted"
                     placeholder="gpt-4, gpt-4o-mini"
                 />
             </div>
@@ -598,7 +598,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
             <div className="flex justify-end gap-3 pt-4">
                 <button
                     onClick={onClose}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition"
+                    className="px-4 py-2 text-foreground-secondary hover:bg-background-tertiary rounded-lg font-medium transition"
                 >
                     Cancel
                 </button>

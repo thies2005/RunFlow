@@ -139,7 +139,7 @@ export default function HeartRateZonesSection({
                                     />
                                     <span className="absolute right-3 top-3 text-foreground-muted text-xs">bpm</span>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">Zone 4 ends at LTHR</p>
+                                <p className="text-xs text-foreground-muted mt-1">Zone 4 ends at LTHR</p>
                             </div>
                             <div>
                                 <label className="block text-xs text-foreground-muted mb-1 uppercase">Threshold Pace</label>
@@ -165,23 +165,23 @@ export default function HeartRateZonesSection({
                                     />
                                     <span className="text-foreground-muted text-xs">/km</span>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">~1 hour race pace</p>
+                                <p className="text-xs text-foreground-muted mt-1">~1 hour race pace</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Calculated 7 Zones Display */}
                     {calculatedZones.length > 0 && (
-                        <div className="bg-black/20 rounded-lg p-4 border border-white/5">
-                            <h4 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wide">Calculated HR Zones (7-Zone Model)</h4>
+                        <div className="bg-foreground/5 rounded-lg p-4 border border-foreground/5">
+                            <h4 className="text-xs font-semibold text-foreground-muted mb-3 uppercase tracking-wide">Calculated HR Zones (7-Zone Model)</h4>
                             <div className="space-y-1">
                                 {calculatedZones.map((zone, i) => {
                                     const colors = ['text-green-400', 'text-lime-400', 'text-yellow-400', 'text-orange-400', 'text-red-400', 'text-indigo-400', 'text-purple-400'];
                                     return (
-                                        <div key={i} className="flex justify-between items-center text-sm p-2 hover:bg-white/5 rounded">
+                                        <div key={i} className="flex justify-between items-center text-sm p-2 hover:bg-foreground/5 rounded">
                                             <span className={`${colors[i]} font-medium`}>{zone.label}</span>
-                                            <span className="text-white font-mono">
-                                                {zone.min} - {zone.max === 999 ? '∞' : zone.max} <span className="text-gray-500 text-xs">bpm</span>
+                                            <span className="text-foreground font-mono">
+                                                {zone.min} - {zone.max === 999 ? '∞' : zone.max} <span className="text-foreground-muted text-xs">bpm</span>
                                             </span>
                                         </div>
                                     );

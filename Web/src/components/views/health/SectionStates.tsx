@@ -2,7 +2,7 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 
 export function SectionLoadingCard({ label }: { label: string }) {
     return (
-        <div className="glass-card border border-glass-border rounded-2xl p-5 flex items-center justify-center gap-3 text-sm text-gray-400">
+        <div className="glass-card border border-glass-border rounded-2xl p-5 flex items-center justify-center gap-3 text-sm text-foreground-muted">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>{label}</span>
         </div>

@@ -219,9 +219,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
 
                     <div className="flex items-start gap-4 pr-10">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center shadow-lg shadow-accent-purple/20">
-                            {activity.type === 'RUN' ? <ActivityIcon className="w-6 h-6 text-white" /> :
-                                activity.type === 'RIDE' ? <Zap className="w-6 h-6 text-white" /> :
-                                    <ActivityIcon className="w-6 h-6 text-white" />}
+                            {activity.type === 'RUN' ? <ActivityIcon className="w-6 h-6 text-foreground" /> :
+                                activity.type === 'RIDE' ? <Zap className="w-6 h-6 text-foreground" /> :
+                                    <ActivityIcon className="w-6 h-6 text-foreground" />}
                         </div>
                         <div>
                             {isEditingName ? (
@@ -462,7 +462,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                                 title={`${zone.name} ${zone.label}: ${formatDuration(zone.time)} (${Math.round(pct)}%)`}
                                             >
                                                 {pct >= 10 && (
-                                                    <span className="text-xs font-bold text-white drop-shadow-md">{zone.name}</span>
+                                                    <span className="text-xs font-bold text-foreground drop-shadow-md">{zone.name}</span>
                                                 )}
                                             </div>
                                         );
@@ -476,7 +476,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                         const mins = Math.floor(zone.time / 60);
                                         const secs = zone.time % 60;
                                         return (
-                                            <div key={i} className="flex items-center justify-between py-1.5 px-2 hover:bg-white/5 rounded text-sm">
+                                            <div key={i} className="flex items-center justify-between py-1.5 px-2 hover:bg-foreground/5 rounded text-sm">
                                                 <div className="flex items-center gap-2">
                                                     <div className={`w-3 h-3 rounded-xs ${zone.color}`} />
                                                     <span className={`font-medium ${zone.textColor}`}>{zone.name}</span>
@@ -546,7 +546,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             <Calendar className="w-3 h-3 text-accent-cyan" />
                                             {aiFeedback.plannedComparison ? 'Vs Planned Workout' : 'Coach Analysis'}
                                         </h4>
-                                        <div className="text-sm text-foreground-muted prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [&_details]:bg-black/20 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-pink">
+                                        <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-pink">
                                             <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.plannedComparison || aiFeedback.progressAnalysis || aiFeedback.goalTrajectory || 'No detailed analysis available.'}</ReactMarkdown>
                                         </div>
                                     </div>
@@ -558,7 +558,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             <TrendingUp className="w-3 h-3 text-accent-pink" />
                                             Progress & Execution
                                         </h4>
-                                        <div className="text-sm text-foreground-muted prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [&_details]:bg-black/20 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-pink">
+                                        <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-pink">
                                             <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.progressAnalysis}</ReactMarkdown>
                                         </div>
                                     </div>
@@ -570,7 +570,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             <Heart className="w-3 h-3 text-accent-purple" />
                                             Goal Trajectory
                                         </h4>
-                                        <div className="text-sm text-foreground-muted prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [&_details]:bg-black/20 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-pink">
+                                        <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-pink">
                                             <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.goalTrajectory}</ReactMarkdown>
                                         </div>
                                     </div>

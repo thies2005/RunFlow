@@ -98,9 +98,9 @@ export default function PlanVolumeSection({
                         aria-valuenow={runsPerWeek}
                         aria-valuemin={2}
                         aria-valuemax={6}
-                        className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                        className="w-full h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
                     />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <div className="flex justify-between text-xs text-foreground-muted mt-1">
                         <span>2</span>
                         <span>4</span>
                         <span>6</span>
@@ -401,15 +401,15 @@ export default function PlanVolumeSection({
                                             }
                                         }}
                                         className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${restDays.includes(idx)
-                                            ? 'bg-gray-500/20 text-gray-300 border-gray-500/30'
-                                            : 'bg-white/5 text-gray-500 border-white/10 hover:text-gray-300'
+                                            ? 'bg-foreground/20 text-foreground-muted border-foreground/30'
+                                            : 'bg-foreground/5 text-foreground-muted border-foreground/10 hover:text-foreground-muted'
                                             }`}
                                     >
                                         {day}
                                     </button>
                                 ))}
                             </div>
-                            <p className="text-xs text-gray-500 mt-2">Select days you prefer to rest (no running).</p>
+                            <p className="text-xs text-foreground-muted mt-2">Select days you prefer to rest (no running).</p>
                         </div>
                     </div>
                 )}

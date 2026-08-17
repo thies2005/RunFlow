@@ -15,21 +15,21 @@ export function ChartCard({ title, tooltip, children, emptyMessage, isEmpty }: C
     const [showTooltip, setShowTooltip] = useState(false);
 
     return (
-        <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-4">
+        <div className="border border-glass-border bg-background-secondary rounded-xl p-4">
             <div className="flex items-center gap-2 mb-3">
-                <h3 className="text-sm font-semibold text-zinc-300">{title}</h3>
+                <h3 className="text-sm font-semibold text-foreground-secondary">{title}</h3>
                 {tooltip && (
                     <div className="relative">
                         <button
                             type="button"
                             onMouseEnter={() => setShowTooltip(true)}
                             onMouseLeave={() => setShowTooltip(false)}
-                            className="p-0.5 text-zinc-600 hover:text-zinc-400 transition-colors"
+                            className="p-0.5 text-foreground-muted hover:text-foreground-secondary transition-colors"
                         >
                             <Info className="w-3.5 h-3.5" />
                         </button>
                         {showTooltip && (
-                            <div className="absolute left-0 top-full mt-1 z-50 w-56 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-xs text-zinc-400 shadow-xl">
+                            <div className="absolute left-0 top-full mt-1 z-50 w-56 px-3 py-2 rounded-lg bg-background-tertiary border border-foreground/20 text-xs text-foreground-secondary shadow-xl">
                                 {tooltip}
                             </div>
                         )}
@@ -37,7 +37,7 @@ export function ChartCard({ title, tooltip, children, emptyMessage, isEmpty }: C
                 )}
             </div>
             {isEmpty ? (
-                <div className="flex items-center justify-center py-10 text-zinc-600 text-sm">
+                <div className="flex items-center justify-center py-10 text-foreground-muted text-sm">
                     {emptyMessage || 'No data available'}
                 </div>
             ) : (

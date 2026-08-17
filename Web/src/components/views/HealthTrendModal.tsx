@@ -107,12 +107,12 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
     return (
         <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-xs sm:items-center sm:justify-center">
             <div
-                className="bg-[#1c1c1e] w-full max-w-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom"
+                className="bg-background-secondary w-full max-w-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom"
             >
                 {/* Header */}
-                <div className="flex flex-col border-b border-white/10 shrink-0">
+                <div className="flex flex-col border-b border-foreground/10 shrink-0">
                     <div className="flex items-center justify-between p-4 pb-2">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                             <MetricIcon className="w-5 h-5" style={{ color: metricColor }} />
                             {metric === 'weight' ? 'Body Metrics' : title}
                         </h2>
@@ -127,7 +127,7 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                             )}
                             <button
                                 onClick={onClose}
-                                className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
+                                className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors"
                                 type="button"
                             >
                                 <X className="w-5 h-5" />
@@ -139,13 +139,13 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                         <div className="flex gap-4 px-4">
                             <button 
                                 onClick={() => setActiveTab('weight')}
-                                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'weight' ? 'text-white border-blue-500' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'weight' ? 'text-foreground border-blue-500' : 'text-foreground-muted border-transparent hover:text-foreground-muted'}`}
                             >
                                 Weight History
                             </button>
                             <button 
                                 onClick={() => setActiveTab('composition')}
-                                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'composition' ? 'text-white border-orange-500' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'composition' ? 'text-foreground border-orange-500' : 'text-foreground-muted border-transparent hover:text-foreground-muted'}`}
                             >
                                 Body Composition
                             </button>
@@ -155,14 +155,14 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
 
                 {/* Manual Weight Entry */}
                 {isEnteringWeight && metric === 'weight' && (
-                    <div className="px-4 py-3 bg-white/5 border-b border-white/10 flex items-center gap-2">
+                    <div className="px-4 py-3 bg-foreground/5 border-b border-foreground/10 flex items-center gap-2">
                         <input
                             type="number"
                             step="0.1"
                             value={manualWeight}
                             onChange={(e) => setManualWeight(e.target.value)}
                             placeholder="Weight in kg"
-                            className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-hidden"
+                            className="flex-1 bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-foreground-muted focus:border-blue-500 focus:outline-hidden"
                             autoFocus
                         />
                         <button
@@ -177,7 +177,7 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                         </button>
                         <button
                             onClick={() => setIsEnteringWeight(false)}
-                            className="px-4 py-2 bg-black/40 hover:bg-white/10 text-gray-300 text-sm font-semibold rounded-lg transition-colors"
+                            className="px-4 py-2 bg-background-tertiary hover:bg-foreground/10 text-foreground-muted text-sm font-semibold rounded-lg transition-colors"
                         >
                             Cancel
                         </button>
@@ -191,14 +191,14 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                     ) : (
                         <>
                             {/* Time Range Selector */}
-                            <div className="flex bg-white/5 p-1 rounded-lg border border-white/10 mb-6 shrink-0 w-full sm:w-auto self-start sm:self-end">
+                            <div className="flex bg-foreground/5 p-1 rounded-lg border border-foreground/10 mb-6 shrink-0 w-full sm:w-auto self-start sm:self-end">
                         {RANGES.map(range => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md transition-colors ${timeRange === range
-                                    ? 'bg-white/10 text-white shadow-xs'
-                                    : 'text-gray-400 hover:text-gray-300'
+                                    ? 'bg-foreground/10 text-foreground shadow-xs'
+                                    : 'text-foreground-muted hover:text-foreground-muted'
                                     }`}
                             >
                                 {range}
@@ -210,11 +210,11 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                     <div className="flex-1 w-full relative min-h-[300px]">
                         {isLoading ? (
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="animate-pulse text-gray-500">Loading chart data...</div>
+                                <div className="animate-pulse text-foreground-muted">Loading chart data...</div>
                             </div>
                         ) : chartData.length === 0 ? (
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="text-gray-500 text-sm">No historical data found for this range.</div>
+                                <div className="text-foreground-muted text-sm">No historical data found for this range.</div>
                             </div>
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">

@@ -73,7 +73,7 @@ export function InfiniteScroll<T>({
             </div>
             {hasMore && (
                 <div className="flex items-center justify-center py-4">
-                    <div className="w-5 h-5 border-2 border-zinc-600 border-t-zinc-100 rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-foreground/25 border-t-foreground rounded-full animate-spin" />
                 </div>
             )}
         </div>

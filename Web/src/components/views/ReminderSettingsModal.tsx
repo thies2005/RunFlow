@@ -132,15 +132,15 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                                     <Bell className="w-5 h-5 text-green-400" />
                                 </div>
                             ) : (
-                                <div className="w-10 h-10 rounded-full bg-gray-500/20 flex items-center justify-center">
-                                    <BellOff className="w-5 h-5 text-gray-400" />
+                                <div className="w-10 h-10 rounded-full bg-foreground/20 flex items-center justify-center">
+                                    <BellOff className="w-5 h-5 text-foreground-muted" />
                                 </div>
                             )}
                             <div>
-                                <p className="text-sm font-semibold text-white">
+                                <p className="text-sm font-semibold text-foreground">
                                     Push Notifications
                                 </p>
-                                <p className="text-xs text-gray-400">
+                                <p className="text-xs text-foreground-muted">
                                     {!push.isSupported
                                         ? 'Not supported on this device/browser'
                                         : push.permission === 'denied'
@@ -181,10 +181,10 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                         {/* Timezone */}
                         <div className="flex items-center justify-between px-1">
                             <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-gray-400" />
-                                <span className="text-xs text-gray-400">Timezone</span>
+                                <Clock className="w-4 h-4 text-foreground-muted" />
+                                <span className="text-xs text-foreground-muted">Timezone</span>
                             </div>
-                            <span className="text-xs font-medium text-white bg-white/10 px-3 py-1 rounded-full">
+                            <span className="text-xs font-medium text-foreground bg-foreground/10 px-3 py-1 rounded-full">
                                 {localSettings.timezone || 'UTC'}
                             </span>
                         </div>
@@ -270,8 +270,8 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm text-white">Planned workouts</p>
-                                    <p className="text-[10px] text-gray-500">Get notified before scheduled activities</p>
+                                    <p className="text-sm text-foreground">Planned workouts</p>
+                                    <p className="text-[10px] text-foreground-muted">Get notified before scheduled activities</p>
                                 </div>
                                 <ToggleSwitch
                                     enabled={!!localSettings.workoutReminderEnabled}
@@ -280,11 +280,11 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                             </div>
                             {localSettings.workoutReminderEnabled && (
                                 <div className="flex items-center justify-between mt-3 pl-4 border-l-2 border-green-500/20">
-                                    <span className="text-xs text-gray-400">Notify before</span>
+                                    <span className="text-xs text-foreground-muted">Notify before</span>
                                     <select
                                         value={localSettings.workoutReminderMinutes || 60}
                                         onChange={(e) => update('workoutReminderMinutes', parseInt(e.target.value))}
-                                        className="bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-hidden focus:ring-2 focus:ring-green-500/50"
+                                        className="bg-foreground/10 border border-foreground/10 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-green-500/50"
                                     >
                                         <option value={15}>15 minutes</option>
                                         <option value={30}>30 minutes</option>
@@ -324,9 +324,9 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                 {/* Not subscribed but has settings hint */}
                 {!push.isSubscribed && push.isSupported && push.permission !== 'denied' && (
                     <div className="text-center py-8">
-                        <Bell className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                        <p className="text-sm text-gray-400 mb-1">Enable push notifications above</p>
-                        <p className="text-xs text-gray-500">to configure your reminders</p>
+                        <Bell className="w-12 h-12 text-foreground-secondary mx-auto mb-3" />
+                        <p className="text-sm text-foreground-muted mb-1">Enable push notifications above</p>
+                        <p className="text-xs text-foreground-muted">to configure your reminders</p>
                     </div>
                 )}
             </div>
@@ -348,7 +348,7 @@ function ReminderSection({ icon, title, color: _color, children }: {
         <div className="glass-card p-4 rounded-xl border border-glass-border">
             <div className="flex items-center gap-2 mb-3">
                 {icon}
-                <h4 className="text-sm font-semibold text-white">{title}</h4>
+                <h4 className="text-sm font-semibold text-foreground">{title}</h4>
             </div>
             <div className="space-y-3">
                 {children}
@@ -366,13 +366,13 @@ function ReminderRow({ label, enabled, time, onToggle, onTimeChange }: {
 }) {
     return (
         <div className="flex items-center justify-between gap-3">
-            <span className="text-sm text-white flex-1">{label}</span>
+            <span className="text-sm text-foreground flex-1">{label}</span>
             {enabled && (
                 <input
                     type="time"
                     value={time}
                     onChange={(e) => onTimeChange(e.target.value)}
-                    className="bg-white/10 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/50 [color-scheme:dark]"
+                    className="bg-foreground/10 border border-foreground/10 rounded-lg px-2 py-1 text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-blue-500/50"
                 />
             )}
             <ToggleSwitch enabled={enabled} onToggle={onToggle} />
@@ -387,7 +387,7 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: (_v: 
             role="switch"
             aria-checked={enabled}
             onClick={() => onToggle(!enabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${enabled ? 'bg-blue-500' : 'bg-gray-600'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${enabled ? 'bg-blue-500' : 'bg-foreground/20'
                 }`}
         >
             <span

@@ -17,7 +17,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ id: s
     });
 
     if (!activity) {
-        return <div className="p-8 text-center text-gray-400">Activity not found</div>;
+        return <div className="p-8 text-center text-foreground-muted">Activity not found</div>;
     }
 
     if (activity.userId !== session.user.id) {

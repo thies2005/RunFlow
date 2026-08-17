@@ -30,11 +30,11 @@ export function AiSuggestionCard({ type, title, body, applyAction, onDismiss }: 
                     )}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-semibold text-zinc-200 flex items-center gap-1">
+                    <h4 className="text-xs font-semibold text-foreground flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-purple-400" />
                         {title}
                     </h4>
-                    <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">{body}</p>
+                    <p className="text-[11px] text-foreground-secondary mt-1 leading-relaxed">{body}</p>
                     <div className="flex items-center gap-2 mt-2.5">
                         <button
                             type="button"
@@ -46,7 +46,7 @@ export function AiSuggestionCard({ type, title, body, applyAction, onDismiss }: 
                         <button
                             type="button"
                             onClick={onDismiss}
-                            className="px-2.5 py-1 rounded-md text-[11px] text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                            className="px-2.5 py-1 rounded-md text-[11px] text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                         >
                             Dismiss
                         </button>
@@ -55,7 +55,7 @@ export function AiSuggestionCard({ type, title, body, applyAction, onDismiss }: 
                 <button
                     type="button"
                     onClick={onDismiss}
-                    className="shrink-0 p-1 rounded text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/50 transition-colors"
+                    className="shrink-0 p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary/50 transition-colors"
                     title="Dismiss"
                 >
                     <X className="w-3.5 h-3.5" />

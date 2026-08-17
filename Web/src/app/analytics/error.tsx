@@ -25,7 +25,7 @@ export default function Error({
                 </div>
 
                 <h2 className="text-2xl font-bold text-foreground mb-3">Something Went Wrong</h2>
-                <p className="text-gray-400 mb-8 text-sm leading-relaxed">
+                <p className="text-foreground-muted mb-8 text-sm leading-relaxed">
                     An error occurred while loading your analytics. Please try again.
                 </p>
 

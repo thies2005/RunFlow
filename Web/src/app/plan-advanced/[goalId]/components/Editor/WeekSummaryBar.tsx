@@ -11,7 +11,7 @@ const PHASE_COLORS: Record<PlanPhase, string> = {
     TAPER: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
     RACE_WEEK: 'bg-green-500/20 text-green-400 border-green-500/30',
     RECOVERY: 'bg-teal-500/20 text-teal-400 border-teal-500/30',
-    OFF: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
+    OFF: 'bg-foreground/20 text-foreground-secondary border-foreground/30',
 };
 
 interface WeekSummaryBarProps {
@@ -38,9 +38,9 @@ export function WeekSummaryBar({
     const phaseColor = PHASE_COLORS[phase] || PHASE_COLORS.OFF;
 
     return (
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 bg-zinc-900/80">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-glass-border bg-background-secondary/80">
             <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-zinc-100">Week {weekIndex}</span>
+                <span className="text-sm font-semibold text-foreground">Week {weekIndex}</span>
                 <PhaseSelector
                     currentPhase={phase}
                     goalId={goalId}

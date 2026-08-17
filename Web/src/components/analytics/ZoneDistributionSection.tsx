@@ -80,7 +80,7 @@ export default function ZoneDistributionSection({ activities, userData }: ZoneDi
                             key={range}
                             onClick={() => setZonesTimeRange(range)}
                             className={`px-2 py-1 text-xs font-medium rounded transition-all ${zonesTimeRange === range
-                                ? 'bg-zinc-700 text-white shadow-xs'
+                                ? 'bg-foreground/15 text-foreground shadow-xs'
                                 : 'text-foreground-muted hover:text-foreground'
                                 }`}
                             style={zonesTimeRange === range ? { backgroundColor: 'var(--accent-purple)' } : {}}
@@ -122,7 +122,7 @@ export default function ZoneDistributionSection({ activities, userData }: ZoneDi
                     {pieData.map((zone, i) => {
                         const pct = (zone.value / total) * 100;
                         return (
-                            <div key={i} className="flex items-center justify-between p-2 hover:bg-white/5 rounded">
+                            <div key={i} className="flex items-center justify-between p-2 hover:bg-foreground/5 rounded">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 rounded-xs" style={{ backgroundColor: zone.color }} />
                                     <span className="text-foreground-muted text-sm">{zone.name}</span>

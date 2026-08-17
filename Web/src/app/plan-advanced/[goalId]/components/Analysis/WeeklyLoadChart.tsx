@@ -26,13 +26,13 @@ const MODALITY_LABELS: Record<string, string> = {
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey: string; value: number; color: string }>; label?: string }) => {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 shadow-xl">
-            <p className="text-xs text-zinc-400 mb-1">{label}</p>
+        <div className="bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 shadow-xl">
+            <p className="text-xs text-foreground-secondary mb-1">{label}</p>
             {payload.map((entry, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                    <span className="text-zinc-400">{MODALITY_LABELS[entry.dataKey] || entry.dataKey}:</span>
-                    <span className="text-zinc-100 font-medium">{entry.value}h</span>
+                    <span className="text-foreground-secondary">{MODALITY_LABELS[entry.dataKey] || entry.dataKey}:</span>
+                    <span className="text-foreground font-medium">{entry.value}h</span>
                 </div>
             ))}
         </div>
@@ -45,22 +45,22 @@ export function WeeklyLoadChart({ data }: WeeklyLoadChartProps) {
     return (
         <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,140,0.3)" />
                 <XAxis
                     dataKey="label"
-                    tick={{ fontSize: 11, fill: '#71717a' }}
-                    axisLine={{ stroke: '#3f3f46' }}
+                    tick={{ fontSize: 11, fill: "#71717a" }}
+                    axisLine={{ stroke: 'rgba(128,128,140,0.45)' }}
                     tickLine={false}
                 />
                 <YAxis
-                    tick={{ fontSize: 11, fill: '#71717a' }}
+                    tick={{ fontSize: 11, fill: "#71717a" }}
                     axisLine={false}
                     tickLine={false}
-                    label={{ value: 'Hours', angle: -90, position: 'insideLeft', style: { fontSize: 11, fill: '#71717a' } }}
+                    label={{ value: 'Hours', angle: -90, position: 'insideLeft', style: { fontSize: 11, fill: "#71717a" } }}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
-                    formatter={(value: string) => <span className="text-xs text-zinc-400">{MODALITY_LABELS[value] || value}</span>}
+                    formatter={(value: string) => <span className="text-xs text-foreground-secondary">{MODALITY_LABELS[value] || value}</span>}
                     wrapperStyle={{ paddingTop: 8 }}
                 />
                 <Bar dataKey="run" stackId="load" fill={MODALITY_COLORS.run} isAnimationActive={false} radius={data.every((d) => d.run === 0) ? [0, 0, 0, 0] : undefined} />

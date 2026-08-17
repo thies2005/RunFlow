@@ -24,7 +24,7 @@ export function WeekAnalysisCard({ weekIndex, phase, commentary, severity = 'ok'
     const truncated = commentary.length > 120;
 
     return (
-        <div className={`rounded-lg border border-zinc-800 border-l-2 ${config.border} ${config.bg}`}>
+        <div className={`rounded-lg border border-glass-border border-l-2 ${config.border} ${config.bg}`}>
             <button
                 type="button"
                 onClick={() => truncated && setExpanded(!expanded)}
@@ -32,8 +32,8 @@ export function WeekAnalysisCard({ weekIndex, phase, commentary, severity = 'ok'
             >
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-zinc-300">Week {weekIndex}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
+                        <span className="text-xs font-medium text-foreground-secondary">Week {weekIndex}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-background-tertiary text-foreground-secondary border border-foreground/20">
                             {phase}
                         </span>
                         {score != null && (
@@ -44,12 +44,12 @@ export function WeekAnalysisCard({ weekIndex, phase, commentary, severity = 'ok'
                             </span>
                         )}
                     </div>
-                    <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                    <p className="text-[11px] text-foreground-secondary mt-1 leading-relaxed">
                         {expanded || !truncated ? commentary : `${commentary.slice(0, 120)}...`}
                     </p>
                 </div>
                 {truncated && (
-                    <ChevronDown className={`w-3.5 h-3.5 text-zinc-600 mt-0.5 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-foreground-muted mt-0.5 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`} />
                 )}
             </button>
         </div>

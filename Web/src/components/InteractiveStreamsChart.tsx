@@ -146,8 +146,8 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
     // Early return AFTER hooks
     if (!streams?.time || data.length === 0) {
         return (
-            <div className="flex items-center justify-center h-64 bg-white/5 rounded-xl border border-white/10">
-                <p className="text-gray-400">No stream data available</p>
+            <div className="flex items-center justify-center h-64 bg-foreground/5 rounded-xl border border-foreground/10">
+                <p className="text-foreground-muted">No stream data available</p>
             </div>
         );
     }
@@ -173,7 +173,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                         onClick={() => setEnabledMetrics(p => ({ ...p, heartrate: !p.heartrate }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.heartrate
                             ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                            : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
+                            : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
                         <Heart className="w-3 h-3" /> Heart Rate
@@ -184,7 +184,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                         onClick={() => setEnabledMetrics(p => ({ ...p, pace: !p.pace }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.pace
                             ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                            : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
+                            : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
                         <TrendingUp className="w-3 h-3" /> Pace
@@ -195,7 +195,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                         onClick={() => setEnabledMetrics(p => ({ ...p, gap: !p.gap }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.gap
                             ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
-                            : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
+                            : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
                         <Mountain className="w-3 h-3" /> GAP
@@ -206,7 +206,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                         onClick={() => setEnabledMetrics(p => ({ ...p, elevation: !p.elevation }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.elevation
                             ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                            : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
+                            : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
                         <Mountain className="w-3 h-3" /> Elevation
@@ -217,7 +217,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                         onClick={() => setEnabledMetrics(p => ({ ...p, cadence: !p.cadence }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.cadence
                             ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                            : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
+                            : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
                         <Zap className="w-3 h-3" /> Cadence
@@ -225,7 +225,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                 )}
             </div>
 
-            <div className="h-[300px] md:h-[400px] w-full bg-white/5 rounded-xl border border-white/10 p-4">
+            <div className="h-[300px] md:h-[400px] w-full bg-foreground/5 rounded-xl border border-foreground/10 p-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" opacity={0.4} vertical={false} />

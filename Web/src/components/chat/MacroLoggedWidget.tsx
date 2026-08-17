@@ -33,12 +33,12 @@ export default function MacroLoggedWidget({
                         <div className="bg-purple-500/20 p-1.5 rounded-full">
                             <Sparkles className="w-4 h-4 text-purple-400" />
                         </div>
-                        <h3 className="font-semibold text-white">Added to Log</h3>
+                        <h3 className="font-semibold text-foreground">Added to Log</h3>
                     </div>
                     {onEditMacros && (
                         <button
                             onClick={onEditMacros}
-                            className="p-1.5 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                            className="p-1.5 rounded-full hover:bg-foreground/10 text-foreground-muted hover:text-foreground transition-colors"
                             title="Edit macros"
                         >
                             <Edit3 className="w-4 h-4" />
@@ -47,9 +47,9 @@ export default function MacroLoggedWidget({
                 </div>
 
                 <div className="mb-4">
-                    <h4 className="text-xl font-bold text-white mb-1 capitalize">{mealName}</h4>
+                    <h4 className="text-xl font-bold text-foreground mb-1 capitalize">{mealName}</h4>
                     <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                        {calories} <span className="text-sm font-medium text-gray-400 ml-1">kcal</span>
+                        {calories} <span className="text-sm font-medium text-foreground-muted ml-1">kcal</span>
                     </p>
                 </div>
 
@@ -72,13 +72,13 @@ export default function MacroLoggedWidget({
                 </div>
 
                 {items && items.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-white/10">
+                    <div className="mt-3 pt-3 border-t border-foreground/10">
                         {items.map((item, i) => (
                             <div key={i} className="flex justify-between items-center py-1">
-                                <span className="text-xs text-gray-400">
+                                <span className="text-xs text-foreground-muted">
                                     • {item.name}{item.estimatedGrams ? ` (${item.estimatedGrams}g)` : ''}
                                 </span>
-                                <span className="text-xs font-semibold text-gray-400">
+                                <span className="text-xs font-semibold text-foreground-muted">
                                     {item.calories} kcal
                                 </span>
                             </div>
@@ -87,8 +87,8 @@ export default function MacroLoggedWidget({
                 )}
             </div>
 
-            <div className="bg-black/30 p-2 text-center border-t border-white/5">
-                <p className="text-xs text-gray-400">View this entry in your <a href="/nutrition" className="text-purple-400 hover:underline">Nutrition Log</a></p>
+            <div className="bg-foreground/5 p-2 text-center border-t border-foreground/5">
+                <p className="text-xs text-foreground-muted">View this entry in your <a href="/nutrition" className="text-purple-400 hover:underline">Nutrition Log</a></p>
             </div>
         </div>
     );

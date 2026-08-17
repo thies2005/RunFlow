@@ -2,7 +2,7 @@ import React from 'react';
 
 export const PoweredByStravaLogo = ({ className = "h-8" }: { className?: string }) => (
     <div className={`flex items-center gap-2 ${className}`}>
-        <span className="text-xs text-gray-500 font-medium">Powered by</span>
+        <span className="text-xs text-foreground-muted font-medium">Powered by</span>
         <svg viewBox="0 0 48 48" className="h-full w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* Simple Strava Logo representation */}
             <path d="M15.387 18.944l-2.089-4.116h-3.065L15.387 25l5.15-10.172h-3.066l-2.084 4.116z" fill="#FC4C02" />
@@ -10,7 +10,7 @@ export const PoweredByStravaLogo = ({ className = "h-8" }: { className?: string 
             {/* Wordmark could go here if full logo needed, but "Powered by [Logo]" is usually sufficient or Logo + "Strava" text */}
             <path d="M26 25H29.5V16H33V13H22.5V16H26V25Z" fill="#777" /> {/* S (Mock) - simplified font */}
         </svg>
-        <span className="text-sm font-bold text-gray-500 tracking-tight">STRAVA</span>
+        <span className="text-sm font-bold text-foreground-muted tracking-tight">STRAVA</span>
     </div>
 );
 

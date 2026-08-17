@@ -219,22 +219,22 @@ export function AnalyticsView({
                     <div className="glass-card p-6 text-center relative">
                         <button
                             onClick={onOpenCalibration}
-                            className="absolute top-2 right-2 p-2 text-gray-500 hover:text-accent-pink transition"
+                            className="absolute top-2 right-2 p-2 text-foreground-muted hover:text-accent-pink transition"
                             title="Calibrate"
                         >
-                            <Settings className="w-5 h-5 text-gray-500" />
+                            <Settings className="w-5 h-5 text-foreground-muted" />
                         </button>
-                        <p className="text-gray-400 text-sm mb-2">Marathon Prediction</p>
+                        <p className="text-foreground-muted text-sm mb-2">Marathon Prediction</p>
                         <div className="flex justify-center items-baseline gap-3">
                             <div>
-                                <p className="text-xs text-gray-500">Optimal</p>
+                                <p className="text-xs text-foreground-muted">Optimal</p>
                                 <p className="text-lg font-semibold text-green-400">
                                     {runalyzeMetrics.optimalTime > 0 ? formatTime(runalyzeMetrics.optimalTime) : '-'}
                                 </p>
                             </div>
-                            <span className="text-gray-600">→</span>
+                            <span className="text-foreground-secondary">→</span>
                             <div>
-                                <p className="text-xs text-gray-500">Predicted</p>
+                                <p className="text-xs text-foreground-muted">Predicted</p>
                                 <p className="text-2xl font-bold text-foreground">
                                     {runalyzeMetrics.predictedTime > 0 ? formatTime(runalyzeMetrics.predictedTime) : '-'}
                                 </p>

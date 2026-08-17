@@ -340,7 +340,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                     {showHeader && (
                         <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
                             <div className="flex items-center justify-between px-4 py-3">
-                                <span className="text-lg font-bold text-white flex items-center gap-2">
+                                <span className="text-lg font-bold text-foreground flex items-center gap-2">
                                     <HeartPulse className="w-5 h-5 text-red-500" /> Health
                                 </span>
                                 <div className="flex items-center gap-2">
@@ -348,18 +348,18 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                         <button
                                             onClick={handleSyncHistoricalData}
                                             disabled={isSyncingHistory}
-                                            className="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors"
+                                            className="p-2 -mr-2 rounded-full hover:bg-foreground/10 transition-colors"
                                             aria-label="Sync Health Data"
                                         >
-                                            <RefreshCw className={`w-5 h-5 text-gray-400 ${isSyncingHistory ? 'animate-spin' : ''}`} />
+                                            <RefreshCw className={`w-5 h-5 text-foreground-muted ${isSyncingHistory ? 'animate-spin' : ''}`} />
                                         </button>
                                     )}
                                     <button
                                         onClick={() => setIsRemindersOpen(true)}
-                                        className="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors"
+                                        className="p-2 -mr-2 rounded-full hover:bg-foreground/10 transition-colors"
                                         aria-label="Notification Reminders"
                                     >
-                                        <Bell className="w-5 h-5 text-gray-400" />
+                                        <Bell className="w-5 h-5 text-foreground-muted" />
                                     </button>
                                 </div>
                             </div>

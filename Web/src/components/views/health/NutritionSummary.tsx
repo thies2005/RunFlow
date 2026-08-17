@@ -58,16 +58,16 @@ export function NutritionSummary({
                 <button
                     type="button"
                     onClick={onOpenAnalytics}
-                    className="w-full text-left bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-2xl p-4 transition-all hover:bg-white/10 active:scale-[0.98]"
+                    className="w-full text-left bg-gradient-to-br from-foreground/10 to-foreground/5 border border-foreground/10 rounded-2xl p-4 transition-all hover:bg-foreground/10 active:scale-[0.98]"
                 >
                     <div className="flex justify-between items-end mb-3">
                         <div>
-                            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
+                            <h3 className="text-xs font-bold uppercase tracking-widest text-foreground-muted mb-1">
                                 {(effectiveTarget - totalCalories) < 0 ? 'Calories Over' : 'Calories Remaining'}
                             </h3>
                             <div className="flex items-baseline gap-1">
-                                <p className="text-3xl font-bold text-white">{Math.abs(Math.round(effectiveTarget - totalCalories))}</p>
-                                <span className="text-sm text-gray-400 font-normal">kcal</span>
+                                <p className="text-3xl font-bold text-foreground">{Math.abs(Math.round(effectiveTarget - totalCalories))}</p>
+                                <span className="text-sm text-foreground-muted font-normal">kcal</span>
                                 {exerciseBudget > 0 && (
                                     <span className="text-sm font-semibold text-green-400 ml-1 bg-green-500/10 px-2 py-0.5 rounded-md border border-green-500/20">
                                         +{exerciseBudget} active
@@ -76,26 +76,26 @@ export function NutritionSummary({
                             </div>
                         </div>
                         <div className="text-right">
-                            <ChevronRight className="w-5 h-5 text-gray-400" />
+                            <ChevronRight className="w-5 h-5 text-foreground-muted" />
                         </div>
                     </div>
-                    <div className="h-2 w-full bg-white/10 rounded-full mb-3 overflow-hidden">
+                    <div className="h-2 w-full bg-foreground/10 rounded-full mb-3 overflow-hidden">
                         <div
                             className={`h-full rounded-full transition-all duration-500 ${(effectiveTarget - totalCalories) < 0 ? 'bg-amber-500/80 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-pink-500'}`}
                             style={{ width: `${Math.min(100, (totalCalories / (effectiveTarget || 1)) * 100)}%` }}
                         />
                     </div>
                     {exerciseCalories > 0 ? (
-                        <div className="flex items-center justify-between text-xs text-gray-400 mb-4 bg-white/5 rounded-lg px-3 py-2">
+                        <div className="flex items-center justify-between text-xs text-foreground-muted mb-4 bg-foreground/5 rounded-lg px-3 py-2">
                             <div className="flex items-center gap-3">
                                 <span>{Math.round(totalCalories)} eaten</span>
                                 <span className="text-green-400">-{Math.round(exerciseCalories)} burned</span>
-                                <span className="text-gray-500">x{exerciseFactor}</span>
+                                <span className="text-foreground-muted">x{exerciseFactor}</span>
                             </div>
-                            <span className="text-white font-medium">{Math.round(totalCalories - exerciseBudget)} net</span>
+                            <span className="text-foreground font-medium">{Math.round(totalCalories - exerciseBudget)} net</span>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
+                        <div className="flex items-center justify-between text-xs text-foreground-muted mb-4">
                             <span>{Math.round(totalCalories)} / {Math.round(effectiveTarget)} kcal eaten</span>
                         </div>
                     )}
@@ -121,7 +121,7 @@ export function NutritionSummary({
                         <p className="text-xs text-blue-200/50 mt-0.5">Perfect meals for your macros</p>
                     </div>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                <div className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
                     <ChevronRight className="w-4 h-4 text-blue-300" />
                 </div>
             </button>

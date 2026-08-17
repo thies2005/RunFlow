@@ -132,7 +132,7 @@ function RacePredictionTimeChart({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                     Race Prediction Trends
-                    <span className="text-xs font-normal text-foreground-muted bg-white/10 px-2 py-1 rounded-full cursor-help" title="Historical estimated performance based on daily fitness and shape">
+                    <span className="text-xs font-normal text-foreground-muted bg-foreground/10 px-2 py-1 rounded-full cursor-help" title="Historical estimated performance based on daily fitness and shape">
                         Current Shape
                     </span>
                 </h3>
@@ -144,7 +144,7 @@ function RacePredictionTimeChart({
                             key={key}
                             onClick={() => toggleRace(key)}
                             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${visibleRaces[key]
-                                ? 'border-transparent text-white shadow-xs'
+                                ? 'border-transparent text-foreground shadow-xs'
                                 : 'border-glass-border text-foreground-muted hover:text-foreground bg-transparent'
                                 }`}
                             style={visibleRaces[key] ? { backgroundColor: RACE_COLORS[key] } : {}}

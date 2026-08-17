@@ -53,18 +53,18 @@ export function BulkTypeChangeDialog({ goalId, workoutIds, onClose, onComplete }
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
-                <h3 className="text-sm font-semibold text-zinc-100 mb-4 flex items-center gap-2">
-                    <ArrowUpDown className="w-4 h-4 text-zinc-400" />
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
+                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <ArrowUpDown className="w-4 h-4 text-foreground-secondary" />
                     Change Workout Type
                 </h3>
 
                 <div className="mb-4">
-                    <label className="block text-xs text-zinc-500 mb-1">New Type</label>
+                    <label className="block text-xs text-foreground-muted mb-1">New Type</label>
                     <select
                         value={newType}
                         onChange={(e) => setNewType(e.target.value)}
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                        className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                     >
                         {WORKOUT_TYPES.map((t) => (
                             <option key={t} value={t}>
@@ -74,12 +74,12 @@ export function BulkTypeChangeDialog({ goalId, workoutIds, onClose, onComplete }
                     </select>
                 </div>
 
-                <div className="mb-4 p-2 rounded-md bg-zinc-800/50 border border-zinc-800">
-                    <span className="text-xs text-zinc-500">Preview: </span>
+                <div className="mb-4 p-2 rounded-md bg-background-tertiary/50 border border-glass-border">
+                    <span className="text-xs text-foreground-muted">Preview: </span>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${previewColors.bg} ${previewColors.text}`}>
                         {newType.replace(/_/g, ' ')}
                     </span>
-                    <span className="text-xs text-zinc-500 ml-1">
+                    <span className="text-xs text-foreground-muted ml-1">
                         ({workoutIds.length} workout{workoutIds.length !== 1 ? 's' : ''})
                     </span>
                 </div>
@@ -88,7 +88,7 @@ export function BulkTypeChangeDialog({ goalId, workoutIds, onClose, onComplete }
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-3 py-1.5 rounded-md bg-zinc-800 text-zinc-300 text-xs hover:bg-zinc-700 transition-colors"
+                        className="px-3 py-1.5 rounded-md bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 transition-colors"
                     >
                         Cancel
                     </button>
@@ -96,7 +96,7 @@ export function BulkTypeChangeDialog({ goalId, workoutIds, onClose, onComplete }
                         type="button"
                         onClick={() => mutation.mutate()}
                         disabled={mutation.isPending}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-zinc-700 text-zinc-200 text-xs hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-foreground/15 text-foreground text-xs hover:bg-foreground/20 disabled:opacity-50 transition-colors"
                     >
                         {mutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                         Apply

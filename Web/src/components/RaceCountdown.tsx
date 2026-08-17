@@ -59,10 +59,10 @@ export function RaceCountdown({
     if (!goal) {
         return (
             <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
-                <h2 className="text-lg font-semibold text-gray-400 mb-4">Race Goal</h2>
+                <h2 className="text-lg font-semibold text-foreground-muted mb-4">Race Goal</h2>
                 <div className="text-center py-8">
-                    <Trophy className="w-16 h-16 mx-auto text-gray-400 mb-4 block" />
-                    <p className="text-gray-400">No race goal set</p>
+                    <Trophy className="w-16 h-16 mx-auto text-foreground-muted mb-4 block" />
+                    <p className="text-foreground-muted">No race goal set</p>
                     <button
                         onClick={() => router.push('/onboarding?step=3')}
                         className="btn-secondary mt-4"
@@ -77,8 +77,8 @@ export function RaceCountdown({
     if (!goal.raceDate || !goal.raceType) {
         return (
             <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
-                <h2 className="text-lg font-semibold text-gray-300 mb-4">{goal.name}</h2>
-                <p className="text-gray-500 text-sm">No race goal set.</p>
+                <h2 className="text-lg font-semibold text-foreground-muted mb-4">{goal.name}</h2>
+                <p className="text-foreground-muted text-sm">No race goal set.</p>
             </div>
         );
     }
@@ -131,7 +131,7 @@ export function RaceCountdown({
     return (
         <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-300">Race Goal</h2>
+                <h2 className="text-lg font-semibold text-foreground-muted">Race Goal</h2>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => router.push('/plan')}
@@ -144,8 +144,8 @@ export function RaceCountdown({
             </div>
 
             <div className="mb-6">
-                <h3 className="text-xl font-bold text-white mb-1">{goal.name}</h3>
-                <div className="flex items-center gap-2 text-gray-400">
+                <h3 className="text-xl font-bold text-foreground mb-1">{goal.name}</h3>
+                <div className="flex items-center gap-2 text-foreground-muted">
                     <Calendar className="w-4 h-4" />
                     <span>{format(raceDate, 'MMMM d, yyyy')}</span>
                 </div>
@@ -154,18 +154,18 @@ export function RaceCountdown({
             <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="glass-card p-4 text-center">
                     <p className="stat-value-accent text-4xl font-bold">{daysToRace}</p>
-                    <p className="text-sm text-gray-400 mt-1">days to go</p>
+                    <p className="text-sm text-foreground-muted mt-1">days to go</p>
                 </div>
                 <div className="glass-card p-4 text-center">
                     <p className="stat-value text-4xl font-bold">{weeksToRace}</p>
-                    <p className="text-sm text-gray-400 mt-1">weeks</p>
+                    <p className="text-sm text-foreground-muted mt-1">weeks</p>
                 </div>
             </div>
 
             <div className="mb-6">
                 <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-400">Training Progress</span>
-                    <span className="text-white font-medium">Week {weeksCompleted} of {totalWeeks}</span>
+                    <span className="text-foreground-muted">Training Progress</span>
+                    <span className="text-foreground font-medium">Week {weeksCompleted} of {totalWeeks}</span>
                 </div>
                 <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
                     <div
@@ -179,11 +179,11 @@ export function RaceCountdown({
                 {goal.targetTime && (
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
-                            <Target className="w-5 h-5 text-white" />
+                            <Target className="w-5 h-5 text-foreground" />
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400 uppercase tracking-wide">Goal</p>
-                            <p className="text-xl font-bold text-white">{formatTime(goal.targetTime)}</p>
+                            <p className="text-xs text-foreground-muted uppercase tracking-wide">Goal</p>
+                            <p className="text-xl font-bold text-foreground">{formatTime(goal.targetTime)}</p>
                         </div>
                     </div>
                 )}
@@ -191,16 +191,16 @@ export function RaceCountdown({
                 {dynamicPredictedTime > 0 && (
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
-                            <Timer className="w-5 h-5 text-white" />
+                            <Timer className="w-5 h-5 text-foreground" />
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                            <p className="text-xs text-foreground-muted uppercase tracking-wide flex items-center gap-1">
                                 Projected Finish
                                 <span className="cursor-help" title="Estimated finish time on race day based on your training plan and expected fitness improvement">&#8505;</span>
                                 {correctionFactor !== 1.0 && <span className="ml-1 text-[10px] text-accent-cyan" title="Using calibrated VO2max">&#9679;</span>}
                             </p>
-                            <p className="text-xl font-bold text-white">{formatTime(dynamicPredictedTime)}</p>
-                            <p className="text-[10px] text-gray-500">Target VO2max {projection.projectedVdot.toFixed(1)}</p>
+                            <p className="text-xl font-bold text-foreground">{formatTime(dynamicPredictedTime)}</p>
+                            <p className="text-[10px] text-foreground-muted">Target VO2max {projection.projectedVdot.toFixed(1)}</p>
                         </div>
                     </div>
                 )}
@@ -220,8 +220,8 @@ export function RaceCountdown({
                 return (
                     <div className="glass-card p-4">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-gray-400">This Week&apos;s Mileage</span>
-                            <span className="text-sm text-white">
+                            <span className="text-sm text-foreground-muted">This Week&apos;s Mileage</span>
+                            <span className="text-sm text-foreground">
                                 {currentWeekMileage.toFixed(1)} / {plannedWeekMileage.toFixed(1)} km
                             </span>
                         </div>
@@ -297,13 +297,13 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
     return (
         <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-300">Race Goal</h2>
+                <h2 className="text-lg font-semibold text-foreground-muted">Race Goal</h2>
                 <span className="badge badge-run">{raceLabels[goal.raceType ?? 'MARATHON'] ?? goal.raceType}</span>
             </div>
 
             <div className="mb-4">
-                <h3 className="text-xl font-bold text-white mb-1">{goal.name}</h3>
-                <div className="flex items-center gap-2 text-gray-400">
+                <h3 className="text-xl font-bold text-foreground mb-1">{goal.name}</h3>
+                <div className="flex items-center gap-2 text-foreground-muted">
                     <Calendar className="w-4 h-4" />
                     <span>{goal.raceDate ? format(new Date(goal.raceDate), 'MMMM d, yyyy') : 'No date'}</span>
                 </div>
@@ -316,7 +316,7 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
                         {isIncompleteArchived ? 'Unfinished Race' : 'Race Week!'}
                     </p>
                 </div>
-                <p className="text-sm text-gray-300">
+                <p className="text-sm text-foreground-muted">
                     {isIncompleteArchived
                         ? 'This race was not recorded. Would you like to link your race result or remove this plan?'
                         : daysToRace === 0 ? "Today is race day!" : daysToRace >= -1 ? "The race has passed!" : `The race was ${Math.abs(daysToRace)} days ago.`}
@@ -324,38 +324,38 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
             </div>
 
             {/* Training completion summary */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 mb-4">
+            <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-3 mb-4">
                 <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-400">Training Completion</span>
-                    <span className="text-sm font-medium text-white">{completionRate}%</span>
+                    <span className="text-xs text-foreground-muted">Training Completion</span>
+                    <span className="text-sm font-medium text-foreground">{completionRate}%</span>
                 </div>
-                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-foreground/5 rounded-full overflow-hidden">
                     <div
                         className={`h-full rounded-full ${completionRate >= 80 ? 'bg-green-500' : completionRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
                         style={{ width: `${completionRate}%` }}
                     />
                 </div>
-                <p className="text-[10px] text-gray-500 mt-1">{workoutStats.completed}/{workoutStats.total} workouts completed</p>
+                <p className="text-[10px] text-foreground-muted mt-1">{workoutStats.completed}/{workoutStats.total} workouts completed</p>
             </div>
 
             {/* Auto-detect section */}
             {suggestLoading ? (
-                <div className="flex items-center justify-center py-4 text-gray-400">
+                <div className="flex items-center justify-center py-4 text-foreground-muted">
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     <span className="text-sm">Looking for your race...</span>
                 </div>
             ) : topSuggestion ? (
                 <div className="space-y-3">
-                    <p className="text-sm text-gray-300">We found a run near your race date:</p>
+                    <p className="text-sm text-foreground-muted">We found a run near your race date:</p>
 
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                    <div className="bg-foreground/5 border border-foreground/10 rounded-lg p-3">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-accent-orange/20 flex items-center justify-center">
                                 <Trophy className="w-4 h-4 text-accent-orange" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-white truncate">{topSuggestion.name}</p>
-                                <div className="flex items-center gap-2 text-xs text-gray-400">
+                                <p className="text-sm font-medium text-foreground truncate">{topSuggestion.name}</p>
+                                <div className="flex items-center gap-2 text-xs text-foreground-muted">
                                     <span>{format(new Date(topSuggestion.startDate), 'MMM d')}</span>
                                     <span>{formatDistanceWithUnit(topSuggestion.distance, useImperial, 1)}</span>
                                     <span>{formatTime(topSuggestion.movingTime)}</span>
@@ -377,14 +377,14 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
 
                     <button
                         onClick={() => onSelectRace?.(goal, null, 'pick')}
-                        className="w-full py-2.5 border border-white/10 text-gray-300 rounded-lg hover:bg-white/5 transition-colors text-sm"
+                        className="w-full py-2.5 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 transition-colors text-sm"
                     >
                         Pick a different run
                     </button>
                 </div>
             ) : (
                 <div className="space-y-3">
-                    <p className="text-sm text-gray-400">No matching run found near your race date.</p>
+                    <p className="text-sm text-foreground-muted">No matching run found near your race date.</p>
                     <button
                         onClick={() => onSelectRace?.(goal, null, 'pick')}
                         className="w-full btn-primary py-3"
@@ -406,7 +406,7 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
             ) : (
                 <button
                     onClick={() => onSelectRace?.(goal, null, 'suggest')}
-                    className="w-full text-xs text-gray-500 hover:text-gray-300 transition-colors py-2"
+                    className="w-full text-xs text-foreground-muted hover:text-foreground-muted transition-colors py-2"
                 >
                     I didn&apos;t race / Skip for now
                 </button>
@@ -420,14 +420,14 @@ function PostRaceOverdue({ goal, className }: { goal: Goal; className: string })
 
     return (
         <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
-            <h2 className="text-lg font-semibold text-gray-400 mb-4">Race Goal</h2>
+            <h2 className="text-lg font-semibold text-foreground-muted mb-4">Race Goal</h2>
             <div className="text-center py-6">
-                <Trophy className="w-16 h-16 mx-auto text-gray-500 mb-4 block" />
-                <h3 className="text-lg font-bold text-white mb-1">{goal.name}</h3>
-                <p className="text-gray-400 text-sm mb-4">
+                <Trophy className="w-16 h-16 mx-auto text-foreground-muted mb-4 block" />
+                <h3 className="text-lg font-bold text-foreground mb-1">{goal.name}</h3>
+                <p className="text-foreground-muted text-sm mb-4">
                     {goal.raceDate ? format(new Date(goal.raceDate), 'MMMM d, yyyy') : 'No date'} &middot; {raceLabels[goal.raceType ?? 'MARATHON'] ?? goal.raceType}
                 </p>
-                <p className="text-gray-500 text-sm mb-6">This training block has concluded.</p>
+                <p className="text-foreground-muted text-sm mb-6">This training block has concluded.</p>
                 <button
                     onClick={() => router.push('/onboarding?step=3')}
                     className="btn-primary"

@@ -9,27 +9,27 @@ export const metadata: Metadata = {
 
 export default function ApiDocsPage() {
     return (
-        <div className="min-h-screen bg-black text-gray-300 font-sans selection:bg-accent-orange/30">
+        <div className="min-h-screen bg-black text-zinc-300 font-sans selection:bg-accent-orange/30">
             {/* Header */}
             <header className="border-b border-white/10 sticky top-0 bg-black/80 backdrop-blur-md z-50">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Link href="/" className="text-gray-400 hover:text-white transition-colors">
+                        <Link href="/" className="text-zinc-300 hover:text-foreground transition-colors">
                             <ArrowLeft className="w-5 h-5" />
                         </Link>
-                        <h1 className="text-xl font-bold text-white tracking-tight">
+                        <h1 className="text-xl font-bold text-foreground tracking-tight">
                             RunFlow <span className="text-accent-orange">API</span>
                         </h1>
                     </div>
-                    <div className="text-xs font-mono text-gray-500">v1.0</div>
+                    <div className="text-xs font-mono text-zinc-300">v1.0</div>
                 </div>
             </header>
 
             <main className="container mx-auto px-4 py-12 max-w-4xl">
                 {/* Introduction */}
                 <section className="mb-16">
-                    <h2 className="text-3xl font-bold text-white mb-6">Introduction</h2>
-                    <p className="text-lg leading-relaxed text-gray-400 mb-8">
+                    <h2 className="text-3xl font-bold text-foreground mb-6">Introduction</h2>
+                    <p className="text-lg leading-relaxed text-zinc-300 mb-8">
                         The RunFlow External API allows you to securely access your running data, training statistics, and goals from external applications or AI assistants (like OpenClaw). All endpoints are read-only and designed for high performance.
                     </p>
 
@@ -54,16 +54,16 @@ export default function ApiDocsPage() {
 
                 {/* Authentication */}
                 <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
                         <Key className="w-6 h-6 text-accent-orange" /> Authentication
                     </h2>
-                    <div className="prose prose-invert max-w-none text-gray-400">
+                    <div className="prose prose-invert max-w-none text-zinc-300">
                         <p className="mb-4">
                             Authenticate your requests by including your API key in the <code className="text-accent-orange">Authorization</code> header.
                         </p>
 
                         <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-6">
-                            <div className="flex items-center justify-between text-xs text-gray-500 mb-2 font-mono">
+                            <div className="flex items-center justify-between text-xs text-zinc-300 mb-2 font-mono">
                                 <span>HTTP Header</span>
                             </div>
                             <code className="block font-mono text-sm text-green-400">
@@ -86,7 +86,7 @@ export default function ApiDocsPage() {
                 </section>
 
                 {/* Endpoints */}
-                <h2 className="text-2xl font-bold text-white mb-8 border-b border-white/10 pb-4">Endpoints</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-8 border-b border-white/10 pb-4">Endpoints</h2>
 
                 {/* Activities Endpoint */}
                 <EndpointSection
@@ -95,11 +95,11 @@ export default function ApiDocsPage() {
                     title="List Activities"
                     icon={<Activity className="w-5 h-5 text-blue-400" />}
                 >
-                    <p className="text-gray-400 mb-6">
+                    <p className="text-zinc-300 mb-6">
                         Retrieve a paginated list of your activities with detailed metrics.
                     </p>
 
-                    <h4 className="text-sm font-medium text-white mb-3">Query Parameters</h4>
+                    <h4 className="text-sm font-medium text-foreground mb-3">Query Parameters</h4>
                     <ParameterTable params={[
                         { name: 'limit', type: 'number', required: false, desc: 'Max records to return (default: 50, max: 100)' },
                         { name: 'offset', type: 'number', required: false, desc: 'Pagination offset (default: 0)' },
@@ -108,7 +108,7 @@ export default function ApiDocsPage() {
                         { name: 'endDate', type: 'ISO Date', required: false, desc: 'Filter activities before this date' },
                     ]} />
 
-                    <h4 className="text-sm font-medium text-white mb-3 mt-6">Example Request</h4>
+                    <h4 className="text-sm font-medium text-foreground mb-3 mt-6">Example Request</h4>
                     <CodeBlock code={`curl "https://runflow.app/api/external/v1/activities?type=RUN&limit=5" \\
   -H "Authorization: Bearer rf_abc123..."`} />
                 </EndpointSection>
@@ -120,18 +120,18 @@ export default function ApiDocsPage() {
                     title="Training Stats"
                     icon={<BarChart className="w-5 h-5 text-green-400" />}
                 >
-                    <p className="text-gray-400 mb-6">
+                    <p className="text-zinc-300 mb-6">
                         Get high-level training metrics including VO2max estimates, marathon shape, and current fitness scores.
                     </p>
 
-                    <h4 className="text-sm font-medium text-white mb-3 text-right">Rate Limit: <span className="text-gray-400 font-normal">100 req/min</span></h4>
+                    <h4 className="text-sm font-medium text-foreground mb-3 text-right">Rate Limit: <span className="text-zinc-300 font-normal">100 req/min</span></h4>
 
                     <CodeBlock code={`curl "https://runflow.app/api/external/v1/stats" \\
   -H "Authorization: Bearer rf_abc123..."`} />
 
                     <div className="mt-4">
-                        <h4 className="text-sm font-medium text-white mb-2">Response Includes:</h4>
-                        <ul className="grid grid-cols-2 gap-2 text-sm text-gray-400">
+                        <h4 className="text-sm font-medium text-foreground mb-2">Response Includes:</h4>
+                        <ul className="grid grid-cols-2 gap-2 text-sm text-zinc-300">
                             <li>• User Settings (HR Zones)</li>
                             <li>• Effective VO2max</li>
                             <li>• Marathon Shape Score</li>
@@ -147,11 +147,11 @@ export default function ApiDocsPage() {
                     title="Race Goals"
                     icon={<Trophy className="w-5 h-5 text-yellow-400" />}
                 >
-                    <p className="text-gray-400 mb-6">
+                    <p className="text-zinc-300 mb-6">
                         Retrieve your active race goals and predicted completion times based on current fitness.
                     </p>
 
-                    <h4 className="text-sm font-medium text-white mb-3">Query Parameters</h4>
+                    <h4 className="text-sm font-medium text-foreground mb-3">Query Parameters</h4>
                     <ParameterTable params={[
                         { name: 'activeOnly', type: 'boolean', required: false, desc: 'Return only active goals (default: true)' },
                     ]} />
@@ -167,11 +167,11 @@ export default function ApiDocsPage() {
                     title="Training Plan & Workouts"
                     icon={<Activity className="w-5 h-5 text-accent-orange" />}
                 >
-                    <p className="text-gray-400 mb-6">
+                    <p className="text-zinc-300 mb-6">
                         Retrieve the active training plan, race details, and scheduled workouts.
                     </p>
 
-                    <h4 className="text-sm font-medium text-white mb-3">Query Parameters</h4>
+                    <h4 className="text-sm font-medium text-foreground mb-3">Query Parameters</h4>
                     <ParameterTable params={[
                         { name: 'from', type: 'ISO Date', required: false, desc: 'Start date for workouts (default: today)' },
                         { name: 'to', type: 'ISO Date', required: false, desc: 'End date (default: +14 days)' },
@@ -181,8 +181,8 @@ export default function ApiDocsPage() {
   -H "Authorization: Bearer rf_abc123..."`} />
 
                     <div className="mt-4">
-                        <h4 className="text-sm font-medium text-white mb-2">Response Includes:</h4>
-                        <ul className="grid grid-cols-2 gap-2 text-sm text-gray-400">
+                        <h4 className="text-sm font-medium text-foreground mb-2">Response Includes:</h4>
+                        <ul className="grid grid-cols-2 gap-2 text-sm text-zinc-300">
                             <li>• Active Goal & Race Info</li>
                             <li>• Workouts list (Type, Desc)</li>
                             <li>• Target Paces & Zones</li>
@@ -198,11 +198,11 @@ export default function ApiDocsPage() {
                     title="Fitness History"
                     icon={<Heart className="w-5 h-5 text-pink-400" />}
                 >
-                    <p className="text-gray-400 mb-6">
+                    <p className="text-zinc-300 mb-6">
                         Get historical fitness data points (CTL, ATL, TSB) for trend analysis.
                     </p>
 
-                    <h4 className="text-sm font-medium text-white mb-3">Query Parameters</h4>
+                    <h4 className="text-sm font-medium text-foreground mb-3">Query Parameters</h4>
                     <ParameterTable params={[
                         { name: 'days', type: 'number', required: false, desc: 'Number of past days to fetch (default: 90, max: 365)' },
                     ]} />
@@ -212,7 +212,7 @@ export default function ApiDocsPage() {
                 </EndpointSection>
 
                 {/* Footer */}
-                <footer className="mt-24 pt-8 border-t border-white/10 text-center text-gray-600 text-sm">
+                <footer className="mt-24 pt-8 border-t border-white/10 text-center text-zinc-400 text-sm">
                     <p>© {new Date().getFullYear()} RunFlow. API Access for personal use only.</p>
                 </footer>
             </main>
@@ -226,23 +226,23 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
     return (
         <div className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-colors">
             <div className="mb-3">{icon}</div>
-            <h3 className="text-white font-medium mb-1">{title}</h3>
-            <p className="text-sm text-gray-500 leading-snug">{description}</p>
+            <h3 className="text-foreground font-medium mb-1">{title}</h3>
+            <p className="text-sm text-zinc-300 leading-snug">{description}</p>
         </div>
     );
 }
 
 function EndpointSection({ method, path, title, icon, children }: { method: string, path: string, title: string, icon: React.ReactNode, children: React.ReactNode }) {
     return (
-        <section className="mb-12 bg-white/[0.02] border border-white/5 rounded-xl p-6 md:p-8">
+        <section className="mb-12 bg-white/[0.02] border border-foreground/5 rounded-xl p-6 md:p-8">
             <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-white/5 rounded-lg border border-white/10">{icon}</div>
                     <div>
-                        <h3 className="text-lg font-bold text-white">{title}</h3>
+                        <h3 className="text-lg font-bold text-foreground">{title}</h3>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide">{method}</span>
-                            <code className="text-sm font-mono text-gray-500">{path}</code>
+                            <code className="text-sm font-mono text-zinc-300">{path}</code>
                         </div>
                     </div>
                 </div>
@@ -256,19 +256,19 @@ function ParameterTable({ params }: { params: { name: string, type: string, requ
     return (
         <div className="border border-white/10 rounded-lg overflow-hidden mb-6">
             <table className="w-full text-left text-sm">
-                <thead className="bg-white/5 text-gray-400 font-medium">
+                <thead className="bg-white/5 text-zinc-300 font-medium">
                     <tr>
                         <th className="p-3 border-b border-white/10 w-32">Param</th>
                         <th className="p-3 border-b border-white/10 w-24">Type</th>
                         <th className="p-3 border-b border-white/10">Description</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-foreground/5">
                     {params.map((p, i) => (
                         <tr key={i} className="hover:bg-white/[0.02]">
                             <td className="p-3 font-mono text-accent-orange">{p.name} {p.required && <span className="text-red-400">*</span>}</td>
-                            <td className="p-3 text-gray-500">{p.type}</td>
-                            <td className="p-3 text-gray-400">{p.desc}</td>
+                            <td className="p-3 text-zinc-300">{p.type}</td>
+                            <td className="p-3 text-zinc-300">{p.desc}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -283,7 +283,7 @@ function CodeBlock({ code }: { code: string }) {
             <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 {/* Simplified copy button could go here */}
             </div>
-            <pre className="bg-black/50 border border-white/10 rounded-lg p-4 overflow-x-auto text-sm text-gray-300 font-mono leading-relaxed">
+            <pre className="bg-black/50 border border-white/10 rounded-lg p-4 overflow-x-auto text-sm text-zinc-300 font-mono leading-relaxed">
                 {code}
             </pre>
         </div>

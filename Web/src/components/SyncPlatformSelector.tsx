@@ -190,7 +190,7 @@ export default function SyncPlatformSelector({
                             {/* Coming Soon Badge */}
                             {!platform.available && (
                                 <div className="absolute top-2 right-2">
-                                    <span className="text-[10px] bg-white/10 text-foreground-muted px-2 py-0.5 rounded-full">
+                                    <span className="text-[10px] bg-foreground/10 text-foreground-muted px-2 py-0.5 rounded-full">
                                         Soon
                                     </span>
                                 </div>
@@ -209,14 +209,14 @@ export default function SyncPlatformSelector({
                             {isConnected && (
                                 <div className="absolute top-2 right-2">
                                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                                        <Check className="w-3 h-3 text-white" />
+                                        <Check className="w-3 h-3 text-foreground" />
                                     </div>
                                 </div>
                             )}
 
                             {/* Icon */}
                             <div
-                                className={`w-14 h-14 ${platform.color} rounded-xl flex items-center justify-center mx-auto mb-3 text-white`}
+                                className={`w-14 h-14 ${platform.color} rounded-xl flex items-center justify-center mx-auto mb-3 text-foreground`}
                             >
                                 {platform.icon}
                             </div>
@@ -268,7 +268,7 @@ export default function SyncPlatformSelector({
                             ) : (
                                 <button
                                     disabled
-                                    className="w-full py-2 px-3 bg-white/5 text-foreground-muted rounded-lg text-sm cursor-not-allowed"
+                                    className="w-full py-2 px-3 bg-foreground/5 text-foreground-muted rounded-lg text-sm cursor-not-allowed"
                                 >
                                     Coming Soon
                                 </button>

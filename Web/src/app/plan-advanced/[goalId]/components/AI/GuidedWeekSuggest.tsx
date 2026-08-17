@@ -139,7 +139,7 @@ export function GuidedWeekSuggest({ goalId, weekIndex, weekStartDate, phase, vdo
     const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return (
-        <div className="mx-4 mb-2 rounded-lg border border-purple-500/20 bg-zinc-900 p-3">
+        <div className="mx-4 mb-2 rounded-lg border border-purple-500/20 bg-background-secondary p-3">
             <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" />
@@ -148,7 +148,7 @@ export function GuidedWeekSuggest({ goalId, weekIndex, weekStartDate, phase, vdo
                 <button
                     type="button"
                     onClick={onClose}
-                    className="p-1 rounded text-zinc-600 hover:text-zinc-400 transition-colors"
+                    className="p-1 rounded text-foreground-muted hover:text-foreground-secondary transition-colors"
                 >
                     <X className="w-3.5 h-3.5" />
                 </button>
@@ -156,9 +156,9 @@ export function GuidedWeekSuggest({ goalId, weekIndex, weekStartDate, phase, vdo
             <div className="space-y-1 mb-3">
                 {suggestions.map((s, i) => (
                     <div key={i} className="flex items-center gap-2 text-[11px]">
-                        <span className="text-zinc-500 w-8">{DAY_NAMES[s.dayOffset]}</span>
-                        <span className="text-zinc-300">{s.type}</span>
-                        <span className="text-zinc-500">
+                        <span className="text-foreground-muted w-8">{DAY_NAMES[s.dayOffset]}</span>
+                        <span className="text-foreground-secondary">{s.type}</span>
+                        <span className="text-foreground-muted">
                             {s.distanceM >= 1000 ? `${(s.distanceM / 1000).toFixed(1)}km` : `${s.distanceM}m`}
                         </span>
                     </div>
@@ -181,7 +181,7 @@ export function GuidedWeekSuggest({ goalId, weekIndex, weekStartDate, phase, vdo
                 <button
                     type="button"
                     onClick={onClose}
-                    className="px-3 py-1.5 rounded-md text-xs text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                    className="px-3 py-1.5 rounded-md text-xs text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                 >
                     Cancel
                 </button>

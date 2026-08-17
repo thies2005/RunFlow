@@ -21,17 +21,17 @@ export function EventsPanel({ goals, onAddSubGoal, onEditSubGoal, onRemoveSubGoa
     if (goals.length === 0) return null;
 
     return (
-        <div className="border-b border-zinc-800">
+        <div className="border-b border-glass-border">
             <div className="px-4 py-2">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-zinc-200">Events</span>
-                        <span className="text-[10px] text-zinc-600">{goals.length}</span>
+                        <span className="text-xs font-semibold text-foreground">Events</span>
+                        <span className="text-[10px] text-foreground-muted">{goals.length}</span>
                     </div>
                     <button
                         type="button"
                         onClick={onAddSubGoal}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                        className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                     >
                         <Plus className="w-3 h-3" />
                         Add Event
@@ -48,9 +48,9 @@ export function EventsPanel({ goals, onAddSubGoal, onEditSubGoal, onRemoveSubGoa
                             className="flex items-center gap-1 w-full text-left"
                         >
                             {expandedId === primaryGoal.id ? (
-                                <ChevronDown className="w-3 h-3 text-zinc-500" />
+                                <ChevronDown className="w-3 h-3 text-foreground-muted" />
                             ) : (
-                                <ChevronRight className="w-3 h-3 text-zinc-500" />
+                                <ChevronRight className="w-3 h-3 text-foreground-muted" />
                             )}
                         </button>
                         <EventCard
@@ -69,9 +69,9 @@ export function EventsPanel({ goals, onAddSubGoal, onEditSubGoal, onRemoveSubGoa
                             className="flex items-center gap-1 w-full text-left"
                         >
                             {expandedId === goal.id ? (
-                                <ChevronDown className="w-3 h-3 text-zinc-500" />
+                                <ChevronDown className="w-3 h-3 text-foreground-muted" />
                             ) : (
-                                <ChevronRight className="w-3 h-3 text-zinc-500" />
+                                <ChevronRight className="w-3 h-3 text-foreground-muted" />
                             )}
                         </button>
                         <div className="flex items-center gap-1">
@@ -85,14 +85,14 @@ export function EventsPanel({ goals, onAddSubGoal, onEditSubGoal, onRemoveSubGoa
                             <button
                                 type="button"
                                 onClick={() => onEditSubGoal(goal.id)}
-                                className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors"
+                                className="p-1 text-foreground-muted hover:text-foreground-secondary transition-colors"
                             >
                                 <Pencil className="w-3 h-3" />
                             </button>
                             <button
                                 type="button"
                                 onClick={() => onRemoveSubGoal(goal.id)}
-                                className="p-1 text-zinc-600 hover:text-red-400 transition-colors"
+                                className="p-1 text-foreground-muted hover:text-red-400 transition-colors"
                             >
                                 <Trash2 className="w-3 h-3" />
                             </button>

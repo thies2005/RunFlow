@@ -73,14 +73,14 @@ export function AiProgressionSuggest({
         return (
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-zinc-300 flex items-center gap-1">
+                    <span className="text-xs font-medium text-foreground-secondary flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-purple-400" />
                         AI Suggestions
                     </span>
                     <button
                         type="button"
                         onClick={handleDismiss}
-                        className="p-0.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+                        className="p-0.5 text-foreground-muted hover:text-foreground-secondary transition-colors"
                     >
                         <X className="w-3 h-3" />
                     </button>
@@ -89,12 +89,12 @@ export function AiProgressionSuggest({
                     {suggestions.map((suggestion) => (
                         <div
                             key={suggestion.id}
-                            className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3"
+                            className="bg-background-tertiary/50 border border-foreground/20 rounded-lg p-3"
                         >
                             <div className="flex items-start justify-between mb-1.5">
                                 <div>
-                                    <span className="text-xs font-medium text-zinc-200">{suggestion.label}</span>
-                                    <p className="text-[10px] text-zinc-500 mt-0.5">{suggestion.description}</p>
+                                    <span className="text-xs font-medium text-foreground">{suggestion.label}</span>
+                                    <p className="text-[10px] text-foreground-muted mt-0.5">{suggestion.description}</p>
                                 </div>
                                 <button
                                     type="button"
@@ -108,7 +108,7 @@ export function AiProgressionSuggest({
                                     Apply
                                 </button>
                             </div>
-                            <div className="flex items-center gap-3 text-[10px] text-zinc-500">
+                            <div className="flex items-center gap-3 text-[10px] text-foreground-muted">
                                 <span>{suggestion.weeks.length} weeks</span>
                                 <span>
                                     Volume: {suggestion.totalVolume >= 1000

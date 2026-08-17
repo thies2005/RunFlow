@@ -59,17 +59,17 @@ export function PlanToolbar({
     };
 
     return (
-        <div className="h-14 border-b border-zinc-800 flex items-center px-4 gap-3 shrink-0">
+        <div className="h-14 border-b border-glass-border flex items-center px-4 gap-3 shrink-0">
             <button
                 type="button"
                 onClick={() => router.push('/plan-advanced')}
-                className="p-1.5 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+                className="p-1.5 rounded-md text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
                 title="Back to Plans"
             >
                 <ArrowLeft className="w-4 h-4" />
             </button>
 
-            <div className="w-px h-6 bg-zinc-800 shrink-0" />
+            <div className="w-px h-6 bg-background-tertiary shrink-0" />
 
             <UndoRedoButtons goalId={goalId} />
 
@@ -89,13 +89,13 @@ export function PlanToolbar({
                                     setIsEditingName(false);
                                 }
                             }}
-                            className="bg-zinc-900 border border-zinc-600 rounded-md px-2 py-1 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500 max-w-xs"
+                            className="bg-background-secondary border border-foreground/25 rounded-md px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted max-w-xs"
                             maxLength={100}
                         />
                         <button
                             type="button"
                             onClick={handleNameSubmit}
-                            className="p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+                            className="p-1 rounded hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
                         >
                             <Check className="w-3.5 h-3.5" />
                         </button>
@@ -106,8 +106,8 @@ export function PlanToolbar({
                         onClick={() => setIsEditingName(true)}
                         className="flex items-center gap-1.5 group max-w-xs"
                     >
-                        <h1 className="text-sm font-semibold text-zinc-100 truncate">{planName}</h1>
-                        <Pencil className="w-3 h-3 text-zinc-600 group-hover:text-zinc-400 transition-colors shrink-0" />
+                        <h1 className="text-sm font-semibold text-foreground truncate">{planName}</h1>
+                        <Pencil className="w-3 h-3 text-foreground-muted group-hover:text-foreground-secondary transition-colors shrink-0" />
                     </button>
                 )}
             </div>

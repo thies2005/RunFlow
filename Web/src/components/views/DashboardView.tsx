@@ -126,7 +126,7 @@ export function DashboardView({
                                 />
                             </div>
                         </div>
-                        <p className="text-gray-400">
+                        <p className="text-foreground-muted">
                             {syncStatus?.totalActivities ? `${syncStatus.totalActivities} activities synced` : 'Sync your Strava activities to get started'}
                         </p>
                     </div>
@@ -144,7 +144,7 @@ export function DashboardView({
                             {isLoading ? (
                                 <div className="h-full flex flex-col items-center justify-center bg-surface/50 border border-glass-border rounded-xl p-8 min-h-[300px]">
                                     <div className="w-8 h-8 rounded-full border-4 border-accent-orange border-t-transparent animate-spin mb-4"></div>
-                                    <p className="text-gray-400 text-sm animate-pulse">Loading plan...</p>
+                                    <p className="text-foreground-muted text-sm animate-pulse">Loading plan...</p>
                                 </div>
                             ) : activeGoal ? (
                                 <RaceCountdown
@@ -177,7 +177,7 @@ export function DashboardView({
                                         <Target className="w-8 h-8 text-accent-orange" />
                                     </div>
                                     <h3 className="text-xl font-semibold text-foreground mb-2">No Active Training Plan</h3>
-                                    <p className="text-gray-400 mb-6 text-sm">
+                                    <p className="text-foreground-muted mb-6 text-sm">
                                         You don&apos;t have an active training plan yet. Create one when you&apos;re ready to start training!
                                     </p>
                                     <button

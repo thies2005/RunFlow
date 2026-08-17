@@ -29,8 +29,8 @@ export default function PlanAdvancedPage() {
     }, [data, router]);
 
     return (
-        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-100 rounded-full animate-spin" />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-foreground/25 border-t-foreground rounded-full animate-spin" />
         </div>
     );
 }

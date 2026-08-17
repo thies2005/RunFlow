@@ -156,56 +156,56 @@ export default function UsersTab({
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
                     <thead>
-                        <tr className="border-b border-gray-100">
-                            <th className="pb-3 font-semibold text-gray-600 text-sm">User</th>
-                            <th className="pb-3 font-semibold text-gray-600 text-sm">Joined</th>
-                            <th className="pb-3 font-semibold text-gray-600 text-sm">Last Sync</th>
-                            <th className="pb-3 font-semibold text-gray-600 text-sm">Activities</th>
-                            <th className="pb-3 font-semibold text-gray-600 text-sm text-center">AI Access</th>
-                            <th className="pb-3 font-semibold text-gray-600 text-sm">AI Tier</th>
-                            <th className="pb-3 font-semibold text-gray-600 text-sm text-right">Actions</th>
+                        <tr className="border-b border-glass-border">
+                            <th className="pb-3 font-semibold text-foreground-secondary text-sm">User</th>
+                            <th className="pb-3 font-semibold text-foreground-secondary text-sm">Joined</th>
+                            <th className="pb-3 font-semibold text-foreground-secondary text-sm">Last Sync</th>
+                            <th className="pb-3 font-semibold text-foreground-secondary text-sm">Activities</th>
+                            <th className="pb-3 font-semibold text-foreground-secondary text-sm text-center">AI Access</th>
+                            <th className="pb-3 font-semibold text-foreground-secondary text-sm">AI Tier</th>
+                            <th className="pb-3 font-semibold text-foreground-secondary text-sm text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-glass-border">
                         {users.map((user: AdminUser) => (
-                            <tr key={user.id} className="group hover:bg-gray-50 transition">
+                            <tr key={user.id} className="group hover:bg-background-secondary transition">
                                 <td className="py-4">
                                     <div className="flex items-center">
-                                        <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                                        <div className="w-8 h-8 rounded-full bg-foreground/15 flex-shrink-0 overflow-hidden">
                                             {user.image ? (
                                                 <Image src={user.image} alt="" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                                <div className="w-full h-full flex items-center justify-center text-foreground-muted text-xs">
                                                     {user.name?.[0] || '?'}
                                                 </div>
                                             )}
                                         </div>
                                         <div className="ml-3">
-                                            <p className="text-sm font-medium text-gray-900">{user.name || 'Unknown'}</p>
-                                            <p className="text-xs text-gray-500">{user.email || 'No email'}</p>
+                                            <p className="text-sm font-medium text-foreground">{user.name || 'Unknown'}</p>
+                                            <p className="text-xs text-foreground-muted">{user.email || 'No email'}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="py-4 text-sm text-gray-500">
+                                <td className="py-4 text-sm text-foreground-muted">
                                     {new Date(user.createdAt).toLocaleDateString()}
                                 </td>
-                                <td className="py-4 text-sm text-gray-500">
+                                <td className="py-4 text-sm text-foreground-muted">
                                     {user.lastSyncAt ? new Date(user.lastSyncAt).toLocaleString() : 'Never'}
                                 </td>
-                                <td className="py-4 text-sm text-gray-500">
+                                <td className="py-4 text-sm text-foreground-muted">
                                     {user.activityCount}
                                 </td>
                                 <td className="py-4">
                                     <div className="flex flex-col items-center gap-1">
                                         <div className="flex gap-2">
                                             <span
-                                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${user.aiSettings?.adminAllowed ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}
+                                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${user.aiSettings?.adminAllowed ? 'bg-green-100 text-green-700' : 'bg-background-tertiary text-foreground-muted'}`}
                                                 title={user.aiSettings?.adminAllowed ? 'Admin has allowed access' : 'Admin has not allowed access'}
                                             >
                                                 {user.aiSettings?.adminAllowed ? 'Allowed' : 'Locked'}
                                             </span>
                                             <span
-                                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${user.aiSettings?.aiEnabled ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-400'}`}
+                                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${user.aiSettings?.aiEnabled ? 'bg-purple-100 text-purple-700' : 'bg-background-tertiary text-foreground-muted'}`}
                                                 title={user.aiSettings?.aiEnabled ? 'User has opted-in' : 'User has not opted-in'}
                                             >
                                                 {user.aiSettings?.aiEnabled ? 'Opt-in' : 'Off'}
@@ -213,12 +213,12 @@ export default function UsersTab({
                                         </div>
                                     </div>
                                 </td>
-                                <td className="py-4 text-sm text-gray-500">
+                                <td className="py-4 text-sm text-foreground-muted">
                                     <select
                                         value={user.aiSettings?.usageTier || 'none'}
                                         onChange={(e) => handleToggleAi(user.id, e.target.value)}
                                         disabled={processing}
-                                        className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2"
+                                        className="bg-background-secondary border border-foreground/20 text-foreground-secondary text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2"
                                     >
                                         <option value="none">No Access</option>
                                         <option value="tier1">{aiSettings?.settings?.tier1Name || 'Tier 1'}</option>
@@ -231,7 +231,7 @@ export default function UsersTab({
                                         <button
                                             onClick={() => handleRecalculateFitness(user.id, user.name || user.email)}
                                             disabled={processing}
-                                            className="text-gray-400 hover:text-blue-500 transition p-2 hover:bg-blue-50 rounded-lg"
+                                            className="text-foreground-muted hover:text-blue-500 transition p-2 hover:bg-blue-50 rounded-lg"
                                             title="Recalculate Fitness"
                                         >
                                             <Activity className="w-4 h-4" />
@@ -239,7 +239,7 @@ export default function UsersTab({
                                         <button
                                             onClick={() => handleResetPassword(user.id, user.email)}
                                             disabled={processing}
-                                            className="text-gray-400 hover:text-emerald-500 transition p-2 hover:bg-emerald-50 rounded-lg"
+                                            className="text-foreground-muted hover:text-emerald-500 transition p-2 hover:bg-emerald-50 rounded-lg"
                                             title="Send Reset Password Email"
                                         >
                                             <Mail className="w-4 h-4" />
@@ -247,7 +247,7 @@ export default function UsersTab({
                                         <button
                                             onClick={() => handleDeleteUser(user.id)}
                                             disabled={processing}
-                                            className="text-gray-400 hover:text-red-500 transition p-2 hover:bg-red-50 rounded-lg"
+                                            className="text-foreground-muted hover:text-red-500 transition p-2 hover:bg-red-50 rounded-lg"
                                             title="Delete User"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -258,7 +258,7 @@ export default function UsersTab({
                         ))}
                         {users.length === 0 && (
                             <tr>
-                                <td colSpan={7} className="py-8 text-center text-gray-500">
+                                <td colSpan={7} className="py-8 text-center text-foreground-muted">
                                     No users found
                                 </td>
                             </tr>

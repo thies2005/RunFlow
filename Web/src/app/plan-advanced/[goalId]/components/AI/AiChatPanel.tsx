@@ -119,28 +119,28 @@ function WorkoutCard({ workout, goalId, onApplied }: { workout: WorkoutAction; g
                 ? 'border-green-500/30 bg-green-500/5'
                 : workout.action === 'delete'
                     ? 'border-red-500/30 bg-red-500/5'
-                    : 'border-zinc-700 bg-zinc-800/80'
+                    : 'border-foreground/20 bg-background-tertiary/80'
         }`}>
             <div className="px-3 py-2 flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full shrink-0 ${colors.dot}`} />
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-semibold text-zinc-200 truncate">
+                        <span className="text-[11px] font-semibold text-foreground truncate">
                             {workout.customName || workout.workoutType?.replace(/_/g, ' ') || 'Workout'}
                         </span>
                         {workout.phase && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-700 text-zinc-400 uppercase tracking-wide">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-foreground/15 text-foreground-secondary uppercase tracking-wide">
                                 {workout.phase}
                             </span>
                         )}
                     </div>
                     {workout.description && (
-                        <p className="text-[10px] text-zinc-500 truncate mt-0.5">{workout.description}</p>
+                        <p className="text-[10px] text-foreground-muted truncate mt-0.5">{workout.description}</p>
                     )}
                 </div>
             </div>
 
-            <div className="px-3 pb-1.5 flex items-center gap-3 text-[10px] text-zinc-500">
+            <div className="px-3 pb-1.5 flex items-center gap-3 text-[10px] text-foreground-muted">
                 {workout.scheduledDate && (
                     <span>📅 {workout.scheduledDate}</span>
                 )}
@@ -154,7 +154,7 @@ function WorkoutCard({ workout, goalId, onApplied }: { workout: WorkoutAction; g
 
             {workout.notes && (
                 <div className="px-3 pb-1.5">
-                    <p className="text-[10px] text-zinc-600 italic">{workout.notes}</p>
+                    <p className="text-[10px] text-foreground-muted italic">{workout.notes}</p>
                 </div>
             )}
 
@@ -191,7 +191,7 @@ function MessageContent({ content, goalId, onWorkoutApplied }: { content: string
 
     const parts = cleanText.split(/%%WORKOUT_CARD_(\d+)%%/);
     return (
-        <div className="text-[12px] text-zinc-300 leading-relaxed whitespace-pre-wrap">
+        <div className="text-[12px] text-foreground-secondary leading-relaxed whitespace-pre-wrap">
             {parts.map((part, i) => {
                 // Even indices are text, odd indices are workout card indices
                 if (i % 2 === 0) {
@@ -432,10 +432,10 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
     if (!isOpen) return null;
 
     return (
-        <div className="w-80 border-l border-zinc-800 bg-zinc-950 flex flex-col overflow-hidden shrink-0">
+        <div className="w-80 border-l border-glass-border bg-background flex flex-col overflow-hidden shrink-0">
             {/* Header */}
-            <div className="h-10 border-b border-zinc-800 flex items-center justify-between px-3 shrink-0">
-                <span className="text-xs font-semibold text-zinc-300 flex items-center gap-1.5">
+            <div className="h-10 border-b border-glass-border flex items-center justify-between px-3 shrink-0">
+                <span className="text-xs font-semibold text-foreground-secondary flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                     AI Plan Chat
                 </span>
@@ -444,7 +444,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                         <button
                             type="button"
                             onClick={() => setMessages([])}
-                            className="p-1 rounded text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                            className="p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                             title="Clear chat"
                         >
                             <Trash2 className="w-3 h-3" />
@@ -453,7 +453,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-1 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                        className="p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                     >
                         <X className="w-3.5 h-3.5" />
                     </button>
@@ -468,13 +468,13 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                             <MessageSquare className="w-5 h-5 text-purple-400" />
                         </div>
                         <div className="text-center space-y-1">
-                            <p className="text-xs font-medium text-zinc-400">AI Plan Assistant</p>
-                            <p className="text-[10px] text-zinc-600 max-w-[200px]">
+                            <p className="text-xs font-medium text-foreground-secondary">AI Plan Assistant</p>
+                            <p className="text-[10px] text-foreground-muted max-w-[200px]">
                                 Ask me to modify your plan, add workouts, adjust volume, or explain training concepts. You can type @ to reference weeks.
                             </p>
                         </div>
-                        <div className="flex flex-wrap items-center justify-center gap-1.5 w-full mt-2 border-b border-zinc-800 pb-3">
-                            <button onClick={handleStartNewPlan} className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[10px]">Start New Plan</button>
+                        <div className="flex flex-wrap items-center justify-center gap-1.5 w-full mt-2 border-b border-glass-border pb-3">
+                            <button onClick={handleStartNewPlan} className="px-2 py-1 bg-background-tertiary hover:bg-foreground/15 text-foreground-secondary rounded text-[10px]">Start New Plan</button>
                             <button onClick={handleDeletePlan} className="px-2 py-1 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded text-[10px]">Delete Plan</button>
                             <button onClick={handleSavePlan} className="px-2 py-1 bg-green-900/30 hover:bg-green-900/50 text-green-400 rounded text-[10px]">Save Plan</button>
                         </div>
@@ -491,7 +491,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                                         setInput(suggestion);
                                         setTimeout(() => inputRef.current?.focus(), 50);
                                     }}
-                                    className="w-full text-left px-2.5 py-1.5 rounded-md text-[10px] text-zinc-500 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:text-zinc-400 transition-colors"
+                                    className="w-full text-left px-2.5 py-1.5 rounded-md text-[10px] text-foreground-muted bg-background-secondary border border-glass-border hover:border-foreground/20 hover:text-foreground-secondary transition-colors"
                                 >
                                     {suggestion}
                                 </button>
@@ -535,19 +535,19 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                 {streaming && !streamingContent && (
                     <div className="flex items-center gap-2 px-1 py-2">
                         <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
-                        <span className="text-[10px] text-zinc-500">Thinking...</span>
+                        <span className="text-[10px] text-foreground-muted">Thinking...</span>
                     </div>
                 )}
             </div>
 
             {/* Input */}
-            <div className="border-t border-zinc-800 p-2 relative">
+            <div className="border-t border-glass-border p-2 relative">
                 {mentionOpen && filteredMentions.length > 0 && (
-                    <div className="absolute bottom-full left-2 mb-2 w-48 max-h-40 overflow-y-auto bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50">
+                    <div className="absolute bottom-full left-2 mb-2 w-48 max-h-40 overflow-y-auto bg-background-tertiary border border-foreground/20 rounded-lg shadow-xl z-50">
                         {filteredMentions.map((opt, i) => (
                             <button
                                 key={opt}
-                                className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${i === mentionIndex ? 'bg-purple-600/30 text-purple-200' : 'text-zinc-300 hover:bg-zinc-700'}`}
+                                className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${i === mentionIndex ? 'bg-purple-600/30 text-purple-200' : 'text-foreground-secondary hover:bg-foreground/15'}`}
                                 onClick={() => insertMention(opt)}
                             >
                                 {opt}
@@ -563,7 +563,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                         onKeyDown={handleKeyDown}
                         placeholder="Ask about your plan (type @ to reference weeks)..."
                         rows={1}
-                        className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-[12px] text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-purple-500/50 resize-none min-h-[32px] max-h-[120px]"
+                        className="flex-1 bg-background-secondary border border-foreground/20 rounded-lg px-2.5 py-1.5 text-[12px] text-foreground placeholder-foreground-muted focus:outline-none focus:ring-1 focus:ring-purple-500/50 resize-none min-h-[32px] max-h-[120px]"
                         style={{ height: 'auto' }}
                         onInput={(e) => {
                             const target = e.target as HTMLTextAreaElement;

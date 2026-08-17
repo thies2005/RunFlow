@@ -106,9 +106,9 @@ export default function MigrationTab() {
             {/* Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Export */}
-                <div className="bg-gray-50 border border-gray-100 rounded-lg p-5 space-y-3">
-                    <h3 className="font-semibold text-gray-800">Export Config Bundle</h3>
-                    <p className="text-sm text-gray-500">
+                <div className="bg-background-secondary border border-glass-border rounded-lg p-5 space-y-3">
+                    <h3 className="font-semibold text-foreground">Export Config Bundle</h3>
+                    <p className="text-sm text-foreground-muted">
                         Downloads a JSON file containing all AI providers (with decrypted API keys)
                         and global AI settings.
                     </p>
@@ -127,9 +127,9 @@ export default function MigrationTab() {
                 </div>
 
                 {/* Import */}
-                <div className="bg-gray-50 border border-gray-100 rounded-lg p-5 space-y-3">
-                    <h3 className="font-semibold text-gray-800">Import Config Bundle</h3>
-                    <p className="text-sm text-gray-500">
+                <div className="bg-background-secondary border border-glass-border rounded-lg p-5 space-y-3">
+                    <h3 className="font-semibold text-foreground">Import Config Bundle</h3>
+                    <p className="text-sm text-foreground-muted">
                         Upload a previously exported bundle. Providers will be created or updated;
                         API keys will be re-encrypted with this instance&apos;s key.
                     </p>
@@ -206,7 +206,7 @@ export default function MigrationTab() {
                     {result.results?.warnings && result.results.warnings.length > 0 && (
                         <div className="mt-2 space-y-1">
                             {result.results.warnings.map((w, i) => (
-                                <div key={i} className="flex gap-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                                <div key={i} className="flex gap-2 text-sm text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded p-2">
                                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
                                     {w}
                                 </div>

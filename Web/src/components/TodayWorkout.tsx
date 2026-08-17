@@ -24,67 +24,67 @@ const workoutConfig = {
         label: 'Easy Run',
         color: 'from-green-500 to-emerald-600',
         badge: 'badge-easy',
-        icon: <Activity className="w-8 h-8 text-white" />,
+        icon: <Activity className="w-8 h-8 text-foreground" />,
     },
     LONG_RUN: {
         label: 'Long Run',
         color: 'from-blue-500 to-indigo-600',
         badge: 'badge-easy',
-        icon: <Route className="w-8 h-8 text-white" />,
+        icon: <Route className="w-8 h-8 text-foreground" />,
     },
     TEMPO: {
         label: 'Tempo',
         color: 'from-yellow-500 to-orange-600',
         badge: 'badge-tempo',
-        icon: <Zap className="w-8 h-8 text-white" />,
+        icon: <Zap className="w-8 h-8 text-foreground" />,
     },
     INTERVALS: {
         label: 'Intervals',
         color: 'from-red-500 to-pink-600',
         badge: 'badge-interval',
-        icon: <Flame className="w-8 h-8 text-white" />,
+        icon: <Flame className="w-8 h-8 text-foreground" />,
     },
     FARTLEK: {
         label: 'Fartlek',
         color: 'from-orange-500 to-amber-600',
         badge: 'badge-tempo',
-        icon: <Zap className="w-8 h-8 text-white" />,
+        icon: <Zap className="w-8 h-8 text-foreground" />,
     },
     RECOVERY: {
         label: 'Recovery',
         color: 'from-cyan-500 to-teal-600',
         badge: 'badge-recovery',
-        icon: <Sparkles className="w-8 h-8 text-white" />,
+        icon: <Sparkles className="w-8 h-8 text-foreground" />,
     },
     REST: {
         label: 'Rest Day',
         color: 'from-gray-500 to-gray-600',
         badge: 'badge-recovery',
-        icon: <Moon className="w-8 h-8 text-white" />,
+        icon: <Moon className="w-8 h-8 text-foreground" />,
     },
     RIDE: {
         label: 'Ride',
         color: 'from-orange-500 to-red-600',
         badge: 'badge-tempo',
-        icon: <Bike className="w-8 h-8 text-white" />,
+        icon: <Bike className="w-8 h-8 text-foreground" />,
     },
     SWIM: {
         label: 'Swim',
         color: 'from-cyan-500 to-blue-600',
         badge: 'badge-interval',
-        icon: <Waves className="w-8 h-8 text-white" />,
+        icon: <Waves className="w-8 h-8 text-foreground" />,
     },
     STRENGTH: {
         label: 'Strength',
         color: 'from-purple-500 to-pink-600',
         badge: 'badge-recovery',
-        icon: <Dumbbell className="w-8 h-8 text-white" />,
+        icon: <Dumbbell className="w-8 h-8 text-foreground" />,
     },
     OTHER: {
         label: 'Other',
         color: 'from-gray-500 to-gray-600',
         badge: 'badge-easy',
-        icon: <Target className="w-8 h-8 text-white" />,
+        icon: <Target className="w-8 h-8 text-foreground" />,
     },
 };
 
@@ -107,11 +107,11 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
     if (!workout) {
         return (
             <div className="glass-card p-6 animate-slide-in">
-                <h2 className="text-lg font-semibold text-gray-400 mb-4">Today&apos;s Workout</h2>
+                <h2 className="text-lg font-semibold text-foreground-muted mb-4">Today&apos;s Workout</h2>
                 <div className="text-center py-8">
-                    <Target className="w-16 h-16 mx-auto text-gray-400 mb-4 block" />
-                    <p className="text-gray-400">No workout scheduled today</p>
-                    <p className="text-sm text-gray-500 mt-2">Set a race goal to generate your training plan</p>
+                    <Target className="w-16 h-16 mx-auto text-foreground-muted mb-4 block" />
+                    <p className="text-foreground-muted">No workout scheduled today</p>
+                    <p className="text-sm text-foreground-muted mt-2">Set a race goal to generate your training plan</p>
                 </div>
             </div>
         );
@@ -122,7 +122,7 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
     return (
         <div className="glass-card intensity-border p-6 animate-pulse-glow animate-slide-in">
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-300">Today&apos;s Workout</h2>
+                <h2 className="text-lg font-semibold text-foreground-muted">Today&apos;s Workout</h2>
                 <span className={`badge ${config.badge}`}>{config.label}</span>
             </div>
 
@@ -131,19 +131,19 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
                     {config.icon}
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-1">{config.label}</h3>
-                    <p className="text-gray-400">{workout.description}</p>
+                    <h3 className="text-2xl font-bold text-foreground mb-1">{config.label}</h3>
+                    <p className="text-foreground-muted">{workout.description}</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-6">
                 {workout.targetDistance && (
                     <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-gray-400 mb-1">
+                        <div className="flex items-center justify-center gap-1 text-foreground-muted mb-1">
                             <TrendingUp className="w-4 h-4" />
                             <span className="text-xs uppercase tracking-wide">Distance</span>
                         </div>
-                        <p className="text-xl font-bold text-white">
+                        <p className="text-xl font-bold text-foreground">
                             {(workout.targetDistance / 1000).toFixed(1)} km
                         </p>
                     </div>
@@ -151,11 +151,11 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
 
                 {workout.targetDuration && (
                     <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-gray-400 mb-1">
+                        <div className="flex items-center justify-center gap-1 text-foreground-muted mb-1">
                             <Clock className="w-4 h-4" />
                             <span className="text-xs uppercase tracking-wide">Duration</span>
                         </div>
-                        <p className="text-xl font-bold text-white">
+                        <p className="text-xl font-bold text-foreground">
                             {formatDuration(workout.targetDuration)}
                         </p>
                     </div>
@@ -163,10 +163,10 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
 
                 {workout.targetPace && (
                     <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-gray-400 mb-1">
+                        <div className="flex items-center justify-center gap-1 text-foreground-muted mb-1">
                             <span className="text-xs uppercase tracking-wide">Pace</span>
                         </div>
-                        <p className="text-xl font-bold text-white">
+                        <p className="text-xl font-bold text-foreground">
                             {formatPace(workout.targetPace.min)}-{formatPace(workout.targetPace.max)}
                         </p>
                     </div>
@@ -174,7 +174,7 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
 
                 {workout.targetHrZone && (
                     <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-gray-400 mb-1">
+                        <div className="flex items-center justify-center gap-1 text-foreground-muted mb-1">
                             <Heart className="w-4 h-4" />
                             <span className="text-xs uppercase tracking-wide">HR Zone</span>
                         </div>

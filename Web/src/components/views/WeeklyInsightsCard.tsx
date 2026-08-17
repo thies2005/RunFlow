@@ -40,11 +40,11 @@ export function WeeklyInsightsCard() {
             <div className="glass-card border border-glass-border rounded-2xl p-5 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 z-0" />
                 <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-2 text-white font-bold">
+                    <div className="flex items-center gap-2 mb-2 text-foreground font-bold">
                         <Sparkles className="w-5 h-5 text-blue-400" />
                         AI Weekly Insights
                     </div>
-                    <p className="text-sm text-gray-400 mb-4">
+                    <p className="text-sm text-foreground-muted mb-4">
                         Get a personalized breakdown of your nutrition consistency over the last 7 days.
                     </p>
                     <button
@@ -61,14 +61,14 @@ export function WeeklyInsightsCard() {
     return (
         <div className="glass-card border border-glass-border rounded-2xl p-5 relative overflow-hidden">
             <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-white font-bold">
+                <div className="flex items-center gap-2 text-foreground font-bold">
                     <Sparkles className="w-5 h-5 text-blue-400" />
                     Weekly Insights
                 </div>
                 <button
                     onClick={() => generateMutation.mutate()}
                     disabled={isGenerating}
-                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 transition-colors"
+                    className="p-1.5 rounded-lg bg-foreground/5 hover:bg-foreground/10 text-foreground-muted transition-colors"
                     title="Generate New Insight"
                 >
                     <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin text-blue-400' : ''}`} />
@@ -86,12 +86,12 @@ export function WeeklyInsightsCard() {
                 </div>
             ) : insight ? (
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between text-xs text-gray-500 border-b border-white/5 pb-3">
+                    <div className="flex items-center justify-between text-xs text-foreground-muted border-b border-foreground/5 pb-3">
                         <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {format(new Date(insight.rangeStart), 'MMM d')} - {format(new Date(insight.rangeEnd), 'MMM d')}</div>
                         <div className="flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> {insight.metrics?.daysLogged || 7} days logged</div>
                     </div>
                     
-                    <div className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap prose prose-invert prose-p:my-2 prose-ul:my-2 max-w-none [&_details]:bg-black/20 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-blue-300">
+                    <div className="text-sm text-foreground-muted leading-relaxed whitespace-pre-wrap prose dark:prose-invert prose-p:my-2 prose-ul:my-2 max-w-none [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-blue-300">
                         <ReactMarkdown rehypePlugins={[rehypeRaw]}>{insight.content}</ReactMarkdown>
                     </div>
                 </div>

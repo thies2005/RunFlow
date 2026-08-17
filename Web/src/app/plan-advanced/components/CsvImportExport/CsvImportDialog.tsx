@@ -167,16 +167,16 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg mx-4 shadow-2xl max-h-[85vh] flex flex-col">
-                <div className="flex items-center justify-between p-4 border-b border-zinc-800 shrink-0">
-                    <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+            <div className="bg-background-secondary border border-glass-border rounded-xl w-full max-w-lg mx-4 shadow-2xl max-h-[85vh] flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-glass-border shrink-0">
+                    <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                         <Upload className="w-4 h-4 text-orange-400" />
                         Import CSV
                     </h2>
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="p-1 rounded-md text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+                        className="p-1 rounded-md text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -193,17 +193,17 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
                                     isDragOver
                                         ? 'border-orange-500/50 bg-orange-500/5'
-                                        : 'border-zinc-700 bg-zinc-900/50 hover:border-zinc-500 hover:bg-zinc-800/50'
+                                        : 'border-foreground/20 bg-background-secondary/50 hover:border-foreground/30 hover:bg-background-tertiary/50'
                                 }`}
                             >
-                                <Upload className={`w-8 h-8 mx-auto mb-3 ${isDragOver ? 'text-orange-400' : 'text-zinc-600'}`} />
-                                <p className="text-sm text-zinc-300 font-medium">
+                                <Upload className={`w-8 h-8 mx-auto mb-3 ${isDragOver ? 'text-orange-400' : 'text-foreground-muted'}`} />
+                                <p className="text-sm text-foreground-secondary font-medium">
                                     Drop your CSV file here
                                 </p>
-                                <p className="text-xs text-zinc-600 mt-1">
+                                <p className="text-xs text-foreground-muted mt-1">
                                     or click to browse
                                 </p>
-                                <p className="text-[10px] text-zinc-700 mt-2">
+                                <p className="text-[10px] text-foreground-muted mt-2">
                                     Supports .csv files from TrainingPeaks, FinalSurge, or RunFlow
                                 </p>
                                 <input
@@ -226,8 +226,8 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                         <>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-xs text-zinc-300 font-medium">{file?.name}</p>
-                                    <p className="text-[10px] text-zinc-600">{(file?.size ? (file.size / 1024).toFixed(1) : 0)} KB</p>
+                                    <p className="text-xs text-foreground-secondary font-medium">{file?.name}</p>
+                                    <p className="text-[10px] text-foreground-muted">{(file?.size ? (file.size / 1024).toFixed(1) : 0)} KB</p>
                                 </div>
                                 <button
                                     type="button"
@@ -238,7 +238,7 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                                         setParseErrors([]);
                                         setPreviewData(null);
                                     }}
-                                    className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                                    className="text-xs text-foreground-muted hover:text-foreground-secondary transition-colors"
                                 >
                                     Change file
                                 </button>
@@ -249,7 +249,7 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                             {previewMutation.isPending && (
                                 <div className="flex flex-col items-center py-8 gap-3">
                                     <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
-                                    <p className="text-xs text-zinc-500">Parsing CSV...</p>
+                                    <p className="text-xs text-foreground-muted">Parsing CSV...</p>
                                 </div>
                             )}
 
@@ -263,10 +263,10 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
 
                             {!previewMutation.isPending && previewData && (
                                 <>
-                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800/50 border border-zinc-800">
+                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background-tertiary/50 border border-glass-border">
                                         <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs text-zinc-300">
+                                            <p className="text-xs text-foreground-secondary">
                                                 {previewData.validRows} valid workouts found
                                             </p>
                                             {previewData.invalidRows > 0 && (
@@ -287,19 +287,19 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                             {step === 'confirming' && (
                                 <div className="flex flex-col items-center py-4 gap-3">
                                     <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
-                                    <p className="text-xs text-zinc-500">Importing workouts...</p>
+                                    <p className="text-xs text-foreground-muted">Importing workouts...</p>
                                 </div>
                             )}
                         </>
                     )}
                 </div>
 
-                <div className="flex items-center justify-between p-4 border-t border-zinc-800 shrink-0">
+                <div className="flex items-center justify-between p-4 border-t border-glass-border shrink-0">
                     {step === 'upload' ? (
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="px-3 py-1.5 rounded-md text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+                            className="px-3 py-1.5 rounded-md text-xs text-foreground-secondary hover:text-foreground transition-colors"
                         >
                             Cancel
                         </button>
@@ -313,7 +313,7 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                                 setParseErrors([]);
                                 setPreviewData(null);
                             }}
-                            className="px-3 py-1.5 rounded-md text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+                            className="px-3 py-1.5 rounded-md text-xs text-foreground-secondary hover:text-foreground transition-colors"
                             disabled={previewMutation.isPending || confirmMutation.isPending}
                         >
                             Back
@@ -327,7 +327,7 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                                     type="button"
                                     onClick={() => previewMutation.mutate()}
                                     disabled={previewMutation.isPending}
-                                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-zinc-700 text-zinc-200 text-xs font-medium hover:bg-zinc-600 transition-colors disabled:opacity-50"
+                                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-foreground/15 text-foreground text-xs font-medium hover:bg-foreground/20 transition-colors disabled:opacity-50"
                                 >
                                     {previewMutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                                     Parse Server-Side

@@ -103,7 +103,7 @@ export default function Dashboard() {
     if (status === 'loading' && !sessionTimedOut) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-pulse text-gray-400">Loading...</div>
+                <div className="animate-pulse text-foreground-muted">Loading...</div>
             </div>
         );
     }
@@ -114,7 +114,7 @@ export default function Dashboard() {
                 <div className="text-center max-w-md px-4">
                     <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-foreground mb-2">Unable to load session</h2>
-                    <p className="text-gray-400 mb-4">The session check is taking too long. This may be a network or database issue.</p>
+                    <p className="text-foreground-muted mb-4">The session check is taking too long. This may be a network or database issue.</p>
                     <button onClick={() => { setSessionTimedOut(false); }} className="btn-primary py-2 px-6">
                         Retry
                     </button>
@@ -126,7 +126,7 @@ export default function Dashboard() {
     if (status === 'authenticated' && isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-pulse text-gray-400">Loading dashboard...</div>
+                <div className="animate-pulse text-foreground-muted">Loading dashboard...</div>
             </div>
         );
     }
@@ -214,7 +214,7 @@ export default function Dashboard() {
                                 Welcome back, {session?.user?.name?.split(' ')[0] || 'Runner'}!
                                 <Hand className="w-8 h-8 text-accent-orange" />
                             </h1>
-                            <p className="text-gray-400">
+                            <p className="text-foreground-muted">
                                 {syncStatus?.totalActivities ? `${syncStatus.totalActivities} activities synced` : 'Sync your Strava activities to get started'}
                             </p>
                         </div>
@@ -254,7 +254,7 @@ export default function Dashboard() {
                                             <Target className="w-8 h-8 text-accent-orange" />
                                         </div>
                                         <h3 className="text-xl font-semibold text-foreground mb-2">No Active Training Plan</h3>
-                                        <p className="text-gray-400 mb-6 text-sm">
+                                        <p className="text-foreground-muted mb-6 text-sm">
                                             You don&apos;t have an active training plan yet. Create one when you&apos;re ready to start training!
                                         </p>
                                         <button

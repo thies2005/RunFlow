@@ -25,8 +25,8 @@ export function SummaryStats({ period, fitness }: SummaryStatsProps) {
             value: period.plannedTss.toFixed(0),
             sub: 'scheduled load',
             icon: ClipboardList,
-            color: 'text-zinc-300',
-            bg: 'bg-zinc-500/10',
+            color: 'text-foreground-secondary',
+            bg: 'bg-foreground/10',
         },
         {
             label: 'Avg VO₂max',
@@ -71,16 +71,16 @@ export function SummaryStats({ period, fitness }: SummaryStatsProps) {
     ];
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 px-4 py-3 border-b border-zinc-800 bg-zinc-900/40 shrink-0">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 px-4 py-3 border-b border-glass-border bg-background-secondary/40 shrink-0">
             {cards.map((c) => (
-                <div key={c.label} className="rounded-lg bg-zinc-900 border border-zinc-800 p-2.5 flex items-center gap-2.5">
+                <div key={c.label} className="rounded-lg bg-background-secondary border border-glass-border p-2.5 flex items-center gap-2.5">
                     <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${c.bg}`}>
                         <c.icon className={`w-4 h-4 ${c.color}`} />
                     </div>
                     <div className="min-w-0">
-                        <div className="text-[10px] text-zinc-500 uppercase tracking-wide truncate">{c.label}</div>
+                        <div className="text-[10px] text-foreground-muted uppercase tracking-wide truncate">{c.label}</div>
                         <div className={`text-base font-semibold leading-none ${c.color}`}>{c.value}</div>
-                        <div className="text-[10px] text-zinc-600 mt-0.5 truncate">{c.sub}</div>
+                        <div className="text-[10px] text-foreground-muted mt-0.5 truncate">{c.sub}</div>
                     </div>
                 </div>
             ))}

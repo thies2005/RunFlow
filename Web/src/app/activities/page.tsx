@@ -61,7 +61,7 @@ export default function ActivitiesPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="animate-pulse text-gray-500">Loading...</div>
+                <div className="animate-pulse text-foreground-muted">Loading...</div>
             </div>
         );
     }
@@ -129,7 +129,7 @@ export default function ActivitiesPage() {
                         </div>
 
                         <div className="glass-card p-6">
-                            <p className="text-gray-400 mb-4 text-sm">
+                            <p className="text-foreground-muted mb-4 text-sm">
                                 Showing {allActivities.length} of {totalCount} {filter.toLowerCase() === 'all' ? 'activities' : filter.toLowerCase() + 's'}.
                             </p>
                             <ActivityList

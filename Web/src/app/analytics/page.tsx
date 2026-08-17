@@ -360,7 +360,7 @@ export default function AnalyticsPage() {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 {showLoading ? (
                     <div className="flex items-center justify-center py-20">
-                        <div className="animate-pulse text-gray-400">Loading analytics...</div>
+                        <div className="animate-pulse text-foreground-muted">Loading analytics...</div>
                     </div>
                 ) : (
                     <>
@@ -420,19 +420,19 @@ export default function AnalyticsPage() {
                         <div className="glass-card p-4">
                             <div className="grid grid-cols-4 gap-4 text-center text-sm">
                                 <div>
-                                    <p className="text-gray-500">Avg Weekly</p>
+                                    <p className="text-foreground-muted">Avg Weekly</p>
                                     <p className="text-foreground font-semibold">{runalyzeMetrics.details.avgWeeklyKm} km</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-500">Target Weekly</p>
+                                    <p className="text-foreground-muted">Target Weekly</p>
                                     <p className="text-foreground font-semibold">{runalyzeMetrics.details.targetWeeklyKm} km</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-500">Long Run Points</p>
+                                    <p className="text-foreground-muted">Long Run Points</p>
                                     <p className="text-foreground font-semibold">{runalyzeMetrics.details.longRunPoints} / 10</p>
                                 </div>
                                 <div>
-                                    <p className="text-gray-500">Calibration</p>
+                                    <p className="text-foreground-muted">Calibration</p>
                                     <p className="text-foreground font-semibold">{runalyzeMetrics.calibrationFactor.toFixed(2)}x</p>
                                 </div>
                             </div>

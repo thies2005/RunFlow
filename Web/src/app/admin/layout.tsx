@@ -47,7 +47,7 @@ function AdminLayoutContent({
     }
 
     return (
-        <div className="h-screen w-full flex overflow-hidden bg-gray-50 text-gray-900">
+        <div className="h-screen w-full flex overflow-hidden bg-background-secondary text-foreground">
             {mobileMenuOpen && (
                 <div
                     className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -57,14 +57,14 @@ function AdminLayoutContent({
 
             <aside className={`
                 fixed inset-y-0 left-0 z-50
-                w-64 bg-slate-900 text-slate-300 flex flex-col
+                w-64 bg-background-tertiary text-foreground-secondary flex flex-col
                 transition-transform duration-300 ease-in-out
                 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
                 md:translate-x-0 md:static md:z-0
             `}>
-                <div className="p-6 flex items-center space-x-2 border-b border-slate-700">
+                <div className="p-6 flex items-center space-x-2 border-b border-glass-border">
                     <Shield className="w-8 h-8 text-emerald-500" />
-                    <span className="text-xl font-bold text-white">Admin</span>
+                    <span className="text-xl font-bold text-foreground">Admin</span>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -80,7 +80,7 @@ function AdminLayoutContent({
                                     flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors
                                     ${isActive
                                         ? 'bg-emerald-600 text-white'
-                                        : 'text-slate-300 hover:bg-slate-800'
+                                        : 'text-foreground-secondary hover:bg-foreground/10'
                                     }
                                 `}
                             >
@@ -91,29 +91,29 @@ function AdminLayoutContent({
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-slate-700">
+                <div className="p-4 border-t border-glass-border">
                     <button
                         onClick={() => {
                             document.cookie = 'runflow_admin_token=; Max-Age=0; path=/;';
                             router.push('/admin/login');
                         }}
-                        className="flex items-center space-x-3 px-4 py-3 w-full text-slate-300 hover:bg-slate-800 rounded-lg transition-colors"
+                        className="flex items-center space-x-3 px-4 py-3 w-full text-foreground-secondary hover:bg-foreground/10 rounded-lg transition-colors"
                     >
                         <LogOut className="w-5 h-5" />
                         <span>Logout</span>
                     </button>
-                    <div className="mt-4 px-4 text-xs text-slate-500">
+                    <div className="mt-4 px-4 text-xs text-foreground-muted">
                         RunFlow Admin v1.0
                     </div>
                 </div>
             </aside>
 
             <div className="flex-1 flex flex-col min-w-0">
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shrink-0 z-10">
+                <header className="h-16 bg-background-secondary border-b border-glass-border flex items-center justify-between px-4 md:px-6 shrink-0 z-10">
                     <div className="flex items-center space-x-4">
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-600"
+                            className="md:hidden p-2 rounded-lg hover:bg-background-tertiary text-foreground-secondary"
                             aria-label="Toggle menu"
                         >
                             {mobileMenuOpen ? (
@@ -122,7 +122,7 @@ function AdminLayoutContent({
                                 <Menu className="w-6 h-6" />
                             )}
                         </button>
-                        <h1 className="text-lg font-semibold text-gray-900">
+                        <h1 className="text-lg font-semibold text-foreground">
                             Admin Dashboard
                         </h1>
                     </div>

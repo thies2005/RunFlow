@@ -30,7 +30,7 @@ export function GoalTimelineMarker({ goal, x, onClick }: GoalTimelineMarkerProps
                 onClick={onClick}
                 onMouseEnter={() => setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
-                className="text-[7px] text-zinc-400 hover:text-zinc-200 whitespace-nowrap mt-0.5 block"
+                className="text-[7px] text-foreground-secondary hover:text-foreground whitespace-nowrap mt-0.5 block"
                 style={{
                     maxWidth: '60px',
                     overflow: 'hidden',
@@ -40,15 +40,15 @@ export function GoalTimelineMarker({ goal, x, onClick }: GoalTimelineMarkerProps
                 {goal.name}
             </button>
             {showTooltip && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-[10px] text-zinc-200 whitespace-nowrap z-10 pointer-events-none">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-background-tertiary border border-foreground/20 rounded px-2 py-1 text-[10px] text-foreground whitespace-nowrap z-10 pointer-events-none">
                     <div className="font-medium">{goal.name}</div>
-                    <div className="text-zinc-400">
+                    <div className="text-foreground-secondary">
                         {goal.raceDate ? new Date(goal.raceDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No date'}
                     </div>
                     <div className={`inline-block mt-0.5 px-1 rounded text-[9px] border ${config.color}`}>
                         {config.label}
                     </div>
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-zinc-700" />
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-background-tertiary" />
                 </div>
             )}
         </div>

@@ -216,15 +216,15 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
 
     return (
         <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+            <div className="bg-background-secondary w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-safe border-b border-white/10 shrink-0">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <div className="flex items-center justify-between p-4 pt-safe border-b border-foreground/10 shrink-0">
+                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                         <Target className="w-5 h-5 text-pink-500" />
                         Nutrition Targets
                     </h2>
-                    <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-white">
+                    <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -237,21 +237,21 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                     ) : (
                         <>
                             {/* Insight box */}
-                            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                            <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-gray-300 flex items-center gap-1.5"><Flame className="w-4 h-4 text-orange-400" /> Est. BMR</span>
-                                    <span className="text-white font-bold">{Math.round(bmr)} kcal</span>
+                                    <span className="text-sm font-medium text-foreground-muted flex items-center gap-1.5"><Flame className="w-4 h-4 text-orange-400" /> Est. BMR</span>
+                                    <span className="text-foreground font-bold">{Math.round(bmr)} kcal</span>
                                 </div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-gray-300 flex items-center gap-1.5"><Activity className="w-4 h-4 text-blue-400" /> Avg Daily Activity</span>
-                                    <span className="text-white font-bold">{Math.round(targetData?.avgActiveCalories || 0)} kcal</span>
+                                    <span className="text-sm font-medium text-foreground-muted flex items-center gap-1.5"><Activity className="w-4 h-4 text-blue-400" /> Avg Daily Activity</span>
+                                    <span className="text-foreground font-bold">{Math.round(targetData?.avgActiveCalories || 0)} kcal</span>
                                 </div>
-                                <div className="h-px bg-white/10 my-2"></div>
+                                <div className="h-px bg-foreground/10 my-2"></div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium text-gray-300">Est. TDEE (Maintenance)</span>
+                                    <span className="text-sm font-medium text-foreground-muted">Est. TDEE (Maintenance)</span>
                                     <span className="text-pink-400 font-bold">{Math.round(tdee)} kcal</span>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-3 flex gap-1">
+                                <p className="text-xs text-foreground-muted mt-3 flex gap-1">
                                     <Info className="w-3.5 h-3.5 shrink-0" />
                                     TDEE includes your Base Metabolic Rate + TEF (10%) + average activity from the past 30 days.
                                 </p>
@@ -260,8 +260,8 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                             {/* Calories Slider */}
                             <div>
                                 <div className="flex justify-between items-end mb-2">
-                                    <label className="text-sm font-semibold text-white">Daily Calorie Target</label>
-                                    <span className="text-2xl font-bold text-pink-500">{Math.round(targetCalories)} <span className="text-xs font-normal text-gray-400">kcal</span></span>
+                                    <label className="text-sm font-semibold text-foreground">Daily Calorie Target</label>
+                                    <span className="text-2xl font-bold text-pink-500">{Math.round(targetCalories)} <span className="text-xs font-normal text-foreground-muted">kcal</span></span>
                                 </div>
 
                                 <input
@@ -271,9 +271,9 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                     step="50"
                                     value={targetCalories}
                                     onChange={(e) => handleCalorieChange(parseFloat(e.target.value))}
-                                    className="w-full accent-pink-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                                    className="w-full accent-pink-500 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer"
                                 />
-                                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <div className="flex justify-between text-xs text-foreground-muted mt-1">
                                     <span>Extreme Diet (800)</span>
                                     <span className="text-pink-400/80 cursor-pointer" onClick={() => handleCalorieChange(tdee)}>Set Maintenance</span>
                                     <span>Extreme Bulk (5000)</span>
@@ -283,8 +283,8 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                             {/* Protein Slider */}
                             <div>
                                 <div className="flex justify-between items-end mb-2">
-                                    <label className="text-sm font-semibold text-white">Protein Target</label>
-                                    <span className="text-lg font-bold text-blue-400">{proteinMultiplier.toFixed(1)} <span className="text-xs font-normal text-gray-400">g/kg</span></span>
+                                    <label className="text-sm font-semibold text-foreground">Protein Target</label>
+                                    <span className="text-lg font-bold text-blue-400">{proteinMultiplier.toFixed(1)} <span className="text-xs font-normal text-foreground-muted">g/kg</span></span>
                                 </div>
 
                                 <input
@@ -294,9 +294,9 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                     step="0.1"
                                     value={proteinMultiplier}
                                     onChange={(e) => handleProteinChange(parseFloat(e.target.value))}
-                                    className="w-full accent-blue-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                                    className="w-full accent-blue-500 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer"
                                 />
-                                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <div className="flex justify-between text-xs text-foreground-muted mt-1">
                                     <span>Min (0.8g)</span>
                                     <span>Max (3.0g)</span>
                                 </div>
@@ -304,35 +304,35 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
 
                             {/* Macros Result */}
                             <div>
-                                <h3 className="text-sm font-semibold text-white mb-3">Macro Distribution</h3>
+                                <h3 className="text-sm font-semibold text-foreground mb-3">Macro Distribution</h3>
 
-                                <div className="flex h-3 rounded-full overflow-hidden mb-4 bg-white/10">
+                                <div className="flex h-3 rounded-full overflow-hidden mb-4 bg-foreground/10">
                                     <div style={{ width: `${proteinPercent}%` }} className="bg-blue-500" />
                                     <div style={{ width: `${carbPercent}%` }} className="bg-green-500" />
                                     <div style={{ width: `${fatPercent}%` }} className="bg-orange-500" />
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                                    <div className="bg-white/5 rounded-lg p-2 border border-blue-500/20">
+                                    <div className="bg-foreground/5 rounded-lg p-2 border border-blue-500/20">
                                         <div className="text-blue-400 font-bold mb-0.5">{proteinPercent.toFixed(0)}%</div>
-                                        <div className="text-white">{Math.round(pGrams)}g</div>
-                                        <div className="text-xs text-gray-500">Protein</div>
+                                        <div className="text-foreground">{Math.round(pGrams)}g</div>
+                                        <div className="text-xs text-foreground-muted">Protein</div>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-2 border border-green-500/20">
+                                    <div className="bg-foreground/5 rounded-lg p-2 border border-green-500/20">
                                         <div className="text-green-400 font-bold mb-0.5">{carbPercent.toFixed(0)}%</div>
-                                        <div className="text-white">{Math.round(cGrams)}g</div>
-                                        <div className="text-xs text-gray-500">Carbs</div>
+                                        <div className="text-foreground">{Math.round(cGrams)}g</div>
+                                        <div className="text-xs text-foreground-muted">Carbs</div>
                                     </div>
-                                    <div className="bg-white/5 rounded-lg p-2 border border-orange-500/20">
+                                    <div className="bg-foreground/5 rounded-lg p-2 border border-orange-500/20">
                                         <div className="text-orange-400 font-bold mb-0.5">{fatPercent.toFixed(0)}%</div>
-                                        <div className="text-white">{Math.round(fGrams)}g</div>
-                                        <div className="text-xs text-gray-500">Fats</div>
+                                        <div className="text-foreground">{Math.round(fGrams)}g</div>
+                                        <div className="text-xs text-foreground-muted">Fats</div>
                                     </div>
                                 </div>
 
                                 {/* Fat & Carb Balancer */}
                                 <div className="mt-4">
-                                    <label className="text-xs font-medium text-gray-400 flex justify-between mb-2">
+                                    <label className="text-xs font-medium text-foreground-muted flex justify-between mb-2">
                                         <span>Balance Fats vs Carbs</span>
                                     </label>
                                     <input
@@ -342,7 +342,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                         step="1"
                                         value={fatPercent}
                                         onChange={(e) => handleFatChange(parseFloat(e.target.value))}
-                                        className="w-full accent-orange-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                                        className="w-full accent-orange-500 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer"
                                     />
                                 </div>
 
@@ -357,28 +357,28 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                             </div>
 
                             {/* Additional Settings */}
-                            <div className="border-t border-white/10 pt-6">
-                                <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                            <div className="border-t border-foreground/10 pt-6">
+                                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                                     <Activity className="w-4 h-4 text-blue-400" />
                                     Tracking Preferences
                                 </h3>
 
                                 {/* Exercise Calorie Source */}
                                 <div className="mb-6">
-                                    <label className="text-sm font-semibold text-white block mb-2">Exercise Calorie Source</label>
-                                    <p className="text-xs text-gray-500 mb-3">
+                                    <label className="text-sm font-semibold text-foreground block mb-2">Exercise Calorie Source</label>
+                                    <p className="text-xs text-foreground-muted mb-3">
                                         Choose where your active calories are imported from.
                                     </p>
-                                    <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
+                                    <div className="flex bg-foreground/5 rounded-lg p-1 border border-foreground/10">
                                         <button
                                             onClick={() => setExerciseCalorieSource('strava')}
-                                            className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors ${exerciseCalorieSource === 'strava' ? 'bg-[#fc4c02] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                            className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors ${exerciseCalorieSource === 'strava' ? 'bg-[#fc4c02] text-white shadow-lg' : 'text-foreground-muted hover:text-foreground hover:bg-foreground/5'}`}
                                         >
                                             Strava
                                         </button>
                                         <button
                                             onClick={() => setExerciseCalorieSource('health_connect')}
-                                            className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors ${exerciseCalorieSource === 'health_connect' ? 'bg-blue-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                            className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors ${exerciseCalorieSource === 'health_connect' ? 'bg-blue-500 text-white shadow-lg' : 'text-foreground-muted hover:text-foreground hover:bg-foreground/5'}`}
                                         >
                                             Health Connect
                                         </button>
@@ -394,10 +394,10 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                 {/* Exercise Calorie Factor */}
                                 <div className="mb-6">
                                     <div className="flex justify-between items-end mb-2">
-                                        <label className="text-sm font-semibold text-white">Exercise Calorie Factor</label>
+                                        <label className="text-sm font-semibold text-foreground">Exercise Calorie Factor</label>
                                         <span className="text-lg font-bold text-pink-400">{exerciseCalorieFactor.toFixed(2)}x</span>
                                     </div>
-                                    <p className="text-xs text-gray-500 mb-3">
+                                    <p className="text-xs text-foreground-muted mb-3">
                                         How heavily should tracked exercise calories impact your remaining budget? (0 = ignore exercise, 1 = full credit).
                                     </p>
                                     <input
@@ -407,9 +407,9 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                         step="0.05"
                                         value={exerciseCalorieFactor}
                                         onChange={(e) => setExerciseCalorieFactor(parseFloat(e.target.value))}
-                                        className="w-full accent-pink-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                                        className="w-full accent-pink-500 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer"
                                     />
-                                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                    <div className="flex justify-between text-xs text-foreground-muted mt-1">
                                         <span>Ignore (0x)</span>
                                         <span>Half (0.5x)</span>
                                         <span>Full (1x)</span>
@@ -420,59 +420,59 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <label className="text-sm font-semibold text-white">Water Tracker</label>
-                                            <p className="text-xs text-gray-500 mt-0.5">Enable the water logging card on your dashboard.</p>
+                                            <label className="text-sm font-semibold text-foreground">Water Tracker</label>
+                                            <p className="text-xs text-foreground-muted mt-0.5">Enable the water logging card on your dashboard.</p>
                                         </div>
                                         <button
                                             onClick={() => setWaterTrackingEnabled(!waterTrackingEnabled)}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${waterTrackingEnabled ? 'bg-blue-500' : 'bg-gray-600'}`}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${waterTrackingEnabled ? 'bg-blue-500' : 'bg-foreground/20'}`}
                                         >
                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${waterTrackingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
 
                                     {waterTrackingEnabled && (
-                                        <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-                                            <label className="text-xs font-semibold text-gray-400 mb-1 block">Daily Water Goal (ml)</label>
+                                        <div className="bg-foreground/5 rounded-xl p-3 border border-foreground/10">
+                                            <label className="text-xs font-semibold text-foreground-muted mb-1 block">Daily Water Goal (ml)</label>
                                             <div className="flex items-center gap-2">
                                                 <input
                                                     type="number"
                                                     value={waterGoalMl}
                                                     onChange={(e) => setWaterGoalMl(parseInt(e.target.value) || 0)}
-                                                    className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:outline-hidden focus:border-blue-500"
+                                                    className="bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground w-full focus:outline-hidden focus:border-blue-500"
                                                     min="500"
                                                     step="100"
                                                 />
-                                                <span className="text-xs font-semibold text-gray-500 bg-white/5 py-2 px-3 rounded-lg">ml</span>
+                                                <span className="text-xs font-semibold text-foreground-muted bg-foreground/5 py-2 px-3 rounded-lg">ml</span>
                                             </div>
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Intermittent Fasting */}
-                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                <div className="space-y-4 pt-4 border-t border-foreground/5">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <label className="text-sm font-semibold text-white">Intermittent Fasting Timer</label>
-                                            <p className="text-xs text-gray-500 mt-0.5">Enable the fasting tracker on your dashboard.</p>
+                                            <label className="text-sm font-semibold text-foreground">Intermittent Fasting Timer</label>
+                                            <p className="text-xs text-foreground-muted mt-0.5">Enable the fasting tracker on your dashboard.</p>
                                         </div>
                                         <button
                                             onClick={() => setFastingEnabled(!fastingEnabled)}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${fastingEnabled ? 'bg-blue-500' : 'bg-gray-600'}`}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${fastingEnabled ? 'bg-blue-500' : 'bg-foreground/20'}`}
                                         >
                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${fastingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
 
                                     {fastingEnabled && (
-                                        <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-                                            <label className="text-xs font-semibold text-gray-400 mb-1 block">Daily Fasting Goal (Hours)</label>
+                                        <div className="bg-foreground/5 rounded-xl p-3 border border-foreground/10">
+                                            <label className="text-xs font-semibold text-foreground-muted mb-1 block">Daily Fasting Goal (Hours)</label>
                                             <div className="flex gap-2">
                                                 {[12, 16, 18, 20].map(h => (
                                                     <button
                                                         key={h}
                                                         onClick={() => setFastingGoalHours(h)}
-                                                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${fastingGoalHours === h ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-black/50 text-gray-400 border-white/10 hover:border-white/20'}`}
+                                                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${fastingGoalHours === h ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-background-tertiary text-foreground-muted border-glass-border hover:border-foreground/20'}`}
                                                     >
                                                         {h}h
                                                     </button>
@@ -487,7 +487,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 pb-8 sm:pb-4 pb-safe border-t border-white/10 shrink-0">
+                <div className="p-4 pb-8 sm:pb-4 pb-safe border-t border-foreground/10 shrink-0">
                     <button
                         onClick={() => saveMutation.mutate()}
                         disabled={saveMutation.isPending || isLoading}

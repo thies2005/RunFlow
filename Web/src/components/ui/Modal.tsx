@@ -117,7 +117,7 @@ export function Modal({
                 {!hideCloseButton && (
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10"
+                        className="absolute top-4 right-4 text-foreground-muted hover:text-foreground transition-colors z-10"
                         aria-label="Close modal"
                     >
                         <X className="w-5 h-5" />
@@ -132,7 +132,7 @@ export function Modal({
                             </div>
                         )}
                         {title && (
-                            <h2 id={titleId} className="text-xl font-bold text-white break-words">
+                            <h2 id={titleId} className="text-xl font-bold text-foreground break-words">
                                 {title}
                             </h2>
                         )}

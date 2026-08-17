@@ -25,8 +25,8 @@ export function CalendarDay({ date, workouts, raceDate, selectedDate, onClick }:
             className={`
                 flex flex-col items-center justify-center p-0.5 rounded-md transition-colors
                 ${today ? 'ring-1 ring-orange-400/50 bg-orange-500/10' : ''}
-                ${isSelected ? 'bg-zinc-700' : 'hover:bg-zinc-800/60'}
-                ${isWeekend ? 'text-zinc-500' : 'text-zinc-300'}
+                ${isSelected ? 'bg-foreground/15' : 'hover:bg-background-tertiary/60'}
+                ${isWeekend ? 'text-foreground-muted' : 'text-foreground-secondary'}
                 w-full h-7 text-xs
             `}
         >
@@ -41,7 +41,7 @@ export function CalendarDay({ date, workouts, raceDate, selectedDate, onClick }:
                         <WorkoutDot key={i} type={w.workoutType} size="sm" />
                     ))}
                     {workouts.length > 3 && (
-                        <span className="text-[7px] text-zinc-500">+{workouts.length - 3}</span>
+                        <span className="text-[7px] text-foreground-muted">+{workouts.length - 3}</span>
                     )}
                 </div>
             ) : null}

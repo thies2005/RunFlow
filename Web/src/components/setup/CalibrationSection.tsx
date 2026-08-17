@@ -107,7 +107,7 @@ export default function CalibrationSection({
             {calibrationMode === 'activity' && (
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1 uppercase">Select Race Activity</label>
+                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Select Race Activity</label>
                         <select
                             value={selectedActivityId}
                             onChange={(e) => setSelectedActivityId(e.target.value)}
@@ -121,7 +121,7 @@ export default function CalibrationSection({
                             ))}
                         </select>
                         {raceActivities.length === 0 && (
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className="text-xs text-foreground-muted mt-2">
                                 No race-eligible activities found. Try manual entry instead.
                             </p>
                         )}
@@ -129,7 +129,7 @@ export default function CalibrationSection({
 
                     {selectedActivityId && (
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Race Distance</label>
+                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Race Distance</label>
                             <select
                                 value={calibrationDistance}
                                 onChange={(e) => setCalibrationDistance(e.target.value)}
@@ -149,7 +149,7 @@ export default function CalibrationSection({
             {calibrationMode === 'manual' && (
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1 uppercase">Race Distance</label>
+                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Race Distance</label>
                         <select
                             value={calibrationDistance}
                             onChange={(e) => setCalibrationDistance(e.target.value)}
@@ -269,7 +269,7 @@ export default function CalibrationSection({
                                             {raceVdot.toFixed(1)} ({factorPercent >= 0 ? '+' : ''}{factorPercent.toFixed(1)}%)
                                         </span>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-2">
+                                    <p className="text-xs text-foreground-muted mt-2">
                                         {factorPercent >= 5 ? (
                                             <><Rocket className="w-4 h-4 inline" /> Race performance exceeds training predictions. Goal times adjusted accordingly.</>
                                         ) : factorPercent >= 0 ? (

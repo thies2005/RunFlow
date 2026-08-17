@@ -18,7 +18,7 @@ export default function OnboardingPage() {
     if (status === 'loading') {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-pulse text-gray-400">Loading...</div>
+                <div className="animate-pulse text-foreground-muted">Loading...</div>
             </div>
         );
     }
@@ -26,7 +26,7 @@ export default function OnboardingPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-pulse text-gray-400">Loading Onboarding...</div>
+                <div className="animate-pulse text-foreground-muted">Loading Onboarding...</div>
             </div>
         }>
             <OnboardingWizard />

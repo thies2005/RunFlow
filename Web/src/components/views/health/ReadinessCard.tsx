@@ -104,26 +104,26 @@ export default function ReadinessCard() {
         return (
             <div className="glass-card border border-glass-border rounded-2xl p-5 animate-pulse">
                 <div className="flex items-center gap-2 mb-4">
-                    <div className="w-4 h-4 rounded bg-white/20" />
-                    <div className="w-24 h-3 rounded bg-white/20" />
+                    <div className="w-4 h-4 rounded bg-foreground/20" />
+                    <div className="w-24 h-3 rounded bg-foreground/20" />
                 </div>
                 <div className="flex items-center gap-5">
-                    <div className="w-20 h-20 rounded-full bg-white/10" />
+                    <div className="w-20 h-20 rounded-full bg-foreground/10" />
                     <div className="flex-1 space-y-2">
-                        <div className="w-20 h-4 rounded bg-white/20" />
-                        <div className="w-32 h-3 rounded bg-white/10" />
+                        <div className="w-20 h-4 rounded bg-foreground/20" />
+                        <div className="w-32 h-3 rounded bg-foreground/10" />
                     </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 mt-4">
                     {Array.from({ length: 4 }).map((_, i) => (
                         <div key={i} className="flex flex-col items-center gap-1">
-                            <div className="w-3.5 h-3.5 rounded bg-white/15" />
-                            <div className="w-8 h-2 rounded bg-white/10" />
-                            <div className="w-6 h-3 rounded bg-white/20" />
+                            <div className="w-3.5 h-3.5 rounded bg-foreground/15" />
+                            <div className="w-8 h-2 rounded bg-foreground/10" />
+                            <div className="w-6 h-3 rounded bg-foreground/20" />
                         </div>
                     ))}
                 </div>
-                <div className="h-16 mt-4 rounded bg-white/5" />
+                <div className="h-16 mt-4 rounded bg-foreground/5" />
             </div>
         );
     }
@@ -154,10 +154,10 @@ export default function ReadinessCard() {
             <div className="glass-card border border-glass-border rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-3">
                     <Heart className="w-4 h-4 text-pink-400" />
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Readiness</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-foreground-muted">Readiness</h4>
                 </div>
-                <p className="text-sm text-gray-500 text-center py-6">No readiness data yet</p>
-                <p className="text-xs text-gray-600 text-center">Complete a workout or sync health data to see your readiness score.</p>
+                <p className="text-sm text-foreground-muted text-center py-6">No readiness data yet</p>
+                <p className="text-xs text-foreground-secondary text-center">Complete a workout or sync health data to see your readiness score.</p>
             </div>
         );
     }
@@ -181,14 +181,14 @@ export default function ReadinessCard() {
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <Heart className="w-4 h-4 text-pink-400" />
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400">Readiness</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-foreground-muted">Readiness</h4>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-gray-400 font-medium capitalize">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-foreground/10 text-foreground-muted font-medium capitalize">
                         {daily.confidence}
                     </span>
                     {daily.syncedAt && (
-                        <span className="text-[10px] text-gray-600">
+                        <span className="text-[10px] text-foreground-secondary">
                             Synced {new Date(daily.syncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                     )}
@@ -204,7 +204,7 @@ export default function ReadinessCard() {
                         {STATE_LABELS[daily.state] || daily.state}
                     </p>
                     {daily.reasons && Array.isArray(daily.reasons) && daily.reasons.length > 0 && (
-                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">{daily.reasons[0]}</p>
+                        <p className="text-xs text-foreground-muted mt-1 leading-relaxed">{daily.reasons[0]}</p>
                     )}
                 </div>
             </div>
@@ -240,23 +240,23 @@ export default function ReadinessCard() {
             )}
 
             {adaptation && (
-                <div className="border border-glass-border rounded-xl p-3 bg-white/5 mb-3">
+                <div className="border border-glass-border rounded-xl p-3 bg-foreground/5 mb-3">
                     <div className="flex items-center gap-2 mb-2">
                         <RefreshCw className="w-3.5 h-3.5 text-blue-400" />
                         <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">Adaptation</span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <div className="flex items-center gap-3 text-xs text-foreground-muted">
                         <span className="capitalize">{adaptation.originalType.replace(/_/g, ' ')}</span>
-                        <span className="text-gray-600">&rarr;</span>
-                        <span className="capitalize text-white font-medium">{adaptation.adaptedType.replace(/_/g, ' ')}</span>
+                        <span className="text-foreground-secondary">&rarr;</span>
+                        <span className="capitalize text-foreground font-medium">{adaptation.adaptedType.replace(/_/g, ' ')}</span>
                     </div>
                     {adaptation.adaptedTargetDuration != null && adaptation.originalTargetDuration > 0 && (
-                        <p className="text-[11px] text-gray-500 mt-1">
+                        <p className="text-[11px] text-foreground-muted mt-1">
                             {adaptation.originalTargetDuration}min &rarr; {adaptation.adaptedTargetDuration}min
                         </p>
                     )}
                     {adaptation.reason && (
-                        <p className="text-[11px] text-gray-500 mt-1">{adaptation.reason}</p>
+                        <p className="text-[11px] text-foreground-muted mt-1">{adaptation.reason}</p>
                     )}
                 </div>
             )}
@@ -268,8 +268,8 @@ function ComponentIndicator({ icon, label, value, color }: { icon: React.ReactNo
     return (
         <div className="flex flex-col items-center gap-1">
             <div className={color}>{icon}</div>
-            <span className="text-[10px] text-gray-500 uppercase tracking-wider">{label}</span>
-            <span className="text-sm font-semibold text-white">{value !== null ? Math.round(value) : '\u2014'}</span>
+            <span className="text-[10px] text-foreground-muted uppercase tracking-wider">{label}</span>
+            <span className="text-sm font-semibold text-foreground">{value !== null ? Math.round(value) : '\u2014'}</span>
         </div>
     );
 }

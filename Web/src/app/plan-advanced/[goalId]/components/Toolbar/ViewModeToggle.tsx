@@ -17,7 +17,7 @@ export function ViewModeToggle({ value, onChange, isPremium = false }: ViewModeT
     ];
 
     return (
-        <div className="flex items-center bg-zinc-900 rounded-md border border-zinc-800 p-0.5">
+        <div className="flex items-center bg-background-secondary rounded-md border border-glass-border p-0.5">
             {modes.map(({ key, label, icon: Icon, premiumOnly }) => {
                 const locked = premiumOnly && !isPremium;
                 return (
@@ -28,10 +28,10 @@ export function ViewModeToggle({ value, onChange, isPremium = false }: ViewModeT
                         title={locked ? 'Upgrade to premium to access AI plan analysis' : label}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                             value === key
-                                ? 'bg-zinc-700 text-zinc-100'
+                                ? 'bg-foreground/15 text-foreground'
                                 : locked
-                                    ? 'text-zinc-700 cursor-not-allowed'
-                                    : 'text-zinc-500 hover:text-zinc-300'
+                                    ? 'text-foreground-muted cursor-not-allowed'
+                                    : 'text-foreground-muted hover:text-foreground-secondary'
                         }`}
                     >
                         {locked ? <Lock className="w-3 h-3" /> : <Icon className="w-3.5 h-3.5" />}

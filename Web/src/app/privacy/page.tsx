@@ -7,13 +7,13 @@ export const metadata = {
 
 export default function PrivacyPolicy() {
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white py-16 px-4">
-            <div className="container mx-auto max-w-3xl prose prose-invert prose-orange">
+        <div className="min-h-screen bg-background text-foreground py-16 px-4">
+            <div className="container mx-auto max-w-3xl prose dark:prose-invert prose-orange">
                 <Link href="/" className="text-orange-500 hover:text-orange-400 no-underline mb-8 inline-block transition-colors">
                     &larr; Back to Home
                 </Link>
                 <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-500">Privacy Policy</h1>
-                <p className="text-gray-400 text-sm mb-8">Last updated: {new Date().toLocaleDateString('en-GB')}</p>
+                <p className="text-foreground-muted text-sm mb-8">Last updated: {new Date().toLocaleDateString('en-GB')}</p>
 
                 <p>
                     At RunFlow, we take your privacy seriously. This Privacy Policy explains how we collect, use,
@@ -65,9 +65,9 @@ export default function PrivacyPolicy() {
                 <p>To provide RunFlow services reliably, we share data with the following third parties. We ensure all providers adhere to strict data protection standards (e.g., via Standard Contractual Clauses or the EU-US Data Privacy Framework).</p>
 
                 <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm border-collapse border border-gray-700 mt-4 rounded-lg">
+                    <table className="min-w-full text-sm border-collapse border border-foreground/20 mt-4 rounded-lg">
                         <thead>
-                            <tr className="bg-white/5 border-b border-gray-700">
+                            <tr className="bg-foreground/5 border-b border-foreground/20">
                                 <th className="p-3 text-left">Provider</th>
                                 <th className="p-3 text-left">Purpose</th>
                                 <th className="p-3 text-left">Data Shared</th>
@@ -75,37 +75,37 @@ export default function PrivacyPolicy() {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-b border-gray-800">
+                            <tr className="border-b border-glass-border">
                                 <td className="p-3"><strong>Strava</strong></td>
                                 <td className="p-3">Activity Synchronization</td>
                                 <td className="p-3">OAuth Tokens (Read/Write Activities)</td>
                                 <td className="p-3">USA</td>
                             </tr>
-                            <tr className="border-b border-gray-800">
+                            <tr className="border-b border-glass-border">
                                 <td className="p-3"><strong>OpenAI / Anthropic / Google</strong></td>
                                 <td className="p-3">AI Coaching Features</td>
                                 <td className="p-3">Chat messages and necessary fitness metrics for context</td>
                                 <td className="p-3">USA</td>
                             </tr>
-                            <tr className="border-b border-gray-800">
+                            <tr className="border-b border-glass-border">
                                 <td className="p-3"><strong>Sentry</strong></td>
                                 <td className="p-3">Error Tracking & Stability</td>
                                 <td className="p-3">IP Addresses, OS, crash reports</td>
                                 <td className="p-3">USA/EU</td>
                             </tr>
-                            <tr className="border-b border-gray-800">
+                            <tr className="border-b border-glass-border">
                                 <td className="p-3"><strong>Open Food Facts</strong></td>
                                 <td className="p-3">Barcode Scanning API</td>
                                 <td className="p-3">Barcode queries (anonymous)</td>
                                 <td className="p-3">EU</td>
                             </tr>
-                            <tr className="border-b border-gray-800">
+                            <tr className="border-b border-glass-border">
                                 <td className="p-3"><strong>SMTP Providers</strong></td>
                                 <td className="p-3">Transactional Emails</td>
                                 <td className="p-3">Email address, names</td>
                                 <td className="p-3">Varies</td>
                             </tr>
-                            <tr className="border-b border-gray-800">
+                            <tr className="border-b border-glass-border">
                                 <td className="p-3"><strong>Self-Hosted Virtual Private Server</strong></td>
                                 <td className="p-3">Database & Application Hosting</td>
                                 <td className="p-3">All application data</td>

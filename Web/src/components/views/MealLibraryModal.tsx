@@ -86,33 +86,33 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
 
     return (
         <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+            <div className="bg-background-secondary w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-white/10 shrink-0">
+                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-foreground/10 shrink-0">
                     <div className="flex items-center gap-2">
                         <BookOpen className="w-5 h-5 text-amber-400" />
-                        <h2 className="text-lg font-bold text-white">Meal Library</h2>
+                        <h2 className="text-lg font-bold text-foreground">Meal Library</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-white">
+                    <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Search Bar */}
-                <div className="p-4 border-b border-white/5 shrink-0 bg-[#1c1c1e] sticky top-0 z-10">
+                <div className="p-4 border-b border-foreground/5 shrink-0 bg-background-secondary sticky top-0 z-10">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-muted" />
                         <input
                             type="text"
                             placeholder="Search meals..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-hidden focus:border-amber-500/50 transition-colors"
+                            className="w-full bg-foreground/5 border border-foreground/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-foreground placeholder-foreground-muted focus:outline-hidden focus:border-amber-500/50 transition-colors"
                         />
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground transition-colors"
                             >
                                 <X className="w-4 h-4" />
                             </button>
@@ -123,15 +123,15 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                 <div className="flex-1 overflow-y-auto p-4">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12">
-                            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                            <Loader2 className="w-6 h-6 animate-spin text-foreground-muted" />
                         </div>
                     ) : !meals?.length ? (
                         <div className="text-center py-12">
-                            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-                                <BookOpen className="w-8 h-8 text-gray-600" />
+                            <div className="w-16 h-16 rounded-full bg-foreground/5 flex items-center justify-center mx-auto mb-4">
+                                <BookOpen className="w-8 h-8 text-foreground-secondary" />
                             </div>
-                            <p className="text-gray-400 font-medium mb-1">No saved meals yet</p>
-                            <p className="text-gray-500 text-sm">
+                            <p className="text-foreground-muted font-medium mb-1">No saved meals yet</p>
+                            <p className="text-foreground-muted text-sm">
                                 Scan food with AI and tap &quot;Save&quot; to build your library
                             </p>
                         </div>
@@ -139,34 +139,34 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                         <div className="space-y-2">
                             {meals.filter(meal => meal.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
                                 <div className="text-center py-8">
-                                    <p className="text-gray-400 font-medium">No meals match &quot;{searchQuery}&quot;</p>
+                                    <p className="text-foreground-muted font-medium">No meals match &quot;{searchQuery}&quot;</p>
                                 </div>
                             ) : (
                                 meals.filter(meal => meal.name.toLowerCase().includes(searchQuery.toLowerCase())).map(meal => (
                                     <div
                                         key={meal.id}
-                                        className="bg-white/5 border border-white/10 rounded-xl overflow-hidden"
+                                        className="bg-foreground/5 border border-foreground/10 rounded-xl overflow-hidden"
                                     >
                                         <button
                                             onClick={() => onSelectMeal(meal)}
-                                            className="w-full text-left p-4 hover:bg-white/5 transition-colors flex items-center gap-3"
+                                            className="w-full text-left p-4 hover:bg-foreground/5 transition-colors flex items-center gap-3"
                                         >
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-white text-sm line-clamp-1">{meal.name}</p>
-                                                <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-400">
+                                                <p className="font-medium text-foreground text-sm line-clamp-1">{meal.name}</p>
+                                                <div className="flex items-center gap-2 mt-1 text-[11px] text-foreground-muted">
                                                     <span className="text-amber-400 font-medium">{Math.round(meal.totalCalories)} kcal</span>
                                                     <span>•</span>
                                                     <span>P: {Math.round(meal.totalProtein)}g</span>
                                                     <span>C: {Math.round(meal.totalCarbs)}g</span>
                                                     <span>F: {Math.round(meal.totalFats)}g</span>
                                                 </div>
-                                                <p className="text-[10px] text-gray-500 mt-1">
+                                                <p className="text-[10px] text-foreground-muted mt-1">
                                                     {meal.items.length} ingredient{meal.items.length !== 1 ? 's' : ''}
                                                 </p>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-gray-500 shrink-0" />
+                                            <ChevronRight className="w-4 h-4 text-foreground-muted shrink-0" />
                                         </button>
-                                        <div className="border-t border-white/5 px-4 py-2 flex justify-end">
+                                        <div className="border-t border-foreground/5 px-4 py-2 flex justify-end">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();

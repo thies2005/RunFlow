@@ -139,7 +139,7 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
                     className="w-full mt-4 btn-primary py-3 flex justify-center items-center gap-2"
                 >
                     {mutation.isPending ? (
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-foreground/30 border-t-white rounded-full animate-spin" />
                     ) : (
                         'Save Activity'
                     )}

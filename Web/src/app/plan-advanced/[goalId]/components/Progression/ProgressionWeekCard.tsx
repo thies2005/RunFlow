@@ -68,14 +68,14 @@ export function ProgressionWeekCard({
 
     if (isEditing) {
         return (
-            <div className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 space-y-2">
+            <div className="bg-background-tertiary/50 border border-foreground/20 rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-zinc-300">Week {weekIndex}</span>
+                    <span className="text-xs font-medium text-foreground-secondary">Week {weekIndex}</span>
                     <div className="flex items-center gap-1">
                         <button
                             type="button"
                             onClick={onCancelEdit}
-                            className="px-2 py-0.5 rounded text-[10px] text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+                            className="px-2 py-0.5 rounded text-[10px] text-foreground-secondary hover:text-foreground hover:bg-foreground/15 transition-colors"
                         >
                             Cancel
                         </button>
@@ -90,20 +90,20 @@ export function ProgressionWeekCard({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                        <span className="text-[10px] text-zinc-500 uppercase">Warmup</span>
+                        <span className="text-[10px] text-foreground-muted uppercase">Warmup</span>
                         <div className="flex items-center gap-1">
                             <input
                                 type="number"
                                 min={0}
                                 value={editData.warmup.distance}
                                 onChange={(e) => updateWarmup('distance', Math.max(0, Number(e.target.value)))}
-                                className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                className="flex-1 bg-background-tertiary border border-foreground/20 rounded px-1.5 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             />
-                            <span className="text-xs text-zinc-600">m</span>
+                            <span className="text-xs text-foreground-muted">m</span>
                             <select
                                 value={editData.warmup.pace}
                                 onChange={(e) => updateWarmup('pace', e.target.value)}
-                                className="w-12 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                className="w-12 bg-background-tertiary border border-foreground/20 rounded px-1 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             >
                                 {PACE_ZONES.map((z) => (
                                     <option key={z} value={z}>{z}</option>
@@ -112,20 +112,20 @@ export function ProgressionWeekCard({
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <span className="text-[10px] text-zinc-500 uppercase">Cooldown</span>
+                        <span className="text-[10px] text-foreground-muted uppercase">Cooldown</span>
                         <div className="flex items-center gap-1">
                             <input
                                 type="number"
                                 min={0}
                                 value={editData.cooldown.distance}
                                 onChange={(e) => updateCooldown('distance', Math.max(0, Number(e.target.value)))}
-                                className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                className="flex-1 bg-background-tertiary border border-foreground/20 rounded px-1.5 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             />
-                            <span className="text-xs text-zinc-600">m</span>
+                            <span className="text-xs text-foreground-muted">m</span>
                             <select
                                 value={editData.cooldown.pace}
                                 onChange={(e) => updateCooldown('pace', e.target.value)}
-                                className="w-12 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                className="w-12 bg-background-tertiary border border-foreground/20 rounded px-1 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             >
                                 {PACE_ZONES.map((z) => (
                                     <option key={z} value={z}>{z}</option>
@@ -136,11 +136,11 @@ export function ProgressionWeekCard({
                 </div>
                 <div>
                     <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] text-zinc-500 uppercase">Main Set</span>
+                        <span className="text-[10px] text-foreground-muted uppercase">Main Set</span>
                         <button
                             type="button"
                             onClick={addMainStep}
-                            className="text-[10px] text-zinc-500 hover:text-zinc-300"
+                            className="text-[10px] text-foreground-muted hover:text-foreground-secondary"
                         >
                             + Add step
                         </button>
@@ -153,21 +153,21 @@ export function ProgressionWeekCard({
                                     min={1}
                                     value={step.reps}
                                     onChange={(e) => updateMainStep(i, 'reps', Math.max(1, Number(e.target.value)))}
-                                    className="w-10 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                    className="w-10 bg-background-tertiary border border-foreground/20 rounded px-1 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                                 />
-                                <span className="text-xs text-zinc-600">&times;</span>
+                                <span className="text-xs text-foreground-muted">&times;</span>
                                 <input
                                     type="number"
                                     min={0}
                                     value={step.distance}
                                     onChange={(e) => updateMainStep(i, 'distance', Math.max(0, Number(e.target.value)))}
-                                    className="w-14 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                    className="w-14 bg-background-tertiary border border-foreground/20 rounded px-1 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                                 />
-                                <span className="text-xs text-zinc-600">m</span>
+                                <span className="text-xs text-foreground-muted">m</span>
                                 <select
                                     value={step.pace}
                                     onChange={(e) => updateMainStep(i, 'pace', e.target.value)}
-                                    className="w-10 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                    className="w-10 bg-background-tertiary border border-foreground/20 rounded px-1 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                                 >
                                     {PACE_ZONES.map((z) => (
                                         <option key={z} value={z}>{z}</option>
@@ -178,14 +178,14 @@ export function ProgressionWeekCard({
                                     min={0}
                                     value={step.restSeconds}
                                     onChange={(e) => updateMainStep(i, 'restSeconds', Math.max(0, Number(e.target.value)))}
-                                    className="w-12 bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                                    className="w-12 bg-background-tertiary border border-foreground/20 rounded px-1 py-0.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                                 />
-                                <span className="text-[10px] text-zinc-600">s</span>
+                                <span className="text-[10px] text-foreground-muted">s</span>
                                 <button
                                     type="button"
                                     onClick={() => removeMainStep(i)}
                                     disabled={editData.main.length <= 1}
-                                    className="ml-auto p-0.5 text-zinc-600 hover:text-red-400 disabled:opacity-30 transition-colors"
+                                    className="ml-auto p-0.5 text-foreground-muted hover:text-red-400 disabled:opacity-30 transition-colors"
                                 >
                                     <X className="w-3 h-3" />
                                 </button>
@@ -198,10 +198,10 @@ export function ProgressionWeekCard({
     }
 
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 hover:border-zinc-700 transition-colors">
+        <div className="bg-background-secondary border border-glass-border rounded-lg p-3 hover:border-foreground/20 transition-colors">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-zinc-200">Week {weekIndex}</span>
+                    <span className="text-xs font-semibold text-foreground">Week {weekIndex}</span>
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${typeColor.bg} ${typeColor.text}`}>
                         {workoutType}
                     </span>
@@ -210,22 +210,22 @@ export function ProgressionWeekCard({
                     <button
                         type="button"
                         onClick={onEdit}
-                        className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
+                        className="p-1 text-foreground-muted hover:text-foreground-secondary transition-colors"
                     >
                         <Pencil className="w-3 h-3" />
                     </button>
                     <button
                         type="button"
                         onClick={onDelete}
-                        className="p-1 text-zinc-500 hover:text-red-400 transition-colors"
+                        className="p-1 text-foreground-muted hover:text-red-400 transition-colors"
                     >
                         <Trash2 className="w-3 h-3" />
                     </button>
                 </div>
             </div>
             <div className="space-y-1">
-                <div className="text-xs text-zinc-300">{mainSetSummary(data)}</div>
-                <div className="flex items-center justify-between text-[10px] text-zinc-500">
+                <div className="text-xs text-foreground-secondary">{mainSetSummary(data)}</div>
+                <div className="flex items-center justify-between text-[10px] text-foreground-muted">
                     <span>WU: {data.warmup.distance}m @ {data.warmup.pace} | CD: {data.cooldown.distance}m @ {data.cooldown.pace}</span>
                     <span>{total >= 1000 ? `${(total / 1000).toFixed(1)} km` : `${total} m`}</span>
                 </div>

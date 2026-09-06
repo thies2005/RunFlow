@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 import { addMonths, endOfWeek, startOfMonth, startOfWeek, subMonths } from 'date-fns';
+import { PencilRuler } from 'lucide-react';
 import { CalendarToolbar, type CalendarViewMode } from '@/app/calendar-preview/components/CalendarToolbar';
 import { MonthlyView } from '@/app/calendar-preview/components/MonthlyView';
 import { WeeklyView } from '@/app/calendar-preview/components/WeeklyView';
@@ -196,6 +198,16 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
                 onPrev={() => setCursor((c) => subMonths(c, 1))}
                 onNext={() => setCursor((c) => addMonths(c, 1))}
                 onToday={() => setCursor(startOfMonth(new Date()))}
+                actions={activeGoal ? (
+                    <Link
+                        href={`/plan-advanced/${activeGoal.id}`}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 ml-1 rounded-md text-xs font-medium text-accent-orange hover:text-accent-pink hover:bg-accent-orange/10 border border-accent-orange/30 transition-colors"
+                        title="Open this plan in the advanced editor"
+                    >
+                        <PencilRuler className="w-3.5 h-3.5" />
+                        Advanced Editor
+                    </Link>
+                ) : undefined}
             />
             <SummaryStats period={period} fitness={fitness} />
 

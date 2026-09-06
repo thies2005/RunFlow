@@ -139,7 +139,7 @@ export function RaceCountdown({
                         onClick={() => router.push(isMobile ? '/plan' : '/calendar')}
                         className="text-xs text-accent-orange hover:text-accent-pink transition-colors"
                     >
-                        {isMobile ? 'View Full Plan &rarr;' : 'View Calendar &rarr;'}
+                        {isMobile ? 'View Full Plan →' : 'View Calendar →'}
                     </button>
                     <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
                 </div>

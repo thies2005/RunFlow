@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, CalendarDays, Rows3, Activity } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 export type CalendarViewMode = 'month' | 'week';
 
@@ -12,6 +13,8 @@ interface CalendarToolbarProps {
     onPrev: () => void;
     onNext: () => void;
     onToday: () => void;
+    /** Optional extra actions rendered next to the mode toggle (e.g. editor link). */
+    actions?: ReactNode;
 }
 
 export function CalendarToolbar({
@@ -21,6 +24,7 @@ export function CalendarToolbar({
     onPrev,
     onNext,
     onToday,
+    actions,
 }: CalendarToolbarProps) {
     return (
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-glass-border bg-background-secondary/80 backdrop-blur shrink-0">
@@ -53,6 +57,7 @@ export function CalendarToolbar({
                         Week
                     </button>
                 </div>
+                {actions}
             </div>
 
             <div className="flex items-center gap-3">

@@ -23,11 +23,21 @@ function escapeHtml(value: string): string {
  * callback returns a minimal trampoline page instead: it tries to open the
  * deep link automatically and, if the browser blocked that, the user taps
  * "Open the app" — a tapped custom-scheme link launches the app everywhere.
+ * If the redirect fails entirely (or the app is not installed), a small
+ * website link appears so the page is never a dead end.
  */
-function mobileTrampoline(scheme: string, params: string, title: string, message: string): NextResponse {
+function mobileTrampoline(
+    scheme: string,
+    params: string,
+    title: string,
+    message: string,
+    fallbackPath = '/login',
+): NextResponse {
     const deepLink = `${scheme}://auth/callback?${params}`;
     const hrefEncoded = escapeHtml(deepLink);
     const jsEncoded = JSON.stringify(deepLink).replace(/</g, '\\u003c');
+    const fallbackUrl = new URL(fallbackPath, getAppBaseUrl()).toString();
+    const fallbackEncoded = escapeHtml(fallbackUrl);
 
     const html = `<!doctype html>
 <html lang="en">
@@ -60,6 +70,11 @@ function mobileTrampoline(scheme: string, params: string, title: string, message
     background: #FF6B35; color: #fff; font-weight: 600; font-size: 16px;
     text-decoration: none;
   }
+  a.web {
+    display: none; margin-top: 18px; font-size: 13px;
+    color: inherit; opacity: .6; text-decoration: underline;
+  }
+  a.web.visible { display: inline-block; }
 </style>
 </head>
 <body>
@@ -68,14 +83,17 @@ function mobileTrampoline(scheme: string, params: string, title: string, message
     <h1>${escapeHtml(title)}</h1>
     <p id="hint">${escapeHtml(message)}</p>
     <a class="btn" id="open" href="${hrefEncoded}">Open the app</a>
+    <a class="web" id="web" href="${fallbackEncoded}">Continue on the website instead</a>
   </div>
 <script>
   (function () {
     var link = document.getElementById('open');
     var hint = document.getElementById('hint');
+    var web = document.getElementById('web');
     try { location.replace(${jsEncoded}); } catch (e) { /* fall through to the button */ }
     setTimeout(function () {
       if (hint) hint.textContent = 'Nothing happened? Tap the button to continue into the app.';
+      if (web) web.classList.add('visible');
     }, 1200);
     setTimeout(function () { try { window.close(); } catch (e) { /* not a custom tab */ } }, 6000);
     link.addEventListener('click', function () {
@@ -107,10 +125,10 @@ export async function GET(request: NextRequest) {
         logger.error('Strava Callback Error', { error, state: state || 'unknown' });
 
         if (state?.startsWith('android_')) {
-            return mobileTrampoline('runflow', `error=${encodeURIComponent(error)}`, 'Strava sign-in failed', 'The sign-in was cancelled or rejected. Returning to the app…');
+            return mobileTrampoline('runflow', `error=${encodeURIComponent(error)}`, 'Strava sign-in failed', 'The sign-in was cancelled or rejected. Returning to the app…', `/login?error=${encodeURIComponent(error)}`);
         }
         if (state?.startsWith('flutter_')) {
-            return mobileTrampoline('runflow2', `error=${encodeURIComponent(error)}`, 'Strava sign-in failed', 'The sign-in was cancelled or rejected. Returning to the app…');
+            return mobileTrampoline('runflow2', `error=${encodeURIComponent(error)}`, 'Strava sign-in failed', 'The sign-in was cancelled or rejected. Returning to the app…', `/login?error=${encodeURIComponent(error)}`);
         }
 
         return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error)}`, baseUrl));
@@ -120,10 +138,10 @@ export async function GET(request: NextRequest) {
         logger.error('Strava Callback Missing Code', { state: state || 'unknown', url: request.url });
 
         if (state?.startsWith('android_')) {
-            return mobileTrampoline('runflow', 'error=missing_code', 'Strava sign-in failed', 'No authorization code was returned. Returning to the app…');
+            return mobileTrampoline('runflow', 'error=missing_code', 'Strava sign-in failed', 'No authorization code was returned. Returning to the app…', '/login?error=missing_code');
         }
         if (state?.startsWith('flutter_')) {
-            return mobileTrampoline('runflow2', 'error=missing_code', 'Strava sign-in failed', 'No authorization code was returned. Returning to the app…');
+            return mobileTrampoline('runflow2', 'error=missing_code', 'Strava sign-in failed', 'No authorization code was returned. Returning to the app…', '/login?error=missing_code');
         }
 
         return NextResponse.redirect(new URL('/login?error=missing_code', baseUrl));
@@ -142,7 +160,7 @@ export async function GET(request: NextRequest) {
 
         if (isNaN(timestamp) || (now - timestamp) > MAX_AGE_MS) {
             logger.warn('Strava Callback: stale or invalid state timestamp', { state, age: now - timestamp });
-            return mobileTrampoline(mobileScheme, 'error=invalid_state', 'Sign-in expired', 'This sign-in link has expired. Please start again from the app.');
+            return mobileTrampoline(mobileScheme, 'error=invalid_state', 'Sign-in expired', 'This sign-in link has expired. Please start again from the app.', '/login?error=invalid_state');
         }
 
         logger.info('Strava Callback Mobile Flow (trampoline)', { state, scheme: mobileScheme });

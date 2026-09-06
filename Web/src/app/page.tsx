@@ -16,6 +16,7 @@ import RaceResultModal from '@/components/RaceResultModal';
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
+import { useAutoStravaSync } from '@/hooks/useAutoStravaSync';
 import type { Workout, Goal } from '@/lib/types';
 import type { SuggestedRaceActivity } from '@/lib/types';
 
@@ -40,7 +41,7 @@ export default function Dashboard() {
         queryKey: ['dashboard-data'],
         queryFn: async () => {
             const todayStr = format(new Date(), 'yyyy-MM-dd');
-            const res = await fetch(`/api/dashboard?date=${todayStr}`);
+            const res = await fetch(`/api/dashboard?date=${todayStr}`, { cache: 'no-store' });
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
                 throw new Error(errorData.error || 'Failed to load dashboard');
@@ -64,8 +65,14 @@ export default function Dashboard() {
             return res.json();
         },
         onSuccess: () => {
-            // Invalidate the unified query
+            // Immediate + delayed: the sync POST returns before the background
+            // task bumps the dashboard cache version, so a single immediate
+            // invalidate can still read the pre-sync cached response and never
+            // start the 2s sync polling.
             queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+            setTimeout(() => {
+                queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+            }, 2000);
         },
     });
 
@@ -74,6 +81,9 @@ export default function Dashboard() {
     const recentActivities = dashboardData?.recentActivities?.activities || [];
     const goalsList = dashboardData?.goals?.goals || [];
     const syncStatus = dashboardData?.syncStatus;
+
+    // Auto-sync with Strava on page open when the last sync is stale.
+    useAutoStravaSync(syncStatus);
 
     // Find active goal
     const activeGoal: Goal | undefined = goalsList.find((g: Goal) => g.isActive);

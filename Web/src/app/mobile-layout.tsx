@@ -17,6 +17,7 @@ import {
 
 import { MobileSwipeLayout } from '@/components/navigation';
 import { useAnalyticsMetrics } from '@/hooks/useAnalyticsMetrics';
+import { useAutoStravaSync } from '@/hooks/useAutoStravaSync';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
 import type { Workout, Goal, ActivityListItem } from '@/lib/types';
 import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
@@ -83,7 +84,7 @@ export function MobileLayout() {
         queryKey: ['dashboard-data'],
         queryFn: async () => {
             const todayStr = format(new Date(), 'yyyy-MM-dd');
-            const res = await fetch(`/api/dashboard?date=${todayStr}`);
+            const res = await fetch(`/api/dashboard?date=${todayStr}`, { cache: 'no-store' });
             if (!res.ok) throw new Error('Failed to load dashboard');
             return res.json();
         },
@@ -204,7 +205,16 @@ export function MobileLayout() {
             if (!res.ok) throw new Error('Failed to start sync');
             return res.json();
         },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dashboard-data'] }),
+        onSuccess: () => {
+            // Immediate + delayed: the sync POST returns before the background
+            // task bumps the dashboard cache version, so a single immediate
+            // invalidate can still read the pre-sync cached response and never
+            // start the 2s sync polling.
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+            setTimeout(() => {
+                queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+            }, 2000);
+        },
     });
 
     const reorderMutation = useMutation({
@@ -241,6 +251,9 @@ export function MobileLayout() {
     const incompleteGoal: Goal | null = dashboardData?.incompleteGoal || null;
     const weeklyWorkouts: Workout[] = activeGoal?.workouts || [];
     const syncStatus = dashboardData?.syncStatus;
+
+    // Auto-sync with Strava when the app opens and the last sync is stale.
+    useAutoStravaSync(syncStatus);
 
     // Analytics calculated data
     const analyticsMetrics = useAnalyticsMetrics(

@@ -9,6 +9,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { getRedisClient } from '@/lib/redis';
 import { safeBigInt } from '@/lib/utils/bigint';
 import type { ActivityData } from './transform';
 import { logger } from '@/lib/logging/logger';
@@ -232,6 +233,16 @@ export async function updateSyncStatus(
         where: { id: userId },
         data: status,
     });
+
+    // Bust the dashboard Redis cache: the cache key embeds this version, so
+    // sync start/completion is reflected immediately instead of after the
+    // 60s TTL (fixes "new activities only appear after page reload").
+    try {
+        const redisClient = await getRedisClient();
+        await redisClient?.incr(`dashboard:cachever:${userId}`);
+    } catch {
+        // Best-effort: entries still expire via TTL if this fails.
+    }
 }
 
 export async function fetchExistingActivities(stravaIds: bigint[]): Promise<Map<string, any>> {

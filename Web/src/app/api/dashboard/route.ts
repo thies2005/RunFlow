@@ -42,8 +42,17 @@ export async function GET(req: NextRequest) {
         const validRefDate = !isNaN(refDate.getTime()) ? refDate : new Date();
 
         // Try Redis Cache
+        // The cache key embeds a per-user version counter that updateSyncStatus()
+        // bumps whenever a Strava sync starts or completes, so a sync is never
+        // shadowed by a stale cached response.
         const redisClient = await getRedisClient();
-        const cacheKey = `dashboard:v3:${userId}:${validRefDate.toISOString().split('T')[0]}`;
+        let cacheVersion = '0';
+        try {
+            cacheVersion = (await redisClient?.get(`dashboard:cachever:${userId}`)) ?? '0';
+        } catch (e) {
+            console.error('Redis cache version read error:', e);
+        }
+        const cacheKey = `dashboard:v3:${userId}:${validRefDate.toISOString().split('T')[0]}:${cacheVersion}`;
 
         try {
             const cachedData = await redisClient?.get(cacheKey);

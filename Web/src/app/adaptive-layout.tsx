@@ -15,7 +15,7 @@ interface AdaptiveLayoutProps {
 }
 
 // Pages that should use the mobile swipe layout
-const SWIPEABLE_PATHS = ['/', '/plan', '/analytics', '/calendar'];
+const SWIPEABLE_PATHS = ['/', '/plan', '/analytics'];
 
 export function AdaptiveLayout({ children }: AdaptiveLayoutProps) {
     const { isMobile, isLoading } = useDeviceType();

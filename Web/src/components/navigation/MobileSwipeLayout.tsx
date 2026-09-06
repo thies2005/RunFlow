@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { MobileBottomNav } from './MobileBottomNav';
-import { Home, CalendarDays, BarChart3, CalendarRange } from 'lucide-react';
+import { Home, CalendarDays, BarChart3 } from 'lucide-react';
 import StravaPoweredFooter from '@/components/StravaPoweredFooter';
 
 interface MobileSwipeLayoutProps {
@@ -12,15 +12,12 @@ interface MobileSwipeLayoutProps {
     onPathChange?: (_path: string) => void;
 }
 
-const _BASE_PATHS = ['/', '/plan', '/analytics', '/calendar'];
-
 export function MobileSwipeLayout({ children, onPageChange, onPathChange }: MobileSwipeLayoutProps) {
 
     const tabs = useMemo(() => [
         { icon: Home, label: 'Home', path: '/' },
         { icon: CalendarDays, label: 'Plan', path: '/plan' },
         { icon: BarChart3, label: 'Analytics', path: '/analytics' },
-        { icon: CalendarRange, label: 'Calendar', path: '/calendar' },
     ], []);
 
     const paths = useMemo(() => tabs.map(t => t.path), [tabs]);

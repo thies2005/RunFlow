@@ -6,6 +6,7 @@ import type { Goal, SuggestedRaceActivity } from '@/lib/types';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import type { RaceDistance } from '@/lib/metrics/vdot';
 import { useUserMetrics } from './providers/UserMetricsProvider';
+import { useDeviceType } from '@/hooks/useDeviceType';
 import { formatDistanceWithUnit, formatPace as formatPaceWithUnits, useUnits } from '@/lib/units';
 
 interface RaceCountdownProps {
@@ -53,6 +54,7 @@ export function RaceCountdown({
         correctionFactor,
         currentWeekMileage
     } = useUserMetrics();
+    const { isMobile } = useDeviceType();
 
     const shapePercent = marathonShape?.shape || 0;
 
@@ -134,10 +136,10 @@ export function RaceCountdown({
                 <h2 className="text-lg font-semibold text-foreground-muted">Race Goal</h2>
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => router.push('/plan')}
+                        onClick={() => router.push(isMobile ? '/plan' : '/calendar')}
                         className="text-xs text-accent-orange hover:text-accent-pink transition-colors"
                     >
-                        View Full Plan &rarr;
+                        {isMobile ? 'View Full Plan &rarr;' : 'View Calendar &rarr;'}
                     </button>
                     <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
                 </div>

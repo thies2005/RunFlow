@@ -35,10 +35,6 @@ const AnalyticsView = dynamic(() => import('@/components/views/AnalyticsView'), 
     ssr: false,
     loading: () => <div className="h-full w-full animate-pulse bg-background" />,
 });
-const CalendarView = dynamic(() => import('@/components/views/CalendarView').then(m => ({ default: m.CalendarView })), {
-    ssr: false,
-    loading: () => <div className="h-full w-full animate-pulse bg-background" />,
-});
 const SettingsModal = dynamic(() => import('@/components/SettingsModal'), { ssr: false, loading: () => null });
 const EditWorkoutModal = dynamic(() => import('@/components/EditWorkoutModal'), { ssr: false, loading: () => null });
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false, loading: () => null });
@@ -71,7 +67,6 @@ export function MobileLayout() {
 
     const isPlanPath = activePath === '/plan';
     const isAnalyticsPath = activePath === '/analytics';
-    const isCalendarPath = activePath === '/calendar';
 
     // DnD Sensors for Plan
     // DnD Sensors for Plan
@@ -379,11 +374,6 @@ export function MobileLayout() {
                         onOpenCalibration={() => setIsCalibrationOpen(true)}
                         showHeader={false}
                     />
-                ) : <div className="h-full w-full" />}
-
-                {/* Calendar View - always index 3 */}
-                {isCalendarPath ? (
-                    <CalendarView showHeader={false} />
                 ) : <div className="h-full w-full" />}
             </MobileSwipeLayout>
 

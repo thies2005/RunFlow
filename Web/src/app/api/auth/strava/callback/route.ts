@@ -7,9 +7,92 @@ function getAppBaseUrl(): string {
         || 'https://runflow.schuelken.uk';
 }
 
-function mobileRedirect(scheme: string, params: string): NextResponse {
-    const url = `${scheme}://auth/callback?${params}`;
-    return NextResponse.redirect(url, { status: 302 });
+function escapeHtml(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/**
+ * Mobile return path. Browsers do not reliably follow a bare 302 to a custom
+ * scheme (Chrome needs a recent user activation; Samsung Internet refuses
+ * entirely and can resolve the URL against the site, producing a 404). So the
+ * callback returns a minimal trampoline page instead: it tries to open the
+ * deep link automatically and, if the browser blocked that, the user taps
+ * "Open the app" — a tapped custom-scheme link launches the app everywhere.
+ */
+function mobileTrampoline(scheme: string, params: string, title: string, message: string): NextResponse {
+    const deepLink = `${scheme}://auth/callback?${params}`;
+    const hrefEncoded = escapeHtml(deepLink);
+    const jsEncoded = JSON.stringify(deepLink).replace(/</g, '\\u003c');
+
+    const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(title)}</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: #0a0a0a; color: #f5f5f5; padding: 24px;
+  }
+  @media (prefers-color-scheme: light) {
+    body { background: #fafafa; color: #1a1a1a; }
+    .card { background: #fff; }
+  }
+  .card {
+    width: 100%; max-width: 400px; text-align: center;
+    background: #141414; border-radius: 20px; padding: 32px 24px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.25);
+  }
+  .logo { font-size: 40px; margin-bottom: 12px; }
+  h1 { font-size: 20px; margin-bottom: 8px; }
+  p { font-size: 14px; opacity: .7; margin-bottom: 20px; line-height: 1.5; }
+  a.btn {
+    display: block; padding: 14px 24px; border-radius: 999px;
+    background: #FF6B35; color: #fff; font-weight: 600; font-size: 16px;
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">🏃</div>
+    <h1>${escapeHtml(title)}</h1>
+    <p id="hint">${escapeHtml(message)}</p>
+    <a class="btn" id="open" href="${hrefEncoded}">Open the app</a>
+  </div>
+<script>
+  (function () {
+    var link = document.getElementById('open');
+    var hint = document.getElementById('hint');
+    try { location.replace(${jsEncoded}); } catch (e) { /* fall through to the button */ }
+    setTimeout(function () {
+      if (hint) hint.textContent = 'Nothing happened? Tap the button to continue into the app.';
+    }, 1200);
+    setTimeout(function () { try { window.close(); } catch (e) { /* not a custom tab */ } }, 6000);
+    link.addEventListener('click', function () {
+      setTimeout(function () { try { window.close(); } catch (e) {} }, 400);
+    });
+  })();
+</script>
+</body>
+</html>`;
+
+    return new NextResponse(html, {
+        status: 200,
+        headers: {
+            'content-type': 'text/html; charset=utf-8',
+            'cache-control': 'no-store, max-age=0',
+        },
+    });
 }
 
 export async function GET(request: NextRequest) {
@@ -24,10 +107,10 @@ export async function GET(request: NextRequest) {
         logger.error('Strava Callback Error', { error, state: state || 'unknown' });
 
         if (state?.startsWith('android_')) {
-            return mobileRedirect('runflow', `error=${encodeURIComponent(error)}`);
+            return mobileTrampoline('runflow', `error=${encodeURIComponent(error)}`, 'Strava sign-in failed', 'The sign-in was cancelled or rejected. Returning to the app…');
         }
         if (state?.startsWith('flutter_')) {
-            return mobileRedirect('runflow2', `error=${encodeURIComponent(error)}`);
+            return mobileTrampoline('runflow2', `error=${encodeURIComponent(error)}`, 'Strava sign-in failed', 'The sign-in was cancelled or rejected. Returning to the app…');
         }
 
         return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error)}`, baseUrl));
@@ -37,10 +120,10 @@ export async function GET(request: NextRequest) {
         logger.error('Strava Callback Missing Code', { state: state || 'unknown', url: request.url });
 
         if (state?.startsWith('android_')) {
-            return mobileRedirect('runflow', 'error=missing_code');
+            return mobileTrampoline('runflow', 'error=missing_code', 'Strava sign-in failed', 'No authorization code was returned. Returning to the app…');
         }
         if (state?.startsWith('flutter_')) {
-            return mobileRedirect('runflow2', 'error=missing_code');
+            return mobileTrampoline('runflow2', 'error=missing_code', 'Strava sign-in failed', 'No authorization code was returned. Returning to the app…');
         }
 
         return NextResponse.redirect(new URL('/login?error=missing_code', baseUrl));
@@ -59,18 +142,22 @@ export async function GET(request: NextRequest) {
 
         if (isNaN(timestamp) || (now - timestamp) > MAX_AGE_MS) {
             logger.warn('Strava Callback: stale or invalid state timestamp', { state, age: now - timestamp });
-            return mobileRedirect(mobileScheme, 'error=invalid_state');
+            return mobileTrampoline(mobileScheme, 'error=invalid_state', 'Sign-in expired', 'This sign-in link has expired. Please start again from the app.');
         }
 
-        logger.info('Strava Callback Mobile Flow (pass-through)', { state, scheme: mobileScheme });
+        logger.info('Strava Callback Mobile Flow (trampoline)', { state, scheme: mobileScheme });
 
         const deepLink = new URL(`${mobileScheme}://auth/callback`);
         deepLink.searchParams.set('code', code);
         if (state) deepLink.searchParams.set('state', state);
         if (scope) deepLink.searchParams.set('scope', scope);
 
-        const qs = deepLink.searchParams.toString();
-        return mobileRedirect(mobileScheme, qs);
+        return mobileTrampoline(
+            mobileScheme,
+            deepLink.searchParams.toString(),
+            'Signing you in',
+            'Returning to the RunFlow app…',
+        );
     }
 
     logger.info('Strava Callback Web Flow', { state: state || 'unknown' });

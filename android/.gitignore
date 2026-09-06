@@ -1,0 +1,16 @@
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild
+.cxx
+
+# Release signing (never commit)
+key.properties
+keystore/
+
+# Built APKs (release artifacts, not source)
+*.apk

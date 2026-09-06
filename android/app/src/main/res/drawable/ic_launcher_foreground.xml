@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Stylized runner with motion flow lines -->
+    <group>
+        <!-- head -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M60.5,30.5 m-4.5,0 a4.5,4.5 0 1,1 9,0 a4.5,4.5 0 1,1 -9,0" />
+        <!-- torso + legs -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M56,37 L64,38.5 C66.5,39 67.5,41.5 66.5,43.5 L61.5,52 L66,61 L61.5,63.5 L55.5,52.5 C55.2,51.8 55.2,51 55.5,50.3 L58.5,44.5 L50,42.5 L47.5,50.5 C46.9,52.3 45,53.3 43.2,52.7 C41.4,52.1 40.4,50.2 41,48.4 L44.5,37.5 C45,35.9 46.6,34.9 48.2,35.3 Z" />
+        <!-- front arm -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M63,40 L69.5,44.5 C71,45.5 71.4,47.5 70.4,49 C69.4,50.5 67.4,50.9 65.9,49.9 L61,46.5 Z" />
+        <!-- flow lines -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3"
+            android:strokeLineCap="round"
+            android:pathData="M30,44 C36,44 40,44 46,44" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3"
+            android:strokeLineCap="round"
+            android:pathData="M27,54 C33,54 38,54 44,54" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="3"
+            android:strokeLineCap="round"
+            android:pathData="M30,64 C35,64 39,64 45,64" />
+    </group>
+</vector>

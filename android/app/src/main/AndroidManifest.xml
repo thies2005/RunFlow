@@ -37,6 +37,14 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="runflow2" android:host="auth" android:path="/callback" />
             </intent-filter>
+            <!-- Verified App Link (assetlinks.json on the server): browsers open
+                 this https URL straight into the app, no custom scheme needed. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="runflow.schuelken.uk" android:path="/auth/app-callback" />
+            </intent-filter>
         </activity>
 
         <service

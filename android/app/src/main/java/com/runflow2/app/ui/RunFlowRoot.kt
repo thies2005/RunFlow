@@ -103,7 +103,11 @@ fun RunFlowRoot(container: AppContainer) {
 
         val showBottomBar = currentRoute in tabs.map { it.route } && !recording
 
+        // Each screen hosts its own Scaffold + TopAppBar, which apply the
+        // status-bar inset themselves; the root must not pre-pad as well or
+        // the top inset is counted twice.
         Scaffold(
+            contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 if (showBottomBar) {
                     NavigationBar {

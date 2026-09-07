@@ -50,19 +50,31 @@ object StravaAuth {
             "&state=${url(state)}"
     }
 
-    /** Result of parsing an incoming runflow2://auth/callback deep link. */
+    /** Result of parsing an incoming OAuth deep link. */
     sealed interface Callback {
         data class Authorized(val code: String, val state: String?) : Callback
         data class Failed(val error: String) : Callback
         data object NotForUs : Callback
     }
 
+    /**
+     * Accepts both return paths:
+     *  - the verified App Link  https://runflow.schuelken.uk/auth/app-callback?code=…
+     *    (host mirrors the manifest intent-filter)
+     *  - the custom-scheme link runflow2://auth/callback?code=…
+     */
     fun parseCallback(raw: String): Callback {
         val uri = runCatching { URI(raw) }.getOrNull() ?: return Callback.NotForUs
-        if (!uri.scheme.equals(CALLBACK_SCHEME, ignoreCase = true)) return Callback.NotForUs
-        if (!uri.host.equals(CALLBACK_HOST, ignoreCase = true)) return Callback.NotForUs
+        val scheme = uri.scheme?.lowercase() ?: return Callback.NotForUs
         val path = uri.path ?: ""
-        if (path != CALLBACK_PATH && path != "$CALLBACK_PATH/") return Callback.NotForUs
+        val appLinkHost = runCatching { URI(Api.DEFAULT_BASE_URL).host?.lowercase() }.getOrNull()
+        val isAppLink = scheme == "https" &&
+            uri.host?.lowercase() == appLinkHost &&
+            (path == "/auth/app-callback" || path == "/auth/app-callback/")
+        val isCustom = scheme == CALLBACK_SCHEME &&
+            uri.host?.equals(CALLBACK_HOST, ignoreCase = true) == true &&
+            (path == CALLBACK_PATH || path == "$CALLBACK_PATH/")
+        if (!isAppLink && !isCustom) return Callback.NotForUs
         val query = parseQuery(uri.rawQuery)
         query["error"]?.let { return Callback.Failed(it) }
         val code = query["code"]

@@ -77,4 +77,31 @@ class StravaAuthTest {
         val result = StravaAuth.parseCallback("runflow2://auth/callback?code=a%2Bb%3Dc")
         assertEquals("a+b=c", (result as StravaAuth.Callback.Authorized).code)
     }
+
+    @Test
+    fun `parses the verified app link form`() {
+        val result = StravaAuth.parseCallback(
+            "https://runflow.schuelken.uk/auth/app-callback?code=xyz&state=flutter_1700000000000&scope=read"
+        )
+        assertTrue(result is StravaAuth.Callback.Authorized)
+        result as StravaAuth.Callback.Authorized
+        assertEquals("xyz", result.code)
+        assertEquals("flutter_1700000000000", result.state)
+    }
+
+    @Test
+    fun `app link error and foreign https paths are handled`() {
+        assertEquals(
+            StravaAuth.Callback.Failed("access_denied"),
+            StravaAuth.parseCallback("https://runflow.schuelken.uk/auth/app-callback?error=access_denied"),
+        )
+        assertEquals(
+            StravaAuth.Callback.NotForUs,
+            StravaAuth.parseCallback("https://runflow.schuelken.uk/login?code=1"),
+        )
+        assertEquals(
+            StravaAuth.Callback.NotForUs,
+            StravaAuth.parseCallback("https://other-host.example.com/auth/app-callback?code=1"),
+        )
+    }
 }

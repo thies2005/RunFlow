@@ -58,14 +58,15 @@ active marathon plan) on first launch.
 **Account & sync (v2.1)**
 - Email sign-in against `/api/mobile/v1/auth/email-login` with single-flight token refresh
   (one automatic retry on 401); tokens in a private DataStore
-- **Strava OAuth sign-in (v2.2)**: "Continue with Strava" opens the Strava consent page
-  (client id 193995, scope `read,activity:read_all`) in a **Custom Tab** (like the Flutter
-  app's flutter_web_auth_2; falls back to the default browser when none is available), with
-  `approval_prompt=force` so the Authorize click gives the browser the user activation it
-  needs to follow the server's 302 back to `runflow2://auth/callback?code=…`. The app
-  receives the deep link (cold start + warm restart) and exchanges the code via
-  `POST /auth/login`. Errors (cancelled consent, expired state, rejected code) surface as
-  readable messages
+- **Strava OAuth sign-in (v2.2+)**: "Continue with Strava" opens the Strava consent page
+  (client id 193995, scope `read,activity:read_all`) in a **Custom Tab** (fallback: default
+  browser) with `approval_prompt=force`. After consent the server 302s to the app's
+  **verified App Link** `https://runflow.schuelken.uk/auth/app-callback?code=…` (statement
+  in the server's assetlinks.json, release cert) — Android opens the app directly, no
+  custom scheme on the redirect path. The legacy `runflow2://auth/callback` filter remains
+  for the trampoline's tap button (unverified/not-installed fallback) and both forms are
+  parsed. The code is exchanged via `POST /auth/login`; errors surface as readable
+  messages
 - Server URL defaults to `https://runflow.schuelken.uk` and is changeable **only** in
   Settings → Advanced (e.g. for staging); switching servers re-syncs immediately
 - **Offline-first outbox sync**: local writes land in Room + `sync_queue` in one transaction;
@@ -125,7 +126,7 @@ keyAlias=runflow2
 keyPassword=<password>
 ```
 
-A ready-to-install signed APK is at `android/RunFlow2-v2.2.1-release.apk`.
+A ready-to-install signed APK is at `android/RunFlow2-v2.2.2-release.apk`.
 
 ## Deferred (next phases)
 

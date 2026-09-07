@@ -88,8 +88,11 @@ class SettingsRepository(private val context: Context) {
     suspend fun setAutoPause(enabled: Boolean) =
         context.dataStore.edit { it[Keys.AUTO_PAUSE] = enabled }
 
-    suspend fun setServerUrl(url: String) =
-        context.dataStore.edit { it[Keys.SERVER_URL] = url.trim().trimEnd('/') }
+    /** Stores an origin-only server URL; the default server is stored as "". */
+    suspend fun setServerUrl(url: String) = context.dataStore.edit {
+        val normalized = com.runflow2.app.data.net.Api.normalizeServerUrl(url)
+        it[Keys.SERVER_URL] = if (normalized == com.runflow2.app.data.net.Api.DEFAULT_BASE_URL) "" else normalized
+    }
 
     suspend fun setLastSync(at: Long, summary: String) = context.dataStore.edit {
         it[Keys.LAST_SYNC_AT] = at

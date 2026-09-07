@@ -50,6 +50,23 @@ object Api {
         val d = LocalDate.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault())
         return "%04d-%02d-%02d".format(d.year, d.monthValue, d.dayOfMonth)
     }
+
+    /**
+     * Server URLs are origin-only (scheme + host + optional port). Paths like
+     * /api/mobile/v1 must never be part of the base: API endpoints are
+     * host-absolute, but the OAuth redirect URI is built by concatenation and
+     * a path would silently produce a nonexistent callback URL.
+     */
+    fun normalizeServerUrl(input: String): String {
+        val raw = input.trim()
+        if (raw.isEmpty()) return DEFAULT_BASE_URL
+        val withScheme = if (raw.startsWith("http://") || raw.startsWith("https://")) raw else "https://$raw"
+        return runCatching {
+            val uri = java.net.URI(withScheme)
+            val port = if (uri.port > 0) ":${uri.port}" else ""
+            "${uri.scheme}://${uri.host}$port"
+        }.getOrDefault(DEFAULT_BASE_URL)
+    }
 }
 
 // ---------- auth ----------

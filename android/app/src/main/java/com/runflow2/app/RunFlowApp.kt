@@ -59,10 +59,12 @@ class AppContainer(app: Application) {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
-        // Hot-swap the API base URL when the server setting changes.
+        // Hot-swap the API base URL when the server setting changes. Values
+        // are normalized to origin-only so a stored URL that still contains a
+        // path (e.g. /api/mobile/v1) can never leak into the OAuth redirect.
         appScope.launch {
             settings.settings.collect { s ->
-                val url = s.serverUrl.ifEmpty { Api.DEFAULT_BASE_URL }
+                val url = Api.normalizeServerUrl(s.serverUrl)
                 if (network.baseUrl != url) {
                     network.baseUrl = url
                     network.reset()

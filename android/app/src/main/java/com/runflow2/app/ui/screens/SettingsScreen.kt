@@ -177,9 +177,9 @@ fun SettingsScreen(
             }
 
             SettingSection("Advanced") {
-                val effective = settings.serverUrl.ifEmpty { com.runflow2.app.data.net.Api.DEFAULT_BASE_URL }
-                var serverUrl by remember(settings.serverUrl) {
-                    mutableStateOf(settings.serverUrl)
+                val normalized = com.runflow2.app.data.net.Api.normalizeServerUrl(settings.serverUrl)
+                var serverUrl by remember(normalized) {
+                    mutableStateOf(normalized)
                 }
                 OutlinedTextField(
                     value = serverUrl,
@@ -188,7 +188,7 @@ fun SettingsScreen(
                     placeholder = { Text(com.runflow2.app.data.net.Api.DEFAULT_BASE_URL) },
                     supportingText = {
                         Text(
-                            if (serverUrl.trim() == settings.serverUrl) "Sync, sign-in and Strava use: $effective"
+                            if (serverUrl.trim() == normalized) "Sync, sign-in and Strava use: $normalized"
                             else "Unsaved — tap Apply to switch servers"
                         )
                     },
@@ -199,6 +199,8 @@ fun SettingsScreen(
                     scope.launch {
                         container.settings.setServerUrl(serverUrl)
                         container.syncManager.syncNow("server-changed")
+                        // reflect the normalized stored value in the field
+                        serverUrl = com.runflow2.app.data.net.Api.normalizeServerUrl(serverUrl)
                     }
                 }) { Text("Apply server URL") }
                 Text(

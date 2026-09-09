@@ -6,6 +6,7 @@ import kotlinx.serialization.json.Json
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -191,6 +192,110 @@ data class UpdateProfileRequest(
 @Serializable
 data class UserWrapper(val user: UserDto)
 
+// ---------- plans ----------
+//
+// The server generates plans (VDOT resolution → phases → sport dispatch) and
+// /api/plans accepts the mobile JWT, so the app delegates creation to the web
+// engine and reconciles plans like any other entity. DTOs are deliberately
+// narrow: structuredSteps, HR ranges, _count and other web-only fields are
+// dropped via ignoreUnknownKeys.
+
+@Serializable
+data class PlanWorkoutDto(
+    val id: String,
+    val goalId: String? = null,
+    val scheduledDate: String? = null, // ISO; plan dates are UTC midnights
+    val workoutType: String? = null,
+    val description: String? = null,
+    val phase: String? = null,
+    val order: Int? = null,
+    val targetDistance: Double? = null, // meters
+    val targetDuration: Int? = null, // seconds
+    val targetPace: Double? = null, // seconds per km
+    val isCompleted: Boolean = false,
+    val completedAt: String? = null,
+    val linkedActivityId: String? = null,
+    val customName: String? = null,
+    val displayDesc: String? = null,
+)
+
+@Serializable
+data class PlanGoalDto(
+    val id: String,
+    val name: String? = null,
+    val raceType: String? = null,
+    val raceDate: String? = null, // ISO
+    val planStartDate: String? = null,
+    val createdAt: String? = null,
+    val targetTime: Int? = null, // seconds
+    val currentVdot: Double? = null,
+    val weeklyMileageGoal: Double? = null, // meters
+    val planWeeks: Int? = null,
+    val runsPerWeek: Int? = null,
+    val strengthPerWeek: Int? = null,
+    val taperWeeks: Int? = null,
+    val longRunDay: Int? = null, // 0=Sunday..6=Saturday
+    val workoutDay: Int? = null,
+    val swimDay: Int? = null,
+    val restDays: List<Int>? = null, // 0..6
+    val isActive: Boolean = false,
+    val completedAt: String? = null,
+    val sport: String? = null,
+    val customDistanceM: Double? = null,
+    val workouts: List<PlanWorkoutDto> = emptyList(),
+)
+
+@Serializable
+data class PlansResponse(val goals: List<PlanGoalDto> = emptyList())
+
+@Serializable
+data class CreatePlanResponse(val goal: PlanGoalDto, val plan: PlanGoalDto? = null)
+
+/** Body for POST /api/plans — the web's PlanCreateInputSchema (distances in meters, days 0..6). */
+@Serializable
+data class CreatePlanRequest(
+    val name: String,
+    val sport: String? = null, // RUN | TRIATHLON | NO_RACE
+    val raceType: String? = null,
+    val raceDate: String? = null, // YYYY-MM-DD (parses as UTC midnight server-side)
+    val planStartDate: String? = null,
+    val durationWeeks: Int? = null, // plan length for NO_RACE plans
+    val runsPerWeek: Int? = null,
+    val strengthPerWeek: Int? = null,
+    val weeklyMileageGoal: Double? = null, // meters
+    val maxLongRunKm: Double? = null, // kilometers
+    val taperWeeks: Int? = null,
+    val longRunDay: Int? = null,
+    val workoutDay: Int? = null,
+    val restDays: List<Int>? = null,
+    val targetTime: Int? = null, // seconds
+    val calibrationTime: Int? = null, // seconds
+    val calibrationDistance: String? = null, // 5K | 10K | HALF | MARATHON
+    val customDistanceM: Double? = null,
+    val planSource: String? = null,
+)
+
+@Serializable
+data class PatchWorkoutRequest(
+    val workoutType: String? = null,
+    val description: String? = null,
+    val targetDistance: Double? = null, // meters
+    val targetPace: Double? = null, // seconds per km
+    val targetDuration: Int? = null, // seconds
+    val scheduledDate: String? = null, // YYYY-MM-DD
+    val isCompleted: Boolean? = null,
+)
+
+@Serializable
+data class UpdateGoalRequest(
+    val name: String? = null,
+    val targetTime: Int? = null,
+    val isActive: Boolean? = null,
+)
+
+@Serializable
+data class GoalWrapper(val goal: PlanGoalDto)
+
 // ---------- server-side sync trigger ----------
 
 @Serializable
@@ -269,6 +374,26 @@ interface RunFlowApi {
 
     @PUT("/api/mobile/v1/user/profile")
     suspend fun updateProfile(@Body body: UpdateProfileRequest): UserWrapper
+
+    // plans — /api/plans is the web app's own API and accepts the mobile JWT.
+    // POST runs the full server generation pipeline and returns the goal
+    // including all generated workouts (201, aliased as both goal and plan).
+    @GET("/api/plans")
+    suspend fun plans(): PlansResponse
+
+    @POST("/api/plans")
+    suspend fun createPlan(@Body body: CreatePlanRequest): CreatePlanResponse
+
+    // workout-level edits (targets, description, date shift, completion)
+    @PATCH("/api/mobile/v1/workouts/{id}")
+    suspend fun patchWorkout(@Path("id") id: String, @Body body: PatchWorkoutRequest): PlanWorkoutDto
+
+    // goal-level edits (metadata only) and delete (hard delete)
+    @PUT("/api/mobile/v1/goals/{id}")
+    suspend fun updateGoal(@Path("id") id: String, @Body body: UpdateGoalRequest): GoalWrapper
+
+    @DELETE("/api/mobile/v1/goals/{id}")
+    suspend fun deleteGoal(@Path("id") id: String): retrofit2.Response<Unit>
 
     // server-side sync (e.g. Strava import); 409 = already running
     @POST("/api/mobile/v1/sync")

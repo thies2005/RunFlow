@@ -158,7 +158,7 @@ fun AthleteScreen(
                 }
             }
 
-            // ---- plan prompt: plans are device-local, a web plan doesn't sync here ----
+            // ---- plan prompt: no active plan (post-login, plans sync — offer the wizard) ----
             if (activeGoal == null) {
                 item {
                     Card(
@@ -186,7 +186,7 @@ fun AthleteScreen(
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 )
                                 Text(
-                                    "Plans don't sync from the web app yet — build one here in under a minute.",
+                                    "Create one here — pick the web engine or the offline classic in under a minute. Web plans sync both ways.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 )

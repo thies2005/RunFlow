@@ -125,6 +125,7 @@ fun PlanScreen(
                         weeklyKm = g.weeklyKmGoal,
                         targetTime = g.targetTimeSec,
                         unit = unit,
+                        syncedWithWeb = !g.isLocalOnly,
                         onRecordResult = { showRaceResult = true },
                     )
                 }
@@ -169,6 +170,7 @@ fun PlanScreen(
             WorkoutActionSheet(
                 workout = liveWorkout,
                 unit = unit,
+                canDelete = goal?.isLocalOnly != false,
                 onStart = {
                     selectedWorkout = null
                     onStartWorkout(liveWorkout.id)
@@ -249,6 +251,7 @@ private fun GoalHeaderCard(
     weeklyKm: Double,
     targetTime: Int?,
     unit: DistanceUnit,
+    syncedWithWeb: Boolean,
     onRecordResult: () -> Unit,
 ) {
     Card(
@@ -270,6 +273,13 @@ private fun GoalHeaderCard(
                     Text("$daysToGo", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                     Text(if (daysToGo == 1L) "day" else "days", style = MaterialTheme.typography.labelMedium)
                 }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                InfoChip(
+                    if (syncedWithWeb) "Synced with web" else "On this device only",
+                    container = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             LinearProgressIndicator(
                 progress = { if (total > 0) done.toFloat() / total else 0f },
@@ -411,6 +421,7 @@ private fun WorkoutCard(
 private fun WorkoutActionSheet(
     workout: WorkoutEntity,
     unit: DistanceUnit,
+    canDelete: Boolean,
     onStart: () -> Unit,
     onComplete: () -> Unit,
     onUncomplete: () -> Unit,
@@ -470,16 +481,20 @@ private fun WorkoutActionSheet(
                 TextButton(onClick = { onShift(-1) }, modifier = Modifier.weight(1f)) { Text("◀ Day earlier") }
                 TextButton(onClick = { onShift(1) }, modifier = Modifier.weight(1f)) { Text("Day later ▶") }
             }
-            TextButton(
-                onClick = onDelete,
-                modifier = Modifier.fillMaxWidth(),
-                colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error,
-                ),
-            ) {
-                Icon(Icons.Outlined.Delete, null)
-                Spacer(Modifier.width(6.dp))
-                Text("Delete workout")
+            if (canDelete) {
+                // Single-workout deletes only stick for on-device plans; synced
+                // plans have no server delete route, so the action is hidden.
+                TextButton(
+                    onClick = onDelete,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error,
+                    ),
+                ) {
+                    Icon(Icons.Outlined.Delete, null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Delete workout")
+                }
             }
         } else {
             EditWorkoutFields(workout = workout, onSave = onSaveEdit, onCancel = { editMode = false })

@@ -15,7 +15,7 @@ phase. Server sync is offline-first: everything works without a connection and r
 cd android
 ./gradlew assembleDebug          # debug APK  → app/build/outputs/apk/debug/
 ./gradlew assembleRelease        # R8-minified + signed (needs android/key.properties) → app/build/outputs/apk/release/
-./gradlew testDebugUnitTest      # 67 unit tests (math, plan, sync mappers, SSE parser, Strava OAuth, API contract, logging, login nudge)
+./gradlew testDebugUnitTest      # 91 unit tests (math, plan, sync mappers, plan mappers, SSE parser, Strava OAuth, API contract, logging, login nudge, wizard flow)
 ```
 
 No API keys or backend required — the app is **fully local-first** (Room + DataStore) and seeds
@@ -33,13 +33,22 @@ active marathon plan) on first launch.
 - Post-run summary with route canvas, splits, and automatic TRIMP / VDOT estimation
 
 **Planning**
-- 6-step plan wizard: goal & race type (17 types incl. ultra/tri), race date, calibration race,
-  target-time slider with VDOT projection, volume (runs/week, weekly km, long run), weekly schedule
-  (long-run day, quality day, rest days)
+- Plan wizard (v2.2.5): **plan-engine picker** — *Web engine* (server-generated via `POST /api/plans`,
+  same pipeline as the website, plan syncs instantly), *Classic* (on-device Daniels port, works
+  fully offline, stays local) and *General fitness* (the web engine's no-race mode, skips the
+  race steps and picks a plan length instead) — then goal & race type (17 types incl. ultra/tri),
+  race date, calibration race, target-time slider with VDOT projection, volume (runs/week, weekly
+  km, long run), weekly schedule (long-run day, quality day, rest days)
+- Web engine (signed in): the server runs VDOT resolution → phases → sport dispatch (standard /
+  ultra / triathlon / no-race) and returns the finished plan; the app stores it with server ids.
+  If the server is unreachable at creation time, the wizard falls back to the on-device generator
+  (marked "On this device only") instead of losing the input
 - Local plan generator: base/build/peak/taper phases, 4-week cycle with recovery weeks, long-run
   progression with time-on-feet cap, quality-session rotation by phase, pace targets from VDOT
-- Plan board grouped by week with phase chips; workout actions: start / complete / edit targets /
-  shift day / delete; race-result flow that recalibrates the VDOT correction factor
+- Plan board grouped by week with phase chips and a "Synced with web" / "On this device only"
+  badge; workout actions: start / complete / edit targets / shift day / delete (single-workout
+  delete is local-plans-only — the server has no workout DELETE route); race-result flow that
+  recalibrates the VDOT correction factor
 
 **Analytics**
 - CTL / ATL / TSB (Banister impulse-response, 42/7-day time constants) with drag-scrubber chart
@@ -54,8 +63,8 @@ active marathon plan) on first launch.
 - Sign-in nudge (v2.2.4): a dashboard dialog offers *Sign in* / *Remind in a week* / *Dismiss*
   while signed out; the snooze and dismissal persist in DataStore
 - Create-plan prompt (v2.2.4): when no active plan exists on this device (e.g. after the demo
-  data was cleared on first login — plans don't sync from the web yet), the Athlete menu shows
-  a highlighted card that opens the plan wizard
+  data was cleared on first login), the Athlete menu shows a highlighted card that opens the
+  plan wizard
 - The profile header shows the signed-in account email; the seeded demo address never survives
   a login
 - **AI Coach** (v2.1): streamed chat against the server's AI backend (`/api/ai/chat`, SSE token
@@ -84,11 +93,17 @@ active marathon plan) on first launch.
   run and at app start; server-side Strava import triggered at most every 6 h via `POST /sync`
 - Demo data is flagged `isDemo` and cleared automatically on first login
 - **Diagnostics logging (v2.2.4)**: sync, auth and network events stream to logcat
-  (`adb logcat -s RunFlow` shows all sub-tags: App/Sync/Auth/Net/Login) and into an in-memory
+  (`adb logcat -s RunFlow` shows all sub-tags: App/Sync/Auth/Net/Login/Plan) and into an in-memory
   ring buffer rendered by Settings → Diagnostics — sync results, dead-lettered outbox items,
   HTTP/IO failures and token-refresh errors are visible on-device without a laptop
-- Plans/goals remain local for now (the server plan model at `/api/plans` has a different
-  contract than the local generator — porting it is a documented next step)
+- **Plan sync (v2.2.5)**: plans are compatible with the web — `GET/POST /api/plans` accepts the
+  mobile JWT, so web-created plans download into Room (units, JS days 0..6, ISO dates and
+  restDays arrays are bridged in `PlanMappers`, pure + tested) and app-created web-engine plans
+  appear on the website immediately. Workout completions, target/description edits and day
+  shifts queue as `workout_update` PATCHes; goal completion and deletion use the mobile goal
+  endpoints. Push-then-pull with dirty flags: queued local edits win until pushed, everything
+  else takes the server version, plans deleted on the web are pruned. Offline-created plans are
+  never auto-pushed (the server would regenerate different workouts) — they stay device-only
 
 **UI**
 - Material 3 **Expressive**: `MaterialExpressiveTheme`, `Large/MediumFlexibleTopAppBar`,
@@ -101,15 +116,16 @@ active marathon plan) on first launch.
 core/math        VdotMath, TrainingLoad (TRIMP/CTL/ATL/TSB), TrainingPaces   (pure Kotlin, tested)
 core/util        AppLog (logcat + on-device ring buffer), LoginPrompt logic (pure, tested)
 domain/model     enums + pace-zone evaluator
-domain/plan      PlanGenerator, RaceDefaults                                (pure Kotlin, tested)
+domain/plan      PlanGenerator, PlanMethod (engine picker + wizard flow), RaceDefaults  (pure Kotlin, tested)
 domain/analytics AnalyticsEngine                                            (pure Kotlin)
 data/db          Room: activities / goals / workouts / profile / sync_queue (outbox) /
-                 chat_messages; schema v2 with a tested v1→v2 migration
-data/net         Retrofit API mirroring the Flutter wire contract, AuthStore (tokens +
+                 chat_messages; schema v3 with v1→v2 and v2→v3 migrations
+data/net         Retrofit API mirroring the Flutter wire contract + the web plan
+                 contract (/api/plans, workout/goal writes), AuthStore (tokens +
                  OAuth hand-off), NetworkClient (bearer header + single-flight 401 refresh),
                  StravaAuth (authorize URL / deep-link parser, pure + tested)
-data/sync        SyncManager (push→pull reconciliation), SyncMappers (pure, tested),
-                 SyncWorker (WorkManager periodic + on-demand)
+data/sync        SyncManager (push→pull reconciliation incl. plans), SyncMappers +
+                 PlanMappers (pure, tested), SyncWorker (WorkManager periodic + on-demand)
 data/ai          AiCoachRepository (SSE streaming), SseParser (pure, tested)
 data/repo        RunFlowRepository (analytics aggregation, plan creation, outbox enqueue),
                  SettingsRepository (DataStore)
@@ -138,7 +154,7 @@ keyAlias=runflow2
 keyPassword=<password>
 ```
 
-A ready-to-install signed APK is at `android/RunFlow2-v2.2.4-release.apk`.
+A ready-to-install signed APK is at `android/RunFlow2-v2.2.5-release.apk`.
 
 ## Deferred (next phases)
 

@@ -2,6 +2,7 @@ package com.runflow2.app.data.repo
 
 import com.runflow2.app.core.math.TrainingLoad
 import com.runflow2.app.core.math.VdotMath
+import com.runflow2.app.core.util.AppLog
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.ActivityDao
 import com.runflow2.app.data.db.ActivityEntity
@@ -16,8 +17,12 @@ import com.runflow2.app.data.db.WorkoutDao
 import com.runflow2.app.data.db.WorkoutEntity
 import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.net.AuthStore
+import com.runflow2.app.data.net.NetworkClient
 import com.runflow2.app.data.sync.SyncManager
 import com.runflow2.app.data.sync.toCreateRequest
+import com.runflow2.app.data.sync.toCreatePlanRequest
+import com.runflow2.app.data.sync.toEntities
+import com.runflow2.app.data.sync.toPatchRequest
 import com.runflow2.app.data.sync.toUpdateRequest
 import com.runflow2.app.domain.analytics.ActivityInput
 import com.runflow2.app.domain.analytics.AnalyticsBundle
@@ -45,6 +50,7 @@ class RunFlowRepository(
     private val profileDao: ProfileDao,
     private val syncQueueDao: SyncQueueDao,
     private val authStore: AuthStore,
+    private val network: NetworkClient,
 ) {
     // ---------- profile ----------
     val profile: Flow<ProfileEntity?> = profileDao.observe()
@@ -121,31 +127,95 @@ class RunFlowRepository(
         return workoutDao.pendingBetween(from, to)
     }
 
-    suspend fun saveWorkout(w: WorkoutEntity) = workoutDao.upsert(w)
+    /**
+     * Persists a workout edit. For plans that sync with the server, the edit
+     * is flagged dirty and a full-state PATCH is queued in the outbox (the
+     * outbox keeps the newest payload per workout); local-only plans write
+     * straight to Room as before.
+     */
+    private suspend fun persistWorkoutEdit(w: WorkoutEntity) {
+        val goal = goalDao.byId(w.goalId)
+        if (goal == null || goal.isLocalOnly || !authStore.state.value.loggedIn) {
+            workoutDao.upsert(w)
+            return
+        }
+        val payload = Api.json.encodeToString(
+            com.runflow2.app.data.net.PatchWorkoutRequest.serializer(),
+            w.toPatchRequest(),
+        )
+        db.withTransaction {
+            workoutDao.upsert(w.copy(dirty = true))
+            syncQueueDao.deletePendingFor(SyncManager.TYPE_WORKOUT_UPDATE, w.id)
+            syncQueueDao.insert(
+                SyncQueueEntity(
+                    entityType = SyncManager.TYPE_WORKOUT_UPDATE,
+                    localId = w.id,
+                    payloadJson = payload,
+                )
+            )
+        }
+    }
+
+    suspend fun saveWorkout(w: WorkoutEntity) = persistWorkoutEdit(w)
 
     suspend fun completeWorkout(id: String, activityId: String?) {
         val w = workoutDao.byId(id) ?: return
-        workoutDao.upsert(w.copy(isCompleted = true, completedAt = System.currentTimeMillis(), activityId = activityId))
+        persistWorkoutEdit(w.copy(isCompleted = true, completedAt = System.currentTimeMillis(), activityId = activityId))
     }
 
     suspend fun uncompleteWorkout(id: String) {
         val w = workoutDao.byId(id) ?: return
-        workoutDao.upsert(w.copy(isCompleted = false, completedAt = null, activityId = null))
+        persistWorkoutEdit(w.copy(isCompleted = false, completedAt = null, activityId = null))
     }
 
+    /** Single-workout deletes only stay deleted for local-only plans (no server route). */
     suspend fun deleteWorkout(id: String) = workoutDao.delete(id)
 
     suspend fun shiftWorkoutDate(id: String, days: Int) {
         val w = workoutDao.byId(id) ?: return
-        workoutDao.upsert(w.copy(scheduledDate = w.scheduledDate + days * 86_400_000L))
+        persistWorkoutEdit(w.copy(scheduledDate = w.scheduledDate + days * 86_400_000L))
     }
 
     suspend fun deleteGoalWithWorkouts(id: String) {
+        val goal = goalDao.byId(id)
+        if (goal != null && !goal.isLocalOnly && authStore.state.value.loggedIn) {
+            db.withTransaction {
+                syncQueueDao.deletePendingFor(SyncManager.TYPE_GOAL_DELETE, id)
+                syncQueueDao.insert(
+                    SyncQueueEntity(
+                        entityType = SyncManager.TYPE_GOAL_DELETE,
+                        localId = id,
+                        payloadJson = "{}",
+                    )
+                )
+            }
+        }
         workoutDao.deleteForGoal(id)
         goalDao.delete(id)
     }
 
-    suspend fun completeGoal(id: String) = goalDao.complete(id, System.currentTimeMillis())
+    suspend fun completeGoal(id: String) {
+        val goal = goalDao.byId(id)
+        if (goal != null && !goal.isLocalOnly && authStore.state.value.loggedIn) {
+            val payload = Api.json.encodeToString(
+                com.runflow2.app.data.net.UpdateGoalRequest.serializer(),
+                com.runflow2.app.data.net.UpdateGoalRequest(isActive = false),
+            )
+            db.withTransaction {
+                goalDao.upsert(goal.copy(isActive = false, completedAt = System.currentTimeMillis(), dirty = true))
+                syncQueueDao.deletePendingFor(SyncManager.TYPE_GOAL_UPDATE, id)
+                syncQueueDao.insert(
+                    SyncQueueEntity(
+                        entityType = SyncManager.TYPE_GOAL_UPDATE,
+                        localId = id,
+                        payloadJson = payload,
+                    )
+                )
+            }
+        } else {
+            goalDao.complete(id, System.currentTimeMillis())
+        }
+    }
 
     /** Create a goal and generate its plan locally. Returns goal id. */
     suspend fun createPlan(spec: PlanSpec): String = withContext(Dispatchers.IO) {
@@ -169,6 +239,8 @@ class RunFlowRepository(
             isActive = true,
             createdAt = System.currentTimeMillis(),
             customDistanceKm = spec.customDistanceKm,
+            planStartDate = Format.epochMillis(spec.startDate.with(java.time.DayOfWeek.MONDAY), LocalTime.MIDNIGHT),
+            isLocalOnly = true,
         )
         // deactivate previous active goals
         val all = goalDao.observeAll().first()
@@ -192,6 +264,36 @@ class RunFlowRepository(
         }
         workoutDao.upsertAll(workouts)
         goalId
+    }
+
+    /**
+     * Creates a plan through the web engine (POST /api/plans): the server runs
+     * its full generation pipeline and returns the goal with all workouts, so
+     * the plan is identical on web and app from the first second. Requires a
+     * signed-in session; fails with an exception when unreachable so the
+     * caller can fall back to [createPlan].
+     */
+    suspend fun createPlanViaServer(spec: PlanSpec): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            check(authStore.state.value.loggedIn) { "not signed in" }
+            val api = network.api()
+            var dto = api.createPlan(spec.toCreatePlanRequest()).goal
+            if (dto.workouts.isEmpty()) {
+                // Defensive: some deployments answer without embedded workouts.
+                dto = api.plans().goals.firstOrNull { it.id == dto.id } ?: dto
+            }
+            val (goal, workouts) = dto.toEntities() ?: error("server returned an unusable plan")
+            db.withTransaction {
+                goalDao.observeAll().first()
+                    .filter { it.isActive && it.id != goal.id }
+                    .forEach { goalDao.upsert(it.copy(isActive = false)) }
+                workoutDao.deleteForGoal(goal.id)
+                goalDao.upsert(goal)
+                workoutDao.upsertAll(workouts)
+            }
+            AppLog.i("Plan", "plan '${goal.name}' created via web engine (${workouts.size} workouts)")
+            goal.id
+        }
     }
 
     // ---------- analytics ----------

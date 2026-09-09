@@ -1,5 +1,6 @@
 package com.runflow2.app.ui.screens
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,29 +55,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
 import com.runflow2.app.core.math.VdotMath
+import com.runflow2.app.core.util.AppLog
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.repo.AppSettings
+import com.runflow2.app.data.sync.calibrationDistanceFor
 import com.runflow2.app.domain.analytics.AnalyticsBundle
 import com.runflow2.app.domain.model.RaceType
 import com.runflow2.app.domain.plan.PlanGenerator
+import com.runflow2.app.domain.plan.PlanMethod
+import com.runflow2.app.domain.plan.PlanMethodFlow
 import com.runflow2.app.domain.plan.PlanSpec
 import com.runflow2.app.domain.plan.RaceDefaultsTable
+import com.runflow2.app.domain.plan.WizardStep
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
-private const val STEP_COUNT = 6
-
 private data class WizardData(
     val name: String = "",
+    val method: PlanMethod = PlanMethod.WEB_ENGINE,
     val raceType: RaceType = RaceType.MARATHON,
     val raceDate: LocalDate = LocalDate.now().plusWeeks(16),
     val calibrationVdot: Double? = null,
     val calibTimeText: String = "",
     val calibDistance: Triple<String, RaceType, Double> = RaceDefaultsTable.calibrationRaces[1],
     val targetTimeSec: Int? = null,
+    val planLengthWeeks: Int = 12,
     val runsPerWeek: Int = 5,
     val weeklyKm: Double = 58.0,
     val longRunKm: Double = 30.0,
@@ -90,9 +97,11 @@ private data class WizardData(
 fun PlanWizardScreen(
     container: AppContainer,
     onDone: () -> Unit,
+    onLogin: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val settings by container.settings.settings.collectAsState(initial = AppSettings())
+    val auth by container.authStore.state.collectAsState()
     val analytics by androidx.compose.runtime.produceState<AnalyticsBundle?>(initialValue = null) {
         value = container.repository.analytics(365)
     }
@@ -101,9 +110,13 @@ fun PlanWizardScreen(
     var data by remember { mutableStateOf(WizardData()) }
     var creating by remember { mutableStateOf(false) }
 
-    // prefill volume defaults from race type
-    LaunchedEffect(data.raceType) {
-        val d = RaceDefaultsTable.forRace(data.raceType)
+    val steps = remember(data.method) { PlanMethodFlow.stepsFor(data.method) }
+    val stepCount = steps.size
+
+    // prefill volume defaults from race type (general fitness uses its own defaults)
+    LaunchedEffect(data.raceType, data.method) {
+        val race = if (data.method == PlanMethod.GENERAL_FITNESS) RaceType.NONE else data.raceType
+        val d = RaceDefaultsTable.forRace(race)
         data = data.copy(
             runsPerWeek = d.runsPerWeek,
             weeklyKm = d.weeklyKm,
@@ -133,11 +146,11 @@ fun PlanWizardScreen(
                 .padding(horizontal = 20.dp),
         ) {
             LinearProgressIndicator(
-                progress = { (step + 1).toFloat() / STEP_COUNT },
+                progress = { (step + 1).toFloat() / stepCount },
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                "Step ${step + 1} of $STEP_COUNT",
+                "Step ${step + 1} of $stepCount",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),
@@ -161,13 +174,13 @@ fun PlanWizardScreen(
                         .padding(vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    when (s) {
-                        0 -> StepGoal(data) { data = it }
-                        1 -> StepDate(data) { data = it }
-                        2 -> StepCalibration(data, analytics) { data = it }
-                        3 -> StepTarget(data, effectiveVdot, raceKm) { data = it }
-                        4 -> StepVolume(data) { data = it }
-                        5 -> StepSchedule(data) { data = it }
+                    when (steps[s]) {
+                        WizardStep.GOAL_METHOD -> StepGoal(data, auth.loggedIn, onLogin) { data = it }
+                        WizardStep.DATE -> StepDate(data) { data = it }
+                        WizardStep.CALIBRATION -> StepCalibration(data, analytics) { data = it }
+                        WizardStep.TARGET -> StepTarget(data, effectiveVdot, raceKm) { data = it }
+                        WizardStep.VOLUME -> StepVolume(data) { data = it }
+                        WizardStep.SCHEDULE -> StepSchedule(data) { data = it }
                     }
                 }
             }
@@ -185,15 +198,17 @@ fun PlanWizardScreen(
                 }
                 Button(
                     onClick = {
-                        if (step < STEP_COUNT - 1) {
+                        if (step < stepCount - 1) {
                             step++
                         } else if (!creating) {
                             creating = true
                             scope.launch {
+                                val method = data.method
+                                val general = method == PlanMethod.GENERAL_FITNESS
                                 val spec = PlanSpec(
                                     name = data.name.ifBlank { data.raceType.label },
-                                    raceType = data.raceType,
-                                    raceDate = data.raceDate,
+                                    raceType = if (general) RaceType.NONE else data.raceType,
+                                    raceDate = if (general) LocalDate.now().plusWeeks(data.planLengthWeeks.toLong()) else data.raceDate,
                                     startDate = LocalDate.now(),
                                     targetTimeSec = data.targetTimeSec,
                                     weeklyKm = data.weeklyKm,
@@ -204,19 +219,42 @@ fun PlanWizardScreen(
                                     workoutDay = data.workoutDay,
                                     restDays = data.restDays,
                                     vdot = effectiveVdot,
+                                    calibrationTimeSec = if (method == PlanMethod.CLASSIC) null
+                                    else data.calibrationVdot?.let { parseDuration(data.calibTimeText) },
+                                    calibrationDistance = if (method == PlanMethod.CLASSIC) null
+                                    else calibrationDistanceFor(data.calibDistance.first),
                                 )
-                                container.repository.createPlan(spec)
+                                val created = when (method) {
+                                    PlanMethod.CLASSIC -> runCatching { container.repository.createPlan(spec) }
+                                    else -> container.repository.createPlanViaServer(spec)
+                                }
+                                if (created.isFailure && method != PlanMethod.CLASSIC) {
+                                    // Offline or server hiccup: keep the user unblocked
+                                    // with an on-device plan instead of losing their input.
+                                    AppLog.w(
+                                        "Wizard",
+                                        "web engine unavailable (${created.exceptionOrNull()?.message}) — created on-device plan instead",
+                                    )
+                                    container.repository.createPlan(spec)
+                                    Toast.makeText(
+                                        container.appContext,
+                                        "Couldn't reach the server — created an on-device plan instead (stays on this phone).",
+                                        Toast.LENGTH_LONG,
+                                    ).show()
+                                }
+                                creating = false
                                 onDone()
                             }
                         }
                     },
                     modifier = Modifier.weight(2f),
                     enabled = when (step) {
-                        0 -> data.name.isNotBlank() && data.raceType != RaceType.NONE || data.raceType == RaceType.NONE
+                        0 -> data.name.isNotBlank() &&
+                            (!data.method.requiresSignIn || auth.loggedIn)
                         else -> true
                     },
                 ) {
-                    Text(if (step == STEP_COUNT - 1) "Create plan" else "Continue")
+                    Text(if (step == stepCount - 1) "Create plan" else "Continue")
                 }
             }
         }
@@ -231,8 +269,68 @@ private fun StepHeader(title: String, subtitle: String) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StepGoal(data: WizardData, update: (WizardData) -> Unit) {
+private fun MethodCard(
+    method: PlanMethod,
+    selected: Boolean,
+    loggedIn: Boolean,
+    onLogin: () -> Unit,
+    onSelect: () -> Unit,
+) {
+    Card(
+        onClick = onSelect,
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surfaceContainerLow,
+            contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
+            else MaterialTheme.colorScheme.onSurface,
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(method.label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                if (method == PlanMethod.WEB_ENGINE) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
+                        Text(
+                            "Recommended",
+                            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    }
+                }
+                if (method.requiresSignIn && !loggedIn) {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
+                        Text(
+                            "Needs sign-in",
+                            Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    }
+                }
+            }
+            Text(
+                method.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (method.requiresSignIn && !loggedIn) {
+                TextButton(onClick = onLogin, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
+                    Text("Sign in to use this engine")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StepGoal(
+    data: WizardData,
+    loggedIn: Boolean,
+    onLogin: () -> Unit,
+    update: (WizardData) -> Unit,
+) {
     StepHeader("Your goal", "What are you training for?")
     OutlinedTextField(
         value = data.name,
@@ -240,34 +338,48 @@ private fun StepGoal(data: WizardData, update: (WizardData) -> Unit) {
         label = { Text("Goal name (e.g. Berlin Marathon)") },
         modifier = Modifier.fillMaxWidth(),
     )
-    Text("Race type", style = MaterialTheme.typography.titleSmall)
-    val grouped = listOf(
-        "Road" to listOf(
-            RaceType.FIVE_K, RaceType.TEN_K, RaceType.HALF_MARATHON, RaceType.MARATHON,
-        ),
-        "Ultra" to listOf(
-            RaceType.FIFTY_K, RaceType.FIFTY_MILE, RaceType.HUNDRED_K, RaceType.HUNDRED_MILE,
-            RaceType.TWELVE_HOUR, RaceType.TWENTY_FOUR_HOUR, RaceType.BACKYARD_ULTRA,
-        ),
-        "Triathlon" to listOf(
-            RaceType.SPRINT_TRI, RaceType.OLYMPIC_TRI, RaceType.HALF_IRONMAN, RaceType.FULL_IRONMAN,
-        ),
-        "General" to listOf(RaceType.NONE),
-    )
-    grouped.forEach { (group, types) ->
-        Text(group, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            types.forEach { rt ->
-                FilterChip(
-                    selected = data.raceType == rt,
-                    onClick = { update(data.copy(raceType = rt)) },
-                    label = { Text(rt.label) },
-                )
+
+    Text("Plan engine", style = MaterialTheme.typography.titleSmall)
+    PlanMethod.entries.forEach { method ->
+        MethodCard(
+            method = method,
+            selected = data.method == method,
+            loggedIn = loggedIn,
+            onLogin = onLogin,
+            onSelect = { update(data.copy(method = method)) },
+        )
+    }
+
+    if (data.method != PlanMethod.GENERAL_FITNESS) {
+        Text("Race type", style = MaterialTheme.typography.titleSmall)
+        val grouped = listOf(
+            "Road" to listOf(
+                RaceType.FIVE_K, RaceType.TEN_K, RaceType.HALF_MARATHON, RaceType.MARATHON,
+            ),
+            "Ultra" to listOf(
+                RaceType.FIFTY_K, RaceType.FIFTY_MILE, RaceType.HUNDRED_K, RaceType.HUNDRED_MILE,
+                RaceType.TWELVE_HOUR, RaceType.TWENTY_FOUR_HOUR, RaceType.BACKYARD_ULTRA,
+            ),
+            "Triathlon" to listOf(
+                RaceType.SPRINT_TRI, RaceType.OLYMPIC_TRI, RaceType.HALF_IRONMAN, RaceType.FULL_IRONMAN,
+            ),
+            "General" to listOf(RaceType.NONE),
+        )
+        grouped.forEach { (group, types) ->
+            Text(group, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                types.forEach { rt ->
+                    FilterChip(
+                        selected = data.raceType == rt,
+                        onClick = { update(data.copy(raceType = rt)) },
+                        label = { Text(rt.label) },
+                    )
+                }
             }
         }
     }
@@ -443,6 +555,19 @@ private fun StepTarget(
 private fun StepVolume(data: WizardData, update: (WizardData) -> Unit) {
     StepHeader("Training volume", "How much are you ready to run?")
 
+    if (data.method == PlanMethod.GENERAL_FITNESS) {
+        Text("Plan length", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(8, 12, 16, 20).forEach { weeks ->
+                FilterChip(
+                    selected = data.planLengthWeeks == weeks,
+                    onClick = { update(data.copy(planLengthWeeks = weeks)) },
+                    label = { Text("$weeks wk") },
+                )
+            }
+        }
+    }
+
     Text("Runs per week: ${data.runsPerWeek}", style = MaterialTheme.typography.titleSmall)
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         (3..7).forEach { n ->
@@ -519,7 +644,10 @@ private fun StepSchedule(data: WizardData, update: (WizardData) -> Unit) {
 
     Card {
         Text(
-            "Every 4th week is a recovery week. Taper begins 2 weeks before race day.",
+            if (data.method == PlanMethod.GENERAL_FITNESS)
+                "The plan repeats weekly base and build blocks, stepping your mileage up gradually."
+            else
+                "Every 4th week is a recovery week. Taper begins 2 weeks before race day.",
             Modifier.padding(16.dp),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

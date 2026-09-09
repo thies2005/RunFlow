@@ -24,7 +24,7 @@ class AppContainer(app: Application) {
     val appContext: Application = app
 
     val database: AppDatabase = Room.databaseBuilder(app, AppDatabase::class.java, "runflow.db")
-        .addMigrations(AppDatabase.MIGRATION_1_2)
+        .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
         .build()
 
     val settings = SettingsRepository(app)
@@ -39,6 +39,7 @@ class AppContainer(app: Application) {
         profileDao = database.profileDao(),
         syncQueueDao = database.syncQueueDao(),
         authStore = authStore,
+        network = network,
     )
 
     val syncManager = SyncManager(

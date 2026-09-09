@@ -76,6 +76,13 @@ data class GoalEntity(
     val completedAt: Long? = null,
     val customDistanceKm: Double? = null,
     @ColumnInfo(defaultValue = "1") val isDemo: Boolean = false,
+    // ---- plan sync metadata (v3). defaultValue mirrors the ALTER TABLE used
+    // in MIGRATION_2_3 so Room's post-migration schema validation passes.
+    // isLocalOnly plans were generated on-device and never uploaded; synced
+    // plans carry the server id and reconcile through the outbox/pull. ----
+    val planStartDate: Long? = null,
+    @ColumnInfo(defaultValue = "1") val isLocalOnly: Boolean = true,
+    @ColumnInfo(defaultValue = "0") val dirty: Boolean = false,
 )
 
 @Entity(tableName = "workouts")
@@ -94,6 +101,8 @@ data class WorkoutEntity(
     val activityId: String? = null,
     val sortIndex: Int = 0,
     @ColumnInfo(defaultValue = "1") val isDemo: Boolean = false,
+    // dirty = a local edit is queued for the server (v3)
+    @ColumnInfo(defaultValue = "0") val dirty: Boolean = false,
 )
 
 @Entity(tableName = "profile")
@@ -124,7 +133,7 @@ data class ProfileEntity(
 @Entity(tableName = "sync_queue")
 data class SyncQueueEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val entityType: String, // activity_create | activity_update | profile_update
+    val entityType: String, // activity_create | activity_update | profile_update | workout_update | goal_update | goal_delete
     val localId: String,
     val payloadJson: String,
     val retryCount: Int = 0,
@@ -192,6 +201,9 @@ interface GoalDao {
 
     @Query("SELECT * FROM goals WHERE id = :id")
     suspend fun byId(id: String): GoalEntity?
+
+    @Query("SELECT * FROM goals WHERE isLocalOnly = 0")
+    suspend fun serverGoals(): List<GoalEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(goal: GoalEntity)
@@ -313,7 +325,7 @@ interface ChatDao {
         ActivityEntity::class, GoalEntity::class, WorkoutEntity::class, ProfileEntity::class,
         SyncQueueEntity::class, ChatMessageEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -352,6 +364,19 @@ abstract class AppDatabase : RoomDatabase() {
                         "id TEXT NOT NULL PRIMARY KEY, sessionId TEXT NOT NULL, role TEXT NOT NULL, " +
                         "content TEXT NOT NULL, createdAt INTEGER NOT NULL)"
                 )
+            }
+        }
+
+        /**
+         * v2 -> v3 adds plan-sync metadata. Everything is additive: existing
+         * rows default to isLocalOnly = 1 (on-device plans) and dirty = 0.
+         */
+        val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE goals ADD COLUMN planStartDate INTEGER")
+                db.execSQL("ALTER TABLE goals ADD COLUMN isLocalOnly INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE goals ADD COLUMN dirty INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN dirty INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

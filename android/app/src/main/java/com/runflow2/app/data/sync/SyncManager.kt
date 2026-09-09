@@ -6,7 +6,9 @@ import com.runflow2.app.data.db.ProfileEntity
 import com.runflow2.app.data.net.AuthStore
 import com.runflow2.app.data.net.CreateActivityRequest
 import com.runflow2.app.data.net.NetworkClient
+import com.runflow2.app.data.net.PatchWorkoutRequest
 import com.runflow2.app.data.net.UpdateActivityRequest
+import com.runflow2.app.data.net.UpdateGoalRequest
 import com.runflow2.app.data.net.UpdateProfileRequest
 import com.runflow2.app.data.repo.SettingsRepository
 import com.runflow2.app.data.sync.applyTo
@@ -58,6 +60,9 @@ class SyncManager(
         const val TYPE_ACTIVITY_CREATE = "activity_create"
         const val TYPE_ACTIVITY_UPDATE = "activity_update"
         const val TYPE_PROFILE_UPDATE = "profile_update"
+        const val TYPE_WORKOUT_UPDATE = "workout_update"
+        const val TYPE_GOAL_UPDATE = "goal_update"
+        const val TYPE_GOAL_DELETE = "goal_delete"
         private const val PAGE_SIZE = 100
         private const val MAX_PAGES = 60
         private const val STRAVA_TRIGGER_INTERVAL_MS = 6 * 60 * 60 * 1000L // 6h
@@ -160,6 +165,19 @@ class SyncManager(
         var (pulled, pruned) = pullActivities()
         if (pulled > 0 || pruned > 0) AppLog.i(TAG, "pulled $pulled activity(ies), pruned $pruned")
 
+        // ---- pull plans (server-generated goals + workouts) ----
+        try {
+            val (planPulled, planPruned) = pullPlans()
+            if (planPulled > 0 || planPruned > 0) AppLog.i(TAG, "pulled $planPulled plan(s), pruned $planPruned")
+            pulled += planPulled
+            pruned += planPruned
+        } catch (e: IOException) {
+            AppLog.w(TAG, "plan pull skipped (${e.message ?: "io error"})")
+        } catch (e: HttpException) {
+            if (e.code() == 401) throw e
+            AppLog.w(TAG, "plan pull failed: HTTP ${e.code()}", e)
+        }
+
         // ---- server-side Strava import, throttled to every 6h ----
         val lastTrigger = settings.settingsOnce().lastStravaTriggerAt
         if (System.currentTimeMillis() - lastTrigger > STRAVA_TRIGGER_INTERVAL_MS) {
@@ -229,7 +247,57 @@ class SyncManager(
                 client.api().updateProfile(req)
                 db.profileDao().get()?.let { db.profileDao().upsert(it.copy(dirty = false)) }
             }
+            TYPE_WORKOUT_UPDATE -> {
+                val req = json.decodeFromString(PatchWorkoutRequest.serializer(), payloadJson)
+                client.api().patchWorkout(localId, req)
+                db.workoutDao().byId(localId)?.let { db.workoutDao().upsert(it.copy(dirty = false)) }
+            }
+            TYPE_GOAL_UPDATE -> {
+                val req = json.decodeFromString(UpdateGoalRequest.serializer(), payloadJson)
+                client.api().updateGoal(localId, req)
+                db.goalDao().byId(localId)?.let { db.goalDao().upsert(it.copy(dirty = false)) }
+            }
+            TYPE_GOAL_DELETE -> {
+                val resp = client.api().deleteGoal(localId)
+                // 404 = already gone on the server: the delete still succeeded.
+                if (!resp.isSuccessful && resp.code() != 404) throw HttpException(resp)
+            }
         }
+    }
+
+    /**
+     * Pulls server-generated plans into Room. Web plans arrive with server
+     * ids; local edits (dirty rows) win over the server until their outbox
+     * item is pushed; plans deleted on the web are pruned locally. Local-only
+     * plans are never touched.
+     */
+    private suspend fun pullPlans(): Pair<Int, Int> {
+        val serverGoals = client.api().plans().goals
+        var pulled = 0
+        var pruned = 0
+        val seenIds = HashSet<String>(serverGoals.size)
+        for (g in serverGoals) {
+            seenIds += g.id
+            val (goal, serverWorkouts) = g.toEntities() ?: continue
+            val existing = db.goalDao().byId(goal.id)
+            db.goalDao().upsert(if (existing?.dirty == true) existing else goal)
+            val localWorkouts = db.workoutDao().forGoal(goal.id)
+            db.workoutDao().upsertAll(mergeServerWorkouts(localWorkouts, serverWorkouts))
+            val serverIds = serverWorkouts.map { it.id }.toSet()
+            localWorkouts.filter { it.id !in serverIds && !it.dirty }.forEach {
+                db.workoutDao().delete(it.id)
+            }
+            pulled++
+        }
+        // prune synced plans the server no longer returns (deleted there)
+        db.goalDao().serverGoals().forEach { local ->
+            if (local.id !in seenIds && !local.dirty) {
+                db.workoutDao().deleteForGoal(local.id)
+                db.goalDao().delete(local.id)
+                pruned++
+            }
+        }
+        return pulled to pruned
     }
 
     /** Returns pulled count and pruned count. */

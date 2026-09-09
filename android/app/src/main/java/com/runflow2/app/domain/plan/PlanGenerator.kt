@@ -26,6 +26,10 @@ data class PlanSpec(
     val taperWeeks: Int = 2,
     val vdot: Double? = null,
     val customDistanceKm: Double? = null,
+    // Only used by the web engine (POST /api/plans calibration block); the
+    // local generator resolves paces from [vdot] directly.
+    val calibrationTimeSec: Int? = null,
+    val calibrationDistance: String? = null, // 5K | 10K | HALF | MARATHON
 )
 
 data class WorkoutDraft(

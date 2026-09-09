@@ -328,10 +328,13 @@ class RunFlowRepository(
             zoneSeconds: List<Int>,
             distanceKm: Double,
             thresholdPaceSecPerKm: Int,
+            hrMax: Int = hrMaxFallback,
+            hrRest: Int = hrRestFallback,
+            isRun: Boolean = true,
         ): Double {
             val minutes = movingTimeSec / 60.0
             val fromHr = avgHr?.let {
-                TrainingLoad.trimpFromHr(minutes, it, hrMaxFallback, hrRestFallback)
+                TrainingLoad.trimpFromHr(minutes, it, hrMax, hrRest)
             }
             val fromZones = TrainingLoad.trimpFromZones(zoneSeconds)
             return when {
@@ -340,7 +343,7 @@ class RunFlowRepository(
                 else -> {
                     val avgSpeed = if (movingTimeSec > 0) (distanceKm * 1000.0) / movingTimeSec else 0.0
                     val thresholdSpeed = if (thresholdPaceSecPerKm > 0) 1000.0 / thresholdPaceSecPerKm else 3.0
-                    TrainingLoad.trimpFromPace(minutes, avgSpeed, thresholdSpeed)
+                    TrainingLoad.trimpFallback(minutes, avgSpeed, thresholdSpeed, isRun)
                 }
             }
         }

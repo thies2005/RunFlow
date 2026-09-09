@@ -29,6 +29,9 @@ data class AnalyticsBundle(
     val atl: Double,
     val tsb: Double,
     val tsbStatus: TsbStatus,
+    /** All-time peaks of the CTL/ATL series — the "% of max" denominators (web parity). */
+    val maxCtl: Double,
+    val maxAtl: Double,
     val rawVdot: Double?,
     val effectiveVdot: Double?,
     val vdotCorrection: Double,
@@ -49,12 +52,14 @@ object AnalyticsEngine {
         vdotCorrection: Double,
         rangeDays: Int = 365,
     ): AnalyticsBundle {
+        // CTL/ATL/TSB and zone distribution cover ALL sports (web parity);
+        // distance-based metrics (VO₂ max, weekly km, volume bars) stay run-only.
         val runs = activities.filter { it.type == ActivityType.RUN }
 
         // daily TRIMP map
         val trimpByDate = HashMap<LocalDate, Double>()
-        for (a in runs) {
-            trimpByDate[a.date] = (trimpByDate[a.date] ?: 0.0) + a.trimp
+        for (a in activities) {
+            trimpByDate[a.date] = (trimpByDate[a.date] ?: 0.0) + effectiveTrimp(a)
         }
 
         val daily = TrainingLoad.dailySeriesWarmedUp(trimpByDate, today, rangeDays)
@@ -62,6 +67,15 @@ object AnalyticsEngine {
         val ctl = latest?.ctl ?: 0.0
         val atl = latest?.atl ?: 0.0
         val tsb = ctl - atl
+
+        // % of max needs the peak over the full history, not just the window
+        val historyDays = activities.minOfOrNull { it.date }
+            ?.let { (today.toEpochDay() - it.toEpochDay()).toInt() + 1 } ?: 0
+        val peakSeries = if (historyDays > rangeDays) {
+            TrainingLoad.dailySeriesWarmedUp(trimpByDate, today, historyDays)
+        } else daily
+        val maxCtl = peakSeries.maxOfOrNull { it.ctl } ?: 0.0
+        val maxAtl = peakSeries.maxOfOrNull { it.atl } ?: 0.0
 
         // best recent performance VDOT (last 90 days, >= 5 km runs)
         val cutoff = today.minusDays(90)
@@ -81,10 +95,10 @@ object AnalyticsEngine {
             .sumOf { it.distanceKm }
         val avgWeeklyKm12 = total12 / 12.0
 
-        // zone totals over range
+        // zone totals over range (all sports — zones are HR-based, not run-based)
         val rangeStart = today.minusDays((rangeDays - 1).toLong())
         val zoneTotals = IntArray(7)
-        runs.filter { !it.date.isBefore(rangeStart) }.forEach { a ->
+        activities.filter { !it.date.isBefore(rangeStart) }.forEach { a ->
             a.zoneSeconds.forEachIndexed { i, s -> zoneTotals[i] += s }
         }
 
@@ -117,6 +131,8 @@ object AnalyticsEngine {
             atl = atl,
             tsb = tsb,
             tsbStatus = TsbStatus.from(tsb),
+            maxCtl = maxCtl,
+            maxAtl = maxAtl,
             rawVdot = rawVdot,
             effectiveVdot = effectiveVdot,
             vdotCorrection = vdotCorrection,
@@ -135,6 +151,17 @@ object AnalyticsEngine {
         if (distanceKm < 3.0 || movingTimeSec < 300) return null
         val v = VdotMath.vdot(distanceKm * 1000.0, movingTimeSec.toDouble())
         return v.takeIf { it in 15.0..90.0 }
+    }
+
+    /**
+     * Load of an activity as the model sees it: stored TRIMP, else zone-based,
+     * else the web's flat fallback (2.5/min) — never zero just because a ride
+     * arrived without heart rate.
+     */
+    private fun effectiveTrimp(a: ActivityInput): Double = when {
+        a.trimp > 0.0 -> a.trimp
+        a.zoneSeconds.sum() > 0 -> TrainingLoad.trimpFromZones(a.zoneSeconds)
+        else -> (a.movingTimeSec / 60.0) * TrainingLoad.FLAT_TRIMP_PER_MIN
     }
 
     fun racePredictions(effectiveVdot: Double): List<Triple<String, Double, Int>> =

@@ -15,7 +15,7 @@ phase. Server sync is offline-first: everything works without a connection and r
 cd android
 ./gradlew assembleDebug          # debug APK  → app/build/outputs/apk/debug/
 ./gradlew assembleRelease        # R8-minified + signed (needs android/key.properties) → app/build/outputs/apk/release/
-./gradlew testDebugUnitTest      # 91 unit tests (math, plan, sync mappers, plan mappers, SSE parser, Strava OAuth, API contract, logging, login nudge, wizard flow)
+./gradlew testDebugUnitTest      # 107 unit tests (math, plan, sync mappers, plan mappers, SSE parser, Strava OAuth, API contract, logging, login nudge, wizard flow)
 ```
 
 No API keys or backend required — the app is **fully local-first** (Room + DataStore) and seeds
@@ -51,11 +51,19 @@ active marathon plan) on first launch.
   recalibrates the VDOT correction factor
 
 **Analytics**
+- **Training-status header (v2.2.6, web parity)**: Fitness (CTL) and Fatigue (ATL) shown as a bar
+  with **% of all-time max** (tap the number to flip to the absolute value), Form (TSB) as a
+  diverging bar around a center tick with status colour, VO₂ max + marathon-shape ring on top and
+  weekly / 12-wk-average footer
 - CTL / ATL / TSB (Banister impulse-response, 42/7-day time constants) with drag-scrubber chart
-  and 30/60/90/365-day ranges
+  and 30/60/90/365-day ranges — **computed from ALL sports since v2.2.6** (rides, swims, walks…
+  count via stored TRIMP, zone times or the web's flat 2.5/min fallback; VO₂ max and km stay
+  run-only, matching the website)
 - Daniels–Gilbert VDOT: effective VO₂ max from best recent performance, race predictions
   (5K/10K/HM/Marathon), training-pace table (E/M/T/I/R)
-- Weekly volume (26 weeks), 7-zone HR distribution, marathon-shape ring + VDOT trend
+- Weekly volume (26 weeks), 7-zone HR distribution (all sports; per-activity zone times now come
+  from the server — the mobile activities endpoint includes `hrZone1..7Time` since v2.2.6),
+  marathon-shape ring + VDOT trend
 
 **Athlete**
 - Profile, body & threshold metrics, editable 7-zone HR model with validation
@@ -154,7 +162,7 @@ keyAlias=runflow2
 keyPassword=<password>
 ```
 
-A ready-to-install signed APK is at `android/RunFlow2-v2.2.5-release.apk`.
+A ready-to-install signed APK is at `android/RunFlow2-v2.2.6-release.apk`.
 
 ## Deferred (next phases)
 

@@ -191,6 +191,40 @@ class PlanMappersTest {
         assertEquals("Workout", composeDescription(null, null))
     }
 
+    @Test
+    fun `web-style display name folds into its longer description`() {
+        // the web derives displayDesc as a prefix of description — showing both duplicates the text
+        assertEquals(
+            "Intervals: 5x800m @ 3:42/km",
+            composeDescription("Intervals: 5x800m", "Intervals: 5x800m @ 3:42/km"),
+        )
+        assertEquals("Easy Run: 6.0km", composeDescription("Easy Run: 6.0km", "Easy Run: 6.0km"))
+    }
+
+    @Test
+    fun `poisoned rows from the old exact-equality join heal`() {
+        assertEquals(
+            "Intervals: 5x800m @ 3:42/km",
+            composeDescription("Intervals: 5x800m", "Intervals: 5x800m · Intervals: 5x800m @ 3:42/km"),
+        )
+    }
+
+    @Test
+    fun `unrelated name and description still join`() {
+        assertEquals("Long Run · 90 min easy, flat", composeDescription("Long Run", "90 min easy, flat"))
+        // a SHORT name inside the text is coincidence, not redundancy
+        assertEquals("Run · Trail Run 10k", composeDescription("Run", "Trail Run 10k"))
+    }
+
+    @Test
+    fun `sub-goal prefixed description keeps its unprefixed name folded in`() {
+        // plan-creation prefixes description with "[10K] " but not customName
+        assertEquals(
+            "[10K] Intervals: 5x800m @ 3:42/km",
+            composeDescription("Intervals: 5x800m", "[10K] Intervals: 5x800m @ 3:42/km"),
+        )
+    }
+
     // ---- merge semantics ----
 
     @Test

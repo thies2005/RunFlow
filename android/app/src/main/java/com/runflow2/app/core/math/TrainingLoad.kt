@@ -44,6 +44,17 @@ object TrainingLoad {
         return minutes * hrReserve * 0.64 * exp(hrReserve * 1.92)
     }
 
+    /**
+     * Web parity for non-run sports without HR: a flat load per minute — the
+     * run-pace curve would score a bike ride as a max-effort run.
+     */
+    const val FLAT_TRIMP_PER_MIN = 2.5
+
+    /** Last-resort TRIMP: pace curve for runs, flat rate for everything else. */
+    fun trimpFallback(minutes: Double, avgSpeedMS: Double, thresholdSpeedMS: Double, isRun: Boolean): Double =
+        if (isRun) trimpFromPace(minutes, avgSpeedMS, thresholdSpeedMS)
+        else minutes * FLAT_TRIMP_PER_MIN
+
     data class DailyLoad(
         val date: LocalDate,
         val trimp: Double,

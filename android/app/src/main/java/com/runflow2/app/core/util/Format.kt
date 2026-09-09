@@ -8,6 +8,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.roundToInt
 
 enum class DistanceUnit { METRIC, IMPERIAL }
 
@@ -117,6 +118,10 @@ object Format {
 
     fun intOrDash(v: Double?): String =
         if (v == null || !v.isFinite()) "—" else "${v.toInt()}"
+
+    /** Rounded, unlike [intOrDash] which truncates — keeps header and chart legend in sync. */
+    fun roundedIntOrDash(v: Double?): String =
+        if (v == null || !v.isFinite()) "—" else "${v.roundToInt()}"
 
     fun oneDecimal(v: Double?): String =
         if (v == null || !v.isFinite()) "—" else String.format(Locale.ENGLISH, "%.1f", v)

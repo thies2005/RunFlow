@@ -68,13 +68,26 @@ private fun parsePhase(raw: String?): PlanPhase = when (raw) {
 fun parseRaceType(raw: String?): RaceType =
     runCatching { RaceType.valueOf(raw ?: "") }.getOrDefault(RaceType.NONE)
 
-/** displayDesc (the user-facing name) and description compose into one card text. */
+/**
+ * displayDesc (the user-facing name) and description compose into one card
+ * text. The web derives displayDesc as a prefix of description ("Intervals:
+ * 5x800m" vs "Intervals: 5x800m @ 3:42/km"), so a mere "·" join would show
+ * the same words twice — redundant names collapse into the fuller text.
+ */
 internal fun composeDescription(name: String?, desc: String?): String {
-    val n = name?.takeIf { it.isNotBlank() }
-    val d = desc?.takeIf { it.isNotBlank() }
+    val n = name?.trim()?.takeIf { it.isNotBlank() }
+    val d = desc?.trim()?.takeIf { it.isNotBlank() }
+    if (n == null) return d ?: "Workout"
+    if (d == null) return n
+    // Self-heal rows poisoned by the old exact-equality-only join ("n · d").
+    val body = d.removePrefix("$n ·").trim()
     return when {
-        n == null -> d ?: "Workout"
-        d == null || d == n -> n
+        body.isEmpty() || body == n -> n
+        body.startsWith(n) -> body
+        // Full-length names are generator-derived; a short one inside the text
+        // ("Run" ⊂ "Trail Run 10k") is a coincidence, not redundancy.
+        n.length >= 8 && body.contains(n) -> body
+        n.contains(d) -> n
         else -> "$n · $d"
     }
 }

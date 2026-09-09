@@ -239,7 +239,10 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
         val s = controller.state.value
         if (s.status != RecStatus.IDLE && s.distanceM > 10) {
             val profile = container.repository.profileOnce()
-            val entity = buildActivity(s, profile.thresholdPaceSecPerKm, profile.weightKg)
+            val entity = buildActivity(
+                s, profile.thresholdPaceSecPerKm, profile.weightKg,
+                profile.hrMax, profile.hrRest,
+            )
             container.repository.saveActivity(entity)
             s.workoutId?.let { container.repository.completeWorkout(it, entity.id) }
             controller.lastSavedActivityId = entity.id
@@ -250,7 +253,13 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
         stopSelf()
     }
 
-    private fun buildActivity(s: RecordingState, thresholdPace: Int, weightKg: Double): ActivityEntity {
+    private fun buildActivity(
+        s: RecordingState,
+        thresholdPace: Int,
+        weightKg: Double,
+        hrMax: Int,
+        hrRest: Int,
+    ): ActivityEntity {
         val now = LocalDateTime.now()
         val name = s.workoutName ?: when (now.toLocalTime()) {
             in LocalTime.of(5, 0)..LocalTime.of(11, 0) -> "Morning Run"
@@ -266,6 +275,8 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
             zoneSeconds = List(7) { 0 },
             distanceKm = km,
             thresholdPaceSecPerKm = thresholdPace,
+            hrMax = hrMax,
+            hrRest = hrRest,
         )
         val route = s.points.take(MAX_ROUTE_POINTS).joinToString(",", "[", "]") {
             "[${"%.5f".format(Locale.ENGLISH, it.lat)},${"%.5f".format(Locale.ENGLISH, it.lng)}]"

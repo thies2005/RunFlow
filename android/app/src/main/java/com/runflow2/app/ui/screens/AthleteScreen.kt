@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.DirectionsWalk
@@ -29,14 +30,14 @@ import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -65,22 +66,29 @@ fun AthleteScreen(
     onActivities: () -> Unit,
     onOpenActivity: (String) -> Unit,
     onAiCoach: () -> Unit,
+    onCreatePlan: () -> Unit = {},
 ) {
     val settings by container.settings.settings.collectAsState(initial = AppSettings())
     val unit = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
     val profile by container.repository.profile.collectAsState(initial = null)
     val activities by container.repository.activities.collectAsState(initial = emptyList())
+    val activeGoal by container.repository.activeGoal.collectAsState(initial = null)
+    val auth by container.authStore.state.collectAsState()
     val analytics by produceState<AnalyticsBundle?>(null, activities.size) {
         value = container.repository.analytics(365)
     }
 
     val p = profile
+    // Signed in? The account email is authoritative — the seeded demo address
+    // must never be shown for a real account.
+    val headerEmail = auth.email?.takeIf { it.isNotBlank() }
+        ?: p?.email?.takeIf { it.isNotBlank() }
+        ?: "Local athlete profile"
 
     Scaffold(
         topBar = {
-            MediumFlexibleTopAppBar(
+            TopAppBar(
                 title = { Text("Athlete") },
-                scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
             )
         },
     ) { padding ->
@@ -113,7 +121,7 @@ fun AthleteScreen(
                             Column(Modifier.weight(1f)) {
                                 Text(p?.name ?: "Athlete", style = MaterialTheme.typography.titleLarge)
                                 Text(
-                                    p?.email?.ifBlank { "Local athlete profile" } ?: "Local athlete profile",
+                                    headerEmail,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -144,6 +152,48 @@ fun AthleteScreen(
                                 value = p?.let { "${it.weightKg.toInt()} kg" } ?: "—",
                                 icon = Icons.Outlined.MonitorHeart,
                                 accent = MaterialTheme.colorScheme.tertiary,
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ---- plan prompt: plans are device-local, a web plan doesn't sync here ----
+            if (activeGoal == null) {
+                item {
+                    Card(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onCreatePlan() },
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    ) {
+                        Row(
+                            Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Icon(
+                                Icons.Outlined.CalendarMonth, null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    "No training plan on this device",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
+                                Text(
+                                    "Plans don't sync from the web app yet — build one here in under a minute.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
+                            }
+                            Icon(
+                                Icons.Outlined.Add, null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
                         }
                     }
@@ -182,7 +232,7 @@ fun AthleteScreen(
                             "Ask anything about your training",
                             onAiCoach,
                         )
-                        MenuRow(Icons.Outlined.Info, "About RunFlow", "v2.0 · Kotlin rewrite") { }
+                        MenuRow(Icons.Outlined.Info, "About RunFlow", "v2.2 · Kotlin rewrite") { }
                     }
                 }
             }

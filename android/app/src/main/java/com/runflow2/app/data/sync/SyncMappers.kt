@@ -86,20 +86,32 @@ fun ActivityDto.mergeInto(existing: ActivityEntity?, now: Long): ActivityEntity 
     )
 }
 
-fun UserDto.applyTo(profile: ProfileEntity): ProfileEntity = profile.copy(
-    name = this.name?.takeIf { it.isNotBlank() } ?: profile.name,
-    email = this.email ?: profile.email,
-    sex = this.sex?.uppercase()?.takeIf { it in listOf("MALE", "FEMALE", "OTHER") } ?: profile.sex,
-    birthYear = Api.parseInstant(this.birthDate)?.let {
-        Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).year
-    } ?: profile.birthYear,
-    weightKg = this.weight ?: profile.weightKg,
-    heightCm = this.height ?: profile.heightCm,
-    hrMax = this.hrMax ?: profile.hrMax,
-    hrRest = this.hrRest ?: profile.hrRest,
-    vdotCorrection = this.vdotCorrectionFactor ?: profile.vdotCorrection,
-    dirty = false,
-)
+/**
+ * Apply a server user onto the local profile row. The email resolution order
+ * is: the signed-in account's email (from the auth session — authoritative),
+ * then the email the server profile carries, then whatever the profile
+ * already had. This keeps the seeded demo address from surviving a login
+ * when the server profile omits the email field.
+ */
+fun UserDto.applyTo(profile: ProfileEntity, accountEmail: String? = null): ProfileEntity {
+    val resolvedEmail = accountEmail?.takeIf { it.isNotBlank() }
+        ?: this.email?.takeIf { it.isNotBlank() }
+        ?: profile.email
+    return profile.copy(
+        name = this.name?.takeIf { it.isNotBlank() } ?: profile.name,
+        email = resolvedEmail,
+        sex = this.sex?.uppercase()?.takeIf { it in listOf("MALE", "FEMALE", "OTHER") } ?: profile.sex,
+        birthYear = Api.parseInstant(this.birthDate)?.let {
+            Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).year
+        } ?: profile.birthYear,
+        weightKg = this.weight ?: profile.weightKg,
+        heightCm = this.height ?: profile.heightCm,
+        hrMax = this.hrMax ?: profile.hrMax,
+        hrRest = this.hrRest ?: profile.hrRest,
+        vdotCorrection = this.vdotCorrectionFactor ?: profile.vdotCorrection,
+        dirty = false,
+    )
+}
 
 fun ProfileEntity.toUpdateRequest(): UpdateProfileRequest {
     // Birth date is a plain date, not a wall-clock moment: anchor it to UTC so

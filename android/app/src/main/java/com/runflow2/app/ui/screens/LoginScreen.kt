@@ -95,12 +95,14 @@ fun LoginScreen(
                 throw e
             } catch (e: HttpException) {
                 busy = false
+                com.runflow2.app.core.util.AppLog.e("Login", "Strava code exchange failed: HTTP ${e.code()}", e)
                 error = when (e.code()) {
                     401, 400 -> "Strava sign-in was rejected. Please try again."
                     else -> "Server error (${e.code()}). Try again."
                 }
             } catch (e: IOException) {
                 busy = false
+                com.runflow2.app.core.util.AppLog.w("Login", "Strava code exchange unreachable", e)
                 error = "No connection. Try again when you're back online."
             } catch (e: Exception) {
                 busy = false
@@ -218,18 +220,18 @@ fun LoginScreen(
                             throw e
                         } catch (e: HttpException) {
                             busy = false
-                            android.util.Log.e("RunFlowLogin", "http ${e.code()}", e)
+                            com.runflow2.app.core.util.AppLog.e("Login", "email sign-in failed: HTTP ${e.code()}", e)
                             error = when (e.code()) {
                                 401, 400 -> "Email or password is incorrect."
                                 else -> "Server error (${e.code()}). Try again."
                             }
                         } catch (e: IOException) {
                             busy = false
-                            android.util.Log.e("RunFlowLogin", "io", e)
+                            com.runflow2.app.core.util.AppLog.w("Login", "email sign-in unreachable", e)
                             error = "No connection. You can still use the app offline and sign in later."
                         } catch (e: Exception) {
                             busy = false
-                            android.util.Log.e("RunFlowLogin", "other", e)
+                            com.runflow2.app.core.util.AppLog.e("Login", "email sign-in failed", e)
                             error = "Login failed: ${e.message ?: "unknown error"}"
                         }
                     }

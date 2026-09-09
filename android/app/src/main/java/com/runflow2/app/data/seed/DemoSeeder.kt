@@ -27,6 +27,10 @@ class DemoSeeder(
     private val profileDao: ProfileDao,
     private val workoutDao: WorkoutDao,
 ) {
+    companion object {
+        /** Seeded placeholder email — replaced by the real account email on login. */
+        const val DEMO_EMAIL = "thies@runflow.app"
+    }
 
     suspend fun seed(
         insertActivity: suspend (ActivityEntity) -> Unit,

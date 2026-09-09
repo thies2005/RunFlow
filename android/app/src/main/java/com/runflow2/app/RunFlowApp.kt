@@ -2,6 +2,7 @@ package com.runflow2.app
 
 import android.app.Application
 import androidx.room.Room
+import com.runflow2.app.core.util.AppLog
 import com.runflow2.app.data.db.AppDatabase
 import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.net.AuthStore
@@ -100,6 +101,7 @@ class RunFlowApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppLog.i("App", "RunFlow starting (process pid ${android.os.Process.myPid()})")
         container = AppContainer(this)
         container.seedIfFirstLaunch()
         container.startSyncLoop()

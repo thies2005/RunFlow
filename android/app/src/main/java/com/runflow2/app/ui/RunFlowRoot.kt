@@ -162,6 +162,7 @@ fun RunFlowRoot(container: AppContainer) {
                         },
                         onCreatePlan = { navController.navigate(Routes.WIZARD) },
                         onOpenActivities = { navController.navigate(Routes.ACTIVITIES) },
+                        onLogin = { navController.navigate(Routes.LOGIN) },
                     )
                 }
 
@@ -197,6 +198,7 @@ fun RunFlowRoot(container: AppContainer) {
                         onActivities = { navController.navigate(Routes.ACTIVITIES) },
                         onOpenActivity = { navController.navigate(Routes.activityDetail(it)) },
                         onAiCoach = { navController.navigate(Routes.AI_COACH) },
+                        onCreatePlan = { navController.navigate(Routes.WIZARD) },
                     )
                 }
 

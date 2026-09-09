@@ -144,4 +144,38 @@ class SyncMappersTest {
         assertEquals(0.98, req.vdotCorrectionFactor!!, 0.001)
         assertTrue(req.birthDate!!.startsWith("1995-"))
     }
+    @Test
+    fun `account email beats server and profile emails`() {
+        val server = UserDto(id = "u1", name = "Server Name", email = "server@runflow.app")
+        val profile = ProfileEntity(name = "Local", email = "demo@runflow.app")
+
+        val merged = server.applyTo(profile, accountEmail = "account@runflow.app")
+
+        assertEquals("account@runflow.app", merged.email)
+    }
+
+    @Test
+    fun `server email fills in when no account email is known`() {
+        val server = UserDto(id = "u1", email = "server@runflow.app")
+        val profile = ProfileEntity(name = "Local", email = "demo@runflow.app")
+
+        assertEquals("server@runflow.app", server.applyTo(profile).email)
+        assertEquals("server@runflow.app", server.applyTo(profile, accountEmail = null).email)
+    }
+
+    @Test
+    fun `blank emails never win`() {
+        val server = UserDto(id = "u1", email = " ")
+        val profile = ProfileEntity(name = "Local", email = "demo@runflow.app")
+
+        assertEquals("demo@runflow.app", server.applyTo(profile, accountEmail = "  ").email)
+    }
+
+    @Test
+    fun `empty profile email stays empty when nothing provides one`() {
+        val server = UserDto(id = "u1", name = "Server Name") // no email
+        val profile = ProfileEntity(name = "Local")           // default email = ""
+
+        assertEquals("", server.applyTo(profile).email)
+    }
 }

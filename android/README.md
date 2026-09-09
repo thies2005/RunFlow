@@ -15,7 +15,7 @@ phase. Server sync is offline-first: everything works without a connection and r
 cd android
 ./gradlew assembleDebug          # debug APK  → app/build/outputs/apk/debug/
 ./gradlew assembleRelease        # R8-minified + signed (needs android/key.properties) → app/build/outputs/apk/release/
-./gradlew testDebugUnitTest      # 46 unit tests (math, plan, sync mappers, SSE parser, Strava OAuth, API contract)
+./gradlew testDebugUnitTest      # 67 unit tests (math, plan, sync mappers, SSE parser, Strava OAuth, API contract, logging, login nudge)
 ```
 
 No API keys or backend required — the app is **fully local-first** (Room + DataStore) and seeds
@@ -51,6 +51,13 @@ active marathon plan) on first launch.
 **Athlete**
 - Profile, body & threshold metrics, editable 7-zone HR model with validation
 - Settings: metric/imperial, light/dark/system theme + dynamic color, voice coach, auto-pause
+- Sign-in nudge (v2.2.4): a dashboard dialog offers *Sign in* / *Remind in a week* / *Dismiss*
+  while signed out; the snooze and dismissal persist in DataStore
+- Create-plan prompt (v2.2.4): when no active plan exists on this device (e.g. after the demo
+  data was cleared on first login — plans don't sync from the web yet), the Athlete menu shows
+  a highlighted card that opens the plan wizard
+- The profile header shows the signed-in account email; the seeded demo address never survives
+  a login
 - **AI Coach** (v2.1): streamed chat against the server's AI backend (`/api/ai/chat`, SSE token
   stream), conversation cached in Room so it can be reread offline, new-chat sessions,
   graceful errors (offline, expired session, admin-gated AI access)
@@ -76,6 +83,10 @@ active marathon plan) on first launch.
 - WorkManager periodic sync every 30 min (network-constrained) + immediate sync after saving a
   run and at app start; server-side Strava import triggered at most every 6 h via `POST /sync`
 - Demo data is flagged `isDemo` and cleared automatically on first login
+- **Diagnostics logging (v2.2.4)**: sync, auth and network events stream to logcat
+  (`adb logcat -s RunFlow` shows all sub-tags: App/Sync/Auth/Net/Login) and into an in-memory
+  ring buffer rendered by Settings → Diagnostics — sync results, dead-lettered outbox items,
+  HTTP/IO failures and token-refresh errors are visible on-device without a laptop
 - Plans/goals remain local for now (the server plan model at `/api/plans` has a different
   contract than the local generator — porting it is a documented next step)
 
@@ -88,6 +99,7 @@ active marathon plan) on first launch.
 
 ```
 core/math        VdotMath, TrainingLoad (TRIMP/CTL/ATL/TSB), TrainingPaces   (pure Kotlin, tested)
+core/util        AppLog (logcat + on-device ring buffer), LoginPrompt logic (pure, tested)
 domain/model     enums + pace-zone evaluator
 domain/plan      PlanGenerator, RaceDefaults                                (pure Kotlin, tested)
 domain/analytics AnalyticsEngine                                            (pure Kotlin)
@@ -126,7 +138,7 @@ keyAlias=runflow2
 keyPassword=<password>
 ```
 
-A ready-to-install signed APK is at `android/RunFlow2-v2.2.2-release.apk`.
+A ready-to-install signed APK is at `android/RunFlow2-v2.2.4-release.apk`.
 
 ## Deferred (next phases)
 

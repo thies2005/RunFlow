@@ -10,6 +10,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.runflow2.app.RunFlowApp
+import com.runflow2.app.core.util.AppLog
 import java.util.concurrent.TimeUnit
 
 /** Periodic background reconciliation: outbox push + server pull every 30 min. */
@@ -19,11 +20,13 @@ class SyncWorker(appContext: Context, params: WorkerParameters) :
     override suspend fun doWork(): Result {
         val container = (applicationContext as RunFlowApp).container
         val result = container.syncManager.syncNow("worker")
-        return when {
+        val outcome = when {
             result.skipped -> Result.success() // not logged in / offline — nothing to do
             result.failed > 0 -> Result.retry()
             else -> Result.success()
         }
+        AppLog.d("Sync", "worker finished: $result → $outcome")
+        return outcome
     }
 
     companion object {

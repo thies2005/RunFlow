@@ -32,8 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.MediumFlexibleTopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -85,10 +84,17 @@ fun AnalyticsScreen(container: AppContainer) {
 
     Scaffold(
         topBar = {
-            MediumFlexibleTopAppBar(
-                title = { Text("Analytics") },
-                subtitle = { Text("Fitness · fatigue · form") },
-                scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
+            TopAppBar(
+                title = {
+                    Column {
+                        Text("Analytics")
+                        Text(
+                            "Fitness · fatigue · form",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
             )
         },
     ) { padding ->

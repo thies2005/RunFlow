@@ -1,5 +1,6 @@
 package com.runflow2.app.data.sync
 
+import com.runflow2.app.core.util.AppLog
 import com.runflow2.app.data.db.AppDatabase
 import com.runflow2.app.data.db.ProfileEntity
 import com.runflow2.app.data.net.AuthStore
@@ -13,6 +14,7 @@ import com.runflow2.app.data.sync.mergeInto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -52,6 +54,7 @@ class SyncManager(
     private val settings: SettingsRepository,
 ) {
     companion object {
+        private const val TAG = "Sync"
         const val TYPE_ACTIVITY_CREATE = "activity_create"
         const val TYPE_ACTIVITY_UPDATE = "activity_update"
         const val TYPE_PROFILE_UPDATE = "profile_update"
@@ -70,15 +73,25 @@ class SyncManager(
     val pendingCount = db.syncQueueDao().observePendingCount()
 
     suspend fun syncNow(reason: String): SyncResult = mutex.withLock {
-        if (!authStore.state.value.loggedIn) return SyncResult(skipped = true)
+        // Wait for the persisted session to be restored: without this, the
+        // startup sync races AuthStore's DataStore read and no-ops even for
+        // signed-in users.
+        authStore.state.first { it.initialized }
+        if (!authStore.state.value.loggedIn) {
+            AppLog.d(TAG, "sync skipped (not signed in), reason=$reason")
+            return SyncResult(skipped = true)
+        }
+        AppLog.i(TAG, "sync start, reason=$reason")
         _status.value = _status.value.copy(running = true, lastMessage = "Syncing…")
         val result = try {
             withContext(Dispatchers.IO) { runSync() }
         } catch (e: IOException) {
+            AppLog.w(TAG, "sync offline (${e.message ?: "io error"}), reason=$reason", e)
             _status.value = SyncStatus(running = false, lastSyncAt = _status.value.lastSyncAt,
                 lastMessage = "Offline — changes stay queued")
             return SyncResult(skipped = true)
         } catch (e: HttpException) {
+            AppLog.e(TAG, "sync aborted: server error ${e.code()}", e)
             _status.value = SyncStatus(running = false, lastSyncAt = _status.value.lastSyncAt,
                 lastMessage = "Server error ${e.code()}")
             return SyncResult(failed = 1)
@@ -95,6 +108,7 @@ class SyncManager(
         }
         _status.value = SyncStatus(running = false, lastSyncAt = now, lastMessage = msg.trim())
         settings.setLastSync(now, msg.trim())
+        AppLog.i(TAG, "sync done (${msg.trim()}), reason=$reason")
         result
     }
 
@@ -121,24 +135,30 @@ class SyncManager(
                     if (e.code() in 400..499 && e.code() != 408 && e.code() != 429) {
                         // Client error: retrying can never succeed — dead-letter,
                         // but retain the row so nothing is silently lost.
+                        AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered: HTTP ${e.code()}", e)
                         db.syncQueueDao().markDead(item.id, now)
                     } else if (item.retryCount + 1 >= item.maxRetries) {
+                        AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered after ${item.retryCount + 1} tries: HTTP ${e.code()}", e)
                         db.syncQueueDao().markDead(item.id, now)
                     } else {
+                        AppLog.w(TAG, "outbox ${item.entityType}(${item.localId}) retry ${item.retryCount + 1}/${item.maxRetries}: HTTP ${e.code()}", e)
                         db.syncQueueDao().incrementRetry(item.id, now)
                     }
                     progress = true
                 } catch (e: IOException) {
                     // Connection dropped: stop draining, retry next window.
+                    AppLog.w(TAG, "outbox push interrupted (${e.message ?: "io error"}) — will retry", e)
                     db.syncQueueDao().incrementRetry(item.id, now)
                     break
                 }
             }
             if (!progress) break
         }
+        if (pushed > 0) AppLog.i(TAG, "pushed $pushed outbox item(s)")
 
         // ---- pull: server state wins ----
         var (pulled, pruned) = pullActivities()
+        if (pulled > 0 || pruned > 0) AppLog.i(TAG, "pulled $pulled activity(ies), pruned $pruned")
 
         // ---- server-side Strava import, throttled to every 6h ----
         val lastTrigger = settings.settingsOnce().lastStravaTriggerAt
@@ -146,6 +166,7 @@ class SyncManager(
             try {
                 val imported = client.api().triggerServerSync().activitiesSynced
                 settings.setLastStravaTrigger(System.currentTimeMillis())
+                AppLog.i(TAG, "server Strava import: $imported activity(ies)")
                 if (imported > 0) {
                     val again = pullActivities()
                     pulled += again.first
@@ -154,8 +175,10 @@ class SyncManager(
             } catch (e: HttpException) {
                 if (e.code() == 409) settings.setLastStravaTrigger(System.currentTimeMillis())
                 // otherwise ignore: import is best-effort
+                AppLog.w(TAG, "server Strava import failed: HTTP ${e.code()}", e)
             } catch (e: IOException) {
                 // best-effort only
+                AppLog.w(TAG, "server Strava import unreachable (${e.message ?: "io error"})", e)
             }
         }
 
@@ -164,12 +187,14 @@ class SyncManager(
             val profile = db.profileDao().get()
             if (profile == null || !profile.dirty) {
                 val server = client.api().profile().user
-                db.profileDao().upsert(server.applyTo(profile ?: ProfileEntity()))
+                db.profileDao().upsert(server.applyTo(profile ?: ProfileEntity(), authStore.state.value.email))
             }
         } catch (e: IOException) {
             // offline mid-sync: fine
+            AppLog.w(TAG, "profile pull skipped (${e.message ?: "io error"})")
         } catch (e: HttpException) {
             if (e.code() == 401) throw e
+            AppLog.w(TAG, "profile pull failed: HTTP ${e.code()}", e)
         }
 
         return SyncResult(pushed = pushed, pulled = pulled, pruned = pruned, failed = failed)
@@ -238,14 +263,25 @@ class SyncManager(
         return pulled to pruned
     }
 
-    /** Demo/seed data is cleared once, the first time the user logs in. */
+    /**
+     * Demo/seed data is cleared once, the first time the user logs in. The
+     * seeded demo profile keeps its metrics (they are useful defaults) but its
+     * demo email must never survive a real login — the account email wins.
+     */
     private suspend fun cleanDemoDataOnFirstLogin() {
         val s = settings.settingsOnce()
         if (!s.demoCleaned) {
             db.activityDao().deleteDemo()
             db.goalDao().deleteDemo()
             db.workoutDao().deleteDemo()
+            val accountEmail = authStore.state.value.email
+            db.profileDao().get()?.let { p ->
+                if (p.email == com.runflow2.app.data.seed.DemoSeeder.DEMO_EMAIL) {
+                    db.profileDao().upsert(p.copy(email = accountEmail ?: ""))
+                }
+            }
             settings.setDemoCleaned()
+            AppLog.i(TAG, "demo data cleared on first login (account=${accountEmail ?: "unknown"})")
         }
     }
 }

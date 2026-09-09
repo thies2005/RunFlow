@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.runflow2.app.core.util.AppLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -19,6 +20,8 @@ import kotlinx.coroutines.sync.withLock
 private val Context.authDataStore by preferencesDataStore(name = "runflow_auth")
 
 data class AuthState(
+    /** False until the persisted session (if any) has been restored — gates UI that must not flash for signed-in users. */
+    val initialized: Boolean = false,
     val loggedIn: Boolean = false,
     val userId: String? = null,
     val email: String? = null,
@@ -85,21 +88,25 @@ class AuthStore(private val context: Context) {
             val access = p[Keys.ACCESS]
             cachedAccess = access
             cachedRefresh = p[Keys.REFRESH]
-            if (!access.isNullOrEmpty()) {
-                _state.value = AuthState(
+            _state.value = if (!access.isNullOrEmpty()) {
+                AuthState(
+                    initialized = true,
                     loggedIn = true,
                     userId = p[Keys.USER_ID],
                     email = p[Keys.EMAIL],
                     name = p[Keys.NAME],
                 )
+            } else {
+                AuthState(initialized = true)
             }
         }
     }
 
     val stateFlow: Flow<AuthState> = context.authDataStore.data.map { p ->
         val access = p[Keys.ACCESS]
-        if (access.isNullOrEmpty()) AuthState()
+        if (access.isNullOrEmpty()) AuthState(initialized = true)
         else AuthState(
+            initialized = true,
             loggedIn = true,
             userId = p[Keys.USER_ID],
             email = p[Keys.EMAIL],
@@ -123,11 +130,13 @@ class AuthStore(private val context: Context) {
             }
         }
         _state.value = AuthState(
+            initialized = true,
             loggedIn = true,
             userId = auth.user?.id,
             email = auth.user?.email,
             name = auth.user?.name,
         )
+        AppLog.i("Auth", "signed in as ${auth.user?.email ?: auth.user?.id ?: "unknown user"}")
     }
 
     suspend fun updateTokens(access: String, refresh: String) {
@@ -142,8 +151,9 @@ class AuthStore(private val context: Context) {
     suspend fun clear() {
         cachedAccess = null
         cachedRefresh = null
-        _state.value = AuthState()
+        _state.value = AuthState(initialized = true)
         context.authDataStore.edit { it.clear() }
+        AppLog.i("Auth", "signed out — session cleared")
     }
 
     /**
@@ -155,8 +165,10 @@ class AuthStore(private val context: Context) {
         return@withLock try {
             val resp = apiProvider().refresh(RefreshRequest(refreshToken = refresh))
             updateTokens(resp.accessToken, resp.refreshToken)
+            AppLog.i("Auth", "token refreshed")
             resp.accessToken
         } catch (e: Exception) {
+            AppLog.w("Auth", "token refresh failed — session likely expired", e)
             null
         }
     }

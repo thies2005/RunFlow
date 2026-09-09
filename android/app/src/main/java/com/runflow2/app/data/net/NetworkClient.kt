@@ -1,5 +1,6 @@
 package com.runflow2.app.data.net
 
+import com.runflow2.app.core.util.AppLog
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Interceptor
@@ -40,10 +41,17 @@ class NetworkClient(
     private val tokenAuthenticator = object : Authenticator {
         override fun authenticate(route: Route?, response: Response): Request? {
             // One retry per request: give up if we already refreshed for it.
-            if (responseCount(response) >= 2) return null
+            if (responseCount(response) >= 2) {
+                AppLog.w("Net", "giving up on ${response.request.url.encodedPath} after repeated 401s")
+                return null
+            }
+            AppLog.i("Net", "401 on ${response.request.url.encodedPath} — refreshing session")
             val newToken = runBlocking {
                 authStore.refreshWith { api() }
-            } ?: return null
+            } ?: run {
+                AppLog.w("Net", "token refresh failed — request left unauthenticated")
+                return null
+            }
             return response.request.newBuilder()
                 .header("Authorization", "Bearer $newToken")
                 .build()

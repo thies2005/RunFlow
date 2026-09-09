@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -121,6 +123,58 @@ fun SettingsScreen(
                         }
                     }
                 }
+            }
+
+            SettingSection("Diagnostics") {
+                var logRevision by remember { mutableStateOf(0) }
+                val logs = remember(logRevision, syncStatus.lastMessage, settings.lastSyncAt) {
+                    com.runflow2.app.core.util.AppLog.recentNewestFirst(50)
+                }
+                Text(
+                    "Recent app, sign-in and sync events (same lines appear in logcat under RunFlow/*).",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Card(Modifier.fillMaxWidth()) {
+                    Column(
+                        Modifier
+                            .heightIn(max = 260.dp)
+                            .verticalScroll(rememberScrollState())
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        if (logs.isEmpty()) {
+                            Text(
+                                "No events recorded yet.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        logs.forEach { entry ->
+                            Text(
+                                buildString {
+                                    append("[")
+                                    append(com.runflow2.app.core.util.FormatRelative.timeAgo(entry.at))
+                                    append("] ")
+                                    append(entry.tag)
+                                    append(" · ")
+                                    append(entry.message)
+                                    entry.error?.let { append(" (").append(it.take(80)).append(")") }
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (entry.isError) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+                TextButton(
+                    onClick = {
+                        com.runflow2.app.core.util.AppLog.clear()
+                        logRevision++
+                    },
+                    enabled = logs.isNotEmpty(),
+                ) { Text("Clear log") }
             }
 
             SettingSection("Units") {

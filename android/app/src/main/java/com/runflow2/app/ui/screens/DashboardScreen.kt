@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -40,13 +41,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.MediumFlexibleTopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,6 +60,7 @@ import com.runflow2.app.AppContainer
 import com.runflow2.app.core.math.VdotMath
 import com.runflow2.app.core.util.DistanceUnit
 import com.runflow2.app.core.util.Format
+import com.runflow2.app.core.util.LoginPrompt
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.analytics.AnalyticsBundle
@@ -82,6 +87,7 @@ fun DashboardScreen(
     onStartWorkout: (String?) -> Unit,
     onCreatePlan: () -> Unit,
     onOpenActivities: () -> Unit,
+    onLogin: () -> Unit = {},
 ) {
     val settings by container.settings.settings.collectAsState(initial = AppSettings())
     val unit = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
@@ -92,6 +98,20 @@ fun DashboardScreen(
     val workouts = activeGoal?.let { goal ->
         container.repository.workoutsForGoal(goal.id).collectAsState(initial = emptyList()).value
     } ?: emptyList()
+
+    // ---- sign-in nudge: shows until signed in, permanently dismissed, or snoozed ----
+    // Gated on auth.initialized so the dialog can't flash for an already
+    // signed-in user while the persisted session is still being restored.
+    val auth by container.authStore.state.collectAsState()
+    val scope = rememberCoroutineScope()
+    var loginPromptHidden by remember { mutableStateOf(false) }
+    val now = remember { System.currentTimeMillis() }
+    val showLoginPrompt = auth.initialized && !loginPromptHidden && LoginPrompt.shouldShow(
+        loggedIn = auth.loggedIn,
+        dismissed = settings.loginPromptDismissed,
+        remindAt = settings.loginPromptRemindAt,
+        now = now,
+    )
 
     val analytics by produceState<AnalyticsBundle?>(null, activities) {
         value = container.repository.analytics(365)
@@ -114,10 +134,17 @@ fun DashboardScreen(
     ) {
         Scaffold(
             topBar = {
-                MediumFlexibleTopAppBar(
-                    title = { Text("RunFlow") },
-                    subtitle = { Text(Format.dateWithYear(today)) },
-                    scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(),
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text("RunFlow")
+                            Text(
+                                Format.dateWithYear(today),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
                 )
             },
         ) { padding ->
@@ -461,5 +488,49 @@ fun DashboardScreen(
                 }
             }
         }
+    }
+
+    // ---- sign-in nudge dialog (Sign in / Remind in a week / Dismiss) ----
+    if (showLoginPrompt) {
+        AlertDialog(
+            onDismissRequest = { loginPromptHidden = true },
+            title = { Text("Sign in to sync your training") },
+            text = {
+                Text(
+                    "Sign in with email or Strava to back up runs, sync across devices and use the AI coach. " +
+                        "Everything already works offline — your data stays on this phone either way.",
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        loginPromptHidden = true
+                        onLogin()
+                    },
+                ) { Text("Sign in") }
+            },
+            dismissButton = {
+                androidx.compose.foundation.layout.Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    TextButton(
+                        onClick = {
+                            loginPromptHidden = true
+                            scope.launch {
+                                container.settings.setLoginPromptRemindAt(
+                                    LoginPrompt.remindInAWeek(System.currentTimeMillis())
+                                )
+                            }
+                        },
+                    ) { Text("Remind in a week") }
+                    TextButton(
+                        onClick = {
+                            loginPromptHidden = true
+                            scope.launch { container.settings.setLoginPromptDismissed() }
+                        },
+                    ) { Text("Dismiss") }
+                }
+            },
+        )
     }
 }

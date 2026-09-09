@@ -29,6 +29,9 @@ data class AppSettings(
     val demoCleaned: Boolean = false,
     val lastStravaTriggerAt: Long = 0L,
     val aiSessionId: String = "",
+    // ---- login nudge ----
+    val loginPromptDismissed: Boolean = false,
+    val loginPromptRemindAt: Long = 0L,
 )
 
 class SettingsRepository(private val context: Context) {
@@ -47,6 +50,8 @@ class SettingsRepository(private val context: Context) {
         val DEMO_CLEANED = booleanPreferencesKey("demo_cleaned")
         val LAST_STRAVA_TRIGGER = longPreferencesKey("last_strava_trigger")
         val AI_SESSION_ID = stringPreferencesKey("ai_session_id")
+        val LOGIN_PROMPT_DISMISSED = booleanPreferencesKey("login_prompt_dismissed")
+        val LOGIN_PROMPT_REMIND_AT = longPreferencesKey("login_prompt_remind_at")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -65,6 +70,8 @@ class SettingsRepository(private val context: Context) {
             demoCleaned = p[Keys.DEMO_CLEANED] ?: false,
             lastStravaTriggerAt = p[Keys.LAST_STRAVA_TRIGGER] ?: 0L,
             aiSessionId = p[Keys.AI_SESSION_ID] ?: "",
+            loginPromptDismissed = p[Keys.LOGIN_PROMPT_DISMISSED] ?: false,
+            loginPromptRemindAt = p[Keys.LOGIN_PROMPT_REMIND_AT] ?: 0L,
         )
     }
 
@@ -110,4 +117,14 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setAiSessionId(id: String) =
         context.dataStore.edit { it[Keys.AI_SESSION_ID] = id }
+
+    /** "Dismiss" on the login nudge: never show it again. */
+    suspend fun setLoginPromptDismissed() = context.dataStore.edit {
+        it[Keys.LOGIN_PROMPT_DISMISSED] = true
+    }
+
+    /** "Remind in a week": snooze the login nudge until [at]. */
+    suspend fun setLoginPromptRemindAt(at: Long) = context.dataStore.edit {
+        it[Keys.LOGIN_PROMPT_REMIND_AT] = at
+    }
 }

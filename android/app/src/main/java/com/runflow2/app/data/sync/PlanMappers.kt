@@ -104,6 +104,7 @@ fun PlanWorkoutDto.toWorkoutEntity(goalId: String, dirty: Boolean = false): Work
         targetDistanceKm = targetDistance?.let { it / 1000.0 },
         targetPaceSecPerKm = targetPace?.toInt(),
         targetDurationSec = targetDuration,
+        structuredStepsJson = structuredSteps?.toString(),
         isCompleted = isCompleted,
         completedAt = serverDateToEpochMillis(completedAt),
         activityId = linkedActivityId,
@@ -219,6 +220,8 @@ fun PlanSpec.toCreatePlanRequest(): CreatePlanRequest {
 }
 
 /** Full-state PATCH payload for a workout edit (meters, s/km, date-only). */
+// structuredSteps is intentionally absent: PATCH /api/mobile/v1/workouts/{id}
+// does not read the field yet, and the pull merge re-syncs it from the server.
 fun WorkoutEntity.toPatchRequest(): PatchWorkoutRequest = PatchWorkoutRequest(
     workoutType = workoutType,
     description = description,

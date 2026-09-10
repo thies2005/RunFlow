@@ -228,6 +228,12 @@ fun SettingsScreen(
                     checked = settings.autoPause,
                     onChecked = { scope.launch { container.settings.setAutoPause(it) } },
                 )
+                SwitchRow(
+                    title = "GPS-Smoothing (Kalman)",
+                    subtitle = "Smooth noisy fixes and drop GPS spikes from distance & route",
+                    checked = settings.gpsSmoothing,
+                    onChecked = { scope.launch { container.settings.setGpsSmoothing(it) } },
+                )
             }
 
             SettingSection("Advanced") {

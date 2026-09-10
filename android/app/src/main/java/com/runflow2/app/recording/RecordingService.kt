@@ -25,6 +25,9 @@ import com.runflow2.app.RunFlowApp
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.domain.model.PaceZoneStatus
+import com.runflow2.app.domain.plan.StructuredStepsParser
+import com.runflow2.app.domain.plan.paceLetterTable
+import com.runflow2.app.domain.plan.vdotFromThresholdPaceSecPerKm
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -91,8 +94,12 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
                 val autoPause = intent.getBooleanExtra(EXTRA_AUTO_PAUSE, true)
                 val voice = intent.getBooleanExtra(EXTRA_VOICE, true)
                 val workout = workoutId?.let { runBlockingWorkout(it) }
+                // Kalman GPS smoothing is snapshotted once per session (DataStore read).
+                controller.gpsSmoothingEnabled = kotlinx.coroutines.runBlocking {
+                    container.settings.settingsOnce().gpsSmoothing
+                }
                 controller.configure(autoPause, voice)
-                controller.start(workout)
+                controller.start(workout, resolvedSteps = structuredStepsFor(workout))
                 startAsForeground()
                 startGps()
                 startTicker()
@@ -116,6 +123,22 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
 
     private fun runBlockingWorkout(id: String) = kotlinx.coroutines.runBlocking {
         container.repository.workout(id)
+    }
+
+    /**
+     * Parses the workout's structuredSteps with a VDOT-derived pace table:
+     * the goal's VDOT at creation wins, falling back to one inverted from the
+     * profile's threshold pace. Empty/malformed JSON yields null so the
+     * controller falls back to the synthesized flat-target steps.
+     */
+    private fun structuredStepsFor(workout: com.runflow2.app.data.db.WorkoutEntity?): List<StepRuntime>? {
+        val raw = workout?.structuredStepsJson ?: return null
+        val vdot = kotlinx.coroutines.runBlocking {
+            container.repository.goal(workout.goalId)?.vdotAtCreation
+                ?: container.repository.profileOnce()
+                    .let { vdotFromThresholdPaceSecPerKm(it.thresholdPaceSecPerKm.toDouble()) }
+        } ?: 50.0
+        return StructuredStepsParser.parse(raw, paceLetterTable(vdot)).takeIf { it.isNotEmpty() }
     }
 
     private fun startAsForeground() {

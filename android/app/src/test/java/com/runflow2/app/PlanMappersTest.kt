@@ -1,6 +1,7 @@
 package com.runflow2.app
 
 import com.runflow2.app.data.db.WorkoutEntity
+import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.net.PlanGoalDto
 import com.runflow2.app.data.net.PlanWorkoutDto
 import com.runflow2.app.data.sync.calibrationDistanceFor
@@ -14,10 +15,16 @@ import com.runflow2.app.data.sync.serverDayToDow
 import com.runflow2.app.data.sync.toCreatePlanRequest
 import com.runflow2.app.data.sync.toEntities
 import com.runflow2.app.data.sync.toPatchRequest
+import com.runflow2.app.data.sync.toWorkoutEntity
 import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.RaceType
 import com.runflow2.app.domain.model.WorkoutType
 import com.runflow2.app.domain.plan.PlanSpec
+import com.runflow2.app.domain.plan.StructuredStepsParser
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -319,6 +326,80 @@ class PlanMappersTest {
         assertEquals(3300, req.targetDuration)
         assertEquals(true, req.isCompleted)
         assertEquals("2026-09-01", req.scheduledDate)
+    }
+
+    // ---- structured steps persistence ----
+
+    @Test
+    fun `generator flat structuredSteps persist into the workout entity`() {
+        val body = """
+            {"id":"w9","goalId":"g1","scheduledDate":"2026-09-01T00:00:00.000Z","workoutType":"INTERVALS",
+             "description":"Intervals","phase":"BUILD",
+             "structuredSteps":{"version":1,"source":"generated-plan","steps":[
+               {"type":"warmup","name":"Warm-up","distanceMeters":1500,"paceSecondsPerKm":330},
+               {"type":"work","name":"3x1K","distanceMeters":1000,"paceSecondsPerKm":240}]},
+             "targetHrMinBpm":140,"_count":{"x":1}}
+        """.trimIndent()
+        val dto = Api.json.decodeFromString(PlanWorkoutDto.serializer(), body)
+        val entity = dto.toWorkoutEntity("g1")!!
+        val persisted = Api.json.parseToJsonElement(entity.structuredStepsJson!!).jsonObject
+        val steps = persisted["steps"]!!.jsonArray
+        assertEquals(2, steps.size)
+        assertEquals("warmup", steps[0].jsonObject["type"]!!.jsonPrimitive.content)
+        assertEquals(1500.0, steps[0].jsonObject["distanceMeters"]!!.jsonPrimitive.double, 0.01)
+        // the stored JSON round-trips through the parser
+        val parsed = StructuredStepsParser.parse(entity.structuredStepsJson, emptyMap())
+        assertEquals(listOf("Warm-up", "3x1K"), parsed.map { it.label })
+        assertEquals(listOf("warmup", "main"), parsed.map { it.kind })
+    }
+
+    @Test
+    fun `builder nested structuredSteps persist and round-trip through the parser`() {
+        val body = """
+            {"id":"w10","scheduledDate":"2026-09-02T00:00:00.000Z","workoutType":"INTERVALS","description":"400s",
+             "structuredSteps":{"warmup":{"distance":1000,"pace":"E"},
+               "main":[{"reps":4,"distance":400,"pace":"I","restSeconds":90}],
+               "cooldown":{"distance":1000,"pace":"E"}}}
+        """.trimIndent()
+        val dto = Api.json.decodeFromString(PlanWorkoutDto.serializer(), body)
+        val entity = dto.toWorkoutEntity("g1")!!
+        val paceTable = mapOf("E" to 300.0, "I" to 220.0)
+        val parsed = StructuredStepsParser.parse(entity.structuredStepsJson, paceTable)
+        assertEquals(9, parsed.size) // warmup + 4 reps + 3 rests + cooldown
+        assertEquals("Warm-up 1.0 km E", parsed.first().label)
+        assertEquals("400 m I (1/4)", parsed[1].label)
+        assertEquals("90 s rest", parsed[2].label)
+        assertEquals("Cool-down 1.0 km E", parsed.last().label)
+        assertEquals(220.0, parsed[1].targetPaceSecPerKm!!, 0.01)
+    }
+
+    @Test
+    fun `workouts without structuredSteps keep a null column`() {
+        val dto = PlanWorkoutDto(id = "w11", scheduledDate = "2026-09-01T00:00:00.000Z", description = "Easy")
+        assertNull(dto.toWorkoutEntity("g1")!!.structuredStepsJson)
+    }
+
+    @Test
+    fun `merge keeps structuredSteps on both server and dirty local rows`() {
+        val local = workout("w1", dirty = true, desc = "local edit")
+            .copy(structuredStepsJson = """{"main":[{"reps":1,"distance":400,"pace":"I"}]}""")
+        val server = workout("w2", dirty = false, desc = "server")
+            .copy(structuredStepsJson = """{"steps":[{"type":"work","name":"A","durationSeconds":600}]}""")
+        val merged = mergeServerWorkouts(listOf(local), listOf(server))
+        assertTrue(merged.first { it.id == "w1" }.structuredStepsJson!!.contains("\"main\""))
+        assertTrue(merged.first { it.id == "w2" }.structuredStepsJson!!.contains("\"steps\""))
+    }
+
+    @Test
+    fun `same-id conflict keeps the dirty local row until the outbox resolves it`() {
+        val local = workout("w9", dirty = true, desc = "local edit")
+            .copy(structuredStepsJson = """{"main":[{"reps":1,"distance":400,"pace":"I"}]}""")
+        val server = workout("w9", dirty = false, desc = "server version")
+            .copy(structuredStepsJson = """{"steps":[{"type":"work","name":"A","durationSeconds":600}]}""")
+        val merged = mergeServerWorkouts(listOf(local), listOf(server))
+        assertEquals(1, merged.size)
+        assertEquals("local edit", merged.first().description)
+        assertTrue(merged.first().structuredStepsJson!!.contains("\"main\""))
     }
 
     // ---- calibration labels ----

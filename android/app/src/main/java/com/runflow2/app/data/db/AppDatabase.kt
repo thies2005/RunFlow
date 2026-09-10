@@ -103,6 +103,9 @@ data class WorkoutEntity(
     @ColumnInfo(defaultValue = "1") val isDemo: Boolean = false,
     // dirty = a local edit is queued for the server (v3)
     @ColumnInfo(defaultValue = "0") val dirty: Boolean = false,
+    // structuredSteps as received from the server (v4): generator flat shape
+    // or builder nested shape, parsed by StructuredStepsParser at record time
+    val structuredStepsJson: String? = null,
 )
 
 @Entity(tableName = "profile")
@@ -325,7 +328,7 @@ interface ChatDao {
         ActivityEntity::class, GoalEntity::class, WorkoutEntity::class, ProfileEntity::class,
         SyncQueueEntity::class, ChatMessageEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -377,6 +380,17 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE goals ADD COLUMN isLocalOnly INTEGER NOT NULL DEFAULT 1")
                 db.execSQL("ALTER TABLE goals ADD COLUMN dirty INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE workouts ADD COLUMN dirty INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        /**
+         * v3 -> v4 adds the server's structuredSteps JSON to workouts. The
+         * column is nullable: rows without a structured plan simply have no
+         * steps and keep falling back to the synthesized target steps.
+         */
+        val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE workouts ADD COLUMN structuredStepsJson TEXT")
             }
         }
     }

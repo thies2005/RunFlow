@@ -14,21 +14,26 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.GpsFixed
+import androidx.compose.material.icons.outlined.HourglassBottom
 import androidx.compose.material.icons.outlined.KeyboardVoice
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.Whatshot
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -55,6 +60,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -67,6 +73,8 @@ import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.domain.model.PaceZoneStatus
 import com.runflow2.app.recording.RecStatus
 import com.runflow2.app.recording.RecordingService
+import com.runflow2.app.recording.StepDurationType
+import com.runflow2.app.recording.StepRuntime
 import com.runflow2.app.ui.components.InfoChip
 import com.runflow2.app.ui.components.RouteCanvas
 import com.runflow2.app.ui.components.SectionTitle
@@ -450,7 +458,14 @@ private fun RecordRunning(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Outlined.Flag, null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(8.dp))
-                            Text(active.label, style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                active.label,
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.weight(1f),
+                            )
+                            rec.currentStepRemaining?.let { remaining ->
+                                InfoChip(stepRemainingLabel(active, remaining, unit))
+                            }
                         }
                         LinearProgressIndicator(
                             progress = { rec.stepProgress },
@@ -463,12 +478,27 @@ private fun RecordRunning(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        rec.steps.getOrNull(rec.activeStepIndex + 1)?.let { next ->
+                        val upcoming = rec.steps.drop(rec.activeStepIndex + 1)
+                        if (upcoming.isNotEmpty()) {
                             Text(
-                                "Next: ${next.label}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.tertiary,
+                                "Upcoming",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
+                            upcoming.take(3).forEach { step ->
+                                UpcomingStepRow(step, unit)
+                            }
+                            val rest = upcoming.drop(3)
+                            if (rest.isNotEmpty()) {
+                                LazyColumn(
+                                    Modifier.heightIn(max = 168.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
+                                    items(rest) { step ->
+                                        UpcomingStepRow(step, unit, compact = true)
+                                    }
+                                }
+                            }
                         }
                     } else {
                         Text(
@@ -533,6 +563,55 @@ private fun MetricCell(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
         Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** mm:ss for TIME steps, meters for DISTANCE steps (converted for imperial users). */
+private fun stepRemainingLabel(step: StepRuntime, remaining: Double, unit: DistanceUnit): String =
+    if (step.durationType == StepDurationType.TIME) {
+        Format.duration(kotlin.math.ceil(remaining).toLong())
+    } else if (unit == DistanceUnit.METRIC) {
+        "${remaining.toInt()} m"
+    } else {
+        Format.distance(remaining / 1000.0, unit)
+    }
+
+private fun stepIcon(kind: String): ImageVector = when (kind) {
+    "warmup" -> Icons.Outlined.Whatshot
+    "recovery" -> Icons.Outlined.HourglassBottom
+    "cooldown" -> Icons.Outlined.AcUnit
+    else -> Icons.Outlined.Flag
+}
+
+/** Right-aligned detail: target pace when known, else the step's duration/distance. */
+private fun stepDetail(step: StepRuntime, unit: DistanceUnit): String =
+    step.targetPaceSecPerKm?.let { Format.pace(it, unit) }
+        ?: if (step.durationType == StepDurationType.DISTANCE) {
+            Format.distance(step.distanceM / 1000.0, unit)
+        } else {
+            Format.duration(step.durationSec.toLong())
+        }
+
+@Composable
+private fun UpcomingStepRow(step: StepRuntime, unit: DistanceUnit, compact: Boolean = false) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            stepIcon(step.kind),
+            null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(if (compact) 16.dp else 18.dp),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            step.label,
+            style = if (compact) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            stepDetail(step, unit),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

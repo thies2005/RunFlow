@@ -22,6 +22,7 @@ data class AppSettings(
     val useImperial: Boolean = false,
     val voiceCoach: Boolean = true,
     val autoPause: Boolean = true,
+    val gpsSmoothing: Boolean = true,
     // ---- account / sync ----
     val serverUrl: String = "", // empty = default production server
     val lastSyncAt: Long = 0L,
@@ -44,6 +45,7 @@ class SettingsRepository(private val context: Context) {
         val USE_IMPERIAL = booleanPreferencesKey("use_imperial")
         val VOICE_COACH = booleanPreferencesKey("voice_coach")
         val AUTO_PAUSE = booleanPreferencesKey("auto_pause")
+        val GPS_SMOOTHING = booleanPreferencesKey("gps_smoothing")
         val SERVER_URL = stringPreferencesKey("server_url")
         val LAST_SYNC_AT = longPreferencesKey("last_sync_at")
         val LAST_SYNC_SUMMARY = stringPreferencesKey("last_sync_summary")
@@ -64,6 +66,7 @@ class SettingsRepository(private val context: Context) {
             useImperial = p[Keys.USE_IMPERIAL] ?: false,
             voiceCoach = p[Keys.VOICE_COACH] ?: true,
             autoPause = p[Keys.AUTO_PAUSE] ?: true,
+            gpsSmoothing = p[Keys.GPS_SMOOTHING] ?: true,
             serverUrl = p[Keys.SERVER_URL] ?: "",
             lastSyncAt = p[Keys.LAST_SYNC_AT] ?: 0L,
             lastSyncSummary = p[Keys.LAST_SYNC_SUMMARY] ?: "",
@@ -94,6 +97,9 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setAutoPause(enabled: Boolean) =
         context.dataStore.edit { it[Keys.AUTO_PAUSE] = enabled }
+
+    suspend fun setGpsSmoothing(enabled: Boolean) =
+        context.dataStore.edit { it[Keys.GPS_SMOOTHING] = enabled }
 
     /** Stores an origin-only server URL; the default server is stored as "". */
     suspend fun setServerUrl(url: String) = context.dataStore.edit {

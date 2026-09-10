@@ -121,6 +121,8 @@ class RunFlowRepository(
 
     suspend fun workout(id: String): WorkoutEntity? = workoutDao.byId(id)
 
+    suspend fun goal(id: String): GoalEntity? = goalDao.byId(id)
+
     suspend fun pendingWorkoutsToday(today: LocalDate): List<WorkoutEntity> {
         val from = Format.epochMillis(today)
         val to = Format.epochMillis(today.plusDays(1)) - 1

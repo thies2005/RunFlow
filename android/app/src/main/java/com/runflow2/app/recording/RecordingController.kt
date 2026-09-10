@@ -1,5 +1,7 @@
 package com.runflow2.app.recording
 
+import com.runflow2.app.core.gps.GpsSample
+import com.runflow2.app.core.gps.LocationFilter
 import com.runflow2.app.data.db.WorkoutEntity
 import com.runflow2.app.domain.model.PaceZoneEvaluator
 import com.runflow2.app.domain.model.PaceZoneStatus
@@ -30,6 +32,15 @@ data class StepRuntime(
     val durationSec: Double,
     val distanceM: Double,
     val targetPaceSecPerKm: Double?,
+)
+
+/** Completed structured step (in-memory split marker; not part of the km laps). */
+data class StepSplit(
+    val index: Int,
+    val label: String,
+    val durSec: Int,
+    val distanceM: Double,
+    val paceSecPerKm: Int?,
 )
 
 sealed interface VoiceEvent {
@@ -66,6 +77,9 @@ data class RecordingState(
     val steps: List<StepRuntime> = emptyList(),
     val activeStepIndex: Int = -1,
     val stepProgress: Float = 0f,
+    // seconds left (TIME steps) or meters left (DISTANCE steps) in the active step
+    val currentStepRemaining: Double? = null,
+    val stepSplits: List<StepSplit> = emptyList(),
 ) {
     val paceZone: PaceZoneStatus
         get() = PaceZoneEvaluator.evaluate(currentPaceSecPerKm, targetPaceSecPerKm)
@@ -74,8 +88,19 @@ data class RecordingState(
 /**
  * Singleton recording state machine. The foreground service feeds it GPS samples
  * and wall-clock ticks; the UI observes [state] and sends commands.
+ *
+ * All state (including [gpsFilter]) is main-thread confined: the GPS callback
+ * and the service ticker both arrive on the main looper, so nothing here is
+ * synchronized.
  */
-class RecordingController {
+class RecordingController(
+    /**
+     * Kalman GPS smoothing on/off; plain snapshot of the gpsSmoothing setting
+     * taken by RecordingService when a session starts (changing the setting
+     * mid-run applies to the next session). Tests inject it directly.
+     */
+    var gpsSmoothingEnabled: Boolean = true,
+) {
 
     /** Set by the dashboard/plan when the user taps Start on a specific planned workout. */
     var pendingWorkoutId: String? = null
@@ -88,6 +113,10 @@ class RecordingController {
 
     private val _voice = MutableSharedFlow<VoiceEvent>(extraBufferCapacity = 16)
     val voice: SharedFlow<VoiceEvent> = _voice.asSharedFlow()
+
+    // One Kalman GPS-smoothing filter per session; reset on start, resume and
+    // session end so each session (and each pause) re-anchors on a fresh fix.
+    private val gpsFilter = LocationFilter()
 
     // engine internals
     private var lastPt: GeoPt? = null
@@ -103,13 +132,18 @@ class RecordingController {
     // step engine
     private var stepStartDist = 0.0
     private var stepStartMoving = 0.0
+    private var lastStepCue = 0
 
     fun configure(autoPause: Boolean, voice: Boolean) {
         _state.value = _state.value.copy(autoPauseEnabled = autoPause, voiceEnabled = voice)
     }
 
-    fun start(workout: WorkoutEntity?, countdownSec: Int = 3) {
-        val steps = buildSteps(workout)
+    /**
+     * [resolvedSteps] lets a caller that has VDOT access inject the parsed
+     * structuredSteps; without them the flat targets are synthesized as before.
+     */
+    fun start(workout: WorkoutEntity?, countdownSec: Int = 3, resolvedSteps: List<StepRuntime>? = null) {
+        val steps = resolvedSteps ?: buildSteps(workout)
         _state.value = RecordingState(
             status = RecStatus.COUNTDOWN,
             countdownRemaining = countdownSec,
@@ -120,9 +154,12 @@ class RecordingController {
             workoutId = workout?.id,
             steps = steps,
             activeStepIndex = if (steps.isEmpty()) -1 else 0,
+            currentStepRemaining = steps.firstOrNull()?.let { stepRemaining(it, 0.0, 0.0) },
         )
         stepStartDist = 0.0
         stepStartMoving = 0.0
+        lastStepCue = 0
+        gpsFilter.reset()
         _voice.tryEmit(VoiceEvent.Started)
     }
 
@@ -163,6 +200,7 @@ class RecordingController {
     fun resume() {
         val s = _state.value
         if (s.status != RecStatus.PAUSED) return
+        gpsFilter.reset() // fresh anchor after the pause (manual or auto-pause)
         _state.value = s.copy(status = RecStatus.RUNNING)
         lastTick = System.currentTimeMillis()
     }
@@ -195,21 +233,33 @@ class RecordingController {
     fun onLocation(lat: Double, lng: Double, ele: Double, speed: Double, accuracy: Float, t: Long = System.currentTimeMillis()) {
         val s = _state.value
         if (s.status != RecStatus.RUNNING && s.status != RecStatus.PAUSED) return
-        val pt = GeoPt(lat, lng, ele, t, speed)
+
+        // Kalman smoothing first (disabled -> the raw sample passes through
+        // unchanged). A rejected fix adds no point/distance/pace, but a better
+        // raw accuracy still updates the GPS chip so it reflects signal quality.
+        val raw = GpsSample(lat, lng, ele, accuracy, speed.toFloat(), t)
+        val fix = if (gpsSmoothingEnabled) gpsFilter.filter(raw) else raw
+        if (fix == null) {
+            if (accuracy < (s.gpsAccuracyM ?: Float.MAX_VALUE)) {
+                _state.value = s.copy(gpsAccuracyM = accuracy, gpsFixed = true)
+            }
+            return
+        }
+        val pt = GeoPt(fix.latitude, fix.longitude, fix.altitudeMeters, fix.timestampMs, fix.speedMetersPerSecond.toDouble())
 
         var ns = if (s.status == RecStatus.RUNNING) {
             var dist = s.distanceM
             var eleGain = s.elevationGainM
             val last = lastPt
             if (last != null) {
-                val d = haversine(last.lat, last.lng, lat, lng)
+                val d = haversine(last.lat, last.lng, fix.latitude, fix.longitude)
                 if (d > 1.5 && d < 60.0 && accuracy < 25f) {
                     dist += d
-                    val dEle = ele - (lastEle ?: ele)
+                    val dEle = fix.altitudeMeters - (lastEle ?: fix.altitudeMeters)
                     if (dEle > 1.0) eleGain += dEle
                 }
             }
-            lastEle = ele
+            lastEle = fix.altitudeMeters
             lastPt = pt
             // pace window (30 s)
             speedWindow.addLast(t to dist)
@@ -278,27 +328,54 @@ class RecordingController {
     private fun advanceSteps(s: RecordingState): RecordingState {
         if (s.steps.isEmpty() || s.activeStepIndex < 0 || s.activeStepIndex >= s.steps.size) return s
         val step = s.steps[s.activeStepIndex]
+        val distInStep = s.distanceM - stepStartDist
+        val movingInStep = s.elapsedMovingSec - stepStartMoving
         val done = when (step.durationType) {
-            StepDurationType.DISTANCE -> (s.distanceM - stepStartDist) >= step.distanceM && step.distanceM > 0
-            StepDurationType.TIME -> (s.elapsedMovingSec - stepStartMoving) >= step.durationSec && step.durationSec > 0
+            StepDurationType.DISTANCE -> distInStep >= step.distanceM && step.distanceM > 0
+            StepDurationType.TIME -> movingInStep >= step.durationSec && step.durationSec > 0
         }
         if (done) {
             _voice.tryEmit(VoiceEvent.StepDone(step.label))
+            val split = StepSplit(
+                index = s.activeStepIndex,
+                label = step.label,
+                durSec = movingInStep.toInt(),
+                distanceM = distInStep,
+                paceSecPerKm = if (distInStep > 50) (movingInStep / (distInStep / 1000.0)).toInt() else null,
+            )
             val next = s.activeStepIndex + 1
             stepStartDist = s.distanceM
             stepStartMoving = s.elapsedMovingSec
+            lastStepCue = 0
             return if (next < s.steps.size) {
                 _voice.tryEmit(VoiceEvent.StepStart(s.steps[next].label))
-                s.copy(activeStepIndex = next, stepProgress = 0f)
+                s.copy(
+                    activeStepIndex = next,
+                    stepProgress = 0f,
+                    currentStepRemaining = stepRemaining(s.steps[next], 0.0, 0.0),
+                    stepSplits = s.stepSplits + split,
+                )
             } else {
-                s.copy(activeStepIndex = -1, stepProgress = 1f)
+                s.copy(
+                    activeStepIndex = -1,
+                    stepProgress = 1f,
+                    currentStepRemaining = null,
+                    stepSplits = s.stepSplits + split,
+                )
             }
         }
         val progress = when (step.durationType) {
-            StepDurationType.DISTANCE -> if (step.distanceM > 0) ((s.distanceM - stepStartDist) / step.distanceM).toFloat() else 0f
-            StepDurationType.TIME -> if (step.durationSec > 0) ((s.elapsedMovingSec - stepStartMoving) / step.durationSec).toFloat() else 0f
+            StepDurationType.DISTANCE -> if (step.distanceM > 0) (distInStep / step.distanceM).toFloat() else 0f
+            StepDurationType.TIME -> if (step.durationSec > 0) (movingInStep / step.durationSec).toFloat() else 0f
         }
-        return s.copy(stepProgress = progress.coerceIn(0f, 1f))
+        val remaining = stepRemaining(step, distInStep, movingInStep)
+        if (step.durationType == StepDurationType.TIME) {
+            stepCountdownCue(remaining, lastStepCue)?.let { cue ->
+                lastStepCue = cue
+                _voice.tryEmit(VoiceEvent.Countdown(cue))
+            }
+        }
+        return s.copy(stepProgress = progress.coerceIn(0f, 1f), currentStepRemaining = remaining)
     }
 
     private fun activeLabel(): String {
@@ -307,6 +384,7 @@ class RecordingController {
     }
 
     fun reset() {
+        gpsFilter.reset()
         lastPt = null
         lastEle = null
         lastLapDistM = 0.0
@@ -317,6 +395,7 @@ class RecordingController {
         autoPaused = false
         stepStartDist = 0.0
         stepStartMoving = 0.0
+        lastStepCue = 0
         _state.value = RecordingState(
             autoPauseEnabled = _state.value.autoPauseEnabled,
             voiceEnabled = _state.value.voiceEnabled,
@@ -333,7 +412,21 @@ class RecordingController {
             return 2 * r * atan2(sqrt(a), sqrt(1 - a))
         }
 
-        /** Flat step list from a workout's targets (structured JSON steps come later). */
+        /** Seconds (TIME) or meters (DISTANCE) left in a step, clamped at 0. */
+        fun stepRemaining(step: StepRuntime, distInStep: Double, movingInStep: Double): Double =
+            when (step.durationType) {
+                StepDurationType.DISTANCE -> (step.distanceM - distInStep).coerceAtLeast(0.0)
+                StepDurationType.TIME -> (step.durationSec - movingInStep).coerceAtLeast(0.0)
+            }
+
+        /** 3-2-1 cue worth speaking for a TIME step's remaining seconds, or null. */
+        fun stepCountdownCue(remainingSec: Double, lastEmitted: Int): Int? {
+            if (remainingSec <= 0.0) return null
+            val cue = kotlin.math.ceil(remainingSec).toInt()
+            return cue.takeIf { it in 1..3 && it != lastEmitted }
+        }
+
+        /** Fallback flat step list from a workout's targets when no structuredSteps exist. */
         fun buildSteps(workout: WorkoutEntity?): List<StepRuntime> {
             val w = workout ?: return emptyList()
             val steps = ArrayList<StepRuntime>()

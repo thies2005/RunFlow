@@ -3,6 +3,7 @@ package com.runflow2.app.data.net
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -196,9 +197,12 @@ data class UserWrapper(val user: UserDto)
 //
 // The server generates plans (VDOT resolution → phases → sport dispatch) and
 // /api/plans accepts the mobile JWT, so the app delegates creation to the web
-// engine and reconciles plans like any other entity. DTOs are deliberately
-// narrow: structuredSteps, HR ranges, _count and other web-only fields are
-// dropped via ignoreUnknownKeys.
+// engine and reconciles plans like any other entity. DTOs stay narrow, with
+// one exception: structuredSteps arrives as arbitrary JSON in two server
+// shapes (generator flat {"steps":[…]} and builder nested
+// {"warmup":…,"main":[…],"cooldown":…}) and is captured as a raw JsonElement,
+// stringified only when persisted. HR ranges, _count and other web-only
+// fields are still dropped via ignoreUnknownKeys.
 
 @Serializable
 data class PlanWorkoutDto(
@@ -212,6 +216,7 @@ data class PlanWorkoutDto(
     val targetDistance: Double? = null, // meters
     val targetDuration: Int? = null, // seconds
     val targetPace: Double? = null, // seconds per km
+    val structuredSteps: JsonElement? = null, // raw shape; parsed at record time
     val isCompleted: Boolean = false,
     val completedAt: String? = null,
     val linkedActivityId: String? = null,

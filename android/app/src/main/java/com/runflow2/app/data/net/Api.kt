@@ -267,6 +267,67 @@ data class PlansResponse(val goals: List<PlanGoalDto> = emptyList())
 @Serializable
 data class CreatePlanResponse(val goal: PlanGoalDto, val plan: PlanGoalDto? = null)
 
+/**
+ * Body for POST /api/plans/import — an explicit workout list (NO server-side
+ * regeneration), the upload path for device-created plans. Units mirror
+ * [CreatePlanRequest]/[CreateWorkoutRequest]: meters, seconds, seconds per km,
+ * date-only strings, JS days 0..6. workoutType/phase carry the RAW web enum
+ * values so server-only types (BRICK, TRANSITION_PRACTICE, …) and phases
+ * (ENDURANCE, TUNE_UP, …) survive the round trip.
+ */
+@Serializable
+data class ImportPlanRequest(
+    val name: String,
+    val sport: String? = null, // RUN | TRIATHLON
+    val raceType: String? = null, // null for no-race plans
+    val raceDate: String? = null, // YYYY-MM-DD
+    val planStartDate: String? = null, // YYYY-MM-DD
+    val targetTime: Int? = null, // seconds
+    val planWeeks: Int? = null,
+    val taperWeeks: Int? = null,
+    val peakWeeks: Int? = null,
+    val buildWeeks: Int? = null,
+    val currentVdot: Double? = null,
+    val weeklyMileageGoal: Int? = null, // meters
+    val runsPerWeek: Int? = null,
+    val ridesPerWeek: Int? = null,
+    val swimsPerWeek: Int? = null,
+    val strengthPerWeek: Int? = null,
+    val longRunDay: Int? = null, // 0=Sunday..6=Saturday
+    val workoutDay: Int? = null,
+    val restDays: List<Int>? = null, // 0..6
+    val creationMode: String? = null, // server defaults to EXPERT_MANUAL
+    val workouts: List<ImportWorkoutRequest>,
+)
+
+/** One workout of [ImportPlanRequest]; [localId] is echoed back in the idMap. */
+@Serializable
+data class ImportWorkoutRequest(
+    val localId: String,
+    val scheduledDate: String, // YYYY-MM-DD
+    val workoutType: String, // raw web enum value
+    val phase: String, // raw web enum value
+    val description: String? = null,
+    val customName: String? = null,
+    val targetDistance: Double? = null, // meters
+    val targetDuration: Int? = null, // seconds
+    val targetPace: Double? = null, // seconds per km
+    val targetHrZone: Int? = null,
+    val targetHrMinBpm: Int? = null,
+    val targetHrMaxBpm: Int? = null,
+    val targetPaceMinSecondsPerKm: Double? = null,
+    val targetPaceMaxSecondsPerKm: Double? = null,
+    val structuredSteps: JsonElement? = null, // generator flat shape, raw
+    val order: Int, // explicit, always sent (server default is the array index)
+)
+
+/** Response of POST /api/plans/import: new goal id + localId → server workout id. */
+@Serializable
+data class ImportPlanResponse(
+    val goalId: String,
+    val idMap: Map<String, String> = emptyMap(),
+)
+
 /** Body for POST /api/plans — the web's PlanCreateInputSchema (distances in meters, days 0..6). */
 @Serializable
 data class CreatePlanRequest(
@@ -442,6 +503,13 @@ interface RunFlowApi {
 
     @POST("/api/plans")
     suspend fun createPlan(@Body body: CreatePlanRequest): CreatePlanResponse
+
+    // Uploads a device-created plan (explicit workout list — the server does
+    // NOT regenerate). Returns the new server goal id plus a localId → server
+    // workout id map for the local remap. (201, raw web enums stored
+    // verbatim.)
+    @POST("/api/plans/import")
+    suspend fun importPlan(@Body body: ImportPlanRequest): ImportPlanResponse
 
     // workout-level edits (targets, description, date shift, completion)
     @PATCH("/api/mobile/v1/workouts/{id}")

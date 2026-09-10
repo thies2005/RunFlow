@@ -194,6 +194,123 @@ All endpoints below require an API key via `Authorization: Bearer rf_<hex>` head
 
 Rate limit: 100 requests per minute.
 
+### 1.5 Authenticated Plan Import Endpoint
+
+```
+POST /api/plans/import
+Authorization: session cookie (NextAuth) or Bearer <mobile JWT>
+Content-Type: application/json
+```
+
+Creates a plan from an **explicit workout list** — no generation, no VDOT
+resolution, no phase math. This is the server side of the mobile app's
+offline-plan upload: the device generates a plan with its ported web engine
+and pushes it verbatim (raw web enum values included), so a plan created
+offline ends up identical on web and app.
+
+**Rate limit:** 10 requests per minute per client (the shared `settings` bucket).
+
+**Request body:**
+
+```json
+{
+  "name": "Berlin Marathon",
+  "raceType": "MARATHON",
+  "raceDate": "2026-09-27",
+  "planStartDate": "2026-06-01",
+  "sport": "RUN",
+  "planWeeks": 16,
+  "taperWeeks": 2,
+  "peakWeeks": 3,
+  "buildWeeks": 4,
+  "currentVdot": 47.5,
+  "weeklyMileageGoal": 58000,
+  "runsPerWeek": 5,
+  "creationMode": "EXPERT_MANUAL",
+  "workouts": [
+    {
+      "localId": "local-w1",
+      "scheduledDate": "2026-06-01",
+      "workoutType": "BRICK",
+      "phase": "MENTAL_PREP",
+      "description": "Bike 40k + run 10k",
+      "targetDistance": 50000,
+      "targetPace": 245,
+      "targetDuration": 6800,
+      "order": 0
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `name` | string (1–255) | **required** — plan display name |
+| `sport` | `"RUN"\|"TRIATHLON"` | defaults to `RUN` |
+| `raceType` | enum (see §2) | nullable for no-race plans |
+| `raceDate`, `planStartDate` | ISO date string | nullable |
+| `targetTime` | int (seconds) | goal finish time |
+| `planWeeks` | int (1–104) | defaults to 12 |
+| `taperWeeks`, `peakWeeks`, `buildWeeks` | int ≥ 0 | phase lengths (server defaults when null) |
+| `currentVdot` | number (20–100) | fitness at creation |
+| `weeklyMileageGoal` | int | **meters**; values < 200 are auto-converted from km, as in `/api/plans` |
+| `runsPerWeek`, `ridesPerWeek`, `swimsPerWeek`, `strengthPerWeek` | int 0–7 | weekly session counts |
+| `longRunDay`, `workoutDay` | int 0–6 | JS day numbers (0 = Sunday) |
+| `restDays` | int[] (0–6) | rest days per week |
+| `creationMode` | PlanCreationMode enum | defaults to `EXPERT_MANUAL` |
+| `planSource` | string | defaults to `"mobile-import"` |
+| `workouts` | array, 1–500 items | **required** — the explicit workout list |
+
+Each `workouts[]` item:
+
+| Field | Type | Description |
+|---|---|---|
+| `localId` | string (1–255) | **required** — device-minted id; must be unique within the request |
+| `scheduledDate` | ISO date string | **required** |
+| `workoutType` | WorkoutType enum | **required** — unknown values → 400 |
+| `phase` | PlanPhase enum | **required** — includes `ENDURANCE`, `TUNE_UP`, `MENTAL_PREP`, `MAINTAIN` |
+| `description` | string ≤ 2000 | falls back to `customName`, then `workoutType` |
+| `displayDesc`, `intensityZone`, `sport`, `customName` | string, nullable | stored verbatim (defaults to `RUN` when omitted) |
+| `targetDistance` | number (meters) | `Float` column — fractional meters allowed |
+| `targetDuration` | int (seconds) | |
+| `targetPace` | number (seconds per km) | |
+| `targetHrZone` | int 1–7 | |
+| `targetHrMinBpm`, `targetHrMaxBpm` | int 60–250 | |
+| `targetPaceMinSecondsPerKm`, `targetPaceMaxSecondsPerKm` | number | builder pace range |
+| `structuredSteps` | JSON object or array | stored verbatim (defaults to `RUN` when omitted) (generator flat or builder nested shape) |
+| `order` | int ≥ 0 | defaults to the array index |
+
+**Semantics:**
+
+- The goal + workouts are created in a single Prisma transaction; a failure
+  anywhere leaves no partial plan behind.
+- An initial `PlanSnapshot` (`operation: "plan_import"`) is created after the
+  transaction commits, mirroring the plan-advanced routes' snapshot behavior.
+- Workouts are stored **verbatim** — the raw web enum values the device's
+  generator emits (`BRICK`, `TRANSITION_PRACTICE`, `ENDURANCE`, …) are never
+  collapsed to single-sport equivalents.
+
+**Success response** (201):
+
+```json
+{
+  "goalId": "cmx…",
+  "idMap": { "local-w1": "cmx…" }
+}
+```
+
+`idMap` maps every request `localId` to its new server workout id, so the
+device can re-point its local rows and queued outbox items onto server ids.
+
+**Error responses:**
+
+| Status | When |
+|---|---|
+| 400 | Validation error (unknown `workoutType`/`phase`, > 500 workouts, duplicate `localId`, missing fields) |
+| 401 | No valid session or Bearer token |
+| 429 | Rate limit exceeded |
+| 500 | Server error |
+
 ## 2. Race Types and Default Parameters
 
 Every race type has tuned defaults that the generator uses when the caller omits optional fields:

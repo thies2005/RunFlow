@@ -118,6 +118,13 @@ data class WorkoutEntity(
     val targetHrMaxBpm: Int? = null,
     val targetPaceMinSecPerKm: Double? = null,
     val targetPaceMaxSecPerKm: Double? = null,
+    // raw web enum values (v7): the ported web generator emits server-only
+    // types/phases (BRICK, TRANSITION_PRACTICE, ENDURANCE, TUNE_UP, …) that
+    // collapse into the domain enums above at write time. Keeping the raw
+    // values lets the plan upload round-trip them to the server untouched;
+    // null on server-pulled rows (those are already server-truth).
+    val webWorkoutType: String? = null,
+    val webPhase: String? = null,
 )
 
 @Entity(tableName = "profile")
@@ -233,6 +240,10 @@ interface GoalDao {
 
     @Query("SELECT * FROM goals WHERE isLocalOnly = 0")
     suspend fun serverGoals(): List<GoalEntity>
+
+    /** Device-created plans the server has never seen, oldest first. */
+    @Query("SELECT * FROM goals WHERE isLocalOnly = 1 ORDER BY createdAt ASC LIMIT :limit")
+    suspend fun localOnlyGoals(limit: Int): List<GoalEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(goal: GoalEntity)
@@ -376,6 +387,10 @@ interface PlanSnapshotDao {
 
     @Query("DELETE FROM plan_snapshots WHERE goalId = :goalId")
     suspend fun deleteAllForGoal(goalId: String)
+
+    /** Re-points undo history after a plan upload remaps the goal id. */
+    @Query("UPDATE plan_snapshots SET goalId = :newGoalId WHERE goalId = :oldGoalId")
+    suspend fun repointGoal(oldGoalId: String, newGoalId: String)
 }
 
 @Database(
@@ -383,7 +398,7 @@ interface PlanSnapshotDao {
         ActivityEntity::class, GoalEntity::class, WorkoutEntity::class, ProfileEntity::class,
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -482,6 +497,19 @@ abstract class AppDatabase : RoomDatabase() {
                         "workoutsJson TEXT NOT NULL)"
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_plan_snapshots_goalId ON plan_snapshots(goalId)")
+            }
+        }
+
+        /**
+         * v6 -> v7 adds the raw web enum columns to workouts so offline plans
+         * can upload without enum fidelity loss. Nullable, purely additive:
+         * server-pulled rows stay null (they already carry server-truth
+         * values in workoutType/phase).
+         */
+        val MIGRATION_6_7: Migration = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE workouts ADD COLUMN webWorkoutType TEXT")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN webPhase TEXT")
             }
         }
     }

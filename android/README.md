@@ -110,8 +110,13 @@ active marathon plan) on first launch.
   appear on the website immediately. Workout completions, target/description edits and day
   shifts queue as `workout_update` PATCHes; goal completion and deletion use the mobile goal
   endpoints. Push-then-pull with dirty flags: queued local edits win until pushed, everything
-  else takes the server version, plans deleted on the web are pruned. Offline-created plans are
-  never auto-pushed (the server would regenerate different workouts) — they stay device-only
+  else takes the server version, plans deleted on the web are pruned. **Offline-created plans
+  upload to the server (the sync itself is bidirectional) (v2.3)**: plans generated on-device by the ported web engine
+  (`WebPlanEngine`, the Kotlin port of the site's generator) are pushed verbatim via
+  `POST /api/plans/import` (explicit workout list, no server-side regeneration) during the
+  next sync; raw web workout types/phases (BRICK, TRANSITION_PRACTICE, ENDURANCE, …) survive
+  the round trip in dedicated `webWorkoutType`/`webPhase` columns, and local ids are remapped
+  onto server ids in one transaction (outbox items and undo history follow)
 
 **UI**
 - Material 3 **Expressive**: `MaterialExpressiveTheme`, `Large/MediumFlexibleTopAppBar`,
@@ -127,7 +132,7 @@ domain/model     enums + pace-zone evaluator
 domain/plan      PlanGenerator, PlanMethod (engine picker + wizard flow), RaceDefaults  (pure Kotlin, tested)
 domain/analytics AnalyticsEngine                                            (pure Kotlin)
 data/db          Room: activities / goals / workouts / profile / sync_queue (outbox) /
-                 chat_messages; schema v3 with v1→v2 and v2→v3 migrations
+                 chat_messages / plan_snapshots; schema v7 with v1→v7 migrations
 data/net         Retrofit API mirroring the Flutter wire contract + the web plan
                  contract (/api/plans, workout/goal writes), AuthStore (tokens +
                  OAuth hand-off), NetworkClient (bearer header + single-flight 401 refresh),
@@ -169,5 +174,4 @@ A ready-to-install signed APK is at `android/RunFlow2-v2.2.6-release.apk`.
 - Health & nutrition (food/macro logging, barcode & AI scan, supplements, fasting, sleep,
   readiness scoring) — the Flutter implementation in `flutter/lib/presentation/screens/health/`
   is the reference
-- Strava OAuth + server sync against `https://runflow.schuelen.uk/api/mobile/v1`
 - AI coach chat, workout template library, strength recorder, route heatmap

@@ -3,11 +3,14 @@ package com.runflow2.app.data.sync
 import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.net.CreatePlanRequest
 import com.runflow2.app.data.net.CreateWorkoutRequest
+import com.runflow2.app.data.net.ImportPlanRequest
+import com.runflow2.app.data.net.ImportWorkoutRequest
 import com.runflow2.app.data.net.PatchWorkoutRequest
 import com.runflow2.app.data.net.PlanGoalDto
 import com.runflow2.app.data.net.PlanWorkoutDto
 import com.runflow2.app.data.net.WorkoutCreatePayload
 import com.runflow2.app.data.db.GoalEntity
+import com.runflow2.app.data.db.SyncQueueEntity
 import com.runflow2.app.data.db.WorkoutEntity
 import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.RaceType
@@ -17,6 +20,11 @@ import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.math.roundToInt
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 
 /*
  * Bridge between the server plan contract (meters, JS days 0..6, ISO dates,
@@ -292,3 +300,145 @@ fun reconcileCreatedWorkout(local: WorkoutEntity, server: WorkoutEntity): Workou
     activityId = local.activityId,
     dirty = false,
 )
+
+// ---- plan upload (POST /api/plans/import) ----
+
+/**
+ * Serializes one workout for the import endpoint. The RAW web enum columns
+ * win when present (the generator's BRICK/TRANSITION_PRACTICE/ENDURANCE/…
+ * values that collapse at DB-write time); the collapsed domain values are
+ * the fallback for rows without them. Units follow [toCreateWorkoutPayload]:
+ * distance meters, pace seconds per km, duration seconds, date-only.
+ */
+fun WorkoutEntity.toImportWorkoutRequest(order: Int): ImportWorkoutRequest = ImportWorkoutRequest(
+    localId = id,
+    scheduledDate = epochMillisToServerDate(scheduledDate),
+    workoutType = webWorkoutType ?: workoutType,
+    phase = webPhase ?: phase,
+    description = description,
+    customName = customName,
+    targetDistance = targetDistanceKm?.let { it * 1000.0 },
+    targetDuration = targetDurationSec,
+    targetPace = targetPaceSecPerKm?.toDouble(),
+    targetHrZone = targetHrZone,
+    targetHrMinBpm = targetHrMinBpm,
+    targetHrMaxBpm = targetHrMaxBpm,
+    targetPaceMinSecondsPerKm = targetPaceMinSecPerKm,
+    targetPaceMaxSecondsPerKm = targetPaceMaxSecPerKm,
+    structuredSteps = structuredStepsJson?.let {
+        runCatching { Api.json.parseToJsonElement(it) }.getOrNull()
+    },
+    order = order,
+)
+
+/**
+ * Serializes a device-created goal (+ its serialized workouts) for the import
+ * endpoint — the same goal scalars the wizard sends to POST /api/plans, with
+ * local Room units converted to the wire contract (km → meters, DayOfWeek
+ * 1..7 → JS days 0..6, dates as YYYY-MM-DD).
+ */
+fun GoalEntity.toImportPlanRequest(workouts: List<ImportWorkoutRequest>): ImportPlanRequest {
+    val race = parseRaceType(raceType)
+    val noRace = race == RaceType.NONE
+    return ImportPlanRequest(
+        name = name,
+        sport = when {
+            noRace -> "RUN"
+            race.tri -> "TRIATHLON"
+            else -> "RUN"
+        },
+        raceType = if (noRace) null else race.name,
+        raceDate = if (noRace) null else epochMillisToServerDate(raceDate),
+        planStartDate = planStartDate?.let { epochMillisToServerDate(it) },
+        targetTime = targetTimeSec,
+        planWeeks = planWeeks,
+        taperWeeks = taperWeeks,
+        currentVdot = vdotAtCreation,
+        weeklyMileageGoal = (weeklyKmGoal * 1000).roundToInt(),
+        runsPerWeek = runsPerWeek,
+        strengthPerWeek = strengthPerWeek,
+        longRunDay = longRunDay % 7,
+        workoutDay = workoutDay % 7,
+        restDays = restDays.split(',').mapNotNull { it.toIntOrNull() }.map { it % 7 }.sorted(),
+        creationMode = creationMode,
+        workouts = workouts,
+    )
+}
+
+/**
+ * Pure id remap after a successful plan upload: local rows move onto the
+ * server ids (goal + every workout via the idMap) while local-only state —
+ * completion, activity link, sort position, structured steps, raw web enums —
+ * carries over untouched. Queued outbox items survive too: workout-scoped
+ * items re-point their localId onto the new workout id, goal-scoped ones onto
+ * the new goal id, and goal references inside payload JSON (the goal-scoped
+ * create/delete bodies) are rewritten. Everything the caller needs for ONE
+ * Room transaction comes back in a [PlanRemap].
+ */
+data class PlanRemap(
+    val goal: GoalEntity,
+    val workouts: List<WorkoutEntity>,
+    /** Outbox items to insert: copies of the re-pointed pending items. */
+    val reQueued: List<SyncQueueEntity>,
+    /** Row ids of the superseded pending items (mark them completed). */
+    val consumedQueueIds: List<Long>,
+)
+
+fun remapUploadedPlan(
+    goal: GoalEntity,
+    workouts: List<WorkoutEntity>,
+    serverGoalId: String,
+    idMap: Map<String, String>,
+    /** Pending outbox items per old workout id (update/create/delete). */
+    workoutQueueItems: Map<String, List<SyncQueueEntity>>,
+    /** Pending goal_update / goal_delete items (localId = old goal id). */
+    goalQueueItems: List<SyncQueueEntity>,
+): PlanRemap {
+    val remappedWorkouts = workouts.map { w ->
+        val serverId = idMap[w.id]
+        w.copy(
+            // No idMap entry means the server echo was incomplete — keep the
+            // local id rather than dropping the user's row.
+            id = serverId ?: w.id,
+            goalId = serverGoalId,
+            dirty = false,
+        )
+    }
+    val reQueued = mutableListOf<SyncQueueEntity>()
+    val consumed = mutableListOf<Long>()
+    for ((oldWorkoutId, items) in workoutQueueItems) {
+        val newId = idMap[oldWorkoutId] ?: oldWorkoutId
+        for (item in items) {
+            reQueued += item.copy(id = 0, localId = newId, payloadJson = remapPayloadGoal(item.payloadJson, serverGoalId))
+            consumed += item.id
+        }
+    }
+    for (item in goalQueueItems) {
+        reQueued += item.copy(id = 0, localId = serverGoalId, payloadJson = remapPayloadGoal(item.payloadJson, serverGoalId))
+        consumed += item.id
+    }
+    return PlanRemap(
+        goal = goal.copy(id = serverGoalId, isLocalOnly = false, dirty = false),
+        workouts = remappedWorkouts,
+        reQueued = reQueued,
+        consumedQueueIds = consumed,
+    )
+}
+
+/**
+ * Rewrites the goalId inside goal-scoped outbox payloads (WorkoutCreatePayload
+ * / WorkoutDeletePayload). Other payloads don't carry a goal id and pass
+ * through unchanged; unparseable JSON also passes through — the item keeps
+ * its old payload and dead-letters on drain exactly as it would have.
+ */
+private fun remapPayloadGoal(payloadJson: String, serverGoalId: String): String {
+    val obj = runCatching { Api.json.parseToJsonElement(payloadJson).jsonObject }.getOrNull() ?: return payloadJson
+    if (obj["goalId"] == null) return payloadJson
+    return Api.json.encodeToString(
+        kotlinx.serialization.json.JsonElement.serializer(),
+        buildJsonObject {
+            obj.forEach { (k, v) -> if (k != "goalId") put(k, v) }
+            put("goalId", JsonPrimitive(serverGoalId))
+        },
+    )
+}

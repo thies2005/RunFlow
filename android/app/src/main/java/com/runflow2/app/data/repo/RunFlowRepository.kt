@@ -23,12 +23,15 @@ import com.runflow2.app.data.net.NetworkClient
 import com.runflow2.app.data.sync.SyncManager
 import com.runflow2.app.data.sync.MAX_PLAN_SNAPSHOTS_PER_GOAL
 import com.runflow2.app.data.sync.parseSnapshotJson
+import com.runflow2.app.data.sync.remapUploadedPlan
 import com.runflow2.app.data.sync.restoreDiff
 import com.runflow2.app.data.sync.toCreatePlanRequest
 import com.runflow2.app.data.sync.toCreateRequest
 import com.runflow2.app.data.sync.toCreateWorkoutPayload
 import com.runflow2.app.data.sync.toEntities
 import com.runflow2.app.data.sync.toEntity
+import com.runflow2.app.data.sync.toImportPlanRequest
+import com.runflow2.app.data.sync.toImportWorkoutRequest
 import com.runflow2.app.data.sync.toPatchRequest
 import com.runflow2.app.data.sync.toSnapshotJson
 import com.runflow2.app.data.sync.toUpdateRequest
@@ -51,6 +54,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import retrofit2.HttpException
+import java.io.IOException
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -571,12 +576,19 @@ class RunFlowRepository(
 
         val generated = WebPlanEngine.generateTrainingPlan(WebPlanEngine.configFromSpec(spec))
         val workouts = generated.mapIndexed { i, w ->
+            // webWorkoutType/webPhase keep the RAW web enum values (BRICK,
+            // TRANSITION_PRACTICE, ENDURANCE, …); workoutType/phase store the
+            // collapsed domain values the UI renders. The upload path prefers
+            // the raw columns so the server sees exactly what it would have
+            // generated itself.
             WorkoutEntity(
                 id = UUID.randomUUID().toString(),
                 goalId = goalId,
                 scheduledDate = Format.epochMillis(w.date, LocalTime.of(7, 30)),
                 workoutType = WebPlanEngine.toDomainWorkoutType(w.type).name,
                 phase = WebPlanEngine.toDomainPhase(w.phase).name,
+                webWorkoutType = w.type,
+                webPhase = w.phase,
                 description = w.description,
                 targetDistanceKm = w.totalDistance / 1000.0,
                 targetPaceSecPerKm = w.targetPace?.roundToInt(),
@@ -642,6 +654,97 @@ class RunFlowRepository(
             goal.id
         }
     }
+
+    /**
+     * Uploads a device-created plan to POST /api/plans/import: the goal
+     * scalars plus the explicit workout list are serialized with their RAW
+     * web enum values (webWorkoutType/webPhase, falling back to the collapsed
+     * domain columns) and the server stores them verbatim — no regeneration,
+     * so "local == server" holds after upload. On success the local ids are
+     * remapped onto the server ids in ONE transaction (goal id, workout ids
+     * via the idMap, queued outbox items, undo snapshots), which makes the
+     * operation crash-safe: a failure mid-transaction leaves the plan fully
+     * local; nothing is half-remapped.
+     */
+    suspend fun uploadLocalPlan(goalId: String): UploadResult = withContext(Dispatchers.IO) {
+        val goal = goalDao.byId(goalId) ?: return@withContext UploadResult.Skipped
+        if (!goal.isLocalOnly) return@withContext UploadResult.Skipped
+        val workouts = workoutDao.forGoal(goalId)
+        if (workouts.isEmpty()) return@withContext UploadResult.Skipped // server rejects empty plans
+
+        val request = goal.toImportPlanRequest(workouts.mapIndexed { i, w -> w.toImportWorkoutRequest(i) })
+
+        val response = try {
+            network.api().importPlan(request)
+        } catch (e: IOException) {
+            AppLog.w("Plan", "plan upload offline (${e.message ?: "io error"}) — stays local, retried next sync", e)
+            return@withContext UploadResult.Retryable
+        } catch (e: HttpException) {
+            if (e.code() in 400..499 && e.code() != 408 && e.code() != 429) {
+                // Permanent rejection (bad payload, auth): retrying can never
+                // succeed. The plan stays local and un-mapped; a later sync
+                // may still upload it once whatever caused the rejection is
+                // fixed (e.g. re-login).
+                AppLog.e("Plan", "plan upload rejected: HTTP ${e.code()}", e)
+                return@withContext UploadResult.Rejected(e.code())
+            }
+            AppLog.w("Plan", "plan upload failed: HTTP ${e.code()} — retried next sync", e)
+            return@withContext UploadResult.Retryable
+        }
+
+        // Pending outbox items that reference the local ids: workout-scoped
+        // items (localId = workout id) and goal-scoped ones (localId = goal
+        // id). They are re-pointed onto the server ids inside the remap.
+
+        var uploadedCount = 0
+        db.withTransaction {
+            // Re-read inside the transaction: edits, completions, creations or
+            // deletions that happened during the upload round-trip must
+            // survive the id remap (the request above used the pre-read
+            // snapshot; the remap below uses the live rows).
+            val fresh = workoutDao.forGoal(goal.id)
+            val workoutQueueItems = buildMap {
+                for (w in fresh) {
+                    for (type in uploadQueueTypes) {
+                        val items = syncQueueDao.pendingFor(type, w.id)
+                        if (items.isNotEmpty()) merge(w.id, items) { a, b -> a + b }
+                    }
+                }
+            }
+            val goalQueueItems = syncQueueDao.pendingFor(SyncManager.TYPE_GOAL_UPDATE, goalId) +
+                syncQueueDao.pendingFor(SyncManager.TYPE_GOAL_DELETE, goalId)
+
+            val remap = remapUploadedPlan(
+                goal = goal,
+                workouts = fresh,
+                serverGoalId = response.goalId,
+                idMap = response.idMap,
+                workoutQueueItems = workoutQueueItems,
+                goalQueueItems = goalQueueItems,
+            )
+
+            // swap the local-only rows for their server-identified twins
+            workoutDao.deleteForGoal(goal.id)
+            goalDao.delete(goal.id)
+            goalDao.upsert(remap.goal)
+            workoutDao.upsertAll(remap.workouts)
+            // undo history follows the goal to its new id
+            planSnapshotDao.repointGoal(goal.id, response.goalId)
+            // re-point queued edits so they land on the server rows
+            remap.consumedQueueIds.forEach { syncQueueDao.markCompleted(it) }
+            remap.reQueued.forEach { syncQueueDao.insert(it) }
+            uploadedCount = fresh.size
+        }
+        AppLog.i("Plan", "plan '${goal.name}' uploaded ($uploadedCount workouts) → ${response.goalId}")
+        UploadResult.Success(response.goalId, uploadedCount)
+    }
+
+    /** Outbox types whose localId references a workout id (re-pointed after upload). */
+    private val uploadQueueTypes = arrayOf(
+        SyncManager.TYPE_WORKOUT_CREATE,
+        SyncManager.TYPE_WORKOUT_UPDATE,
+        SyncManager.TYPE_WORKOUT_DELETE,
+    )
 
     // ---------- analytics ----------
     suspend fun analytics(rangeDays: Int = 365): AnalyticsBundle = withContext(Dispatchers.Default) {
@@ -711,3 +814,18 @@ fun WorkoutEntity.type(): WorkoutType = runCatching { WorkoutType.valueOf(workou
 fun WorkoutEntity.phase(): PlanPhase = runCatching { PlanPhase.valueOf(phase) }.getOrDefault(PlanPhase.BASE)
 
 fun WorkoutEntity.date(): LocalDate = Format.localDate(scheduledDate)
+
+/** Outcome of [RunFlowRepository.uploadLocalPlan]. */
+sealed interface UploadResult {
+    /** Plan imported server-side; local rows re-pointed onto [serverGoalId]. */
+    data class Success(val serverGoalId: String, val workoutCount: Int) : UploadResult
+
+    /** Permanent server rejection (4xx): retrying cannot succeed this cycle. */
+    data class Rejected(val code: Int) : UploadResult
+
+    /** Network or 5xx failure: the plan stays local and retries next sync. */
+    data object Retryable : UploadResult
+
+    /** Nothing to do: goal missing, already synced, or no workouts. */
+    data object Skipped : UploadResult
+}

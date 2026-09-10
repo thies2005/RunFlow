@@ -12,7 +12,9 @@ import com.runflow2.app.data.net.UpdateGoalRequest
 import com.runflow2.app.data.net.UpdateProfileRequest
 import com.runflow2.app.data.net.WorkoutCreatePayload
 import com.runflow2.app.data.net.WorkoutDeletePayload
+import com.runflow2.app.data.repo.RunFlowRepository
 import com.runflow2.app.data.repo.SettingsRepository
+import com.runflow2.app.data.repo.UploadResult
 import com.runflow2.app.data.sync.applyTo
 import com.runflow2.app.data.sync.mergeInto
 import com.runflow2.app.data.sync.reconcileCreatedWorkout
@@ -58,6 +60,7 @@ class SyncManager(
     private val client: NetworkClient,
     private val authStore: AuthStore,
     private val settings: SettingsRepository,
+    private val repository: RunFlowRepository,
 ) {
     companion object {
         private const val TAG = "Sync"
@@ -72,6 +75,8 @@ class SyncManager(
         private const val PAGE_SIZE = 100
         private const val MAX_PAGES = 60
         private const val STRAVA_TRIGGER_INTERVAL_MS = 6 * 60 * 60 * 1000L // 6h
+        /** Device-plan uploads per sync cycle, bounding the work per drain. */
+        private const val MAX_PLAN_UPLOADS_PER_SYNC = 5
     }
 
     private val mutex = Mutex()
@@ -128,6 +133,14 @@ class SyncManager(
         var failed = 0
 
         cleanDemoDataOnFirstLogin()
+
+        // ---- upload: device-created plans the server has never seen ----
+        // Runs BEFORE the outbox drain: the plan must exist server-side
+        // before any queued workout_create/workout_update items drain against
+        // it (their routes are goal-scoped and would 404 against a goal the
+        // server doesn't know). Pull comes last so the freshly imported plan
+        // round-trips as ordinary server truth.
+        uploadLocalPlans()
 
         // ---- push: drain the outbox, oldest first ----
         while (true) {
@@ -222,6 +235,44 @@ class SyncManager(
         }
 
         return SyncResult(pushed = pushed, pulled = pulled, pruned = pruned, failed = failed)
+    }
+
+    /**
+     * Uploads local-only plans (device-created, never on the server), oldest
+     * first, capped at [MAX_PLAN_UPLOADS_PER_SYNC] per cycle to bound the
+     * work of a single drain. Failures never abort the sync: network errors
+     * and 5xx are inherently retryable and simply leave the plan local until
+     * the next cycle; permanent 4xx rejections are logged and skipped the
+     * same way (the plan remains device-only instead of poisoning the sync).
+     */
+    private suspend fun uploadLocalPlans() {
+        // Wide query, success-capped loop: a permanently rejected plan must
+        // not occupy an upload slot and starve later goals.
+        val goals = db.goalDao().localOnlyGoals(50)
+        if (goals.isEmpty()) return
+        var uploaded = 0
+        for (goal in goals) {
+            if (uploaded >= MAX_PLAN_UPLOADS_PER_SYNC) break
+            try {
+                when (val result = repository.uploadLocalPlan(goal.id)) {
+                    is UploadResult.Success -> uploaded++
+                    is UploadResult.Rejected ->
+                        AppLog.w(TAG, "plan ${goal.id} upload rejected (HTTP ${result.code}) — stays local")
+                    is UploadResult.Retryable ->
+                        AppLog.w(TAG, "plan ${goal.id} upload deferred (network/server) — stays local")
+                    UploadResult.Skipped -> Unit
+                }
+            } catch (e: IOException) {
+                AppLog.w(TAG, "plan ${goal.id} upload offline (${e.message ?: "io error"}) — stays local", e)
+            } catch (e: HttpException) {
+                AppLog.w(TAG, "plan ${goal.id} upload failed: HTTP ${e.code()} — stays local", e)
+            } catch (e: Exception) {
+                // Unexpected (mapping/serialization bug): log and keep going —
+                // one bad plan must not abort the whole sync.
+                AppLog.e(TAG, "plan ${goal.id} upload failed unexpectedly — stays local", e)
+            }
+        }
+        if (uploaded > 0) AppLog.i(TAG, "uploaded $uploaded local plan(s)")
     }
 
     private suspend fun handleOutboxItem(type: String, localId: String, payloadJson: String) {

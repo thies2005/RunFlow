@@ -100,7 +100,4 @@ object TrainingLoad {
     }
 
     fun tsbStatus(tsb: Double): TsbStatus = TsbStatus.from(tsb)
-
-    /** CTL a runner roughly needs to be "in marathon shape" (tunable constant). */
-    const val MARATHON_CTL_TARGET = 65.0
 }

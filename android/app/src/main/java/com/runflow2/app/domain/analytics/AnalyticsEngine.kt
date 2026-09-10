@@ -1,5 +1,6 @@
 package com.runflow2.app.domain.analytics
 
+import com.runflow2.app.core.math.MarathonShape
 import com.runflow2.app.core.math.TrainingLoad
 import com.runflow2.app.core.math.VdotMath
 import com.runflow2.app.domain.model.ActivityType
@@ -121,9 +122,20 @@ object AnalyticsEngine {
             if (best != null) trend += VdotPoint(ws, best)
         }
 
-        val shape = if (effectiveVdot != null) {
-            (ctl / TrainingLoad.MARATHON_CTL_TARGET * 100.0).coerceIn(0.0, 115.0)
-        } else null
+        // Marathon shape — the web's mileage + long-run (+ cross-training)
+        // composite (Web/src/lib/metrics/runalyze.ts), not a CTL ratio. The
+        // server route feeds it runs vs {RIDE, VIRTUAL_RIDE, SWIM, WORKOUT};
+        // the app has no VIRTUAL_RIDE type.
+        val shape = effectiveVdot?.let {
+            MarathonShape.calculate(
+                runs = runs.map { MarathonShape.Run(it.date, it.distanceKm) },
+                crossTraining = activities
+                    .filter { it.type == ActivityType.RIDE || it.type == ActivityType.SWIM || it.type == ActivityType.WORKOUT }
+                    .map { MarathonShape.CrossTraining(it.date, it.movingTimeSec, it.zoneSeconds) },
+                effectiveVdot = it,
+                today = today,
+            ).shape.toDouble()
+        }
 
         return AnalyticsBundle(
             daily = daily,

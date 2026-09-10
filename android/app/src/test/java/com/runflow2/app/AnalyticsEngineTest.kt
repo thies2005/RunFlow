@@ -173,6 +173,21 @@ class AnalyticsEngineTest {
         assertNull(b.marathonShape)
     }
 
+    @Test
+    fun `marathon shape is the web composite, never a ctl ratio`() {
+        // 120 days of solid training → CTL far above 65: the old invented
+        // formula (ctl/65×100) would have shown >100%; the web composite cannot
+        val acts = (0 until 120).map { run(today.minusDays(120L - it), km = 12.0, trimp = 150.0, vdot = 55.0) }
+        val b = AnalyticsEngine.compute(acts, today, 1.0)
+        assertTrue("ctl ${b.ctl} should exceed the old 65 target", b.ctl > 65.0)
+        assertNotNull(b.marathonShape)
+        assertTrue("shape ${b.marathonShape} must be capped at 100", b.marathonShape!! <= 100.0)
+        // web mileage divides the 6-month total by a flat 26 weeks: 1440 km/26
+        // = 55.4 km/wk vs vdot 55 → mileage 100.7, no long runs (<13 km), no
+        // CT → shape = round(100.7 × 2/3) = 67
+        assertEquals(67.0, b.marathonShape!!, 0.0)
+    }
+
     // ---- status ----
 
     @Test

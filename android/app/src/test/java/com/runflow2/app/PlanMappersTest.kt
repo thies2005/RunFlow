@@ -331,6 +331,127 @@ class PlanMappersTest {
     // ---- structured steps persistence ----
 
     @Test
+    fun `builder target fields round-trip from DTO into the entity`() {
+        val body = """
+            {"id":"w20","goalId":"g1","scheduledDate":"2026-09-03T00:00:00.000Z","workoutType":"TEMPO",
+             "description":"Zone 3 steady","phase":"BUILD","customName":"Thursday Steady",
+             "targetHrZone":3,"targetHrZoneLabel":"Z3 Aerobic","targetHrMinBpm":140,"targetHrMaxBpm":155,
+             "targetPaceZoneLabel":"Steady","targetPaceMinSecondsPerKm":285.0,"targetPaceMaxSecondsPerKm":300.5,
+             "plannedTss":62.5,"color":"#ff0000"}
+        """.trimIndent()
+        val dto = Api.json.decodeFromString(PlanWorkoutDto.serializer(), body)
+        val entity = dto.toWorkoutEntity("g1")!!
+        assertEquals("Thursday Steady", entity.customName)
+        assertEquals(3, entity.targetHrZone)
+        assertEquals(140, entity.targetHrMinBpm)
+        assertEquals(155, entity.targetHrMaxBpm)
+        assertEquals(285.0, entity.targetPaceMinSecPerKm!!, 0.001)
+        assertEquals(300.5, entity.targetPaceMaxSecPerKm!!, 0.001)
+    }
+
+    @Test
+    fun `generator workouts keep null builder fields`() {
+        val dto = PlanWorkoutDto(id = "w21", scheduledDate = "2026-09-03T00:00:00.000Z", description = "Easy")
+        val entity = dto.toWorkoutEntity("g1")!!
+        assertNull(entity.customName)
+        assertNull(entity.targetHrZone)
+        assertNull(entity.targetHrMinBpm)
+        assertNull(entity.targetHrMaxBpm)
+        assertNull(entity.targetPaceMinSecPerKm)
+        assertNull(entity.targetPaceMaxSecPerKm)
+    }
+
+    @Test
+    fun `goal creation mode and guidance level persist`() {
+        val dto = PlanGoalDto(
+            id = "g6", name = "Builder plan", raceDate = "2026-08-01T00:00:00.000Z",
+            creationMode = "STANDARD_BUILDER", guidanceLevel = "full",
+            workouts = emptyList(),
+        )
+        val (goal, _) = dto.toEntities()!!
+        assertEquals("STANDARD_BUILDER", goal.creationMode)
+        assertEquals("full", goal.guidanceLevel)
+    }
+
+    @Test
+    fun `builder fields survive the merge on same-id dirty rows`() {
+        val local = workout("w20", dirty = true, desc = "local edit").copy(
+            customName = "Thursday Steady",
+            targetHrZone = 3,
+            targetHrMinBpm = 140,
+            targetHrMaxBpm = 155,
+            targetPaceMinSecPerKm = 285.0,
+            targetPaceMaxSecPerKm = 300.5,
+        )
+        val server = workout("w20", dirty = false, desc = "server version")
+        val merged = mergeServerWorkouts(listOf(local), listOf(server))
+        assertEquals(1, merged.size)
+        val kept = merged.single()
+        assertEquals("local edit", kept.description)
+        assertEquals("Thursday Steady", kept.customName)
+        assertEquals(3, kept.targetHrZone)
+        assertEquals(140, kept.targetHrMinBpm)
+        assertEquals(155, kept.targetHrMaxBpm)
+        assertEquals(285.0, kept.targetPaceMinSecPerKm!!, 0.001)
+        assertEquals(300.5, kept.targetPaceMaxSecPerKm!!, 0.001)
+    }
+
+    @Test
+    fun `patch payload carries the builder fields`() {
+        val w = workout("w20", dirty = false, desc = "Steady").copy(
+            customName = "Thursday Steady",
+            targetHrZone = 3,
+            targetHrMinBpm = 140,
+            targetHrMaxBpm = 155,
+            targetPaceMinSecPerKm = 285.0,
+            targetPaceMaxSecPerKm = 300.5,
+        )
+        val req = w.toPatchRequest()
+        assertEquals("Thursday Steady", req.customName)
+        assertEquals(3, req.targetHrZone)
+        assertEquals(140, req.targetHrMinBpm)
+        assertEquals(155, req.targetHrMaxBpm)
+        assertEquals(285.0, req.targetPaceMinSecondsPerKm!!, 0.001)
+        assertEquals(300.5, req.targetPaceMaxSecondsPerKm!!, 0.001)
+    }
+
+    @Test
+    fun `patch payload omits null builder fields`() {
+        // encodeDefaults=false + explicitNulls=false: unset fields stay off the wire
+        val req = workout("w21", dirty = false, desc = "Easy").toPatchRequest()
+        assertNull(req.customName)
+        assertNull(req.targetHrZone)
+        assertNull(req.targetPaceMinSecondsPerKm)
+        val encoded = Api.json.encodeToString(
+            com.runflow2.app.data.net.PatchWorkoutRequest.serializer(), req,
+        )
+        assertTrue(!encoded.contains("customName"))
+        assertTrue(!encoded.contains("targetHrZone"))
+    }
+
+    @Test
+    fun `patch payload carries structuredSteps when the entity has them`() {
+        // the current server route ignores the field; sent for forward compatibility
+        val w = workout("w30", dirty = false, desc = "400s").copy(
+            structuredStepsJson = """{"warmup":{"distance":1000,"pace":"E"},"main":[{"reps":4,"distance":400,"pace":"I","restSeconds":90}],"cooldown":{"distance":1000,"pace":"E"}}""",
+        )
+        val req = w.toPatchRequest()
+        val entry = req.structuredSteps!!.jsonObject["main"]!!.jsonArray[0].jsonObject
+        assertEquals("I", entry["pace"]!!.jsonPrimitive.content)
+        assertEquals(4, entry["reps"]!!.jsonPrimitive.content.toInt())
+    }
+
+    @Test
+    fun `patch payload omits structuredSteps without stored steps`() {
+        val req = workout("w31", dirty = false, desc = "Easy").toPatchRequest()
+        assertNull(req.structuredSteps)
+        val encoded = Api.json.encodeToString(
+            com.runflow2.app.data.net.PatchWorkoutRequest.serializer(), req,
+        )
+        assertTrue(!encoded.contains("structuredSteps"))
+    }
+
+    @Test
     fun `generator flat structuredSteps persist into the workout entity`() {
         val body = """
             {"id":"w9","goalId":"g1","scheduledDate":"2026-09-01T00:00:00.000Z","workoutType":"INTERVALS",

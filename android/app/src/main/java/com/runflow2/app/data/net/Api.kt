@@ -201,8 +201,10 @@ data class UserWrapper(val user: UserDto)
 // one exception: structuredSteps arrives as arbitrary JSON in two server
 // shapes (generator flat {"steps":[…]} and builder nested
 // {"warmup":…,"main":[…],"cooldown":…}) and is captured as a raw JsonElement,
-// stringified only when persisted. HR ranges, _count and other web-only
-// fields are still dropped via ignoreUnknownKeys.
+// stringified only when persisted. The builder's HR/pace ranges are captured
+// too (ints for bpm, seconds-per-km doubles for pace); zone *label* strings
+// and other web-only fields (_count, color, …) are still dropped via
+// ignoreUnknownKeys.
 
 @Serializable
 data class PlanWorkoutDto(
@@ -216,6 +218,12 @@ data class PlanWorkoutDto(
     val targetDistance: Double? = null, // meters
     val targetDuration: Int? = null, // seconds
     val targetPace: Double? = null, // seconds per km
+    // builder target range: pace bounds in seconds per km, HR bounds in bpm
+    val targetPaceMinSecondsPerKm: Double? = null,
+    val targetPaceMaxSecondsPerKm: Double? = null,
+    val targetHrZone: Int? = null,
+    val targetHrMinBpm: Int? = null,
+    val targetHrMaxBpm: Int? = null,
     val structuredSteps: JsonElement? = null, // raw shape; parsed at record time
     val isCompleted: Boolean = false,
     val completedAt: String? = null,
@@ -247,6 +255,9 @@ data class PlanGoalDto(
     val completedAt: String? = null,
     val sport: String? = null,
     val customDistanceM: Double? = null,
+    // builder plan metadata
+    val creationMode: String? = null,
+    val guidanceLevel: String? = null,
     val workouts: List<PlanWorkoutDto> = emptyList(),
 )
 
@@ -289,6 +300,17 @@ data class PatchWorkoutRequest(
     val targetDuration: Int? = null, // seconds
     val scheduledDate: String? = null, // YYYY-MM-DD
     val isCompleted: Boolean? = null,
+    // builder fields (seconds per km / bpm as on the wire)
+    val customName: String? = null,
+    val targetHrZone: Int? = null,
+    val targetHrMinBpm: Int? = null,
+    val targetHrMaxBpm: Int? = null,
+    val targetPaceMinSecondsPerKm: Double? = null,
+    val targetPaceMaxSecondsPerKm: Double? = null,
+    // builder structuredSteps (nested builder JSON, raw); the current server
+    // PATCH route ignores this field — sent for forward compatibility until
+    // the server task whitelists it
+    val structuredSteps: JsonElement? = null,
 )
 
 @Serializable

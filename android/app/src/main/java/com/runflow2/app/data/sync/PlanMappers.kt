@@ -104,6 +104,12 @@ fun PlanWorkoutDto.toWorkoutEntity(goalId: String, dirty: Boolean = false): Work
         targetDistanceKm = targetDistance?.let { it / 1000.0 },
         targetPaceSecPerKm = targetPace?.toInt(),
         targetDurationSec = targetDuration,
+        customName = customName,
+        targetHrZone = targetHrZone,
+        targetHrMinBpm = targetHrMinBpm,
+        targetHrMaxBpm = targetHrMaxBpm,
+        targetPaceMinSecPerKm = targetPaceMinSecondsPerKm,
+        targetPaceMaxSecPerKm = targetPaceMaxSecondsPerKm,
         structuredStepsJson = structuredSteps?.toString(),
         isCompleted = isCompleted,
         completedAt = serverDateToEpochMillis(completedAt),
@@ -155,6 +161,8 @@ fun PlanGoalDto.toEntities(): Pair<GoalEntity, List<WorkoutEntity>>? {
         planStartDate = startMs,
         isLocalOnly = false,
         dirty = false,
+        creationMode = creationMode,
+        guidanceLevel = guidanceLevel,
     )
     return goal to workoutEntities
 }
@@ -219,9 +227,14 @@ fun PlanSpec.toCreatePlanRequest(): CreatePlanRequest {
     )
 }
 
-/** Full-state PATCH payload for a workout edit (meters, s/km, date-only). */
-// structuredSteps is intentionally absent: PATCH /api/mobile/v1/workouts/{id}
-// does not read the field yet, and the pull merge re-syncs it from the server.
+/**
+ * Full-state PATCH payload for a workout edit (meters, s/km, date-only).
+ * structuredSteps is forwarded as raw JSON ONLY when the entity carries it —
+ * the current PATCH /api/mobile/v1/workouts/{id} route ignores the field (a
+ * later server task whitelists it), and the pull merge re-syncs it from the
+ * server in the meantime. The builder fields below are likewise sent even
+ * though the current server route ignores them.
+ */
 fun WorkoutEntity.toPatchRequest(): PatchWorkoutRequest = PatchWorkoutRequest(
     workoutType = workoutType,
     description = description,
@@ -230,4 +243,13 @@ fun WorkoutEntity.toPatchRequest(): PatchWorkoutRequest = PatchWorkoutRequest(
     targetDuration = targetDurationSec,
     scheduledDate = epochMillisToServerDate(scheduledDate),
     isCompleted = isCompleted,
+    customName = customName,
+    targetHrZone = targetHrZone,
+    targetHrMinBpm = targetHrMinBpm,
+    targetHrMaxBpm = targetHrMaxBpm,
+    targetPaceMinSecondsPerKm = targetPaceMinSecPerKm,
+    targetPaceMaxSecondsPerKm = targetPaceMaxSecPerKm,
+    structuredSteps = structuredStepsJson?.let {
+        runCatching { Api.json.parseToJsonElement(it) }.getOrNull()
+    },
 )

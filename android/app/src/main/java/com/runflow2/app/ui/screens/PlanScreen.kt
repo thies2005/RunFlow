@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -75,6 +76,7 @@ fun PlanScreen(
     onCreatePlan: () -> Unit,
     onOpenActivity: (String) -> Unit,
     onStartWorkout: (String) -> Unit = {},
+    onEditIntervals: (String) -> Unit = {},
 ) {
     val settings by container.settings.settings.collectAsState(initial = AppSettings())
     val unit = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
@@ -193,6 +195,10 @@ fun PlanScreen(
                 onSaveEdit = { updated ->
                     scope.launch { container.repository.saveWorkout(updated) }
                     selectedWorkout = null
+                },
+                onEditIntervals = {
+                    selectedWorkout = null
+                    onEditIntervals(liveWorkout.id)
                 },
             )
         }
@@ -416,6 +422,11 @@ private fun WorkoutCard(
     }
 }
 
+/** Workout types that can carry a structured (warmup/main/cooldown) definition. */
+val STRUCTURED_WORKOUT_TYPES = setOf(
+    WorkoutType.INTERVALS, WorkoutType.REPETITIONS, WorkoutType.TEMPO, WorkoutType.FARTLEK,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WorkoutActionSheet(
@@ -428,6 +439,7 @@ private fun WorkoutActionSheet(
     onShift: (Int) -> Unit,
     onDelete: () -> Unit,
     onSaveEdit: (WorkoutEntity) -> Unit,
+    onEditIntervals: () -> Unit,
 ) {
     val type = runCatching { WorkoutType.valueOf(workout.workoutType) }.getOrDefault(WorkoutType.EASY)
     val visual = WorkoutVisuals.forType(type)
@@ -476,6 +488,15 @@ private fun WorkoutActionSheet(
                 Icon(Icons.Outlined.Edit, null)
                 Spacer(Modifier.width(6.dp))
                 Text("Edit targets")
+            }
+            // Structured editor: only for quality workouts that can carry a
+            // warmup / main-set / cooldown definition.
+            if (type in STRUCTURED_WORKOUT_TYPES) {
+                TextButton(onClick = onEditIntervals, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Outlined.Timer, null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Edit intervals")
+                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = { onShift(-1) }, modifier = Modifier.weight(1f)) { Text("◀ Day earlier") }

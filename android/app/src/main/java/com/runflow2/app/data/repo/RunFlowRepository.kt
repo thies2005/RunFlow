@@ -160,6 +160,18 @@ class RunFlowRepository(
 
     suspend fun saveWorkout(w: WorkoutEntity) = persistWorkoutEdit(w)
 
+    /**
+     * Saves structured steps built by the interval editor. Follows
+     * [saveWorkout] exactly: the row is re-loaded, swapped to the new JSON and
+     * routed through [persistWorkoutEdit], which flags it dirty and enqueues
+     * the workout_update outbox item for synced plans (local-only plans write
+     * straight to Room).
+     */
+    suspend fun saveStructuredSteps(workoutId: String, json: String) {
+        val w = workoutDao.byId(workoutId) ?: return
+        persistWorkoutEdit(w.copy(structuredStepsJson = json))
+    }
+
     suspend fun completeWorkout(id: String, activityId: String?) {
         val w = workoutDao.byId(id) ?: return
         persistWorkoutEdit(w.copy(isCompleted = true, completedAt = System.currentTimeMillis(), activityId = activityId))

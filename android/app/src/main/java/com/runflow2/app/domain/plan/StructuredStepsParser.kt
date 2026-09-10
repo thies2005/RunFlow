@@ -1,9 +1,8 @@
 package com.runflow2.app.domain.plan
 
-import com.runflow2.app.core.math.TrainingPaces
 import com.runflow2.app.core.math.VdotMath
-import com.runflow2.app.core.math.WorkoutPaceTarget
 import com.runflow2.app.domain.model.PaceZone
+import com.runflow2.app.domain.person.Personalization
 import com.runflow2.app.recording.StepDurationType
 import com.runflow2.app.recording.StepRuntime
 import kotlinx.serialization.json.Json
@@ -156,15 +155,19 @@ object StructuredStepsParser {
         (this[key] as? JsonPrimitive)?.intOrNull
 }
 
-/** E/M/T/I/R letter → sec/km for a VDOT, from the Daniels training-pace table. */
+/**
+ * E/M/T/I/R letter → sec/km for a VDOT. Single source of truth is the
+ * web-parity table in [Personalization], so the paces the structured editor
+ * shows and the voice coach enforces mid-run always agree.
+ */
 fun paceLetterTable(vdot: Double): Map<String, Double> {
-    val paces = TrainingPaces(vdot)
+    val paces = Personalization.trainingPaces(vdot)
     return mapOf(
-        "E" to paces.paceSecPerKm(WorkoutPaceTarget.EASY),
-        "M" to paces.paceSecPerKm(WorkoutPaceTarget.MARATHON),
-        "T" to paces.paceSecPerKm(WorkoutPaceTarget.THRESHOLD),
-        "I" to paces.paceSecPerKm(WorkoutPaceTarget.INTERVAL),
-        "R" to paces.paceSecPerKm(WorkoutPaceTarget.REPETITION),
+        "E" to paces.target(Personalization.PaceLetter.E).toDouble(),
+        "M" to paces.target(Personalization.PaceLetter.M).toDouble(),
+        "T" to paces.target(Personalization.PaceLetter.T).toDouble(),
+        "I" to paces.target(Personalization.PaceLetter.I).toDouble(),
+        "R" to paces.target(Personalization.PaceLetter.R).toDouble(),
     )
 }
 

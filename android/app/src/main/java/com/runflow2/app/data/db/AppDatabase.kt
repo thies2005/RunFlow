@@ -83,6 +83,10 @@ data class GoalEntity(
     val planStartDate: Long? = null,
     @ColumnInfo(defaultValue = "1") val isLocalOnly: Boolean = true,
     @ColumnInfo(defaultValue = "0") val dirty: Boolean = false,
+    // web builder plan metadata (v5): how the plan was created and how much
+    // AI guidance it carries; null on generator/mobile-originated plans
+    val creationMode: String? = null,
+    val guidanceLevel: String? = null,
 )
 
 @Entity(tableName = "workouts")
@@ -106,6 +110,14 @@ data class WorkoutEntity(
     // structuredSteps as received from the server (v4): generator flat shape
     // or builder nested shape, parsed by StructuredStepsParser at record time
     val structuredStepsJson: String? = null,
+    // web builder fields (v5): user-titled name plus the HR/pace target range
+    // the builder sets; null on generator-only workouts
+    val customName: String? = null,
+    val targetHrZone: Int? = null,
+    val targetHrMinBpm: Int? = null,
+    val targetHrMaxBpm: Int? = null,
+    val targetPaceMinSecPerKm: Double? = null,
+    val targetPaceMaxSecPerKm: Double? = null,
 )
 
 @Entity(tableName = "profile")
@@ -328,7 +340,7 @@ interface ChatDao {
         ActivityEntity::class, GoalEntity::class, WorkoutEntity::class, ProfileEntity::class,
         SyncQueueEntity::class, ChatMessageEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -391,6 +403,24 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_3_4: Migration = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE workouts ADD COLUMN structuredStepsJson TEXT")
+            }
+        }
+
+        /**
+         * v4 -> v5 adds the web builder's target fields to workouts (custom
+         * name, HR zone + bpm range, pace range) and the plan metadata to
+         * goals (creationMode, guidanceLevel). All nullable, purely additive.
+         */
+        val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE workouts ADD COLUMN customName TEXT")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetHrZone INTEGER")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetHrMinBpm INTEGER")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetHrMaxBpm INTEGER")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetPaceMinSecPerKm REAL")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetPaceMaxSecPerKm REAL")
+                db.execSQL("ALTER TABLE goals ADD COLUMN creationMode TEXT")
+                db.execSQL("ALTER TABLE goals ADD COLUMN guidanceLevel TEXT")
             }
         }
     }

@@ -41,6 +41,7 @@ import com.runflow2.app.ui.screens.PlanScreen
 import com.runflow2.app.ui.screens.PlanWizardScreen
 import com.runflow2.app.ui.screens.RecordScreen
 import com.runflow2.app.ui.screens.SettingsScreen
+import com.runflow2.app.ui.screens.StructuredEditorScreen
 import com.runflow2.app.ui.theme.RunFlowTheme
 import kotlinx.coroutines.launch
 
@@ -60,6 +61,8 @@ object Routes {
     const val HR_ZONES = "hr_zones"
     const val ACTIVITY_DETAIL = "activity/{id}"
     fun activityDetail(id: String) = "activity/$id"
+    const val STRUCTURED_EDITOR = "structured-editor/{workoutId}"
+    fun structuredEditor(workoutId: String) = "structured-editor/$workoutId"
 }
 
 private data class Tab(val route: String, val label: String, val icon: ImageVector)
@@ -175,6 +178,9 @@ fun RunFlowRoot(container: AppContainer) {
                             container.recording.pendingWorkoutId = workoutId
                             navController.navigate(Routes.RECORD) { launchSingleTop = true }
                         },
+                        onEditIntervals = { workoutId ->
+                            navController.navigate(Routes.structuredEditor(workoutId))
+                        },
                     )
                 }
 
@@ -263,6 +269,15 @@ fun RunFlowRoot(container: AppContainer) {
                     ActivityDetailScreen(
                         container = container,
                         activityId = id,
+                        onBack = { navController.popBackStack() },
+                    )
+                }
+
+                composable(Routes.STRUCTURED_EDITOR) { entry ->
+                    val workoutId = entry.arguments?.getString("workoutId") ?: return@composable
+                    StructuredEditorScreen(
+                        container = container,
+                        workoutId = workoutId,
                         onBack = { navController.popBackStack() },
                     )
                 }

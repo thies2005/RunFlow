@@ -1,0 +1,2357 @@
+{
+  "name": "marathon_v50",
+  "config": {
+    "vdot": 50,
+    "raceType": "MARATHON",
+    "raceDate": "2026-11-29",
+    "startDate": "2026-09-07",
+    "runsPerWeek": 5,
+    "weeklyMileageGoal": 70000,
+    "maxLongRunKm": 32,
+    "taperWeeks": 3,
+    "hrZone1Max": 75,
+    "hrZone2Max": 85,
+    "hrZone3Max": 95,
+    "hrZone4Max": 102,
+    "hrZone5Max": 108,
+    "hrZone6Max": 115,
+    "hrMax": 190,
+    "hrRest": 55
+  },
+  "workouts": [
+    {
+      "id": "w0",
+      "date": "2026-09-09",
+      "type": "FARTLEK",
+      "phase": "BASE",
+      "description": "Fartlek: 10km (3min @ F (T-I) 4:20 / 2min @ E 5:26)",
+      "displayDescription": "Fartlek: 3min @ F (T-I) 4:20 / 2min @ E 5:26",
+      "sport": "RUN",
+      "intensityZone": "F Zone",
+      "totalDistance": 10000,
+      "targetPace": 260,
+      "targetDuration": 2963,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": 163,
+      "targetHrMaxBpm": 177,
+      "targetPaceZoneLabel": "Fartlek",
+      "targetPaceMinSecondsPerKm": 230,
+      "targetPaceMaxSecondsPerKm": 255,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "durationSeconds": 600,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 1",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 1",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 2",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 2",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 3",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 3",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 4",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 4",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 5",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 5",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "durationSeconds": 600,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w1",
+      "date": "2026-09-13",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 27.4km @ Easy",
+      "displayDescription": "Long Run: 27.4km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 27400,
+      "targetPace": 326,
+      "targetDuration": 8932,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 27400,
+            "durationSeconds": 8932,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w2",
+      "date": "2026-09-14",
+      "type": "RECOVERY",
+      "phase": "BASE",
+      "description": "Recovery Run: 4.1km + 6x100m Strides",
+      "displayDescription": "Recovery Run: 4.1km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 4100,
+      "targetPace": 326,
+      "targetDuration": 1337,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 4100,
+            "durationSeconds": 1337,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w3",
+      "date": "2026-09-15",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy Run: 4.1km + 6x100m Strides",
+      "displayDescription": "Easy Run: 4.1km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 4100,
+      "targetPace": 326,
+      "targetDuration": 1337,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 4100,
+            "durationSeconds": 1337,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w4",
+      "date": "2026-09-16",
+      "type": "FARTLEK",
+      "phase": "BASE",
+      "description": "Fartlek: 10km (3min @ F (T-I) 4:20 / 2min @ E 5:26)",
+      "displayDescription": "Fartlek: 3min @ F (T-I) 4:20 / 2min @ E 5:26",
+      "sport": "RUN",
+      "intensityZone": "F Zone",
+      "totalDistance": 10000,
+      "targetPace": 260,
+      "targetDuration": 2963,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": 163,
+      "targetHrMaxBpm": 177,
+      "targetPaceZoneLabel": "Fartlek",
+      "targetPaceMinSecondsPerKm": 230,
+      "targetPaceMaxSecondsPerKm": 255,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "durationSeconds": 600,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 1",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 1",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 2",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 2",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 3",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 3",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 4",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 4",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 5",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 5",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "durationSeconds": 600,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w5",
+      "date": "2026-09-18",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy Run: 4.1km",
+      "displayDescription": "Easy Run: 4.1km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 4100,
+      "targetPace": 326,
+      "targetDuration": 1337,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 4100,
+            "durationSeconds": 1337,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w6",
+      "date": "2026-09-20",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 29.8km @ Easy",
+      "displayDescription": "Long Run: 29.8km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 29800,
+      "targetPace": 326,
+      "targetDuration": 9715,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 29800,
+            "durationSeconds": 9715,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w7",
+      "date": "2026-09-21",
+      "type": "RECOVERY",
+      "phase": "BASE",
+      "description": "Recovery Run: 4.8km + 6x100m Strides",
+      "displayDescription": "Recovery Run: 4.8km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 4800,
+      "targetPace": 326,
+      "targetDuration": 1565,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 4800,
+            "durationSeconds": 1565,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w8",
+      "date": "2026-09-22",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy Run: 4.8km + 6x100m Strides",
+      "displayDescription": "Easy Run: 4.8km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 4800,
+      "targetPace": 326,
+      "targetDuration": 1565,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 4800,
+            "durationSeconds": 1565,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w9",
+      "date": "2026-09-23",
+      "type": "FARTLEK",
+      "phase": "BASE",
+      "description": "Fartlek: 10km (3min @ F (T-I) 4:20 / 2min @ E 5:26)",
+      "displayDescription": "Fartlek: 3min @ F (T-I) 4:20 / 2min @ E 5:26",
+      "sport": "RUN",
+      "intensityZone": "F Zone",
+      "totalDistance": 10000,
+      "targetPace": 260,
+      "targetDuration": 2963,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": 163,
+      "targetHrMaxBpm": 177,
+      "targetPaceZoneLabel": "Fartlek",
+      "targetPaceMinSecondsPerKm": 230,
+      "targetPaceMaxSecondsPerKm": 255,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "durationSeconds": 600,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 1",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 1",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 2",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 2",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 3",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 3",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 4",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 4",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 5",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 5",
+            "durationSeconds": 120,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "durationSeconds": 600,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w10",
+      "date": "2026-09-25",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy Run: 4.8km",
+      "displayDescription": "Easy Run: 4.8km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 4800,
+      "targetPace": 326,
+      "targetDuration": 1565,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 4800,
+            "durationSeconds": 1565,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w11",
+      "date": "2026-09-27",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 26.0km @ Easy",
+      "displayDescription": "Long Run: 26.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 26000,
+      "targetPace": 326,
+      "targetDuration": 8476,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 26000,
+            "durationSeconds": 8476,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w12",
+      "date": "2026-09-30",
+      "type": "FARTLEK",
+      "phase": "BASE",
+      "description": "Fartlek: 12km (4min @ F (T-I) 4:20 / 3min @ E 5:26)",
+      "displayDescription": "Fartlek: 4min @ F (T-I) 4:20 / 3min @ E 5:26",
+      "sport": "RUN",
+      "intensityZone": "F Zone",
+      "totalDistance": 10500,
+      "targetPace": 260,
+      "targetDuration": 3111,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": 163,
+      "targetHrMaxBpm": 177,
+      "targetPaceZoneLabel": "Fartlek",
+      "targetPaceMinSecondsPerKm": 230,
+      "targetPaceMaxSecondsPerKm": 255,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "durationSeconds": 600,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 1",
+            "durationSeconds": 240,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 1",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 2",
+            "durationSeconds": 240,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 2",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 3",
+            "durationSeconds": 240,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 3",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 4",
+            "durationSeconds": 240,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 4",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "durationSeconds": 600,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w13",
+      "date": "2026-10-04",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 32.0km @ Easy",
+      "displayDescription": "Long Run: 32.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 32000,
+      "targetPace": 326,
+      "targetDuration": 10432,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 32000,
+            "durationSeconds": 10432,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w14",
+      "date": "2026-10-05",
+      "type": "RECOVERY",
+      "phase": "BASE",
+      "description": "Recovery Run: 5.0km + 6x100m Strides",
+      "displayDescription": "Recovery Run: 5.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 5000,
+      "targetPace": 326,
+      "targetDuration": 1630,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 5000,
+            "durationSeconds": 1630,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w15",
+      "date": "2026-10-06",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy Run: 5.0km + 6x100m Strides",
+      "displayDescription": "Easy Run: 5.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 5000,
+      "targetPace": 326,
+      "targetDuration": 1630,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 5000,
+            "durationSeconds": 1630,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w16",
+      "date": "2026-10-07",
+      "type": "FARTLEK",
+      "phase": "BASE",
+      "description": "Fartlek: 12km (4min @ F (T-I) 4:20 / 3min @ E 5:26)",
+      "displayDescription": "Fartlek: 4min @ F (T-I) 4:20 / 3min @ E 5:26",
+      "sport": "RUN",
+      "intensityZone": "F Zone",
+      "totalDistance": 12000,
+      "targetPace": 260,
+      "targetDuration": 3556,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": 163,
+      "targetHrMaxBpm": 177,
+      "targetPaceZoneLabel": "Fartlek",
+      "targetPaceMinSecondsPerKm": 230,
+      "targetPaceMaxSecondsPerKm": 255,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "durationSeconds": 600,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 1",
+            "durationSeconds": 240,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 1",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 2",
+            "durationSeconds": 240,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 2",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 3",
+            "durationSeconds": 240,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 3",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 4",
+            "durationSeconds": 240,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 4",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "work",
+            "name": "Fartlek Hard 5",
+            "durationSeconds": 240,
+            "paceSecondsPerKm": 260,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Fartlek Easy 5",
+            "durationSeconds": 180,
+            "paceSecondsPerKm": 299,
+            "hrZone": 2
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "durationSeconds": 600,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w17",
+      "date": "2026-10-09",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy Run: 5.0km",
+      "displayDescription": "Easy Run: 5.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 5000,
+      "targetPace": 326,
+      "targetDuration": 1630,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 5000,
+            "durationSeconds": 1630,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w18",
+      "date": "2026-10-11",
+      "type": "LONG_RUN",
+      "phase": "BUILD",
+      "description": "Long Run: 32.0km (last 3km progressive)",
+      "displayDescription": "Long Run: 32.0km (last 3km progressive)",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 32000,
+      "targetPace": 326,
+      "targetDuration": 10432,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 32000,
+            "durationSeconds": 10432,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w19",
+      "date": "2026-10-12",
+      "type": "RECOVERY",
+      "phase": "BUILD",
+      "description": "Recovery Run: 6.4km",
+      "displayDescription": "Recovery Run: 6.4km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6400,
+      "targetPace": 326,
+      "targetDuration": 2086,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 6400,
+            "durationSeconds": 2086,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w20",
+      "date": "2026-10-13",
+      "type": "EASY",
+      "phase": "BUILD",
+      "description": "Easy Run: 6.4km",
+      "displayDescription": "Easy Run: 6.4km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6400,
+      "targetPace": 326,
+      "targetDuration": 2086,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 6400,
+            "durationSeconds": 2086,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w21",
+      "date": "2026-10-14",
+      "type": "INTERVALS",
+      "phase": "BUILD",
+      "description": "Intervals: 5x1km @ 3:50",
+      "displayDescription": "Intervals: 5x1km",
+      "sport": "RUN",
+      "intensityZone": "I Zone",
+      "totalDistance": 13000,
+      "targetPace": 230,
+      "targetDuration": 3614,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": 163,
+      "targetHrMaxBpm": 177,
+      "targetPaceZoneLabel": "Interval",
+      "targetPaceMinSecondsPerKm": 225,
+      "targetPaceMaxSecondsPerKm": 235,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 1",
+            "distanceMeters": 1000,
+            "paceSecondsPerKm": 230,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Recovery jog",
+            "distanceMeters": 1375,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 2",
+            "distanceMeters": 1000,
+            "paceSecondsPerKm": 230,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Recovery jog",
+            "distanceMeters": 1375,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 3",
+            "distanceMeters": 1000,
+            "paceSecondsPerKm": 230,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Recovery jog",
+            "distanceMeters": 1375,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 4",
+            "distanceMeters": 1000,
+            "paceSecondsPerKm": 230,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Recovery jog",
+            "distanceMeters": 1375,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 5",
+            "distanceMeters": 1000,
+            "paceSecondsPerKm": 230,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w22",
+      "date": "2026-10-16",
+      "type": "EASY",
+      "phase": "BUILD",
+      "description": "Easy Run: 6.4km",
+      "displayDescription": "Easy Run: 6.4km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6400,
+      "targetPace": 326,
+      "targetDuration": 2086,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 6400,
+            "durationSeconds": 2086,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w23",
+      "date": "2026-10-18",
+      "type": "LONG_RUN",
+      "phase": "BUILD",
+      "description": "Long Run: 32.0km (last 3km progressive)",
+      "displayDescription": "Long Run: 32.0km (last 3km progressive)",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 32000,
+      "targetPace": 326,
+      "targetDuration": 10432,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 32000,
+            "durationSeconds": 10432,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w24",
+      "date": "2026-10-19",
+      "type": "RECOVERY",
+      "phase": "BUILD",
+      "description": "Recovery Run: 8.3km",
+      "displayDescription": "Recovery Run: 8.3km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 8300,
+      "targetPace": 326,
+      "targetDuration": 2706,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 8300,
+            "durationSeconds": 2706,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w25",
+      "date": "2026-10-20",
+      "type": "EASY",
+      "phase": "BUILD",
+      "description": "Easy Run: 8.3km",
+      "displayDescription": "Easy Run: 8.3km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 8300,
+      "targetPace": 326,
+      "targetDuration": 2706,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 8300,
+            "durationSeconds": 2706,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w26",
+      "date": "2026-10-21",
+      "type": "INTERVALS",
+      "phase": "BUILD",
+      "description": "Intervals: 5x1km @ 3:50",
+      "displayDescription": "Intervals: 5x1km",
+      "sport": "RUN",
+      "intensityZone": "I Zone",
+      "totalDistance": 13000,
+      "targetPace": 230,
+      "targetDuration": 3614,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": 163,
+      "targetHrMaxBpm": 177,
+      "targetPaceZoneLabel": "Interval",
+      "targetPaceMinSecondsPerKm": 225,
+      "targetPaceMaxSecondsPerKm": 235,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 1",
+            "distanceMeters": 1000,
+            "paceSecondsPerKm": 230,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Recovery jog",
+            "distanceMeters": 1375,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 2",
+            "distanceMeters": 1000,
+            "paceSecondsPerKm": 230,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Recovery jog",
+            "distanceMeters": 1375,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 3",
+            "distanceMeters": 1000,
+            "paceSecondsPerKm": 230,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Recovery jog",
+            "distanceMeters": 1375,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 4",
+            "distanceMeters": 1000,
+            "paceSecondsPerKm": 230,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Recovery jog",
+            "distanceMeters": 1375,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 5",
+            "distanceMeters": 1000,
+            "paceSecondsPerKm": 230,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w27",
+      "date": "2026-10-23",
+      "type": "EASY",
+      "phase": "BUILD",
+      "description": "Easy Run: 8.3km",
+      "displayDescription": "Easy Run: 8.3km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 8300,
+      "targetPace": 326,
+      "targetDuration": 2706,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 8300,
+            "durationSeconds": 2706,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w28",
+      "date": "2026-10-25",
+      "type": "LONG_RUN",
+      "phase": "PEAK",
+      "description": "Long Run: 22.4km Easy + 9.6km @ Goal Pace",
+      "displayDescription": "Long Run: 32.0km (22.4km Easy + 9.6km @ Goal Pace)",
+      "sport": "RUN",
+      "intensityZone": "E + MP",
+      "totalDistance": 32000,
+      "targetPace": 326,
+      "targetDuration": 10432,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 32000,
+            "durationSeconds": 10432,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w29",
+      "date": "2026-10-26",
+      "type": "RECOVERY",
+      "phase": "PEAK",
+      "description": "Recovery Run: 6.6km",
+      "displayDescription": "Recovery Run: 6.6km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6600,
+      "targetPace": 326,
+      "targetDuration": 2151,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 6600,
+            "durationSeconds": 2151,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w30",
+      "date": "2026-10-27",
+      "type": "EASY",
+      "phase": "PEAK",
+      "description": "Easy Run: 6.6km",
+      "displayDescription": "Easy Run: 6.6km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6600,
+      "targetPace": 326,
+      "targetDuration": 2151,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 6600,
+            "durationSeconds": 2151,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w31",
+      "date": "2026-10-28",
+      "type": "TEMPO",
+      "phase": "PEAK",
+      "description": "MP Segments: 3x5km @ 4:41",
+      "displayDescription": "Goal Pace: 3x5km @ 4:41/km",
+      "sport": "RUN",
+      "intensityZone": "MP/Race Pace",
+      "totalDistance": 18000,
+      "targetPace": 281,
+      "targetDuration": 5342,
+      "targetHrZone": 3,
+      "targetHrZoneLabel": "Z3 Tempo",
+      "targetHrMinBpm": 150,
+      "targetHrMaxBpm": 163,
+      "targetPaceZoneLabel": "Marathon Pace",
+      "targetPaceMinSecondsPerKm": 273,
+      "targetPaceMaxSecondsPerKm": 289,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 1",
+            "distanceMeters": 5000,
+            "paceSecondsPerKm": 281,
+            "hrZone": 3
+          },
+          {
+            "type": "recovery",
+            "name": "Tempo rest",
+            "distanceMeters": 250,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 2",
+            "distanceMeters": 5000,
+            "paceSecondsPerKm": 281,
+            "hrZone": 3
+          },
+          {
+            "type": "recovery",
+            "name": "Tempo rest",
+            "distanceMeters": 250,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 3",
+            "distanceMeters": 5000,
+            "paceSecondsPerKm": 281,
+            "hrZone": 3
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w32",
+      "date": "2026-10-30",
+      "type": "EASY",
+      "phase": "PEAK",
+      "description": "Easy Run: 6.6km",
+      "displayDescription": "Easy Run: 6.6km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6600,
+      "targetPace": 326,
+      "targetDuration": 2151,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 6600,
+            "durationSeconds": 2151,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w33",
+      "date": "2026-11-01",
+      "type": "LONG_RUN",
+      "phase": "PEAK",
+      "description": "Long Run: 22.4km Easy + 9.6km @ Goal Pace",
+      "displayDescription": "Long Run: 32.0km (22.4km Easy + 9.6km @ Goal Pace)",
+      "sport": "RUN",
+      "intensityZone": "E + MP",
+      "totalDistance": 32000,
+      "targetPace": 326,
+      "targetDuration": 10432,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 32000,
+            "durationSeconds": 10432,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w34",
+      "date": "2026-11-02",
+      "type": "RECOVERY",
+      "phase": "PEAK",
+      "description": "Recovery Run: 6.6km",
+      "displayDescription": "Recovery Run: 6.6km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6600,
+      "targetPace": 326,
+      "targetDuration": 2151,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 6600,
+            "durationSeconds": 2151,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w35",
+      "date": "2026-11-03",
+      "type": "EASY",
+      "phase": "PEAK",
+      "description": "Easy Run: 6.6km",
+      "displayDescription": "Easy Run: 6.6km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6600,
+      "targetPace": 326,
+      "targetDuration": 2151,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 6600,
+            "durationSeconds": 2151,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w36",
+      "date": "2026-11-04",
+      "type": "TEMPO",
+      "phase": "PEAK",
+      "description": "MP Segments: 3x5km @ 4:41",
+      "displayDescription": "Goal Pace: 3x5km @ 4:41/km",
+      "sport": "RUN",
+      "intensityZone": "MP/Race Pace",
+      "totalDistance": 18000,
+      "targetPace": 281,
+      "targetDuration": 5342,
+      "targetHrZone": 3,
+      "targetHrZoneLabel": "Z3 Tempo",
+      "targetHrMinBpm": 150,
+      "targetHrMaxBpm": 163,
+      "targetPaceZoneLabel": "Marathon Pace",
+      "targetPaceMinSecondsPerKm": 273,
+      "targetPaceMaxSecondsPerKm": 289,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 1",
+            "distanceMeters": 5000,
+            "paceSecondsPerKm": 281,
+            "hrZone": 3
+          },
+          {
+            "type": "recovery",
+            "name": "Tempo rest",
+            "distanceMeters": 250,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 2",
+            "distanceMeters": 5000,
+            "paceSecondsPerKm": 281,
+            "hrZone": 3
+          },
+          {
+            "type": "recovery",
+            "name": "Tempo rest",
+            "distanceMeters": 250,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 3",
+            "distanceMeters": 5000,
+            "paceSecondsPerKm": 281,
+            "hrZone": 3
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w37",
+      "date": "2026-11-06",
+      "type": "EASY",
+      "phase": "PEAK",
+      "description": "Easy Run: 6.6km",
+      "displayDescription": "Easy Run: 6.6km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6600,
+      "targetPace": 326,
+      "targetDuration": 2151,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 6600,
+            "durationSeconds": 2151,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w38",
+      "date": "2026-11-08",
+      "type": "LONG_RUN",
+      "phase": "TAPER",
+      "description": "Long Run: 30.8km @ Easy",
+      "displayDescription": "Long Run: 30.8km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 30800,
+      "targetPace": 326,
+      "targetDuration": 10041,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 30800,
+            "durationSeconds": 10041,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w39",
+      "date": "2026-11-09",
+      "type": "RECOVERY",
+      "phase": "TAPER",
+      "description": "Recovery Run: 6.3km",
+      "displayDescription": "Recovery Run: 6.3km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6300,
+      "targetPace": 326,
+      "targetDuration": 2054,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 6300,
+            "durationSeconds": 2054,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w40",
+      "date": "2026-11-10",
+      "type": "EASY",
+      "phase": "TAPER",
+      "description": "Easy Run: 6.3km",
+      "displayDescription": "Easy Run: 6.3km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6300,
+      "targetPace": 326,
+      "targetDuration": 2054,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 6300,
+            "durationSeconds": 2054,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w41",
+      "date": "2026-11-11",
+      "type": "LONG_RUN",
+      "phase": "TAPER",
+      "description": "Long Run: 25.0km @ Easy",
+      "displayDescription": "Long Run: 25.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 25000,
+      "targetPace": 326,
+      "targetDuration": 8150,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 8150,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w42",
+      "date": "2026-11-13",
+      "type": "EASY",
+      "phase": "TAPER",
+      "description": "Easy Run: 6.3km",
+      "displayDescription": "Easy Run: 6.3km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6300,
+      "targetPace": 326,
+      "targetDuration": 2054,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 6300,
+            "durationSeconds": 2054,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w43",
+      "date": "2026-11-15",
+      "type": "EASY",
+      "phase": "TAPER",
+      "description": "Easy Run: 6.3km",
+      "displayDescription": "Easy Run: 6.3km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 6300,
+      "targetPace": 326,
+      "targetDuration": 2054,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 6300,
+            "durationSeconds": 2054,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w44",
+      "date": "2026-11-16",
+      "type": "RECOVERY",
+      "phase": "TAPER",
+      "description": "Recovery Run: 5.1km",
+      "displayDescription": "Recovery Run: 5.1km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 5100,
+      "targetPace": 326,
+      "targetDuration": 1663,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 5100,
+            "durationSeconds": 1663,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w45",
+      "date": "2026-11-17",
+      "type": "EASY",
+      "phase": "TAPER",
+      "description": "Easy Run: 5.1km",
+      "displayDescription": "Easy Run: 5.1km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 5100,
+      "targetPace": 326,
+      "targetDuration": 1663,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 5100,
+            "durationSeconds": 1663,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w46",
+      "date": "2026-11-18",
+      "type": "RECOVERY",
+      "phase": "RACE_WEEK",
+      "description": "Shakeout Run: 3km @ Easy",
+      "displayDescription": "Recovery Run: 3.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 3000,
+      "targetPace": 326,
+      "targetDuration": 978,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 3000,
+            "durationSeconds": 978,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w47",
+      "date": "2026-11-20",
+      "type": "EASY",
+      "phase": "TAPER",
+      "description": "Easy Run: 5.1km",
+      "displayDescription": "Easy Run: 5.1km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 5100,
+      "targetPace": 326,
+      "targetDuration": 1663,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 5100,
+            "durationSeconds": 1663,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w48",
+      "date": "2026-11-26",
+      "type": "EASY",
+      "phase": "TAPER",
+      "description": "Easy Run: 5.1km",
+      "displayDescription": "Easy Run: 5.1km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 5100,
+      "targetPace": 326,
+      "targetDuration": 1663,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 5100,
+            "durationSeconds": 1663,
+            "paceSecondsPerKm": 326,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w49",
+      "date": "2026-11-27",
+      "type": "EASY",
+      "phase": "RACE_WEEK",
+      "description": "Easy Run: 3km + 4x100m Strides",
+      "displayDescription": "Easy Run: 3.4km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 3400,
+      "targetPace": 302,
+      "targetDuration": 1027,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": 136,
+      "targetHrMaxBpm": 150,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 3400,
+            "durationSeconds": 1027,
+            "paceSecondsPerKm": 302,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w50",
+      "date": "2026-11-28",
+      "type": "RECOVERY",
+      "phase": "RACE_WEEK",
+      "description": "Shakeout Run: 3km @ Easy",
+      "displayDescription": "Recovery Run: 3.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 3000,
+      "targetPace": 326,
+      "targetDuration": 978,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": 123,
+      "targetHrMaxBpm": 136,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 278,
+      "targetPaceMaxSecondsPerKm": 326,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 3000,
+            "durationSeconds": 978,
+            "paceSecondsPerKm": 326,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w51",
+      "date": "2026-11-29",
+      "type": "RACE",
+      "phase": "RACE_WEEK",
+      "description": "Race Day: 42.2km",
+      "displayDescription": "Race Day",
+      "sport": "RUN",
+      "intensityZone": "Race",
+      "totalDistance": 42195,
+      "targetPace": 0,
+      "targetDuration": 0,
+      "targetHrZone": 5,
+      "targetHrZoneLabel": "Z5 VO2max",
+      "targetHrMinBpm": 177,
+      "targetHrMaxBpm": 183,
+      "targetPaceZoneLabel": null,
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Race Day",
+            "distanceMeters": 39695,
+            "hrZone": 5
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    }
+  ]
+}

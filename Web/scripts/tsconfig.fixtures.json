@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "lib": ["esnext"],
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["node"]
+  },
+  "ts-node": {
+    "transpileOnly": true,
+    "moduleTypes": {
+      "*": "cjs",
+      "../src/**/*": "cjs"
+    }
+  },
+  "include": ["*.ts", "../src/lib/**/*", "../src/generated/**/*"]
+}

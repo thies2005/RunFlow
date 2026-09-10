@@ -1,0 +1,427 @@
+{
+  "fixtures": [
+    {
+      "name": "five_k_v30",
+      "config": {
+        "vdot": 30,
+        "raceType": "FIVE_K",
+        "raceDate": "2026-12-13",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 4,
+        "weeklyMileageGoal": 28000,
+        "taperWeeks": 1,
+        "maxLongRunKm": 18,
+        "strengthPerWeek": 1,
+        "longRunDay": 0,
+        "workoutDay": 3
+      },
+      "workoutCount": 55
+    },
+    {
+      "name": "five_k_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "FIVE_K",
+        "raceDate": "2026-11-15",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 32000,
+        "maxLongRunKm": 20,
+        "name": "five_k_v40"
+      },
+      "workoutCount": 21
+    },
+    {
+      "name": "five_k_v50",
+      "config": {
+        "vdot": 50,
+        "raceType": "FIVE_K",
+        "raceDate": "2026-10-18",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 3,
+        "weeklyMileageGoal": 24000,
+        "taperWeeks": 1,
+        "name": "five_k_v50"
+      },
+      "workoutCount": 13
+    },
+    {
+      "name": "ten_k_v30",
+      "config": {
+        "vdot": 30,
+        "raceType": "TEN_K",
+        "raceDate": "2026-12-13",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 4,
+        "weeklyMileageGoal": 34000,
+        "maxLongRunKm": 20
+      },
+      "workoutCount": 43
+    },
+    {
+      "name": "ten_k_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "TEN_K",
+        "raceDate": "2026-11-29",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 6,
+        "weeklyMileageGoal": 42000,
+        "restDays": [
+          2,
+          4
+        ]
+      },
+      "workoutCount": 31
+    },
+    {
+      "name": "ten_k_v50",
+      "config": {
+        "vdot": 50,
+        "raceType": "TEN_K",
+        "raceDate": "2026-11-01",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 4,
+        "weeklyMileageGoal": 38000,
+        "taperWeeks": 1
+      },
+      "workoutCount": 23
+    },
+    {
+      "name": "half_marathon_v30",
+      "config": {
+        "vdot": 30,
+        "raceType": "HALF_MARATHON",
+        "raceDate": "2026-12-27",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 4,
+        "weeklyMileageGoal": 42000,
+        "maxLongRunKm": 24
+      },
+      "workoutCount": 49
+    },
+    {
+      "name": "half_marathon_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "HALF_MARATHON",
+        "raceDate": "2026-12-13",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 45000,
+        "maxLongRunKm": 24,
+        "targetTime": 5940
+      },
+      "workoutCount": 28
+    },
+    {
+      "name": "half_marathon_v50",
+      "config": {
+        "vdot": 50,
+        "raceType": "HALF_MARATHON",
+        "raceDate": "2026-11-29",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 4,
+        "weeklyMileageGoal": 48000,
+        "taperWeeks": 2,
+        "targetVdot": 55
+      },
+      "workoutCount": 41
+    },
+    {
+      "name": "marathon_v30",
+      "config": {
+        "vdot": 30,
+        "raceType": "MARATHON",
+        "raceDate": "2027-01-03",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 4,
+        "weeklyMileageGoal": 52000,
+        "maxLongRunKm": 30
+      },
+      "workoutCount": 63
+    },
+    {
+      "name": "marathon_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "MARATHON",
+        "raceDate": "2026-12-27",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 62000,
+        "maxLongRunKm": 32,
+        "taperWeeks": 2
+      },
+      "workoutCount": 63
+    },
+    {
+      "name": "marathon_v50",
+      "config": {
+        "vdot": 50,
+        "raceType": "MARATHON",
+        "raceDate": "2026-11-29",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 70000,
+        "maxLongRunKm": 32,
+        "taperWeeks": 3,
+        "hrZone1Max": 75,
+        "hrZone2Max": 85,
+        "hrZone3Max": 95,
+        "hrZone4Max": 102,
+        "hrZone5Max": 108,
+        "hrZone6Max": 115,
+        "hrMax": 190,
+        "hrRest": 55
+      },
+      "workoutCount": 52
+    },
+    {
+      "name": "fifty_k_v30",
+      "config": {
+        "vdot": 30,
+        "raceType": "FIFTY_K",
+        "raceDate": "2027-01-03",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 70000,
+        "maxLongRunKm": 35
+      },
+      "workoutCount": 98
+    },
+    {
+      "name": "fifty_k_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "FIFTY_K",
+        "raceDate": "2026-12-20",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 75000,
+        "name": "fifty_k_v40"
+      },
+      "workoutCount": 86
+    },
+    {
+      "name": "hundred_k_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "HUNDRED_K",
+        "raceDate": "2027-01-10",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 6,
+        "weeklyMileageGoal": 90000
+      },
+      "workoutCount": 121
+    },
+    {
+      "name": "hundred_k_v50",
+      "config": {
+        "vdot": 50,
+        "raceType": "HUNDRED_K",
+        "raceDate": "2026-12-27",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 95000,
+        "taperWeeks": 2
+      },
+      "workoutCount": 92
+    },
+    {
+      "name": "hundred_mile_v30",
+      "config": {
+        "vdot": 30,
+        "raceType": "HUNDRED_MILE",
+        "raceDate": "2027-02-21",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 96000,
+        "maxLongRunKm": 45
+      },
+      "workoutCount": 140
+    },
+    {
+      "name": "hundred_mile_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "HUNDRED_MILE",
+        "raceDate": "2027-01-24",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 6,
+        "weeklyMileageGoal": 100000,
+        "name": "hundred_mile_v40"
+      },
+      "workoutCount": 135
+    },
+    {
+      "name": "backyard_ultra_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "BACKYARD_ULTRA",
+        "raceDate": "2026-12-27",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 60000
+      },
+      "workoutCount": 94
+    },
+    {
+      "name": "twelve_hour_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "TWELVE_HOUR",
+        "raceDate": "2026-12-13",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 80000
+      },
+      "workoutCount": 85
+    },
+    {
+      "name": "fifty_mile_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "FIFTY_MILE",
+        "raceDate": "2027-01-17",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 85000,
+        "maxLongRunKm": 40
+      },
+      "workoutCount": 110
+    },
+    {
+      "name": "twenty_four_hour_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "TWENTY_FOUR_HOUR",
+        "raceDate": "2026-12-27",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 90000
+      },
+      "workoutCount": 97
+    },
+    {
+      "name": "custom_distance_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "CUSTOM_DISTANCE",
+        "raceDate": "2026-11-29",
+        "startDate": "2026-09-07",
+        "runsPerWeek": 4,
+        "weeklyMileageGoal": 40000,
+        "customDistanceM": 21100
+      },
+      "workoutCount": 31
+    },
+    {
+      "name": "sprint_tri_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "SPRINT_TRI",
+        "raceDate": "2026-11-29",
+        "startDate": "2026-09-07",
+        "sport": "TRIATHLON",
+        "runsPerWeek": 3,
+        "ridesPerWeek": 2,
+        "swimsPerWeek": 2,
+        "strengthPerWeek": 2,
+        "weeklyMileageGoal": 30000
+      },
+      "workoutCount": 74
+    },
+    {
+      "name": "olympic_tri_v50",
+      "config": {
+        "vdot": 50,
+        "raceType": "OLYMPIC_TRI",
+        "raceDate": "2027-01-03",
+        "startDate": "2026-09-07",
+        "sport": "TRIATHLON",
+        "runsPerWeek": 3,
+        "ridesPerWeek": 3,
+        "swimsPerWeek": 3
+      },
+      "workoutCount": 115
+    },
+    {
+      "name": "half_ironman_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "HALF_IRONMAN",
+        "raceDate": "2027-01-24",
+        "startDate": "2026-09-07",
+        "sport": "TRIATHLON",
+        "runsPerWeek": 3,
+        "ridesPerWeek": 3,
+        "swimsPerWeek": 3
+      },
+      "workoutCount": 136
+    },
+    {
+      "name": "full_ironman_v30",
+      "config": {
+        "vdot": 30,
+        "raceType": "FULL_IRONMAN",
+        "raceDate": "2027-02-21",
+        "startDate": "2026-09-07",
+        "sport": "TRIATHLON",
+        "runsPerWeek": 3,
+        "ridesPerWeek": 3,
+        "swimsPerWeek": 3,
+        "strengthPerWeek": 2
+      },
+      "workoutCount": 164
+    },
+    {
+      "name": "custom_tri_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": "CUSTOM_TRI",
+        "raceDate": "2027-01-10",
+        "startDate": "2026-09-07",
+        "sport": "TRIATHLON",
+        "runsPerWeek": 3,
+        "ridesPerWeek": 3,
+        "swimsPerWeek": 2,
+        "customSwimDistM": 1000,
+        "customBikeDistM": 40000,
+        "customRunDistM": 10000
+      },
+      "workoutCount": 122
+    },
+    {
+      "name": "no_race_v40",
+      "config": {
+        "vdot": 40,
+        "raceType": null,
+        "raceDate": "2026-12-06",
+        "startDate": "2026-09-07",
+        "weeksTotal": 12,
+        "runsPerWeek": 5,
+        "weeklyMileageGoal": 40000,
+        "ridesPerWeek": 1,
+        "name": "no_race_v40"
+      },
+      "workoutCount": 71
+    },
+    {
+      "name": "no_race_v30_swim",
+      "config": {
+        "vdot": 30,
+        "raceType": null,
+        "raceDate": "2026-12-06",
+        "startDate": "2026-09-07",
+        "weeksTotal": 8,
+        "runsPerWeek": 4,
+        "weeklyMileageGoal": 30000,
+        "swimsPerWeek": 1,
+        "strengthPerWeek": 2,
+        "name": "no_race_v30_swim"
+      },
+      "workoutCount": 55
+    }
+  ]
+}

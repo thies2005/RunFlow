@@ -41,14 +41,20 @@ import com.runflow2.app.domain.model.RaceType
 import com.runflow2.app.domain.model.WorkoutType
 import com.runflow2.app.domain.plan.PlanGenerator
 import com.runflow2.app.domain.plan.PlanSpec
+import com.runflow2.app.domain.plan.WebPlanEngine
+import com.runflow2.app.domain.plan.WebStructuredPlan
 import androidx.room.withTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
+import kotlin.math.roundToInt
 
 class RunFlowRepository(
     private val db: AppDatabase,
@@ -529,11 +535,90 @@ class RunFlowRepository(
     }
 
     /**
+     * Offline fallback that keeps plans identical to the server: same
+     * goal/workout mapping as [createPlan], but the workouts come from
+     * [WebPlanEngine] — the on-device port of the web generator — instead of
+     * the Classic engine. Used when createPlanViaServer cannot reach the API.
+     */
+    suspend fun createPlanOffline(spec: PlanSpec): String = withContext(Dispatchers.IO) {
+        val goalId = UUID.randomUUID().toString()
+        val weeks = PlanGenerator.planWeeks(spec)
+        val goal = GoalEntity(
+            id = goalId,
+            name = spec.name,
+            raceType = spec.raceType.name,
+            raceDate = Format.epochMillis(spec.raceDate, LocalTime.of(9, 0)),
+            targetTimeSec = spec.targetTimeSec,
+            weeklyKmGoal = spec.weeklyKm,
+            planWeeks = weeks,
+            runsPerWeek = spec.runsPerWeek,
+            strengthPerWeek = spec.strengthPerWeek,
+            longRunDay = spec.longRunDay.value,
+            workoutDay = spec.workoutDay.value,
+            restDays = spec.restDays.joinToString(",") { it.value.toString() },
+            taperWeeks = spec.taperWeeks,
+            vdotAtCreation = spec.vdot,
+            isActive = true,
+            createdAt = System.currentTimeMillis(),
+            customDistanceKm = spec.customDistanceKm,
+            planStartDate = Format.epochMillis(spec.startDate.with(java.time.DayOfWeek.MONDAY), LocalTime.MIDNIGHT),
+            isLocalOnly = true,
+        )
+        // deactivate previous active goals
+        val all = goalDao.observeAll().first()
+        all.filter { it.isActive }.forEach { goalDao.upsert(it.copy(isActive = false)) }
+        goalDao.upsert(goal)
+
+        val generated = WebPlanEngine.generateTrainingPlan(WebPlanEngine.configFromSpec(spec))
+        val workouts = generated.mapIndexed { i, w ->
+            WorkoutEntity(
+                id = UUID.randomUUID().toString(),
+                goalId = goalId,
+                scheduledDate = Format.epochMillis(w.date, LocalTime.of(7, 30)),
+                workoutType = WebPlanEngine.toDomainWorkoutType(w.type).name,
+                phase = WebPlanEngine.toDomainPhase(w.phase).name,
+                description = w.description,
+                targetDistanceKm = w.totalDistance / 1000.0,
+                targetPaceSecPerKm = w.targetPace?.roundToInt(),
+                targetDurationSec = w.targetDuration?.roundToInt(),
+                sortIndex = i,
+                structuredStepsJson = w.structuredSteps?.let { structuredStepsJson(it) },
+                targetHrZone = w.targetHrZone,
+                targetHrMinBpm = w.targetHrMinBpm?.roundToInt(),
+                targetHrMaxBpm = w.targetHrMaxBpm?.roundToInt(),
+                targetPaceMinSecPerKm = w.targetPaceMinSecondsPerKm,
+                targetPaceMaxSecPerKm = w.targetPaceMaxSecondsPerKm,
+            )
+        }
+        workoutDao.upsertAll(workouts)
+        goalId
+    }
+
+    /** Serializes the ported generator's steps in the server's flat JSON shape. */
+    private fun structuredStepsJson(plan: WebStructuredPlan): String {
+        val steps = JsonArray(plan.steps.map { s ->
+            buildJsonObject {
+                put("type", s.type)
+                put("name", s.name)
+                s.distanceMeters?.let { put("distanceMeters", it) }
+                s.durationSeconds?.let { put("durationSeconds", it) }
+                s.paceSecondsPerKm?.let { put("paceSecondsPerKm", it) }
+                s.hrZone?.let { put("hrZone", it) }
+            }
+        })
+        return buildJsonObject {
+            put("version", 1)
+            put("source", "generated-plan")
+            put("steps", steps)
+        }.toString()
+    }
+
+    /**
      * Creates a plan through the web engine (POST /api/plans): the server runs
      * its full generation pipeline and returns the goal with all workouts, so
      * the plan is identical on web and app from the first second. Requires a
      * signed-in session; fails with an exception when unreachable so the
-     * caller can fall back to [createPlan].
+     * caller can fall back to [createPlanOffline].
      */
     suspend fun createPlanViaServer(spec: PlanSpec): Result<String> = withContext(Dispatchers.IO) {
         runCatching {

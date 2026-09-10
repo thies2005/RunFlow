@@ -1,0 +1,6468 @@
+{
+  "name": "full_ironman_v30",
+  "config": {
+    "vdot": 30,
+    "raceType": "FULL_IRONMAN",
+    "raceDate": "2027-02-21",
+    "startDate": "2026-09-07",
+    "sport": "TRIATHLON",
+    "runsPerWeek": 3,
+    "ridesPerWeek": 3,
+    "swimsPerWeek": 3,
+    "strengthPerWeek": 2
+  },
+  "workouts": [
+    {
+      "id": "w0",
+      "date": "2026-09-07",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 1600m (technique focus)",
+      "displayDescription": "Swim Drill: 1600m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 1600,
+      "targetPace": 135,
+      "targetDuration": 2160,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w1",
+      "date": "2026-09-08",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 119min (Zone 2)",
+      "displayDescription": "Long Ride: 119min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 7114,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 7114,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w2",
+      "date": "2026-09-09",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w3",
+      "date": "2026-09-10",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2000m @ Endurance",
+      "displayDescription": "Endurance Swim: 2000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2000,
+      "targetPace": 143,
+      "targetDuration": 2860,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w4",
+      "date": "2026-09-11",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 8.3km",
+      "displayDescription": "Easy Run: 8.3km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 8300,
+      "targetPace": 452,
+      "targetDuration": 3752,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 8300,
+            "durationSeconds": 3752,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w5",
+      "date": "2026-09-12",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2000m @ Endurance",
+      "displayDescription": "Endurance Swim: 2000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2000,
+      "targetPace": 143,
+      "targetDuration": 2860,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w6",
+      "date": "2026-09-13",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 17.8km @ Easy",
+      "displayDescription": "Long Run: 17.8km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 17785,
+      "targetPace": 452,
+      "targetDuration": 8039,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 17785,
+            "durationSeconds": 8039,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w7",
+      "date": "2026-09-14",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 1700m (technique focus)",
+      "displayDescription": "Swim Drill: 1680m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 1680,
+      "targetPace": 135,
+      "targetDuration": 2268,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1280,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w8",
+      "date": "2026-09-15",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 129min (Zone 2)",
+      "displayDescription": "Long Ride: 129min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 7747,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 7747,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w9",
+      "date": "2026-09-16",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w10",
+      "date": "2026-09-17",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2100m @ Endurance",
+      "displayDescription": "Endurance Swim: 2100m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2100,
+      "targetPace": 143,
+      "targetDuration": 3003,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1700,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w11",
+      "date": "2026-09-18",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 9.7km",
+      "displayDescription": "Easy Run: 9.7km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 9700,
+      "targetPace": 452,
+      "targetDuration": 4384,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 9700,
+            "durationSeconds": 4384,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w12",
+      "date": "2026-09-19",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2100m @ Endurance",
+      "displayDescription": "Endurance Swim: 2100m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2100,
+      "targetPace": 143,
+      "targetDuration": 3003,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1700,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w13",
+      "date": "2026-09-20",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 19.4km @ Easy",
+      "displayDescription": "Long Run: 19.4km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 19365,
+      "targetPace": 452,
+      "targetDuration": 8753,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 19365,
+            "durationSeconds": 8753,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w14",
+      "date": "2026-09-21",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 1800m (technique focus)",
+      "displayDescription": "Swim Drill: 1840m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 1840,
+      "targetPace": 135,
+      "targetDuration": 2484,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1440,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w15",
+      "date": "2026-09-22",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 141min (Zone 2)",
+      "displayDescription": "Long Ride: 141min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 8435,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 8435,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w16",
+      "date": "2026-09-23",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w17",
+      "date": "2026-09-24",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2300m @ Endurance",
+      "displayDescription": "Endurance Swim: 2300m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2300,
+      "targetPace": 143,
+      "targetDuration": 3289,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1900,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w18",
+      "date": "2026-09-25",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 11.3km",
+      "displayDescription": "Easy Run: 11.3km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 11300,
+      "targetPace": 452,
+      "targetDuration": 5108,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 11300,
+            "durationSeconds": 5108,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w19",
+      "date": "2026-09-26",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2300m @ Endurance",
+      "displayDescription": "Endurance Swim: 2300m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2300,
+      "targetPace": 143,
+      "targetDuration": 3289,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1900,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w20",
+      "date": "2026-09-27",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 16.9km @ Easy",
+      "displayDescription": "Long Run: 16.9km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 16869,
+      "targetPace": 452,
+      "targetDuration": 7625,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 16869,
+            "durationSeconds": 7625,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w21",
+      "date": "2026-09-28",
+      "type": "RIDE",
+      "phase": "BASE",
+      "description": "Easy Ride: 202min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 202min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 12146,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 12146,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w22",
+      "date": "2026-09-29",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w23",
+      "date": "2026-09-30",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 1600m (technique focus)",
+      "displayDescription": "Swim Drill: 1600m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 1600,
+      "targetPace": 135,
+      "targetDuration": 2160,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w24",
+      "date": "2026-10-01",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2000m @ Endurance",
+      "displayDescription": "Endurance Swim: 2000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2000,
+      "targetPace": 143,
+      "targetDuration": 2860,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w25",
+      "date": "2026-10-02",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 21.1km @ Easy",
+      "displayDescription": "Long Run: 21.1km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 21086,
+      "targetPace": 452,
+      "targetDuration": 9531,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 21086,
+            "durationSeconds": 9531,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w26",
+      "date": "2026-10-03",
+      "type": "RIDE",
+      "phase": "BASE",
+      "description": "Easy Ride: 135min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 135min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 8097,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 8097,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w27",
+      "date": "2026-10-04",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2000m @ Endurance",
+      "displayDescription": "Endurance Swim: 2000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2000,
+      "targetPace": 143,
+      "targetDuration": 2860,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w28",
+      "date": "2026-10-05",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 2000m (technique focus)",
+      "displayDescription": "Swim Drill: 2000m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 2000,
+      "targetPace": 135,
+      "targetDuration": 2700,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1600,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w29",
+      "date": "2026-10-06",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 153min (Zone 2)",
+      "displayDescription": "Long Ride: 153min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 9185,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 9185,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w30",
+      "date": "2026-10-07",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w31",
+      "date": "2026-10-08",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2500m @ Endurance",
+      "displayDescription": "Endurance Swim: 2500m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2500,
+      "targetPace": 143,
+      "targetDuration": 3575,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2100,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w32",
+      "date": "2026-10-09",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w33",
+      "date": "2026-10-10",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2500m @ Endurance",
+      "displayDescription": "Endurance Swim: 2500m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2500,
+      "targetPace": 143,
+      "targetDuration": 3575,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2100,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w34",
+      "date": "2026-10-11",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 23.0km @ Easy",
+      "displayDescription": "Long Run: 23.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 22960,
+      "targetPace": 452,
+      "targetDuration": 10378,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 22960,
+            "durationSeconds": 10378,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w35",
+      "date": "2026-10-12",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 2200m (technique focus)",
+      "displayDescription": "Swim Drill: 2240m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 2240,
+      "targetPace": 135,
+      "targetDuration": 3024,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1840,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w36",
+      "date": "2026-10-13",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 167min (Zone 2)",
+      "displayDescription": "Long Ride: 167min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 10001,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 10001,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w37",
+      "date": "2026-10-14",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w38",
+      "date": "2026-10-15",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2800m @ Endurance",
+      "displayDescription": "Endurance Swim: 2800m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2800,
+      "targetPace": 143,
+      "targetDuration": 4004,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2400,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w39",
+      "date": "2026-10-16",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w40",
+      "date": "2026-10-17",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2800m @ Endurance",
+      "displayDescription": "Endurance Swim: 2800m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2800,
+      "targetPace": 143,
+      "targetDuration": 4004,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2400,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w41",
+      "date": "2026-10-18",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 25.0km @ Easy",
+      "displayDescription": "Long Run: 25.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w42",
+      "date": "2026-10-19",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 2400m (technique focus)",
+      "displayDescription": "Swim Drill: 2400m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 2400,
+      "targetPace": 135,
+      "targetDuration": 3240,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2000,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w43",
+      "date": "2026-10-20",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 182min (Zone 2)",
+      "displayDescription": "Long Ride: 182min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 10890,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 10890,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w44",
+      "date": "2026-10-21",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w45",
+      "date": "2026-10-22",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w46",
+      "date": "2026-10-23",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w47",
+      "date": "2026-10-24",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w48",
+      "date": "2026-10-25",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 21.8km @ Easy",
+      "displayDescription": "Long Run: 21.8km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 21778,
+      "targetPace": 452,
+      "targetDuration": 9844,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 21778,
+            "durationSeconds": 9844,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w49",
+      "date": "2026-10-26",
+      "type": "RIDE",
+      "phase": "BASE",
+      "description": "Easy Ride: 261min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 261min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 15680,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 15680,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w50",
+      "date": "2026-10-27",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w51",
+      "date": "2026-10-28",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 2100m (technique focus)",
+      "displayDescription": "Swim Drill: 2080m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 2080,
+      "targetPace": 135,
+      "targetDuration": 2808,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1680,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w52",
+      "date": "2026-10-29",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2600m @ Endurance",
+      "displayDescription": "Endurance Swim: 2600m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2600,
+      "targetPace": 143,
+      "targetDuration": 3718,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w53",
+      "date": "2026-10-30",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 25.0km @ Easy",
+      "displayDescription": "Long Run: 25.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w54",
+      "date": "2026-10-31",
+      "type": "RIDE",
+      "phase": "BASE",
+      "description": "Easy Ride: 174min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 174min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 10453,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 10453,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w55",
+      "date": "2026-11-01",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2600m @ Endurance",
+      "displayDescription": "Endurance Swim: 2600m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2600,
+      "targetPace": 143,
+      "targetDuration": 3718,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w56",
+      "date": "2026-11-02",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 2400m (technique focus)",
+      "displayDescription": "Swim Drill: 2400m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 2400,
+      "targetPace": 135,
+      "targetDuration": 3240,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2000,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w57",
+      "date": "2026-11-03",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 182min (Zone 2)",
+      "displayDescription": "Long Ride: 182min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 10890,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 10890,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w58",
+      "date": "2026-11-04",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w59",
+      "date": "2026-11-05",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w60",
+      "date": "2026-11-06",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w61",
+      "date": "2026-11-07",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w62",
+      "date": "2026-11-08",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 25.0km @ Easy",
+      "displayDescription": "Long Run: 25.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w63",
+      "date": "2026-11-09",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 2400m (technique focus)",
+      "displayDescription": "Swim Drill: 2400m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 2400,
+      "targetPace": 135,
+      "targetDuration": 3240,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2000,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w64",
+      "date": "2026-11-10",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 182min (Zone 2)",
+      "displayDescription": "Long Ride: 182min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 10890,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 10890,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w65",
+      "date": "2026-11-11",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w66",
+      "date": "2026-11-12",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w67",
+      "date": "2026-11-13",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w68",
+      "date": "2026-11-14",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w69",
+      "date": "2026-11-15",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 25.0km @ Easy",
+      "displayDescription": "Long Run: 25.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w70",
+      "date": "2026-11-16",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 2400m (technique focus)",
+      "displayDescription": "Swim Drill: 2400m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 2400,
+      "targetPace": 135,
+      "targetDuration": 3240,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2000,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w71",
+      "date": "2026-11-17",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 182min (Zone 2)",
+      "displayDescription": "Long Ride: 182min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 10890,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 10890,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w72",
+      "date": "2026-11-18",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w73",
+      "date": "2026-11-19",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w74",
+      "date": "2026-11-20",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w75",
+      "date": "2026-11-21",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w76",
+      "date": "2026-11-22",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 21.8km @ Easy",
+      "displayDescription": "Long Run: 21.8km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 21778,
+      "targetPace": 452,
+      "targetDuration": 9844,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 21778,
+            "durationSeconds": 9844,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w77",
+      "date": "2026-11-23",
+      "type": "RIDE",
+      "phase": "BASE",
+      "description": "Easy Ride: 261min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 261min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 15680,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 15680,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w78",
+      "date": "2026-11-24",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w79",
+      "date": "2026-11-25",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 2100m (technique focus)",
+      "displayDescription": "Swim Drill: 2080m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 2080,
+      "targetPace": 135,
+      "targetDuration": 2808,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1680,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w80",
+      "date": "2026-11-26",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2600m @ Endurance",
+      "displayDescription": "Endurance Swim: 2600m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2600,
+      "targetPace": 143,
+      "targetDuration": 3718,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w81",
+      "date": "2026-11-27",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 25.0km @ Easy",
+      "displayDescription": "Long Run: 25.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w82",
+      "date": "2026-11-28",
+      "type": "RIDE",
+      "phase": "BASE",
+      "description": "Easy Ride: 174min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 174min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 10453,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 10453,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w83",
+      "date": "2026-11-29",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 2600m @ Endurance",
+      "displayDescription": "Endurance Swim: 2600m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2600,
+      "targetPace": 143,
+      "targetDuration": 3718,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w84",
+      "date": "2026-11-30",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 2400m (technique focus)",
+      "displayDescription": "Swim Drill: 2400m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 2400,
+      "targetPace": 135,
+      "targetDuration": 3240,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2000,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w85",
+      "date": "2026-12-01",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 182min (Zone 2)",
+      "displayDescription": "Long Ride: 182min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 10890,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 10890,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w86",
+      "date": "2026-12-02",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w87",
+      "date": "2026-12-03",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w88",
+      "date": "2026-12-04",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w89",
+      "date": "2026-12-05",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w90",
+      "date": "2026-12-06",
+      "type": "LONG_RUN",
+      "phase": "BASE",
+      "description": "Long Run: 25.0km @ Easy",
+      "displayDescription": "Long Run: 25.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w91",
+      "date": "2026-12-07",
+      "type": "SWIM_DRILL",
+      "phase": "BASE",
+      "description": "Swim Drill: 2400m (technique focus)",
+      "displayDescription": "Swim Drill: 2400m",
+      "sport": "SWIM",
+      "intensityZone": "Drill",
+      "totalDistance": 2400,
+      "targetPace": 135,
+      "targetDuration": 3240,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Drill",
+      "targetPaceMinSecondsPerKm": 128,
+      "targetPaceMaxSecondsPerKm": 142,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2000,
+            "paceSecondsPerKm": 135
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 135
+          }
+        ]
+      }
+    },
+    {
+      "id": "w92",
+      "date": "2026-12-08",
+      "type": "LONG_RIDE",
+      "phase": "BASE",
+      "description": "Long Ride: 182min (Zone 2)",
+      "displayDescription": "Long Ride: 182min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 10890,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 10890,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w93",
+      "date": "2026-12-09",
+      "type": "TEMPO",
+      "phase": "BASE",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w94",
+      "date": "2026-12-10",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w95",
+      "date": "2026-12-11",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w96",
+      "date": "2026-12-12",
+      "type": "SWIM",
+      "phase": "BASE",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w97",
+      "date": "2026-12-13",
+      "type": "LONG_RUN",
+      "phase": "BUILD",
+      "description": "Long Run: 25.0km @ Easy",
+      "displayDescription": "Long Run: 25.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w98",
+      "date": "2026-12-14",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w99",
+      "date": "2026-12-15",
+      "type": "LONG_RIDE",
+      "phase": "BUILD",
+      "description": "Long Ride: 264min (Zone 2)",
+      "displayDescription": "Long Ride: 264min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 15840,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 15840,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w100",
+      "date": "2026-12-16",
+      "type": "TEMPO",
+      "phase": "BUILD",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w101",
+      "date": "2026-12-17",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w102",
+      "date": "2026-12-18",
+      "type": "EASY",
+      "phase": "BUILD",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w103",
+      "date": "2026-12-19",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w104",
+      "date": "2026-12-20",
+      "type": "LONG_RUN",
+      "phase": "BUILD",
+      "description": "Long Run: 21.8km @ Easy",
+      "displayDescription": "Long Run: 21.8km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 21778,
+      "targetPace": 452,
+      "targetDuration": 9844,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 21778,
+            "durationSeconds": 9844,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w105",
+      "date": "2026-12-21",
+      "type": "RIDE",
+      "phase": "BUILD",
+      "description": "Easy Ride: 261min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 261min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 15680,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 15680,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w106",
+      "date": "2026-12-22",
+      "type": "EASY",
+      "phase": "BUILD",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w107",
+      "date": "2026-12-23",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 2600m @ Endurance",
+      "displayDescription": "Endurance Swim: 2600m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2600,
+      "targetPace": 143,
+      "targetDuration": 3718,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w108",
+      "date": "2026-12-24",
+      "type": "RIDE",
+      "phase": "BUILD",
+      "description": "Easy Ride: 174min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 174min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 10453,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 10453,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w109",
+      "date": "2026-12-25",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 2600m @ Endurance",
+      "displayDescription": "Endurance Swim: 2600m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2600,
+      "targetPace": 143,
+      "targetDuration": 3718,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w110",
+      "date": "2026-12-26",
+      "type": "LONG_RIDE",
+      "phase": "BUILD",
+      "description": "Long Ride: 264min (Zone 2)",
+      "displayDescription": "Long Ride: 264min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 15840,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 15840,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w111",
+      "date": "2026-12-27",
+      "type": "LONG_RUN",
+      "phase": "BUILD",
+      "description": "Long Run: 25.0km @ Easy",
+      "displayDescription": "Long Run: 25.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w112",
+      "date": "2026-12-28",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w113",
+      "date": "2026-12-29",
+      "type": "EASY",
+      "phase": "BUILD",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w114",
+      "date": "2026-12-30",
+      "type": "TEMPO",
+      "phase": "BUILD",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w115",
+      "date": "2026-12-31",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w116",
+      "date": "2027-01-01",
+      "type": "LONG_RUN",
+      "phase": "BUILD",
+      "description": "Long Run: 25.0km @ Easy",
+      "displayDescription": "Long Run: 25.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w117",
+      "date": "2027-01-02",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w118",
+      "date": "2027-01-03",
+      "type": "LONG_RIDE",
+      "phase": "BUILD",
+      "description": "Long Ride: 264min (Zone 2)",
+      "displayDescription": "Long Ride: 264min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 15840,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 15840,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w119",
+      "date": "2027-01-04",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w120",
+      "date": "2027-01-05",
+      "type": "EASY",
+      "phase": "BUILD",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w121",
+      "date": "2027-01-06",
+      "type": "TEMPO",
+      "phase": "BUILD",
+      "description": "Threshold: 6km @ 6:24",
+      "displayDescription": "Threshold: 6km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 8000,
+      "targetPace": 384,
+      "targetDuration": 3358,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Threshold",
+            "distanceMeters": 5500,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w122",
+      "date": "2027-01-07",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w123",
+      "date": "2027-01-08",
+      "type": "LONG_RUN",
+      "phase": "PEAK",
+      "description": "Long Run: 17.5km Easy + 7.5km @ Race Pace",
+      "displayDescription": "Long Run: 25.0km (17.5km Easy + 7.5km @ Goal Pace)",
+      "sport": "RUN",
+      "intensityZone": "E + MP",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w124",
+      "date": "2027-01-09",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w125",
+      "date": "2027-01-10",
+      "type": "LONG_RIDE",
+      "phase": "PEAK",
+      "description": "Long Ride: 330min (Zone 2)",
+      "displayDescription": "Long Ride: 330min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 19800,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 19800,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w126",
+      "date": "2027-01-11",
+      "type": "OPEN_WATER_SWIM",
+      "phase": "PEAK",
+      "description": "Open Water Swim: 3000m (sighting practice)",
+      "displayDescription": "Open Water: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Open Water",
+      "totalDistance": 3000,
+      "targetPace": 145,
+      "targetDuration": 4350,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "OW Swim",
+      "targetPaceMinSecondsPerKm": 138,
+      "targetPaceMaxSecondsPerKm": 152,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 145
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 145
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 145
+          }
+        ]
+      }
+    },
+    {
+      "id": "w127",
+      "date": "2027-01-12",
+      "type": "SWIM",
+      "phase": "BUILD",
+      "description": "Swim: 2600m @ Endurance",
+      "displayDescription": "Endurance Swim: 2600m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2600,
+      "targetPace": 143,
+      "targetDuration": 3718,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w128",
+      "date": "2027-01-13",
+      "type": "TEMPO",
+      "phase": "PEAK",
+      "description": "Run Threshold: 3x3km @ 6:24",
+      "displayDescription": "Threshold: 3x3km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 13000,
+      "targetPace": 384,
+      "targetDuration": 5456,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 1",
+            "distanceMeters": 3000,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Tempo rest",
+            "distanceMeters": 750,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 2",
+            "distanceMeters": 3000,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Tempo rest",
+            "distanceMeters": 750,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 3",
+            "distanceMeters": 3000,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w129",
+      "date": "2027-01-14",
+      "type": "SWIM",
+      "phase": "PEAK",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w130",
+      "date": "2027-01-15",
+      "type": "EASY",
+      "phase": "PEAK",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w131",
+      "date": "2027-01-16",
+      "type": "SWIM",
+      "phase": "PEAK",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w132",
+      "date": "2027-01-17",
+      "type": "LONG_RUN",
+      "phase": "PEAK",
+      "description": "Long Run: 17.5km Easy + 7.5km @ Race Pace",
+      "displayDescription": "Long Run: 25.0km (17.5km Easy + 7.5km @ Goal Pace)",
+      "sport": "RUN",
+      "intensityZone": "E + MP",
+      "totalDistance": 25000,
+      "targetPace": 452,
+      "targetDuration": 11300,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 25000,
+            "durationSeconds": 11300,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w133",
+      "date": "2027-01-18",
+      "type": "OPEN_WATER_SWIM",
+      "phase": "PEAK",
+      "description": "Open Water Swim: 3000m (sighting practice)",
+      "displayDescription": "Open Water: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Open Water",
+      "totalDistance": 3000,
+      "targetPace": 145,
+      "targetDuration": 4350,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "OW Swim",
+      "targetPaceMinSecondsPerKm": 138,
+      "targetPaceMaxSecondsPerKm": 152,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 145
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 145
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 145
+          }
+        ]
+      }
+    },
+    {
+      "id": "w134",
+      "date": "2027-01-19",
+      "type": "LONG_RIDE",
+      "phase": "PEAK",
+      "description": "Long Ride: 330min (Zone 2)",
+      "displayDescription": "Long Ride: 330min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 19800,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 19800,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w135",
+      "date": "2027-01-20",
+      "type": "TEMPO",
+      "phase": "PEAK",
+      "description": "Run Threshold: 3x3km @ 6:24",
+      "displayDescription": "Threshold: 3x3km",
+      "sport": "RUN",
+      "intensityZone": "T Zone",
+      "totalDistance": 13000,
+      "targetPace": 384,
+      "targetDuration": 5456,
+      "targetHrZone": 4,
+      "targetHrZoneLabel": "Z4 Threshold",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Threshold",
+      "targetPaceMinSecondsPerKm": 372,
+      "targetPaceMaxSecondsPerKm": 396,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 1",
+            "distanceMeters": 3000,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Tempo rest",
+            "distanceMeters": 750,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 2",
+            "distanceMeters": 3000,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "recovery",
+            "name": "Tempo rest",
+            "distanceMeters": 750,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Rep 3",
+            "distanceMeters": 3000,
+            "paceSecondsPerKm": 384,
+            "hrZone": 4
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w136",
+      "date": "2027-01-21",
+      "type": "SWIM",
+      "phase": "PEAK",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w137",
+      "date": "2027-01-22",
+      "type": "EASY",
+      "phase": "PEAK",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w138",
+      "date": "2027-01-23",
+      "type": "SWIM",
+      "phase": "PEAK",
+      "description": "Swim: 3000m @ Endurance",
+      "displayDescription": "Endurance Swim: 3000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 3000,
+      "targetPace": 143,
+      "targetDuration": 4290,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w139",
+      "date": "2027-01-24",
+      "type": "LONG_RUN",
+      "phase": "TAPER",
+      "description": "Long Run: 10.0km @ Easy",
+      "displayDescription": "Long Run: 10.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 10000,
+      "targetPace": 452,
+      "targetDuration": 4520,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 10000,
+            "durationSeconds": 4520,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w140",
+      "date": "2027-01-25",
+      "type": "RIDE",
+      "phase": "TAPER",
+      "description": "Easy Ride: 187min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 187min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 11232,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 11232,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w141",
+      "date": "2027-01-26",
+      "type": "EASY",
+      "phase": "TAPER",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w142",
+      "date": "2027-01-27",
+      "type": "OPEN_WATER_SWIM",
+      "phase": "TAPER",
+      "description": "Open Water Swim: 2400m (sighting practice)",
+      "displayDescription": "Open Water: 2400m",
+      "sport": "SWIM",
+      "intensityZone": "Open Water",
+      "totalDistance": 2400,
+      "targetPace": 145,
+      "targetDuration": 3480,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "OW Swim",
+      "targetPaceMinSecondsPerKm": 138,
+      "targetPaceMaxSecondsPerKm": 152,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 145
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2000,
+            "paceSecondsPerKm": 145
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 145
+          }
+        ]
+      }
+    },
+    {
+      "id": "w143",
+      "date": "2027-01-28",
+      "type": "SWIM",
+      "phase": "TAPER",
+      "description": "Swim: 2400m @ Endurance",
+      "displayDescription": "Endurance Swim: 2400m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2400,
+      "targetPace": 143,
+      "targetDuration": 3432,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2000,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w144",
+      "date": "2027-01-29",
+      "type": "LONG_RUN",
+      "phase": "TAPER",
+      "description": "Long Run: 10.6km @ Easy",
+      "displayDescription": "Long Run: 10.6km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 10563,
+      "targetPace": 452,
+      "targetDuration": 4774,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 10563,
+            "durationSeconds": 4774,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w145",
+      "date": "2027-01-30",
+      "type": "LONG_RIDE",
+      "phase": "TAPER",
+      "description": "Long Ride: 106min (Zone 2)",
+      "displayDescription": "Long Ride: 106min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 6336,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 6336,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w146",
+      "date": "2027-01-31",
+      "type": "SWIM",
+      "phase": "TAPER",
+      "description": "Swim: 2400m @ Endurance",
+      "displayDescription": "Endurance Swim: 2400m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2400,
+      "targetPace": 143,
+      "targetDuration": 3432,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 2000,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w147",
+      "date": "2027-02-01",
+      "type": "RIDE",
+      "phase": "TAPER",
+      "description": "Easy Ride: 131min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 131min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 7839,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 7839,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w148",
+      "date": "2027-02-02",
+      "type": "EASY",
+      "phase": "TAPER",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w149",
+      "date": "2027-02-03",
+      "type": "OPEN_WATER_SWIM",
+      "phase": "TAPER",
+      "description": "Open Water Swim: 2000m (sighting practice)",
+      "displayDescription": "Open Water: 2000m",
+      "sport": "SWIM",
+      "intensityZone": "Open Water",
+      "totalDistance": 2000,
+      "targetPace": 145,
+      "targetDuration": 2900,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "OW Swim",
+      "targetPaceMinSecondsPerKm": 138,
+      "targetPaceMaxSecondsPerKm": 152,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 145
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1600,
+            "paceSecondsPerKm": 145
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 145
+          }
+        ]
+      }
+    },
+    {
+      "id": "w150",
+      "date": "2027-02-04",
+      "type": "SWIM",
+      "phase": "TAPER",
+      "description": "Swim: 2000m @ Endurance",
+      "displayDescription": "Endurance Swim: 2000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2000,
+      "targetPace": 143,
+      "targetDuration": 2860,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w151",
+      "date": "2027-02-05",
+      "type": "LONG_RUN",
+      "phase": "TAPER",
+      "description": "Long Run: 10.0km @ Easy",
+      "displayDescription": "Long Run: 10.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 10000,
+      "targetPace": 452,
+      "targetDuration": 4520,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long run",
+            "distanceMeters": 10000,
+            "durationSeconds": 4520,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w152",
+      "date": "2027-02-06",
+      "type": "LONG_RIDE",
+      "phase": "TAPER",
+      "description": "Long Ride: 129min (Zone 2)",
+      "displayDescription": "Long Ride: 129min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 7722,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 7722,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w153",
+      "date": "2027-02-07",
+      "type": "SWIM",
+      "phase": "TAPER",
+      "description": "Swim: 2000m @ Endurance",
+      "displayDescription": "Endurance Swim: 2000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 2000,
+      "targetPace": 143,
+      "targetDuration": 2860,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1600,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w154",
+      "date": "2027-02-08",
+      "type": "RIDE",
+      "phase": "TAPER",
+      "description": "Easy Ride: 88min (Zone 1-2)",
+      "displayDescription": "Zone 2 Ride: 88min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 5288,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 5288,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w155",
+      "date": "2027-02-09",
+      "type": "EASY",
+      "phase": "TAPER",
+      "description": "Easy: 12.0km",
+      "displayDescription": "Easy Run: 12.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 12000,
+      "targetPace": 452,
+      "targetDuration": 5424,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy run",
+            "distanceMeters": 12000,
+            "durationSeconds": 5424,
+            "paceSecondsPerKm": 452,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w156",
+      "date": "2027-02-10",
+      "type": "SWIM",
+      "phase": "TAPER",
+      "description": "Swim: 1500m @ Endurance",
+      "displayDescription": "Endurance Swim: 1500m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 1500,
+      "targetPace": 143,
+      "targetDuration": 2145,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1100,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w157",
+      "date": "2027-02-11",
+      "type": "LONG_RIDE",
+      "phase": "TAPER",
+      "description": "Long Ride: 124min (Zone 2)",
+      "displayDescription": "Long Ride: 124min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 7425,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Long Ride",
+            "durationSeconds": 7425,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w158",
+      "date": "2027-02-12",
+      "type": "SWIM",
+      "phase": "TAPER",
+      "description": "Swim: 1500m @ Endurance",
+      "displayDescription": "Endurance Swim: 1500m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 1500,
+      "targetPace": 143,
+      "targetDuration": 2145,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1100,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w159",
+      "date": "2027-02-13",
+      "type": "RIDE",
+      "phase": "RACE_WEEK",
+      "description": "Easy Spin: 30min (Zone 1)",
+      "displayDescription": "Zone 2 Ride: 30min",
+      "sport": "RIDE",
+      "intensityZone": "Zone 2",
+      "totalDistance": 0,
+      "targetPace": 0,
+      "targetDuration": 1800,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Power Z2: 134-180W",
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Easy Ride",
+            "durationSeconds": 1800,
+            "hrZone": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "w160",
+      "date": "2027-02-17",
+      "type": "RECOVERY",
+      "phase": "RACE_WEEK",
+      "description": "Shakeout Run: 3km Easy",
+      "displayDescription": "Recovery Run: 3.0km",
+      "sport": "RUN",
+      "intensityZone": "E Zone",
+      "totalDistance": 3000,
+      "targetPace": 486,
+      "targetDuration": 1458,
+      "targetHrZone": 1,
+      "targetHrZoneLabel": "Z1 Recovery",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Easy",
+      "targetPaceMinSecondsPerKm": 418,
+      "targetPaceMaxSecondsPerKm": 486,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "steady",
+            "name": "Recovery run",
+            "distanceMeters": 3000,
+            "durationSeconds": 1458,
+            "paceSecondsPerKm": 486,
+            "hrZone": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "w161",
+      "date": "2027-02-18",
+      "type": "SWIM",
+      "phase": "TAPER",
+      "description": "Swim: 1500m @ Endurance",
+      "displayDescription": "Endurance Swim: 1500m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 1500,
+      "targetPace": 143,
+      "targetDuration": 2145,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 136,
+      "targetPaceMaxSecondsPerKm": 150,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 1100,
+            "paceSecondsPerKm": 143
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 200,
+            "paceSecondsPerKm": 143
+          }
+        ]
+      }
+    },
+    {
+      "id": "w162",
+      "date": "2027-02-20",
+      "type": "SWIM",
+      "phase": "RACE_WEEK",
+      "description": "Swim: 1000m Easy (race site familiarization)",
+      "displayDescription": "Endurance Swim: 1000m",
+      "sport": "SWIM",
+      "intensityZone": "Endurance",
+      "totalDistance": 1000,
+      "targetPace": 145,
+      "targetDuration": 1450,
+      "targetHrZone": 2,
+      "targetHrZoneLabel": "Z2 Aerobic",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": "Swim Pace",
+      "targetPaceMinSecondsPerKm": 138,
+      "targetPaceMaxSecondsPerKm": 152,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up swim",
+            "distanceMeters": 150,
+            "paceSecondsPerKm": 145
+          },
+          {
+            "type": "work",
+            "name": "Main Set",
+            "distanceMeters": 700,
+            "paceSecondsPerKm": 145
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down swim",
+            "distanceMeters": 150,
+            "paceSecondsPerKm": 145
+          }
+        ]
+      }
+    },
+    {
+      "id": "w163",
+      "date": "2027-02-21",
+      "type": "RACE",
+      "phase": "RACE_WEEK",
+      "description": "Race Day: Full Ironman (3.8km/180km/42.2km)",
+      "displayDescription": "Race Day",
+      "sport": "RUN",
+      "intensityZone": "Race",
+      "totalDistance": 42195,
+      "targetPace": 0,
+      "targetDuration": 0,
+      "targetHrZone": 5,
+      "targetHrZoneLabel": "Z5 VO2max",
+      "targetHrMinBpm": null,
+      "targetHrMaxBpm": null,
+      "targetPaceZoneLabel": null,
+      "targetPaceMinSecondsPerKm": null,
+      "targetPaceMaxSecondsPerKm": null,
+      "structuredSteps": {
+        "version": 1,
+        "source": "generated-plan",
+        "steps": [
+          {
+            "type": "warmup",
+            "name": "Warm up",
+            "distanceMeters": 1500,
+            "hrZone": 1
+          },
+          {
+            "type": "work",
+            "name": "Race Day",
+            "distanceMeters": 39695,
+            "hrZone": 5
+          },
+          {
+            "type": "cooldown",
+            "name": "Cool down",
+            "distanceMeters": 1000,
+            "hrZone": 1
+          }
+        ]
+      }
+    }
+  ]
+}

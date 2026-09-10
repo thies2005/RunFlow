@@ -14,7 +14,7 @@ enum class PlanMethod(
 ) {
     WEB_ENGINE(
         "Web engine",
-        "Same generator as the website. Richer sessions, HR-aware targets, and the plan syncs to your account.",
+        "Same generator as the website — online it syncs to your account; without a connection the identical on-device engine builds it for later sync.",
         requiresSignIn = true,
     ),
     CLASSIC(

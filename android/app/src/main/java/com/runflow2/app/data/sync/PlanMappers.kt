@@ -239,11 +239,9 @@ fun PlanSpec.toCreatePlanRequest(): CreatePlanRequest {
 
 /**
  * Full-state PATCH payload for a workout edit (meters, s/km, date-only).
- * structuredSteps is forwarded as raw JSON ONLY when the entity carries it —
- * the current PATCH /api/mobile/v1/workouts/{id} route ignores the field (a
- * later server task whitelists it), and the pull merge re-syncs it from the
- * server in the meantime. The builder fields below are likewise sent even
- * though the current server route ignores them.
+ * structuredSteps is forwarded as raw JSON ONLY when the entity carries it;
+ * the server PATCH route whitelists and persists it along with the builder
+ * fields below, and the pull merge re-syncs it from the server.
  */
 fun WorkoutEntity.toPatchRequest(): PatchWorkoutRequest = PatchWorkoutRequest(
     workoutType = workoutType,
@@ -397,15 +395,30 @@ fun remapUploadedPlan(
     val remappedWorkouts = workouts.map { w ->
         val serverId = idMap[w.id]
         w.copy(
-            // No idMap entry means the server echo was incomplete — keep the
-            // local id rather than dropping the user's row.
+            // No idMap entry means the workout was created during the upload
+            // round-trip (or the server echo was incomplete) — keep the local
+            // id and stay dirty so the next pull cannot prune the row; its
+            // create is queued below.
             id = serverId ?: w.id,
             goalId = serverGoalId,
-            dirty = false,
+            dirty = serverId == null,
         )
     }
     val reQueued = mutableListOf<SyncQueueEntity>()
     val consumed = mutableListOf<Long>()
+    // workouts the server has not seen yet must still reach it
+    for (w in workouts) {
+        if (idMap[w.id] == null) {
+            reQueued += SyncQueueEntity(
+                entityType = SyncManager.TYPE_WORKOUT_CREATE,
+                localId = w.id,
+                payloadJson = Api.json.encodeToString(
+                    WorkoutCreatePayload.serializer(),
+                    w.toCreateWorkoutPayload(serverGoalId),
+                ),
+            )
+        }
+    }
     for ((oldWorkoutId, items) in workoutQueueItems) {
         val newId = idMap[oldWorkoutId] ?: oldWorkoutId
         for (item in items) {

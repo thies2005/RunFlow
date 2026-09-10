@@ -391,6 +391,10 @@ interface PlanSnapshotDao {
     /** Re-points undo history after a plan upload remaps the goal id. */
     @Query("UPDATE plan_snapshots SET goalId = :newGoalId WHERE goalId = :oldGoalId")
     suspend fun repointGoal(oldGoalId: String, newGoalId: String)
+
+    /** Rewrites a snapshot's workout entries after an upload remaps their ids. */
+    @Query("UPDATE plan_snapshots SET workoutsJson = :json WHERE id = :id")
+    suspend fun updateWorkoutsJson(id: Long, json: String)
 }
 
 @Database(

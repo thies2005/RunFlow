@@ -201,6 +201,7 @@ class RecordingController(
         val s = _state.value
         if (s.status != RecStatus.PAUSED) return
         gpsFilter.reset() // fresh anchor after the pause (manual or auto-pause)
+        autoPaused = false // a manual resume must not be undone by the latch
         _state.value = s.copy(status = RecStatus.RUNNING)
         lastTick = System.currentTimeMillis()
     }

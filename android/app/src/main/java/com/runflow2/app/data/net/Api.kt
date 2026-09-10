@@ -368,9 +368,8 @@ data class PatchWorkoutRequest(
     val targetHrMaxBpm: Int? = null,
     val targetPaceMinSecondsPerKm: Double? = null,
     val targetPaceMaxSecondsPerKm: Double? = null,
-    // builder structuredSteps (nested builder JSON, raw); the current server
-    // PATCH route ignores this field — sent for forward compatibility until
-    // the server task whitelists it
+    // builder structuredSteps (nested builder JSON, raw); the server PATCH
+    // route whitelists and persists it
     val structuredSteps: JsonElement? = null,
 )
 

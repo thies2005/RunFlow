@@ -5,9 +5,12 @@ import com.runflow2.app.data.db.GoalEntity
 import com.runflow2.app.data.db.SyncQueueEntity
 import com.runflow2.app.data.db.WorkoutEntity
 import com.runflow2.app.data.net.Api
+import com.runflow2.app.data.sync.parseSnapshotJson
+import com.runflow2.app.data.sync.remapSnapshotJson
 import com.runflow2.app.data.sync.remapUploadedPlan
 import com.runflow2.app.data.sync.toImportPlanRequest
 import com.runflow2.app.data.sync.toImportWorkoutRequest
+import com.runflow2.app.data.sync.toSnapshotJson
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -240,6 +243,39 @@ class PlanUploadTest {
         )
         assertEquals(listOf("sw1", "w2"), remap.workouts.map { it.id })
         assertTrue(remap.workouts.all { it.goalId == "server-goal" })
+    }
+
+    @Test
+    fun `workout missing from the idMap stays dirty and queues a create`() {
+        val remap = remapUploadedPlan(
+            goal = goal(),
+            workouts = listOf(workout("w1"), workout("w2")),
+            serverGoalId = "server-goal",
+            idMap = mapOf("w1" to "sw1"), // w2 was created mid-upload
+            workoutQueueItems = emptyMap(),
+            goalQueueItems = emptyList(),
+        )
+        // not dirty would let the next pull prune the row the server never saw
+        assertTrue(remap.workouts.first { it.id == "w2" }.dirty)
+        assertFalse(remap.workouts.first { it.id == "sw1" }.dirty)
+        assertEquals(1, remap.reQueued.size)
+        assertEquals("workout_create", remap.reQueued.single().entityType)
+        assertEquals("w2", remap.reQueued.single().localId)
+        assertTrue(remap.reQueued.single().payloadJson.contains("\"goalId\":\"server-goal\""))
+    }
+
+    @Test
+    fun `snapshot json is remapped onto the server ids`() {
+        val json = listOf(workout("w1"), workout("w2")).toSnapshotJson()
+        val remapped = remapSnapshotJson(json, mapOf("w1" to "sw1"), "server-goal")!!
+        val dtos = parseSnapshotJson(remapped)!!
+        assertEquals("sw1", dtos[0].id)
+        assertEquals("server-goal", dtos[0].goalId)
+        // unmapped ids are preserved rather than dropped
+        assertEquals("w2", dtos[1].id)
+        assertEquals("server-goal", dtos[1].goalId)
+        // unreadable payload → null (caller keeps the original)
+        assertNull(remapSnapshotJson("not json", mapOf("w1" to "sw1"), "server-goal"))
     }
 
     @Test

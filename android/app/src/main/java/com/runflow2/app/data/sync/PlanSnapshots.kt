@@ -104,6 +104,21 @@ fun parseSnapshotJson(json: String): List<WorkoutSnapshotDto>? =
         Api.json.decodeFromString(ListSerializer(WorkoutSnapshotDto.serializer()), json)
     }.getOrNull()
 
+/**
+ * Rewrites a snapshot's workout ids (via [idMap]) and goalId after a plan
+ * upload, so undo keeps matching rows by id instead of churning the whole
+ * plan. Returns null when the payload is unreadable — the caller keeps the
+ * original JSON in that case (undo degrades to the upload-era behaviour).
+ */
+fun remapSnapshotJson(json: String, idMap: Map<String, String>, serverGoalId: String): String? =
+    runCatching {
+        val dtos = Api.json.decodeFromString(ListSerializer(WorkoutSnapshotDto.serializer()), json)
+        Api.json.encodeToString(
+            ListSerializer(WorkoutSnapshotDto.serializer()),
+            dtos.map { it.copy(id = idMap[it.id] ?: it.id, goalId = serverGoalId) },
+        )
+    }.getOrNull()
+
 /** What a restore has to do to roll the goal's workouts back to the snapshot. */
 data class RestorePlan(
     /** In snapshot and DB, content drifted → rewrite the row from the snapshot. */

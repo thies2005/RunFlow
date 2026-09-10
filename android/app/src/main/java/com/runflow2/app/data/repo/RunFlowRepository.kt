@@ -23,6 +23,7 @@ import com.runflow2.app.data.net.NetworkClient
 import com.runflow2.app.data.sync.SyncManager
 import com.runflow2.app.data.sync.MAX_PLAN_SNAPSHOTS_PER_GOAL
 import com.runflow2.app.data.sync.parseSnapshotJson
+import com.runflow2.app.data.sync.remapSnapshotJson
 import com.runflow2.app.data.sync.remapUploadedPlan
 import com.runflow2.app.data.sync.restoreDiff
 import com.runflow2.app.data.sync.toCreatePlanRequest
@@ -193,7 +194,9 @@ class RunFlowRepository(
             val plan = restoreDiff(workoutDao.forGoal(goalId), snap)
             // rows changed since the snapshot: put their snapshot state back
             for (s in plan.updates) {
-                val entity = s.toEntity()
+                // goalId is forced: a snapshot taken before a plan upload still
+                // carries the old local goal id inside its workout entries.
+                val entity = s.toEntity().copy(goalId = goalId)
                 if (synced) {
                     val payload = Api.json.encodeToString(
                         com.runflow2.app.data.net.PatchWorkoutRequest.serializer(),
@@ -221,7 +224,7 @@ class RunFlowRepository(
                     // server-side with a fresh temp id, exactly like a new
                     // workout — the outbox reconciles temp → server id.
                     val id = UUID.randomUUID().toString()
-                    val entity = s.toEntity().copy(id = id, dirty = true)
+                    val entity = s.toEntity().copy(id = id, goalId = goalId, dirty = true)
                     val payload = Api.json.encodeToString(
                         com.runflow2.app.data.net.WorkoutCreatePayload.serializer(),
                         entity.toCreateWorkoutPayload(goalId),
@@ -242,7 +245,7 @@ class RunFlowRepository(
                     // overwrite the restore on the next pull.
                     pendingDelete.forEach { syncQueueDao.markCompleted(it.id) }
                     if (synced) {
-                        val entity = s.toEntity().copy(dirty = true)
+                        val entity = s.toEntity().copy(goalId = goalId, dirty = true)
                         val payload = Api.json.encodeToString(
                             com.runflow2.app.data.net.PatchWorkoutRequest.serializer(),
                             entity.toPatchRequest(),
@@ -728,7 +731,13 @@ class RunFlowRepository(
             goalDao.delete(goal.id)
             goalDao.upsert(remap.goal)
             workoutDao.upsertAll(remap.workouts)
-            // undo history follows the goal to its new id
+            // undo history follows the goal AND its workout ids to their new
+            // ids — otherwise restoreDiff would see zero id overlap with the
+            // server-identified rows and churn the whole plan on undo
+            planSnapshotDao.latestForGoal(goal.id, MAX_PLAN_SNAPSHOTS_PER_GOAL).forEach { snap ->
+                remapSnapshotJson(snap.workoutsJson, response.idMap, response.goalId)
+                    ?.let { planSnapshotDao.updateWorkoutsJson(snap.id, it) }
+            }
             planSnapshotDao.repointGoal(goal.id, response.goalId)
             // re-point queued edits so they land on the server rows
             remap.consumedQueueIds.forEach { syncQueueDao.markCompleted(it) }

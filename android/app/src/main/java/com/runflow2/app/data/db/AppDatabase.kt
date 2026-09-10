@@ -148,7 +148,7 @@ data class ProfileEntity(
 @Entity(tableName = "sync_queue")
 data class SyncQueueEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val entityType: String, // activity_create | activity_update | profile_update | workout_update | goal_update | goal_delete
+    val entityType: String, // activity_create | activity_update | profile_update | workout_create | workout_update | workout_delete | goal_update | goal_delete
     val localId: String,
     val payloadJson: String,
     val retryCount: Int = 0,
@@ -165,6 +165,20 @@ data class ChatMessageEntity(
     val role: String, // user | assistant
     val content: String,
     val createdAt: Long,
+)
+
+/**
+ * Local undo history for plan edits (v6, web: src/lib/plan/snapshot.ts):
+ * one row per pre-mutation snapshot of a goal's workouts, stored as a JSON
+ * array (WorkoutSnapshotDto). Undo consumes the newest row; inserts prune
+ * the goal's history back to MAX_PLAN_SNAPSHOTS_PER_GOAL.
+ */
+@Entity(tableName = "plan_snapshots", indices = [Index("goalId")])
+data class PlanSnapshotEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val goalId: String,
+    val createdAtEpochMs: Long,
+    val workoutsJson: String, // JSON array of WorkoutSnapshotDto
 )
 
 @Dao
@@ -304,6 +318,9 @@ interface SyncQueueDao {
     @Query("DELETE FROM sync_queue WHERE entityType = :type AND dead = 0 AND localId = :localId")
     suspend fun deletePendingFor(type: String, localId: String)
 
+    @Query("SELECT * FROM sync_queue WHERE entityType = :type AND dead = 0 AND localId = :localId")
+    suspend fun pendingFor(type: String, localId: String): List<SyncQueueEntity>
+
     @Query("DELETE FROM sync_queue")
     suspend fun clear()
 }
@@ -335,12 +352,38 @@ interface ChatDao {
     suspend fun clear()
 }
 
+@Dao
+interface PlanSnapshotDao {
+    @Insert
+    suspend fun insertSnapshot(snapshot: PlanSnapshotEntity): Long
+
+    /** Newest first (autoincrement id is monotonic, matching web's createdAt sort). */
+    @Query("SELECT * FROM plan_snapshots WHERE goalId = :goalId ORDER BY id DESC LIMIT :limit")
+    suspend fun latestForGoal(goalId: String, limit: Int): List<PlanSnapshotEntity>
+
+    @Query("SELECT COUNT(*) FROM plan_snapshots WHERE goalId = :goalId")
+    fun snapshotCountForGoal(goalId: String): Flow<Int>
+
+    /** Deletes everything but the newest :keep snapshots of a goal (undo depth cap). */
+    @Query(
+        "DELETE FROM plan_snapshots WHERE goalId = :goalId AND id IN (" +
+            "SELECT id FROM plan_snapshots WHERE goalId = :goalId ORDER BY id DESC LIMIT -1 OFFSET :keep)"
+    )
+    suspend fun deleteOldestBeyond(goalId: String, keep: Int)
+
+    @Query("DELETE FROM plan_snapshots WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("DELETE FROM plan_snapshots WHERE goalId = :goalId")
+    suspend fun deleteAllForGoal(goalId: String)
+}
+
 @Database(
     entities = [
         ActivityEntity::class, GoalEntity::class, WorkoutEntity::class, ProfileEntity::class,
-        SyncQueueEntity::class, ChatMessageEntity::class,
+        SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -350,6 +393,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
     abstract fun syncQueueDao(): SyncQueueDao
     abstract fun chatDao(): ChatDao
+    abstract fun planSnapshotDao(): PlanSnapshotDao
 
     companion object {
         /**
@@ -421,6 +465,23 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE workouts ADD COLUMN targetPaceMaxSecPerKm REAL")
                 db.execSQL("ALTER TABLE goals ADD COLUMN creationMode TEXT")
                 db.execSQL("ALTER TABLE goals ADD COLUMN guidanceLevel TEXT")
+            }
+        }
+
+        /**
+         * v5 -> v6 adds the plan-snapshot history powering local undo of plan
+         * edits. Purely additive: a new table, no existing column changes.
+         */
+        val MIGRATION_5_6: Migration = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS plan_snapshots (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "goalId TEXT NOT NULL, " +
+                        "createdAtEpochMs INTEGER NOT NULL, " +
+                        "workoutsJson TEXT NOT NULL)"
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_plan_snapshots_goalId ON plan_snapshots(goalId)")
             }
         }
     }

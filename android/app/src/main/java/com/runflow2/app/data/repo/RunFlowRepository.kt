@@ -9,6 +9,8 @@ import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.data.db.AppDatabase
 import com.runflow2.app.data.db.GoalDao
 import com.runflow2.app.data.db.GoalEntity
+import com.runflow2.app.data.db.PlanSnapshotDao
+import com.runflow2.app.data.db.PlanSnapshotEntity
 import com.runflow2.app.data.db.ProfileDao
 import com.runflow2.app.data.db.ProfileEntity
 import com.runflow2.app.data.db.SyncQueueDao
@@ -19,10 +21,16 @@ import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.net.AuthStore
 import com.runflow2.app.data.net.NetworkClient
 import com.runflow2.app.data.sync.SyncManager
-import com.runflow2.app.data.sync.toCreateRequest
+import com.runflow2.app.data.sync.MAX_PLAN_SNAPSHOTS_PER_GOAL
+import com.runflow2.app.data.sync.parseSnapshotJson
+import com.runflow2.app.data.sync.restoreDiff
 import com.runflow2.app.data.sync.toCreatePlanRequest
+import com.runflow2.app.data.sync.toCreateRequest
+import com.runflow2.app.data.sync.toCreateWorkoutPayload
 import com.runflow2.app.data.sync.toEntities
+import com.runflow2.app.data.sync.toEntity
 import com.runflow2.app.data.sync.toPatchRequest
+import com.runflow2.app.data.sync.toSnapshotJson
 import com.runflow2.app.data.sync.toUpdateRequest
 import com.runflow2.app.domain.analytics.ActivityInput
 import com.runflow2.app.domain.analytics.AnalyticsBundle
@@ -49,6 +57,7 @@ class RunFlowRepository(
     private val workoutDao: WorkoutDao,
     private val profileDao: ProfileDao,
     private val syncQueueDao: SyncQueueDao,
+    private val planSnapshotDao: PlanSnapshotDao,
     private val authStore: AuthStore,
     private val network: NetworkClient,
 ) {
@@ -129,6 +138,151 @@ class RunFlowRepository(
         return workoutDao.pendingBetween(from, to)
     }
 
+    // ---------- plan edit snapshots (undo) ----------
+
+    /** Undo depth for the UI: how many snapshots exist for a goal. */
+    fun snapshotCountForGoal(goalId: String): Flow<Int> = planSnapshotDao.snapshotCountForGoal(goalId)
+
+    /**
+     * Captures the goal's current workouts as an undo snapshot (web:
+     * snapshot.ts createSnapshot — the API routes auto-snapshot before every
+     * workout mutation). Taken for local-only plans too: undo is pure local
+     * and must work offline. The history is pruned to the newest
+     * [MAX_PLAN_SNAPSHOTS_PER_GOAL] rows per goal.
+     */
+    private suspend fun snapshotGoal(goalId: String) {
+        planSnapshotDao.insertSnapshot(
+            PlanSnapshotEntity(
+                goalId = goalId,
+                createdAtEpochMs = System.currentTimeMillis(),
+                workoutsJson = workoutDao.forGoal(goalId).toSnapshotJson(),
+            )
+        )
+        planSnapshotDao.deleteOldestBeyond(goalId, MAX_PLAN_SNAPSHOTS_PER_GOAL)
+    }
+
+    /**
+     * Undoes the last plan edit by restoring the goal's newest snapshot
+     * (web: snapshot.ts restoreFromSnapshot, but as an id-diff instead of a
+     * delete-all-and-recreate so sync state survives). Everything happens in
+     * one transaction; the consumed snapshot is deleted so the next undo goes
+     * one step further back. Returns false when there is nothing to undo.
+     */
+    suspend fun undoLastEdit(goalId: String): Boolean {
+        val snapshot = planSnapshotDao.latestForGoal(goalId, 1).firstOrNull() ?: return false
+        val snap = parseSnapshotJson(snapshot.workoutsJson)
+        if (snap == null) {
+            // Corrupt snapshot: useless data — drop it so undo can reach older ones.
+            planSnapshotDao.delete(snapshot.id)
+            return false
+        }
+        val goal = goalDao.byId(goalId)
+        val synced = goal != null && !goal.isLocalOnly && authStore.state.value.loggedIn
+        val stats = db.withTransaction {
+            val plan = restoreDiff(workoutDao.forGoal(goalId), snap)
+            // rows changed since the snapshot: put their snapshot state back
+            for (s in plan.updates) {
+                val entity = s.toEntity()
+                if (synced) {
+                    val payload = Api.json.encodeToString(
+                        com.runflow2.app.data.net.PatchWorkoutRequest.serializer(),
+                        entity.toPatchRequest(),
+                    )
+                    workoutDao.upsert(entity.copy(dirty = true))
+                    syncQueueDao.deletePendingFor(SyncManager.TYPE_WORKOUT_UPDATE, entity.id)
+                    syncQueueDao.insert(
+                        SyncQueueEntity(
+                            entityType = SyncManager.TYPE_WORKOUT_UPDATE,
+                            localId = entity.id,
+                            payloadJson = payload,
+                        )
+                    )
+                } else {
+                    workoutDao.upsert(entity)
+                }
+            }
+            // rows deleted since the snapshot: bring them back
+            for (s in plan.reinstates) {
+                val pendingDelete = syncQueueDao.pendingFor(SyncManager.TYPE_WORKOUT_DELETE, s.id)
+                if (pendingDelete.isEmpty() && synced) {
+                    // The server row is gone (delete already pushed) or the
+                    // create was cancelled before it ever left: re-create it
+                    // server-side with a fresh temp id, exactly like a new
+                    // workout — the outbox reconciles temp → server id.
+                    val id = UUID.randomUUID().toString()
+                    val entity = s.toEntity().copy(id = id, dirty = true)
+                    val payload = Api.json.encodeToString(
+                        com.runflow2.app.data.net.WorkoutCreatePayload.serializer(),
+                        entity.toCreateWorkoutPayload(goalId),
+                    )
+                    workoutDao.upsert(entity)
+                    syncQueueDao.insert(
+                        SyncQueueEntity(
+                            entityType = SyncManager.TYPE_WORKOUT_CREATE,
+                            localId = id,
+                            payloadJson = payload,
+                        )
+                    )
+                } else {
+                    // Local-only plan — or the delete never left the device:
+                    // cancel it and revive the row. For synced plans mark it
+                    // dirty + push the snapshot state, so an edit that landed
+                    // on the server between snapshot and delete can't silently
+                    // overwrite the restore on the next pull.
+                    pendingDelete.forEach { syncQueueDao.markCompleted(it.id) }
+                    if (synced) {
+                        val entity = s.toEntity().copy(dirty = true)
+                        val payload = Api.json.encodeToString(
+                            com.runflow2.app.data.net.PatchWorkoutRequest.serializer(),
+                            entity.toPatchRequest(),
+                        )
+                        workoutDao.upsert(entity)
+                        syncQueueDao.deletePendingFor(SyncManager.TYPE_WORKOUT_UPDATE, entity.id)
+                        syncQueueDao.insert(
+                            SyncQueueEntity(
+                                entityType = SyncManager.TYPE_WORKOUT_UPDATE,
+                                localId = entity.id,
+                                payloadJson = payload,
+                            )
+                        )
+                    } else {
+                        workoutDao.upsert(s.toEntity())
+                    }
+                }
+            }
+            // rows created since the snapshot: remove them again (same
+            // outbox conventions as deleteWorkout)
+            for (w in plan.removals) {
+                if (synced) {
+                    val pendingCreate = syncQueueDao.pendingFor(SyncManager.TYPE_WORKOUT_CREATE, w.id)
+                    if (pendingCreate.isEmpty()) {
+                        syncQueueDao.deletePendingFor(SyncManager.TYPE_WORKOUT_UPDATE, w.id)
+                        syncQueueDao.deletePendingFor(SyncManager.TYPE_WORKOUT_DELETE, w.id)
+                        syncQueueDao.insert(
+                            SyncQueueEntity(
+                                entityType = SyncManager.TYPE_WORKOUT_DELETE,
+                                localId = w.id,
+                                payloadJson = Api.json.encodeToString(
+                                    com.runflow2.app.data.net.WorkoutDeletePayload.serializer(),
+                                    com.runflow2.app.data.net.WorkoutDeletePayload(goalId = goalId),
+                                ),
+                            )
+                        )
+                    } else {
+                        // the server never saw this workout: cancel the create
+                        pendingCreate.forEach { syncQueueDao.markCompleted(it.id) }
+                    }
+                }
+                workoutDao.delete(w.id)
+            }
+            // consume the snapshot so the next undo goes one step further back
+            planSnapshotDao.delete(snapshot.id)
+            Triple(plan.updates.size, plan.reinstates.size, plan.removals.size)
+        }
+        AppLog.i("Plan", "undo on goal $goalId: ${stats.first} update(s), ${stats.second} reinstated, ${stats.third} removed")
+        return true
+    }
+
     /**
      * Persists a workout edit. For plans that sync with the server, the edit
      * is flagged dirty and a full-state PATCH is queued in the outbox (the
@@ -158,7 +312,10 @@ class RunFlowRepository(
         }
     }
 
-    suspend fun saveWorkout(w: WorkoutEntity) = persistWorkoutEdit(w)
+    suspend fun saveWorkout(w: WorkoutEntity) {
+        snapshotGoal(w.goalId)
+        persistWorkoutEdit(w)
+    }
 
     /**
      * Saves structured steps built by the interval editor. Follows
@@ -169,6 +326,7 @@ class RunFlowRepository(
      */
     suspend fun saveStructuredSteps(workoutId: String, json: String) {
         val w = workoutDao.byId(workoutId) ?: return
+        snapshotGoal(w.goalId)
         persistWorkoutEdit(w.copy(structuredStepsJson = json))
     }
 
@@ -182,11 +340,100 @@ class RunFlowRepository(
         persistWorkoutEdit(w.copy(isCompleted = false, completedAt = null, activityId = null))
     }
 
-    /** Single-workout deletes only stay deleted for local-only plans (no server route). */
-    suspend fun deleteWorkout(id: String) = workoutDao.delete(id)
+    /**
+     * Inserts a new workout into a goal. Synced plans mint a temp local id,
+     * flag it dirty and enqueue a workout_create outbox item (reconciled to
+     * the server id when the push drains); local-only plans write straight to
+     * Room — they upload wholesale in task 3h.
+     */
+    suspend fun createWorkoutInGoal(
+        goalId: String,
+        date: LocalDate,
+        workoutType: WorkoutType,
+        name: String? = null,
+        distanceKm: Double? = null,
+        paceSecPerKm: Int? = null,
+        phase: PlanPhase,
+        structuredStepsJson: String? = null,
+    ): String {
+        snapshotGoal(goalId)
+        val goal = goalDao.byId(goalId)
+        val id = UUID.randomUUID().toString()
+        val entity = WorkoutEntity(
+            id = id,
+            goalId = goalId,
+            scheduledDate = Format.epochMillis(date),
+            workoutType = workoutType.name,
+            phase = phase.name,
+            description = name?.takeIf { it.isNotBlank() } ?: workoutType.label,
+            targetDistanceKm = distanceKm,
+            targetPaceSecPerKm = paceSecPerKm,
+            targetDurationSec = null,
+            customName = name?.takeIf { it.isNotBlank() },
+            structuredStepsJson = structuredStepsJson,
+        )
+        if (goal == null || goal.isLocalOnly || !authStore.state.value.loggedIn) {
+            workoutDao.upsert(entity)
+        } else {
+            val payload = Api.json.encodeToString(
+                com.runflow2.app.data.net.WorkoutCreatePayload.serializer(),
+                entity.toCreateWorkoutPayload(goalId),
+            )
+            db.withTransaction {
+                workoutDao.upsert(entity.copy(dirty = true))
+                syncQueueDao.insert(
+                    SyncQueueEntity(
+                        entityType = SyncManager.TYPE_WORKOUT_CREATE,
+                        localId = id,
+                        payloadJson = payload,
+                    )
+                )
+            }
+        }
+        return id
+    }
+
+    /**
+     * Deletes a workout. Local-only plans (or signed-out users) hard-delete as
+     * before; synced plans enqueue a workout_delete outbox item and delete the
+     * local row (the next pull confirms). A workout whose create is still
+     * queued never reached the server — its create item is cancelled instead.
+     */
+    suspend fun deleteWorkout(id: String) {
+        val w = workoutDao.byId(id) ?: return
+        snapshotGoal(w.goalId)
+        val goal = goalDao.byId(w.goalId)
+        if (goal != null && !goal.isLocalOnly && authStore.state.value.loggedIn) {
+            val pendingCreate = syncQueueDao.pendingFor(SyncManager.TYPE_WORKOUT_CREATE, id)
+            db.withTransaction {
+                if (pendingCreate.isEmpty()) {
+                    // superseded: drop any queued edit, then enqueue the delete
+                    syncQueueDao.deletePendingFor(SyncManager.TYPE_WORKOUT_UPDATE, id)
+                    syncQueueDao.deletePendingFor(SyncManager.TYPE_WORKOUT_DELETE, id)
+                    syncQueueDao.insert(
+                        SyncQueueEntity(
+                            entityType = SyncManager.TYPE_WORKOUT_DELETE,
+                            localId = id,
+                            payloadJson = Api.json.encodeToString(
+                                com.runflow2.app.data.net.WorkoutDeletePayload.serializer(),
+                                com.runflow2.app.data.net.WorkoutDeletePayload(goalId = w.goalId),
+                            ),
+                        )
+                    )
+                } else {
+                    // the server never saw this workout: cancel the create
+                    pendingCreate.forEach { syncQueueDao.markCompleted(it.id) }
+                }
+                workoutDao.delete(id)
+            }
+        } else {
+            workoutDao.delete(id)
+        }
+    }
 
     suspend fun shiftWorkoutDate(id: String, days: Int) {
         val w = workoutDao.byId(id) ?: return
+        snapshotGoal(w.goalId)
         persistWorkoutEdit(w.copy(scheduledDate = w.scheduledDate + days * 86_400_000L))
     }
 
@@ -206,6 +453,7 @@ class RunFlowRepository(
         }
         workoutDao.deleteForGoal(id)
         goalDao.delete(id)
+        planSnapshotDao.deleteAllForGoal(id)
     }
 
     suspend fun completeGoal(id: String) {

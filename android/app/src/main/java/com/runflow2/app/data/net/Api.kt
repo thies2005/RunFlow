@@ -320,6 +320,38 @@ data class UpdateGoalRequest(
     val isActive: Boolean? = null,
 )
 
+/**
+ * Body for POST /api/plan-advanced/{goalId}/workouts. The route requires a
+ * valid scheduledDate, a server WorkoutType and a non-empty description;
+ * everything else is optional and defaults server-side.
+ */
+@Serializable
+data class CreateWorkoutRequest(
+    val scheduledDate: String, // YYYY-MM-DD
+    val workoutType: String,
+    val description: String,
+    val phase: String? = null, // server PlanPhase name
+    val customName: String? = null,
+    val targetDistance: Double? = null, // meters
+    val targetPace: Double? = null, // seconds per km
+    val targetDuration: Int? = null, // seconds
+    val structuredSteps: JsonElement? = null, // builder nested shape, raw
+)
+
+/** Outbox payload for workout_create: the create body plus the owning goal. */
+@Serializable
+data class WorkoutCreatePayload(
+    val goalId: String,
+    val workout: CreateWorkoutRequest,
+)
+
+/** Outbox payload for workout_delete: the delete route is goal-scoped. */
+@Serializable
+data class WorkoutDeletePayload(val goalId: String)
+
+@Serializable
+data class WorkoutWrapper(val workout: PlanWorkoutDto)
+
 @Serializable
 data class GoalWrapper(val goal: PlanGoalDto)
 
@@ -414,6 +446,17 @@ interface RunFlowApi {
     // workout-level edits (targets, description, date shift, completion)
     @PATCH("/api/mobile/v1/workouts/{id}")
     suspend fun patchWorkout(@Path("id") id: String, @Body body: PatchWorkoutRequest): PlanWorkoutDto
+
+    // workout create/delete on existing plans (goal-scoped web routes that
+    // accept the mobile JWT; create snapshots, returns 201 + { workout })
+    @POST("/api/plan-advanced/{goalId}/workouts")
+    suspend fun createWorkout(@Path("goalId") goalId: String, @Body body: CreateWorkoutRequest): WorkoutWrapper
+
+    @DELETE("/api/plan-advanced/{goalId}/workouts/{workoutId}")
+    suspend fun deleteWorkout(
+        @Path("goalId") goalId: String,
+        @Path("workoutId") workoutId: String,
+    ): retrofit2.Response<Unit>
 
     // goal-level edits (metadata only) and delete (hard delete)
     @PUT("/api/mobile/v1/goals/{id}")

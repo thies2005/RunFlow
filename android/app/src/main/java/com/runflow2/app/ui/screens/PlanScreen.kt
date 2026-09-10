@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
@@ -27,8 +28,14 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -39,6 +46,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,11 +70,15 @@ import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.WorkoutType
+import com.runflow2.app.domain.person.Personalization
+import com.runflow2.app.domain.plan.vdotFromThresholdPaceSecPerKm
 import com.runflow2.app.ui.components.InfoChip
 import com.runflow2.app.ui.components.WorkoutVisuals
+import android.widget.Toast
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -87,9 +99,14 @@ fun PlanScreen(
     val workouts = goal?.let { g ->
         container.repository.workoutsForGoal(g.id).collectAsState(initial = emptyList()).value
     } ?: emptyList()
+    // Undo depth: enabled as soon as one pre-edit snapshot exists for the goal.
+    val undoCount = goal?.let { g ->
+        container.repository.snapshotCountForGoal(g.id).collectAsState(initial = 0).value
+    } ?: 0
 
     var selectedWorkout by remember { mutableStateOf<WorkoutEntity?>(null) }
     var showRaceResult by remember { mutableStateOf(false) }
+    var showAddWorkout by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -132,6 +149,37 @@ fun PlanScreen(
                     )
                 }
 
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = { showAddWorkout = true }, modifier = Modifier.weight(1f)) {
+                            Icon(Icons.Outlined.Add, null)
+                            Spacer(Modifier.width(6.dp))
+                            Text("Add workout")
+                        }
+                        // Local undo of the last plan edit (restore of the
+                        // newest snapshot; each tap steps one edit further
+                        // back). No redo — deviation vs web, see task notes.
+                        TextButton(
+                            onClick = {
+                                scope.launch {
+                                    val undone = container.repository.undoLastEdit(g.id)
+                                    Toast.makeText(
+                                        container.appContext,
+                                        if (undone) "Edit undone" else "Nothing left to undo",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                }
+                            },
+                            enabled = undoCount > 0,
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(Icons.AutoMirrored.Outlined.Undo, null)
+                            Spacer(Modifier.width(6.dp))
+                            Text("Undo")
+                        }
+                    }
+                }
+
                 val firstWeek = workouts.minOfOrNull { Format.localDate(it.scheduledDate) }?.with(DayOfWeek.MONDAY)
                 val grouped = workouts
                     .groupBy { Format.localDate(it.scheduledDate).with(DayOfWeek.MONDAY) }
@@ -172,7 +220,6 @@ fun PlanScreen(
             WorkoutActionSheet(
                 workout = liveWorkout,
                 unit = unit,
-                canDelete = goal?.isLocalOnly != false,
                 onStart = {
                     selectedWorkout = null
                     onStartWorkout(liveWorkout.id)
@@ -202,6 +249,16 @@ fun PlanScreen(
                 },
             )
         }
+    }
+
+    // ---- add workout dialog ----
+    if (showAddWorkout && goal != null) {
+        AddWorkoutDialog(
+            goal = goal!!,
+            workouts = workouts,
+            container = container,
+            onDismiss = { showAddWorkout = false },
+        )
     }
 
     // ---- race result dialog ----
@@ -432,7 +489,6 @@ val STRUCTURED_WORKOUT_TYPES = setOf(
 private fun WorkoutActionSheet(
     workout: WorkoutEntity,
     unit: DistanceUnit,
-    canDelete: Boolean,
     onStart: () -> Unit,
     onComplete: () -> Unit,
     onUncomplete: () -> Unit,
@@ -502,20 +558,19 @@ private fun WorkoutActionSheet(
                 TextButton(onClick = { onShift(-1) }, modifier = Modifier.weight(1f)) { Text("◀ Day earlier") }
                 TextButton(onClick = { onShift(1) }, modifier = Modifier.weight(1f)) { Text("Day later ▶") }
             }
-            if (canDelete) {
-                // Single-workout deletes only stick for on-device plans; synced
-                // plans have no server delete route, so the action is hidden.
-                TextButton(
-                    onClick = onDelete,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                    ),
-                ) {
-                    Icon(Icons.Outlined.Delete, null)
-                    Spacer(Modifier.width(6.dp))
-                    Text("Delete workout")
-                }
+            // Works for local-only and synced plans alike: synced deletes
+            // enqueue a workout_delete outbox item (server delete + pull
+            // confirm), local-only deletes just drop the row.
+            TextButton(
+                onClick = onDelete,
+                modifier = Modifier.fillMaxWidth(),
+                colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                Icon(Icons.Outlined.Delete, null)
+                Spacer(Modifier.width(6.dp))
+                Text("Delete workout")
             }
         } else {
             EditWorkoutFields(workout = workout, onSave = onSaveEdit, onCancel = { editMode = false })
@@ -603,6 +658,134 @@ fun parseDuration(text: String): Int? {
     if (parts.size == 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
     if (parts.size == 2) return parts[0] * 60 + parts[1]
     return t.toIntOrNull()
+}
+
+/**
+ * Minimal create-workout dialog: date (picker, defaults to today), type
+ * (dropdown, EASY default), optional name and distance. Quality types are
+ * prefilled with the athlete's structured defaults (VDOT chain like
+ * StructuredEditorScreen); "Edit intervals" stays available afterwards via
+ * the workout action sheet.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddWorkoutDialog(
+    goal: GoalEntity,
+    workouts: List<WorkoutEntity>,
+    container: AppContainer,
+    onDismiss: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    var showPicker by remember { mutableStateOf(false) }
+    var date by remember { mutableStateOf(LocalDate.now()) }
+    var type by remember { mutableStateOf(WorkoutType.EASY) }
+    var typeExpanded by remember { mutableStateOf(false) }
+    var nameText by remember { mutableStateOf("") }
+    var kmText by remember { mutableStateOf("") }
+
+    if (showPicker) {
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = date.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli(),
+        )
+        DatePickerDialog(
+            onDismissRequest = { showPicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pickerState.selectedDateMillis?.let { ms ->
+                            date = java.time.Instant.ofEpochMilli(ms).atZone(ZoneId.of("UTC")).toLocalDate()
+                        }
+                        showPicker = false
+                    },
+                ) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showPicker = false }) { Text("Cancel") } },
+        ) {
+            DatePicker(state = pickerState)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add workout") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                androidx.compose.material3.OutlinedButton(
+                    onClick = { showPicker = true },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Date: ${Format.dateWithYear(date)}") }
+                ExposedDropdownMenuBox(expanded = typeExpanded, onExpandedChange = { typeExpanded = it }) {
+                    OutlinedTextField(
+                        value = type.label,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Type") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(typeExpanded) },
+                        modifier = Modifier
+                            .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                            .fillMaxWidth(),
+                    )
+                    ExposedDropdownMenu(expanded = typeExpanded, onDismissRequest = { typeExpanded = false }) {
+                        WorkoutType.entries.forEach { t ->
+                            DropdownMenuItem(
+                                text = { Text(t.label) },
+                                onClick = {
+                                    type = t
+                                    typeExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = nameText,
+                    onValueChange = { nameText = it },
+                    label = { Text("Name (optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = kmText,
+                    onValueChange = { kmText = it },
+                    label = { Text("Distance (km, optional)") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val phase = workouts
+                        .filter { Format.localDate(it.scheduledDate) < date }
+                        .maxByOrNull { it.scheduledDate }
+                        ?.let { runCatching { PlanPhase.valueOf(it.phase) }.getOrNull() }
+                        ?: PlanPhase.BASE
+                    scope.launch {
+                        val steps = if (type in STRUCTURED_WORKOUT_TYPES) {
+                            val profile = container.repository.profileOnce()
+                            val v = goal.vdotAtCreation
+                                ?: vdotFromThresholdPaceSecPerKm(profile.thresholdPaceSecPerKm.toDouble())
+                                ?: 50.0
+                            Personalization.structuredEditorDefaults(v).toJsonString()
+                        } else null
+                        container.repository.createWorkoutInGoal(
+                            goalId = goal.id,
+                            date = date,
+                            workoutType = type,
+                            name = nameText.takeIf { it.isNotBlank() },
+                            distanceKm = kmText.toDoubleOrNull(),
+                            phase = phase,
+                            structuredStepsJson = steps,
+                        )
+                        onDismiss()
+                    }
+                },
+            ) { Text("Add") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
 
 @Composable

@@ -10,9 +10,13 @@ import com.runflow2.app.data.net.PatchWorkoutRequest
 import com.runflow2.app.data.net.UpdateActivityRequest
 import com.runflow2.app.data.net.UpdateGoalRequest
 import com.runflow2.app.data.net.UpdateProfileRequest
+import com.runflow2.app.data.net.WorkoutCreatePayload
+import com.runflow2.app.data.net.WorkoutDeletePayload
 import com.runflow2.app.data.repo.SettingsRepository
 import com.runflow2.app.data.sync.applyTo
 import com.runflow2.app.data.sync.mergeInto
+import com.runflow2.app.data.sync.reconcileCreatedWorkout
+import com.runflow2.app.data.sync.toWorkoutEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,7 +64,9 @@ class SyncManager(
         const val TYPE_ACTIVITY_CREATE = "activity_create"
         const val TYPE_ACTIVITY_UPDATE = "activity_update"
         const val TYPE_PROFILE_UPDATE = "profile_update"
+        const val TYPE_WORKOUT_CREATE = "workout_create"
         const val TYPE_WORKOUT_UPDATE = "workout_update"
+        const val TYPE_WORKOUT_DELETE = "workout_delete"
         const val TYPE_GOAL_UPDATE = "goal_update"
         const val TYPE_GOAL_DELETE = "goal_delete"
         private const val PAGE_SIZE = 100
@@ -251,6 +257,50 @@ class SyncManager(
                 val req = json.decodeFromString(PatchWorkoutRequest.serializer(), payloadJson)
                 client.api().patchWorkout(localId, req)
                 db.workoutDao().byId(localId)?.let { db.workoutDao().upsert(it.copy(dirty = false)) }
+            }
+            TYPE_WORKOUT_CREATE -> {
+                val payload = json.decodeFromString(WorkoutCreatePayload.serializer(), payloadJson)
+                try {
+                    val dto = api.createWorkout(payload.goalId, payload.workout).workout
+                    val local = db.workoutDao().byId(localId)
+                    if (local == null) {
+                        // The row vanished mid-drain (deleted while the create
+                        // was in flight): remove the just-created server row so
+                        // the server doesn't keep an orphan the user deleted.
+                        runCatching { api.deleteWorkout(payload.goalId, dto.id) }
+                    } else {
+                        val server = dto.toWorkoutEntity(payload.goalId)
+                        val dup = db.workoutDao().byId(dto.id)
+                        if (server == null || (dup != null && dup.id != local.id)) {
+                            // Unusable response, or a pull already brought this
+                            // server row in: drop the temp row, server wins.
+                            db.workoutDao().delete(local.id)
+                        } else {
+                            db.workoutDao().upsert(reconcileCreatedWorkout(local, server))
+                            db.workoutDao().delete(local.id)
+                            // Re-point queued full-state PATCHes from the temp
+                            // id to the server id so later edits still land.
+                            db.syncQueueDao().pendingFor(TYPE_WORKOUT_UPDATE, local.id).forEach { item ->
+                                db.syncQueueDao().insert(item.copy(id = 0, localId = dto.id))
+                                db.syncQueueDao().markCompleted(item.id)
+                            }
+                        }
+                    }
+                } catch (e: HttpException) {
+                    if (e.code() in 400..499 && e.code() != 408 && e.code() != 429) {
+                        // The server rejected the create for good: clear dirty
+                        // so the next pull prunes the temp row instead of
+                        // keeping it (and re-pushing it) forever.
+                        db.workoutDao().byId(localId)?.let { db.workoutDao().upsert(it.copy(dirty = false)) }
+                    }
+                    throw e
+                }
+            }
+            TYPE_WORKOUT_DELETE -> {
+                val payload = json.decodeFromString(WorkoutDeletePayload.serializer(), payloadJson)
+                val resp = api.deleteWorkout(payload.goalId, localId)
+                // 404 = already gone on the server: the delete still succeeded.
+                if (!resp.isSuccessful && resp.code() != 404) throw HttpException(resp)
             }
             TYPE_GOAL_UPDATE -> {
                 val req = json.decodeFromString(UpdateGoalRequest.serializer(), payloadJson)

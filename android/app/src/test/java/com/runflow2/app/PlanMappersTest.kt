@@ -10,9 +10,11 @@ import com.runflow2.app.data.sync.dowToServerDay
 import com.runflow2.app.data.sync.epochMillisToServerDate
 import com.runflow2.app.data.sync.mergeServerWorkouts
 import com.runflow2.app.data.sync.parseRaceType
+import com.runflow2.app.data.sync.reconcileCreatedWorkout
 import com.runflow2.app.data.sync.serverDateToEpochMillis
 import com.runflow2.app.data.sync.serverDayToDow
 import com.runflow2.app.data.sync.toCreatePlanRequest
+import com.runflow2.app.data.sync.toCreateWorkoutPayload
 import com.runflow2.app.data.sync.toEntities
 import com.runflow2.app.data.sync.toPatchRequest
 import com.runflow2.app.data.sync.toWorkoutEntity
@@ -521,6 +523,78 @@ class PlanMappersTest {
         assertEquals(1, merged.size)
         assertEquals("local edit", merged.first().description)
         assertTrue(merged.first().structuredStepsJson!!.contains("\"main\""))
+    }
+
+    // ---- workout create outbox ----
+
+    @Test
+    fun `create payload converts units and carries goal id`() {
+        val w = workout("temp-1", dirty = true, desc = "Thursday 400s").copy(
+            workoutType = "INTERVALS",
+            phase = "BUILD",
+            customName = "Thursday 400s",
+            targetDistanceKm = 8.0,
+            targetPaceSecPerKm = 240,
+            targetDurationSec = 2400,
+        )
+        val payload = w.toCreateWorkoutPayload("g1")
+        assertEquals("g1", payload.goalId)
+        val req = payload.workout
+        assertEquals("2026-09-01", req.scheduledDate)
+        assertEquals("INTERVALS", req.workoutType)
+        assertEquals("Thursday 400s", req.description)
+        assertEquals("BUILD", req.phase)
+        assertEquals("Thursday 400s", req.customName)
+        assertEquals(8000.0, req.targetDistance!!, 0.001)
+        assertEquals(240.0, req.targetPace!!, 0.001)
+        assertEquals(2400, req.targetDuration)
+        assertNull(req.structuredSteps)
+        // null optional fields stay off the wire
+        val encoded = Api.json.encodeToString(
+            com.runflow2.app.data.net.WorkoutCreatePayload.serializer(), payload,
+        )
+        assertTrue(!encoded.contains("structuredSteps"))
+    }
+
+    @Test
+    fun `create payload forwards structuredSteps as raw JSON`() {
+        val w = workout("temp-2", dirty = true, desc = "400s").copy(
+            structuredStepsJson = """{"warmup":{"distance":1000,"pace":"E"},"main":[{"reps":4,"distance":400,"pace":"I","restSeconds":90}],"cooldown":{"distance":1000,"pace":"E"}}""",
+        )
+        val req = w.toCreateWorkoutPayload("g1").workout
+        val entry = req.structuredSteps!!.jsonObject["main"]!!.jsonArray[0].jsonObject
+        assertEquals("I", entry["pace"]!!.jsonPrimitive.content)
+        assertEquals(90, entry["restSeconds"]!!.jsonPrimitive.content.toInt())
+    }
+
+    @Test
+    fun `created server workout reconciles onto the temp row`() {
+        val temp = workout("temp-1", dirty = true, desc = "local edit").copy(
+            sortIndex = 7,
+            isCompleted = true,
+            completedAt = 1000L,
+            activityId = "act-1",
+        )
+        val server = workout("server-1", dirty = false, desc = "server echo").copy(sortIndex = 0)
+        val merged = reconcileCreatedWorkout(temp, server)
+        // server identity wins, dirty clears
+        assertEquals("server-1", merged.id)
+        assertTrue(!merged.dirty)
+        assertEquals("server echo", merged.description)
+        // local-only state the create response cannot know carries over
+        assertEquals(7, merged.sortIndex)
+        assertEquals(true, merged.isCompleted)
+        assertEquals(1000L, merged.completedAt)
+        assertEquals("act-1", merged.activityId)
+    }
+
+    @Test
+    fun `reconciliation keeps a server-side completion that raced ahead`() {
+        val temp = workout("temp-1", dirty = true, desc = "local").copy(isCompleted = false, completedAt = null)
+        val server = workout("server-1", dirty = false, desc = "server").copy(isCompleted = true, completedAt = 2000L)
+        val merged = reconcileCreatedWorkout(temp, server)
+        assertEquals(true, merged.isCompleted)
+        assertEquals(2000L, merged.completedAt)
     }
 
     // ---- calibration labels ----

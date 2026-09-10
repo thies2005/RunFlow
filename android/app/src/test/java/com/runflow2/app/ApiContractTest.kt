@@ -3,6 +3,7 @@ package com.runflow2.app
 import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.net.CreateActivityRequest
 import com.runflow2.app.data.net.CreatePlanRequest
+import com.runflow2.app.data.net.CreateWorkoutRequest
 import com.runflow2.app.data.net.EmailLoginRequest
 import com.runflow2.app.data.net.PatchWorkoutRequest
 import com.runflow2.app.data.net.RefreshRequest
@@ -233,5 +234,52 @@ class ApiContractTest {
         assertEquals("/api/mobile/v1/goals/g1", recorded.path)
         assertEquals("DELETE", recorded.method)
         assertTrue(del.isSuccessful)
+    }
+
+    @Test
+    fun `workout create and delete hit the goal-scoped plan-advanced paths`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(201).setBody(
+            """{"workout":{"id":"w-server","goalId":"g1","scheduledDate":"2026-09-10T00:00:00.000Z",
+                 "workoutType":"INTERVALS","description":"Thursday 400s","phase":"BUILD"}}"""
+        ))
+        val resp = api.createWorkout(
+            "g1",
+            CreateWorkoutRequest(
+                scheduledDate = "2026-09-10",
+                workoutType = "INTERVALS",
+                description = "Thursday 400s",
+                phase = "BUILD",
+                customName = "Thursday 400s",
+                targetDistance = 8000.0,
+                structuredSteps = Api.json.parseToJsonElement(
+                    """{"main":[{"reps":4,"distance":400,"pace":"I","restSeconds":90}]}""",
+                ),
+            ),
+        )
+        var recorded = server.takeRequest()
+        assertEquals("/api/plan-advanced/g1/workouts", recorded.path)
+        assertEquals("POST", recorded.method)
+        val body = recorded.body.readUtf8()
+        assertTrue(body.contains("\"scheduledDate\":\"2026-09-10\""))
+        assertTrue(body.contains("\"workoutType\":\"INTERVALS\""))
+        assertTrue(body.contains("\"description\":\"Thursday 400s\""))
+        assertTrue(body.contains("\"targetDistance\":8000.0"))
+        assertTrue(body.contains("\"reps\":4"))
+        assertEquals("w-server", resp.workout.id)
+        assertEquals("INTERVALS", resp.workout.workoutType)
+
+        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"success":true}"""))
+        val del = api.deleteWorkout("g1", "w-server")
+        recorded = server.takeRequest()
+        assertEquals("/api/plan-advanced/g1/workouts/w-server", recorded.path)
+        assertEquals("DELETE", recorded.method)
+        assertTrue(del.isSuccessful)
+
+        // 404 = already gone: surfaces as an unsuccessful response the caller
+        // treats as success (same convention as goal deletes).
+        server.enqueue(MockResponse().setResponseCode(404).setBody("""{"error":"Workout not found"}"""))
+        val gone = api.deleteWorkout("g1", "w-server")
+        assertTrue(!gone.isSuccessful)
+        assertEquals(404, gone.code())
     }
 }

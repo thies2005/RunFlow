@@ -2,9 +2,11 @@ package com.runflow2.app.data.sync
 
 import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.net.CreatePlanRequest
+import com.runflow2.app.data.net.CreateWorkoutRequest
 import com.runflow2.app.data.net.PatchWorkoutRequest
 import com.runflow2.app.data.net.PlanGoalDto
 import com.runflow2.app.data.net.PlanWorkoutDto
+import com.runflow2.app.data.net.WorkoutCreatePayload
 import com.runflow2.app.data.db.GoalEntity
 import com.runflow2.app.data.db.WorkoutEntity
 import com.runflow2.app.domain.model.PlanPhase
@@ -252,4 +254,41 @@ fun WorkoutEntity.toPatchRequest(): PatchWorkoutRequest = PatchWorkoutRequest(
     structuredSteps = structuredStepsJson?.let {
         runCatching { Api.json.parseToJsonElement(it) }.getOrNull()
     },
+)
+
+/**
+ * Outbox payload for workout_create: the POST /api/plan-advanced/{goalId}/
+ * workouts body (meters, s/km, date-only) plus the owning goal id. The route
+ * demands a non-empty description; the caller guarantees one.
+ */
+fun WorkoutEntity.toCreateWorkoutPayload(goalId: String): WorkoutCreatePayload = WorkoutCreatePayload(
+    goalId = goalId,
+    workout = CreateWorkoutRequest(
+        scheduledDate = epochMillisToServerDate(scheduledDate),
+        workoutType = workoutType,
+        description = description,
+        phase = phase,
+        customName = customName,
+        targetDistance = targetDistanceKm?.let { it * 1000.0 },
+        targetPace = targetPaceSecPerKm?.toDouble(),
+        targetDuration = targetDurationSec,
+        structuredSteps = structuredStepsJson?.let {
+            runCatching { Api.json.parseToJsonElement(it) }.getOrNull()
+        },
+    ),
+)
+
+/**
+ * Applies a freshly created server workout onto its local temp row after the
+ * workout_create push resolves: the server row (with its real id) wins, while
+ * local-only state the create response cannot know — sort position, manual
+ * completion, activity link — carries over. dirty clears; completion is OR-ed
+ * so a manual complete that raced the push survives.
+ */
+fun reconcileCreatedWorkout(local: WorkoutEntity, server: WorkoutEntity): WorkoutEntity = server.copy(
+    sortIndex = local.sortIndex,
+    isCompleted = local.isCompleted || server.isCompleted,
+    completedAt = local.completedAt ?: server.completedAt,
+    activityId = local.activityId,
+    dirty = false,
 )

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
@@ -74,8 +75,9 @@ export async function GET(req: Request, ctx: RouteContext) {
 
 export async function POST(req: Request, ctx: RouteContext) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        // Dual auth: NextAuth session (web) or mobile JWT Bearer (app).
+        const user = await getAuthenticatedUser(req);
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -91,7 +93,7 @@ export async function POST(req: Request, ctx: RouteContext) {
         const { goalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id },
+            where: { id: goalId, userId: user.id },
         });
 
         if (!goal) {
@@ -119,7 +121,7 @@ export async function POST(req: Request, ctx: RouteContext) {
 
         if (linkedActivityId) {
             const activity = await prisma.activity.findFirst({
-                where: { id: linkedActivityId, userId: session.user.id },
+                where: { id: linkedActivityId, userId: user.id },
             });
             if (!activity) {
                 return NextResponse.json({ error: 'Activity not found' }, { status: 404 });

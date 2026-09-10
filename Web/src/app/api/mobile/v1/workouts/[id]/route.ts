@@ -53,11 +53,37 @@ export async function PATCH(
     };
     const warnings = checkFieldConsistency(finalValues);
 
+    // Builder fields: undefined = untouched, null = cleared (same semantics as
+    // the targets above). Types are validated so malformed payloads fail fast
+    // instead of poisoning the row; structuredSteps must be a JSON object or
+    // array (Prisma Json input), never a primitive.
+    const optionalInt = (v: unknown) => v === undefined || v === null || (typeof v === 'number' && Number.isInteger(v));
+    const optionalNumber = (v: unknown) => v === undefined || v === null || (typeof v === 'number' && Number.isFinite(v));
+    const optionalString = (v: unknown) => v === undefined || v === null || typeof v === 'string';
+    const builderFieldsValid =
+      optionalInt(body.targetHrZone) &&
+      optionalInt(body.targetHrMinBpm) &&
+      optionalInt(body.targetHrMaxBpm) &&
+      optionalNumber(body.targetPaceMinSecondsPerKm) &&
+      optionalNumber(body.targetPaceMaxSecondsPerKm) &&
+      optionalString(body.customName) &&
+      (body.structuredSteps === undefined || body.structuredSteps === null || typeof body.structuredSteps === 'object');
+    if (!builderFieldsValid) {
+      return errorResponses.badRequest('Invalid builder field type');
+    }
+
     const updated = await prisma.workout.update({
       where: { id },
       data: {
         ...(body.workoutType && { workoutType: body.workoutType }),
         ...(body.description && { description: body.description }),
+        ...(body.customName !== undefined && { customName: body.customName }),
+        ...(body.targetHrZone !== undefined && { targetHrZone: body.targetHrZone }),
+        ...(body.targetHrMinBpm !== undefined && { targetHrMinBpm: body.targetHrMinBpm }),
+        ...(body.targetHrMaxBpm !== undefined && { targetHrMaxBpm: body.targetHrMaxBpm }),
+        ...(body.targetPaceMinSecondsPerKm !== undefined && { targetPaceMinSecondsPerKm: body.targetPaceMinSecondsPerKm }),
+        ...(body.targetPaceMaxSecondsPerKm !== undefined && { targetPaceMaxSecondsPerKm: body.targetPaceMaxSecondsPerKm }),
+        ...(body.structuredSteps !== undefined && { structuredSteps: body.structuredSteps }),
         ...(body.targetDistance !== undefined
           ? { targetDistance: body.targetDistance }
           : derivedTargetDistance !== undefined

@@ -117,6 +117,7 @@ export type GoalMinAggregateOutputType = {
   targetLaps: number | null
   planSource: string | null
   guidanceLevel: string | null
+  importKey: string | null
   parentGoalId: string | null
   priority: $Enums.GoalPriority | null
   trainingFocus: string | null
@@ -161,6 +162,7 @@ export type GoalMaxAggregateOutputType = {
   targetLaps: number | null
   planSource: string | null
   guidanceLevel: string | null
+  importKey: string | null
   parentGoalId: string | null
   priority: $Enums.GoalPriority | null
   trainingFocus: string | null
@@ -206,6 +208,8 @@ export type GoalCountAggregateOutputType = {
   targetLaps: number
   planSource: number
   guidanceLevel: number
+  importKey: number
+  importIdMap: number
   parentGoalId: number
   priority: number
   trainingFocus: number
@@ -304,6 +308,7 @@ export type GoalMinAggregateInputType = {
   targetLaps?: true
   planSource?: true
   guidanceLevel?: true
+  importKey?: true
   parentGoalId?: true
   priority?: true
   trainingFocus?: true
@@ -348,6 +353,7 @@ export type GoalMaxAggregateInputType = {
   targetLaps?: true
   planSource?: true
   guidanceLevel?: true
+  importKey?: true
   parentGoalId?: true
   priority?: true
   trainingFocus?: true
@@ -393,6 +399,8 @@ export type GoalCountAggregateInputType = {
   targetLaps?: true
   planSource?: true
   guidanceLevel?: true
+  importKey?: true
+  importIdMap?: true
   parentGoalId?: true
   priority?: true
   trainingFocus?: true
@@ -525,6 +533,8 @@ export type GoalGroupByOutputType = {
   targetLaps: number | null
   planSource: string
   guidanceLevel: string
+  importKey: string | null
+  importIdMap: runtime.JsonValue | null
   parentGoalId: string | null
   priority: $Enums.GoalPriority
   trainingFocus: string | null
@@ -593,6 +603,8 @@ export type GoalWhereInput = {
   targetLaps?: Prisma.IntNullableFilter<"Goal"> | number | null
   planSource?: Prisma.StringFilter<"Goal"> | string
   guidanceLevel?: Prisma.StringFilter<"Goal"> | string
+  importKey?: Prisma.StringNullableFilter<"Goal"> | string | null
+  importIdMap?: Prisma.JsonNullableFilter<"Goal">
   parentGoalId?: Prisma.StringNullableFilter<"Goal"> | string | null
   priority?: Prisma.EnumGoalPriorityFilter<"Goal"> | $Enums.GoalPriority
   trainingFocus?: Prisma.StringNullableFilter<"Goal"> | string | null
@@ -649,6 +661,8 @@ export type GoalOrderByWithRelationInput = {
   targetLaps?: Prisma.SortOrderInput | Prisma.SortOrder
   planSource?: Prisma.SortOrder
   guidanceLevel?: Prisma.SortOrder
+  importKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  importIdMap?: Prisma.SortOrderInput | Prisma.SortOrder
   parentGoalId?: Prisma.SortOrderInput | Prisma.SortOrder
   priority?: Prisma.SortOrder
   trainingFocus?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -667,6 +681,7 @@ export type GoalOrderByWithRelationInput = {
 
 export type GoalWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  importKey?: string
   AND?: Prisma.GoalWhereInput | Prisma.GoalWhereInput[]
   OR?: Prisma.GoalWhereInput[]
   NOT?: Prisma.GoalWhereInput | Prisma.GoalWhereInput[]
@@ -708,6 +723,7 @@ export type GoalWhereUniqueInput = Prisma.AtLeast<{
   targetLaps?: Prisma.IntNullableFilter<"Goal"> | number | null
   planSource?: Prisma.StringFilter<"Goal"> | string
   guidanceLevel?: Prisma.StringFilter<"Goal"> | string
+  importIdMap?: Prisma.JsonNullableFilter<"Goal">
   parentGoalId?: Prisma.StringNullableFilter<"Goal"> | string | null
   priority?: Prisma.EnumGoalPriorityFilter<"Goal"> | $Enums.GoalPriority
   trainingFocus?: Prisma.StringNullableFilter<"Goal"> | string | null
@@ -722,7 +738,7 @@ export type GoalWhereUniqueInput = Prisma.AtLeast<{
   paceProfile?: Prisma.XOR<Prisma.PlanPaceProfileNullableScalarRelationFilter, Prisma.PlanPaceProfileWhereInput> | null
   taggedWorkouts?: Prisma.WorkoutListRelationFilter
   guidedPlanSessions?: Prisma.GuidedPlanSessionListRelationFilter
-}, "id">
+}, "id" | "importKey">
 
 export type GoalOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -764,6 +780,8 @@ export type GoalOrderByWithAggregationInput = {
   targetLaps?: Prisma.SortOrderInput | Prisma.SortOrder
   planSource?: Prisma.SortOrder
   guidanceLevel?: Prisma.SortOrder
+  importKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  importIdMap?: Prisma.SortOrderInput | Prisma.SortOrder
   parentGoalId?: Prisma.SortOrderInput | Prisma.SortOrder
   priority?: Prisma.SortOrder
   trainingFocus?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -817,6 +835,8 @@ export type GoalScalarWhereWithAggregatesInput = {
   targetLaps?: Prisma.IntNullableWithAggregatesFilter<"Goal"> | number | null
   planSource?: Prisma.StringWithAggregatesFilter<"Goal"> | string
   guidanceLevel?: Prisma.StringWithAggregatesFilter<"Goal"> | string
+  importKey?: Prisma.StringNullableWithAggregatesFilter<"Goal"> | string | null
+  importIdMap?: Prisma.JsonNullableWithAggregatesFilter<"Goal">
   parentGoalId?: Prisma.StringNullableWithAggregatesFilter<"Goal"> | string | null
   priority?: Prisma.EnumGoalPriorityWithAggregatesFilter<"Goal"> | $Enums.GoalPriority
   trainingFocus?: Prisma.StringNullableWithAggregatesFilter<"Goal"> | string | null
@@ -861,6 +881,8 @@ export type GoalCreateInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -916,6 +938,8 @@ export type GoalUncheckedCreateInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -969,6 +993,8 @@ export type GoalUpdateInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -1024,6 +1050,8 @@ export type GoalUncheckedUpdateInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1078,6 +1106,8 @@ export type GoalCreateManyInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -1122,6 +1152,8 @@ export type GoalUpdateManyMutationInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -1166,6 +1198,8 @@ export type GoalUncheckedUpdateManyInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1226,6 +1260,8 @@ export type GoalCountOrderByAggregateInput = {
   targetLaps?: Prisma.SortOrder
   planSource?: Prisma.SortOrder
   guidanceLevel?: Prisma.SortOrder
+  importKey?: Prisma.SortOrder
+  importIdMap?: Prisma.SortOrder
   parentGoalId?: Prisma.SortOrder
   priority?: Prisma.SortOrder
   trainingFocus?: Prisma.SortOrder
@@ -1296,6 +1332,7 @@ export type GoalMaxOrderByAggregateInput = {
   targetLaps?: Prisma.SortOrder
   planSource?: Prisma.SortOrder
   guidanceLevel?: Prisma.SortOrder
+  importKey?: Prisma.SortOrder
   parentGoalId?: Prisma.SortOrder
   priority?: Prisma.SortOrder
   trainingFocus?: Prisma.SortOrder
@@ -1340,6 +1377,7 @@ export type GoalMinOrderByAggregateInput = {
   targetLaps?: Prisma.SortOrder
   planSource?: Prisma.SortOrder
   guidanceLevel?: Prisma.SortOrder
+  importKey?: Prisma.SortOrder
   parentGoalId?: Prisma.SortOrder
   priority?: Prisma.SortOrder
   trainingFocus?: Prisma.SortOrder
@@ -1647,6 +1685,8 @@ export type GoalCreateWithoutUserInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
@@ -1700,6 +1740,8 @@ export type GoalUncheckedCreateWithoutUserInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -1783,6 +1825,8 @@ export type GoalScalarWhereInput = {
   targetLaps?: Prisma.IntNullableFilter<"Goal"> | number | null
   planSource?: Prisma.StringFilter<"Goal"> | string
   guidanceLevel?: Prisma.StringFilter<"Goal"> | string
+  importKey?: Prisma.StringNullableFilter<"Goal"> | string | null
+  importIdMap?: Prisma.JsonNullableFilter<"Goal">
   parentGoalId?: Prisma.StringNullableFilter<"Goal"> | string | null
   priority?: Prisma.EnumGoalPriorityFilter<"Goal"> | $Enums.GoalPriority
   trainingFocus?: Prisma.StringNullableFilter<"Goal"> | string | null
@@ -1827,6 +1871,8 @@ export type GoalCreateWithoutSubGoalsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -1881,6 +1927,8 @@ export type GoalUncheckedCreateWithoutSubGoalsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -1938,6 +1986,8 @@ export type GoalCreateWithoutParentGoalInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -1992,6 +2042,8 @@ export type GoalUncheckedCreateWithoutParentGoalInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
@@ -2065,6 +2117,8 @@ export type GoalUpdateWithoutSubGoalsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -2119,6 +2173,8 @@ export type GoalUncheckedUpdateWithoutSubGoalsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2187,6 +2243,8 @@ export type GoalCreateWithoutRaceResultInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -2241,6 +2299,8 @@ export type GoalUncheckedCreateWithoutRaceResultInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -2309,6 +2369,8 @@ export type GoalUpdateWithoutRaceResultInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -2363,6 +2425,8 @@ export type GoalUncheckedUpdateWithoutRaceResultInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2415,6 +2479,8 @@ export type GoalCreateWithoutWorkoutsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -2469,6 +2535,8 @@ export type GoalUncheckedCreateWithoutWorkoutsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -2526,6 +2594,8 @@ export type GoalCreateWithoutTaggedWorkoutsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -2580,6 +2650,8 @@ export type GoalUncheckedCreateWithoutTaggedWorkoutsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -2648,6 +2720,8 @@ export type GoalUpdateWithoutWorkoutsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -2702,6 +2776,8 @@ export type GoalUncheckedUpdateWithoutWorkoutsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2765,6 +2841,8 @@ export type GoalUpdateWithoutTaggedWorkoutsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -2819,6 +2897,8 @@ export type GoalUncheckedUpdateWithoutTaggedWorkoutsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2871,6 +2951,8 @@ export type GoalCreateWithoutSnapshotsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -2925,6 +3007,8 @@ export type GoalUncheckedCreateWithoutSnapshotsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -2993,6 +3077,8 @@ export type GoalUpdateWithoutSnapshotsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -3047,6 +3133,8 @@ export type GoalUncheckedUpdateWithoutSnapshotsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3099,6 +3187,8 @@ export type GoalCreateWithoutIntervalProgressionsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -3153,6 +3243,8 @@ export type GoalUncheckedCreateWithoutIntervalProgressionsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -3221,6 +3313,8 @@ export type GoalUpdateWithoutIntervalProgressionsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -3275,6 +3369,8 @@ export type GoalUncheckedUpdateWithoutIntervalProgressionsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3327,6 +3423,8 @@ export type GoalCreateWithoutAiAnalysisInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -3381,6 +3479,8 @@ export type GoalUncheckedCreateWithoutAiAnalysisInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -3449,6 +3549,8 @@ export type GoalUpdateWithoutAiAnalysisInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -3503,6 +3605,8 @@ export type GoalUncheckedUpdateWithoutAiAnalysisInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3555,6 +3659,8 @@ export type GoalCreateWithoutPaceProfileInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -3609,6 +3715,8 @@ export type GoalUncheckedCreateWithoutPaceProfileInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -3677,6 +3785,8 @@ export type GoalUpdateWithoutPaceProfileInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -3731,6 +3841,8 @@ export type GoalUncheckedUpdateWithoutPaceProfileInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3783,6 +3895,8 @@ export type GoalCreateWithoutGuidedPlanSessionsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -3837,6 +3951,8 @@ export type GoalUncheckedCreateWithoutGuidedPlanSessionsInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -3905,6 +4021,8 @@ export type GoalUpdateWithoutGuidedPlanSessionsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -3959,6 +4077,8 @@ export type GoalUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4011,6 +4131,8 @@ export type GoalCreateManyUserInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
@@ -4055,6 +4177,8 @@ export type GoalUpdateWithoutUserInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
@@ -4108,6 +4232,8 @@ export type GoalUncheckedUpdateWithoutUserInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4161,6 +4287,8 @@ export type GoalUncheckedUpdateManyWithoutUserInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4206,6 +4334,8 @@ export type GoalCreateManyParentGoalInput = {
   targetLaps?: number | null
   planSource?: string
   guidanceLevel?: string
+  importKey?: string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
 }
@@ -4249,6 +4379,8 @@ export type GoalUpdateWithoutParentGoalInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -4303,6 +4435,8 @@ export type GoalUncheckedUpdateWithoutParentGoalInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
@@ -4356,6 +4490,8 @@ export type GoalUncheckedUpdateManyWithoutParentGoalInput = {
   targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   planSource?: Prisma.StringFieldUpdateOperationsInput | string
   guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  importKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -4476,6 +4612,8 @@ export type GoalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   targetLaps?: boolean
   planSource?: boolean
   guidanceLevel?: boolean
+  importKey?: boolean
+  importIdMap?: boolean
   parentGoalId?: boolean
   priority?: boolean
   trainingFocus?: boolean
@@ -4533,6 +4671,8 @@ export type GoalSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   targetLaps?: boolean
   planSource?: boolean
   guidanceLevel?: boolean
+  importKey?: boolean
+  importIdMap?: boolean
   parentGoalId?: boolean
   priority?: boolean
   trainingFocus?: boolean
@@ -4580,6 +4720,8 @@ export type GoalSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   targetLaps?: boolean
   planSource?: boolean
   guidanceLevel?: boolean
+  importKey?: boolean
+  importIdMap?: boolean
   parentGoalId?: boolean
   priority?: boolean
   trainingFocus?: boolean
@@ -4627,12 +4769,14 @@ export type GoalSelectScalar = {
   targetLaps?: boolean
   planSource?: boolean
   guidanceLevel?: boolean
+  importKey?: boolean
+  importIdMap?: boolean
   parentGoalId?: boolean
   priority?: boolean
   trainingFocus?: boolean
 }
 
-export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "swimDay" | "restDays" | "isActive" | "completedAt" | "deletedAt" | "createdAt" | "updatedAt" | "sport" | "creationMode" | "customDistanceM" | "customSwimDistM" | "customBikeDistM" | "customRunDistM" | "backyardLoopDistM" | "backyardLoopTimeS" | "targetLaps" | "planSource" | "guidanceLevel" | "parentGoalId" | "priority" | "trainingFocus", ExtArgs["result"]["goal"]>
+export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "swimDay" | "restDays" | "isActive" | "completedAt" | "deletedAt" | "createdAt" | "updatedAt" | "sport" | "creationMode" | "customDistanceM" | "customSwimDistM" | "customBikeDistM" | "customRunDistM" | "backyardLoopDistM" | "backyardLoopTimeS" | "targetLaps" | "planSource" | "guidanceLevel" | "importKey" | "importIdMap" | "parentGoalId" | "priority" | "trainingFocus", ExtArgs["result"]["goal"]>
 export type GoalInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   workouts?: boolean | Prisma.Goal$workoutsArgs<ExtArgs>
@@ -4711,6 +4855,8 @@ export type $GoalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     targetLaps: number | null
     planSource: string
     guidanceLevel: string
+    importKey: string | null
+    importIdMap: runtime.JsonValue | null
     parentGoalId: string | null
     priority: $Enums.GoalPriority
     trainingFocus: string | null
@@ -5187,6 +5333,8 @@ export interface GoalFieldRefs {
   readonly targetLaps: Prisma.FieldRef<"Goal", 'Int'>
   readonly planSource: Prisma.FieldRef<"Goal", 'String'>
   readonly guidanceLevel: Prisma.FieldRef<"Goal", 'String'>
+  readonly importKey: Prisma.FieldRef<"Goal", 'String'>
+  readonly importIdMap: Prisma.FieldRef<"Goal", 'Json'>
   readonly parentGoalId: Prisma.FieldRef<"Goal", 'String'>
   readonly priority: Prisma.FieldRef<"Goal", 'GoalPriority'>
   readonly trainingFocus: Prisma.FieldRef<"Goal", 'String'>

@@ -7,6 +7,7 @@ import { createSnapshot } from '@/lib/plan/snapshot';
 import { RaceType, WorkoutType, PlanPhase, PlanCreationMode } from '@/generated/prisma/client';
 import type { Prisma } from '@/generated/prisma/client';
 import { z } from 'zod';
+import { createHash } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -113,66 +114,119 @@ export async function POST(request: NextRequest) {
             weeklyMileageGoal = weeklyMileageGoal * 1000;
         }
 
-        const created = await prisma.$transaction(async (tx) => {
-            const goal = await tx.goal.create({
-                data: {
-                    userId: user.id,
-                    name: input.name.trim(),
-                    sport: input.sport ?? 'RUN',
-                    raceType: input.raceType ?? null,
-                    raceDate: input.raceDate ? new Date(input.raceDate) : null,
-                    planStartDate: input.planStartDate ? new Date(input.planStartDate) : null,
-                    targetTime: input.targetTime ?? null,
-                    currentVdot: input.currentVdot ?? null,
-                    weeklyMileageGoal,
-                    planWeeks: input.planWeeks ?? 12,
-                    taperWeeks: input.taperWeeks ?? 2,
-                    peakWeeks: input.peakWeeks ?? 4,
-                    buildWeeks: input.buildWeeks ?? 4,
-                    runsPerWeek: input.runsPerWeek ?? 4,
-                    ridesPerWeek: input.ridesPerWeek ?? 0,
-                    swimsPerWeek: input.swimsPerWeek ?? 0,
-                    strengthPerWeek: input.strengthPerWeek ?? 0,
-                    longRunDay: input.longRunDay ?? 0,
-                    workoutDay: input.workoutDay ?? 3,
-                    ...(input.restDays && { restDays: input.restDays }),
-                    creationMode: input.creationMode,
-                    planSource: 'mobile-import',
-                },
-            });
+        // Idempotency: the import must be replayable. If the response is lost
+        // after the server committed (flaky mobile network), the app retries
+        // with the SAME client-minted workout localIds — so a key derived
+        // from them identifies the plan without any extra client contract.
+        // A retry that ADDED workouts locally hashes differently and falls
+        // back to the normal e87db2dc dirty-create reconciliation path.
+        const importKey = createHash('sha256')
+            .update([...localIds].sort().join('\n'))
+            .digest('hex');
 
-            // Individual creates (not createMany) so the server ids come back
-            // for the idMap; insertion order preserves the caller's order.
-            const idMap: Record<string, string> = {};
-            for (const [index, w] of input.workouts.entries()) {
-                const workout = await tx.workout.create({
+        const existing = await prisma.goal.findFirst({
+            where: { importKey, userId: user.id, deletedAt: null },
+            select: { id: true, importIdMap: true },
+        });
+        if (existing) {
+            // Unreachable in practice: rows with an importKey are always
+            // written together with their idMap in one transaction.
+            if (!existing.importIdMap) {
+                throw new Error(`Imported plan ${existing.id} is missing its id map`);
+            }
+            return NextResponse.json(
+                { goalId: existing.id, idMap: existing.importIdMap, replayed: true },
+                { status: 200, headers: rateLimitHeaders(rateLimitResult) },
+            );
+        }
+
+        let created: { goalId: string; idMap: Record<string, string> };
+        try {
+            created = await prisma.$transaction(async (tx) => {
+                const goal = await tx.goal.create({
                     data: {
-                        goalId: goal.id,
-                        scheduledDate: new Date(w.scheduledDate),
-                        workoutType: w.workoutType as WorkoutType,
-                        description: w.description ?? w.customName ?? w.workoutType,
-                        phase: w.phase as PlanPhase,
-                        order: w.order ?? index,
-                        displayDesc: w.displayDesc ?? null,
-                        intensityZone: w.intensityZone ?? null,
-                        sport: w.sport ?? 'RUN',
-                        customName: w.customName ?? null,
-                        targetDistance: w.targetDistance ?? null,
-                        targetDuration: w.targetDuration ?? null,
-                        targetPace: w.targetPace ?? null,
-                        targetHrZone: w.targetHrZone ?? null,
-                        targetHrMinBpm: w.targetHrMinBpm ?? null,
-                        targetHrMaxBpm: w.targetHrMaxBpm ?? null,
-                        targetPaceMinSecondsPerKm: w.targetPaceMinSecondsPerKm ?? null,
-                        targetPaceMaxSecondsPerKm: w.targetPaceMaxSecondsPerKm ?? null,
-                        structuredSteps: (w.structuredSteps ?? undefined) as Prisma.InputJsonValue | undefined,
+                        userId: user.id,
+                        name: input.name.trim(),
+                        sport: input.sport ?? 'RUN',
+                        raceType: input.raceType ?? null,
+                        raceDate: input.raceDate ? new Date(input.raceDate) : null,
+                        planStartDate: input.planStartDate ? new Date(input.planStartDate) : null,
+                        targetTime: input.targetTime ?? null,
+                        currentVdot: input.currentVdot ?? null,
+                        weeklyMileageGoal,
+                        planWeeks: input.planWeeks ?? 12,
+                        taperWeeks: input.taperWeeks ?? 2,
+                        peakWeeks: input.peakWeeks ?? 4,
+                        buildWeeks: input.buildWeeks ?? 4,
+                        runsPerWeek: input.runsPerWeek ?? 4,
+                        ridesPerWeek: input.ridesPerWeek ?? 0,
+                        swimsPerWeek: input.swimsPerWeek ?? 0,
+                        strengthPerWeek: input.strengthPerWeek ?? 0,
+                        longRunDay: input.longRunDay ?? 0,
+                        workoutDay: input.workoutDay ?? 3,
+                        ...(input.restDays && { restDays: input.restDays }),
+                        creationMode: input.creationMode,
+                        planSource: 'mobile-import',
+                        importKey,
                     },
                 });
-                idMap[w.localId] = workout.id;
-            }
 
-            return { goalId: goal.id, idMap };
-        });
+                // Individual creates (not createMany) so the server ids come back
+                // for the idMap; insertion order preserves the caller's order.
+                const idMap: Record<string, string> = {};
+                for (const [index, w] of input.workouts.entries()) {
+                    const workout = await tx.workout.create({
+                        data: {
+                            goalId: goal.id,
+                            scheduledDate: new Date(w.scheduledDate),
+                            workoutType: w.workoutType as WorkoutType,
+                            description: w.description ?? w.customName ?? w.workoutType,
+                            phase: w.phase as PlanPhase,
+                            order: w.order ?? index,
+                            displayDesc: w.displayDesc ?? null,
+                            intensityZone: w.intensityZone ?? null,
+                            sport: w.sport ?? 'RUN',
+                            customName: w.customName ?? null,
+                            targetDistance: w.targetDistance ?? null,
+                            targetDuration: w.targetDuration ?? null,
+                            targetPace: w.targetPace ?? null,
+                            targetHrZone: w.targetHrZone ?? null,
+                            targetHrMinBpm: w.targetHrMinBpm ?? null,
+                            targetHrMaxBpm: w.targetHrMaxBpm ?? null,
+                            targetPaceMinSecondsPerKm: w.targetPaceMinSecondsPerKm ?? null,
+                            targetPaceMaxSecondsPerKm: w.targetPaceMaxSecondsPerKm ?? null,
+                            structuredSteps: (w.structuredSteps ?? undefined) as Prisma.InputJsonValue | undefined,
+                        },
+                    });
+                    idMap[w.localId] = workout.id;
+                }
+
+                // Persist the id map so a lost-response retry can be replayed
+                // with the original localId -> serverId mapping.
+                await tx.goal.update({
+                    where: { id: goal.id },
+                    data: { importIdMap: idMap as Prisma.InputJsonValue },
+                });
+
+                return { goalId: goal.id, idMap };
+            });
+        } catch (error) {
+            // Concurrent duplicate import lost the unique-importKey race:
+            // the winner's row is the plan this request describes — replay it.
+            if ((error as { code?: string })?.code === 'P2002') {
+                const winner = await prisma.goal.findFirst({
+                    where: { importKey, userId: user.id, deletedAt: null },
+                    select: { id: true, importIdMap: true },
+                });
+                if (winner?.importIdMap) {
+                    return NextResponse.json(
+                        { goalId: winner.id, idMap: winner.importIdMap, replayed: true },
+                        { status: 200, headers: rateLimitHeaders(rateLimitResult) },
+                    );
+                }
+            }
+            throw error;
+        }
 
         // Initial snapshot so the imported plan starts with a clean undo
         // baseline, same as the plan-advanced routes snapshot before mutations.

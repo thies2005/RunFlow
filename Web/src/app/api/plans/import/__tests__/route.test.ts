@@ -69,6 +69,8 @@ jest.mock('@/lib/db', () => ({
         $transaction: jest.fn(),
         goal: {
             create: jest.fn(),
+            findFirst: jest.fn(),
+            update: jest.fn(),
         },
         workout: {
             create: jest.fn(),
@@ -147,6 +149,8 @@ describe('POST /api/plans/import', () => {
         (getClientIdentifier as jest.Mock).mockReturnValue('test-client');
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
         (getAuthenticatedUser as jest.Mock).mockResolvedValue({ id: 'user-1', authMethod: 'jwt' });
+        // No previously imported plan with this key by default.
+        (prisma.goal.findFirst as jest.Mock).mockResolvedValue(null);
 
         // $transaction runs the callback against the same mocked prisma.
         (prisma.$transaction as jest.Mock).mockImplementation(
@@ -277,5 +281,74 @@ describe('POST /api/plans/import', () => {
         const res = await POST(buildRequest(validBody()));
         expect(res.status).toBe(401);
         expect(prisma.goal.create).not.toHaveBeenCalled();
+    });
+
+    it('stores the importKey and persists the id map for replay', async () => {
+        await POST(buildRequest(validBody()));
+
+        const goalData = (prisma.goal.create as jest.Mock).mock.calls[0][0].data;
+        expect(typeof goalData.importKey).toBe('string');
+        expect(goalData.importKey).toHaveLength(64); // sha256 hex
+
+        // the id map written back is the one returned to the client
+        const updateCall = (prisma.goal.update as jest.Mock).mock.calls[0][0];
+        expect(updateCall.where).toEqual({ id: 'goal-server-1' });
+        expect(updateCall.data.importIdMap).toEqual({
+            'local-w1': 'workout-server-1',
+            'local-w2': 'workout-server-2',
+        });
+    });
+
+    it('replays a retry of the same plan instead of duplicating it', async () => {
+        (prisma.goal.findFirst as jest.Mock).mockResolvedValue({
+            id: 'goal-existing',
+            importIdMap: { 'local-w1': 'workout-a', 'local-w2': 'workout-b' },
+        });
+
+        const res = await POST(buildRequest(validBody()));
+        expect(res.status).toBe(200);
+
+        const json = await res.json();
+        expect(json.goalId).toBe('goal-existing');
+        expect(json.idMap).toEqual({ 'local-w1': 'workout-a', 'local-w2': 'workout-b' });
+        expect(json.replayed).toBe(true);
+
+        // nothing was created — the whole point of the replay
+        expect(prisma.goal.create).not.toHaveBeenCalled();
+        expect(prisma.workout.create).not.toHaveBeenCalled();
+        expect(createSnapshot).not.toHaveBeenCalled();
+    });
+
+    it('replays when a concurrent import wins the unique-key race (P2002)', async () => {
+        // pre-check sees nothing…
+        (prisma.goal.findFirst as jest.Mock).mockResolvedValueOnce(null);
+        // …but the insert collides with a concurrent winner…
+        (prisma.goal.create as jest.Mock).mockRejectedValueOnce(
+            Object.assign(new Error('Unique constraint failed'), { code: 'P2002' }),
+        );
+        // …whose row is found in the catch path.
+        (prisma.goal.findFirst as jest.Mock).mockResolvedValueOnce({
+            id: 'goal-winner',
+            importIdMap: { 'local-w1': 'workout-x', 'local-w2': 'workout-y' },
+        });
+
+        const res = await POST(buildRequest(validBody()));
+        expect(res.status).toBe(200);
+
+        const json = await res.json();
+        expect(json.goalId).toBe('goal-winner');
+        expect(json.replayed).toBe(true);
+        expect(prisma.workout.create).not.toHaveBeenCalled();
+    });
+
+    it('imports a plan with different workout localIds as a fresh plan', async () => {
+        (prisma.goal.findFirst as jest.Mock).mockResolvedValue(null);
+
+        const body = validBody();
+        (body.workouts as Array<Record<string, unknown>>)[0].localId = 'local-other';
+        const res = await POST(buildRequest(body));
+
+        expect(res.status).toBe(201);
+        expect(prisma.goal.create).toHaveBeenCalled();
     });
 });

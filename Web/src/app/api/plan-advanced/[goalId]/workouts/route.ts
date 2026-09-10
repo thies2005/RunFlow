@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/db';
-import { auth } from '@/auth';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
@@ -11,12 +10,25 @@ type RouteContext = { params: Promise<{ goalId: string }> };
 
 export async function GET(req: Request, ctx: RouteContext) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        // Dual auth (web session or mobile JWT), same as the mutations in
+        // this file — the GET used to be session-only.
+        const user = await getAuthenticatedUser(req);
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { goalId } = await ctx.params;
+
+        // Ownership check: without it any authenticated user could read any
+        // other user's workout list by guessing goal ids (IDOR).
+        const goal = await prisma.goal.findFirst({
+            where: { id: goalId, userId: user.id },
+            select: { id: true },
+        });
+        if (!goal) {
+            return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+        }
+
         const url = new URL(req.url);
         const weekStart = url.searchParams.get('weekStart');
         const weekEnd = url.searchParams.get('weekEnd');

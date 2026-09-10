@@ -513,6 +513,8 @@ model Goal {
   targetLaps            Int?
   planSource            String              @default("standard")
   guidanceLevel         String              @default("none")
+  importKey             String?             @unique
+  importIdMap           Json?
   parentGoalId          String?
   priority              GoalPriority        @default(PRIMARY)
   trainingFocus         String?

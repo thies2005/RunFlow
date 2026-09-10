@@ -574,6 +574,8 @@ export const GoalScalarFieldEnum = {
   targetLaps: 'targetLaps',
   planSource: 'planSource',
   guidanceLevel: 'guidanceLevel',
+  importKey: 'importKey',
+  importIdMap: 'importIdMap',
   parentGoalId: 'parentGoalId',
   priority: 'priority',
   trainingFocus: 'trainingFocus'

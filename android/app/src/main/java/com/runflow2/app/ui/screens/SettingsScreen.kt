@@ -45,6 +45,7 @@ import com.runflow2.app.AppContainer
 import com.runflow2.app.BuildConfig
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.ThemeMode
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -191,6 +192,70 @@ fun SettingsScreen(
                         onClick = { scope.launch { container.settings.setUseImperial(true) } },
                         shape = SegmentedButtonDefaults.itemShape(1, 2),
                     ) { Text("Imperial (mi)") }
+                }
+            }
+
+            SettingSection("Export") {
+                val goal by container.repository.activeGoal.collectAsState(initial = null)
+                var exporting by remember { mutableStateOf(false) }
+                var exportError by remember { mutableStateOf<String?>(null) }
+                val context = androidx.compose.ui.platform.LocalContext.current
+
+                Text(
+                    "Save or share the active training plan as a PDF — one section per training week with every scheduled session.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedButton(
+                    onClick = {
+                        val g = goal ?: return@OutlinedButton
+                        scope.launch {
+                            exporting = true
+                            exportError = null
+                            try {
+                                val workouts = container.repository.workoutsForGoal(g.id)
+                                    .firstOrNull().orEmpty()
+                                val unit = if (settings.useImperial) {
+                                    com.runflow2.app.core.util.DistanceUnit.IMPERIAL
+                                } else {
+                                    com.runflow2.app.core.util.DistanceUnit.METRIC
+                                }
+                                val file = com.runflow2.app.core.export.PlanPdfExporter(unit)
+                                    .exportToCache(context, g, workouts)
+                                val uri = androidx.core.content.FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    file,
+                                )
+                                val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                    type = "application/pdf"
+                                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                    putExtra(android.content.Intent.EXTRA_SUBJECT, g.name)
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(android.content.Intent.createChooser(send, "Share training plan"))
+                            } catch (e: Exception) {
+                                exportError = e.message ?: "export failed"
+                            } finally {
+                                exporting = false
+                            }
+                        }
+                    },
+                    enabled = goal != null && !exporting,
+                ) { Text(if (exporting) "Exporting…" else "Export plan as PDF") }
+                if (goal == null) {
+                    Text(
+                        "No active plan — create one first.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                exportError?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
 

@@ -361,6 +361,26 @@
       "workoutCount": 136
     },
     {
+      "name": "half_ironman_saturated",
+      "config": {
+        "vdot": 40,
+        "raceType": "HALF_IRONMAN",
+        "raceDate": "2027-01-24",
+        "startDate": "2026-09-07",
+        "sport": "TRIATHLON",
+        "runsPerWeek": 3,
+        "ridesPerWeek": 3,
+        "swimsPerWeek": 3,
+        "strengthPerWeek": 1,
+        "restDays": [
+          1,
+          5
+        ],
+        "name": "half_ironman_saturated"
+      },
+      "workoutCount": 98
+    },
+    {
       "name": "full_ironman_v30",
       "config": {
         "vdot": 30,

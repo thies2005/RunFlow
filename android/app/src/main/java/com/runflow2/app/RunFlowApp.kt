@@ -27,6 +27,7 @@ class AppContainer(app: Application) {
         .addMigrations(
             AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4,
             AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7,
+            AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9,
         )
         .build()
 
@@ -46,12 +47,19 @@ class AppContainer(app: Application) {
         network = network,
     )
 
+    val healthConnect = com.runflow2.app.data.health.HealthConnectManager(
+        appContext = app,
+        repository = repository,
+        settings = settings,
+    )
+
     val syncManager = SyncManager(
         db = database,
         client = network,
         authStore = authStore,
         settings = settings,
         repository = repository,
+        healthConnect = healthConnect,
     )
 
     val aiCoach = com.runflow2.app.data.ai.AiCoachRepository(

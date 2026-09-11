@@ -354,4 +354,10 @@ class PlanUploadTest {
         assertEquals(6, AppDatabase.MIGRATION_6_7.startVersion)
         assertEquals(7, AppDatabase.MIGRATION_6_7.endVersion)
     }
+
+    @Test
+    fun `v8 to v9 migration adds the Health Connect dedupe column`() {
+        assertEquals(8, AppDatabase.MIGRATION_8_9.startVersion)
+        assertEquals(9, AppDatabase.MIGRATION_8_9.endVersion)
+    }
 }

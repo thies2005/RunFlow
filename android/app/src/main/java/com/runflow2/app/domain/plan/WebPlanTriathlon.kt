@@ -521,7 +521,7 @@ internal object WebPlanTriathlonGenerator {
                 workouts.add(
                     WebScheduledWorkout(
                         dayOffset = owDay, type = "OPEN_WATER_SWIM",
-                        description = "Open Water Swim: ${(swimDistPerSession / 100).toInt()}00m (sighting practice)",
+                        description = "Open Water Swim: ${jr(swimDistPerSession / 100).toInt()}00m (sighting practice)",
                         totalDistance = swimDistPerSession,
                         targetPace = jr(css + 10),
                         targetDuration = 0.0,
@@ -553,7 +553,7 @@ internal object WebPlanTriathlonGenerator {
             workouts.add(
                 WebScheduledWorkout(
                     dayOffset = day, type = "SWIM",
-                    description = "Swim: ${(swimDistPerSession / 100).toInt()}00m @ Endurance",
+                    description = "Swim: ${jr(swimDistPerSession / 100).toInt()}00m @ Endurance",
                     totalDistance = swimDistPerSession,
                     targetPace = jr(css + 8),
                     targetDuration = 0.0,
@@ -566,9 +566,17 @@ internal object WebPlanTriathlonGenerator {
         var longRideDay: Int? = null
 
         if (hasLongRide) {
+            // Web parity: longRideDay is assigned BEFORE the placement check,
+            // so the overflow easy rides anchor on it (and remainingRides
+            // subtracts the long ride) even when the day is already taken and
+            // the LONG_RIDE workout is never pushed.
+            // Web parity: longRideDay is assigned BEFORE the placement check,
+            // so the overflow easy rides anchor on it (and remainingRides
+            // subtracts the long ride) even when the day is already taken and
+            // the LONG_RIDE workout is never pushed.
             val candidate = getAvailableDay((longRunDayResolved + 5) % 7, hardSessionDays)
+            longRideDay = candidate
             if (!usedDays.contains(candidate)) {
-                longRideDay = candidate
                 usedDays.add(candidate)
                 hardSessionDays.add(candidate)
                 workouts.add(
@@ -614,7 +622,11 @@ internal object WebPlanTriathlonGenerator {
         }
 
         val brickCount = workouts.count { it.type == "BRICK" }
-        var remainingRides = ridesPerWeek - (if (longRideDay != null) 1 else 0) - brickCount
+        // Web parity: the long ride is subtracted when hasLongRide — even if
+        // its day was taken and the workout was never pushed.
+        // Web parity: the long ride is subtracted when hasLongRide — even if
+        // its day was taken and the workout was never pushed.
+        var remainingRides = ridesPerWeek - (if (hasLongRide) 1 else 0) - brickCount
 
         val brickBikeMinForCalc = when (raceType) {
             "FULL_IRONMAN" -> 90

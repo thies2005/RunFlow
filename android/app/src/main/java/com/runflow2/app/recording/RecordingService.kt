@@ -24,6 +24,7 @@ import com.runflow2.app.R
 import com.runflow2.app.RunFlowApp
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.ActivityEntity
+import com.runflow2.app.data.sync.toJsonOrNull
 import com.runflow2.app.domain.model.PaceZoneStatus
 import com.runflow2.app.domain.plan.StructuredStepsParser
 import com.runflow2.app.domain.plan.paceLetterTable
@@ -307,6 +308,7 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
         val laps = s.laps.joinToString(",", "[", "]") {
             """{"km":${it.km},"durSec":${it.durSec},"paceSecPerKm":${it.paceSecPerKm}}"""
         }
+        val streamsJson = StreamCapture.build(s.points)?.toJsonOrNull()
         val cadence = s.cadence
         val calories = (moving / 60.0 * weightKg * 0.9 * 1.05).toInt().takeIf { it > 0 }
         return ActivityEntity(
@@ -326,6 +328,7 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
             estimatedVdot = com.runflow2.app.data.repo.RunFlowRepository.estimateVdot(km, moving),
             routeJson = if (s.points.size > 1) route else null,
             lapsJson = if (s.laps.isNotEmpty()) laps else null,
+            streamsJson = streamsJson,
         )
     }
 

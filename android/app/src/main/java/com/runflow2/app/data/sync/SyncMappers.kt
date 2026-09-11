@@ -3,6 +3,7 @@ package com.runflow2.app.data.sync
 import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.data.db.ProfileEntity
 import com.runflow2.app.data.net.ActivityDto
+import com.runflow2.app.data.net.ActivityStreamsDto
 import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.net.CreateActivityRequest
 import com.runflow2.app.data.net.UpdateProfileRequest
@@ -33,7 +34,20 @@ fun ActivityEntity.toCreateRequest(): CreateActivityRequest = CreateActivityRequ
     totalElevation = totalElevation,
     hasHeartrate = averageHr != null,
     notes = notes,
+    // Streams ride along so the server (and web) can chart phone-recorded runs
+    // and recompute HR-zone times; the zod schema accepts the same shape.
+    streams = streams(),
 )
+
+/** Decodes the cached streams JSON (server field names). Null when absent or corrupt. */
+fun ActivityEntity.streams(): ActivityStreamsDto? = streamsJson?.let { json ->
+    runCatching { Api.json.decodeFromString(ActivityStreamsDto.serializer(), json) }.getOrNull()
+}
+
+/** Serializes streams in the server's wire format, dropping empty time series. */
+fun ActivityStreamsDto.toJsonOrNull(): String? =
+    if (time.isEmpty()) null
+    else runCatching { Api.json.encodeToString(ActivityStreamsDto.serializer(), this) }.getOrNull()
 
 /**
  * Apply a server activity onto the local row. The server wins for all

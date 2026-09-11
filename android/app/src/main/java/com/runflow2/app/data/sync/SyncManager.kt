@@ -61,6 +61,7 @@ class SyncManager(
     private val authStore: AuthStore,
     private val settings: SettingsRepository,
     private val repository: RunFlowRepository,
+    private val healthConnect: com.runflow2.app.data.health.HealthConnectManager? = null,
 ) {
     companion object {
         private const val TAG = "Sync"
@@ -88,19 +89,26 @@ class SyncManager(
     /** Outbox depth for UI badges. */
     val pendingCount = db.syncQueueDao().observePendingCount()
 
-    suspend fun syncNow(reason: String): SyncResult = mutex.withLock {
+    suspend fun syncNow(reason: String, forceStrava: Boolean = false): SyncResult = mutex.withLock {
         // Wait for the persisted session to be restored: without this, the
         // startup sync races AuthStore's DataStore read and no-ops even for
         // signed-in users.
         authStore.state.first { it.initialized }
+        // Health Connect import is a local feature — run it regardless of
+        // sign-in state. Cheap no-op unless the setting is enabled.
+        healthConnect?.let { hc ->
+            runCatching { hc.importIfEnabled() }.onFailure {
+                AppLog.w(TAG, "Health Connect import error (${it.message})")
+            }
+        }
         if (!authStore.state.value.loggedIn) {
             AppLog.d(TAG, "sync skipped (not signed in), reason=$reason")
             return SyncResult(skipped = true)
         }
-        AppLog.i(TAG, "sync start, reason=$reason")
+        AppLog.i(TAG, "sync start, reason=$reason forceStrava=$forceStrava")
         _status.value = _status.value.copy(running = true, lastMessage = "Syncing…")
         val result = try {
-            withContext(Dispatchers.IO) { runSync() }
+            withContext(Dispatchers.IO) { runSync(forceStrava) }
         } catch (e: IOException) {
             AppLog.w(TAG, "sync offline (${e.message ?: "io error"}), reason=$reason", e)
             _status.value = SyncStatus(running = false, lastSyncAt = _status.value.lastSyncAt,
@@ -128,7 +136,7 @@ class SyncManager(
         result
     }
 
-    private suspend fun runSync(): SyncResult {
+    private suspend fun runSync(forceStrava: Boolean): SyncResult {
         var pushed = 0
         var failed = 0
 
@@ -197,9 +205,11 @@ class SyncManager(
             AppLog.w(TAG, "plan pull failed: HTTP ${e.code()}", e)
         }
 
-        // ---- server-side Strava import, throttled to every 6h ----
+        // ---- server-side Strava import. Throttled to every 6h for the
+        // periodic/startup path; explicit user pulls (pull-to-refresh, manual
+        // "Sync now") force it so fresh Strava activities show up on demand. ----
         val lastTrigger = settings.settingsOnce().lastStravaTriggerAt
-        if (System.currentTimeMillis() - lastTrigger > STRAVA_TRIGGER_INTERVAL_MS) {
+        if (forceStrava || System.currentTimeMillis() - lastTrigger > STRAVA_TRIGGER_INTERVAL_MS) {
             try {
                 val imported = client.api().triggerServerSync().activitiesSynced
                 settings.setLastStravaTrigger(System.currentTimeMillis())

@@ -144,7 +144,12 @@ fun PlanScreen(
                         weeklyKm = g.weeklyKmGoal,
                         targetTime = g.targetTimeSec,
                         unit = unit,
-                        syncedWithWeb = !g.isLocalOnly,
+                        engineLabel = when {
+                            !g.isLocalOnly -> "Web engine · synced"
+                            workouts.any { it.webWorkoutType != null } -> "Web engine · local"
+                            // plans created before the classic engine was removed (v2.3.0)
+                            else -> "Legacy classic plan"
+                        },
                         onRecordResult = { showRaceResult = true },
                     )
                 }
@@ -314,7 +319,7 @@ private fun GoalHeaderCard(
     weeklyKm: Double,
     targetTime: Int?,
     unit: DistanceUnit,
-    syncedWithWeb: Boolean,
+    engineLabel: String,
     onRecordResult: () -> Unit,
 ) {
     Card(
@@ -339,7 +344,7 @@ private fun GoalHeaderCard(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 InfoChip(
-                    if (syncedWithWeb) "Synced with web" else "On this device only",
+                    engineLabel,
                     container = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

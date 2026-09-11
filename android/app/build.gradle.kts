@@ -23,8 +23,8 @@ android {
         applicationId = "com.runflow2.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 10
-        versionName = "2.2.6"
+        versionCode = 12
+        versionName = "2.3.0"
     }
 
     signingConfigs {
@@ -54,6 +54,8 @@ android {
 
     buildFeatures {
         compose = true
+        // BuildConfig.VERSION_NAME drives the About screen / settings copy
+        buildConfig = true
     }
 
     compileOptions {
@@ -93,6 +95,9 @@ dependencies {
 
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+    // Health Connect (read runs recorded by other apps / watches)
+    implementation("androidx.health.connect:connect-client:1.1.0")
 
     // Strava OAuth round-trip: Custom Tabs (like the Flutter app's
     // flutter_web_auth_2) so the runflow2:// 302 back from the server opens

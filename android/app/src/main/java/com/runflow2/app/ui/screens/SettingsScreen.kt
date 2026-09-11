@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
+import com.runflow2.app.BuildConfig
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.ThemeMode
 import kotlinx.coroutines.launch
@@ -113,7 +115,7 @@ fun SettingsScreen(
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         OutlinedButton(
-                            onClick = { scope.launch { container.syncManager.syncNow("manual") } },
+                            onClick = { scope.launch { container.syncManager.syncNow("manual", forceStrava = true) } },
                             enabled = !syncStatus.running,
                         ) {
                             Text(if (syncStatus.running) "Syncing…" else "Sync now")
@@ -236,6 +238,87 @@ fun SettingsScreen(
                 )
             }
 
+            SettingSection("Health Connect") {
+                val hc = container.healthConnect
+                val availability = remember { hc.availability() }
+                var importRunning by remember { mutableStateOf(false) }
+                var permissionGranted by remember { mutableStateOf(false) }
+
+                LaunchedEffect(availability) {
+                    if (availability is com.runflow2.app.data.health.HealthConnectManager.Availability.Available) {
+                        hc.clientOrNull()?.let { client ->
+                            permissionGranted = hc.hasAllPermissions(client)
+                        }
+                    }
+                }
+
+                if (availability is com.runflow2.app.data.health.HealthConnectManager.Availability.Unavailable) {
+                    Text(
+                        "Health Connect is not available on this device. It is built into Android 14+ and available as the \"Health Connect by Android\" app on older versions.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                        androidx.health.connect.client.PermissionController.createRequestPermissionResultContract(),
+                    ) { granted ->
+                        permissionGranted = granted.containsAll(hc.permissions)
+                        if (permissionGranted) {
+                            scope.launch {
+                                container.settings.setHealthConnectImportEnabled(true)
+                                importRunning = true
+                                hc.importRuns()
+                                importRunning = false
+                            }
+                        }
+                    }
+                    SwitchRow(
+                        title = "Import runs from Health Connect",
+                        subtitle = "Pull runs recorded in other apps and watches (Strava, Garmin, Fitbit…) into RunFlow on every sync",
+                        checked = settings.healthConnectImportEnabled,
+                        onChecked = { on ->
+                            if (!on) {
+                                scope.launch { container.settings.setHealthConnectImportEnabled(false) }
+                            } else if (permissionGranted) {
+                                scope.launch {
+                                    container.settings.setHealthConnectImportEnabled(true)
+                                    importRunning = true
+                                    hc.importRuns()
+                                    importRunning = false
+                                }
+                            } else {
+                                permissionLauncher.launch(hc.permissions)
+                            }
+                        },
+                    )
+                    if (settings.healthConnectImportEnabled && !permissionGranted) {
+                        Text(
+                            "Read permission missing — turn the toggle off and on to grant it in Health Connect.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            scope.launch {
+                                importRunning = true
+                                hc.importRuns()
+                                importRunning = false
+                            }
+                        },
+                        enabled = permissionGranted && !importRunning,
+                    ) { Text(if (importRunning) "Importing…" else "Import now") }
+                    if (settings.healthConnectLastImportAt > 0) {
+                        Text(
+                            "Last import: ${settings.healthConnectLastImportSummary.ifBlank { "no new runs" }} · " +
+                                com.runflow2.app.core.util.FormatRelative.timeAgo(settings.healthConnectLastImportAt),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
             SettingSection("Advanced") {
                 val normalized = com.runflow2.app.data.net.Api.normalizeServerUrl(settings.serverUrl)
                 var serverUrl by remember(normalized) {
@@ -272,7 +355,9 @@ fun SettingsScreen(
 
             SettingSection("Data") {
                 Text(
-                    "RunFlow v2.2 — native Kotlin rewrite. Training, planning and analytics run fully on-device; account sync and the AI coach use your RunFlow server. Health & nutrition features arrive in a future update.",
+                    "RunFlow v${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE}) — native Kotlin rewrite. " +
+                        "Training, planning and analytics run fully on-device; account sync and the AI coach use your RunFlow server. " +
+                        "Source code: github.com/thies2005/RunFlow",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

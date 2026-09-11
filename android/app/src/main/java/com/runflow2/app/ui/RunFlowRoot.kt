@@ -214,7 +214,6 @@ fun RunFlowRoot(container: AppContainer) {
                         onDone = {
                             navController.popBackStack()
                         },
-                        onLogin = { navController.navigate(Routes.LOGIN) },
                     )
                 }
 

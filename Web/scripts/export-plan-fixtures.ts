@@ -154,6 +154,13 @@ const FIXTURES: FixtureDef[] = [
     race('HALF_IRONMAN', 40, '2027-01-24', {
         sport: 'TRIATHLON', runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 3,
     }),
+    // Saturated week: rest days [Mon, Fri] occupy the long-ride anchor day
+    // (longRunDay 0 + 5 = Friday), so the LONG_RIDE is never placed while
+    // remainingRides still subtracts it — pins the Kotlin longRideDay parity.
+    race('HALF_IRONMAN', 40, '2027-01-24', {
+        sport: 'TRIATHLON', runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 3,
+        strengthPerWeek: 1, restDays: [1, 5], name: 'half_ironman_saturated',
+    }),
     race('FULL_IRONMAN', 30, '2027-02-21', {
         sport: 'TRIATHLON', runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 3,
         strengthPerWeek: 2,

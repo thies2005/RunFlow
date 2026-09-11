@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,6 +47,7 @@ import com.runflow2.app.core.util.DistanceUnit
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.domain.model.ActivityType
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +59,7 @@ fun ActivitiesScreen(
     val settings by container.settings.settings.collectAsState(initial = AppSettings())
     val unit = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
     val activities by container.repository.activities.collectAsState(initial = emptyList())
+    val syncStatus by container.syncManager.status.collectAsState()
     var filter by remember { mutableStateOf("ALL") }
 
     val filtered = when (filter) {
@@ -65,82 +68,93 @@ fun ActivitiesScreen(
         else -> activities
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Activities") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
-                    }
-                },
-            )
-        },
-    ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding),
-        ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                listOf("ALL" to "All", "RUN" to "Runs", "RIDE" to "Rides").forEach { (key, label) ->
-                    FilterChip(
-                        selected = filter == key,
-                        onClick = { filter = key },
-                        label = { Text(label) },
-                    )
-                }
+    // Pull-to-refresh runs a full sync including the server-side Strava import
+    // (forced past the 6h throttle) so new rides/runs appear on demand.
+    PullToRefreshBox(
+        isRefreshing = syncStatus.running,
+        onRefresh = {
+            container.appScope.launch {
+                container.syncManager.syncNow("pull-refresh", forceStrava = true)
             }
-            LazyColumn(
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+        },
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Activities") },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                )
+            },
+        ) { padding ->
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding),
             ) {
-                items(filtered, key = { it.id }) { a ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onOpen(a.id) },
-                    ) {
-                        Row(
-                            Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    listOf("ALL" to "All", "RUN" to "Runs", "RIDE" to "Rides").forEach { (key, label) ->
+                        FilterChip(
+                            selected = filter == key,
+                            onClick = { filter = key },
+                            label = { Text(label) },
+                        )
+                    }
+                }
+                LazyColumn(
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(filtered, key = { it.id }) { a ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onOpen(a.id) },
                         ) {
-                            val type = runCatching { ActivityType.valueOf(a.type) }
-                                .getOrDefault(ActivityType.RUN)
-                            val icon = activityIcon(type)
-                            Box(
-                                Modifier
-                                    .size(40.dp)
-                                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-                                contentAlignment = Alignment.Center,
+                            Row(
+                                Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                Icon(icon, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
-                            }
-                            Column(Modifier.weight(1f)) {
-                                Text(a.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(
-                                    "${Format.distance(a.distanceKm, unit)} · ${Format.duration(a.movingTimeSec)} · ${Format.paceWithUnit(a.paceSecPerKm, unit)}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    a.averageHr?.let { "${it.toInt()} bpm" } ?: "",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    Format.date(Format.localDate(a.startDate)),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                                val type = runCatching { ActivityType.valueOf(a.type) }
+                                    .getOrDefault(ActivityType.RUN)
+                                val icon = activityIcon(type)
+                                Box(
+                                    Modifier
+                                        .size(40.dp)
+                                        .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(icon, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                                }
+                                Column(Modifier.weight(1f)) {
+                                    Text(a.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text(
+                                        "${Format.distance(a.distanceKm, unit)} · ${Format.duration(a.movingTimeSec)} · ${Format.paceWithUnit(a.paceSecPerKm, unit)}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        a.averageHr?.let { "${it.toInt()} bpm" } ?: "",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Text(
+                                        Format.date(Format.localDate(a.startDate)),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
                             }
                         }
                     }

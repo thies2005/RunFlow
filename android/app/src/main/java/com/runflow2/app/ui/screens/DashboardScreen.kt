@@ -123,11 +123,14 @@ fun DashboardScreen(
         !d.isBefore(weekStart) && !d.isAfter(today)
     }
 
+    // Pull-to-refresh runs a full sync including the server-side Strava
+    // import; the analytics produceState re-runs on its own once Room updates.
+    val syncStatus by container.syncManager.status.collectAsState()
     PullToRefreshBox(
-        isRefreshing = false,
+        isRefreshing = syncStatus.running,
         onRefresh = {
             container.appScope.launch {
-                container.repository.analytics(365)
+                container.syncManager.syncNow("pull-refresh", forceStrava = true)
             }
         },
         modifier = Modifier.fillMaxSize(),
@@ -497,8 +500,8 @@ fun DashboardScreen(
             title = { Text("Sign in to sync your training") },
             text = {
                 Text(
-                    "Sign in with email or Strava to back up runs, sync across devices and use the AI coach. " +
-                        "Everything already works offline — your data stays on this phone either way.",
+                    "Sign in with email or Strava to back up runs, sync plans across devices and use the AI coach. " +
+                        "Your data always lives on this phone — signing in adds a synced copy on your account.",
                 )
             },
             confirmButton = {

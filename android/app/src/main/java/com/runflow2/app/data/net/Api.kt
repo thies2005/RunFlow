@@ -112,6 +112,22 @@ data class UserDto(
 
 // ---------- activities ----------
 
+/**
+ * Strava-style stream arrays stored inline on the server's Activity row
+ * (`Activity.streams Json`). Same key names on the wire, including the
+ * snake_case `velocity_smooth`. The list endpoint never returns streams;
+ * only GET /activities/{id} does.
+ */
+@Serializable
+data class ActivityStreamsDto(
+    val time: List<Double> = emptyList(), // seconds from start
+    val latlng: List<List<Double>>? = null,
+    val altitude: List<Double>? = null, // meters
+    val heartrate: List<Double>? = null, // bpm
+    val cadence: List<Double>? = null, // rpm (Strava); spm after doubling
+    @SerialName("velocity_smooth") val velocitySmooth: List<Double>? = null, // m/s
+)
+
 @Serializable
 data class CreateActivityRequest(
     val name: String,
@@ -126,6 +142,7 @@ data class CreateActivityRequest(
     val totalElevation: Double? = null,
     val hasHeartrate: Boolean? = null,
     val notes: String? = null,
+    val streams: ActivityStreamsDto? = null,
 )
 
 @Serializable
@@ -162,6 +179,8 @@ data class ActivityDto(
     @SerialName("hrZone6Time") val hrZone6Time: Int = 0,
     @SerialName("hrZone7Time") val hrZone7Time: Int = 0,
     val calories: Double? = null,
+    // Only present in the single-activity detail response (GET /activities/{id}).
+    val streams: ActivityStreamsDto? = null,
 )
 
 @Serializable
@@ -338,17 +357,32 @@ data class CreatePlanRequest(
     val planStartDate: String? = null,
     val durationWeeks: Int? = null, // plan length for NO_RACE plans
     val runsPerWeek: Int? = null,
+    val ridesPerWeek: Int? = null,
+    val swimsPerWeek: Int? = null,
     val strengthPerWeek: Int? = null,
     val weeklyMileageGoal: Double? = null, // meters
+    val startWeeklyMileage: Double? = null, // meters; null = server derives from history
     val maxLongRunKm: Double? = null, // kilometers
     val taperWeeks: Int? = null,
+    val peakWeeks: Int? = null,
+    val buildWeeks: Int? = null,
     val longRunDay: Int? = null,
     val workoutDay: Int? = null,
+    val swimDay: Int? = null,
     val restDays: List<Int>? = null,
     val targetTime: Int? = null, // seconds
     val calibrationTime: Int? = null, // seconds
     val calibrationDistance: String? = null, // 5K | 10K | HALF | MARATHON
     val customDistanceM: Double? = null,
+    val customSwimDistM: Double? = null,
+    val customBikeDistM: Double? = null,
+    val customRunDistM: Double? = null,
+    val backyardLoopDistM: Double? = null, // meters; goal metadata on the server
+    val targetLaps: Int? = null, // backyard laps goal (1-100)
+    val maxHeartRate: Int? = null,
+    val restingHeartRate: Int? = null,
+    val thresholdHeartRate: Int? = null,
+    val thresholdPaceSecondsPerKm: Double? = null,
     val planSource: String? = null,
 )
 
@@ -424,6 +458,38 @@ data class TriggerSyncResponse(
     val lastSyncAt: String? = null,
 )
 
+// ---------- AI activity feedback (web's "AI overview") ----------
+
+/** Mirrors the server's ActivityAiFeedback row (three markdown sections). */
+@Serializable
+data class AiFeedbackDto(
+    val id: String? = null,
+    val activityId: String? = null,
+    val plannedComparison: String? = null,
+    val progressAnalysis: String? = null,
+    val goalTrajectory: String? = null,
+    val generatedAt: String? = null,
+)
+
+/**
+ * GET returns {feedback, cached}; a successful POST can also return
+ * {queued: true, message} when the LLM run exceeds the server's 90 s
+ * budget (it enqueues a background job instead).
+ */
+@Serializable
+data class AiFeedbackResponse(
+    val feedback: AiFeedbackDto? = null,
+    val cached: Boolean = false,
+    val queued: Boolean = false,
+    val message: String? = null,
+)
+
+@Serializable
+data class GenerateFeedbackRequest(
+    val activityId: String,
+    val regenerate: Boolean = false,
+)
+
 // ---------- AI coach ----------
 
 @Serializable
@@ -487,6 +553,10 @@ interface RunFlowApi {
     @PUT("/api/mobile/v1/activities/{id}")
     suspend fun updateActivity(@Path("id") id: String, @Body body: UpdateActivityRequest): ActivityWrapper
 
+    /** Full record including `streams` — the list endpoint deliberately omits them. */
+    @GET("/api/mobile/v1/activities/{id}")
+    suspend fun activityDetail(@Path("id") id: String): ActivityWrapper
+
     // profile
     @GET("/api/mobile/v1/user/profile")
     suspend fun profile(): UserWrapper
@@ -539,6 +609,14 @@ interface RunFlowApi {
     // AI coach
     @GET("/api/ai/chat/sessions")
     suspend fun chatSessions(): ChatSessionsWrapper
+
+    // AI overview per activity (web's "AI Coach Feedback")
+    @GET("/api/mobile/v1/ai/activity-feedback")
+    suspend fun activityFeedback(@Query("activityId") activityId: String): AiFeedbackResponse
+
+    // Raw response: a queued 429 or an on-demand timeout still carries a JSON body.
+    @POST("/api/mobile/v1/ai/activity-feedback")
+    suspend fun generateActivityFeedback(@Body body: GenerateFeedbackRequest): retrofit2.Response<AiFeedbackResponse>
 
     @POST("/api/ai/chat/sessions")
     suspend fun createChatSession(): ChatSessionWrapper

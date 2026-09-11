@@ -3,15 +3,20 @@ package com.runflow2.app
 import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.data.db.ProfileEntity
 import com.runflow2.app.data.net.ActivityDto
+import com.runflow2.app.data.net.ActivityStreamsDto
 import com.runflow2.app.data.net.UserDto
 import com.runflow2.app.data.sync.applyTo
 import com.runflow2.app.data.sync.localTypeFromServer
 import com.runflow2.app.data.sync.mergeInto
 import com.runflow2.app.data.sync.serverTypeFromLocal
+import com.runflow2.app.data.sync.streams
 import com.runflow2.app.data.sync.toCreateRequest
+import com.runflow2.app.data.sync.toJsonOrNull
 import com.runflow2.app.data.sync.toUpdateRequest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -177,5 +182,48 @@ class SyncMappersTest {
         val profile = ProfileEntity(name = "Local")           // default email = ""
 
         assertEquals("", server.applyTo(profile).email)
+    }
+
+    // ---- activity streams cache ----
+
+    @Test
+    fun `streams json round-trips in the server wire format`() {
+        val json = ActivityStreamsDto(
+            time = listOf(0.0, 5.0, 10.0),
+            velocitySmooth = listOf(3.0, 2.9, 3.1),
+            altitude = listOf(50.0, 51.0, 52.0),
+        ).toJsonOrNull()!!
+        // snake_case keys on the wire; absent channels omitted
+        assertTrue(json.contains("\"velocity_smooth\""))
+        assertFalse(json.contains("\"heartrate\""))
+
+        val decoded = localActivity().copy(streamsJson = json).streams()
+        assertNotNull(decoded)
+        assertEquals(listOf(0.0, 5.0, 10.0), decoded!!.time)
+        assertEquals(listOf(3.0, 2.9, 3.1), decoded.velocitySmooth)
+    }
+
+    @Test
+    fun `empty or corrupt streams decode to null`() {
+        assertNull(localActivity().streams())                    // no cache
+        assertNull(ActivityStreamsDto().toJsonOrNull())          // no time series
+        assertNull(localActivity().copy(streamsJson = "{oops").streams())
+    }
+
+    @Test
+    fun `merge preserves the cached streams like route and laps`() {
+        val dto = ActivityDto(id = "server-9", type = "RUN", name = "Run", distance = 10_000.0, movingTime = 3_000)
+        val merged = dto.mergeInto(localActivity().copy(streamsJson = "{\"time\":[0,5]}"), now = 1L)
+        assertEquals("{\"time\":[0,5]}", merged.streamsJson)
+    }
+
+    @Test
+    fun `create request carries streams so the server can chart phone runs`() {
+        val withStreams = localActivity().copy(
+            streamsJson = ActivityStreamsDto(time = listOf(0.0, 5.0), velocitySmooth = listOf(3.0, 3.0)).toJsonOrNull()
+        )
+        assertEquals(listOf(0.0, 5.0), withStreams.toCreateRequest().streams!!.time)
+
+        assertNull(localActivity().toCreateRequest().streams) // nothing cached -> field omitted
     }
 }

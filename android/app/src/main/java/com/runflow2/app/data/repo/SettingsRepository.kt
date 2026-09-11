@@ -33,6 +33,10 @@ data class AppSettings(
     // ---- login nudge ----
     val loginPromptDismissed: Boolean = false,
     val loginPromptRemindAt: Long = 0L,
+    // ---- Health Connect ----
+    val healthConnectImportEnabled: Boolean = false,
+    val healthConnectLastImportAt: Long = 0L,
+    val healthConnectLastImportSummary: String = "",
 )
 
 class SettingsRepository(private val context: Context) {
@@ -54,6 +58,9 @@ class SettingsRepository(private val context: Context) {
         val AI_SESSION_ID = stringPreferencesKey("ai_session_id")
         val LOGIN_PROMPT_DISMISSED = booleanPreferencesKey("login_prompt_dismissed")
         val LOGIN_PROMPT_REMIND_AT = longPreferencesKey("login_prompt_remind_at")
+        val HC_IMPORT_ENABLED = booleanPreferencesKey("health_connect_import_enabled")
+        val HC_LAST_IMPORT_AT = longPreferencesKey("health_connect_last_import_at")
+        val HC_LAST_IMPORT_SUMMARY = stringPreferencesKey("health_connect_last_import_summary")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -75,6 +82,9 @@ class SettingsRepository(private val context: Context) {
             aiSessionId = p[Keys.AI_SESSION_ID] ?: "",
             loginPromptDismissed = p[Keys.LOGIN_PROMPT_DISMISSED] ?: false,
             loginPromptRemindAt = p[Keys.LOGIN_PROMPT_REMIND_AT] ?: 0L,
+            healthConnectImportEnabled = p[Keys.HC_IMPORT_ENABLED] ?: false,
+            healthConnectLastImportAt = p[Keys.HC_LAST_IMPORT_AT] ?: 0L,
+            healthConnectLastImportSummary = p[Keys.HC_LAST_IMPORT_SUMMARY] ?: "",
         )
     }
 
@@ -132,5 +142,17 @@ class SettingsRepository(private val context: Context) {
     /** "Remind in a week": snooze the login nudge until [at]. */
     suspend fun setLoginPromptRemindAt(at: Long) = context.dataStore.edit {
         it[Keys.LOGIN_PROMPT_REMIND_AT] = at
+    }
+
+    // ---- Health Connect ----
+
+    /** Import toggle: when true, runs are pulled from Health Connect on sync. */
+    suspend fun setHealthConnectImportEnabled(enabled: Boolean) = context.dataStore.edit {
+        it[Keys.HC_IMPORT_ENABLED] = enabled
+    }
+
+    suspend fun setHealthConnectLastImport(at: Long, summary: String) = context.dataStore.edit {
+        it[Keys.HC_LAST_IMPORT_AT] = at
+        it[Keys.HC_LAST_IMPORT_SUMMARY] = summary
     }
 }

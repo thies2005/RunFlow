@@ -17,7 +17,7 @@ import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.WorkoutType
 import kotlinx.coroutines.flow.Flow
 
-@Entity(tableName = "activities", indices = [Index("serverId")])
+@Entity(tableName = "activities", indices = [Index("serverId"), Index("hcRecordId")])
 data class ActivityEntity(
     @PrimaryKey val id: String,
     val name: String,
@@ -42,6 +42,11 @@ data class ActivityEntity(
     val estimatedVdot: Double?,
     val routeJson: String?, // [[lat,lng],...]
     val lapsJson: String?, // [{km,durSec,paceSecPerKm}]
+    // Activity streams JSON (server shape: {time, altitude, heartrate, cadence,
+    // velocity_smooth}) for the analysis charts. Cached from GET /activities/{id}
+    // or synthesized at recording time; the list endpoint never carries it.
+    // ---- v4 ----
+    val streamsJson: String? = null,
     val notes: String? = null,
     // ---- sync metadata (v2). defaultValue mirrors the ALTER TABLE used in
     // MIGRATION_1_2 so Room's post-migration schema validation passes. ----
@@ -49,6 +54,9 @@ data class ActivityEntity(
     @ColumnInfo(defaultValue = "0") val updatedAt: Long = 0,
     @ColumnInfo(defaultValue = "0") val dirty: Boolean = false,
     @ColumnInfo(defaultValue = "1") val isDemo: Boolean = false,
+    // ---- Health Connect (v9): record id of the imported ExerciseSession,
+    // the dedupe key so re-imports never duplicate a run. ----
+    val hcRecordId: String? = null,
 ) {
     val distanceKm: Double get() = distanceMeters / 1000.0
     val paceSecPerKm: Double? get() = if (distanceMeters > 0) movingTimeSec / distanceKm else null
@@ -202,6 +210,13 @@ interface ActivityDao {
     @Query("SELECT * FROM activities WHERE serverId = :serverId LIMIT 1")
     suspend fun byServerId(serverId: String): ActivityEntity?
 
+    @Query("SELECT * FROM activities WHERE hcRecordId = :hcRecordId LIMIT 1")
+    suspend fun byHcRecordId(hcRecordId: String): ActivityEntity?
+
+    /** Candidates for Health-Connect duplicate detection (same start window). */
+    @Query("SELECT * FROM activities WHERE startDate BETWEEN :fromMs AND :toMs")
+    suspend fun betweenStart(fromMs: Long, toMs: Long): List<ActivityEntity>
+
     @Query("SELECT * FROM activities ORDER BY startDate DESC")
     suspend fun all(): List<ActivityEntity>
 
@@ -213,6 +228,9 @@ interface ActivityDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(activities: List<ActivityEntity>)
+
+    @Query("UPDATE activities SET streamsJson = :streams WHERE id = :id")
+    suspend fun updateStreams(id: String, streams: String?)
 
     @Query("DELETE FROM activities WHERE id = :id")
     suspend fun delete(id: String)
@@ -402,7 +420,7 @@ interface PlanSnapshotDao {
         ActivityEntity::class, GoalEntity::class, WorkoutEntity::class, ProfileEntity::class,
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
     ],
-    version = 7,
+    version = 9,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -514,6 +532,28 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE workouts ADD COLUMN webWorkoutType TEXT")
                 db.execSQL("ALTER TABLE workouts ADD COLUMN webPhase TEXT")
+            }
+        }
+
+        /**
+         * v7 -> v8 adds the per-activity streams cache used by the analysis
+         * charts. Nullable column, so no default is needed; existing rows
+         * simply have no streams until they are fetched or recorded.
+         */
+        val MIGRATION_7_8: Migration = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE activities ADD COLUMN streamsJson TEXT")
+            }
+        }
+
+        /**
+         * v8 -> v9 adds the Health Connect record id to activities — the
+         * dedupe key for imported ExerciseSessions. Nullable, no default.
+         */
+        val MIGRATION_8_9: Migration = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE activities ADD COLUMN hcRecordId TEXT")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_activities_hcRecordId ON activities(hcRecordId)")
             }
         }
     }

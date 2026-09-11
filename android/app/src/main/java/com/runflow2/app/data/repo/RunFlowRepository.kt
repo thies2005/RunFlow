@@ -18,7 +18,9 @@ import com.runflow2.app.data.db.SyncQueueEntity
 import com.runflow2.app.data.db.WorkoutDao
 import com.runflow2.app.data.db.WorkoutEntity
 import com.runflow2.app.data.net.Api
+import com.runflow2.app.data.net.AiFeedbackDto
 import com.runflow2.app.data.net.AuthStore
+import com.runflow2.app.data.net.GenerateFeedbackRequest
 import com.runflow2.app.data.net.NetworkClient
 import com.runflow2.app.data.sync.SyncManager
 import com.runflow2.app.data.sync.MAX_PLAN_SNAPSHOTS_PER_GOAL
@@ -26,6 +28,7 @@ import com.runflow2.app.data.sync.parseSnapshotJson
 import com.runflow2.app.data.sync.remapSnapshotJson
 import com.runflow2.app.data.sync.remapUploadedPlan
 import com.runflow2.app.data.sync.restoreDiff
+import com.runflow2.app.data.sync.toJsonOrNull
 import com.runflow2.app.data.sync.toCreatePlanRequest
 import com.runflow2.app.data.sync.toCreateRequest
 import com.runflow2.app.data.sync.toCreateWorkoutPayload
@@ -43,7 +46,7 @@ import com.runflow2.app.domain.model.ActivityType
 import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.RaceType
 import com.runflow2.app.domain.model.WorkoutType
-import com.runflow2.app.domain.plan.PlanGenerator
+import com.runflow2.app.domain.plan.PlanMath
 import com.runflow2.app.domain.plan.PlanSpec
 import com.runflow2.app.domain.plan.WebPlanEngine
 import com.runflow2.app.domain.plan.WebStructuredPlan
@@ -107,6 +110,13 @@ class RunFlowRepository(
 
     suspend fun activity(id: String): ActivityEntity? = activityDao.byId(id)
 
+    /** Health Connect import lookups (dedupe by record id / start-time window). */
+    suspend fun activityByHcRecordId(hcRecordId: String): ActivityEntity? =
+        activityDao.byHcRecordId(hcRecordId)
+
+    suspend fun activitiesBetweenStart(fromMs: Long, toMs: Long): List<ActivityEntity> =
+        activityDao.betweenStart(fromMs, toMs)
+
     /** Saves locally immediately; queues an upload when logged in. */
     suspend fun saveActivity(a: ActivityEntity) {
         if (authStore.state.value.loggedIn && a.serverId == null) {
@@ -133,6 +143,74 @@ class RunFlowRepository(
     suspend fun deleteActivity(id: String) = activityDao.delete(id)
 
     suspend fun clearActivities() = activityDao.clear()
+
+    /**
+     * Fetches the full server record for a synced activity and caches its
+     * streams into the local row (first successful fetch only — local or
+     * previously cached streams are never overwritten). Returns true when
+     * streams were cached and the caller should reload the row.
+     */
+    suspend fun fetchAndCacheStreams(activityId: String, serverId: String): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            val streams = network.api().activityDetail(serverId).activity.streams
+                ?: return@runCatching false
+            if (streams.time.size < 2) return@runCatching false
+            val json = streams.toJsonOrNull() ?: return@runCatching false
+            val existing = activityDao.byId(activityId) ?: return@runCatching false
+            if (existing.streamsJson != null) return@runCatching false
+            activityDao.updateStreams(activityId, json)
+            AppLog.i("Activity", "cached ${streams.time.size} stream samples for $activityId")
+            true
+        }.getOrDefault(false)
+    }
+
+    // ---------- AI activity feedback (web's "AI overview") ----------
+
+    sealed interface AiFeedbackResult {
+        data class Ready(val feedback: AiFeedbackDto) : AiFeedbackResult
+        data object None : AiFeedbackResult
+        data class Queued(val message: String) : AiFeedbackResult
+        data class Error(val message: String) : AiFeedbackResult
+    }
+
+    /** Loads the cached server-side feedback, if any. */
+    suspend fun loadActivityFeedback(serverId: String): AiFeedbackResult = withContext(Dispatchers.IO) {
+        runCatching {
+            val res = network.api().activityFeedback(serverId)
+            res.feedback?.let { AiFeedbackResult.Ready(it) } ?: AiFeedbackResult.None
+        }.getOrDefault(AiFeedbackResult.Error("Could not load the AI analysis"))
+    }
+
+    /**
+     * Triggers on-demand generation. The server allows 90 s; this client's
+     * read timeout is 30 s, so slow generations surface as [AiFeedbackResult.Queued]
+     * while the server keeps working and caches the result.
+     */
+    suspend fun generateActivityFeedback(serverId: String, regenerate: Boolean): AiFeedbackResult =
+        withContext(Dispatchers.IO) {
+            try {
+                val res = network.api().generateActivityFeedback(
+                    GenerateFeedbackRequest(activityId = serverId, regenerate = regenerate)
+                )
+                when {
+                    res.isSuccessful -> {
+                        val body = res.body()
+                        when {
+                            body?.queued == true ->
+                                AiFeedbackResult.Queued(body.message ?: "Queued — it will appear shortly.")
+                            body?.feedback != null -> AiFeedbackResult.Ready(body.feedback)
+                            else -> loadActivityFeedback(serverId)
+                        }
+                    }
+                    res.code() == 429 ->
+                        AiFeedbackResult.Queued("Server busy — the analysis is queued and will appear shortly.")
+                    res.code() == 403 -> AiFeedbackResult.Error("AI features are not enabled on your account.")
+                    else -> AiFeedbackResult.Error("Server error ${res.code()}")
+                }
+            } catch (e: java.io.IOException) {
+                AiFeedbackResult.Queued("Still generating — tap refresh in a moment.")
+            }
+        }
 
     // ---------- goals & workouts ----------
     val activeGoal: Flow<GoalEntity?> = goalDao.observeActive()
@@ -493,64 +571,15 @@ class RunFlowRepository(
         }
     }
 
-    /** Create a goal and generate its plan locally. Returns goal id. */
-    suspend fun createPlan(spec: PlanSpec): String = withContext(Dispatchers.IO) {
-        val goalId = UUID.randomUUID().toString()
-        val weeks = PlanGenerator.planWeeks(spec)
-        val goal = GoalEntity(
-            id = goalId,
-            name = spec.name,
-            raceType = spec.raceType.name,
-            raceDate = Format.epochMillis(spec.raceDate, LocalTime.of(9, 0)),
-            targetTimeSec = spec.targetTimeSec,
-            weeklyKmGoal = spec.weeklyKm,
-            planWeeks = weeks,
-            runsPerWeek = spec.runsPerWeek,
-            strengthPerWeek = spec.strengthPerWeek,
-            longRunDay = spec.longRunDay.value,
-            workoutDay = spec.workoutDay.value,
-            restDays = spec.restDays.joinToString(",") { it.value.toString() },
-            taperWeeks = spec.taperWeeks,
-            vdotAtCreation = spec.vdot,
-            isActive = true,
-            createdAt = System.currentTimeMillis(),
-            customDistanceKm = spec.customDistanceKm,
-            planStartDate = Format.epochMillis(spec.startDate.with(java.time.DayOfWeek.MONDAY), LocalTime.MIDNIGHT),
-            isLocalOnly = true,
-        )
-        // deactivate previous active goals
-        val all = goalDao.observeAll().first()
-        all.filter { it.isActive }.forEach { goalDao.upsert(it.copy(isActive = false)) }
-        goalDao.upsert(goal)
-
-        val drafts = PlanGenerator.generate(spec)
-        val workouts = drafts.mapIndexed { i, d ->
-            WorkoutEntity(
-                id = UUID.randomUUID().toString(),
-                goalId = goalId,
-                scheduledDate = Format.epochMillis(d.date, LocalTime.of(7, 30)),
-                workoutType = d.type.name,
-                phase = d.phase.name,
-                description = d.description,
-                targetDistanceKm = d.distanceKm,
-                targetPaceSecPerKm = d.targetPaceSecPerKm?.toInt(),
-                targetDurationSec = d.durationSec,
-                sortIndex = i,
-            )
-        }
-        workoutDao.upsertAll(workouts)
-        goalId
-    }
-
     /**
-     * Offline fallback that keeps plans identical to the server: same
-     * goal/workout mapping as [createPlan], but the workouts come from
-     * [WebPlanEngine] — the on-device port of the web generator — instead of
-     * the Classic engine. Used when createPlanViaServer cannot reach the API.
+     * Offline plan creation with the on-device port of the web generator
+     * ([WebPlanEngine]): the workouts are identical to what the server would
+     * generate. Used when [createPlanViaServer] cannot reach the API — this
+     * is the only local generation path.
      */
     suspend fun createPlanOffline(spec: PlanSpec): String = withContext(Dispatchers.IO) {
         val goalId = UUID.randomUUID().toString()
-        val weeks = PlanGenerator.planWeeks(spec)
+        val weeks = PlanMath.planWeeks(spec)
         val goal = GoalEntity(
             id = goalId,
             name = spec.name,

@@ -5,6 +5,7 @@ import com.runflow2.app.data.net.CreateActivityRequest
 import com.runflow2.app.data.net.CreatePlanRequest
 import com.runflow2.app.data.net.CreateWorkoutRequest
 import com.runflow2.app.data.net.EmailLoginRequest
+import com.runflow2.app.data.net.GenerateFeedbackRequest
 import com.runflow2.app.data.net.PatchWorkoutRequest
 import com.runflow2.app.data.net.RefreshRequest
 import com.runflow2.app.data.net.RunFlowApi
@@ -189,6 +190,10 @@ class ApiContractTest {
                 maxLongRunKm = 30.0, taperWeeks = 2,
                 longRunDay = 0, workoutDay = 3, restDays = listOf(1, 5),
                 targetTime = 12600, planSource = "mobile",
+                ridesPerWeek = 2, swimsPerWeek = 1, startWeeklyMileage = 25000.0,
+                peakWeeks = 3, buildWeeks = 5, swimDay = 2,
+                maxHeartRate = 190, restingHeartRate = 50,
+                thresholdHeartRate = 175, thresholdPaceSecondsPerKm = 255.0,
             )
         )
         val recorded = server.takeRequest()
@@ -200,9 +205,21 @@ class ApiContractTest {
         assertTrue(body.contains("\"longRunDay\":0"))
         assertTrue(body.contains("\"restDays\":[1,5]"))
         assertTrue(body.contains("\"planSource\":\"mobile\""))
+        // web-parity advanced options
+        assertTrue(body.contains("\"ridesPerWeek\":2"))
+        assertTrue(body.contains("\"swimsPerWeek\":1"))
+        assertTrue(body.contains("\"startWeeklyMileage\":25000.0"))
+        assertTrue(body.contains("\"peakWeeks\":3"))
+        assertTrue(body.contains("\"buildWeeks\":5"))
+        assertTrue(body.contains("\"swimDay\":2"))
+        assertTrue(body.contains("\"maxHeartRate\":190"))
+        assertTrue(body.contains("\"thresholdPaceSecondsPerKm\":255.0"))
         // encodeDefaults=false: unset optional fields must not be sent
         assertTrue(!body.contains("calibrationTime"))
         assertTrue(!body.contains("durationWeeks"))
+        assertTrue(!body.contains("backyardLoopDistM"))
+        assertTrue(!body.contains("targetLaps"))
+        assertTrue(!body.contains("customSwimDistM"))
         assertEquals("g9", resp.goal.id)
         assertEquals(1, resp.goal.workouts.size)
     }
@@ -281,5 +298,63 @@ class ApiContractTest {
         val gone = api.deleteWorkout("g1", "w-server")
         assertTrue(!gone.isSuccessful)
         assertEquals(404, gone.code())
+    }
+
+    @Test
+    fun `activity detail embeds snake_case streams`() = runTest {
+        server.enqueue(
+            MockResponse().setBody(
+                """{"activity":{"id":"a1","type":"RUN","name":"Long Run","distance":10000,"movingTime":2400,
+                     "streams":{"time":[0,5,10],"heartrate":[120,130,140],"velocity_smooth":[2.8,3.0,3.1],
+                                "altitude":[50,52,55],"cadence":[88,90,91]}}}""".trimIndent()
+            )
+        )
+        val resp = api.activityDetail("a1")
+        assertEquals("/api/mobile/v1/activities/a1", server.takeRequest().path)
+        val streams = resp.activity.streams!!
+        assertEquals(listOf(0.0, 5.0, 10.0), streams.time)
+        assertEquals(listOf(2.8, 3.0, 3.1), streams.velocitySmooth)
+        assertEquals(listOf(120.0, 130.0, 140.0), streams.heartrate)
+        assertEquals(listOf(88.0, 90.0, 91.0), streams.cadence)
+        assertEquals(listOf(50.0, 52.0, 55.0), streams.altitude)
+    }
+
+    @Test
+    fun `activity feedback get reads the cached overview`() = runTest {
+        server.enqueue(
+            MockResponse().setBody(
+                """{"feedback":{"id":"f1","activityId":"a1","plannedComparison":"p","progressAnalysis":"pr",
+                     "goalTrajectory":"g","generatedAt":"2026-09-01T10:00:00.000Z"},"cached":true}""".trimIndent()
+            )
+        )
+        val resp = api.activityFeedback("a1")
+        assertEquals("/api/mobile/v1/ai/activity-feedback?activityId=a1", server.takeRequest().path)
+        assertTrue(resp.cached)
+        assertEquals("p", resp.feedback!!.plannedComparison)
+        assertEquals("g", resp.feedback!!.goalTrajectory)
+    }
+
+    @Test
+    fun `generate feedback posts and parses ready or queued replies`() = runTest {
+        server.enqueue(
+            MockResponse().setBody(
+                """{"feedback":{"activityId":"a1","plannedComparison":"p","progressAnalysis":"pr","goalTrajectory":"g"}}"""
+            )
+        )
+        var resp = api.generateActivityFeedback(GenerateFeedbackRequest("a1", regenerate = false))
+        var recorded = server.takeRequest()
+        assertEquals("/api/mobile/v1/ai/activity-feedback", recorded.path)
+        assertEquals("POST", recorded.method)
+        assertEquals("""{"activityId":"a1"}""", recorded.body.readUtf8()) // encodeDefaults=false drops regenerate=false
+        assertTrue(resp.isSuccessful)
+        assertEquals("p", resp.body()!!.feedback!!.plannedComparison)
+
+        // server-side timeout / rate limit: queue-fallback envelope, possibly as 429
+        server.enqueue(
+            MockResponse().setResponseCode(429).setBody("""{"queued":true,"message":"queued"}""")
+        )
+        resp = api.generateActivityFeedback(GenerateFeedbackRequest("a1", regenerate = true))
+        assertEquals(429, resp.code())
+        server.takeRequest()
     }
 }

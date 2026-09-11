@@ -197,57 +197,113 @@ fun SettingsScreen(
 
             SettingSection("Export") {
                 val goal by container.repository.activeGoal.collectAsState(initial = null)
-                var exporting by remember { mutableStateOf(false) }
+                var exporting by remember { mutableStateOf<String?>(null) }
+                var exportNote by remember { mutableStateOf<String?>(null) }
                 var exportError by remember { mutableStateOf<String?>(null) }
                 val context = androidx.compose.ui.platform.LocalContext.current
 
                 Text(
-                    "Save or share the active training plan as a PDF — one section per training week with every scheduled session.",
+                    "Save or share the active training plan — one section per training week with every scheduled session. " +
+                        "Signed in, the PDF is rendered by the server with the website's layout; offline it is rendered on this phone.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                OutlinedButton(
-                    onClick = {
-                        val g = goal ?: return@OutlinedButton
-                        scope.launch {
-                            exporting = true
-                            exportError = null
-                            try {
-                                val workouts = container.repository.workoutsForGoal(g.id)
-                                    .firstOrNull().orEmpty()
+
+                /**
+                 * Runs [format] ("pdf"|"csv"): signed in, the export comes from
+                 * the server's layout engine; any failure (offline, local-only
+                 * plan) falls back to the on-device renderer.
+                 */
+                suspend fun export(format: String) {
+                    val g = goal ?: return
+                    exporting = format
+                    exportNote = null
+                    exportError = null
+                    try {
+                        val workouts = container.repository.workoutsForGoal(g.id).firstOrNull().orEmpty()
+                        var note: String? = null
+                        val file = if (auth.loggedIn) {
+                            runCatching {
+                                val body = container.network.api().exportPlan(g.id, format)
+                                val dir = java.io.File(context.cacheDir, "exports").apply { mkdirs() }
+                                val f = java.io.File(dir, "runflow-${g.raceType.lowercase()}-plan.$format")
+                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                    body.byteStream().use { input -> f.outputStream().use { input.copyTo(it) } }
+                                }
+                                f
+                            }.getOrElse {
+                                note = when {
+                                    it is retrofit2.HttpException && it.code() == 404 ->
+                                        "This plan hasn't been synced to your account yet — rendered it on this phone."
+                                    else ->
+                                        "Couldn't reach the server — rendered the plan on this phone."
+                                }
+                                if (format == "pdf") {
+                                    val unit = if (settings.useImperial) {
+                                        com.runflow2.app.core.util.DistanceUnit.IMPERIAL
+                                    } else {
+                                        com.runflow2.app.core.util.DistanceUnit.METRIC
+                                    }
+                                    com.runflow2.app.core.export.PlanPdfExporter(unit).exportToCache(context, g, workouts)
+                                } else {
+                                    com.runflow2.app.core.export.exportCsvToCache(context, g, workouts)
+                                }
+                            }
+                        } else {
+                            if (format == "pdf") {
                                 val unit = if (settings.useImperial) {
                                     com.runflow2.app.core.util.DistanceUnit.IMPERIAL
                                 } else {
                                     com.runflow2.app.core.util.DistanceUnit.METRIC
                                 }
-                                val file = com.runflow2.app.core.export.PlanPdfExporter(unit)
-                                    .exportToCache(context, g, workouts)
-                                val uri = androidx.core.content.FileProvider.getUriForFile(
-                                    context,
-                                    "${context.packageName}.fileprovider",
-                                    file,
-                                )
-                                val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                    type = "application/pdf"
-                                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                                    putExtra(android.content.Intent.EXTRA_SUBJECT, g.name)
-                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-                                context.startActivity(android.content.Intent.createChooser(send, "Share training plan"))
-                            } catch (e: Exception) {
-                                exportError = e.message ?: "export failed"
-                            } finally {
-                                exporting = false
+                                com.runflow2.app.core.export.PlanPdfExporter(unit).exportToCache(context, g, workouts)
+                            } else {
+                                com.runflow2.app.core.export.exportCsvToCache(context, g, workouts)
                             }
                         }
-                    },
-                    enabled = goal != null && !exporting,
-                ) { Text(if (exporting) "Exporting…" else "Export plan as PDF") }
+                        note?.let { exportNote = it }
+                        val mime = if (format == "pdf") "application/pdf" else "text/csv"
+                        val uri = androidx.core.content.FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            file,
+                        )
+                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = mime
+                            putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                            putExtra(android.content.Intent.EXTRA_SUBJECT, g.name)
+                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(android.content.Intent.createChooser(send, "Share training plan"))
+                    } catch (e: Exception) {
+                        exportError = e.message ?: "export failed"
+                    } finally {
+                        exporting = null
+                    }
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedButton(
+                        onClick = { scope.launch { export("pdf") } },
+                        enabled = goal != null && exporting == null,
+                    ) { Text(if (exporting == "pdf") "Exporting…" else "Export as PDF") }
+                    OutlinedButton(
+                        onClick = { scope.launch { export("csv") } },
+                        enabled = goal != null && exporting == null,
+                    ) { Text(if (exporting == "csv") "Exporting…" else "Export as CSV") }
+                }
                 if (goal == null) {
                     Text(
                         "No active plan — create one first.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                exportNote?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary,
                     )
                 }
                 exportError?.let {

@@ -23,8 +23,8 @@ android {
         applicationId = "com.runflow2.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 13
-        versionName = "2.4.0"
+        versionCode = 14
+        versionName = "2.4.1"
     }
 
     signingConfigs {

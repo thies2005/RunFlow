@@ -4,6 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -12,6 +13,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Streaming
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -569,6 +571,15 @@ interface RunFlowApi {
     // including all generated workouts (201, aliased as both goal and plan).
     @GET("/api/plans")
     suspend fun plans(): PlansResponse
+
+    /**
+     * Server-side plan export (the web layout engine): format "pdf" | "csv".
+     * 404 when the goal only exists locally — the caller falls back to the
+     * on-device renderer.
+     */
+    @Streaming
+    @GET("/api/mobile/v1/goals/{id}/export")
+    suspend fun exportPlan(@Path("id") id: String, @Query("format") format: String): ResponseBody
 
     @POST("/api/plans")
     suspend fun createPlan(@Body body: CreatePlanRequest): CreatePlanResponse

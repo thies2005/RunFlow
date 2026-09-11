@@ -15,7 +15,7 @@ phase. Server sync is offline-first: everything works without a connection and r
 cd android
 ./gradlew assembleDebug          # debug APK  → app/build/outputs/apk/debug/
 ./gradlew assembleRelease        # R8-minified + signed (needs android/key.properties) → app/build/outputs/apk/release/
-./gradlew testDebugUnitTest      # 252 unit tests (math, streams/GAP, stream capture, plan, sync mappers, plan mappers, SSE parser, Strava OAuth, API contract, logging, login nudge, wizard flow, Health Connect import, plan-config parity)
+./gradlew testDebugUnitTest      # 273 unit tests (math, streams/GAP, stream capture, plan, sync mappers, plan mappers, SSE parser, Strava OAuth, API contract, logging, login nudge, wizard flow, Health Connect import, plan-config parity)
 ```
 
 No API keys or backend required — the app is **fully local-first** (Room + DataStore) and seeds
@@ -204,7 +204,7 @@ keyAlias=runflow2
 keyPassword=<password>
 ```
 
-A ready-to-install signed APK is at `android/RunFlow2-v2.4.0-release.apk`.
+A ready-to-install signed APK is at `android/RunFlow2-v2.4.1-release.apk`.
 
 ## Deferred (next phases)
 

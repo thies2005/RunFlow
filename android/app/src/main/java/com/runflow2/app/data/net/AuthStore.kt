@@ -139,8 +139,19 @@ class AuthStore(private val context: Context) {
         AppLog.i("Auth", "signed in as ${auth.user?.email ?: auth.user?.id ?: "unknown user"}")
     }
 
-    suspend fun updateTokens(access: String, refresh: String) {
-        cachedAccess = access
+    /**
+     * Backfills the account email if the session doesn't have one — e.g. a
+     * Strava account whose email only reached the server after a later
+     * sign-in with the profile:read_all scope.
+     */
+    suspend fun updateEmailIfMissing(email: String?) {
+        if (email.isNullOrBlank() || !_state.value.loggedIn || !_state.value.email.isNullOrBlank()) return
+        context.authDataStore.edit { p -> p[Keys.EMAIL] = email }
+        _state.value = _state.value.copy(email = email)
+        AppLog.i("Auth", "account email backfilled from server profile")
+    }
+
+    suspend fun updateTokens(access: String, refresh: String) {        cachedAccess = access
         cachedRefresh = refresh
         context.authDataStore.edit { p ->
             p[Keys.ACCESS] = access

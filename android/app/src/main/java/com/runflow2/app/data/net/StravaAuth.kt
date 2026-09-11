@@ -26,7 +26,9 @@ object StravaAuth {
     const val CALLBACK_HOST = "auth"
     const val CALLBACK_PATH = "/callback"
 
-    const val SCOPE = "read,activity:read_all"
+    /** profile:read_all makes Strava return athlete.email, so the account
+     *  gets a real email on the server instead of a null placeholder. */
+    const val SCOPE = "read,activity:read_all,profile:read_all"
 
     /** Server callback endpoint the browser is redirected to after consent. */
     fun callbackUriFor(baseUrl: String): String = "${baseUrl.trimEnd('/')}/api/auth/strava/callback"

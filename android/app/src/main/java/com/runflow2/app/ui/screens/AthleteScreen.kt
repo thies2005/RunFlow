@@ -91,9 +91,12 @@ fun AthleteScreen(
     var showAbout by remember { mutableStateOf(false) }
 
     val p = profile
-    // The signed-in account email is authoritative. Signed out, NEVER show the
-    // seeded demo address — it is a placeholder, not the user's account.
-    val headerEmail = auth.email?.takeIf { it.isNotBlank() } ?: "Local athlete profile"
+    // The signed-in account email is authoritative; Strava-only accounts may
+    // not have one, so fall back to the account name. Signed out, NEVER show
+    // the seeded demo address — it is a placeholder, not the user's account.
+    val headerEmail = auth.email?.takeIf { it.isNotBlank() }
+        ?: auth.name?.takeIf { it.isNotBlank() }
+        ?: "Local athlete profile"
 
     Scaffold(
         topBar = {

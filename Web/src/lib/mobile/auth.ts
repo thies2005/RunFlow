@@ -313,18 +313,36 @@ export async function exchangeStravaCodeForTokens(
         }
 
         if (!user) {
-            // Create new user
-            user = await prisma.user.create({
-                data: {
-                    stravaId,
-                    name: `${athlete.firstname || ''} ${athlete.lastname || ''}`.trim() || null,
-                    image: athlete.profile || null,
-                    stravaAccessToken: encryptToken(access_token),
-                    stravaRefreshToken: encryptToken(refresh_token),
-                    stravaTokenExpiry: new Date(expires_at * 1000)
-                },
-                select: { id: true, name: true, email: true, image: true, emailVerified: true, tokenVersion: true }
-            });
+            // Create new user. Email is unique — if another account (e.g. an
+            // email-login user) already holds the Strava email, retry without
+            // it instead of failing the whole sign-in.
+            const baseData = {
+                stravaId,
+                name: `${athlete.firstname || ''} ${athlete.lastname || ''}`.trim() || null,
+                image: athlete.profile || null,
+                stravaAccessToken: encryptToken(access_token),
+                stravaRefreshToken: encryptToken(refresh_token),
+                stravaTokenExpiry: new Date(expires_at * 1000)
+            };
+            try {
+                user = await prisma.user.create({
+                    data: {
+                        ...baseData,
+                        // Present when the app's OAuth scope includes profile:read_all
+                        ...(athlete.email ? { email: athlete.email } : {})
+                    },
+                    select: { id: true, name: true, email: true, image: true, emailVerified: true, tokenVersion: true }
+                });
+            } catch (e) {
+                if (e && typeof e === 'object' && 'code' in e && (e as { code?: string }).code === 'P2002' && athlete.email) {
+                    user = await prisma.user.create({
+                        data: baseData,
+                        select: { id: true, name: true, email: true, image: true, emailVerified: true, tokenVersion: true }
+                    });
+                } else {
+                    throw e;
+                }
+            }
 
             // Create Account record for NextAuth compatibility
             await prisma.account.create({

@@ -235,6 +235,9 @@ class SyncManager(
             if (profile == null || !profile.dirty) {
                 val server = client.api().profile().user
                 db.profileDao().upsert(server.applyTo(profile ?: ProfileEntity(), authStore.state.value.email))
+                // A Strava account may only get its email server-side later
+                // (profile:read_all scope) — persist it once it shows up.
+                authStore.updateEmailIfMissing(server.email)
             }
         } catch (e: IOException) {
             // offline mid-sync: fine

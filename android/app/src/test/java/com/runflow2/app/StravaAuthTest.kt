@@ -30,7 +30,8 @@ class StravaAuthTest {
         // state must be flutter_<millis> — the server picks the runflow2 scheme
         // and validates the timestamp from it
         assertEquals("flutter_1700000000000", q["state"])
-        assertEquals("read%2Cactivity%3Aread_all", q["scope"])
+        // profile:read_all makes Strava return athlete.email so the account gets a real email
+        assertEquals("read%2Cactivity%3Aread_all%2Cprofile%3Aread_all", q["scope"])
     }
 
     @Test

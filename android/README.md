@@ -204,7 +204,7 @@ keyAlias=runflow2
 keyPassword=<password>
 ```
 
-A ready-to-install signed APK is at `android/RunFlow2-v2.3.0-release.apk`.
+A ready-to-install signed APK is at `android/RunFlow2-v2.4.0-release.apk`.
 
 ## Deferred (next phases)
 

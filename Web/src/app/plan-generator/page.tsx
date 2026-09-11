@@ -22,8 +22,8 @@ const RACE_OPTIONS: RaceOption[] = [
     { value: 'FIFTY_K', label: '50K Ultra', icon: '⛰️', category: 'Ultra' },
     { value: 'SPRINT_TRI', label: 'Sprint Tri', icon: '🏊', category: 'Triathlon' },
     { value: 'OLYMPIC_TRI', label: 'Olympic Tri', icon: '🏊‍♂️', category: 'Triathlon' },
-    { value: 'HALF_IRONMAN', label: 'Half Ironman', icon: '🚴', category: 'Triathlon' },
-    { value: 'FULL_IRONMAN', label: 'Ironman', icon: '🧑‍🚀', category: 'Triathlon' },
+    { value: 'HALF_IRONMAN', label: 'Middle Distance', icon: '🚴', category: 'Triathlon' },
+    { value: 'FULL_IRONMAN', label: 'Long Distance', icon: '🧑‍🚀', category: 'Triathlon' },
 ];
 
 const FITNESS_LEVELS = [

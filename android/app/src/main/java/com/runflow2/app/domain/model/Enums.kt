@@ -31,8 +31,8 @@ enum class RaceType(val label: String, val distanceKm: Double?, val tri: Boolean
     CUSTOM_DISTANCE("Custom Distance", null),
     SPRINT_TRI("Sprint Triathlon", 5.0, tri = true),
     OLYMPIC_TRI("Olympic Triathlon", 10.0, tri = true),
-    HALF_IRONMAN("Half Ironman", 21.0975, tri = true),
-    FULL_IRONMAN("Ironman", 42.195, tri = true),
+    HALF_IRONMAN("Middle Distance Triathlon", 21.0975, tri = true),
+    FULL_IRONMAN("Long Distance Triathlon", 42.195, tri = true),
     CUSTOM_TRI("Custom Triathlon", null, tri = true),
     NONE("No race / general fitness", null),
 }

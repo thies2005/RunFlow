@@ -34,8 +34,8 @@ internal object WebPlanTriathlonGenerator {
     private val TRI_RACE_LABELS: Map<String, String> = mapOf(
         "SPRINT_TRI" to "Sprint Triathlon (750m/20km/5km)",
         "OLYMPIC_TRI" to "Olympic Triathlon (1.5km/40km/10km)",
-        "HALF_IRONMAN" to "Half Ironman (1.9km/90km/21.1km)",
-        "FULL_IRONMAN" to "Full Ironman (3.8km/180km/42.2km)",
+        "HALF_IRONMAN" to "Middle Distance Triathlon (1.9km/90km/21.1km)",
+        "FULL_IRONMAN" to "Long Distance Triathlon (3.8km/180km/42.2km)",
     )
 
     private val TRI_RACE_RUN_DIST: Map<String, Double> = mapOf(

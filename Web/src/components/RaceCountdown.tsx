@@ -21,6 +21,11 @@ const raceLabels: Record<string, string> = {
     TEN_K: '10K',
     HALF_MARATHON: 'Half Marathon',
     MARATHON: 'Marathon',
+    SPRINT_TRI: 'Sprint Triathlon',
+    OLYMPIC_TRI: 'Olympic Triathlon',
+    HALF_IRONMAN: 'Middle Distance Triathlon',
+    FULL_IRONMAN: 'Long Distance Triathlon',
+    CUSTOM_TRI: 'Custom Triathlon',
 };
 
 const raceDistanceMap: Record<string, RaceDistance> = {

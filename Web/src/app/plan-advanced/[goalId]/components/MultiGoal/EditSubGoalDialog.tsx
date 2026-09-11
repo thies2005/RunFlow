@@ -126,8 +126,8 @@ export function EditSubGoalDialog({ subGoal, isOpen, onClose, onUpdated }: EditS
                                 <optgroup label="Triathlon">
                                     <option value="SPRINT_TRI">Sprint Triathlon</option>
                                     <option value="OLYMPIC_TRI">Olympic Triathlon</option>
-                                    <option value="HALF_IRONMAN">Half Ironman (70.3)</option>
-                                    <option value="FULL_IRONMAN">Full Ironman</option>
+                                    <option value="HALF_IRONMAN">Middle Distance (70.3)</option>
+                                    <option value="FULL_IRONMAN">Long Distance</option>
                                     <option value="CUSTOM_TRI">Custom Triathlon</option>
                                 </optgroup>
                                 <optgroup label="Other">

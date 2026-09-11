@@ -75,6 +75,7 @@ import com.runflow2.app.domain.plan.PlanMath
 import com.runflow2.app.domain.plan.PlanMethodFlow
 import com.runflow2.app.domain.plan.PlanSpec
 import com.runflow2.app.domain.plan.RaceDefaultsTable
+import com.runflow2.app.domain.plan.TriathlonTimeEstimator
 import com.runflow2.app.domain.plan.WizardStep
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -166,6 +167,9 @@ fun PlanWizardScreen(
             taperWeeks = c.taperWeeks,
             peakWeeks = c.peakWeeks,
             buildWeeks = c.buildWeeks,
+            // a target time picked for another race means something else
+            // here (run leg vs total tri time) — always restart the step
+            targetTimeSec = null,
         )
     }
 
@@ -403,7 +407,7 @@ private fun StepEventType(
     val cards = listOf(
         Triple(EventCategory.RUN, Icons.Outlined.DirectionsRun, "5K · 10K · Half · Marathon · Custom"),
         Triple(EventCategory.ULTRA, Icons.Outlined.Terrain, "50K to 100 miles · timed · backyard"),
-        Triple(EventCategory.TRIATHLON, Icons.Outlined.Pool, "Sprint to Ironman · custom"),
+        Triple(EventCategory.TRIATHLON, Icons.Outlined.Pool, "Sprint to long distance · custom"),
         Triple(EventCategory.GENERAL, Icons.Outlined.SelfImprovement, "No race — build fitness"),
     )
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -534,7 +538,7 @@ private fun StepRace(data: WizardData, update: (WizardData) -> Unit) {
                 )
             }
             Text(
-                "Leave blank to use the Olympic defaults (1.5 km / 40 km / 10 km).",
+                "Leave blank to use the Sprint defaults (750 m / 20 km / 5 km).",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -609,7 +613,11 @@ private fun StepCalibration(
     analytics: AnalyticsBundle?,
     update: (WizardData) -> Unit,
 ) {
-    StepHeader("Calibration", "A recent race result sharpens your pace targets.")
+    StepHeader(
+        "Calibration",
+        if (data.raceType.tri) "A recent run race sets your swim, bike and run training paces."
+        else "A recent race result sharpens your pace targets.",
+    )
     Card {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("From your history", style = MaterialTheme.typography.titleSmall)
@@ -665,6 +673,10 @@ private fun StepTarget(
     raceKm: Double?,
     update: (WizardData) -> Unit,
 ) {
+    if (data.raceType.tri) {
+        StepTargetTriathlon(data, vdot, update)
+        return
+    }
     if (raceKm == null) {
         StepHeader("Target", "Timed events use time-based goals — pick your volume in the next step.")
         Card {
@@ -695,8 +707,8 @@ private fun StepTarget(
         valueRange = minSec.toFloat()..maxSec.toFloat(),
     )
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("Conservative", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text("Ambitious", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Conservative", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     val targetPace = current / raceKm
     Text(
@@ -709,9 +721,90 @@ private fun StepTarget(
     }
 }
 
+/**
+ * Triathlon TARGET: the goal is the TOTAL finish time (swim + transitions +
+ * bike + run), projected from the run VDOT exactly like the web's
+ * TriathlonGoalTimeRenderer — not a run-leg marathon time.
+ */
+@Composable
+private fun StepTargetTriathlon(data: WizardData, vdot: Double, update: (WizardData) -> Unit) {
+    // blank CUSTOM_TRI legs stay null: the estimator then applies the same
+    // 750m/20km/5km fallback the engine's classifyCustomTri uses
+    val swimM = data.parseKm(data.customSwimText)?.times(1000)
+    val bikeM = data.parseKm(data.customBikeText)?.times(1000)
+    val runM = data.parseKm(data.customRunText)?.times(1000)
+    val projection = TriathlonTimeEstimator.estimate(vdot, data.raceType, swimM, bikeM, runM)
+    if (projection == null) {
+        StepHeader("Goal finish time", "Add a race result in calibration first — the projection needs a VDOT.")
+        return
+    }
+
+    val minSec = projection.optimal.totalSeconds / 30 * 30
+    val maxSec = ((projection.conservative.totalSeconds / 30) + 1) * 30
+    val current = data.targetTimeSec ?: ((projection.projected.totalSeconds / 30) * 30).coerceIn(minSec, maxSec)
+
+    StepHeader(
+        "Goal finish time",
+        "The whole race — swim, both transitions, bike and run. " +
+            "Projected from VDOT ${Format.oneDecimal(vdot)}: ${Format.duration(projection.projected.totalSeconds)}.",
+    )
+    Text(
+        Format.duration(current),
+        style = MaterialTheme.typography.displayMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary,
+    )
+    Slider(
+        value = current.toFloat().coerceIn(minSec.toFloat(), maxSec.toFloat()),
+        onValueChange = { update(data.copy(targetTimeSec = (it.toInt() / 30 * 30).coerceAtLeast(300))) },
+        valueRange = minSec.toFloat()..maxSec.toFloat(),
+    )
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text("Optimal", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Conservative", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    Card {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Projected race day", style = MaterialTheme.typography.titleSmall)
+            val p = projection.projected
+            val legs = projection.legs
+            SplitRow("Swim", p.swimSeconds, Format.duration((p.swimSeconds / (legs.swimM / 100)).toInt()) + " /100m")
+            SplitRow("T1", p.t1Seconds, null)
+            SplitRow("Bike", p.bikeSeconds, String.format("%.1f km/h", legs.bikeM / 1000.0 / (p.bikeSeconds / 3600.0)))
+            SplitRow("T2", p.t2Seconds, null)
+            SplitRow("Run", p.runSeconds, Format.pace(p.runSeconds / (legs.runM / 1000.0)) + " /km")
+        }
+    }
+    Text(
+        "The plan itself is paced by your VDOT — this goal is stored on the plan for tracking.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    TextButton(onClick = { update(data.copy(targetTimeSec = null)) }) {
+        Text("Skip — let the plan use prediction")
+    }
+}
+
+@Composable
+private fun SplitRow(label: String, seconds: Int, detail: String?) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            Format.duration(seconds) + (detail?.let { "  ·  $it" } ?: ""),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
 @Composable
 private fun StepVolume(data: WizardData, update: (WizardData) -> Unit) {
-    StepHeader("Training volume", "How much are you ready to run?")
+    val tri = data.raceType.tri
+    StepHeader(
+        "Training volume",
+        if (tri) "How much are you ready to train? Volume scales swim, bike and run together."
+        else "How much are you ready to run?",
+    )
 
     if (data.raceType == RaceType.NONE) {
         Text("Plan length", style = MaterialTheme.typography.titleSmall)
@@ -737,8 +830,34 @@ private fun StepVolume(data: WizardData, update: (WizardData) -> Unit) {
         }
     }
 
+    if (tri) {
+        // For triathlon these are core plan inputs (the engine distributes
+        // sessions per sport), so they live here — not under advanced options.
+        Text("Rides per week: ${data.ridesPerWeek}", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            (0..3).forEach { n ->
+                FilterChip(
+                    selected = data.ridesPerWeek == n,
+                    onClick = { update(data.copy(ridesPerWeek = n)) },
+                    label = { Text("$n") },
+                )
+            }
+        }
+        Text("Swims per week: ${data.swimsPerWeek}", style = MaterialTheme.typography.titleSmall)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            (0..3).forEach { n ->
+                FilterChip(
+                    selected = data.swimsPerWeek == n,
+                    onClick = { update(data.copy(swimsPerWeek = n)) },
+                    label = { Text("$n") },
+                )
+            }
+        }
+    }
+
     Text(
-        "Peak weekly mileage: ${Format.distance(data.weeklyKm)}",
+        if (tri) "Peak weekly training volume: ${Format.distance(data.weeklyKm)}"
+        else "Peak weekly mileage: ${Format.distance(data.weeklyKm)}",
         style = MaterialTheme.typography.titleSmall,
     )
     Slider(
@@ -747,16 +866,24 @@ private fun StepVolume(data: WizardData, update: (WizardData) -> Unit) {
         valueRange = 20f..120f,
     )
 
-    val cap = RaceDefaultsTable.longRunCapKm(data.raceType).toFloat()
-    Text(
-        "Longest long run: ${Format.distance(data.longRunKm)}",
-        style = MaterialTheme.typography.titleSmall,
-    )
-    Slider(
-        value = data.longRunKm.toFloat().coerceIn(6f, cap),
-        onValueChange = { update(data.copy(longRunKm = (it / 1).roundToInt().toDouble())) },
-        valueRange = 6f..cap,
-    )
+    if (!tri) {
+        val cap = RaceDefaultsTable.longRunCapKm(data.raceType).toFloat()
+        Text(
+            "Longest long run: ${Format.distance(data.longRunKm)}",
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Slider(
+            value = data.longRunKm.toFloat().coerceIn(6f, cap),
+            onValueChange = { update(data.copy(longRunKm = (it / 1).roundToInt().toDouble())) },
+            valueRange = 6f..cap,
+        )
+    } else {
+        Text(
+            "Long runs are capped by race distance (${Format.distance((RaceDefaultsTable.longRunCapKm(data.raceType)))} max).",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 
     Text("Strength sessions / week", style = MaterialTheme.typography.titleSmall)
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -780,28 +907,35 @@ private fun StepAdvanced(
     analytics: AnalyticsBundle?,
     update: (WizardData) -> Unit,
 ) {
-    StepHeader("Advanced options", "Cross-training, start volume, phases & heart rate. Defaults match the web engine.")
+    val tri = data.raceType.tri
+    StepHeader(
+        "Advanced options",
+        if (tri) "Start volume, training phases & heart rate. Defaults match the web engine."
+        else "Cross-training, start volume, phases & heart rate. Defaults match the web engine.",
+    )
 
-    // ---- cross-training ----
-    Text("Cross-training", style = MaterialTheme.typography.titleSmall)
-    Text("Rides / week", style = MaterialTheme.typography.bodyMedium)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        (0..3).forEach { n ->
-            FilterChip(
-                selected = data.ridesPerWeek == n,
-                onClick = { update(data.copy(ridesPerWeek = n)) },
-                label = { Text("$n") },
-            )
+    // ---- cross-training (run/ultra plans; triathlon sets rides & swims in the volume step) ----
+    if (!tri) {
+        Text("Cross-training", style = MaterialTheme.typography.titleSmall)
+        Text("Rides / week", style = MaterialTheme.typography.bodyMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            (0..3).forEach { n ->
+                FilterChip(
+                    selected = data.ridesPerWeek == n,
+                    onClick = { update(data.copy(ridesPerWeek = n)) },
+                    label = { Text("$n") },
+                )
+            }
         }
-    }
-    Text("Swims / week", style = MaterialTheme.typography.bodyMedium)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        (0..3).forEach { n ->
-            FilterChip(
-                selected = data.swimsPerWeek == n,
-                onClick = { update(data.copy(swimsPerWeek = n)) },
-                label = { Text("$n") },
-            )
+        Text("Swims / week", style = MaterialTheme.typography.bodyMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            (0..3).forEach { n ->
+                FilterChip(
+                    selected = data.swimsPerWeek == n,
+                    onClick = { update(data.copy(swimsPerWeek = n)) },
+                    label = { Text("$n") },
+                )
+            }
         }
     }
 

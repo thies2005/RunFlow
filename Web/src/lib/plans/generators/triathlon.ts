@@ -34,8 +34,8 @@ const TRI_TAPER_FRACTIONS: Record<string, number[]> = {
 const TRI_RACE_LABELS: Partial<Record<RaceType, string>> = {
     SPRINT_TRI: 'Sprint Triathlon (750m/20km/5km)',
     OLYMPIC_TRI: 'Olympic Triathlon (1.5km/40km/10km)',
-    HALF_IRONMAN: 'Half Ironman (1.9km/90km/21.1km)',
-    FULL_IRONMAN: 'Full Ironman (3.8km/180km/42.2km)',
+    HALF_IRONMAN: 'Middle Distance Triathlon (1.9km/90km/21.1km)',
+    FULL_IRONMAN: 'Long Distance Triathlon (3.8km/180km/42.2km)',
 };
 
 const TRI_RACE_RUN_DIST: Partial<Record<RaceType, number>> = {

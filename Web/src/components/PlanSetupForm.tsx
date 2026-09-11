@@ -1163,8 +1163,8 @@ export default function PlanSetupForm({
                                     <optgroup label="Triathlon">
                                         <option value="SPRINT_TRI">Sprint Triathlon</option>
                                         <option value="OLYMPIC_TRI">Olympic Triathlon</option>
-                                        <option value="HALF_IRONMAN">Half Ironman</option>
-                                        <option value="FULL_IRONMAN">Full Ironman</option>
+                                        <option value="HALF_IRONMAN">Middle Distance</option>
+                                        <option value="FULL_IRONMAN">Long Distance</option>
                                     </optgroup>
                                 </select>
                                 <input

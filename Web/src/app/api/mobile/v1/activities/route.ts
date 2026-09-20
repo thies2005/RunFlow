@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
                     runningTss: true,
                     estimatedVdot: true,
                     trainingType: true,
+                    calories: true,
                     hrZone1Time: true,
                     hrZone2Time: true,
                     hrZone3Time: true,

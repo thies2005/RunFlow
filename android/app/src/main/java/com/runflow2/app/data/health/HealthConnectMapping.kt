@@ -74,7 +74,7 @@ object HealthConnectMapping {
         return "Run ${Format.dateWithYear(date)} · ${Format.oneDecimal(s.distanceMeters / 1000.0)} km"
     }
 
-    fun toActivityEntity(s: HcRunSnapshot, id: String = UUID.randomUUID().toString()): ActivityEntity {
+    fun toActivityEntity(s: HcRunSnapshot, id: String = UUID.randomUUID().toString(), weightKg: Double = 72.0): ActivityEntity {
         val moving = movingTimeSec(s)
         val km = s.distanceMeters / 1000.0
         return ActivityEntity(
@@ -88,7 +88,9 @@ object HealthConnectMapping {
             maxHr = s.maxHr,
             averageCadence = s.steps?.let { st -> if (moving > 0) st * 60.0 / moving else null },
             totalElevation = s.elevationMeters ?: 0.0,
-            calories = s.caloriesKcal,
+            // Source apps that don't write TotalCaloriesBurned leave kcal null —
+            // fall back to the MET estimate instead of importing calorie-less runs.
+            calories = s.caloriesKcal ?: estimateCalories(s, weightKg),
             trimp = 0.0,
             trainingType = null,
             estimatedVdot = RunFlowRepository.estimateVdot(km, moving),
@@ -97,4 +99,8 @@ object HealthConnectMapping {
             hcRecordId = s.recordId,
         )
     }
+
+    /** MET fallback for sessions whose source app wrote no calorie records. */
+    fun estimateCalories(s: HcRunSnapshot, weightKg: Double = 72.0): Int? =
+        com.runflow2.app.core.math.CalorieMath.estimate(movingTimeSec(s), s.distanceMeters, weightKg)
 }

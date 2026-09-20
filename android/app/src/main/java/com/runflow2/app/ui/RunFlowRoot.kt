@@ -57,6 +57,8 @@ object Routes {
     const val SETTINGS = "settings"
     const val LOGIN = "login"
     const val AI_COACH = "ai_coach"
+    const val AI_COACH_ACTIVITY = "ai_coach/activity/{activityId}"
+    fun aiCoachActivity(activityId: String) = "ai_coach/activity/$activityId"
     const val EDIT_PROFILE = "edit_profile"
     const val HR_ZONES = "hr_zones"
     const val ACTIVITY_DETAIL = "activity/{id}"
@@ -249,6 +251,16 @@ fun RunFlowRoot(container: AppContainer) {
                     )
                 }
 
+                composable(Routes.AI_COACH_ACTIVITY) { entry ->
+                    val id = entry.arguments?.getString("activityId") ?: return@composable
+                    AiCoachScreen(
+                        container = container,
+                        onBack = { navController.popBackStack() },
+                        onLogin = { navController.navigate(Routes.LOGIN) },
+                        activityId = id,
+                    )
+                }
+
                 composable(Routes.EDIT_PROFILE) {
                     EditProfileScreen(
                         container = container,
@@ -269,6 +281,7 @@ fun RunFlowRoot(container: AppContainer) {
                         container = container,
                         activityId = id,
                         onBack = { navController.popBackStack() },
+                        onDiscuss = { navController.navigate(Routes.aiCoachActivity(it)) },
                     )
                 }
 

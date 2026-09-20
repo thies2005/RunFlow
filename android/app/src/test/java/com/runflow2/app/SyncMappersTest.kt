@@ -62,8 +62,14 @@ class SyncMappersTest {
         assertEquals(3_000, req.elapsedTime)
         assertEquals(155.0, req.averageHr!!, 0.01)
         assertEquals(true, req.hasHeartrate)
+        assertEquals(650.0, req.calories!!, 0.01)
         assertTrue(req.startDate.endsWith("Z"))
         assertEquals("2023-11-14T22:13:20Z", req.startDate)
+    }
+
+    @Test
+    fun `create request omits calories when the device has none`() {
+        assertNull(localActivity().copy(calories = null).toCreateRequest().calories)
     }
 
     @Test
@@ -79,6 +85,7 @@ class SyncMappersTest {
             trimp = 57.5,
             estimatedVdot = 44.8,
             trainingType = "TEMPO",
+            calories = 612.0,
             hrZone1Time = 100, hrZone2Time = 200, hrZone3Time = 300,
             hrZone4Time = 400, hrZone5Time = 500, hrZone6Time = 600, hrZone7Time = 700,
         )
@@ -98,6 +105,15 @@ class SyncMappersTest {
         assertEquals(700, merged.hrZone7Sec)
         assertFalse(merged.dirty)
         assertEquals(42L, merged.updatedAt)
+        // server calories win over the local estimate
+        assertEquals(612, merged.calories)
+    }
+
+    @Test
+    fun `merge keeps local calories when the server sends none`() {
+        val dto = ActivityDto(id = "server-9", type = "RUN", name = "Run", distance = 10_000.0, movingTime = 3_000)
+        val merged = dto.mergeInto(localActivity(), now = 1L)
+        assertEquals(650, merged.calories)
     }
 
     @Test

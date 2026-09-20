@@ -1,10 +1,12 @@
 package com.runflow2.app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -21,17 +24,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -45,6 +46,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
@@ -60,7 +64,11 @@ import com.runflow2.app.domain.plan.StructuredWorkoutDraft
 import com.runflow2.app.domain.plan.formatTotalDistance
 import com.runflow2.app.domain.plan.toDraft
 import com.runflow2.app.domain.plan.vdotFromThresholdPaceSecPerKm
+import com.runflow2.app.ui.theme.ChartAtl
+import com.runflow2.app.ui.theme.ChartCtl
+import com.runflow2.app.ui.theme.ChartTsb
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /**
  * Structured interval editor — app mirror of the web's
@@ -292,16 +300,14 @@ private fun SectionFields(
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = distanceText,
-                onValueChange = onDistanceChange,
-                label = { Text("Distance (m)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.weight(1f),
-            )
-            PaceDropdown(letter = pace, paceTargets = paceTargets, onSelected = onPaceChange, modifier = Modifier.weight(1f))
-        }
+        OutlinedTextField(
+            value = distanceText,
+            onValueChange = onDistanceChange,
+            label = { Text("Distance (m)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        PaceZoneSlider(letter = pace, paceTargets = paceTargets, onSelected = onPaceChange)
     }
 }
 
@@ -336,14 +342,6 @@ private fun MainEntryCard(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1.4f),
                 )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                PaceDropdown(
-                    letter = row.pace,
-                    paceTargets = paceTargets,
-                    onSelected = { onChange(row.copy(pace = it)) },
-                    modifier = Modifier.weight(1.6f),
-                )
                 OutlinedTextField(
                     value = row.rest,
                     onValueChange = { onChange(row.copy(rest = it)) },
@@ -355,43 +353,84 @@ private fun MainEntryCard(
                     Icon(Icons.Outlined.Close, contentDescription = "Remove entry")
                 }
             }
+            PaceZoneSlider(
+                letter = row.pace,
+                paceTargets = paceTargets,
+                onSelected = { onChange(row.copy(pace = it)) },
+            )
         }
     }
 }
 
-/** E/M/T/I/R dropdown showing the letter plus its resolved sec/km for the athlete's VDOT. */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Pace picker as a slider that snaps to the five Daniels zones, the zone
+ * segments painted in the same colors as the analytics "Training paces"
+ * card (E green → R purple). Replaces the old dropdown so the whole zone
+ * spectrum is visible at a glance.
+ */
 @Composable
-private fun PaceDropdown(
+private fun PaceZoneSlider(
     letter: PaceLetter,
     paceTargets: Map<PaceLetter, Int>,
     onSelected: (PaceLetter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
-        OutlinedTextField(
-            value = "${letter.name} · ${Format.pace(paceTargets[letter]?.toDouble())} /km",
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Pace") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth(),
+    val zoneColor = paceZoneColor(letter)
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(0.dp)) {
+        Text(
+            "Pace · ${paceLabel(letter)} — ${Format.pace(paceTargets[letter]?.toDouble())} /km",
+            style = MaterialTheme.typography.labelMedium,
+            color = zoneColor,
+            fontWeight = FontWeight.SemiBold,
         )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            PACE_LETTERS.forEach { l ->
-                DropdownMenuItem(
-                    text = { Text("${l.name} — ${paceLabel(l)} · ${Format.pace(paceTargets[l]?.toDouble())} /km") },
-                    onClick = {
-                        onSelected(l)
-                        expanded = false
-                    },
-                )
+        Slider(
+            value = PACE_LETTERS.indexOf(letter).toFloat(),
+            onValueChange = { v ->
+                onSelected(PACE_LETTERS[v.roundToInt().coerceIn(0, PACE_LETTERS.lastIndex)])
+            },
+            valueRange = 0f..PACE_LETTERS.lastIndex.toFloat(),
+            steps = PACE_LETTERS.size - 2,
+            colors = SliderDefaults.colors(
+                thumbColor = zoneColor,
+                activeTrackColor = zoneColor,
+                inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            ),
+        )
+        // zone bar: outer segments are half-width so each snap point sits
+        // inside its own colored segment
+        Row(Modifier.fillMaxWidth().height(20.dp)) {
+            PACE_LETTERS.forEachIndexed { i, l ->
+                val selected = l == letter
+                val c = paceZoneColor(l)
+                Box(
+                    Modifier
+                        .weight(if (i == 0 || i == PACE_LETTERS.lastIndex) 1f else 2f)
+                        .fillMaxHeight()
+                        .padding(horizontal = 1.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (selected) c else c.copy(alpha = 0.30f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        l.name,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (selected) Color(0xFF101010) else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (selected) FontWeight.Bold else null,
+                    )
+                }
             }
         }
     }
+}
+
+/** Zone colors exactly as the analytics "Training paces" card paints them. */
+@Composable
+private fun paceZoneColor(letter: PaceLetter): Color = when (letter) {
+    PaceLetter.E -> ChartCtl
+    PaceLetter.M -> ChartTsb
+    PaceLetter.T -> ChartAtl
+    PaceLetter.I -> MaterialTheme.colorScheme.error
+    PaceLetter.R -> MaterialTheme.colorScheme.tertiary
 }
 
 private fun paceLabel(letter: PaceLetter): String = when (letter) {

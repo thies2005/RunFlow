@@ -191,7 +191,9 @@ class HealthConnectManager(
                         duplicates++
                         return@forEach
                     }
-                    repository.saveActivity(HealthConnectMapping.toActivityEntity(snapshot))
+                    repository.saveActivity(
+                        HealthConnectMapping.toActivityEntity(snapshot, weightKg = repository.profileOnce().weightKg)
+                    )
                     imported++
                 }
 

@@ -173,13 +173,17 @@ data class SyncQueueEntity(
     val lastAttemptAt: Long? = null,
 )
 
-@Entity(tableName = "chat_messages")
+@Entity(tableName = "chat_messages", indices = [Index("activityId")])
 data class ChatMessageEntity(
     @PrimaryKey val id: String,
     val sessionId: String,
     val role: String, // user | assistant
     val content: String,
     val createdAt: Long,
+    // ---- v10: set on "discuss this run" threads so an activity's chat
+    // history can be observed across sessions (the server filters history by
+    // the same field). Null on the general coach conversation. ----
+    val activityId: String? = null,
 )
 
 /**
@@ -231,6 +235,9 @@ interface ActivityDao {
 
     @Query("UPDATE activities SET streamsJson = :streams WHERE id = :id")
     suspend fun updateStreams(id: String, streams: String?)
+
+    @Query("UPDATE activities SET calories = :calories WHERE id = :id")
+    suspend fun updateCalories(id: String, calories: Int)
 
     @Query("DELETE FROM activities WHERE id = :id")
     suspend fun delete(id: String)
@@ -359,8 +366,12 @@ interface ChatDao {
     @Query("SELECT * FROM chat_messages WHERE sessionId = :sessionId ORDER BY createdAt ASC, id ASC")
     fun observeForSession(sessionId: String): Flow<List<ChatMessageEntity>>
 
-    @Query("SELECT * FROM chat_messages ORDER BY createdAt ASC, id ASC")
-    fun observeAll(): Flow<List<ChatMessageEntity>>
+    @Query("SELECT * FROM chat_messages WHERE activityId = :activityId ORDER BY createdAt ASC, id ASC")
+    fun observeForActivity(activityId: String): Flow<List<ChatMessageEntity>>
+
+    /** Newest message row of an activity thread — carries its sessionId. */
+    @Query("SELECT * FROM chat_messages WHERE activityId = :activityId ORDER BY createdAt DESC, id DESC LIMIT 1")
+    suspend fun newestForActivity(activityId: String): ChatMessageEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(message: ChatMessageEntity)
@@ -376,6 +387,9 @@ interface ChatDao {
 
     @Query("DELETE FROM chat_messages WHERE sessionId = :sessionId")
     suspend fun deleteForSession(sessionId: String)
+
+    @Query("DELETE FROM chat_messages WHERE activityId = :activityId")
+    suspend fun deleteForActivity(activityId: String)
 
     @Query("DELETE FROM chat_messages")
     suspend fun clear()
@@ -420,7 +434,7 @@ interface PlanSnapshotDao {
         ActivityEntity::class, GoalEntity::class, WorkoutEntity::class, ProfileEntity::class,
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -554,6 +568,17 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE activities ADD COLUMN hcRecordId TEXT")
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_activities_hcRecordId ON activities(hcRecordId)")
+            }
+        }
+
+        /**
+         * v9 -> v10 tags chat messages with the activity they discuss (the
+         * "discuss this run" coach threads). Nullable, purely additive.
+         */
+        val MIGRATION_9_10: Migration = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE chat_messages ADD COLUMN activityId TEXT")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_chat_messages_activityId ON chat_messages(activityId)")
             }
         }
     }

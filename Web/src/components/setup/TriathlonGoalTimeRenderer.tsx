@@ -31,6 +31,18 @@ function formatRunPace(secondsPerKm: number): string {
     return `${mins}:${secs.toString().padStart(2, '0')}/km`;
 }
 
+// Standard leg distances (mirrors triathlon-time.ts) — used to derive split
+// paces when the athlete didn't enter custom distances.
+const TRI_SWIM_M: Record<string, number> = {
+    SPRINT_TRI: 750, OLYMPIC_TRI: 1500, HALF_IRONMAN: 1900, FULL_IRONMAN: 3800, CUSTOM_TRI: 750,
+};
+const TRI_BIKE_M: Record<string, number> = {
+    SPRINT_TRI: 20000, OLYMPIC_TRI: 40000, HALF_IRONMAN: 90000, FULL_IRONMAN: 180000, CUSTOM_TRI: 20000,
+};
+const TRI_RUN_M: Record<string, number> = {
+    SPRINT_TRI: 5000, OLYMPIC_TRI: 10000, HALF_IRONMAN: 21097, FULL_IRONMAN: 42195, CUSTOM_TRI: 5000,
+};
+
 export default function TriathlonGoalTimeRenderer({
     vdot,
     raceType,
@@ -214,8 +226,15 @@ export default function TriathlonGoalTimeRenderer({
     const ftp = estimateBikeFtpFromVdot(vdot);
     const bikePower = Math.round(ftp * 0.75);
 
-    const swimPacePer100m = projection.projected.swimSeconds / ((customSwimDistM && customSwimDistM > 0 ? customSwimDistM : 750) / 100);
-    const runPacePerKm = projection.projected.runSeconds / ((customRunDistM && customRunDistM > 0 ? customRunDistM : 5000) / 1000);
+    const swimDistM = customSwimDistM && customSwimDistM > 0 ? customSwimDistM : (TRI_SWIM_M[raceType] ?? 750);
+    const bikeDistM = customBikeDistM && customBikeDistM > 0 ? customBikeDistM : (TRI_BIKE_M[raceType] ?? 20000);
+    const runDistM = customRunDistM && customRunDistM > 0 ? customRunDistM : (TRI_RUN_M[raceType] ?? 5000);
+
+    const swimPacePer100m = projection.projected.swimSeconds / (swimDistM / 100);
+    const runPacePerKm = projection.projected.runSeconds / (runDistM / 1000);
+    const bikeKmh = projection.projected.bikeSeconds > 0
+        ? (bikeDistM / 1000) / (projection.projected.bikeSeconds / 3600)
+        : 0;
 
     const startManualEntry = () => {
         const t = displayTime;
@@ -373,7 +392,7 @@ export default function TriathlonGoalTimeRenderer({
                                     {formatTime(projection.projected.bikeSeconds)}
                                 </span>
                                 <span className="text-foreground-muted text-xs ml-2">
-                                    ~{bikePower} W
+                                    ~{bikePower} W · {bikeKmh.toFixed(1)} km/h
                                 </span>
                             </div>
                         </div>

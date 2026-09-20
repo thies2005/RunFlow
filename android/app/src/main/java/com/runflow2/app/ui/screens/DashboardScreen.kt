@@ -73,6 +73,7 @@ import com.runflow2.app.ui.components.WorkoutVisuals
 import com.runflow2.app.ui.components.color
 import com.runflow2.app.domain.model.TsbStatus
 import com.runflow2.app.domain.model.WorkoutType
+import com.runflow2.app.domain.plan.TriathlonTimeEstimator
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -262,9 +263,17 @@ fun DashboardScreen(
                         val done = workouts.count { it.isCompleted }
                         val total = workouts.size.coerceAtLeast(1)
                         val a = analytics
+                        val race = goal.raceType()
+                        // Triathlon goals project the WHOLE race (swim + T1 +
+                        // bike + T2 + run) — a run-distance prediction would
+                        // show just the run leg (~1:40 for a middle distance).
                         val projected = a?.effectiveVdot?.let { eff ->
-                            (goal.customDistanceKm ?: goal.raceType().distanceKm)?.let { km ->
-                                VdotMath.predictTimeSec(eff, km * 1000.0)?.toInt()
+                            if (race.tri) {
+                                TriathlonTimeEstimator.estimate(eff, race)?.projected?.totalSeconds
+                            } else {
+                                (goal.customDistanceKm ?: race.distanceKm)?.let { km ->
+                                    VdotMath.predictTimeSec(eff, km * 1000.0)?.toInt()
+                                }
                             }
                         }
                         Card(modifier = Modifier.fillMaxWidth()) {
@@ -392,8 +401,8 @@ fun DashboardScreen(
                                         w.targetDistanceKm?.let {
                                             InfoChip(Format.distance(it, unit), icon = Icons.Outlined.DirectionsRun)
                                         }
-                                        w.targetPaceSecPerKm?.let {
-                                            InfoChip("${Format.pace(it.toDouble(), unit)} /${Format.distanceUnitLabel(unit)}", icon = Icons.Outlined.Speed)
+                                        Format.paceLabelFor(w.workoutType, w.targetPaceSecPerKm?.toDouble(), unit)?.let {
+                                            InfoChip(it, icon = Icons.Outlined.Speed)
                                         }
                                         w.targetDurationSec?.let {
                                             InfoChip(Format.duration(it), icon = Icons.Outlined.Timer)

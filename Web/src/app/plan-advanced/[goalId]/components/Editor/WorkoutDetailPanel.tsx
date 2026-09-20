@@ -6,6 +6,7 @@ import { X, Trash2, Save, Loader2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { WORKOUT_COLORS } from '../Shared/WorkoutTypeColors';
 import { StructuredWorkoutEditor } from './StructuredWorkoutEditor';
+import { PaceZoneSlider, formatPaceShort } from './PaceZoneSlider';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 
 export type WorkoutType =
@@ -93,6 +94,14 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
             { label: `R — Repetition (${Math.floor(paces.repetition / 60)}:${String(Math.round(paces.repetition % 60)).padStart(2, '0')})`, value: paces.repetition },
         ];
     }, [currentVdot]);
+
+    // Zone letters ↔ pace values for the zone slider labels.
+    const paceZoneLetters = ['E', 'M', 'T', 'I', 'R'];
+    const paceZoneLabels = useMemo(
+        () => paceZoneOptions.map((z) => formatPaceShort(z.value)),
+        [paceZoneOptions],
+    );
+
     const [form, setForm] = useState({ ...workout });
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -107,6 +116,23 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
     const updateField = useCallback((field: string, value: any) => {
         setForm((prev) => ({ ...prev, [field]: value }));
     }, []);
+
+    // Nearest zone to the current pace — exact match wins, otherwise the
+    // closest zone pace marks the slider position.
+    const paceZoneLetter = useMemo(() => {
+        if (form.targetPace == null) return 'E';
+        let best = 0;
+        let bestDiff = Infinity;
+        paceZoneOptions.forEach((z, i) => {
+            const diff = Math.abs(z.value - (form.targetPace as number));
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                best = i;
+            }
+        });
+        return paceZoneLetters[best];
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.targetPace, paceZoneOptions]);
 
     const saveMutation = useMutation({
         mutationFn: async (data: Partial<Workout>) => {
@@ -311,6 +337,19 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                     </div>
                 </div>
 
+                {/* zone-colored pace slider — same zone colors as the analytics
+                    page; picking a zone writes the zone's pace into targetPace */}
+                {form.targetPace != null && (
+                    <PaceZoneSlider
+                        value={paceZoneLetter}
+                        paceLabels={paceZoneLabels}
+                        onChange={(letter) => {
+                            const idx = ['E', 'M', 'T', 'I', 'R'].indexOf(letter);
+                            if (idx >= 0) updateField('targetPace', paceZoneOptions[idx].value);
+                        }}
+                    />
+                )}
+
                 <div>
                     <label className="block text-xs text-foreground-muted mb-1">Color Override</label>
                     <input
@@ -338,6 +377,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                             value={form.structuredSteps}
                             onChange={(steps) => updateField('structuredSteps', steps)}
                             targetPace={form.targetPace ?? undefined}
+                            paceZoneLabels={paceZoneLabels}
                         />
                     </div>
                 )}

@@ -62,8 +62,11 @@ fun epochMillisToServerDate(millis: Long): String =
 private fun parseWorkoutType(raw: String?): WorkoutType =
     raw?.let { runCatching { WorkoutType.valueOf(it) }.getOrNull() }
         ?: when (raw) {
-            // server-only multi-sport types render as cross-training
-            "BRICK", "OPEN_WATER_SWIM" -> WorkoutType.CROSS_TRAIN
+            // server-only multi-sport types fold to their closest domain type
+            // (swims keep SWIM so pace chips label per 100m, matching the
+            // local engine's toDomainWorkoutType)
+            "SWIM_DRILL", "OPEN_WATER_SWIM" -> WorkoutType.SWIM
+            "BRICK" -> WorkoutType.CROSS_TRAIN
             else -> WorkoutType.OTHER
         }
 

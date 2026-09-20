@@ -5,6 +5,8 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import type { Goal, SuggestedRaceActivity } from '@/lib/types';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import type { RaceDistance } from '@/lib/metrics/vdot';
+import { estimateTriathlonTime } from '@/lib/plans/triathlon-time';
+import { RaceType } from '@/generated/prisma/browser';
 import { useUserMetrics } from './providers/UserMetricsProvider';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { formatDistanceWithUnit, formatPace as formatPaceWithUnits, useUnits } from '@/lib/units';
@@ -34,6 +36,8 @@ const raceDistanceMap: Record<string, RaceDistance> = {
     'HALF_MARATHON': 'HALF',
     'MARATHON': 'MARATHON',
 };
+
+const TRI_RACE_TYPES = new Set(['SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'FULL_IRONMAN', 'CUSTOM_TRI']);
 
 function formatTime(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
@@ -133,7 +137,12 @@ export function RaceCountdown({
         currentWeekMileage
     );
 
-    const dynamicPredictedTime = projection.projectedTime;
+    // Triathlon goals project the WHOLE race (swim + T1 + bike + T2 + run) from
+    // the projected VDOT — a run-distance prediction would collapse a ~6h
+    // middle distance race into its ~1:40 run leg.
+    const dynamicPredictedTime = TRI_RACE_TYPES.has(goal.raceType)
+        ? (estimateTriathlonTime({ vdot: projection.projectedVdot, raceType: goal.raceType as RaceType })?.projected.totalSeconds ?? 0)
+        : projection.projectedTime;
 
     return (
         <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>

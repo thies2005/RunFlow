@@ -142,6 +142,38 @@ class RunFlowRepository(
 
     suspend fun deleteActivity(id: String) = activityDao.delete(id)
 
+    /**
+     * Renames an activity. Synced rows flag dirty and queue an
+     * activity_update outbox item whose payload embeds the SERVER id under
+     * "activityId" (the drain handler addresses the PUT with it — the local
+     * row id is only meaningful on this device). Local-only rows just write
+     * to Room; their create will carry the new name.
+     */
+    suspend fun renameActivity(id: String, newName: String) {
+        val a = activityDao.byId(id) ?: return
+        val name = newName.trim().take(200)
+        if (name.isEmpty() || name == a.name) return
+        if (authStore.state.value.loggedIn && a.serverId != null) {
+            val payload = buildJsonObject {
+                put("activityId", a.serverId!!)
+                put("name", name)
+            }.toString()
+            db.withTransaction {
+                activityDao.upsert(a.copy(name = name, dirty = true, updatedAt = System.currentTimeMillis()))
+                syncQueueDao.deletePendingFor(SyncManager.TYPE_ACTIVITY_UPDATE, a.id)
+                syncQueueDao.insert(
+                    SyncQueueEntity(
+                        entityType = SyncManager.TYPE_ACTIVITY_UPDATE,
+                        localId = a.id,
+                        payloadJson = payload,
+                    )
+                )
+            }
+        } else {
+            activityDao.upsert(a.copy(name = name, updatedAt = System.currentTimeMillis()))
+        }
+    }
+
     suspend fun clearActivities() = activityDao.clear()
 
     /**
@@ -152,13 +184,18 @@ class RunFlowRepository(
      */
     suspend fun fetchAndCacheStreams(activityId: String, serverId: String): Boolean = withContext(Dispatchers.IO) {
         runCatching {
-            val streams = network.api().activityDetail(serverId).activity.streams
-                ?: return@runCatching false
+            val detail = network.api().activityDetail(serverId).activity
+            val streams = detail.streams ?: return@runCatching false
             if (streams.time.size < 2) return@runCatching false
             val json = streams.toJsonOrNull() ?: return@runCatching false
             val existing = activityDao.byId(activityId) ?: return@runCatching false
             if (existing.streamsJson != null) return@runCatching false
             activityDao.updateStreams(activityId, json)
+            // The detail record also carries fields old list pulls missed —
+            // pick up an energy value the local row lacks while we're here.
+            if (existing.calories == null && detail.calories != null) {
+                activityDao.updateCalories(activityId, detail.calories.toInt())
+            }
             AppLog.i("Activity", "cached ${streams.time.size} stream samples for $activityId")
             true
         }.getOrDefault(false)

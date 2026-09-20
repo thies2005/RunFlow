@@ -153,7 +153,9 @@ class PlanMappersTest {
         )
         val (goal, workouts) = dto.toEntities()!!
         assertEquals(RaceType.NONE, parseRaceType(goal.raceType))
-        assertEquals(WorkoutType.CROSS_TRAIN, WorkoutType.valueOf(workouts[0].workoutType))
+        // swim variants keep SWIM (pace chips label per 100m, matching the
+        // local engine's toDomainWorkoutType)
+        assertEquals(WorkoutType.SWIM, WorkoutType.valueOf(workouts[0].workoutType))
         assertEquals(PlanPhase.BASE, PlanPhase.valueOf(workouts[0].phase))
     }
 

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.AlertDialog
@@ -30,6 +31,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -107,6 +109,8 @@ fun PlanScreen(
     var selectedWorkout by remember { mutableStateOf<WorkoutEntity?>(null) }
     var showRaceResult by remember { mutableStateOf(false) }
     var showAddWorkout by remember { mutableStateOf(false) }
+    var showPlanMenu by remember { mutableStateOf(false) }
+    var showDeletePlan by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -116,6 +120,30 @@ fun PlanScreen(
                     if (goal != null) {
                         IconButton(onClick = onCreatePlan) {
                             Icon(Icons.Outlined.Add, contentDescription = "New plan")
+                        }
+                        Box {
+                            IconButton(onClick = { showPlanMenu = true }) {
+                                Icon(Icons.Outlined.MoreVert, contentDescription = "Plan options")
+                            }
+                            DropdownMenu(
+                                expanded = showPlanMenu,
+                                onDismissRequest = { showPlanMenu = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Delete plan", color = MaterialTheme.colorScheme.error) },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Outlined.Delete,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error,
+                                        )
+                                    },
+                                    onClick = {
+                                        showPlanMenu = false
+                                        showDeletePlan = true
+                                    },
+                                )
+                            }
                         }
                     }
                 },
@@ -272,6 +300,38 @@ fun PlanScreen(
             goal = goal!!,
             container = container,
             onDismiss = { showRaceResult = false },
+        )
+    }
+
+    // ---- delete plan confirmation ----
+    if (showDeletePlan && goal != null) {
+        val g = goal!!
+        AlertDialog(
+            onDismissRequest = { showDeletePlan = false },
+            title = { Text("Delete plan?") },
+            text = {
+                Text(
+                    "\"${g.name}\" and all ${g.planWeeks} weeks of workouts will be removed. " +
+                        if (g.isLocalOnly) "This plan only exists on this device."
+                        else "It will also be deleted from your account on all devices."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeletePlan = false
+                        scope.launch {
+                            container.repository.deleteGoalWithWorkouts(g.id)
+                            Toast.makeText(
+                                container.appContext,
+                                "Plan deleted",
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    },
+                ) { Text("Delete plan", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { showDeletePlan = false }) { Text("Cancel") } },
         )
     }
 }
@@ -470,8 +530,8 @@ private fun WorkoutCard(
                     workout.targetDistanceKm?.let {
                         InfoChip(Format.distance(it, unit))
                     }
-                    workout.targetPaceSecPerKm?.let {
-                        InfoChip("${Format.pace(it.toDouble(), unit)} /${Format.distanceUnitLabel(unit)}")
+                    Format.paceLabelFor(workout.workoutType, workout.targetPaceSecPerKm?.toDouble(), unit)?.let {
+                        InfoChip(it)
                     }
                 }
             }

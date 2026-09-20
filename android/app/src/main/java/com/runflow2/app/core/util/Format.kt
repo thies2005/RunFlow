@@ -113,6 +113,32 @@ object Format {
     fun speedKmh(secPerKm: Double?): String =
         if (secPerKm == null || secPerKm <= 0) "—" else String.format(Locale.ENGLISH, "%.1f", 3600.0 / secPerKm)
 
+    // Swim paces are stored per 100m, ride speeds read best in km/h — plan
+    // generators and Strava both feed these raw strings through, so the
+    // unit choice is made here once for every display site.
+    private val SWIM_TYPES = setOf("SWIM", "SWIM_DRILL", "OPEN_WATER_SWIM")
+    private val RIDE_TYPES = setOf("RIDE", "LONG_RIDE", "RIDE_INTERVALS", "VIRTUAL_RIDE")
+
+    fun isSwimType(type: String?): Boolean = type in SWIM_TYPES
+
+    fun isRideType(type: String?): Boolean = type in RIDE_TYPES
+
+    /**
+     * Sport-aware pace label for a raw workout/activity type string:
+     *  - swim types: value is seconds per 100m → "1:45 /100m"
+     *  - ride types: value is seconds per km → speed, "31.4 km/h"
+     *  - anything else (runs) → "5:12 /km" (or "/mi")
+     * Returns null when there is no usable pace (hidden chip).
+     */
+    fun paceLabelFor(type: String?, paceSecPerKm: Double?, unit: DistanceUnit = DistanceUnit.METRIC): String? {
+        if (paceSecPerKm == null || !paceSecPerKm.isFinite() || paceSecPerKm <= 0.0) return null
+        return when (type) {
+            in SWIM_TYPES -> "${pace(paceSecPerKm)} /100m"
+            in RIDE_TYPES -> "${speedKmh(paceSecPerKm)} km/h"
+            else -> paceWithUnit(paceSecPerKm, unit)
+        }
+    }
+
     fun heartRate(hr: Double?): String =
         if (hr == null || hr <= 0.0) "—" else "${hr.toInt()} bpm"
 

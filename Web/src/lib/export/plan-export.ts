@@ -105,6 +105,24 @@ export function formatPace(secPerKm: number | null): string {
     return `${m}:${String(s).padStart(2, '0')} /km`;
 }
 
+/** Swim workouts store targetPace as seconds per 100m (CSS-based), rides as
+ *  seconds per km — label accordingly so a 1:45/100m swim never reads /km. */
+const EXPORT_SWIM_TYPES = new Set(['SWIM', 'SWIM_DRILL', 'OPEN_WATER_SWIM']);
+const EXPORT_RIDE_TYPES = new Set(['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS']);
+
+export function formatTargetPace(workoutType: string, targetPace: number | null): string {
+    if (!targetPace || targetPace <= 0) return '-';
+    if (EXPORT_SWIM_TYPES.has(workoutType)) {
+        const m = Math.floor(targetPace / 60);
+        const s = Math.round(targetPace % 60);
+        return `${m}:${String(s).padStart(2, '0')} /100m`;
+    }
+    if (EXPORT_RIDE_TYPES.has(workoutType)) {
+        return `${(3600 / targetPace).toFixed(1)} km/h`;
+    }
+    return formatPace(targetPace);
+}
+
 /** Monday-based week grouping (same as the plan page), always in UTC so the
  * output is independent of the server's timezone. */
 export function buildExportPlan(goal: ExportGoalInput): ExportPlan {
@@ -137,7 +155,7 @@ export function buildExportPlan(goal: ExportGoalInput): ExportPlan {
             title: w.customName?.trim() || w.description,
             distanceKm: w.targetDistance ? (w.targetDistance / 1000).toFixed(1) : '-',
             duration: formatDuration(w.targetDuration),
-            pace: formatPace(w.targetPace),
+            pace: formatTargetPace(w.workoutType, w.targetPace),
             phase: w.phase.replace(/_/g, ' '),
             intensityZone: w.intensityZone ?? null,
         })),

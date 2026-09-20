@@ -15,6 +15,9 @@ Working directory for all commands: `android/`
 ./gradlew assembleRelease   # R8-minified + signed (needs android/key.properties)
 ```
 
+When asked to build the APK, always build the release APK (`assembleRelease`);
+only use debug if explicitly requested.
+
 ### Compile check
 ```
 ./gradlew :app:compileDebugKotlin

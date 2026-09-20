@@ -164,4 +164,17 @@ class HealthConnectMappingTest {
         assertFalse(a.name.isBlank())
         assertTrue(a.name.startsWith("Run"))
     }
+
+    @Test
+    fun `sessions without calorie records get a MET estimate`() {
+        // Source apps that write no TotalCaloriesBurned records leave kcal
+        // null — the import must not produce a calorie-less run.
+        val s = snapshot(recordId = "hc-no-kcal").copy(caloriesKcal = null)
+        val a = HealthConnectMapping.toActivityEntity(s, weightKg = 72.0)
+        assertNotNull(a.calories)
+        // 45 min easy-moderate run @ 8 km/45 min ≈ 2.96 m/s → moderate 9.8 MET
+        // → 9.8 × 72 × 0.75 ≈ 529 kcal (the same model the web engine uses)
+        assertEquals(HealthConnectMapping.estimateCalories(s, 72.0), a.calories)
+        assertTrue(a.calories!! in 300..700)
+    }
 }

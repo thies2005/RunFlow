@@ -33,6 +33,9 @@ fun ActivityEntity.toCreateRequest(): CreateActivityRequest = CreateActivityRequ
     averageCadence = averageCadence,
     totalElevation = totalElevation,
     hasHeartrate = averageHr != null,
+    // device-measured/-estimated burn rides along; the server keeps it when
+    // non-zero instead of recomputing from its own HR/MET model
+    calories = calories?.toDouble(),
     notes = notes,
     // Streams ride along so the server (and web) can chart phone-recorded runs
     // and recompute HR-zone times; the zod schema accepts the same shape.

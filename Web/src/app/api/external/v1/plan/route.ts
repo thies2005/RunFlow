@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
                         distance: w.targetDistance, // meters
                         duration: w.targetDuration ? formatDuration(w.targetDuration) : null,
                         durationSeconds: w.targetDuration,
-                        pace: w.targetPace ? formatPace(w.targetPace) : null, // min/km
+                        pace: formatTargetPace(w.workoutType, w.targetPace),
                         paceSeconds: w.targetPace,
                         hrZone: w.targetHrZone,
                     },
@@ -209,4 +209,16 @@ function formatPace(secondsPerKm: number): string {
     const m = Math.floor(secondsPerKm / 60);
     const s = Math.round(secondsPerKm % 60);
     return `${m}:${s.toString().padStart(2, '0')}/km`;
+}
+
+// Swim targetPace is seconds per 100m, not per km — label the unit honestly.
+function formatTargetPace(workoutType: string, targetPace: number | null): string | null {
+    if (!targetPace || targetPace <= 0) return null;
+    if (workoutType === 'SWIM' || workoutType === 'SWIM_DRILL' || workoutType === 'OPEN_WATER_SWIM') {
+        return `${formatPace(targetPace).replace('/km', '/100m')}`;
+    }
+    if (workoutType === 'RIDE' || workoutType === 'LONG_RIDE' || workoutType === 'RIDE_INTERVALS') {
+        return `${(3600 / targetPace).toFixed(1)} km/h`;
+    }
+    return formatPace(targetPace);
 }

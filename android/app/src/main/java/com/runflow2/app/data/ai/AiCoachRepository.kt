@@ -46,6 +46,9 @@ class AiCoachRepository(
 
     fun observeMessages(sessionId: String) = db.chatDao().observeForSession(sessionId)
 
+    /** Messages of an activity thread ("discuss this run"), across sessions. */
+    fun observeMessagesForActivity(activityId: String) = db.chatDao().observeForActivity(activityId)
+
     fun clearError() { _error.value = null }
 
     /** Returns the active session id, creating or reusing a server session. */
@@ -58,6 +61,16 @@ class AiCoachRepository(
         settings.setAiSessionId(session.id)
         return session.id
     }
+
+    /**
+     * Session id for an activity thread: reuses the session of the newest
+     * locally cached activity message (threads keep their server session), or
+     * creates a fresh one. Never touches the general aiSessionId setting, so
+     * the main coach conversation is unaffected by activity chats.
+     */
+    suspend fun ensureActivitySession(activityId: String): String =
+        db.chatDao().newestForActivity(activityId)?.sessionId
+            ?: client.api().createChatSession().session.id
 
     /** Replaces the local cache with the server-side history. */
     suspend fun loadHistory(sessionId: String) {
@@ -73,6 +86,32 @@ class AiCoachRepository(
                         content = it.content,
                         createdAt = Api.parseInstant(it.createdAt) ?: 0L,
                     )
+                }
+            )
+        } catch (e: IOException) {
+            // offline: cached history stays
+        } catch (e: HttpException) {
+            if (e.code() != 404) _error.value = "Could not load history (${e.code()})"
+        }
+    }
+
+    /** Replaces the local cache of an activity thread with the server history. */
+    suspend fun loadHistoryForActivity(activityId: String) {
+        try {
+            val history = client.api().chatHistoryByActivity(activityId).messages
+            db.chatDao().deleteForActivity(activityId)
+            db.chatDao().upsertAll(
+                history.mapNotNull { m ->
+                    m.sessionId?.let { sid ->
+                        ChatMessageEntity(
+                            id = m.id,
+                            sessionId = sid,
+                            role = m.role,
+                            content = m.content,
+                            createdAt = Api.parseInstant(m.createdAt) ?: 0L,
+                            activityId = activityId,
+                        )
+                    }
                 }
             )
         } catch (e: IOException) {
@@ -98,9 +137,12 @@ class AiCoachRepository(
     /**
      * Sends a message and streams the answer into the local cache. The user
      * bubble appears immediately (optimistic); on failure both rows are
-     * removed again so the cache keeps matching the server history.
+     * removed again so the cache keeps matching the server history. A non-null
+     * [activityId] scopes the exchange to that activity: the server injects
+     * its full context into the coach prompt and the cached rows join the
+     * activity thread.
      */
-    fun send(sessionId: String, text: String) {
+    fun send(sessionId: String, text: String, activityId: String? = null) {
         if (_streaming.value || text.isBlank()) return
         val message = text.trim()
         _streaming.value = true
@@ -113,16 +155,18 @@ class AiCoachRepository(
                 ChatMessageEntity(
                     id = userId, sessionId = sessionId, role = "user",
                     content = message, createdAt = System.currentTimeMillis(),
+                    activityId = activityId,
                 )
             )
             db.chatDao().upsert(
                 ChatMessageEntity(
                     id = assistantId, sessionId = sessionId, role = "assistant",
                     content = "", createdAt = System.currentTimeMillis() + 1,
+                    activityId = activityId,
                 )
             )
             try {
-                val sseError = streamReply(sessionId, message) { delta ->
+                val sseError = streamReply(sessionId, message, activityId) { delta ->
                     assistantText += delta
                     db.chatDao().updateContent(assistantId, assistantText)
                 }
@@ -162,6 +206,7 @@ class AiCoachRepository(
     private suspend fun streamReply(
         sessionId: String,
         message: String,
+        activityId: String? = null,
         onDelta: suspend (String) -> Unit,
     ): String? = withContext(Dispatchers.IO) {
             val body = Api.json.encodeToString(
@@ -170,6 +215,7 @@ class AiCoachRepository(
                     message = message,
                     sessionId = sessionId,
                     clientLocalDate = Api.localDateString(System.currentTimeMillis()),
+                    activityId = activityId,
                 ),
             ).toRequestBody("application/json".toMediaType())
 

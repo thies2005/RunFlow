@@ -11,6 +11,21 @@ import type { ChatMessage } from '@/lib/ai';
 import { logger } from '@/lib/logging/logger';
 import { fenceUntrusted } from '@/lib/ai/prompts';
 
+/**
+ * Normalize LaTeX-style section headers that some models (DeepSeek/Kimi/Qwen
+ * class via OpenRouter) emit despite the prompt asking for markdown `##`
+ * headers: `\section*{Planned Comparison}` → `## Planned Comparison`,
+ * `\subsection{…}` → `### …`. Line-anchored so prose containing a literal
+ * backslash-word is left alone. Exported for unit tests.
+ */
+export function normalizeLatexSectionHeaders(raw: string): string {
+    return raw
+        .replace(/^[ \t]*\\{1,2}((?:sub)*)section\*?[ \t]*\{([^}\n]+)\}[ \t]*$/gim, (_m, subs: string, title: string) => {
+            const level = Math.min(1 + Math.floor(subs.length / 3), 6);
+            return '#'.repeat(level) + ' ' + title.trim();
+        });
+}
+
 async function canAutoGenerateFeedback(userId: string): Promise<boolean> {
     const aiSettings = await prisma.userAiSettings.findUnique({
         where: { userId }
@@ -272,6 +287,11 @@ export async function generateAndSaveActivityFeedback(
     if (!cleaned) {
         cleaned = raw;
     }
+
+    // Some models answer with LaTeX section headers (\section*{…}) instead of
+    // the requested markdown ## — normalize before parsing so both Strategy 1
+    // (header match) and the section trims see clean markdown.
+    cleaned = normalizeLatexSectionHeaders(cleaned);
 
     // Parse the combined response into the 3 sections using markdown headers.
     // We look for ## headers first, then fall back to keyword search.

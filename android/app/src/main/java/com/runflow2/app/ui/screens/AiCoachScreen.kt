@@ -52,7 +52,10 @@ import java.io.IOException
 
 /**
  * AI coach chat: streamed answers from the RunFlow server, cached in Room so
- * the conversation can be reread offline. Requires sign-in.
+ * the conversation can be reread offline. Requires sign-in. With a non-null
+ * [activityId] (local row id) the screen becomes a "discuss this run" thread:
+ * the server injects the activity's context into every prompt and history is
+ * scoped to the activity.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +63,7 @@ fun AiCoachScreen(
     container: AppContainer,
     onBack: () -> Unit,
     onLogin: () -> Unit,
+    activityId: String? = null,
 ) {
     val auth by container.authStore.state.collectAsState()
     val streaming by container.aiCoach.streaming.collectAsState()
@@ -69,19 +73,38 @@ fun AiCoachScreen(
     var loadError by remember { mutableStateOf<String?>(null) }
     var input by remember { mutableStateOf("") }
 
+    // Activity thread target: the SERVER id the chat API understands, plus
+    // the display name. Null when the row is local-only (no server context).
+    var chatActivity by remember { mutableStateOf<Pair<String, String>?>(null) }
+    LaunchedEffect(activityId) {
+        chatActivity = activityId?.let { localId ->
+            container.repository.activity(localId)
+                ?.takeIf { it.serverId != null }
+                ?.let { it.serverId!! to it.name }
+        }
+    }
+
     val listState = rememberLazyListState()
 
     // Resolve / create the chat session and refresh history when opening.
-    LaunchedEffect(auth.loggedIn) {
+    LaunchedEffect(auth.loggedIn, chatActivity?.first) {
         if (auth.loggedIn) {
             loadError = null
+            val target = chatActivity
             try {
-                val id = container.aiCoach.ensureSession()
-                container.aiCoach.loadHistory(id)
+                val id = if (target != null) {
+                    container.aiCoach.ensureActivitySession(target.first).also {
+                        container.aiCoach.loadHistoryForActivity(target.first)
+                    }
+                } else {
+                    container.aiCoach.ensureSession().also {
+                        container.aiCoach.loadHistory(it)
+                    }
+                }
                 sessionId = id
             } catch (e: IOException) {
                 loadError = "Offline — cached conversation only."
-                sessionId = tryOfflineSession(container)
+                sessionId = if (target != null) null else tryOfflineSession(container)
             } catch (e: HttpException) {
                 loadError = "Could not open chat (${e.code()})."
             }
@@ -96,7 +119,12 @@ fun AiCoachScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("AI Coach") },
+                title = {
+                    Text(
+                        chatActivity?.second?.let { "Coach · $it" } ?: "AI Coach",
+                        maxLines = 1,
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
@@ -108,7 +136,13 @@ fun AiCoachScreen(
                             if (!streaming && auth.loggedIn) {
                                 container.appScope.launch {
                                     runCatching { container.aiCoach.newChat() }
-                                        .onSuccess { sessionId = it }
+                                        .onSuccess {
+                                            // A fresh session keeps an activity
+                                            // thread scoped: history reload is
+                                            // activity-filtered, only the
+                                            // server session id changes.
+                                            sessionId = it
+                                        }
                                 }
                             }
                         },
@@ -125,9 +159,15 @@ fun AiCoachScreen(
             return@Scaffold
         }
 
-        val messages = sessionId
-            ?.let { container.aiCoach.observeMessages(it).collectAsState(initial = emptyList()).value }
-            ?: emptyList()
+        val target = chatActivity
+        val messages = if (target != null) {
+            container.aiCoach.observeMessagesForActivity(target.first)
+                .collectAsState(initial = emptyList()).value
+        } else {
+            sessionId
+                ?.let { container.aiCoach.observeMessages(it).collectAsState(initial = emptyList()).value }
+                ?: emptyList()
+        }
 
         // Auto-scroll to the newest message while streaming.
         LaunchedEffect(messages.size, messages.lastOrNull()?.content?.length) {
@@ -146,13 +186,26 @@ fun AiCoachScreen(
                     sessionId == null && loadError == null -> CircularProgressIndicator(
                         Modifier.align(Alignment.Center),
                     )
+                    activityId != null && target == null -> Column(
+                        Modifier
+                            .align(Alignment.Center)
+                            .padding(horizontal = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text("This run hasn't synced yet", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Once the activity reaches your account you can discuss it here.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     messages.isEmpty() -> Column(
                         Modifier
                             .align(Alignment.Center)
                             .padding(horizontal = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        EmptyConversation(offlineNote = loadError != null)
+                        EmptyConversation(offlineNote = loadError != null, aboutActivity = target != null)
                         val err = error ?: loadError
                         if (err != null) {
                             Text(
@@ -195,7 +248,9 @@ fun AiCoachScreen(
                     OutlinedTextField(
                         value = input,
                         onValueChange = { input = it },
-                        placeholder = { Text("Ask your coach…") },
+                        placeholder = {
+                            Text(if (target != null) "Ask about this run…" else "Ask your coach…")
+                        },
                         modifier = Modifier.weight(1f),
                         maxLines = 4,
                         keyboardOptions = KeyboardOptions.Default,
@@ -205,7 +260,7 @@ fun AiCoachScreen(
                     IconButton(
                         onClick = {
                             val id = sessionId ?: return@IconButton
-                            container.aiCoach.send(id, input)
+                            container.aiCoach.send(id, input, target?.first)
                             input = ""
                         },
                         enabled = !streaming && input.isNotBlank() && sessionId != null,
@@ -251,27 +306,41 @@ private fun MessageBubble(m: ChatMessageEntity) {
                 )
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
-            Text(
-                shown,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (isUser) {
+                Text(
+                    shown,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            } else {
+                // assistant replies arrive as markdown (web renders the same
+                // content with react-markdown) — headings, lists, bold, code
+                com.runflow2.app.ui.components.MarkdownText(
+                    markdown = shown,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun EmptyConversation(modifier: Modifier = Modifier, offlineNote: Boolean) {
+private fun EmptyConversation(modifier: Modifier = Modifier, offlineNote: Boolean, aboutActivity: Boolean = false) {
     Column(
         modifier.padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text("Ask anything about your training", style = MaterialTheme.typography.titleMedium)
         Text(
-            if (offlineNote) "Offline — your conversation will load once you're connected again."
-            else "Race strategy, pacing, recovery, plan tweaks — your coach knows your training data.",
+            if (aboutActivity) "Ask about this run" else "Ask anything about your training",
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Text(
+            when {
+                offlineNote -> "Offline — your conversation will load once you're connected again."
+                aboutActivity -> "Pacing, effort, how it fit the plan — the coach sees this run's full data."
+                else -> "Race strategy, pacing, recovery, plan tweaks — your coach knows your training data."
+            },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

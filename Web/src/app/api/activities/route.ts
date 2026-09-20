@@ -11,6 +11,7 @@ import { handleError } from '@/lib/errors/handler';
 import { logger } from '@/lib/logging/logger';
 import { recordMetric } from '@/lib/monitoring/metrics';
 import { MINUTE_MS } from '@/lib/constants';
+import { calculateAge, calculateCalories } from '@/lib/metrics/calories';
 
 // Type for Prisma where clause with optional filters
 type ActivityWhereClause = {
@@ -204,6 +205,32 @@ export async function POST(request: NextRequest) {
         const randomSuffix = crypto.randomInt(0, 1000000);
         const stravaId = BigInt(-1) * BigInt(`${Date.now()}${randomSuffix.toString().padStart(6, '0')}`);
 
+        // Calories: manual entries carry none at input — compute them the same
+        // way the Strava import and mobile upload paths do (Keytel HR formula
+        // when an average HR was given, MET estimate otherwise), so manually
+        // logged workouts don't show up as the only calorie-less activities.
+        let calories: number | null = null;
+        try {
+            const dbUser = await prisma.user.findUnique({
+                where: { id: session.user.id },
+                select: { sex: true, weight: true, birthDate: true },
+            });
+            if (dbUser && parsedDuration > 0) {
+                const averageSpeedMps = parsedDistance * 1000 / (parsedDuration * 60);
+                calories = calculateCalories({
+                    durationMinutes: parsedDuration,
+                    activityType: activityType as ActivityType,
+                    weightKg: dbUser.weight ?? undefined,
+                    averageHr: parsedHr ?? undefined,
+                    age: calculateAge(dbUser.birthDate),
+                    sex: (dbUser.sex as 'MALE' | 'FEMALE' | 'OTHER') ?? 'MALE',
+                    averageSpeedMps,
+                }).calories || null;
+            }
+        } catch {
+            // calorie computation is best-effort; the activity still saves
+        }
+
         const activity = await prisma.activity.create({
             data: {
                 userId: session.user.id,
@@ -216,6 +243,7 @@ export async function POST(request: NextRequest) {
                 elapsedTime: parsedDuration * 60,
                 averageHr: parsedHr,
                 hasHeartrate: parsedHr !== null,
+                calories,
 
                 // HR Zones
                 hrZone1Time: hrZones?.z1,

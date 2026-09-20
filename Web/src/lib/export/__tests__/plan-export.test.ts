@@ -1,4 +1,4 @@
-import { buildCsv, buildExportPlan, exportFileName, raceLabel, formatDuration, formatPace,
+import { buildCsv, buildExportPlan, exportFileName, raceLabel, formatDuration, formatPace, formatTargetPace,
     type ExportGoalInput } from '../plan-export';
 import { buildPlanPdf } from '../plan-pdf';
 
@@ -79,6 +79,21 @@ describe('plan export engine', () => {
         expect(formatDuration(2700)).toBe('45:00');
         expect(formatPace(null)).toBe('-');
         expect(formatPace(300)).toBe('5:00 /km');
+    });
+
+    it('labels swim paces per 100m and ride paces as km/h', () => {
+        // swim targetPace is seconds per 100m (CSS-based)
+        expect(formatTargetPace('SWIM', 122)).toBe('2:02 /100m');
+        expect(formatTargetPace('OPEN_WATER_SWIM', 130)).toBe('2:10 /100m');
+        expect(formatTargetPace('SWIM_DRILL', 115)).toBe('1:55 /100m');
+        // ride targetPace is seconds per km → speed
+        expect(formatTargetPace('RIDE', 135)).toBe('26.7 km/h');
+        expect(formatTargetPace('LONG_RIDE', 150)).toBe('24.0 km/h');
+        // rides and unset paces export as '-'
+        expect(formatTargetPace('RIDE', 0)).toBe('-');
+        expect(formatTargetPace('SWIM', null)).toBe('-');
+        // run paces stay per km
+        expect(formatTargetPace('EASY', 337.5)).toBe('5:38 /km');
     });
 
     it('builds CSV with the web export columns and escaping', () => {

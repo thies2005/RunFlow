@@ -310,7 +310,9 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
         }
         val streamsJson = StreamCapture.build(s.points)?.toJsonOrNull()
         val cadence = s.cadence
-        val calories = (moving / 60.0 * weightKg * 0.9 * 1.05).toInt().takeIf { it > 0 }
+        // MET estimate matching the web engine (Compendium METs × kg × hours);
+        // the old minute×kg×0.945 formula overshot real burn ~5×.
+        val calories = com.runflow2.app.core.math.CalorieMath.estimate(moving, s.distanceM, weightKg)
         return ActivityEntity(
             id = UUID.randomUUID().toString(),
             name = name,

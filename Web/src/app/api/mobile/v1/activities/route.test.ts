@@ -104,6 +104,24 @@ describe('GET /api/mobile/v1/activities', () => {
         }));
     });
 
+    it('should include calories in the select so the app can display them', async () => {
+        // Regression: the select omitted calories, so every synced activity
+        // arrived on the phone with no energy data even though the server had it.
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue({ id: 'user-1' });
+        (prisma.activity.findMany as jest.Mock).mockResolvedValue([
+            { id: 'act-1', stravaId: BigInt(123), startDate: new Date(), type: 'RUN', calories: 512 }
+        ]);
+        (prisma.activity.count as jest.Mock).mockResolvedValue(1);
+
+        const req = new NextRequest('http://localhost/api/mobile/v1/activities');
+        const response = await GET(req);
+        const json = await response.json();
+
+        const select = (prisma.activity.findMany as jest.Mock).mock.calls[0][0].select;
+        expect(select.calories).toBe(true);
+        expect(json.activities[0].calories).toBe(512);
+    });
+
     it('should return 401 if not authenticated', async () => {
         (getAuthenticatedUser as jest.Mock).mockResolvedValue(null);
 

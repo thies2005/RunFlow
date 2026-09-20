@@ -310,6 +310,7 @@ class SyncManager(
                         serverId,
                         json.decodeFromString(UpdateActivityRequest.serializer(), payloadJson),
                     )
+                    db.activityDao().byId(localId)?.let { db.activityDao().upsert(it.copy(dirty = false)) }
                 }
             }
             TYPE_PROFILE_UPDATE -> {
@@ -427,6 +428,9 @@ class SyncManager(
             for (dto in res.activities) {
                 seen += dto.id
                 val existing = db.activityDao().byServerId(dto.id)
+                // dirty = an unpushed local edit (rename): local wins until the
+                // outbox item drains, mirroring the plan pull guard.
+                if (existing?.dirty == true) continue
                 db.activityDao().upsert(dto.mergeInto(existing, now))
                 pulled++
             }

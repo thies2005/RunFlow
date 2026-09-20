@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.MonitorHeart
@@ -31,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -78,6 +81,7 @@ fun ActivityDetailScreen(
     container: AppContainer,
     activityId: String,
     onBack: () -> Unit,
+    onDiscuss: (String) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val settings by container.settings.settings.collectAsState(
@@ -91,6 +95,7 @@ fun ActivityDetailScreen(
     }
     val a = activity ?: return
     var showDelete by remember { mutableStateOf(false) }
+    var showRename by remember { mutableStateOf(false) }
 
     val route = remember(a.id, a.routeJson) { parseRoute(a.routeJson) }
     val laps = remember(a.id, a.lapsJson) { parseLaps(a.lapsJson) }
@@ -145,6 +150,9 @@ fun ActivityDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showRename = true }) {
+                        Icon(Icons.Outlined.Edit, contentDescription = "Rename")
+                    }
                     IconButton(onClick = { showDelete = true }) {
                         Icon(Icons.Outlined.Delete, contentDescription = "Delete")
                     }
@@ -183,8 +191,8 @@ fun ActivityDetailScreen(
                         ) {
                             StatTile("Time", Format.duration(a.movingTimeSec), Icons.Outlined.Timer)
                             StatTile(
-                                "Pace",
-                                Format.paceWithUnit(a.paceSecPerKm, u),
+                                if (Format.isRideType(a.type)) "Speed" else "Pace",
+                                Format.paceLabelFor(a.type, a.paceSecPerKm, u) ?: "—",
                                 Icons.Outlined.Speed,
                                 accent = MaterialTheme.colorScheme.primary,
                             )
@@ -227,7 +235,7 @@ fun ActivityDetailScreen(
                             is RunFlowRepository.AiFeedbackResult.None -> AiUiState.Missing
                         }
                     }
-                }) }
+                }, onDiscuss = { onDiscuss(a.id) }) }
             }
 
             // analysis charts (HR / pace / GAP / elevation)
@@ -301,7 +309,8 @@ fun ActivityDetailScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            Format.paceWithUnit(lap.third, u),
+                            if (Format.isRideType(a.type)) "${Format.speedKmh(lap.third)} km/h"
+                            else Format.paceWithUnit(lap.third, u),
                             Modifier.padding(start = 16.dp),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
@@ -345,6 +354,47 @@ fun ActivityDetailScreen(
             dismissButton = { TextButton(onClick = { showDelete = false }) { Text("Cancel") } },
         )
     }
+
+    if (showRename) {
+        RenameActivityDialog(
+            initial = a.name,
+            onDismiss = { showRename = false },
+            onConfirm = { name ->
+                showRename = false
+                scope.launch {
+                    container.repository.renameActivity(a.id, name)
+                    activity = container.repository.activity(activityId)
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun RenameActivityDialog(initial: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+    var name by remember { mutableStateOf(initial) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rename activity") },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it.take(200) },
+                singleLine = true,
+                isError = name.isBlank(),
+                supportingText = if (name.isBlank()) {
+                    { Text("Name can't be empty") }
+                } else null,
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(name) },
+                enabled = name.isNotBlank() && name.trim() != initial.trim(),
+            ) { Text("Save") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
 
 @Composable
@@ -352,6 +402,7 @@ private fun AiOverviewCard(
     state: AiUiState,
     onGenerate: (Boolean) -> Unit,
     onReload: () -> Unit,
+    onDiscuss: () -> Unit = {},
 ) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -423,6 +474,11 @@ private fun AiOverviewCard(
                     AiFeedbackSection("Vs Planned Workout", f.plannedComparison)
                     AiFeedbackSection("Progress & Execution", f.progressAnalysis)
                     AiFeedbackSection("Goal Trajectory", f.goalTrajectory)
+                    TextButton(onClick = onDiscuss) {
+                        Icon(Icons.AutoMirrored.Outlined.Chat, contentDescription = null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Discuss this run")
+                    }
                 }
             }
         }
@@ -438,22 +494,9 @@ private fun AiFeedbackSection(title: String, markdown: String?) {
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.primary,
     )
-    // The model returns light markdown (bold markers, dash bullets); strip
-    // the markers rather than shipping a markdown renderer for 2-3 sentences.
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        markdown.split("\n").forEach { raw ->
-            val line = raw.trim().trimStart('#').trim()
-            if (line.isEmpty()) return@forEach
-            val bullet = line.startsWith("- ") || line.startsWith("• ")
-            val body = line.removePrefix("- ").removePrefix("• ").replace("**", "")
-            Text(
-                body,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = if (bullet) Modifier.padding(start = 10.dp) else Modifier,
-            )
-        }
-    }
+    // Feedback bodies carry real markdown (headers, bullets, bold, tables) —
+    // the same content the web renders with react-markdown.
+    com.runflow2.app.ui.components.MarkdownText(markdown = markdown)
 }
 
 private fun parseRoute(json: String?): List<Pair<Double, Double>> {

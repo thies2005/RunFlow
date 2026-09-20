@@ -143,6 +143,7 @@ data class CreateActivityRequest(
     val averageCadence: Double? = null,
     val totalElevation: Double? = null,
     val hasHeartrate: Boolean? = null,
+    val calories: Double? = null,
     val notes: String? = null,
     val streams: ActivityStreamsDto? = null,
 )
@@ -515,6 +516,7 @@ data class ChatMessageDto(
     val role: String = "user",
     val content: String = "",
     val createdAt: String? = null,
+    val activityId: String? = null,
 )
 
 @Serializable
@@ -525,6 +527,9 @@ data class SendChatRequest(
     val message: String,
     val sessionId: String,
     val clientLocalDate: String,
+    // When set, the server injects this activity's full context into the
+    // coach's system prompt ("discuss this run" threads).
+    val activityId: String? = null,
 )
 
 /**
@@ -637,4 +642,8 @@ interface RunFlowApi {
 
     @GET("/api/ai/chat/history")
     suspend fun chatHistory(@Query("sessionId") sessionId: String): ChatMessagesWrapper
+
+    /** Per-activity thread ("discuss this run") — the server filters by activityId. */
+    @GET("/api/ai/chat/history")
+    suspend fun chatHistoryByActivity(@Query("activityId") activityId: String): ChatMessagesWrapper
 }

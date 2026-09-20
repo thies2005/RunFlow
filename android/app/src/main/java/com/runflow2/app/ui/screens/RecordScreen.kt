@@ -258,8 +258,8 @@ private fun RecordIdle(
                         Text(wk.description, style = MaterialTheme.typography.bodyMedium)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             wk.targetDistanceKm?.let { InfoChip(Format.distance(it, unit)) }
-                            wk.targetPaceSecPerKm?.let {
-                                InfoChip("${Format.pace(it.toDouble(), unit)} /${Format.distanceUnitLabel(unit)}")
+                            Format.paceLabelFor(wk.workoutType, wk.targetPaceSecPerKm?.toDouble(), unit)?.let {
+                                InfoChip(it)
                             }
                         }
                     }

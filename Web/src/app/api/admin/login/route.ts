@@ -12,10 +12,15 @@ import { setCsrfCookie } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logger } from '@/lib/logging/logger';
 import { handleError } from '@/lib/errors/handler';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
+        const rawBody = await readBodyWithLimit(request);
+        if (rawBody === null) {
+            return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+        }
+        const body = JSON.parse(rawBody);
         const { username, password } = body;
 
         logger.info('Admin login attempt', { username });

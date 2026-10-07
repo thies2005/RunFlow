@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exchangeStravaCodeForTokens } from '@/lib/mobile/auth';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 
 // Allowlist of valid Strava OAuth callback redirect URIs.
 // The redirectUri is sent to Strava during the code exchange and must be
@@ -39,7 +40,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const body = await request.json();
+        const rawBody = await readBodyWithLimit(request);
+        if (rawBody === null) {
+            return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+        }
+        const body = JSON.parse(rawBody);
         const { code, redirectUri: providedRedirectUri } = body;
 
         // Validate required fields

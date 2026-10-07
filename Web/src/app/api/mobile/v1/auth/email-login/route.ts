@@ -9,11 +9,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyPassword } from '@/lib/auth/auth-email';
 import { generateTokenPair } from '@/lib/mobile/auth';
-import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
+import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders, resetRateLimit } from '@/lib/rateLimit';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 
 export async function POST(request: NextRequest) {
     try {
-        // Rate limiting
+        // Per-client gate (the guessing defense): keyed on the request's
+        // client identifier, never on the caller-supplied email, so nothing
+        // before credential verification can create denial state for an
+        // account the caller does not control.
         const clientId = getClientIdentifier(request);
         const rateLimitResult = await checkRateLimitAsync(clientId, {
             limit: 5,
@@ -28,7 +32,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const body = await request.json();
+        const rawBody = await readBodyWithLimit(request);
+        if (rawBody === null) {
+            return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+        }
+        const body = JSON.parse(rawBody);
         const { email, password } = body;
 
         if (!email || !password) {
@@ -38,37 +46,37 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const emailRateLimit = await checkRateLimitAsync(email.toLowerCase(), {
-            limit: 5,
-            windowSeconds: 300,
-            prefix: 'mobile-email-login-email'
-        });
-
-        if (!emailRateLimit.allowed) {
-            return NextResponse.json(
-                { error: 'Too many login attempts for this account. Please try again later.' },
-                { status: 429, headers: rateLimitHeaders(emailRateLimit) }
-            );
-        }
-
+        const normalizedEmail = String(email).toLowerCase();
         const user = await prisma.user.findUnique({
-            where: { email: email.toLowerCase() }
+            where: { email: normalizedEmail }
         });
 
-        if (!user || !user.passwordHash) {
+        if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
+            // Count only FAILED verifications, keyed per client + email, so an
+            // anonymous caller cannot lock out someone else's account - and a
+            // correct-password login never consults the limiter at all.
+            const emailFailureLimit = await checkRateLimitAsync(`${clientId}|${normalizedEmail}`, {
+                limit: 5,
+                windowSeconds: 300,
+                prefix: 'mobile-email-login-email'
+            });
+
+            if (!emailFailureLimit.allowed) {
+                return NextResponse.json(
+                    { error: 'Too many login attempts for this account. Please try again later.' },
+                    { status: 429, headers: rateLimitHeaders(emailFailureLimit) }
+                );
+            }
+
             return NextResponse.json(
                 { error: 'Invalid email or password' },
                 { status: 401 }
             );
         }
 
-        const isValid = await verifyPassword(password, user.passwordHash);
-        if (!isValid) {
-            return NextResponse.json(
-                { error: 'Invalid email or password' },
-                { status: 401 }
-            );
-        }
+        // Successful verification clears this client's failure counter for
+        // the account.
+        await resetRateLimit(`${clientId}|${normalizedEmail}`, 'mobile-email-login-email');
 
         // Generate JWT tokens
         const tokens = await generateTokenPair(user.id, user.tokenVersion);

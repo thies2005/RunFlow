@@ -60,6 +60,8 @@ cd Web
 docker compose up -d --build
 ```
 
+The compose file publishes host ports `127.0.0.1:3000` (app) and `127.0.0.1:5434` (Postgres) on loopback only — external traffic is expected to arrive through the Cloudflare Tunnel (`tunnel` service), not through a published host port. If you front the stack with your own reverse proxy, point it at `127.0.0.1:3000` on the host (or remove the mapping and attach the proxy to the `runflow-network` directly).
+
 ### 4. Updates
 To update the web application:
 ```bash

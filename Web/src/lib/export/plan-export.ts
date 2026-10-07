@@ -1,4 +1,5 @@
 import { format, startOfWeek, addDays } from 'date-fns';
+import { csvCell } from './csv-cell';
 
 /**
  * Shared plan-export engine: turns a Prisma goal (+workouts) into the
@@ -178,16 +179,19 @@ export function buildCsv(plan: ExportPlan): string {
     const lines = [headers.join(',')];
     for (const week of plan.weeks) {
         for (const w of week.rows) {
+            // csvCell quotes every field (RFC-4180) and neutralizes
+            // formula-leading text — including intensityZone, which used to
+            // be written unquoted so an embedded newline injected raw rows.
             const row = [
-                w.date,
-                w.day,
-                w.type.replace(/_/g, ' '),
-                `"${w.title.replace(/"/g, '""')}"`,
-                w.distanceKm,
-                w.duration,
-                w.pace,
-                w.phase,
-                w.intensityZone ?? '',
+                csvCell(w.date),
+                csvCell(w.day),
+                csvCell(w.type.replace(/_/g, ' ')),
+                csvCell(w.title),
+                csvCell(w.distanceKm),
+                csvCell(w.duration),
+                csvCell(w.pace),
+                csvCell(w.phase),
+                csvCell(w.intensityZone ?? ''),
             ];
             lines.push(row.join(','));
         }

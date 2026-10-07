@@ -27,8 +27,15 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const query = searchParams.get('q');
 
-        if (!query) {
+        if (!query || query.trim().length === 0) {
             return errorResponses.badRequest('Query parameter "q" is required');
+        }
+        // Bound the query before it fans out to up to 9 provider calls and
+        // becomes a persistent cache key: an arbitrarily long or endlessly
+        // varied q minted permanent, uncapped rows in the shared provider
+        // cache tables.
+        if (query.length > 100) {
+            return errorResponses.badRequest('Query parameter "q" must be at most 100 characters');
         }
 
         const [localItems, blsResults] = await Promise.all([

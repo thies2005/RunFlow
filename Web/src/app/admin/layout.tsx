@@ -10,6 +10,7 @@ import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Shield, LayoutDashboard, Database, LogOut, Menu, X, Users, Bot, BarChart3, ClipboardList, ArrowRightLeft, Cpu, Activity } from 'lucide-react';
+import { csrfHeaders } from '@/lib/admin/csrfHelper';
 
 function AdminLayoutContent({
     children,
@@ -94,8 +95,24 @@ function AdminLayoutContent({
                 <div className="p-4 border-t border-glass-border">
                     <button
                         onClick={() => {
-                            document.cookie = 'runflow_admin_token=; Max-Age=0; path=/;';
-                            router.push('/admin/login');
+                            // Server-side logout: the runflow_admin_token cookie
+                            // is httpOnly, so a document.cookie write can never
+                            // remove it (RFC 6265). POST /api/admin/logout
+                            // expires it via Set-Cookie Max-Age=0 (CSRF-protected
+                            // by the login-issued cookie pair) before the
+                            // redirect.
+                            void (async () => {
+                                try {
+                                    await fetch('/api/admin/logout', {
+                                        method: 'POST',
+                                        headers: csrfHeaders(),
+                                    });
+                                } catch {
+                                    // Network failure: still redirect; worst
+                                    // case the cookie dies with the 2h JWT exp.
+                                }
+                                router.push('/admin/login');
+                            })();
                         }}
                         className="flex items-center space-x-3 px-4 py-3 w-full text-foreground-secondary hover:bg-foreground/10 rounded-lg transition-colors"
                     >

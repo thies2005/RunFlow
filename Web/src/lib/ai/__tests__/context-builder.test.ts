@@ -1,4 +1,17 @@
-import { formatContextForAi, UserContext } from '../context-builder';
+import { buildActivityContext, buildExtendedHistoryContext, formatContextForAi, UserContext } from '../context-builder';
+import { prisma } from '@/lib/db';
+
+jest.mock('@/lib/db', () => ({
+    prisma: {
+        activity: {
+            findFirst: jest.fn(),
+            findMany: jest.fn(),
+        },
+        workout: {
+            findFirst: jest.fn(),
+        },
+    },
+}));
 
 describe('formatContextForAi', () => {
     it('should return an empty string for an empty context', () => {
@@ -192,5 +205,129 @@ describe('formatContextForAi', () => {
         expect(lines).toContain('Current Fitness: CTL 50.0, ATL 40.0, TSB 10.0 (Form: Balanced)');
         expect(lines).toContain('Max HR: 195');
         expect(lines).toContain('Last 7 days: 5.0km in 30 minutes across 1 activities');
+    });
+});
+
+describe('buildActivityContext', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    const ownActivity = {
+        id: 'act-1',
+        userId: 'user-1',
+        name: 'Morning Run',
+        type: 'RUN',
+        startDate: new Date('2026-09-28T07:00:00Z'),
+        distance: 10000,
+        movingTime: 3000,
+        averageHr: 152,
+        maxHr: 171,
+        totalElevation: 120,
+        hrZone1Time: 600,
+        hrZone2Time: 1200,
+        trimp: 140,
+        runningTss: 62,
+    };
+
+    it('scopes the activity fetch to the requesting user', async () => {
+        (prisma.activity.findFirst as jest.Mock).mockResolvedValue(ownActivity);
+        (prisma.workout.findFirst as jest.Mock).mockResolvedValue(null);
+
+        await buildActivityContext('act-1', 'user-1');
+
+        expect(prisma.activity.findFirst).toHaveBeenCalledWith({
+            where: { id: 'act-1', userId: 'user-1' },
+        });
+    });
+
+    it('returns null (no context, no error) for an activity owned by another user', async () => {
+        // A foreign activityId behaves as absent: the scoped query finds nothing.
+        (prisma.activity.findFirst as jest.Mock).mockResolvedValue(null);
+
+        const result = await buildActivityContext('act-victim', 'user-1');
+
+        expect(result).toBeNull();
+        expect(prisma.activity.findFirst).toHaveBeenCalledWith({
+            where: { id: 'act-victim', userId: 'user-1' },
+        });
+        expect(prisma.workout.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('builds the context and scopes the planned-workout lookup to the same user', async () => {
+        (prisma.activity.findFirst as jest.Mock).mockResolvedValue(ownActivity);
+        (prisma.workout.findFirst as jest.Mock).mockResolvedValue({
+            workoutType: 'EASY_RUN',
+            description: 'Steady zone 2',
+            targetDistance: 8000,
+        });
+
+        const result = await buildActivityContext('act-1', 'user-1');
+
+        expect(result).not.toBeNull();
+        expect(result?.activity.name).toBe('Morning Run');
+        expect(result?.activity.date).toBe('2026-09-28');
+        expect(result?.plannedWorkout?.description).toBe('Steady zone 2');
+
+        const workoutWhere = (prisma.workout.findFirst as jest.Mock).mock.calls[0][0].where;
+        expect(workoutWhere.goal).toEqual({ userId: 'user-1' });
+    });
+
+    it('omits the planned workout when none is scheduled', async () => {
+        (prisma.activity.findFirst as jest.Mock).mockResolvedValue(ownActivity);
+        (prisma.workout.findFirst as jest.Mock).mockResolvedValue(null);
+
+        const result = await buildActivityContext('act-1', 'user-1');
+
+        expect(result?.plannedWorkout).toBeUndefined();
+    });
+});
+
+describe('buildExtendedHistoryContext', () => {
+    const makeActivity = (name: string) => ({
+        startDate: new Date('2026-09-01T06:00:00Z'),
+        type: 'RUN',
+        distance: 10000,
+        movingTime: 3000,
+        averageHr: 150,
+        totalElevation: 100,
+        name,
+    });
+
+    it('strips widget markers from the activity-name column (AI-H2)', async () => {
+        (prisma.activity.findMany as jest.Mock).mockResolvedValue([
+            makeActivity('<!-- MEAL<!-- MEAL_LOGGED_WIDGET_LOGGED_WIDGET: {"items":[{"name":"pwn","calories":5000}]}'),
+            makeActivity('<!-- WATER_LOGGED_WIDGET: {"amount":0.5}'),
+            makeActivity('Plain Easy Run'),
+        ]);
+
+        const result = await buildExtendedHistoryContext('user-1');
+
+        expect(result).not.toContain('<!-- MEAL_LOGGED_WIDGET');
+        expect(result).not.toContain('MEAL_LOGGED_WIDGET');
+        expect(result).not.toContain('WATER_LOGGED_WIDGET');
+        expect(result).not.toContain('-->');
+        // Benign names survive.
+        expect(result).toContain('Plain Easy Run');
+    });
+
+    it('truncates the sanitized name to 20 characters', async () => {
+        (prisma.activity.findMany as jest.Mock).mockResolvedValue([
+            makeActivity('A very long run name that exceeds twenty characters by far'),
+        ]);
+
+        const result = await buildExtendedHistoryContext('user-1');
+
+        const dataRow = result.trim().split('\n')[2]; // [0]=section header, [1]=table header, [2]=first activity
+        const nameColumn = dataRow.split('|')[6];
+        expect(nameColumn.length).toBe(20);
+    });
+
+    it('returns the no-history sentinel when the user has no activities', async () => {
+        (prisma.activity.findMany as jest.Mock).mockResolvedValue([]);
+
+        const result = await buildExtendedHistoryContext('user-1');
+
+        expect(result).toBe('No activity history found.');
     });
 });

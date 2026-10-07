@@ -6,6 +6,7 @@ import { getStravaAthleteWeight } from '@/lib/strava/fetch';
 import { logger } from '@/lib/logging/logger';
 import { upsertDailyHealthLog } from '@/lib/health/dailyHealth';
 import { parseUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
+import { healthDataConsentWithdrawn, HEALTH_DATA_WITHDRAWN_MESSAGE } from '@/lib/health/consent-gate';
 
 /**
  * Request body for batch health data sync
@@ -31,6 +32,28 @@ interface BatchSyncResponse {
 }
 
 /**
+ * Cap on client-controlled entries per sync batch. The web twin of
+ * /api/mobile/v1/health/sync-batch runs the same findUnique+upsert loop in
+ * one interactive transaction (5s default timeout) and has no rate limiter,
+ * so the batch length must be bounded here too (p3:
+ * UNBOUNDED_HEALTH_SYNC_BATCH). 500 matches the JSON plan-import cap.
+ */
+const MAX_HEALTH_SYNC_BATCH_ENTRIES = 500;
+
+function isValidSyncEntry(entry: unknown, numericKeys: readonly string[]): boolean {
+    if (typeof entry !== 'object' || entry === null) return false;
+    const e = entry as Record<string, unknown>;
+    if (typeof e.date !== 'string' || !e.date.trim()) return false;
+    if (Number.isNaN(new Date(e.date).getTime())) return false;
+    for (const key of numericKeys) {
+        const value = e[key];
+        if (value === undefined || value === null) continue;
+        if (typeof value !== 'number' || !Number.isFinite(value)) return false;
+    }
+    return true;
+}
+
+/**
  * POST /api/health/sync-batch
  *
  * Batch upsert daily health data (steps and weight) from Health Connect.
@@ -48,6 +71,30 @@ export async function POST(request: NextRequest) {
 
         if (!Array.isArray(data)) {
             return NextResponse.json({ error: 'Invalid data format, expected array' }, { status: 400 });
+        }
+
+        if (data.length > MAX_HEALTH_SYNC_BATCH_ENTRIES) {
+            return NextResponse.json(
+                { error: `Sync batch too large: ${data.length} entries (max ${MAX_HEALTH_SYNC_BATCH_ENTRIES} per request). Please split the data into smaller batches.` },
+                { status: 400 }
+            );
+        }
+
+        const invalidEntryIndex = data.findIndex(
+            (entry) => !isValidSyncEntry(entry, ['steps', 'weight'])
+        );
+        if (invalidEntryIndex !== -1) {
+            return NextResponse.json(
+                { error: `Invalid entry at index ${invalidEntryIndex}: expected { date: string, steps?: number, weight?: number }` },
+                { status: 400 }
+            );
+        }
+
+        // Re-ingestion gate for withdrawn HEALTH_DATA consent: withdrawal
+        // deletes the user's health rows, so silently re-upserting them must
+        // be refused (p3: HEALTH_DATA_WITHDRAWN_INCOMPLETE_CASCADE).
+        if (await healthDataConsentWithdrawn(session.user.id)) {
+            return NextResponse.json({ error: HEALTH_DATA_WITHDRAWN_MESSAGE }, { status: 400 });
         }
 
         // Check if we have any weight data in the incoming payload

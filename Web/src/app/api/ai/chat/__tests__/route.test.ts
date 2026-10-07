@@ -38,7 +38,8 @@ jest.mock('@/lib/ai', () => ({
     formatContextForAi: jest.fn(() => ''),
     buildSystemPrompt: jest.fn(() => ''),
     buildExtendedHistoryContext: jest.fn(() => ''),
-    checkUsageLimit: jest.fn(),
+    reserveUsageSlot: jest.fn(),
+    releaseUsageReservation: jest.fn(),
     incrementUsage: jest.fn(),
     generateCompletion: jest.fn(),
     countTokens: jest.fn(() => 10),
@@ -59,7 +60,14 @@ jest.mock('@/lib/mobile/auth', () => ({
 import { auth } from '@/auth';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
-import { getAiConfig, streamChat, checkUsageLimit } from '@/lib/ai';
+import {
+    getAiConfig,
+    streamChat,
+    reserveUsageSlot,
+    releaseUsageReservation,
+    incrementUsage,
+    buildActivityContext,
+} from '@/lib/ai';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
 
@@ -78,7 +86,9 @@ describe('POST /api/ai/chat', () => {
             model: 'gpt-4',
             providerId: 'provider-1',
         });
-        (checkUsageLimit as jest.Mock).mockResolvedValue({ canUse: true });
+        (reserveUsageSlot as jest.Mock).mockResolvedValue({ allowed: true, claimed: true });
+        (releaseUsageReservation as jest.Mock).mockResolvedValue(undefined);
+        (incrementUsage as jest.Mock).mockResolvedValue(undefined);
         (prisma.chatSession.create as jest.Mock).mockResolvedValue({
             id: 'session-1',
             title: 'Test message',
@@ -172,9 +182,10 @@ describe('POST /api/ai/chat', () => {
         expect(text).toContain('error');
     });
 
-    it('should return 429 when usage limit exceeded', async () => {
-        (checkUsageLimit as jest.Mock).mockResolvedValue({
-            canUse: false,
+    it('should emit the usage-limit error over SSE when the reservation is denied', async () => {
+        (reserveUsageSlot as jest.Mock).mockResolvedValue({
+            allowed: false,
+            claimed: false,
             reason: 'Usage limit exceeded',
         });
 
@@ -196,6 +207,98 @@ describe('POST /api/ai/chat', () => {
         }
         const text = Buffer.concat(chunks).toString();
         expect(text).toContain('Usage limit exceeded');
+        // Denied before any provider spend.
+        expect(streamChat).not.toHaveBeenCalled();
+    });
+
+    it('should reserve the quota slot atomically before any provider work', async () => {
+        const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Hello AI' }),
+        });
+
+        const response = await POST(mockRequest);
+        const reader = response.body?.getReader();
+        if (reader) {
+            let result;
+            while (!(result = await reader.read()).done);
+        }
+
+        expect(reserveUsageSlot).toHaveBeenCalledWith('user-1');
+        // The reservation must happen before the provider stream starts.
+        expect((reserveUsageSlot as jest.Mock).mock.invocationCallOrder[0])
+            .toBeLessThan((streamChat as jest.Mock).mock.invocationCallOrder[0]);
+        // A denied reservation never reaches the provider.
+        expect(getAiConfig).toHaveBeenCalled();
+    });
+
+    it('should settle token deltas without re-counting the reserved message', async () => {
+        const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Hello AI' }),
+        });
+
+        const response = await POST(mockRequest);
+        const reader = response.body?.getReader();
+        if (reader) {
+            let result;
+            while (!(result = await reader.read()).done);
+        }
+
+        expect(incrementUsage).toHaveBeenCalledWith(
+            'user-1',
+            { inputTokens: 20, outputTokens: 10 },
+            'provider-1',
+            { messagesAlreadyCounted: true }
+        );
+    });
+
+    it('should refund the reserved slot when the provider stream fails', async () => {
+        (streamChat as jest.Mock).mockImplementation(async () => {
+            throw new Error('provider exploded');
+        });
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Hello AI' }),
+        });
+
+        const response = await POST(mockRequest);
+        const reader = response.body?.getReader();
+        if (reader) {
+            let result;
+            while (!(result = await reader.read()).done);
+        }
+
+        expect(releaseUsageReservation).toHaveBeenCalledWith('user-1');
+        // The failed stream never settles usage.
+        expect(incrementUsage).not.toHaveBeenCalled();
+    });
+
+    it('should not refund when no tier slot was claimed (BYOK)', async () => {
+        (reserveUsageSlot as jest.Mock).mockResolvedValue({ allowed: true, claimed: false });
+
+        (streamChat as jest.Mock).mockImplementation(async () => {
+            throw new Error('provider exploded');
+        });
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'Hello AI' }),
+        });
+
+        const response = await POST(mockRequest);
+        const reader = response.body?.getReader();
+        if (reader) {
+            let result;
+            while (!(result = await reader.read()).done);
+        }
+
+        expect(releaseUsageReservation).not.toHaveBeenCalled();
     });
 
     it('should handle existing session', async () => {
@@ -232,5 +335,76 @@ describe('POST /api/ai/chat', () => {
         const response = await POST(mockRequest);
 
         expect(handleError).toHaveBeenCalled();
+    });
+
+    it('should not build activity context without the activity consent flags', async () => {
+        (prisma.userAiSettings.findUnique as jest.Mock).mockResolvedValue({
+            accessAllActivities: false,
+            accessActivityHistory: false,
+            accessActivityLogs: false,
+        });
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: 'Analyze my run',
+                activityId: 'act-1',
+            }),
+        });
+
+        const response = await POST(mockRequest);
+        const reader = response.body?.getReader();
+        if (reader) {
+            let result;
+            while (!(result = await reader.read()).done);
+        }
+
+        expect(buildActivityContext).not.toHaveBeenCalled();
+    });
+
+    it('should scope activity context to the session user when consent is granted', async () => {
+        (prisma.userAiSettings.findUnique as jest.Mock).mockResolvedValue({
+            accessActivityHistory: true,
+        });
+        (buildActivityContext as jest.Mock).mockResolvedValue({
+            activity: {
+                id: 'act-1',
+                name: 'Morning Run',
+                type: 'RUN',
+                date: '2026-09-28',
+                distance: 10000,
+                duration: 3000,
+                pace: 300,
+                avgHr: 152,
+            },
+            plannedWorkout: undefined,
+        });
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: 'Analyze my run',
+                activityId: 'act-1',
+            }),
+        });
+
+        const response = await POST(mockRequest);
+
+        expect(response.status).toBe(200);
+        const reader = response.body?.getReader();
+        if (reader) {
+            let result;
+            while (!(result = await reader.read()).done);
+        }
+
+        expect(buildActivityContext).toHaveBeenCalledWith('act-1', 'user-1');
+
+        // The activity block reaches the model input for the session user only.
+        const systemMessage = (streamChat as jest.Mock).mock.calls[0][1].find(
+            (m: { role: string }) => m.role === 'system'
+        );
+        expect(systemMessage.content).toContain('Morning Run');
     });
 });

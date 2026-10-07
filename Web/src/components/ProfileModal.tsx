@@ -5,6 +5,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot, LinkIcon, Bell, ShieldCheck, ShieldOff } from 'lucide-react';
 import Link from 'next/link';
 import { signIn, signOut } from 'next-auth/react';
+import { evictAuthBoundCaches } from '@/lib/pwa/authCacheEviction';
 
 import { requestHealthPermissions, syncHealthData } from '@/lib/mobile/healthConnect';
 import AiSettingsModal from '@/components/AiSettingsModal';
@@ -256,6 +257,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             return res.json();
         },
         onSuccess: async () => {
+            // Evict auth-bound SW runtime caches before the sign-out
+            // navigation (account deletion is also an auth-state change).
+            await evictAuthBoundCaches();
             // Force refresh to handle redirect
             await signOut({ callbackUrl: '/' });
         },

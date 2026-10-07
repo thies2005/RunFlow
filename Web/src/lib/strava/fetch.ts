@@ -21,6 +21,10 @@ const MAX_RETRIES = 3;
 
 const RATE_LIMIT_KEY = 'strava:rate_limit:requests';
 
+// SECURITY: this fallback exists ONLY as a migration read path for legacy
+// plaintext rows and is logged at error level on every use. New writes always
+// go through encryptToken() (which throws when ENCRYPTION_KEY is missing or
+// invalid) - plaintext is never written.
 function tryDecryptOrPlaintextAccessToken(token: string | null | undefined, userId: string): string | null {
     if (!token) {
         return null;
@@ -29,7 +33,7 @@ function tryDecryptOrPlaintextAccessToken(token: string | null | undefined, user
     try {
         return decryptToken(token);
     } catch (error) {
-        logger.warn('Falling back to legacy plaintext Strava access token', {
+        logger.error('Serving legacy plaintext Strava access token (migration path only) - re-authenticate to encrypt it at rest', {
             userId,
             error: error instanceof Error ? error.message : String(error),
         });

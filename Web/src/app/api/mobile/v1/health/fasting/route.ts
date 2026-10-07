@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
+import { healthDataConsentWithdrawn, HEALTH_DATA_WITHDRAWN_MESSAGE } from '@/lib/health/consent-gate';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 
@@ -60,6 +61,15 @@ export async function POST(request: NextRequest) {
         }
 
         const userId = authUser.id;
+
+        // Re-ingestion gate for withdrawn HEALTH_DATA consent (p3:
+        // HEALTH_DATA_WITHDRAWN_INCOMPLETE_CASCADE): withdrawal deletes the
+        // user's fasting sessions, so silently creating new ones must be
+        // refused.
+        if (await healthDataConsentWithdrawn(userId)) {
+            return errorResponses.badRequest(HEALTH_DATA_WITHDRAWN_MESSAGE);
+        }
+
         const body = await request.json();
         const { action } = body;
 

@@ -6,6 +6,7 @@ import { getStravaAthleteWeight } from '@/lib/strava/fetch';
 import { logger } from '@/lib/logging/logger';
 import { upsertDailyHealthLog } from '@/lib/health/dailyHealth';
 import { parseUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
+import { healthDataConsentWithdrawn, HEALTH_DATA_WITHDRAWN_MESSAGE } from '@/lib/health/consent-gate';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses } from '@/lib/api/apiResponse';
 
@@ -25,6 +26,35 @@ interface BatchSyncResponse {
     synced: number;
     stravaFallbackUsed: boolean;
     message?: string;
+}
+
+/**
+ * Cap on client-controlled entries per sync batch (p3:
+ * UNBOUNDED_HEALTH_SYNC_BATCH). Each entry costs two sequential DB round
+ * trips (findUnique + upsert) inside one interactive transaction with a 5s
+ * default timeout, so an unbounded array pins a connection and burns DB
+ * CPU/WAL linearly with attacker-controlled length. 500 matches the JSON
+ * plan-import workout cap and comfortably exceeds a day's worth of daily
+ * health entries.
+ */
+const MAX_HEALTH_SYNC_BATCH_ENTRIES = 500;
+
+/**
+ * Structural validation per entry (date shape + numeric types) before the
+ * transaction. Wrong-shaped entries previously surfaced as mid-transaction
+ * Prisma 500s; they are now a 400 before any DB work.
+ */
+function isValidSyncEntry(entry: unknown, numericKeys: readonly string[]): boolean {
+    if (typeof entry !== 'object' || entry === null) return false;
+    const e = entry as Record<string, unknown>;
+    if (typeof e.date !== 'string' || !e.date.trim()) return false;
+    if (Number.isNaN(new Date(e.date).getTime())) return false;
+    for (const key of numericKeys) {
+        const value = e[key];
+        if (value === undefined || value === null) continue;
+        if (typeof value !== 'number' || !Number.isFinite(value)) return false;
+    }
+    return true;
 }
 
 export async function POST(request: NextRequest) {
@@ -47,7 +77,29 @@ export async function POST(request: NextRequest) {
             return errorResponses.badRequest('Invalid data format, expected array');
         }
 
+        if (data.length > MAX_HEALTH_SYNC_BATCH_ENTRIES) {
+            return errorResponses.badRequest(
+                `Sync batch too large: ${data.length} entries (max ${MAX_HEALTH_SYNC_BATCH_ENTRIES} per request). Please split the data into smaller batches.`
+            );
+        }
+
+        const invalidEntryIndex = data.findIndex(
+            (entry) => !isValidSyncEntry(entry, ['steps', 'weight', 'activeCalories'])
+        );
+        if (invalidEntryIndex !== -1) {
+            return errorResponses.badRequest(
+                `Invalid entry at index ${invalidEntryIndex}: expected { date: string, steps?: number, weight?: number, activeCalories?: number }`
+            );
+        }
+
         const userId = authUser.id;
+
+        // Re-ingestion gate for withdrawn HEALTH_DATA consent (p3:
+        // HEALTH_DATA_WITHDRAWN_INCOMPLETE_CASCADE): withdrawal deletes the
+        // user's health rows, so silently re-upserting them must be refused.
+        if (await healthDataConsentWithdrawn(userId)) {
+            return errorResponses.badRequest(HEALTH_DATA_WITHDRAWN_MESSAGE);
+        }
 
         const hasWeightData = data.some((entry) => entry.weight !== undefined && entry.weight !== null);
 

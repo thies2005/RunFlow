@@ -4,6 +4,7 @@ import { getAiConfigForModel, generateCompletion } from '@/lib/ai';
 import { logger } from '@/lib/logging/logger';
 import { auth } from '@/auth';
 import { subDays, format } from 'date-fns';
+import { healthDataConsentWithdrawn, HEALTH_DATA_WITHDRAWN_MESSAGE } from '@/lib/health/consent-gate';
 
 export async function POST(_request: Request) {
     try {
@@ -11,8 +12,16 @@ export async function POST(_request: Request) {
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         const userId = session.user.id;
+
+        // Re-ingestion gate for withdrawn HEALTH_DATA consent (p3:
+        // HEALTH_DATA_WITHDRAWN_INCOMPLETE_CASCADE): withdrawal deletes the
+        // user's health insights, so generating and storing new ones must be
+        // refused.
+        if (await healthDataConsentWithdrawn(userId)) {
+            return NextResponse.json({ error: HEALTH_DATA_WITHDRAWN_MESSAGE }, { status: 400 });
+        }
 
         const userSettings = await prisma.userAiSettings.findUnique({
             where: { userId },

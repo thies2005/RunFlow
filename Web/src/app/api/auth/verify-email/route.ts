@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { verifyAuthCode } from '@/lib/auth/tokens';
 import { AuthCodeType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 
 export async function POST(request: NextRequest) {
     try {
@@ -14,7 +15,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Too many verification attempts. Please try again later.' }, { status: 429 });
         }
 
-        const { email: rawEmail, code } = await request.json();
+        const rawBody = await readBodyWithLimit(request);
+        if (rawBody === null) {
+            return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+        }
+        const { email: rawEmail, code } = JSON.parse(rawBody);
         const email = typeof rawEmail === 'string' ? rawEmail.toLowerCase() : rawEmail;
 
         if (!email || !code) {

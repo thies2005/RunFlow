@@ -65,6 +65,30 @@ export async function POST(request: NextRequest) {
                     },
                 })
             );
+
+            // Mirror the web consent route's HEALTH_DATA withdrawal cascade
+            // (p3: HEALTH_DATA_WITHDRAWN_INCOMPLETE_CASCADE): deleting every
+            // userId-scoped health store and disabling tracking, so a mobile
+            // withdrawal has the same data-lifecycle effect as the web one.
+            if (update.consentType === 'HEALTH_DATA' && update.action === 'WITHDRAWN') {
+                operations.push(prisma.activity.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.dailyFitness.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.dailyHealthLog.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.supplementLog.deleteMany({ where: { supplement: { userId: user.id } } }));
+                operations.push(prisma.supplementStack.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.supplement.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.nutritionLog.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.bodyMeasurement.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.fastingSession.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.healthInsight.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.dailyReadinessRecord.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.readinessBaseline.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.adaptedWorkout.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.user.update({
+                    where: { id: user.id },
+                    data: { healthTrackingEnabled: false },
+                }));
+            }
         }
 
         const results = await prisma.$transaction(operations);

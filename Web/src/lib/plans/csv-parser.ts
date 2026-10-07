@@ -1,4 +1,5 @@
 import { WorkoutType, PlanPhase } from '@/generated/prisma/client';
+import { csvCell } from '../export/csv-cell';
 
 export type CsvFormat = 'trainingpeaks' | 'finalsurge' | 'runflow';
 
@@ -330,15 +331,20 @@ function parseFinalSurgeRow(row: string[], headerMap: Map<string, number>): Pars
 
 export function parseCsv(
     csvText: string,
-    format?: CsvFormat
+    format?: CsvFormat,
+    options: { maxRows?: number } = {},
 ): {
     workouts: ParsedCsvWorkout[];
     errors: Array<{ row: number; message: string }>;
     skipped: number;
+    /** True when the maxRows budget stopped parsing before the end of the
+     *  file, so callers can reject the upload instead of silently importing
+     *  a truncated plan. */
+    truncated: boolean;
 } {
     const rows = parseCsvRows(csvText);
     if (rows.length < 2) {
-        return { workouts: [], errors: [], skipped: 0 };
+        return { workouts: [], errors: [], skipped: 0, truncated: false };
     }
 
     const headerRowIndex = findHeaderRowIndex(rows, format);
@@ -349,6 +355,14 @@ export function parseCsv(
     const workouts: ParsedCsvWorkout[] = [];
     const errors: Array<{ row: number; message: string }> = [];
     let skipped = 0;
+    let truncated = false;
+
+    // Row budget (p3: uncapped-upload-parse-preview-retention): bounds the
+    // per-upload parse work and the number of workout objects the caller can
+    // materialize and retain. Default stays unlimited for programmatic
+    // callers; the upload route passes the 500-workout ceiling it shares
+    // with /api/plans/import.
+    const maxRows = options.maxRows ?? Number.POSITIVE_INFINITY;
 
     const parseRow = detectedFormat === 'trainingpeaks'
         ? parseTrainingPeaksRow
@@ -357,6 +371,12 @@ export function parseCsv(
             : parseRunflowRow;
 
     for (let i = headerRowIndex + 1; i < rows.length; i++) {
+        if (workouts.length >= maxRows) {
+            truncated = true;
+            errors.push({ row: i + 1, message: `Row limit of ${maxRows} reached; file truncated` });
+            break;
+        }
+
         const row = rows[i];
         if (row.every(cell => !cell)) continue;
 
@@ -374,12 +394,14 @@ export function parseCsv(
         }
     }
 
-    return { workouts, errors, skipped };
+    return { workouts, errors, skipped, truncated };
 }
 
+/** Shared escaping for every user-derived CSV cell: RFC-4180 quoting via
+ *  csvCell, which also neutralizes spreadsheet formula-leading text (= + - @
+ *  tab CR) with a leading apostrophe. */
 function csvEscape(value: string | number | null | undefined): string {
-    const text = value == null ? '' : String(value);
-    return `"${text.replace(/"/g, '""')}"`;
+    return csvCell(value);
 }
 
 export function workoutsToRunFlowCsv(workouts: ParsedCsvWorkout[], metadata: RunFlowCsvMetadataEntry[] = []): string {
@@ -405,8 +427,8 @@ export function workoutsToRunFlowCsv(workouts: ParsedCsvWorkout[], metadata: Run
             w.date,
             w.workoutType,
             w.phase || '',
-            `"${(w.name || '').replace(/"/g, '""')}"`,
-            `"${(w.description || '').replace(/"/g, '""')}"`,
+            csvEscape(w.name || ''),
+            csvEscape(w.description || ''),
             w.distanceM != null ? String(w.distanceM) : '',
             w.durationS != null ? String(w.durationS) : '',
             w.paceSKm != null ? String(w.paceSKm) : '',
@@ -426,8 +448,8 @@ export function workoutsToTrainingPeaksCsv(workouts: ParsedCsvWorkout[]): string
     for (const w of workouts) {
         const row = [
             w.date,
-            `"${(w.name || '').replace(/"/g, '""')}"`,
-            `"${(w.description || '').replace(/"/g, '""')}"`,
+            csvEscape(w.name || ''),
+            csvEscape(w.description || ''),
             w.workoutType.replace(/_/g, ' '),
             w.distanceM != null ? String(w.distanceM / 1000) : '',
             w.durationS != null ? String(w.durationS) : '',
@@ -449,8 +471,8 @@ export function workoutsToFinalSurgeCsv(workouts: ParsedCsvWorkout[]): string {
         const row = [
             w.date,
             w.workoutType.replace(/_/g, ' '),
-            `"${(w.name || '').replace(/"/g, '""')}"`,
-            `"${(w.description || '').replace(/"/g, '""')}"`,
+            csvEscape(w.name || ''),
+            csvEscape(w.description || ''),
             w.distanceM != null ? String(w.distanceM / 1000) : '',
             w.durationS != null ? String(w.durationS) : '',
             w.paceSKm != null ? `${Math.floor(w.paceSKm / 60)}:${String(w.paceSKm % 60).padStart(2, '0')}/km` : '',

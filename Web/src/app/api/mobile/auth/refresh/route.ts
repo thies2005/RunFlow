@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyJWT, generateTokenPair } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 
 export async function POST(request: NextRequest) {
     try {
@@ -28,7 +29,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const body = await request.json();
+        const rawBody = await readBodyWithLimit(request);
+        if (rawBody === null) {
+            return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+        }
+        const body = JSON.parse(rawBody);
         const { refreshToken } = body;
 
         // Validate required fields

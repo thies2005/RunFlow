@@ -63,6 +63,10 @@ export const PLAN_CONSTANTS = {
     STEP_LOADING_CYCLE: 4,
     MIN_GAP_DAYS: 2,
     MAX_TIME_ON_FEET_SECONDS: 12600,
+    // Defensive upper bound on plan length (~2 years). Training plans never
+    // legitimately exceed this; the clamp keeps a far-future raceDate from
+    // driving an unbounded generation loop, whatever the caller passes.
+    MAX_TOTAL_WEEKS: 104,
 };
 
 export const TAPER_FRACTIONS: Partial<Record<RaceType, number[]>> = {
@@ -396,7 +400,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     currentDate.setDate(currentDate.getDate() - currentDate.getDay());
 
     const timeDiff = raceDate.getTime() - currentDate.getTime();
-    const totalWeeks = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)));
+    const totalWeeks = Math.min(PLAN_CONSTANTS.MAX_TOTAL_WEEKS, Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7))));
 
     const minStart = getMinStartVolume(config.raceType ?? null);
     let startVolume: number;

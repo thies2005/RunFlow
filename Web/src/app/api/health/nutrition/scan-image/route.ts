@@ -7,6 +7,24 @@ import { detectImageMime } from '@/lib/utils/imageMagic';
 
 
 export async function POST(request: Request) {
+    // CalorieSnap quota reservation state: the slot is claimed atomically
+    // before the paid provider call (see below) and refunded on any path
+    // that delivers nothing. Declared at handler scope so the catch block
+    // can release it too.
+    let slotClaimed = false;
+    let reservedUserId: string | null = null;
+    const releaseClaimedSlot = (): Promise<unknown> => (slotClaimed && reservedUserId)
+        ? prisma.userAiSettings.updateMany({
+            where: {
+                userId: reservedUserId,
+                calorieSnapsUsedToday: { gt: 0 },
+            },
+            data: {
+                calorieSnapsUsedToday: { decrement: 1 },
+            },
+        }).catch(() => undefined)
+        : Promise.resolve();
+
     try {
         const session = await auth();
         if (!session?.user?.id) {
@@ -85,26 +103,40 @@ export async function POST(request: Request) {
         const userTier = userSettings?.usageTier || 'tier1';
         const dailyLimit = tierLimits[userTier];
 
-        // Reset counter if it's a new day
-        const now = new Date();
-        const lastReset = userSettings?.lastUsageReset ? new Date(userSettings.lastUsageReset) : new Date(0);
-        const isNewDay = now.toDateString() !== lastReset.toDateString();
+        // Quota-lost-update fix (mirrors generateAndSaveActivityFeedback in
+        // lib/ai/feedback.ts): the daily CalorieSnap limit used to be a
+        // read-compare before the multi-second Gemini call plus a blind
+        // `currentScans + 1` write after it, so N concurrent scans all passed
+        // the same stale pre-check, each burned a paid provider call, and
+        // their absolute writes collapsed into a single increment. The slot
+        // is now RESERVED atomically before any provider spend, with a
+        // conditional updateMany whose WHERE clause is the gate, and refunded
+        // when nothing is delivered.
 
-        let currentScans = userSettings?.calorieSnapsUsedToday || 0;
-        if (isNewDay && userSettings) {
-            // Reset daily counters
-            await prisma.userAiSettings.update({
-                where: { userId },
-                data: {
-                    calorieSnapsUsedToday: 0,
-                    messagesUsedToday: 0,
-                    inputTokensUsedToday: 0,
-                    outputTokensUsedToday: 0,
-                    lastUsageReset: now,
-                },
-            });
-            currentScans = 0;
-        }
+        // Lazy day rollover, expressed in the WHERE clause so a concurrent
+        // re-run is a same-day no-op (idempotent — lastUsageReset is not
+        // written here; the claim below stamps it). The chat counters have
+        // their own rollover in lib/ai/usage.ts.
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        await prisma.userAiSettings.updateMany({
+            where: {
+                userId,
+                lastUsageReset: { lt: startOfToday },
+            },
+            data: {
+                calorieSnapsUsedToday: 0,
+            },
+        });
+
+        // Best-effort fast rejection on the pre-call snapshot; the atomic
+        // claim below is the authoritative gate.
+        const lastResetDay = userSettings?.lastUsageReset
+            ? new Date(userSettings.lastUsageReset).toDateString()
+            : '';
+        const currentScans = lastResetDay === startOfToday.toDateString()
+            ? (userSettings?.calorieSnapsUsedToday || 0)
+            : 0;
 
         // Enforce limit (skip for BYOK users who have unlimited)
         if (userTier !== 'none' && dailyLimit !== undefined && currentScans >= dailyLimit) {
@@ -148,6 +180,36 @@ export async function POST(request: Request) {
                 { error: 'No valid API keys found for Google AI provider' },
                 { status: 500 }
             );
+        }
+
+        // Atomic quota claim BEFORE the paid provider call: the UPDATE only
+        // matches while the counter is still below the tier limit, so of N
+        // concurrent requests at most dailyLimit - calorieSnapsUsedToday can
+        // reach Gemini (BYOK 'none' tier is exempt and unlimited).
+        if (userTier !== 'none') {
+            const claimed = await prisma.userAiSettings.updateMany({
+                where: {
+                    userId,
+                    calorieSnapsUsedToday: { lt: dailyLimit },
+                },
+                data: {
+                    calorieSnapsUsedToday: { increment: 1 },
+                    lastUsageReset: new Date(),
+                },
+            });
+            if (claimed.count === 0) {
+                return NextResponse.json(
+                    {
+                        error: `Daily CalorieSnap limit reached (${dailyLimit} scans/day for your tier). Upgrade your plan or try again tomorrow.`,
+                        limitReached: true,
+                        remaining: 0,
+                        limit: dailyLimit,
+                    },
+                    { status: 429 }
+                );
+            }
+            slotClaimed = true;
+            reservedUserId = userId;
         }
 
         // Build the prompt dynamically based on input type
@@ -269,6 +331,7 @@ Confidence should be "high", "medium", or "low" based on ${imageBase64 ? 'image 
                 requestPayloadTokens: fullPrompt.length // estimate
             });
 
+            await releaseClaimedSlot();
             return NextResponse.json(
                 { error: `AI analysis failed (${status}). Please try again.` },
                 { status: 502 }
@@ -287,6 +350,7 @@ Confidence should be "high", "medium", or "low" based on ${imageBase64 ? 'image 
         const textContent = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!textContent) {
             logger.error('[Food Scanner] No text in Gemini response', { data: JSON.stringify(data).substring(0, 500) });
+            await releaseClaimedSlot();
             return NextResponse.json(
                 { error: 'AI could not analyze the image. Please try a clearer photo.' },
                 { status: 422 }
@@ -325,6 +389,7 @@ Confidence should be "high", "medium", or "low" based on ${imageBase64 ? 'image 
 
         // Validate the structure
         if (!parsed.items || !Array.isArray(parsed.items)) {
+            await releaseClaimedSlot();
             return NextResponse.json(
                 { error: 'AI returned an unexpected format. Please try again.' },
                 { status: 422 }
@@ -342,13 +407,9 @@ Confidence should be "high", "medium", or "low" based on ${imageBase64 ? 'image 
         }));
 
         // ============================================
-        // Increment CalorieSnap usage counter
+        // Usage was already counted atomically by the pre-call claim
         // ============================================
-        const newScansUsed = currentScans + 1;
-        await prisma.userAiSettings.update({
-            where: { userId },
-            data: { calorieSnapsUsedToday: newScansUsed },
-        });
+        const newScansUsed = currentScans + 1; // optimistic value for the `remaining` hint only
 
         const remaining = userTier !== 'none' && dailyLimit !== undefined
             ? Math.max(0, dailyLimit - newScansUsed)
@@ -377,6 +438,13 @@ Confidence should be "high", "medium", or "low" based on ${imageBase64 ? 'image 
 
         return NextResponse.json(result);
     } catch (error) {
+        // Nothing was delivered on this path — give the reserved quota unit
+        // back before the generic error response.
+        try {
+            await releaseClaimedSlot();
+        } catch {
+            // best-effort refund; the guarded decrement is idempotent-safe
+        }
         logger.error('[Food Scanner] Unexpected error', {
             error: error instanceof Error ? error.message : String(error),
         });

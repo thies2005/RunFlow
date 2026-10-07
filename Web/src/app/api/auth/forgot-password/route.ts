@@ -5,6 +5,7 @@ import { createAuthCode } from '@/lib/auth/tokens';
 import { sendPasswordResetEmail } from '@/lib/email';
 import { AuthCodeType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 import { logger } from '@/lib/logging/logger';
 import { handleError } from '@/lib/errors/handler';
 
@@ -18,7 +19,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
         }
 
-        const { email } = await request.json();
+        const rawBody = await readBodyWithLimit(request);
+        if (rawBody === null) {
+            return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+        }
+        const { email } = JSON.parse(rawBody);
 
         if (!email) {
             return NextResponse.json(

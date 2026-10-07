@@ -14,7 +14,8 @@ import {
     buildActivityContext,
     formatContextForAi,
     buildSystemPrompt,
-    checkUsageLimit,
+    reserveUsageSlot,
+    releaseUsageReservation,
     incrementUsage,
     buildExtendedHistoryContext,
     generateCompletion,
@@ -29,6 +30,8 @@ import { fenceUntrusted } from '@/lib/ai/prompts';
 
 interface UserAiSettingsAccess {
     accessAllActivities?: boolean;
+    accessActivityHistory?: boolean;
+    accessActivityLogs?: boolean;
 }
 
 // AI-H1: Range-bounded validation schemas for AI-emitted widget payloads.
@@ -202,6 +205,10 @@ export async function POST(request: NextRequest) {
         const encoder = new TextEncoder();
         let fullResponse = '';
         let heartbeat: NodeJS.Timeout | undefined;
+        // Set when reserveUsageSlot() actually claimed a tier quota unit; the
+        // stream error path refunds it and the settle call skips re-counting
+        // the message.
+        let usageReserved = false;
 
         const readableStream = new ReadableStream({
             async start(controller) {
@@ -240,9 +247,14 @@ export async function POST(request: NextRequest) {
                         }
                     }
 
-                    // Check usage limits
-                    const usageStatus = await checkUsageLimit(userId!);
-                    if (!usageStatus.canUse) throw new Error(usageStatus.reason);
+                    // Reserve one message slot atomically BEFORE any provider
+                    // work. The previous read-only checkUsageLimit was settled
+                    // only after the stream completed, so concurrent in-flight
+                    // requests were all admitted against the same stale counter
+                    // snapshot and overshot the daily/monthly caps.
+                    const reservation = await reserveUsageSlot(userId!);
+                    if (!reservation.allowed) throw new Error(reservation.reason || 'Usage limit reached');
+                    usageReserved = reservation.claimed;
 
                     // Get global and user settings
                     const [globalSettings, userSettings] = await Promise.all([
@@ -264,9 +276,11 @@ export async function POST(request: NextRequest) {
                         }
                     }
 
-                    // Activity context
-                    if (activityId) {
-                        const activityContext = await buildActivityContext(activityId);
+                    // Activity context — gated by the same activity consent flags as the
+                    // other context categories, and scoped to the requesting user so a
+                    // foreign activityId yields no context.
+                    if (activityId && (settingsAccess?.accessActivityHistory || settingsAccess?.accessActivityLogs)) {
+                        const activityContext = await buildActivityContext(activityId, userId!);
                         if (activityContext) {
                             contextString += `\n\n--- Current Activity ---\n`;
                             contextString += `Activity: ${fenceUntrusted(activityContext.activity.name)} on ${activityContext.activity.date}\n`;
@@ -475,7 +489,10 @@ export async function POST(request: NextRequest) {
                         });
 
                         const outputTokens = countTokens(fullResponse, config.model);
-                        await incrementUsage(userId!, { inputTokens, outputTokens }, config.providerId);
+                        // The message counters were already advanced atomically by
+                        // reserveUsageSlot() when a tier slot was claimed; settle
+                        // only the token deltas so the message counts exactly once.
+                        await incrementUsage(userId!, { inputTokens, outputTokens }, config.providerId, { messagesAlreadyCounted: usageReserved });
                         logger.debug('Saved AI response to database', { sessionId, responseLength: fullResponse.length });
                     } catch (dbError) {
                         logger.error('Failed to save AI response or update usage', { sessionId, error: dbError instanceof Error ? dbError.message : String(dbError) });
@@ -485,6 +502,16 @@ export async function POST(request: NextRequest) {
                 } catch (error) {
                     logger.error('Stream error', { sessionId, error: error instanceof Error ? error.message : String(error) });
                     clearInterval(heartbeat);
+
+                    // Refund the reserved quota slot: nothing was delivered.
+                    if (usageReserved) {
+                        usageReserved = false;
+                        try {
+                            await releaseUsageReservation(userId!);
+                        } catch (refundError) {
+                            logger.warn('Failed to release usage reservation', { sessionId, error: refundError instanceof Error ? refundError.message : String(refundError) });
+                        }
+                    }
 
                     // If no response was generated, clean up the orphaned session/message
                     if (!fullResponse && sessionId) {

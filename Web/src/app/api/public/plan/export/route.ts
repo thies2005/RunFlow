@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders, type RateLimitConfig } from '@/lib/rateLimit';
+import { csvCell } from '@/lib/export/csv-cell';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 
 const EXPORT_RATE_LIMIT: RateLimitConfig = {
     limit: 20,
@@ -39,16 +41,19 @@ function generateCsv(plan: z.infer<typeof exportRequestSchema>['plan']): string 
 
     for (const week of plan.weeks) {
         for (const w of week.workouts) {
+            // csvCell quotes every field (RFC-4180) and neutralizes
+            // formula-leading text — same shared escaping as the
+            // authenticated export paths.
             const row = [
-                w.date,
-                w.dayOfWeek,
-                w.type.replace(/_/g, ' '),
-                `"${w.description.replace(/"/g, '""')}"`,
-                w.distanceKm,
-                w.durationMin,
-                w.pace,
-                w.phase.replace(/_/g, ' '),
-                w.intensityZone || '',
+                csvCell(w.date),
+                csvCell(w.dayOfWeek),
+                csvCell(w.type.replace(/_/g, ' ')),
+                csvCell(w.description),
+                csvCell(w.distanceKm),
+                csvCell(w.durationMin),
+                csvCell(w.pace),
+                csvCell(w.phase.replace(/_/g, ' ')),
+                csvCell(w.intensityZone || ''),
             ];
             lines.push(row.join(','));
         }
@@ -92,16 +97,23 @@ function generateHtml(plan: z.infer<typeof exportRequestSchema>['plan']): string
         const phaseColor = phaseColors[week.phase] || '#6b7280';
         const workoutsHtml = week.workouts.map(w => {
             const typeColor = typeColors[w.type] || '#6b7280';
+            // p3 generateHtml-unescaped-workout-fields: EVERY caller-supplied
+            // plan value interpolated into this anonymous text/html response
+            // must go through escapeHtml. date/distanceKm/durationMin/pace
+            // and week.totalDistanceKm are z.string() fields (not
+            // generator-emitted numbers), so without escaping an anonymous
+            // caller gets arbitrary script/iframe markup into a
+            // RunFlow-branded document from the trusted origin.
             return `<tr>
-                <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;">${w.date}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;">${escapeHtml(w.date)}</td>
                 <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;">${escapeHtml(w.dayOfWeek)}</td>
                 <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">
                     <span style="background:${typeColor};color:white;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;">${escapeHtml(w.type.replace(/_/g, ' '))}</span>
                 </td>
                 <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;">${escapeHtml(w.description)}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;text-align:right;">${w.distanceKm}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;text-align:right;">${w.durationMin}</td>
-                <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;">${w.pace}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;text-align:right;">${escapeHtml(w.distanceKm)}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;text-align:right;">${escapeHtml(w.durationMin)}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;">${escapeHtml(w.pace)}</td>
             </tr>`;
         }).join('');
 
@@ -109,7 +121,7 @@ function generateHtml(plan: z.infer<typeof exportRequestSchema>['plan']): string
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                 <span style="background:${phaseColor};color:white;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:700;">Week ${week.weekNumber}</span>
                 <span style="background:${phaseColor}20;color:${phaseColor};padding:4px 12px;border-radius:6px;font-size:13px;font-weight:600;">${escapeHtml(week.phase.replace(/_/g, ' '))}</span>
-                <span style="margin-left:auto;font-size:13px;color:#6b7280;">${week.totalDistanceKm} km</span>
+                <span style="margin-left:auto;font-size:13px;color:#6b7280;">${escapeHtml(week.totalDistanceKm)} km</span>
             </div>
             <table style="width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                 <thead>
@@ -168,7 +180,13 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const body = await request.json();
+        // 2MB: legit clients post the full generated plan (up to the 104-week
+        // horizon, a few hundred KB); anything larger is waste, not export.
+        const rawBody = await readBodyWithLimit(request, 2 * 1024 * 1024);
+        if (rawBody === null) {
+            return NextResponse.json({ error: 'Request body too large' }, { status: 413, headers });
+        }
+        const body = JSON.parse(rawBody);
         const parsed = exportRequestSchema.safeParse(body);
 
         if (!parsed.success) {
@@ -188,6 +206,8 @@ export async function POST(request: NextRequest) {
                 headers: {
                     'Content-Type': 'text/csv; charset=utf-8',
                     'Content-Disposition': `attachment; filename="runflow-${raceTypeSlug}-plan.csv"`,
+                    // Defense-in-depth for the caller-controlled download.
+                    'X-Content-Type-Options': 'nosniff',
                     ...headers,
                 },
             });
@@ -200,6 +220,12 @@ export async function POST(request: NextRequest) {
                 headers: {
                     'Content-Type': 'text/html; charset=utf-8',
                     'Content-Disposition': `attachment; filename="runflow-${raceTypeSlug}-plan.html"`,
+                    // Defense-in-depth: the document is a download that may
+                    // be opened from disk (no site CSP applies there), so it
+                    // carries its own restrictive policy — inline styles for
+                    // the layout, no script/frame/remote origins.
+                    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+                    'X-Content-Type-Options': 'nosniff',
                     ...headers,
                 },
             });

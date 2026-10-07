@@ -8,7 +8,9 @@
 
 export const FALLBACK_TRIMP_PER_MINUTE = 2.5;
 
-export type Sex = 'MALE' | 'FEMALE';
+// Mirrors the Prisma `Sex` enum (schema.prisma) — activities code passes
+// dbUser.sex straight through. Formulas treat OTHER via the non-MALE branch.
+export type Sex = 'MALE' | 'FEMALE' | 'OTHER';
 
 export interface TrimpInput {
     durationMinutes: number;

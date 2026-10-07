@@ -52,6 +52,9 @@ jest.mock('@/lib/rateLimit', () => ({
   checkRateLimitAsync: jest.fn().mockResolvedValue({ allowed: true }),
   getClientIdentifier: jest.fn().mockReturnValue('test-client'),
   rateLimitHeaders: jest.fn().mockReturnValue({}),
+  // Called by the email-login route after a successful verification to clear
+  // the client+email failure counter.
+  resetRateLimit: jest.fn().mockResolvedValue(undefined),
   RATE_LIMITS: {},
 }));
 

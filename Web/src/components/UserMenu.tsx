@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { evictAuthBoundCaches } from '@/lib/pwa/authCacheEviction';
 import { Settings, LogOut, User, Moon, Sun, Monitor, ChevronDown } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -121,7 +122,15 @@ export function UserMenu({
                         <div className="h-px bg-glass-border my-2" />
 
                         <button
-                            onClick={() => signOut({ callbackUrl: '/login' })}
+                            onClick={() => {
+                                // Evict auth-bound SW runtime caches before
+                                // the sign-out navigation so the previous
+                                // account's cached API responses can never be
+                                // replayed.
+                                void evictAuthBoundCaches().then(() =>
+                                    signOut({ callbackUrl: '/login' })
+                                );
+                            }}
                             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                         >
                             <LogOut className="w-4 h-4" />

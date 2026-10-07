@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession, signOut, signIn } from 'next-auth/react';
+import { evictAuthBoundCaches } from '@/lib/pwa/authCacheEviction';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useTheme } from 'next-themes';
 import {
@@ -241,7 +242,12 @@ function MobilePanel({
                                 ))}
                             </div>
                             <button
-                                onClick={() => signOut({ callbackUrl: '/login' })}
+                                onClick={() => {
+                                // Evict auth-bound SW runtime caches before the
+                                // sign-out navigation so the previous account's
+                                // cached API responses can never be replayed.
+                                void evictAuthBoundCaches().then(() => signOut({ callbackUrl: '/login' }));
+                            }}
                                 className="w-full py-3 text-red-400 text-sm font-medium rounded-xl hover:bg-red-500/10 transition-colors"
                             >
                                 Log Out
@@ -370,7 +376,12 @@ function DesktopPopover({
                     ))}
                 </div>
                 <button
-                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    onClick={() => {
+                        // Evict auth-bound SW runtime caches before the
+                        // sign-out navigation so the previous account's
+                        // cached API responses can never be replayed.
+                        void evictAuthBoundCaches().then(() => signOut({ callbackUrl: '/login' }));
+                    }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                 >
                     <LogOut className="w-4 h-4" />
@@ -1176,6 +1187,9 @@ function DangerShortcut() {
             return res.json();
         },
         onSuccess: async () => {
+            // Evict auth-bound SW runtime caches before the sign-out
+            // navigation (account deletion is also an auth-state change).
+            await evictAuthBoundCaches();
             await signOut({ callbackUrl: '/' });
         },
         onError: () => {

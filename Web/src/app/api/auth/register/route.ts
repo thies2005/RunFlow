@@ -12,6 +12,7 @@ import { createAuthCode } from '@/lib/auth/tokens';
 import { sendWelcomeEmail } from '@/lib/email';
 import { AuthCodeType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 import { handleError } from '@/lib/errors/handler';
 import { logger } from '@/lib/logging/logger';
 
@@ -25,7 +26,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Too many registration attempts. Please try again later.' }, { status: 429 });
         }
 
-        const body = await request.json();
+        // p4: bound the anonymous body before parsing (the middleware gates the
+        // declared Content-Length; this also covers chunked/lying headers).
+        const rawBody = await readBodyWithLimit(request);
+        if (rawBody === null) {
+            return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+        }
+        const body = JSON.parse(rawBody);
         const { email, password, name } = body;
 
         // Validate email

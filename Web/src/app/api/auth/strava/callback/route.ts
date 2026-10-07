@@ -7,6 +7,26 @@ function getAppBaseUrl(): string {
         || 'https://runflow.schuelken.uk';
 }
 
+const STATE_MAX_AGE_MS = 10 * 60 * 1000;
+
+/**
+ * Mobile state format: `<prefix>_<epochMillis>_<nonce>` (e.g.
+ * `flutter_1760000000000_3fa9b2c1d4e5f60718293a4b5c6d7e8f`). The nonce is a
+ * per-flow random secret only the app knows and verifies when the deep link
+ * lands (StravaAuth.validateAndConsumeCallbackState binds the code to the
+ * login attempt that started it); the server cannot verify it and must not
+ * reject it — here we only validate the prefix and the timestamp. Legacy
+ * states without a nonce (`<prefix>_<epochMillis>`, from app versions
+ * predating the binding) are still routed; they carry no protection of their
+ * own but the old apps' behavior is unchanged.
+ */
+function parseMobileStateTimestamp(state: string): number | null {
+    const parts = state.split('_');
+    if (parts.length < 2) return null;
+    const timestamp = parseInt(parts[1], 10);
+    return Number.isNaN(timestamp) ? null : timestamp;
+}
+
 /**
  * Mobile flow: redirect to the app's App Link URL
  * (https://<host>/auth/app-callback). On devices where the link is verified
@@ -57,13 +77,14 @@ export async function GET(request: NextRequest) {
     const isMobile = isFlutter || isAndroid;
 
     if (isMobile) {
-        const parts = state!.split('_');
-        const timestamp = parseInt(parts[1], 10);
+        const timestamp = parseMobileStateTimestamp(state!);
         const now = Date.now();
-        const MAX_AGE_MS = 10 * 60 * 1000;
 
-        if (isNaN(timestamp) || (now - timestamp) > MAX_AGE_MS) {
-            logger.warn('Strava Callback: stale or invalid state timestamp', { state, age: now - timestamp });
+        if (timestamp === null || (now - timestamp) > STATE_MAX_AGE_MS) {
+            logger.warn('Strava Callback: stale or invalid state timestamp', {
+                state,
+                age: timestamp === null ? undefined : now - timestamp,
+            });
             return mobileAppCallback(baseUrl, { error: 'invalid_state' });
         }
 

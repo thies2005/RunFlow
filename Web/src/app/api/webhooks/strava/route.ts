@@ -7,6 +7,7 @@ import { safeBigInt } from '@/lib/utils/bigint';
 import { runBackgroundTask } from '@/lib/utils/backgroundTask';
 import { logger } from '@/lib/logging/logger';
 import { enqueueFeedbackJobsForActivities } from '@/lib/ai/feedback';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -120,8 +121,12 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Get raw body for signature verification
-        const rawBody = await req.text();
+        // Get raw body for signature verification, bounded before the HMAC
+        // check runs (p4: no pre-auth size gate existed anywhere in intake).
+        const rawBody = await readBodyWithLimit(req);
+        if (rawBody === null) {
+            return new NextResponse('Payload Too Large', { status: 413 });
+        }
 
         // Verify webhook signature
         const signature = req.headers.get('x-hub-signature');

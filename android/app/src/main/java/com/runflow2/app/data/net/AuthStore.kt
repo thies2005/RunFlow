@@ -61,10 +61,24 @@ class AuthStore(private val context: Context) {
     fun offerOAuthResult(result: com.runflow2.app.data.net.StravaAuth.Callback) {
         when (result) {
             is StravaAuth.Callback.Authorized -> {
+                // The runflow2:// deep link is deliverable by any app on the
+                // device: only accept a code that completes an authorization
+                // flow this app instance started (nonce-bound state, in
+                // flight, not expired, single use). Anything else is logged
+                // and dropped — no session change, no parked code.
+                if (!StravaAuth.validateAndConsumeCallbackState(result.state)) {
+                    pendingOAuthCode.value = null
+                    AppLog.w("Auth", "OAuth callback rejected: state does not match an in-app authorization flow (possible forged deep link)")
+                    return
+                }
                 pendingOAuthError.value = null
                 pendingOAuthCode.value = result.code
             }
             is StravaAuth.Callback.Failed -> {
+                // The flow is over either way (user denied, or the server
+                // rejected the state) — error callbacks carry no verifiable
+                // state, so nothing is accepted here, only cleaned up.
+                StravaAuth.clearPendingFlow()
                 pendingOAuthCode.value = null
                 pendingOAuthError.value = result.error
             }

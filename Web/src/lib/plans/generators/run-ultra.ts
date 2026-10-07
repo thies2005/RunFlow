@@ -80,7 +80,7 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
     currentDate.setDate(currentDate.getDate() - currentDate.getDay());
 
     const timeDiff = raceDate.getTime() - currentDate.getTime();
-    const totalWeeks = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)));
+    const totalWeeks = Math.min(PLAN_CONSTANTS.MAX_TOTAL_WEEKS, Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7))));
 
     const minStart = getMinStartVolume(config.raceType ?? null);
     let startVolume: number;

@@ -9,9 +9,9 @@ import { encryptToken } from '@/lib/crypto';
 import { verifyPassword } from '@/lib/auth/auth-email';
 import { TIME_RANGES } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
-import { checkRateLimitAsync } from '@/lib/rateLimit';
+import { checkRateLimitAsync, getClientIdentifier, resetRateLimit } from '@/lib/rateLimit';
 
-function tryEncryptOrPlaintextToken(
+function encryptTokenOrFail(
     token: string | null | undefined,
     tokenType: 'access' | 'refresh',
     providerAccountId?: string
@@ -19,16 +19,18 @@ function tryEncryptOrPlaintextToken(
     if (!token) {
         return null;
     }
-
+    // Fail closed: when ENCRYPTION_KEY is missing or invalid we must refuse to
+    // persist OAuth tokens in plaintext. The error from encryptToken()
+    // propagates to the sign-in handler, which aborts the flow.
     try {
         return encryptToken(token);
     } catch (error) {
-        logger.warn('Failed to encrypt Strava token, storing plaintext fallback', {
+        logger.error('Refusing to store Strava token in plaintext: encryption unavailable', {
             tokenType,
             providerAccountId,
             error: error instanceof Error ? error.message : String(error),
         });
-        return token;
+        throw error;
     }
 }
 
@@ -69,20 +71,26 @@ const authConfig = {
                 email: { label: 'Email', type: 'email' },
                 password: { label: 'Password', type: 'password' },
             },
-            async authorize(credentials) {
+            async authorize(credentials, request) {
                 if (!credentials?.email || !credentials?.password) {
                     throw new Error('Email and password are required');
                 }
 
                 const identifier = (credentials.email as string).toLowerCase();
-                const rateLimitResult = await checkRateLimitAsync(identifier, {
-                    limit: 5,
+
+                // Anti-guessing gate keyed on the CLIENT, never on the bare
+                // email: nothing before credential verification may be keyed
+                // on caller-supplied data, or a stranger could create denial
+                // state for an account they do not control.
+                const clientId = getClientIdentifier(request);
+                const clientRateLimitResult = await checkRateLimitAsync(clientId, {
+                    limit: 20,
                     windowSeconds: 300,
-                    prefix: 'login',
+                    prefix: 'login-client',
                 });
 
-                if (!rateLimitResult.allowed) {
-                    logger.warn('Rate limit exceeded for login', { email: identifier });
+                if (!clientRateLimitResult.allowed) {
+                    logger.warn('Rate limit exceeded for login (per client)', { clientId });
                     throw new Error('Too many login attempts. Please try again later.');
                 }
 
@@ -90,14 +98,26 @@ const authConfig = {
                     where: { email: identifier },
                 });
 
-                if (!user || !user.passwordHash) {
+                if (!user || !user.passwordHash || !(await verifyPassword(credentials.password as string, user.passwordHash))) {
+                    // Count only FAILED verifications, keyed per client + email,
+                    // so an anonymous caller cannot lock out someone else's
+                    // account - and a correct-password login never consults the
+                    // limiter at all.
+                    const failureRateLimit = await checkRateLimitAsync(`${clientId}|${identifier}`, {
+                        limit: 5,
+                        windowSeconds: 300,
+                        prefix: 'login',
+                    });
+                    if (!failureRateLimit.allowed) {
+                        logger.warn('Rate limit exceeded for login (failed verifications)', { email: identifier });
+                        throw new Error('Too many login attempts. Please try again later.');
+                    }
                     throw new Error('Invalid email or password');
                 }
 
-                const isValid = await verifyPassword(credentials.password as string, user.passwordHash);
-                if (!isValid) {
-                    throw new Error('Invalid email or password');
-                }
+                // Successful verification clears this client's failure counter
+                // for the account.
+                await resetRateLimit(`${clientId}|${identifier}`, 'login');
 
                 return {
                     id: user.id,
@@ -110,26 +130,36 @@ const authConfig = {
     ],
     callbacks: {
         async signIn({ account }) {
+            if (account?.provider === 'credentials') {
+                return true;
+            }
+
+            if (account && 'athlete' in account) {
+                delete (account as Record<string, unknown> & { athlete?: unknown }).athlete;
+            }
+
+            // Fail closed: if the OAuth tokens cannot be encrypted (missing or
+            // invalid ENCRYPTION_KEY), abort the sign-in instead of persisting
+            // plaintext tokens. This must NOT be caught by the generic error
+            // handler below, which would continue the flow with raw tokens.
+            let encryptedAccess: string | null = null;
+            let encryptedRefresh: string | null = null;
             try {
-                if (account?.provider === 'credentials') {
-                    return true;
-                }
-
-                if (account && 'athlete' in account) {
-                    delete (account as Record<string, unknown> & { athlete?: unknown }).athlete;
-                }
-
-                const encryptedAccess = tryEncryptOrPlaintextToken(
+                encryptedAccess = encryptTokenOrFail(
                     account?.access_token,
                     'access',
                     account?.providerAccountId
                 );
-                const encryptedRefresh = tryEncryptOrPlaintextToken(
+                encryptedRefresh = encryptTokenOrFail(
                     account?.refresh_token,
                     'refresh',
                     account?.providerAccountId
                 );
+            } catch {
+                return false;
+            }
 
+            try {
                 if (account?.provider === 'strava' && account.providerAccountId) {
                     try {
                         const existingAccount = await prisma.account.findUnique({
@@ -178,6 +208,22 @@ const authConfig = {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
+                // Bind the current tokenVersion into the session JWT so any
+                // later bump (password reset, mobile logout) revokes it in the
+                // session callback. A failed lookup leaves the claim absent,
+                // which the session callback treats as version 0.
+                try {
+                    const dbUser = await prisma.user.findUnique({
+                        where: { id: user.id },
+                        select: { tokenVersion: true },
+                    });
+                    token.tokenVersion = dbUser?.tokenVersion ?? 0;
+                } catch (error) {
+                    logger.error('Failed to bind tokenVersion to session token', {
+                        userId: user.id,
+                        error: error instanceof Error ? error.message : String(error),
+                    });
+                }
             }
             return token;
         },
@@ -203,8 +249,29 @@ const authConfig = {
 
                     const dbUser = await prisma.user.findUnique({
                         where: { id: userId as string },
-                        select: { lastSyncAt: true, authMethod: true, image: true, name: true },
+                        select: { tokenVersion: true, lastSyncAt: true, authMethod: true, image: true, name: true },
                     });
+
+                    // Revoke the session when its bound tokenVersion no longer
+                    // matches the database: a password reset or mobile logout
+                    // bumped the version after this session was issued.
+                    // Sessions issued before this check existed carry no claim
+                    // and are treated as version 0, so they keep working
+                    // unless the user's tokenVersion has been bumped since.
+                    const boundVersion = typeof token.tokenVersion === 'number' ? token.tokenVersion : 0;
+                    if (dbUser && dbUser.tokenVersion !== boundVersion) {
+                        logger.warn('Revoking stale web session (tokenVersion mismatch)', { userId: String(userId) });
+                        // Strip the identity so every `session?.user?.id` guard in
+                        // downstream consumers rejects the request.
+                        session.user.id = '';
+                        (session.user as unknown as Record<string, unknown>).email = null;
+                        (session.user as unknown as Record<string, unknown>).name = null;
+                        (session.user as unknown as Record<string, unknown>).image = null;
+                        (session.user as unknown as Record<string, unknown>).hasStrava = false;
+                        (session.user as unknown as Record<string, unknown>).authMethod = 'strava';
+                        (session.user as unknown as Record<string, unknown>).lastSyncAt = null;
+                        return session;
+                    }
 
                     (session.user as unknown as Record<string, unknown>).hasStrava = !!stravaAccount;
                     (session.user as unknown as Record<string, unknown>).authMethod = dbUser?.authMethod || 'strava';
@@ -266,5 +333,8 @@ const authConfig = {
     },
     debug: process.env.NODE_ENV === 'development',
 } satisfies NextAuthConfig;
+
+// Exported for tests; the runtime surface below is unchanged.
+export const authConfigObject = authConfig;
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

@@ -23,10 +23,15 @@ export const activitySchema = z.object({
 export const goalSchema = z.object({
   name: z.string().min(1).max(255),
   raceType: z.nativeEnum(RaceType),
-  raceDate: z.string().datetime(),
+  // Plans are capped at 104 weeks everywhere (plan-import route, plan
+  // creation service, generators) — reject far-future horizons early so a
+  // raceDate cannot drive an unbounded generation loop.
+  raceDate: z.string().datetime().refine((value) =>
+    new Date(value).getTime() - Date.now() <= 104 * 7 * 24 * 60 * 60 * 1000,
+    { message: 'raceDate too far in the future' }),
   targetTime: z.number().int().positive().optional(),
   weeklyMileageGoal: z.number().int().positive().optional(),
-  planWeeks: z.number().int().positive().optional(),
+  planWeeks: z.number().int().positive().max(104).optional(),
   runsPerWeek: z.number().int().nonnegative().max(7).optional(),
   ridesPerWeek: z.number().int().nonnegative().max(7).optional(),
   strengthPerWeek: z.number().int().nonnegative().max(7).optional(),

@@ -11,7 +11,7 @@ import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { RaceType } from '@/generated/prisma/browser';
-import { createPlanWithWorkouts } from '@/lib/services/plan-creation';
+import { createPlanWithWorkouts, PlanCreateInputSchema } from '@/lib/services/plan-creation';
 
 export async function GET(request: NextRequest) {
     try {
@@ -85,6 +85,16 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
+
+        // Validate the raw body before plan creation: the same caps the web
+        // routes already enforce (planWeeks <= 104, raceDate horizon <= 104
+        // weeks, per-week session counts) so a mobile client cannot drive an
+        // unbounded generation loop with unchecked fields.
+        const parsed = PlanCreateInputSchema.omit({ subGoals: true }).safeParse(body);
+        if (!parsed.success) {
+            return errorResponses.validation('Validation failed', parsed.error.flatten());
+        }
+
         const {
             name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks,
             runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
@@ -95,7 +105,7 @@ export async function POST(request: NextRequest) {
             backyardLoopDistM, targetLaps, customDistanceM, planSource,
             calibrationTime, calibrationDistance, calibrationFactor,
             planStartDate
-        } = body;
+        } = parsed.data;
 
         if (!name || !raceType || !raceDate) {
             return errorResponses.validation(
@@ -145,7 +155,7 @@ export async function POST(request: NextRequest) {
             maxLongRunKm: maxLongRunKm ?? null,
             longRunDay: longRunDay ?? null,
             workoutDay: workoutDay ?? null,
-            sport: sport ?? undefined,
+            sport: (sport === 'RUN' || sport === 'TRIATHLON') ? sport : undefined,
             swimDay: swimDay ?? null,
             restDays: restDays ?? null,
             backyardLoopDistM: backyardLoopDistM ?? null,

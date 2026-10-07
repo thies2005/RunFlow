@@ -5,6 +5,7 @@ import { handleError } from '@/lib/errors/handler';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses } from '@/lib/api/apiResponse';
 import { serializeDailyRecord, parseDateOnly } from '@/lib/readiness/serialization';
+import { healthDataConsentWithdrawn, HEALTH_DATA_WITHDRAWN_MESSAGE } from '@/lib/health/consent-gate';
 
 export async function GET(request: NextRequest) {
     try {
@@ -50,6 +51,14 @@ export async function POST(request: NextRequest) {
         const authUser = await getAuthenticatedUser(request);
         if (!authUser) {
             return errorResponses.unauthorized();
+        }
+
+        // Re-ingestion gate for withdrawn HEALTH_DATA consent (p3:
+        // HEALTH_DATA_WITHDRAWN_INCOMPLETE_CASCADE): withdrawal deletes the
+        // user's readiness records, so silently re-upserting them must be
+        // refused.
+        if (await healthDataConsentWithdrawn(authUser.id)) {
+            return errorResponses.badRequest(HEALTH_DATA_WITHDRAWN_MESSAGE);
         }
 
         const body = await request.json();

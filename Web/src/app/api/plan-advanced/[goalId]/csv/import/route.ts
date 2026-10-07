@@ -22,6 +22,17 @@ type PreviewData = {
 
 const VALID_WORKOUT_TYPES = new Set(Object.values(WorkoutType));
 
+/**
+ * Upload bounds (p3: uncapped-upload-parse-preview-retention). The route
+ * previously read the whole file into memory, parsed it with no row cap and
+ * retained the full parsed array in a process-global preview cache —
+ * unbounded request size, unbounded row count, unbounded retained state.
+ * 5MB / 500 workouts matches the sibling import caps (scan-image 10MB,
+ * /api/plans/import 500-workout zod cap).
+ */
+const MAX_CSV_BYTES = 5 * 1024 * 1024;
+const MAX_CSV_ROWS = 500;
+
 export async function POST(req: Request, ctx: RouteContext) {
     try {
         const session = await auth();
@@ -59,6 +70,12 @@ export async function POST(req: Request, ctx: RouteContext) {
                 return NextResponse.json({ error: 'file is required' }, { status: 400 });
             }
 
+            // Bound the upload before materializing it as a string
+            // (file.size is available on the File object before .text()).
+            if (file.size > MAX_CSV_BYTES) {
+                return NextResponse.json({ error: `CSV file exceeds the ${MAX_CSV_BYTES / (1024 * 1024)}MB limit` }, { status: 413 });
+            }
+
             const csvText = await file.text();
 
             if (!csvText.trim()) {
@@ -66,12 +83,16 @@ export async function POST(req: Request, ctx: RouteContext) {
             }
 
             const format = formatHint as 'trainingpeaks' | 'finalsurge' | 'runflow' | undefined;
-            const { workouts, errors, skipped } = parseCsv(csvText, format);
+            const { workouts, errors, skipped, truncated } = parseCsv(csvText, format, { maxRows: MAX_CSV_ROWS });
+
+            if (truncated) {
+                return NextResponse.json({ error: `CSV exceeds ${MAX_CSV_ROWS} workouts` }, { status: 413 });
+            }
 
             const validWorkouts = workouts.filter(w => VALID_WORKOUT_TYPES.has(w.workoutType as WorkoutType));
 
             const previewId = randomUUID();
-            storePreview(previewId, {
+            storePreview(previewId, session.user.id, {
                 goalId,
                 userId: session.user.id,
                 workouts: validWorkouts,

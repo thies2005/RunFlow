@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { auth } from '@/auth';
 
-// GET /api/health/nutrition/meals?userId=...
-export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-        return NextResponse.json({ error: 'userId is required' }, { status: 400 });
+// GET /api/health/nutrition/meals
+// Meals are always scoped to the authenticated session user; any client-supplied
+// userId is ignored (mirrors /api/mobile/v1/health/nutrition/meals).
+export async function GET() {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    const userId = session.user.id;
 
     try {
         const meals = await prisma.savedMeal.findMany({
@@ -25,20 +27,26 @@ export async function GET(request: Request) {
 
 // POST /api/health/nutrition/meals
 export async function POST(request: Request) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const body = await request.json();
-        const { userId, name, items, totalCalories, totalProtein, totalCarbs, totalFats } = body;
+        const { name, items, totalCalories, totalProtein, totalCarbs, totalFats } = body;
 
-        if (!userId || !name || !items?.length) {
+        if (!name || !items?.length) {
             return NextResponse.json(
-                { error: 'userId, name, and items are required' },
+                { error: 'name and items are required' },
                 { status: 400 }
             );
         }
 
+        // userId derives from the session only; a body-supplied userId is never trusted.
         const meal = await prisma.savedMeal.create({
             data: {
-                userId,
+                userId: session.user.id,
                 name,
                 totalCalories: totalCalories || 0,
                 totalProtein: totalProtein || 0,
@@ -66,6 +74,11 @@ export async function POST(request: Request) {
 
 // DELETE /api/health/nutrition/meals?id=...
 export async function DELETE(request: Request) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -74,6 +87,15 @@ export async function DELETE(request: Request) {
     }
 
     try {
+        // Owner-bound lookup: a meal id belonging to another user is treated as not found.
+        const existing = await prisma.savedMeal.findFirst({
+            where: { id, userId: session.user.id },
+        });
+
+        if (!existing) {
+            return NextResponse.json({ error: 'Not found' }, { status: 404 });
+        }
+
         await prisma.savedMeal.delete({ where: { id } });
         return NextResponse.json({ success: true });
     } catch {

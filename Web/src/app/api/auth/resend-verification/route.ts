@@ -4,6 +4,7 @@ import { createAuthCode } from '@/lib/auth/tokens';
 import { sendWelcomeEmail } from '@/lib/email';
 import { AuthCodeType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 import { logger } from '@/lib/logging/logger';
 
 export async function POST(request: NextRequest) {
@@ -22,7 +23,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { email: rawEmail } = await request.json();
+        const rawBody = await readBodyWithLimit(request);
+        if (rawBody === null) {
+            return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+        }
+        const { email: rawEmail } = JSON.parse(rawBody);
         const email = typeof rawEmail === 'string' ? rawEmail.toLowerCase() : '';
 
         if (!email) {

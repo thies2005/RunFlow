@@ -4,6 +4,7 @@ describe('checkRateLimitAsync Security', () => {
     let mockIncr: jest.Mock;
     let mockExpire: jest.Mock;
     let mockTtl: jest.Mock;
+    let mockDel: jest.Mock;
     let mockOn: jest.Mock;
     let mockConnect: jest.Mock;
 
@@ -14,6 +15,7 @@ describe('checkRateLimitAsync Security', () => {
         mockIncr = jest.fn();
         mockExpire = jest.fn();
         mockTtl = jest.fn();
+        mockDel = jest.fn();
         mockOn = jest.fn();
         mockConnect = jest.fn().mockResolvedValue(undefined);
 
@@ -24,6 +26,7 @@ describe('checkRateLimitAsync Security', () => {
                     incr: mockIncr,
                     expire: mockExpire,
                     ttl: mockTtl,
+                    del: mockDel,
                     on: mockOn,
                     connect: mockConnect,
                 })),
@@ -71,5 +74,31 @@ describe('checkRateLimitAsync Security', () => {
 
         expect(mockIncr).not.toHaveBeenCalled();
         expect(result.allowed).toBe(true);
+    });
+
+    it('resetRateLimit deletes the Redis key when a client is available', async () => {
+        process.env.REDIS_URL = 'redis://localhost:6379';
+        mockDel.mockResolvedValue(1);
+
+        const { resetRateLimit } = await import('../rateLimit');
+
+        await resetRateLimit('clientA|victim@example.com', 'login');
+
+        expect(mockDel).toHaveBeenCalledWith('ratelimit:login:clientA|victim@example.com');
+    });
+
+    it('resetRateLimit swallows Redis failures and still clears the in-memory bucket', async () => {
+        process.env.REDIS_URL = 'redis://localhost:6379';
+        mockDel.mockRejectedValue(new Error('Redis gone'));
+
+        const { resetRateLimit, checkRateLimit } = await import('../rateLimit');
+
+        const identifier = 'clientB|victim@example.com';
+        checkRateLimit(identifier, { limit: 1, windowSeconds: 60, prefix: 'login' });
+        expect(checkRateLimit(identifier, { limit: 1, windowSeconds: 60, prefix: 'login' }).allowed).toBe(false);
+
+        await expect(resetRateLimit(identifier, 'login')).resolves.toBeUndefined();
+
+        expect(checkRateLimit(identifier, { limit: 1, windowSeconds: 60, prefix: 'login' }).allowed).toBe(true);
     });
 });

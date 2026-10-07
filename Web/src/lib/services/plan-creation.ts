@@ -3,7 +3,7 @@ import { analyzeRace, calculateTrainingPaces, calculateVdot, DISTANCES, type Rac
 import { AnalyticsService } from '@/lib/services/analytics';
 import { type ActivityForShape } from '@/lib/metrics/runalyze';
 import { calculateProjectedGoalTime, type PlanSettings } from '@/lib/metrics/goalProjection';
-import { buildStructuredStepsForWorkout, generateTrainingPlan, type PlanConfig, type GeneratedWorkout, getMinStartVolume } from '@/lib/plans';
+import { buildStructuredStepsForWorkout, generateTrainingPlan, PLAN_CONSTANTS, type PlanConfig, type GeneratedWorkout, getMinStartVolume } from '@/lib/plans';
 import { WorkoutType, RaceType, PlanSport, PlanCreationMode } from '@/generated/prisma/browser';
 import { logger } from '@/lib/logging/logger';
 import { z } from 'zod';
@@ -15,11 +15,32 @@ const dateStringSchema = z.string().refine((value) => !Number.isNaN(new Date(val
     message: 'Invalid date',
 });
 
+/** Hard ceiling on plan length shared by every creation path (web plans,
+ * goals, mobile goals, sub-goals) — the same ceiling the plan-import route
+ * (planWeeks .max(104)) and the generators' defensive clamp enforce. */
+export const MAX_PLAN_WEEKS = PLAN_CONSTANTS.MAX_TOTAL_WEEKS;
+
+/** Hard backstop on workouts persisted/returned per plan-creation request:
+ * 104 weeks × at most 28 sessions/week (7 runs + 7 rides + 7 swims + 7
+ * strength, each capped in the schemas) plus slack. */
+export const MAX_PERSISTED_WORKOUTS = MAX_PLAN_WEEKS * 32;
+
+const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
+
+/** Max sub-goals per plan-creation request; each one runs its own bounded
+ * generation loop, so the array itself must be bounded too. */
+const MAX_SUB_GOALS = 10;
+
+const boundedRaceDateSchema = dateStringSchema.refine(
+    (value) => new Date(value).getTime() - Date.now() <= MAX_PLAN_WEEKS * MS_PER_WEEK,
+    { message: `raceDate must be within ${MAX_PLAN_WEEKS} weeks` },
+);
+
 export const SubGoalSchema = z.object({
     name: z.string().min(1).max(255),
     sport: z.enum(['RUN', 'TRIATHLON', 'NO_RACE']).optional(),
     raceType: z.nativeEnum(RaceType).nullable().optional(),
-    raceDate: dateStringSchema.nullable().optional(),
+    raceDate: boundedRaceDateSchema.nullable().optional(),
     priority: z.enum(['SECONDARY', 'TUNE_UP', 'MILESTONE']).optional(),
     targetTime: z.number().int().positive().optional(),
 });
@@ -31,7 +52,7 @@ export const PlanCreateInputSchema = z.object({
     // Sport / race configuration
     sport: z.enum(['RUN', 'TRIATHLON', 'NO_RACE']).optional(),
     raceType: z.nativeEnum(RaceType).nullable().optional(),
-    raceDate: dateStringSchema.nullable().optional(),
+    raceDate: boundedRaceDateSchema.nullable().optional(),
     planStartDate: dateStringSchema.nullable().optional(),
     durationWeeks: z.number().int().min(4).max(52).optional(),
 
@@ -64,7 +85,7 @@ export const PlanCreateInputSchema = z.object({
     calibrationFactor: z.number().min(0.5).max(2.0).optional(),
 
     // Advanced fields
-    planWeeks: z.number().int().positive().nullable().optional(),
+    planWeeks: z.number().int().positive().max(MAX_PLAN_WEEKS).nullable().optional(),
     planSource: z.string().optional(),
     creationMode: z.nativeEnum(PlanCreationMode).optional(),
     backyardLoopDistM: z.number().min(100).nullable().optional(),
@@ -74,7 +95,7 @@ export const PlanCreateInputSchema = z.object({
     customSwimDistM: z.number().nullable().optional(),
     customBikeDistM: z.number().nullable().optional(),
     customRunDistM: z.number().nullable().optional(),
-    subGoals: z.array(SubGoalSchema).optional(),
+    subGoals: z.array(SubGoalSchema).max(MAX_SUB_GOALS).optional(),
 
     // Heart rate profile
     maxHeartRate: z.number().int().min(60).max(250).optional(),
@@ -129,16 +150,20 @@ export function normalizePlanInput(
     const resolvedRaceType: RaceType | null = isNoRace ? null : (raceType ?? null);
     const resolvedRaceDate: string | null = isNoRace ? null : (raceDate ?? null);
 
-    // Resolve plan weeks
-    let resolvedPlanWeeks: number | null = planWeeks ?? null;
+    // Resolve plan weeks. Every source is ceiling-capped at MAX_PLAN_WEEKS so
+    // no caller input (explicit planWeeks or a raceDate horizon) can drive an
+    // unbounded generation loop; schemas reject over-limit values early, this
+    // clamp is the backstop for any caller that bypasses them.
+    let resolvedPlanWeeks: number | null = planWeeks != null
+        ? Math.min(MAX_PLAN_WEEKS, planWeeks)
+        : null;
     if (!resolvedPlanWeeks && isNoRace && durationWeeks) {
         resolvedPlanWeeks = durationWeeks;
     }
     if (!resolvedPlanWeeks && resolvedRaceDate && planStartDate) {
-        const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-        const weeks = Math.max(4, Math.ceil(
-            (new Date(resolvedRaceDate).getTime() - new Date(planStartDate).getTime()) / msPerWeek,
-        ));
+        const weeks = Math.min(MAX_PLAN_WEEKS, Math.max(4, Math.ceil(
+            (new Date(resolvedRaceDate).getTime() - new Date(planStartDate).getTime()) / MS_PER_WEEK,
+        )));
         resolvedPlanWeeks = weeks;
     }
     if (!resolvedPlanWeeks) {
@@ -781,15 +806,15 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
 
     let totalWeeks: number;
     if (isNoRace) {
-        totalWeeks = input.planWeeks || 12;
+        totalWeeks = Math.min(MAX_PLAN_WEEKS, input.planWeeks || 12);
     } else if (raceDate) {
         const rDate = new Date(raceDate);
-        totalWeeks = Math.max(4, Math.ceil((rDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+        totalWeeks = Math.min(MAX_PLAN_WEEKS, Math.max(4, Math.ceil((rDate.getTime() - startDate.getTime()) / MS_PER_WEEK)));
     } else {
         totalWeeks = 12;
     }
 
-    const resolvedPlanWeeks = Math.max(4, totalWeeks);
+    const resolvedPlanWeeks = Math.min(MAX_PLAN_WEEKS, Math.max(4, totalWeeks));
 
     const phases = resolvePhases({
         planWeeks: resolvedPlanWeeks,
@@ -950,8 +975,14 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
     const workouts = generateTrainingPlan(planConfig);
 
     if (workouts.length > 0) {
+        // Hard backstop on rows per createMany: the clamped horizon bounds
+        // generation, and this cap guarantees no caller can persist more
+        // than MAX_PERSISTED_WORKOUTS rows in one request.
+        const boundedWorkouts = workouts.length > MAX_PERSISTED_WORKOUTS
+            ? workouts.slice(0, MAX_PERSISTED_WORKOUTS)
+            : workouts;
         await prisma.workout.createMany({
-            data: mapWorkoutsForDb(workouts, { goalId: goal.id }),
+            data: mapWorkoutsForDb(boundedWorkouts, { goalId: goal.id }),
         });
     } else {
         logger.warn('Plan generation returned 0 workouts', {
@@ -996,7 +1027,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
             if (sg.raceType && sg.raceDate) {
                 const subRaceDate = new Date(sg.raceDate);
                 if (subRaceDate > now) {
-                    const weeksAvailable = Math.max(1, Math.ceil((subRaceDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+                    const weeksAvailable = Math.min(MAX_PLAN_WEEKS, Math.max(1, Math.ceil((subRaceDate.getTime() - startDate.getTime()) / MS_PER_WEEK)));
                     const priority = sg.priority || 'SECONDARY';
                     const subPhaseWeeks = Math.max(1, weeksAvailable - 1);
                     const subTaper = Math.min(priority === 'TUNE_UP' ? 1 : phases.taperWeeks, subPhaseWeeks);
@@ -1043,8 +1074,11 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
                         : subWorkouts;
 
                     if (filteredWorkouts.length > 0) {
+                        const boundedSubWorkouts = filteredWorkouts.length > MAX_PERSISTED_WORKOUTS
+                            ? filteredWorkouts.slice(0, MAX_PERSISTED_WORKOUTS)
+                            : filteredWorkouts;
                         await prisma.workout.createMany({
-                            data: mapWorkoutsForDb(filteredWorkouts, {
+                            data: mapWorkoutsForDb(boundedSubWorkouts, {
                                 goalId: goal.id,
                                 subGoalId: subGoal.id,
                                 descriptionPrefix: `[${sg.name.trim()}] `,
@@ -1062,7 +1096,10 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
     const goalWithWorkouts = await prisma.goal.findUnique({
         where: { id: goal.id },
         include: {
-            workouts: { orderBy: { scheduledDate: 'asc' } },
+            // Bounded response: never serialize more workouts than the
+            // creation path can persist, so the HTTP payload stays bounded
+            // no matter what the inputs claimed.
+            workouts: { orderBy: { scheduledDate: 'asc' }, take: MAX_PERSISTED_WORKOUTS },
             ...(createdSubGoals.length > 0 && {
                 subGoals: { where: { deletedAt: null }, orderBy: { createdAt: 'asc' } },
             }),

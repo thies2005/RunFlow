@@ -2,6 +2,11 @@ import { prisma } from '@/lib/db';
 import { encryptToken, decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 
+// SECURITY: this fallback exists ONLY as a migration read path for legacy
+// plaintext rows and is logged at error level on every use. New writes always
+// go through encryptToken() (which throws when ENCRYPTION_KEY is missing or
+// invalid) - plaintext is never written. Re-authenticating with Strava
+// re-encrypts the tokens.
 function tryDecryptOrPlaintext(token: string | null | undefined, tokenType: 'access' | 'refresh', userId: string): string | null {
     if (!token) {
         return null;
@@ -10,7 +15,7 @@ function tryDecryptOrPlaintext(token: string | null | undefined, tokenType: 'acc
     try {
         return decryptToken(token);
     } catch (error) {
-        logger.warn('Falling back to legacy plaintext Strava token', {
+        logger.error('Serving legacy plaintext Strava token (migration path only) - re-authenticate to encrypt it at rest', {
             userId,
             tokenType,
             error: error instanceof Error ? error.message : String(error),

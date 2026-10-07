@@ -290,6 +290,137 @@ export async function checkProviderLimit(providerId: string): Promise<{ canUse: 
 }
 
 /**
+ * Result of an atomic usage reservation (see reserveUsageSlot).
+ */
+export interface UsageReservation {
+    allowed: boolean;
+    /**
+     * True when a tier quota unit was actually claimed with a conditional
+     * updateMany. Only then does the caller owe a releaseUsageReservation()
+     * refund when the request fails before delivering a response.
+     */
+    claimed: boolean;
+    reason?: string;
+}
+
+/**
+ * Atomically reserve one chat message against the user's tier quotas BEFORE
+ * any provider work (context building, intent classification, streaming).
+ *
+ * Quota-overshoot fix: the chat routes used to gate admission on a read-only
+ * checkUsageLimit() and only increment the counters after the provider stream
+ * completed. Concurrent in-flight requests were therefore all admitted against
+ * the same stale counter snapshot and pushed messages/tokens past the daily
+ * and monthly caps by up to one in-flight burst. This reservation is a single
+ * conditional UPDATE whose WHERE clause is the quota gate, so of N concurrent
+ * requests at most the remaining headroom can be admitted; incrementUsage()
+ * afterwards settles the token deltas.
+ */
+export async function reserveUsageSlot(userId: string): Promise<UsageReservation> {
+    const [userSettings, globalSettings] = await Promise.all([
+        prisma.userAiSettings.findUnique({ where: { userId } }),
+        prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
+    ]);
+
+    if (!userSettings) {
+        return { allowed: false, claimed: false, reason: 'AI not configured' };
+    }
+
+    // Users with their own API key are not billed against platform tiers.
+    if (userSettings.customApiKey) {
+        return { allowed: true, claimed: false };
+    }
+
+    const tier = userSettings.usageTier || 'none';
+    if (tier === 'none') {
+        return { allowed: false, claimed: false, reason: 'Add your own API key to use AI features' };
+    }
+
+    const limits = getTierLimits(tier, globalSettings);
+
+    // Lazy day/month rollover so stale counters from a previous period cannot
+    // block (or admit) today's traffic. Expressed in WHERE clauses;
+    // lastUsageReset is not written here so the rollover stays idempotent —
+    // the claim below stamps it.
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfMonth = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1);
+
+    await prisma.userAiSettings.updateMany({
+        where: { userId, lastUsageReset: { lt: startOfToday } },
+        data: {
+            messagesUsedToday: 0,
+            inputTokensUsedToday: 0,
+            outputTokensUsedToday: 0,
+        },
+    });
+    await prisma.userAiSettings.updateMany({
+        where: { userId, lastUsageReset: { lt: startOfMonth } },
+        data: {
+            messagesUsedThisMonth: 0,
+            inputTokensUsedThisMonth: 0,
+            outputTokensUsedThisMonth: 0,
+        },
+    });
+
+    // Atomic conditional increment: the UPDATE only matches while EVERY
+    // counter is still below its cap, so concurrent in-flight requests can no
+    // longer all pass on the same stale snapshot.
+    const result = await prisma.userAiSettings.updateMany({
+        where: {
+            userId,
+            messagesUsedToday: { lt: limits.daily },
+            messagesUsedThisMonth: { lt: limits.monthly },
+            inputTokensUsedToday: { lt: limits.dailyTokens },
+            outputTokensUsedToday: { lt: limits.dailyTokens },
+            inputTokensUsedThisMonth: { lt: limits.monthlyTokens },
+            outputTokensUsedThisMonth: { lt: limits.monthlyTokens },
+        },
+        data: {
+            messagesUsedToday: { increment: 1 },
+            messagesUsedThisMonth: { increment: 1 },
+            lastUsageReset: new Date(),
+        },
+    });
+
+    if (result.count === 0) {
+        return { allowed: false, claimed: false, reason: 'Daily or monthly AI message/token limit reached' };
+    }
+    return { allowed: true, claimed: true };
+}
+
+/**
+ * Best-effort release of a message slot claimed by reserveUsageSlot() when the
+ * request failed before delivering a response. Guarded decrements keep the
+ * counters non-negative even if a rollover already reset them.
+ */
+export async function releaseUsageReservation(userId: string): Promise<void> {
+    await prisma.userAiSettings.updateMany({
+        where: {
+            userId,
+            messagesUsedToday: { gt: 0 },
+            messagesUsedThisMonth: { gt: 0 },
+        },
+        data: {
+            messagesUsedToday: { decrement: 1 },
+            messagesUsedThisMonth: { decrement: 1 },
+        },
+    });
+}
+
+/**
+ * Options for incrementUsage.
+ */
+export interface IncrementUsageOptions {
+    /**
+     * Set when a chat route already counted this message atomically via
+     * reserveUsageSlot() before the provider call. Settling then records only
+     * the token deltas so the message counters advance exactly once per chat.
+     */
+    messagesAlreadyCounted?: boolean;
+}
+
+/**
  * Increment usage counters for a user
  * Called after each successful AI message
  *
@@ -301,15 +432,21 @@ export async function checkProviderLimit(providerId: string): Promise<{ canUse: 
  * number of concurrent requests in the reset instant, which is far better than the
  * previous unbounded lost-update (quota bypass). The common increment path is
  * fully atomic.
+ *
+ * Chat routes that reserved a slot via reserveUsageSlot() pass
+ * `{ messagesAlreadyCounted: true }` so the message counters (already advanced
+ * by the reservation) are left untouched and only the token deltas settle here.
  */
 export async function incrementUsage(
     userId: string,
     tokenStats?: { inputTokens: number; outputTokens: number },
-    providerId?: string
+    providerId?: string,
+    options?: IncrementUsageOptions
 ): Promise<void> {
     const now = new Date();
     const inputDelta = tokenStats?.inputTokens || 0;
     const outputDelta = tokenStats?.outputTokens || 0;
+    const messagesAlreadyCounted = options?.messagesAlreadyCounted === true;
 
     // Fetch settings to decide whether a reset is due (read is fine for the *decision*;
     // the write below is atomic so concurrent increments don't lose updates).
@@ -328,13 +465,19 @@ export async function incrementUsage(
     // could both see dayChanged=true and both set messagesUsedToday=1), but that only over-counts
     // by the number of concurrent requests in the reset instant — far better than the current
     // unbounded lost-update. The increment path (the common case) is fully atomic.
-    const dayFields = dayChanged
-        ? { messagesUsedToday: 1, inputTokensUsedToday: inputDelta, outputTokensUsedToday: outputDelta }
-        : { messagesUsedToday: { increment: 1 }, inputTokensUsedToday: { increment: inputDelta }, outputTokensUsedToday: { increment: outputDelta } };
+    // `undefined` fields are skipped by Prisma: when the caller already counted the
+    // message via reserveUsageSlot(), the message counters are not written again.
+    const dayFields = {
+        messagesUsedToday: messagesAlreadyCounted ? undefined : (dayChanged ? 1 : { increment: 1 }),
+        inputTokensUsedToday: dayChanged ? inputDelta : { increment: inputDelta },
+        outputTokensUsedToday: dayChanged ? outputDelta : { increment: outputDelta },
+    };
 
-    const monthFields = monthChanged
-        ? { messagesUsedThisMonth: 1, inputTokensUsedThisMonth: inputDelta, outputTokensUsedThisMonth: outputDelta }
-        : { messagesUsedThisMonth: { increment: 1 }, inputTokensUsedThisMonth: { increment: inputDelta }, outputTokensUsedThisMonth: { increment: outputDelta } };
+    const monthFields = {
+        messagesUsedThisMonth: messagesAlreadyCounted ? undefined : (monthChanged ? 1 : { increment: 1 }),
+        inputTokensUsedThisMonth: monthChanged ? inputDelta : { increment: inputDelta },
+        outputTokensUsedThisMonth: monthChanged ? outputDelta : { increment: outputDelta },
+    };
 
     await prisma.userAiSettings.update({
         where: { userId },

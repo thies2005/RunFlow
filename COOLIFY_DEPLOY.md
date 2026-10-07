@@ -211,7 +211,7 @@ On each redeploy the `migrator` container runs again and applies any new migrati
 | Feature | `docker-compose.yml` (original) | `docker-compose.coolify.yml` |
 |---|---|---|
 | Reverse proxy | Cloudflare Tunnel (`tunnel` service) | Coolify's built-in Traefik proxy |
-| Host port mappings | `3000:3000`, `5434:5432` | None (all internal) |
+| Host port mappings | Loopback-only: `127.0.0.1:3000:3000`, `127.0.0.1:5434:5432` | None (all internal) |
 | HTTPS / TLS | Via Cloudflare | Auto-provisioned by Coolify |
 | Backup volume | Bind mount `./backups` | Named volume `backups` |
 | `container_name` | Explicit names | Omitted (Coolify manages naming) |

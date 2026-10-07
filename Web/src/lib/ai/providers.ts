@@ -6,6 +6,7 @@
 import { prisma } from '@/lib/db';
 import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
+import { resolveHostAddresses } from '@/lib/net/dnsResolve';
 
 /**
  * Decrypt an AI provider key, falling back to plaintext for historical data.
@@ -14,13 +15,18 @@ import { logger } from '@/lib/logging/logger';
  * keys keep working (with a logged warning) while correctly-encrypted keys are
  * decrypted. decryptToken now throws on short/corrupt values (fail-closed), so
  * callers must wrap it; AI features should degrade gracefully rather than crash.
+ *
+ * SECURITY: this fallback exists ONLY as a migration read path for legacy
+ * plaintext rows and is logged at error level on every use. New writes always
+ * go through encryptToken() (which throws when ENCRYPTION_KEY is missing or
+ * invalid) - plaintext is never written. Re-saving a legacy key encrypts it.
  */
 export function tryDecryptAiKey(storedKey: string, keyType: string, contextId?: string): string | null {
     if (!storedKey) return null;
     try {
         return decryptToken(storedKey);
     } catch (error) {
-        logger.warn('Falling back to legacy plaintext AI provider key', {
+        logger.error('Serving legacy plaintext AI provider key (migration path only) - re-save the key to encrypt it at rest', {
             keyType,
             contextId,
             error: error instanceof Error ? error.message : String(error),
@@ -127,6 +133,83 @@ export function validateUrl(url: string, allowedUrls: readonly string[] = DEFAUL
     }
 }
 
+/**
+ * SSRF DNS-resolution guard.
+ *
+ * validateUrl/validateBaseUrl only inspect the hostname STRING: a
+ * caller-controlled DNS name (an attacker's A record, or a multi-label
+ * internal-only name such as metadata.google.internal) passes those checks,
+ * and the raw fetch would then connect to whatever the name resolves to.
+ * assertResolvesToPublicHost() closes that gap by resolving the hostname the
+ * same way the subsequent fetch will (getaddrinfo) and refusing
+ * private / loopback / link-local / reserved targets for IPv4 and IPv6
+ * BEFORE any connection is made.
+ */
+function isPrivateResolvedAddress(address: string): boolean {
+    const ip = address.trim().toLowerCase().replace(/^\[|\]$/g, '');
+
+    if (!ip.includes(':')) {
+        // IPv4
+        const parts = ip.split('.').map(Number);
+        if (parts.length !== 4 || parts.some((p) => !Number.isInteger(p) || p < 0 || p > 255)) {
+            return true; // unparseable -> fail closed
+        }
+        const [a, b, c] = parts;
+        if (a === 0 || a === 10 || a === 127) return true;                 // this-network, private, loopback
+        if (a === 169 && b === 254) return true;                           // link-local (incl. cloud metadata 169.254.169.254)
+        if (a === 172 && b >= 16 && b <= 31) return true;                  // private
+        if (a === 192 && b === 168) return true;                           // private
+        if (a === 100 && b >= 64 && b <= 127) return true;                 // CGNAT shared range (RFC 6598)
+        if (a === 192 && b === 0 && (c === 0 || c === 2)) return true;     // protocol assignments / TEST-NET-1
+        if (a === 198 && (b === 18 || b === 19)) return true;              // benchmarking (RFC 2544)
+        if (a === 198 && b === 51 && c === 100) return true;               // TEST-NET-2
+        if (a === 203 && b === 0 && c === 113) return true;                // TEST-NET-3
+        if (a >= 224) return true;                                         // multicast / reserved / limited broadcast
+        return false;
+    }
+
+    // IPv6 (scope/zone ids stripped)
+    const v6 = ip.split('%')[0];
+    if (v6 === '::' || v6 === '::1') return true;                          // unspecified / loopback
+    if (v6.startsWith('::ffff:')) {
+        // IPv4-mapped address, dotted or hex form
+        const rest = v6.slice('::ffff:'.length);
+        if (rest.includes('.')) return isPrivateResolvedAddress(rest);
+        const hex = rest.replace(/:/g, '');
+        if (hex.length === 8 && /^[0-9a-f]+$/.test(hex)) {
+            const bytes = hex.match(/.{2}/g)!.map((h) => parseInt(h, 16));
+            return isPrivateResolvedAddress(bytes.join('.'));
+        }
+        return true; // unparseable mapped form -> fail closed
+    }
+    if (/^f[cd][0-9a-f]{2}:/.test(v6)) return true;                        // ULA fc00::/7
+    if (/^fe[89ab][0-9a-f]:/.test(v6)) return true;                        // link-local fe80::/10
+    if (/^ff[0-9a-f]{2}:/.test(v6)) return true;                           // multicast ff00::/8
+    if (/^2001:db8:/.test(v6)) return true;                                // documentation 2001:db8::/32
+    if (/^64:ff9b:/.test(v6)) return true;                                 // NAT64 well-known prefix (embeds IPv4 space)
+    if (/^100::/.test(v6)) return true;                                    // discard-only 100::/64
+    return false;
+}
+
+async function assertResolvesToPublicHost(hostname: string): Promise<void> {
+    let addresses: string[];
+    try {
+        addresses = await resolveHostAddresses(hostname);
+    } catch {
+        throw new Error(`SSRF Protection: DNS resolution failed for host: ${hostname}`);
+    }
+    if (addresses.length === 0) {
+        throw new Error(`SSRF Protection: host did not resolve to any address: ${hostname}`);
+    }
+    for (const address of addresses) {
+        if (isPrivateResolvedAddress(address)) {
+            throw new Error(
+                `SSRF Protection: Blocked request to host resolving to a private/reserved address: ${hostname} (${address})`
+            );
+        }
+    }
+}
+
 export async function safeFetch(input: RequestInfo | URL, init?: RequestInit & { allowedUrls?: string[] }): Promise<Response> {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
 
@@ -134,17 +217,27 @@ export async function safeFetch(input: RequestInfo | URL, init?: RequestInit & {
         throw new Error(`SSRF Protection: Blocked request to disallowed URL: ${url}`);
     }
 
+    // DNS-resolution guard: hostname-string checks do not stop a
+    // caller-controlled DNS name that resolves into private/link-local
+    // space (internal services on the docker bridge, cloud metadata). This
+    // runs for every safeFetch caller, including the self-granted-allowlist
+    // shape used by testAiConfig (/api/ai/test-key) and stored BYOK/admin
+    // provider base URLs.
+    await assertResolvesToPublicHost(new URL(url).hostname);
+
     const response = await fetch(input, init);
 
-    if (!response.ok) {
-        return response;
-    }
-
+    // Redirect re-check. fetch follows redirects by default, so response.url
+    // is the final URL; this is now checked for every status (not just OK)
+    // so a non-OK body fetched from a disallowed redirect target cannot flow
+    // back to the caller either.
     const finalUrl = response.url;
-
-    if (finalUrl && finalUrl !== url && !validateUrl(finalUrl, init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS)) {
-        response.body?.cancel();
-        throw new Error(`SSRF Protection: Blocked redirect to disallowed URL: ${finalUrl}`);
+    if (finalUrl && finalUrl !== url) {
+        if (!validateUrl(finalUrl, init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS)) {
+            response.body?.cancel();
+            throw new Error(`SSRF Protection: Blocked redirect to disallowed URL: ${finalUrl}`);
+        }
+        await assertResolvesToPublicHost(new URL(finalUrl).hostname);
     }
 
     return response;
@@ -1047,6 +1140,20 @@ async function generateGoogleCompletion(
     return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
+/**
+ * Cap on fetched-target body text echoed back through testAiConfig's result
+ * (and thereby through /api/ai/test-key's response). The fetched endpoint is
+ * attacker-selected on that route, so its body must not be relayed unbounded.
+ */
+const ECHO_BODY_MAX_CHARS = 500;
+
+function boundEchoText(value: unknown): string | undefined {
+    if (typeof value !== 'string' || !value) return undefined;
+    return value.length > ECHO_BODY_MAX_CHARS
+        ? `${value.substring(0, ECHO_BODY_MAX_CHARS)}…[truncated]`
+        : value;
+}
+
 export async function testAiConfig(config: AiConfig): Promise<{ success: boolean; error?: string; model?: string }> {
     try {
         if (config.provider === 'google') {
@@ -1057,7 +1164,7 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
             });
             if (res.ok) return { success: true, model: config.model };
             const data = await res.json();
-            return { success: false, error: data.error?.message || 'Google API Error' };
+            return { success: false, error: boundEchoText(data.error?.message) || 'Google API Error' };
         }
         if (config.provider === 'anthropic') {
             const res = await safeFetch(`${config.baseUrl}/v1/messages`, {
@@ -1076,7 +1183,7 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
             });
             if (res.ok) return { success: true, model: config.model };
             const data = await res.json();
-            return { success: false, error: data.error?.message || 'Anthropic API Error' };
+            return { success: false, error: boundEchoText(data.error?.message) || 'Anthropic API Error' };
         }
 
         const chatResponse = await safeFetch(`${config.baseUrl}/chat/completions`, {
@@ -1098,9 +1205,10 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
         let errorMessage = `API returned ${chatResponse.status}`;
         try {
             const data = await chatResponse.json();
-            if (data.error?.message) errorMessage += `: ${data.error.message}`;
+            const message = boundEchoText(data.error?.message);
+            if (message) errorMessage += `: ${message}`;
         } catch {
-            const text = await chatResponse.text();
+            const text = boundEchoText((await chatResponse.text().catch(() => '')) ?? '');
             if (text) errorMessage += `: ${text}`;
         }
         return { success: false, error: errorMessage };

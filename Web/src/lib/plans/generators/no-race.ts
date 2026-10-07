@@ -33,9 +33,11 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
     }
     const maintainVolume = peakVolume;
 
-    const totalWeeks = config.weeksTotal ?? Math.max(8, Math.ceil(
+    // Defensive horizon clamp (same as the other generators): weeksTotal is
+    // caller-controlled, so a huge value must never drive the week loop.
+    const totalWeeks = Math.min(PLAN_CONSTANTS.MAX_TOTAL_WEEKS, config.weeksTotal ?? Math.max(8, Math.ceil(
         Math.log(peakVolume / startVolume) / Math.log(PLAN_CONSTANTS.WEEKLY_GROWTH_CAP)
-    ) + 4);
+    ) + 4));
 
     const paces = calculateTrainingPaces(vdot);
     const easyPace = Math.round((paces.easy.min + paces.easy.max) / 2);

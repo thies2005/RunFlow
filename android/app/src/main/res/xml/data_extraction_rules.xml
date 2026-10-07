@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Backup rules for Android 12+ (API 31+), referenced by
+     android:dataExtractionRules in the manifest. Deny-list style: only the
+     credential store is excluded, from BOTH cloud backup and device-to-device
+     transfer; regular app data (settings, Room activities database) keeps
+     backing up.
+
+     AuthStore (data/net/AuthStore.kt) persists the mobile access and refresh
+     JWTs in plaintext to files/datastore/runflow_auth.preferences_pb via
+     preferencesDataStore(name = "runflow_auth"). The refresh token is a
+     long-lived account credential — it must not leave the device through OS
+     backups or device-to-device transfer. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="datastore/runflow_auth.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="datastore/runflow_auth.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>

@@ -152,6 +152,26 @@ export async function checkRateLimitAsync(
     return checkRateLimitInMemory(key, limit, windowSeconds);
 }
 
+/**
+ * Clear the rate-limit state for an identifier (e.g. the failed-login counter
+ * for a client+email pair after a successful verification).
+ *
+ * Best effort: if the Redis delete fails the counter simply keeps its natural
+ * window expiry.
+ */
+export async function resetRateLimit(identifier: string, prefix = ''): Promise<void> {
+    const key = `ratelimit:${prefix}:${identifier}`;
+    rateLimitCache.delete(key);
+    try {
+        const client = await getRedisClient();
+        if (client) {
+            await client.del(key);
+        }
+    } catch {
+        // Best effort only - the window expires on its own.
+    }
+}
+
 export const RATE_LIMITS = {
     sync: { limit: 10, windowSeconds: 60, prefix: 'sync' },
     activities: { limit: 30, windowSeconds: 60, prefix: 'activities' },
@@ -160,27 +180,75 @@ export const RATE_LIMITS = {
     general: { limit: 60, windowSeconds: 60, prefix: 'general' },
 } as const;
 
+/**
+ * Extract a trustworthy client IP from a forwarded-for header.
+ *
+ * Proxies that we trust APPEND the address they received the request from to
+ * X-Forwarded-For, so the rightmost `trustedHops` entries were written by our
+ * own infrastructure while everything to the left of them is client-supplied
+ * and freely spoofable. The client's real IP therefore sits at
+ * `parts.length - trustedHops`.
+ *
+ * If the header carries fewer entries than the trusted hop count, it cannot
+ * have passed through the expected proxy chain and is not trusted at all.
+ * A hop count of 0 means "no trusted proxy" and disables the header entirely.
+ */
+function extractTrustedForwardedIp(forwardedFor: string | null, trustedHops: number): string | null {
+    if (trustedHops <= 0 || !forwardedFor) {
+        return null;
+    }
+    const parts = forwardedFor.split(',').map((s) => s.trim()).filter(Boolean);
+    if (parts.length < trustedHops) {
+        return null;
+    }
+    return parts[parts.length - trustedHops] || null;
+}
+
+function getTrustedProxyHops(): number {
+    const raw = process.env.TRUSTED_PROXY_HOPS;
+    if (raw === undefined || raw === '') {
+        // Default: one appending proxy in front of the app (the shipped
+        // deployment runs behind a single cloudflared tunnel hop).
+        return 1;
+    }
+    const parsed = parseInt(raw, 10);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+        return 1;
+    }
+    return parsed;
+}
+
 export function getClientIdentifier(request: Request): string {
     const headers = request.headers;
 
-    // Prefer x-vercel-forwarded-for (set by Vercel's proxy, harder to spoof)
-    const vercelForwardedFor = headers.get('x-vercel-forwarded-for');
-    const forwardedFor = headers.get('x-forwarded-for');
-    const realIp = headers.get('x-real-ip');
-    const userAgent = headers.get('user-agent') || 'unknown';
-
     let ipAddress: string | null = null;
 
-    if (vercelForwardedFor) {
-        // Vercel header is more trustworthy than generic x-forwarded-for
-        ipAddress = vercelForwardedFor.split(',')[0].trim();
-    } else if (forwardedFor) {
-        // NOTE: In production behind a reverse proxy, ensure your proxy is configured
-        // to overwrite (not append to) X-Forwarded-For from untrusted sources.
-        // Otherwise, clients can spoof this header to bypass rate limiting.
-        ipAddress = forwardedFor.split(',')[0].trim();
-    } else if (realIp) {
-        ipAddress = realIp.trim();
+    // 1. Explicitly trusted platform/proxy header (e.g. Cf-Connecting-Ip set
+    //    by Cloudflare/cloudflared). Only configure this when the app is not
+    //    reachable except through that proxy.
+    const trustedHeaderName = process.env.TRUSTED_CLIENT_IP_HEADER?.trim();
+    if (trustedHeaderName) {
+        ipAddress = headers.get(trustedHeaderName.toLowerCase())?.trim() || null;
+    }
+
+    // 2. x-vercel-forwarded-for is only meaningful on Vercel, where the edge
+    //    overwrites it. Everywhere else it is a plain client-settable header
+    //    and must be ignored.
+    if (!ipAddress && process.env.VERCEL) {
+        ipAddress = extractTrustedForwardedIp(headers.get('x-vercel-forwarded-for'), 1);
+    }
+
+    // 3. X-Forwarded-For: use the entry appended by our trusted proxies (see
+    //    extractTrustedForwardedIp). The FIRST entry is client-controlled and
+    //    must never be used for rate-limit identity.
+    if (!ipAddress) {
+        ipAddress = extractTrustedForwardedIp(headers.get('x-forwarded-for'), getTrustedProxyHops());
+    }
+
+    // 4. x-real-ip is only trustworthy when set by a trusted proxy (Vercel
+    //    sets it; otherwise configure TRUSTED_CLIENT_IP_HEADER=X-Real-Ip).
+    if (!ipAddress && process.env.VERCEL) {
+        ipAddress = headers.get('x-real-ip')?.trim() || null;
     }
 
     if (!ipAddress) {
@@ -189,11 +257,11 @@ export function getClientIdentifier(request: Request): string {
         ipAddress = sessionMatch ? sessionMatch[1] : 'anonymous';
     }
 
-    const identifierData = `${ipAddress}|${userAgent}`;
-
+    // Hash the IP alone. The User-Agent is client-controlled and previously
+    // let a single client split its own bucket by rotating the header.
     let hash = 2166136261;
-    for (let i = 0; i < identifierData.length; i++) {
-        hash ^= identifierData.charCodeAt(i);
+    for (let i = 0; i < ipAddress.length; i++) {
+        hash ^= ipAddress.charCodeAt(i);
         // FNV-1a prime step optimized for 32-bit JS bitwise operations
         hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
     }

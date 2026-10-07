@@ -4,12 +4,18 @@ import { generateTrainingPlan, type PlanConfig, type GeneratedWorkout } from '@/
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders, type RateLimitConfig } from '@/lib/rateLimit';
 import { adjustDefaultsForVdot, getRaceDefaults } from '@/lib/plans/defaults';
 import { RaceType } from '@/generated/prisma/browser';
+import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 
 const PUBLIC_PLAN_RATE_LIMIT: RateLimitConfig = {
     limit: 10,
     windowSeconds: 3600,
     prefix: 'public-plan',
 };
+
+// Training plans are at most ~2 years. Bound the accepted raceDate horizon so a
+// single request cannot drive an unbounded generation loop (the generators also
+// clamp totalWeeks defensively to PLAN_CONSTANTS.MAX_TOTAL_WEEKS).
+const MAX_PLAN_HORIZON_DAYS = 104 * 7;
 
 const FITNESS_VDOT_MAP: Record<string, number> = {
     beginner: 30,
@@ -138,7 +144,11 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const body = await request.json();
+        const rawBody = await readBodyWithLimit(request);
+        if (rawBody === null) {
+            return NextResponse.json({ error: 'Request body too large' }, { status: 413, headers });
+        }
+        const body = JSON.parse(rawBody);
         const parsed = planRequestSchema.safeParse(body);
 
         if (!parsed.success) {
@@ -163,6 +173,14 @@ export async function POST(request: NextRequest) {
         if (raceDateObj <= today) {
             return NextResponse.json(
                 { error: 'Race date must be in the future' },
+                { status: 400, headers }
+            );
+        }
+
+        const horizonDays = (raceDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+        if (horizonDays > MAX_PLAN_HORIZON_DAYS) {
+            return NextResponse.json(
+                { error: `Race date is too far in the future. Plans are limited to ${MAX_PLAN_HORIZON_DAYS / 7} weeks.` },
                 { status: 400, headers }
             );
         }

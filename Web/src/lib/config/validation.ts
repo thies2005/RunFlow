@@ -19,10 +19,10 @@ function containsForbiddenPattern(value: string): boolean {
 const REQUIRED_ENV_VARS = [
   'NEXTAUTH_SECRET',
   'DATABASE_URL',
+  'ENCRYPTION_KEY',
 ] as const
 
 const OPTIONAL_ENV_VARS = [
-  'ENCRYPTION_KEY',
   'JWT_SECRET',
   'STRAVA_CLIENT_SECRET',
 ] as const
@@ -30,7 +30,13 @@ const OPTIONAL_ENV_VARS = [
 const envVarSchema = z.object({
   NEXTAUTH_SECRET: z.string().min(32),
   DATABASE_URL: z.string().url(),
-  ENCRYPTION_KEY: z.string().min(32).optional(),
+  // Must actually decode to exactly 32 bytes (256 bits). A string-length
+  // check alone accepts values like the shipped .env.example placeholder,
+  // which decodes to 27 bytes and silently disables encryption at rest.
+  ENCRYPTION_KEY: z.string().refine(
+    (v) => Buffer.from(v, 'base64').length === 32,
+    'ENCRYPTION_KEY must be a base64 string decoding to exactly 32 bytes. Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"'
+  ),
   JWT_SECRET: z.string().min(32).optional(),
   STRAVA_CLIENT_SECRET: z.string().min(1).optional(),
 })
@@ -108,7 +114,7 @@ export function getValidatedEnv(): EnvVarSchema {
   return {
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET!,
     DATABASE_URL: process.env.DATABASE_URL!,
-    ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
+    ENCRYPTION_KEY: process.env.ENCRYPTION_KEY!,
     JWT_SECRET: process.env.JWT_SECRET,
     STRAVA_CLIENT_SECRET: process.env.STRAVA_CLIENT_SECRET,
   }

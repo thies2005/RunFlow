@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto-backup rules for Android 6–11 (API < 31), referenced by
+     android:fullBackupContent in the manifest. Deny-list style: only the
+     credential store is excluded, so regular app data (settings, Room
+     activities database) keeps backing up.
+
+     AuthStore (data/net/AuthStore.kt) persists the mobile access and refresh
+     JWTs in plaintext to files/datastore/runflow_auth.preferences_pb via
+     preferencesDataStore(name = "runflow_auth"). The refresh token is a
+     long-lived account credential — it must not leave the device through OS
+     backups or device-to-device transfer. -->
+<full-backup-content>
+    <exclude domain="file" path="datastore/runflow_auth.preferences_pb" />
+</full-backup-content>

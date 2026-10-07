@@ -3,6 +3,67 @@ import { prisma } from '@/lib/db';
 let fatsecretAccessToken: string | null = null;
 let tokenExpiryTime: number = 0;
 
+// Bounds for the query-keyed provider cache tables (OffFoodCache /
+// FatSecretFoodCache). These mirror the hygiene the web routes
+// (search-off / search-fs) already apply after their inline cache writes:
+// 90-day TTL pruning plus a hard row cap with oldest-first eviction, so
+// attacker-chosen distinct search strings cannot grow the shared tables
+// without bound.
+const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
+const MAX_CACHE_ROWS = 150_000;
+const MAX_QUERY_LENGTH = 100;
+
+/**
+ * Normalize and bound a caller-supplied search query before it is used as a
+ * persistent cache key or sent to a provider. Returns null when the query is
+ * unusable (empty/whitespace or longer than MAX_QUERY_LENGTH) — callers must
+ * then skip the provider fan-out and the cache write entirely, instead of
+ * minting an uncapped cache row from attacker-chosen input.
+ *
+ * Exported for unit tests.
+ */
+export function normalizeFoodSearchQuery(query: string): string | null {
+    if (typeof query !== 'string') return null;
+    if (query.length > MAX_QUERY_LENGTH) return null;
+    const normalized = query.trim().toLowerCase();
+    if (normalized.length === 0) return null;
+    return normalized;
+}
+
+/**
+ * Keep a query-keyed provider cache table bounded after a write: prune
+ * entries older than 90 days, then trim the table to MAX_CACHE_ROWS
+ * oldest-first. Best-effort — cache hygiene must never break the search
+ * path.
+ */
+async function boundCacheTable(
+    table: {
+        deleteMany(args: unknown): Promise<unknown>;
+        count(args?: unknown): Promise<number>;
+        findMany(args: unknown): Promise<Array<{ id: string }>>;
+    }
+): Promise<void> {
+    try {
+        await table.deleteMany({ where: { updatedAt: { lt: new Date(Date.now() - NINETY_DAYS_MS) } } });
+
+        const rowCount = await table.count();
+        if (rowCount > MAX_CACHE_ROWS) {
+            const overflow = rowCount - MAX_CACHE_ROWS;
+            const oldest = await table.findMany({
+                select: { id: true },
+                orderBy: { updatedAt: 'asc' },
+                take: overflow,
+            });
+            if (oldest.length > 0) {
+                await table.deleteMany({ where: { id: { in: oldest.map((row) => row.id) } } });
+            }
+        }
+    } catch {
+        // ignore cache hygiene errors
+    }
+}
+
+
 async function getFatSecretToken(): Promise<string | null> {
     const clientId = process.env.FATSECRET_CLIENT_ID;
     const clientSecret = process.env.FATSECRET_CLIENT_SECRET;
@@ -41,7 +102,8 @@ async function getFatSecretToken(): Promise<string | null> {
 }
 
 export async function searchOpenFoodFacts(query: string): Promise<Array<Record<string, unknown>>> {
-    const normalizedQuery = query.toLowerCase().trim();
+    const normalizedQuery = normalizeFoodSearchQuery(query);
+    if (!normalizedQuery) return [];
 
     try {
         const cacheEntry = await prisma.offFoodCache.findUnique({
@@ -50,7 +112,7 @@ export async function searchOpenFoodFacts(query: string): Promise<Array<Record<s
 
         if (cacheEntry) {
             const ageInMs = Date.now() - cacheEntry.updatedAt.getTime();
-            if (ageInMs < 90 * 24 * 60 * 60 * 1000) {
+            if (ageInMs < NINETY_DAYS_MS) {
                 return cacheEntry.results as unknown as Array<Record<string, unknown>>;
             }
         }
@@ -112,6 +174,9 @@ export async function searchOpenFoodFacts(query: string): Promise<Array<Record<s
                     update: { results: results as any, updatedAt: new Date() },
                     create: { query: normalizedQuery, results: results as any },
                 });
+                // Bound the shared cache table after every write so distinct
+                // attacker-chosen queries cannot grow it without bound.
+                await boundCacheTable(prisma.offFoodCache);
             } catch { /* ignore cache write errors */ }
         }
 
@@ -123,7 +188,8 @@ export async function searchOpenFoodFacts(query: string): Promise<Array<Record<s
 }
 
 export async function searchFatSecret(query: string): Promise<Array<Record<string, unknown>>> {
-    const normalizedQuery = query.toLowerCase().trim();
+    const normalizedQuery = normalizeFoodSearchQuery(query);
+    if (!normalizedQuery) return [];
 
     try {
         const cacheEntry = await prisma.fatSecretFoodCache.findUnique({
@@ -132,7 +198,7 @@ export async function searchFatSecret(query: string): Promise<Array<Record<strin
 
         if (cacheEntry) {
             const ageInMs = Date.now() - cacheEntry.updatedAt.getTime();
-            if (ageInMs < 90 * 24 * 60 * 60 * 1000) {
+            if (ageInMs < NINETY_DAYS_MS) {
                 return cacheEntry.results as unknown as Array<Record<string, unknown>>;
             }
         }
@@ -220,6 +286,9 @@ export async function searchFatSecret(query: string): Promise<Array<Record<strin
                     update: { results: mapped as any, updatedAt: new Date() },
                     create: { query: normalizedQuery, results: mapped as any },
                 });
+                // Bound the shared cache table after every write so distinct
+                // attacker-chosen queries cannot grow it without bound.
+                await boundCacheTable(prisma.fatSecretFoodCache);
             } catch { /* ignore cache write errors */ }
         }
 

@@ -72,6 +72,34 @@ describe('POST /api/auth/reset-password', () => {
         expect(prisma.user.update).toHaveBeenCalled();
     });
 
+    it('REGRESSION: bumps tokenVersion so outstanding WEB sessions are revoked too', async () => {
+        // The version bump is what invalidates mobile tokens AND, via the
+        // tokenVersion claim bound into the NextAuth session JWT and checked
+        // in the session callback, pre-reset web session cookies.
+        const mockRequest = new NextRequest('http://localhost:3000/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: 'test@example.com',
+                code: '123456',
+                password: 'NewValidPassword123!',
+            }),
+        });
+
+        const response = await POST(mockRequest);
+
+        expect(response.status).toBe(200);
+        expect(prisma.user.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                where: { email: 'test@example.com' },
+                data: expect.objectContaining({
+                    passwordHash: 'hashed-password',
+                    tokenVersion: { increment: 1 },
+                }),
+            })
+        );
+    });
+
     it('should require email', async () => {
         const mockRequest = new NextRequest('http://localhost:3000/api/auth/reset-password', {
             method: 'POST',

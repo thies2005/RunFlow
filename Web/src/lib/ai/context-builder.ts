@@ -4,7 +4,7 @@
 
 import { prisma } from '@/lib/db';
 import { DAY_MS } from '@/lib/constants';
-import { fenceUntrusted } from '@/lib/ai/prompts';
+import { fenceUntrusted, stripWidgetMarkers } from '@/lib/ai/prompts';
 
 export interface UserContext {
     // Basic info
@@ -384,10 +384,13 @@ export async function buildUserContext(userId: string): Promise<UserContext> {
 
 /**
  * Build context for a specific activity
+ *
+ * The activity is fetched with an owner scope: an activityId belonging to
+ * another user yields null (treated as absent) rather than leaking their data.
  */
-export async function buildActivityContext(activityId: string): Promise<ActivityContext | null> {
-    const activity = await prisma.activity.findUnique({
-        where: { id: activityId },
+export async function buildActivityContext(activityId: string, userId: string): Promise<ActivityContext | null> {
+    const activity = await prisma.activity.findFirst({
+        where: { id: activityId, userId },
     });
 
     if (!activity) return null;
@@ -587,7 +590,10 @@ export async function buildExtendedHistoryContext(userId: string): Promise<strin
         const time = Math.round(a.movingTime / 60);
         const hr = a.averageHr ? Math.round(a.averageHr) : '-';
         const elev = a.totalElevation ? Math.round(a.totalElevation) : '-';
-        lines.push(`${date}|${a.type}|${dist}|${time}|${hr}|${elev}|${a.name.substring(0, 20)}`);
+        // AI-H2: activity names are untrusted (Strava-synced); strip widget
+        // marker tokens BEFORE truncating so no marker (whole or re-formed)
+        // can ride into the model prompt through the history table.
+        lines.push(`${date}|${a.type}|${dist}|${time}|${hr}|${elev}|${stripWidgetMarkers(a.name).substring(0, 20)}`);
     });
 
     return `\n\n--- EXTENDED ACTIVITY HISTORY (Last ${activities.length}) ---\n${lines.join('\n')}`;

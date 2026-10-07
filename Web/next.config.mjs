@@ -12,7 +12,10 @@ const withPWAConfig = withPWA({
         document: "/~offline",
     },
     workboxOptions: {
-        importScripts: ["/push-sw.js"],
+        // sw-auth-guard.js evicts the auth-bound 'apis' runtime cache on
+        // RUNFLOW_EVICT_AUTH_CACHES messages and bypasses that cache for
+        // unauthenticated /api/ requests (cross-account replay guard).
+        importScripts: ["/push-sw.js", "/sw-auth-guard.js"],
         skipWaiting: true,
         clientsClaim: true,
         disableDevLogs: true,

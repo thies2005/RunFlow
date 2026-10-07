@@ -1,6 +1,21 @@
 import { adminRateLimit } from '../rateLimitAdmin';
 
 describe('Rate Limiting - Admin API', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    process.env = { ...originalEnv };
+    // Simulate the documented deployment with one trusted appending proxy in
+    // front of the app so distinct XFF entries map to distinct clients.
+    process.env.TRUSTED_PROXY_COUNT = '1';
+    delete process.env.TRUSTED_CLIENT_IP_HEADER;
+    delete process.env.REDIS_URL;
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
   describe('IP-based identification', () => {
     it('should identify client by x-forwarded-for header', async () => {
       const request = new Request('http://localhost', {
@@ -11,7 +26,7 @@ describe('Rate Limiting - Admin API', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should identify client by x-real-ip header', async () => {
+    it('should identify client by x-real-ip header behind a trusted proxy', async () => {
       const request = new Request('http://localhost', {
         headers: { 'x-real-ip': '5.6.7.8' },
       });
@@ -26,13 +41,22 @@ describe('Rate Limiting - Admin API', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should use first IP from x-forwarded-for chain', async () => {
-      const request = new Request('http://localhost', {
+    it('should use the LAST (proxy-appended) IP from an x-forwarded-for chain', async () => {
+      // With one trusted appending proxy, the rightmost entry is the client
+      // the proxy saw; the leftmost is client-supplied and spoofable.
+      const requestA = new Request('http://localhost', {
         headers: { 'x-forwarded-for': '1.2.3.4, 5.6.7.8' },
       });
+      const requestB = new Request('http://localhost', {
+        headers: { 'x-forwarded-for': '9.9.9.9, 5.6.7.8' },
+      });
 
-      const result = await adminRateLimit(request, 'read');
-      expect(result.success).toBe(true);
+      // Exhaust the sensitive limit (3/min) under the shared appended IP
+      await adminRateLimit(requestA, 'sensitive');
+      await adminRateLimit(requestA, 'sensitive');
+      await adminRateLimit(requestA, 'sensitive');
+      const result = await adminRateLimit(requestB, 'sensitive');
+      expect(result.success).toBe(false); // spoofed first entry does not mint a new bucket
     });
   });
 
@@ -175,6 +199,90 @@ describe('Rate Limiting - Admin API', () => {
       expect(blocked.success).toBe(false);
       expect(blocked.error).toBeDefined();
       expect(blocked.error?.headers.get('Retry-After')).toBeDefined();
+    });
+  });
+
+  describe('REGRESSION: XFF / x-real-ip spoofing must not bypass or frame', () => {
+    let nowSpy: jest.SpyInstance;
+    let clock = Date.now();
+
+    beforeEach(() => {
+      // Default deployment: no trusted proxy configured - forwarded headers
+      // are client-supplied and must be ignored entirely.
+      delete process.env.TRUSTED_PROXY_COUNT;
+      delete process.env.TRUSTED_CLIENT_IP_HEADER;
+      // Age out any shared 'unknown'-bucket state from earlier tests
+      // (rate windows are 60s, violation blocks 15min).
+      clock += 20 * 60 * 1000;
+      nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => clock);
+    });
+
+    afterEach(() => {
+      nowSpy.mockRestore();
+    });
+
+    it('rotating spoofed x-forwarded-for values shares one bucket (throttled, not bypassed)', async () => {
+      const results: boolean[] = [];
+      for (let i = 0; i < 6; i++) {
+        const request = new Request('http://localhost', {
+          headers: { 'x-forwarded-for': `198.51.100.${i}` },
+        });
+        results.push((await adminRateLimit(request, 'sensitive')).success);
+      }
+      // Sensitive limit is 3/min: the 4th spoofed rotation must be throttled
+      expect(results).toEqual([true, true, true, false, false, false]);
+    });
+
+    it('rotating spoofed x-real-ip values shares one bucket when no proxy is trusted', async () => {
+      const results: boolean[] = [];
+      for (let i = 0; i < 5; i++) {
+        const request = new Request('http://localhost', {
+          headers: { 'x-real-ip': `203.0.113.${i}` },
+        });
+        results.push((await adminRateLimit(request, 'sensitive')).success);
+      }
+      expect(results).toEqual([true, true, true, false, false]);
+    });
+
+    it('a spoofed first entry cannot frame a different appended client', async () => {
+      process.env.TRUSTED_PROXY_COUNT = '1';
+      const victimAppendedIp = '203.0.113.7';
+
+      // Attacker spoofs the victim's IP as the FIRST entry with their own
+      // appended entry: they must only consume their own bucket.
+      for (let i = 0; i < 3; i++) {
+        const attacker = new Request('http://localhost', {
+          headers: { 'x-forwarded-for': `${victimAppendedIp}, 198.51.100.250` },
+        });
+        expect((await adminRateLimit(attacker, 'sensitive')).success).toBe(true);
+      }
+      // Attacker exhausted their own bucket...
+      const attackerAgain = new Request('http://localhost', {
+        headers: { 'x-forwarded-for': `${victimAppendedIp}, 198.51.100.250` },
+      });
+      expect((await adminRateLimit(attackerAgain, 'sensitive')).success).toBe(false);
+
+      // ...while the victim's genuine requests are unaffected.
+      const victim = new Request('http://localhost', {
+        headers: { 'x-forwarded-for': `1.1.1.1, ${victimAppendedIp}` },
+      });
+      expect((await adminRateLimit(victim, 'sensitive')).success).toBe(true);
+    });
+
+    it('honors a configured TRUSTED_CLIENT_IP_HEADER over forwarded headers', async () => {
+      process.env.TRUSTED_CLIENT_IP_HEADER = 'Cf-Connecting-Ip';
+
+      const results: boolean[] = [];
+      for (let i = 0; i < 4; i++) {
+        const request = new Request('http://localhost', {
+          headers: {
+            'cf-connecting-ip': '198.51.100.77',
+            'x-forwarded-for': `spoofed-${i}`,
+          },
+        });
+        results.push((await adminRateLimit(request, 'sensitive')).success);
+      }
+      expect(results).toEqual([true, true, true, false]);
     });
   });
 });

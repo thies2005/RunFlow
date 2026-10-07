@@ -1,15 +1,86 @@
 name: OpenCode Agent
+
+# p4 remediation for `github/workflows/opencode.yml:ungated-issue-comment-agent-token`:
+#  - execution is gated on the COMMENTER being a repo collaborator/owner: the
+#    authorize job checks the payload author_association AND the GitHub API
+#    permission endpoint, and the agent job needs its success
+#  - GITHUB_TOKEN is scoped to the minimum the agent needs instead of falling
+#    back to repo/org defaults
+#  - the third-party action is pinned by full commit SHA
+#  - the dead `issues[opened]` trigger arm was removed (its gate read
+#    github.event.comment.body, which does not exist on issues events, so it
+#    could never fire)
 on:
   issue_comment:
     types: [created]
-  issues:
-    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+# Never run two agent sessions for the same comment at once.
+concurrency:
+  group: opencode-agent-${{ github.event.comment.id }}
+  cancel-in-progress: false
 
 jobs:
-  opencode:
-    if: contains(github.event.comment.body, '/opencode') || contains(github.event.comment.body, '/oc')
+  authorize:
+    if: >-
+      (contains(github.event.comment.body, '/opencode') || contains(github.event.comment.body, '/oc'))
+      && contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: ubuntu-latest
+    continue-on-error: false
+    # The gate job only queries the collaborator permission API — never give
+    # it the write scopes the agent job needs.
+    permissions:
+      contents: read
     steps:
-      - uses: opencode-ai/github-action@v1
+      - name: Verify the commenter is a repo collaborator or owner
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.event.comment.user.login }}
+        run: |
+          set -euo pipefail
+          # Authoritative check via the GitHub API: only admin/maintain/write
+          # collaborators may start the token-bearing agent.
+          if perm="$(gh api "repos/${REPO}/collaborators/${ACTOR}/permission" --jq .permission 2>/dev/null)"; then
+            case "${perm}" in
+              admin|maintain|write)
+                echo "::notice::${ACTOR} authorized to run the OpenCode agent (permission: ${perm})"
+                ;;
+              *)
+                echo "::error::Refusing to run the OpenCode agent: ${ACTOR} has '${perm}' access, collaborator/owner required"
+                exit 1
+                ;;
+            esac
+          else
+            # The permission API is unreachable or this token cannot query it;
+            # fall back to the association GitHub computed for this comment,
+            # already restricted to OWNER/MEMBER/COLLABORATOR by the job's if.
+            echo "::warning::collaborator permission API unavailable; relying on author_association"
+          fi
+
+  opencode:
+    needs: authorize
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Provider credential for the model below — configure as a repo secret
+      # (or change vars.OPENCODE_MODEL and pass the matching key).
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+
+      # The original opencode-ai/github-action repository no longer resolves
+      # (GitHub API 404, verified 2026-10-07), so this uses the maintained
+      # action published from the opencode monorepo, pinned by full commit SHA
+      # resolved via the GitHub API: tag github-v1.2.19 == tag latest ->
+      # 77fc88c8ade8e5a620ebbe1197f3a572d29ae91a
+      - uses: anomalyco/opencode/github@77fc88c8ade8e5a620ebbe1197f3a572d29ae91a
+        with:
+          model: ${{ vars.OPENCODE_MODEL || 'anthropic/claude-sonnet-4-5' }}
+          use_github_token: 'true'

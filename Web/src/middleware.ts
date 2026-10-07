@@ -46,6 +46,78 @@ const computeAllowedOrigins = (): string[] => {
 const ALLOWED_ORIGINS = computeAllowedOrigins();
 
 /**
+ * Pre-auth request-body size gate (p4: `missing-preauth-body-size-gate`).
+ *
+ * next@15 enforces no body-size limit on App Router route handlers (its only
+ * limits cover Server Actions and bodies cloned into middleware), so the
+ * anonymous intake surface (auth, webhooks, public plan generation/export,
+ * admin/mobile logins) previously buffered unbounded bodies before any
+ * authentication or signature check ran. This is the cheap header-only first
+ * line of defense: any mutating request to a pre-auth API path that DECLARES a
+ * Content-Length above the cap is rejected with 413 before the body is read.
+ * Absent/lying Content-Length headers and chunked transfers are bounded by the
+ * route-level `readBodyWithLimit` guard (src/lib/api/bodyLimit.ts) — this gate
+ * must never read or clone the request body itself.
+ */
+const PREAUTH_JSON_BODY_CAP_BYTES = 64 * 1024;
+// /api/public/plan/export posts the full generated plan back (up to the
+// 104-week horizon the generate route allows), which reaches a few hundred KB.
+const PUBLIC_API_BODY_CAP_BYTES = 2 * 1024 * 1024;
+const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const PREAUTH_JSON_PREFIXES = [
+    '/api/auth/',
+    '/api/webhooks/',
+    '/api/mobile/auth/',
+    '/api/mobile/v1/auth/',
+];
+const PREAUTH_JSON_EXACT_PATHS = new Set(['/api/admin/login']);
+
+function preAuthBodyCapFor(pathname: string): number | null {
+    if (PREAUTH_JSON_EXACT_PATHS.has(pathname)) {
+        return PREAUTH_JSON_BODY_CAP_BYTES;
+    }
+    for (const prefix of PREAUTH_JSON_PREFIXES) {
+        if (pathname.startsWith(prefix)) {
+            return PREAUTH_JSON_BODY_CAP_BYTES;
+        }
+    }
+    if (pathname.startsWith('/api/public/')) {
+        return PUBLIC_API_BODY_CAP_BYTES;
+    }
+    return null;
+}
+
+function enforcePreAuthBodyCap(request: NextRequest): NextResponse | null {
+    if (!MUTATING_METHODS.has(request.method)) {
+        return null;
+    }
+    const pathname = request.nextUrl.pathname;
+    if (!pathname.startsWith('/api/')) {
+        return null;
+    }
+    const cap = preAuthBodyCapFor(pathname);
+    if (cap === null) {
+        return null;
+    }
+    const declaredLength = request.headers.get('content-length');
+    if (declaredLength === null) {
+        // No declared size (e.g. chunked): the route-level bounded read enforces.
+        return null;
+    }
+    const length = Number(declaredLength);
+    if (Number.isFinite(length) && length > cap) {
+        return new NextResponse(
+            JSON.stringify({ error: 'Payload too large' }),
+            {
+                status: 413,
+                headers: { 'content-type': 'application/json' },
+            },
+        );
+    }
+    return null;
+}
+
+/**
  * Handle CORS for API routes
  */
 function handleCors(request: NextRequest): NextResponse | null {
@@ -102,6 +174,13 @@ function addCorsHeaders(response: NextResponse, request: NextRequest): NextRespo
 
 // Middleware function that handles CORS, CSP, logging, and rewrites
 export async function middleware(request: NextRequest) {
+    // Cheap pre-auth body-size gate first: reject oversized anonymous API
+    // bodies on the declared Content-Length before anything else runs.
+    const bodyCapResponse = enforcePreAuthBodyCap(request);
+    if (bodyCapResponse) {
+        return bodyCapResponse;
+    }
+
     // Handle CORS first
     const corsResponse = handleCors(request);
     if (corsResponse) {
@@ -212,8 +291,6 @@ export const config = {
     matcher: [
         /*
          * Match all request paths except for the ones starting with:
-         * - api/auth (auth endpoints)
-         * - api/webhooks (webhook endpoints)
          * - login (login page)
          * - register (register page)
          * - _next/static (static files)
@@ -227,7 +304,14 @@ export const config = {
          * - api/health (health check endpoints — must be lightweight)
          * - api/monitoring (monitoring endpoints)
          * - .well-known (Android App Links / iOS Universal Links)
+         *
+         * api/auth and api/webhooks are deliberately NOT excluded anymore so
+         * the pre-auth body-size gate above can cover the anonymous intake
+         * surface (auth + webhook bodies are small JSON; the CORS origin block
+         * and the self-tracking call below already skip these prefixes, so the
+         * only new middleware behavior for them is the 413 gate, CSP headers
+         * and request logging).
          */
-        '/((?!api/auth|api/webhooks|api/health|api/monitoring|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker|workbox|.well-known).*)',
+        '/((?!api/health|api/monitoring|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker|workbox|.well-known).*)',
     ],
 }

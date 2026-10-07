@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
 import { upsertDailyHealthLog } from '@/lib/health/dailyHealth';
 import { parseUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
+import { healthDataConsentWithdrawn, HEALTH_DATA_WITHDRAWN_MESSAGE } from '@/lib/health/consent-gate';
 
 export async function GET(_request: Request) {
     try {
@@ -37,8 +38,17 @@ export async function POST(request: Request) {
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        
+
         const userId = session.user.id;
+
+        // Re-ingestion gate for withdrawn HEALTH_DATA consent (p3:
+        // HEALTH_DATA_WITHDRAWN_INCOMPLETE_CASCADE): withdrawal deletes the
+        // user's body measurements, so silently re-upserting them must be
+        // refused.
+        if (await healthDataConsentWithdrawn(userId)) {
+            return NextResponse.json({ error: HEALTH_DATA_WITHDRAWN_MESSAGE }, { status: 400 });
+        }
+
         const body = await request.json();
         const { dateStr, weight, bodyFat, muscleMass, chest, waist, hips, arms, thighs } = body;
 

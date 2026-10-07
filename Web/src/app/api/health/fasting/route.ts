@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
+import { healthDataConsentWithdrawn, HEALTH_DATA_WITHDRAWN_MESSAGE } from '@/lib/health/consent-gate';
 
 export async function GET() {
     try {
@@ -49,6 +50,14 @@ export async function POST(request: Request) {
         }
         
         const userId = session.user.id;
+
+        // Re-ingestion gate for withdrawn HEALTH_DATA consent (p3:
+        // HEALTH_DATA_WITHDRAWN_INCOMPLETE_CASCADE): withdrawal deletes the
+        // user's health rows, so silently creating new ones must be refused.
+        if (await healthDataConsentWithdrawn(userId)) {
+            return NextResponse.json({ error: HEALTH_DATA_WITHDRAWN_MESSAGE }, { status: 400 });
+        }
+
         const body = await request.json();
         const { action } = body; // 'start', 'end', or 'cancel'
 

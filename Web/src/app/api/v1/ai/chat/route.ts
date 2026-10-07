@@ -8,7 +8,8 @@ import {
     buildActivityContext,
     formatContextForAi,
     buildSystemPrompt,
-    checkUsageLimit,
+    reserveUsageSlot,
+    releaseUsageReservation,
     incrementUsage,
     buildExtendedHistoryContext,
     generateCompletion,
@@ -19,9 +20,12 @@ import type { ChatMessage } from '@/lib/ai';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
 import { setApiVersionHeaders } from '@/lib/api/version';
 import { logger } from '@/lib/logging/logger';
+import { fenceUntrusted } from '@/lib/ai/prompts';
 
 interface UserAiSettingsAccess {
     accessAllActivities?: boolean;
+    accessActivityHistory?: boolean;
+    accessActivityLogs?: boolean;
 }
 
 export const dynamic = 'force-dynamic';
@@ -116,6 +120,10 @@ export async function POST(request: NextRequest) {
         const encoder = new TextEncoder();
         let fullResponse = '';
         let heartbeat: NodeJS.Timeout | undefined;
+        // Set when reserveUsageSlot() actually claimed a tier quota unit; the
+        // stream error path refunds it and the settle call skips re-counting
+        // the message.
+        let usageReserved = false;
 
         const readableStream = new ReadableStream({
             async start(controller) {
@@ -137,8 +145,14 @@ export async function POST(request: NextRequest) {
                     const config = await getAiConfig(userId);
                     if (!config) throw new Error('AI features not enabled. Add your own API key or contact admin.');
 
-                    const usageStatus = await checkUsageLimit(userId);
-                    if (!usageStatus.canUse) throw new Error(usageStatus.reason);
+                    // Reserve one message slot atomically BEFORE any provider
+                    // work. The previous read-only checkUsageLimit was settled
+                    // only after the stream completed, so concurrent in-flight
+                    // requests were all admitted against the same stale counter
+                    // snapshot and overshot the daily/monthly caps.
+                    const reservation = await reserveUsageSlot(userId);
+                    if (!reservation.allowed) throw new Error(reservation.reason || 'Usage limit reached');
+                    usageReserved = reservation.claimed;
 
                     const [globalSettings, userSettings] = await Promise.all([
                         prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
@@ -157,11 +171,14 @@ export async function POST(request: NextRequest) {
                         }
                     }
 
-                    if (activityId) {
-                        const activityContext = await buildActivityContext(activityId);
+                    // Activity context — gated by the same activity consent flags as the
+                    // other context categories, and scoped to the requesting user so a
+                    // foreign activityId yields no context.
+                    if (activityId && (settingsAccess?.accessActivityHistory || settingsAccess?.accessActivityLogs)) {
+                        const activityContext = await buildActivityContext(activityId, userId);
                         if (activityContext) {
                             contextString += `\n\n--- Current Activity ---\n`;
-                            contextString += `Activity: ${activityContext.activity.name} on ${activityContext.activity.date}\n`;
+                            contextString += `Activity: ${fenceUntrusted(activityContext.activity.name)} on ${activityContext.activity.date}\n`;
                             contextString += `Type: ${activityContext.activity.type}\n`;
                             contextString += `Distance: ${(activityContext.activity.distance / 1000).toFixed(2)}km\n`;
                             contextString += `Duration: ${Math.floor(activityContext.activity.duration / 60)}:${(activityContext.activity.duration % 60).toString().padStart(2, '0')}\n`;
@@ -169,7 +186,7 @@ export async function POST(request: NextRequest) {
                             if (activityContext.activity.avgHr) contextString += `Avg HR: ${activityContext.activity.avgHr.toFixed(0)} bpm\n`;
                             if (activityContext.activity.elevationGain) contextString += `Elevation: +${activityContext.activity.elevationGain.toFixed(0)}m\n`;
                             if (activityContext.plannedWorkout) {
-                                contextString += `\nPlanned workout: ${activityContext.plannedWorkout.type} - ${activityContext.plannedWorkout.description}\n`;
+                                contextString += `\nPlanned workout: ${activityContext.plannedWorkout.type} - ${fenceUntrusted(activityContext.plannedWorkout.description)}\n`;
                             }
                         }
                     }
@@ -214,7 +231,10 @@ export async function POST(request: NextRequest) {
                         });
 
                         const outputTokens = countTokens(fullResponse, config.model);
-                        await incrementUsage(userId, { inputTokens, outputTokens }, config.providerId);
+                        // The message counters were already advanced atomically by
+                        // reserveUsageSlot() when a tier slot was claimed; settle
+                        // only the token deltas so the message counts exactly once.
+                        await incrementUsage(userId, { inputTokens, outputTokens }, config.providerId, { messagesAlreadyCounted: usageReserved });
                     } catch (dbError) {
                         logger.error('[DB ERROR] Failed to save AI response or update usage', { error: dbError });
                     } finally {
@@ -223,6 +243,17 @@ export async function POST(request: NextRequest) {
                 } catch (error) {
                     logger.error('[STREAM ERROR]', { sessionId, error });
                     clearInterval(heartbeat);
+
+                    // Refund the reserved quota slot: nothing was delivered.
+                    if (usageReserved) {
+                        usageReserved = false;
+                        try {
+                            await releaseUsageReservation(userId);
+                        } catch (refundError) {
+                            logger.warn('Failed to release usage reservation', { sessionId, error: refundError });
+                        }
+                    }
+
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
                     controller.close();
                 }

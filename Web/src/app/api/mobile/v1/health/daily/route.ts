@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { handleError } from '@/lib/errors/handler';
 import { upsertDailyHealthLog, type DailyHealthWeightSource } from '@/lib/health/dailyHealth';
 import { parseUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
+import { healthDataConsentWithdrawn, HEALTH_DATA_WITHDRAWN_MESSAGE } from '@/lib/health/consent-gate';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses } from '@/lib/api/apiResponse';
 
@@ -157,6 +158,13 @@ export async function POST(request: NextRequest) {
         }
 
         const userId = authUser.id;
+
+        // Re-ingestion gate for withdrawn HEALTH_DATA consent (p3:
+        // HEALTH_DATA_WITHDRAWN_INCOMPLETE_CASCADE): withdrawal deletes the
+        // user's health rows, so silently re-upserting them must be refused.
+        if (await healthDataConsentWithdrawn(userId)) {
+            return errorResponses.badRequest(HEALTH_DATA_WITHDRAWN_MESSAGE);
+        }
 
         const body = await request.json();
         const { date: dateStr, action } = body;

@@ -139,7 +139,7 @@ fun ActivitiesScreen(
                                     Text(a.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text(
                                         "${Format.distance(a.distanceKm, unit)} · ${Format.duration(a.movingTimeSec)} · ${
-                                            Format.paceLabelFor(a.type, a.paceSecPerKm, unit) ?: "—"
+                                            Format.activityPaceLabel(a.type, a.paceSecPerKm, unit) ?: "—"
                                         }",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -123,20 +123,61 @@ object Format {
 
     fun isRideType(type: String?): Boolean = type in RIDE_TYPES
 
+    private fun swimUnitLabel(unit: DistanceUnit): String =
+        if (unit == DistanceUnit.METRIC) "/100m" else "/100yd"
+
     /**
-     * Sport-aware pace label for a raw workout/activity type string:
-     *  - swim types: value is seconds per 100m → "1:45 /100m"
-     *  - ride types: value is seconds per km → speed, "31.4 km/h"
-     *  - anything else (runs) → "5:12 /km" (or "/mi")
-     * Returns null when there is no usable pace (hidden chip).
+     * Sport-aware pace label for PLAN/workout targets. Careful — the two pace
+     * families store swims differently:
+     *  - plan targets ([paceLabelFor]): swim values are ALREADY seconds per
+     *    100m (web engine convention) → formatted as-is;
+     *  - activity rows ([activityPaceLabel]): pace is seconds per KILOMETRE
+     *    for every sport → converted here.
+     * Ride targets are sec/km in both families → speed, "31.4 km/h"; runs
+     * → "5:12 /km" (or "/mi"). Returns null when there is no usable pace.
      */
     fun paceLabelFor(type: String?, paceSecPerKm: Double?, unit: DistanceUnit = DistanceUnit.METRIC): String? {
         if (paceSecPerKm == null || !paceSecPerKm.isFinite() || paceSecPerKm <= 0.0) return null
         return when (type) {
-            in SWIM_TYPES -> "${pace(paceSecPerKm)} /100m"
+            in SWIM_TYPES -> {
+                val secPer100 = if (unit == DistanceUnit.METRIC) paceSecPerKm else paceSecPerKm * 1.09361
+                "${pace(secPer100)} ${swimUnitLabel(unit)}"
+            }
             in RIDE_TYPES -> "${speedKmh(paceSecPerKm)} km/h"
             else -> paceWithUnit(paceSecPerKm, unit)
         }
+    }
+
+    /**
+     * Sport-aware pace label for ACTIVITY rows: [ActivityEntity.paceSecPerKm]
+     * is seconds per kilometre for every sport, so a 1:52/100m swim arrives
+     * as 1120 s/km and must be converted — otherwise it displays as an
+     * absurd "18:40 /100m" that reads ten times slower than reality.
+     */
+    fun activityPaceLabel(type: String?, paceSecPerKm: Double?, unit: DistanceUnit = DistanceUnit.METRIC): String? {
+        if (paceSecPerKm == null || !paceSecPerKm.isFinite() || paceSecPerKm <= 0.0) return null
+        return when (type) {
+            in SWIM_TYPES -> {
+                val secPer100 = when (unit) {
+                    DistanceUnit.METRIC -> paceSecPerKm / 10.0        // 100m is a tenth of a km
+                    DistanceUnit.IMPERIAL -> paceSecPerKm * 0.09144   // 100yd = 91.44m
+                }
+                "${pace(secPer100)} ${swimUnitLabel(unit)}"
+            }
+            in RIDE_TYPES -> "${speedKmh(paceSecPerKm)} km/h"
+            else -> paceWithUnit(paceSecPerKm, unit)
+        }
+    }
+
+    /** Lowercase sport noun for about/chat wording: "run", "ride", "swim"… */
+    fun activityNoun(type: String?): String = when (type?.uppercase()) {
+        "RUN" -> "run"
+        "RIDE", "VIRTUAL_RIDE" -> "ride"
+        "SWIM" -> "swim"
+        "WALK" -> "walk"
+        "HIKE" -> "hike"
+        "WORKOUT", "STRENGTH" -> "workout"
+        else -> "activity"
     }
 
     fun heartRate(hr: Double?): String =

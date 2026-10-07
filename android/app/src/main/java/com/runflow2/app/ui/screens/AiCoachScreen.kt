@@ -73,28 +73,32 @@ fun AiCoachScreen(
     var loadError by remember { mutableStateOf<String?>(null) }
     var input by remember { mutableStateOf("") }
 
-    // Activity thread target: the SERVER id the chat API understands, plus
-    // the display name. Null when the row is local-only (no server context).
-    var chatActivity by remember { mutableStateOf<Pair<String, String>?>(null) }
+    // Activity thread target: the SERVER id the chat API understands, the
+    // display name, and the sport noun for wording ("run"/"ride"/"swim"…).
+    // Null when the row is local-only (no server context); the noun is kept
+    // separately so the unsynced hint can still say "this swim".
+    var chatActivity by remember { mutableStateOf<ChatTarget?>(null) }
+    var activityNoun by remember { mutableStateOf("activity") }
     LaunchedEffect(activityId) {
-        chatActivity = activityId?.let { localId ->
-            container.repository.activity(localId)
-                ?.takeIf { it.serverId != null }
-                ?.let { it.serverId!! to it.name }
-        }
+        if (activityId == null) return@LaunchedEffect
+        val a = container.repository.activity(activityId)
+        activityNoun = com.runflow2.app.core.util.Format.activityNoun(a?.type)
+        chatActivity = a
+            ?.takeIf { it.serverId != null }
+            ?.let { ChatTarget(it.serverId!!, it.name, activityNoun) }
     }
 
     val listState = rememberLazyListState()
 
     // Resolve / create the chat session and refresh history when opening.
-    LaunchedEffect(auth.loggedIn, chatActivity?.first) {
+    LaunchedEffect(auth.loggedIn, chatActivity?.serverId) {
         if (auth.loggedIn) {
             loadError = null
             val target = chatActivity
             try {
                 val id = if (target != null) {
-                    container.aiCoach.ensureActivitySession(target.first).also {
-                        container.aiCoach.loadHistoryForActivity(target.first)
+                    container.aiCoach.ensureActivitySession(target.serverId).also {
+                        container.aiCoach.loadHistoryForActivity(target.serverId)
                     }
                 } else {
                     container.aiCoach.ensureSession().also {
@@ -121,7 +125,7 @@ fun AiCoachScreen(
             TopAppBar(
                 title = {
                     Text(
-                        chatActivity?.second?.let { "Coach · $it" } ?: "AI Coach",
+                        chatActivity?.name?.let { "Coach · $it" } ?: "AI Coach",
                         maxLines = 1,
                     )
                 },
@@ -161,7 +165,7 @@ fun AiCoachScreen(
 
         val target = chatActivity
         val messages = if (target != null) {
-            container.aiCoach.observeMessagesForActivity(target.first)
+            container.aiCoach.observeMessagesForActivity(target.serverId)
                 .collectAsState(initial = emptyList()).value
         } else {
             sessionId
@@ -192,7 +196,7 @@ fun AiCoachScreen(
                             .padding(horizontal = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("This run hasn't synced yet", style = MaterialTheme.typography.titleMedium)
+                        Text("This $activityNoun hasn't synced yet", style = MaterialTheme.typography.titleMedium)
                         Text(
                             "Once the activity reaches your account you can discuss it here.",
                             style = MaterialTheme.typography.bodyMedium,
@@ -205,7 +209,7 @@ fun AiCoachScreen(
                             .padding(horizontal = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        EmptyConversation(offlineNote = loadError != null, aboutActivity = target != null)
+                        EmptyConversation(offlineNote = loadError != null, aboutNoun = target?.noun)
                         val err = error ?: loadError
                         if (err != null) {
                             Text(
@@ -249,7 +253,7 @@ fun AiCoachScreen(
                         value = input,
                         onValueChange = { input = it },
                         placeholder = {
-                            Text(if (target != null) "Ask about this run…" else "Ask your coach…")
+                            Text("Ask about this ${target?.noun ?: "training"}…")
                         },
                         modifier = Modifier.weight(1f),
                         maxLines = 4,
@@ -260,7 +264,7 @@ fun AiCoachScreen(
                     IconButton(
                         onClick = {
                             val id = sessionId ?: return@IconButton
-                            container.aiCoach.send(id, input, target?.first)
+                            container.aiCoach.send(id, input, target?.serverId)
                             input = ""
                         },
                         enabled = !streaming && input.isNotBlank() && sessionId != null,
@@ -325,20 +329,21 @@ private fun MessageBubble(m: ChatMessageEntity) {
 }
 
 @Composable
-private fun EmptyConversation(modifier: Modifier = Modifier, offlineNote: Boolean, aboutActivity: Boolean = false) {
+private fun EmptyConversation(modifier: Modifier = Modifier, offlineNote: Boolean, aboutNoun: String? = null) {
     Column(
         modifier.padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
-            if (aboutActivity) "Ask about this run" else "Ask anything about your training",
+            if (aboutNoun != null) "Ask about this $aboutNoun" else "Ask anything about your training",
             style = MaterialTheme.typography.titleMedium,
         )
         Text(
             when {
                 offlineNote -> "Offline — your conversation will load once you're connected again."
-                aboutActivity -> "Pacing, effort, how it fit the plan — the coach sees this run's full data."
+                aboutNoun != null ->
+                    "Pacing, effort, how it fit the plan — the coach sees this $aboutNoun's full data."
                 else -> "Race strategy, pacing, recovery, plan tweaks — your coach knows your training data."
             },
             style = MaterialTheme.typography.bodyMedium,
@@ -365,6 +370,9 @@ private fun SignInPlaceholder(onLogin: () -> Unit) {
         androidx.compose.material3.Button(onClick = onLogin) { Text("Sign in") }
     }
 }
+
+/** Activity-thread target resolved from the local row (see [AiCoachScreen]). */
+private data class ChatTarget(val serverId: String, val name: String, val noun: String)
 
 /** Best-effort offline fallback: reuse the last session id from settings. */
 private suspend fun tryOfflineSession(container: AppContainer): String? =

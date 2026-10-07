@@ -469,7 +469,9 @@ fun DashboardScreen(
                                     maxLines = 1,
                                 )
                                 Text(
-                                    "${Format.distance(a.distanceKm, unit)} · ${Format.duration(a.movingTimeSec)} · ${Format.paceWithUnit(a.paceSecPerKm, unit)}",
+                                    "${Format.distance(a.distanceKm, unit)} · ${Format.duration(a.movingTimeSec)} · ${
+                                        Format.activityPaceLabel(a.type, a.paceSecPerKm, unit) ?: "—"
+                                    }",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )

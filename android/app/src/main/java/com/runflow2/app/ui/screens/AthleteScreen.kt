@@ -265,7 +265,9 @@ fun AthleteScreen(
                                 Column(Modifier.weight(1f)) {
                                     Text(latest.name, style = MaterialTheme.typography.titleSmall)
                                     Text(
-                                        "${Format.distance(latest.distanceKm, unit)} · ${Format.duration(latest.movingTimeSec)} · ${Format.paceWithUnit(latest.paceSecPerKm, unit)}",
+                                        "${Format.distance(latest.distanceKm, unit)} · ${Format.duration(latest.movingTimeSec)} · ${
+                                            Format.activityPaceLabel(latest.type, latest.paceSecPerKm, unit) ?: "—"
+                                        }",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )

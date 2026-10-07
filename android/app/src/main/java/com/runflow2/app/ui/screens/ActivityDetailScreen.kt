@@ -191,8 +191,12 @@ fun ActivityDetailScreen(
                         ) {
                             StatTile("Time", Format.duration(a.movingTimeSec), Icons.Outlined.Timer)
                             StatTile(
-                                if (Format.isRideType(a.type)) "Speed" else "Pace",
-                                Format.paceLabelFor(a.type, a.paceSecPerKm, u) ?: "—",
+                                when {
+                                    Format.isRideType(a.type) -> "Speed"
+                                    Format.isSwimType(a.type) -> "Pace /100m"
+                                    else -> "Pace"
+                                },
+                                Format.activityPaceLabel(a.type, a.paceSecPerKm, u) ?: "—",
                                 Icons.Outlined.Speed,
                                 accent = MaterialTheme.colorScheme.primary,
                             )
@@ -235,7 +239,7 @@ fun ActivityDetailScreen(
                             is RunFlowRepository.AiFeedbackResult.None -> AiUiState.Missing
                         }
                     }
-                }, onDiscuss = { onDiscuss(a.id) }) }
+                }, onDiscuss = { onDiscuss(a.id) }, discussLabel = "Discuss this ${Format.activityNoun(a.type)}") }
             }
 
             // analysis charts (HR / pace / GAP / elevation)
@@ -309,8 +313,12 @@ fun ActivityDetailScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Text(
-                            if (Format.isRideType(a.type)) "${Format.speedKmh(lap.third)} km/h"
-                            else Format.paceWithUnit(lap.third, u),
+                            when {
+                                Format.isRideType(a.type) -> "${Format.speedKmh(lap.third)} km/h"
+                                // lap paces are sec/km like every activity row
+                                Format.isSwimType(a.type) -> Format.activityPaceLabel("SWIM", lap.third, u) ?: "—"
+                                else -> Format.paceWithUnit(lap.third, u)
+                            },
                             Modifier.padding(start = 16.dp),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
@@ -403,6 +411,7 @@ private fun AiOverviewCard(
     onGenerate: (Boolean) -> Unit,
     onReload: () -> Unit,
     onDiscuss: () -> Unit = {},
+    discussLabel: String = "Discuss this activity",
 ) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -477,7 +486,7 @@ private fun AiOverviewCard(
                     TextButton(onClick = onDiscuss) {
                         Icon(Icons.AutoMirrored.Outlined.Chat, contentDescription = null, Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Discuss this run")
+                        Text(discussLabel)
                     }
                 }
             }

@@ -1054,6 +1054,7 @@ export const DailyReadinessRecordScalarFieldEnum = {
   sleepJson: 'sleepJson',
   loadJson: 'loadJson',
   subjectiveJson: 'subjectiveJson',
+  hrvJson: 'hrvJson',
   overrideJson: 'overrideJson',
   computedAt: 'computedAt',
   syncedAt: 'syncedAt',

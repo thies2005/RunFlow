@@ -81,6 +81,7 @@ export type DailyReadinessRecordCountAggregateOutputType = {
   sleepJson: number
   loadJson: number
   subjectiveJson: number
+  hrvJson: number
   overrideJson: number
   computedAt: number
   syncedAt: number
@@ -147,6 +148,7 @@ export type DailyReadinessRecordCountAggregateInputType = {
   sleepJson?: true
   loadJson?: true
   subjectiveJson?: true
+  hrvJson?: true
   overrideJson?: true
   computedAt?: true
   syncedAt?: true
@@ -256,6 +258,7 @@ export type DailyReadinessRecordGroupByOutputType = {
   sleepJson: runtime.JsonValue | null
   loadJson: runtime.JsonValue | null
   subjectiveJson: runtime.JsonValue | null
+  hrvJson: runtime.JsonValue | null
   overrideJson: runtime.JsonValue | null
   computedAt: Date | null
   syncedAt: Date | null
@@ -301,6 +304,7 @@ export type DailyReadinessRecordWhereInput = {
   sleepJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   loadJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   subjectiveJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
+  hrvJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   overrideJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   computedAt?: Prisma.DateTimeNullableFilter<"DailyReadinessRecord"> | Date | string | null
   syncedAt?: Prisma.DateTimeNullableFilter<"DailyReadinessRecord"> | Date | string | null
@@ -324,6 +328,7 @@ export type DailyReadinessRecordOrderByWithRelationInput = {
   sleepJson?: Prisma.SortOrderInput | Prisma.SortOrder
   loadJson?: Prisma.SortOrderInput | Prisma.SortOrder
   subjectiveJson?: Prisma.SortOrderInput | Prisma.SortOrder
+  hrvJson?: Prisma.SortOrderInput | Prisma.SortOrder
   overrideJson?: Prisma.SortOrderInput | Prisma.SortOrder
   computedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   syncedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -351,6 +356,7 @@ export type DailyReadinessRecordWhereUniqueInput = Prisma.AtLeast<{
   sleepJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   loadJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   subjectiveJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
+  hrvJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   overrideJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   computedAt?: Prisma.DateTimeNullableFilter<"DailyReadinessRecord"> | Date | string | null
   syncedAt?: Prisma.DateTimeNullableFilter<"DailyReadinessRecord"> | Date | string | null
@@ -374,6 +380,7 @@ export type DailyReadinessRecordOrderByWithAggregationInput = {
   sleepJson?: Prisma.SortOrderInput | Prisma.SortOrder
   loadJson?: Prisma.SortOrderInput | Prisma.SortOrder
   subjectiveJson?: Prisma.SortOrderInput | Prisma.SortOrder
+  hrvJson?: Prisma.SortOrderInput | Prisma.SortOrder
   overrideJson?: Prisma.SortOrderInput | Prisma.SortOrder
   computedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   syncedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -404,6 +411,7 @@ export type DailyReadinessRecordScalarWhereWithAggregatesInput = {
   sleepJson?: Prisma.JsonNullableWithAggregatesFilter<"DailyReadinessRecord">
   loadJson?: Prisma.JsonNullableWithAggregatesFilter<"DailyReadinessRecord">
   subjectiveJson?: Prisma.JsonNullableWithAggregatesFilter<"DailyReadinessRecord">
+  hrvJson?: Prisma.JsonNullableWithAggregatesFilter<"DailyReadinessRecord">
   overrideJson?: Prisma.JsonNullableWithAggregatesFilter<"DailyReadinessRecord">
   computedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"DailyReadinessRecord"> | Date | string | null
   syncedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"DailyReadinessRecord"> | Date | string | null
@@ -425,6 +433,7 @@ export type DailyReadinessRecordCreateInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Date | string | null
   syncedAt?: Date | string | null
@@ -448,6 +457,7 @@ export type DailyReadinessRecordUncheckedCreateInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Date | string | null
   syncedAt?: Date | string | null
@@ -469,6 +479,7 @@ export type DailyReadinessRecordUpdateInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -492,6 +503,7 @@ export type DailyReadinessRecordUncheckedUpdateInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -514,6 +526,7 @@ export type DailyReadinessRecordCreateManyInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Date | string | null
   syncedAt?: Date | string | null
@@ -535,6 +548,7 @@ export type DailyReadinessRecordUpdateManyMutationInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -557,6 +571,7 @@ export type DailyReadinessRecordUncheckedUpdateManyInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -594,6 +609,7 @@ export type DailyReadinessRecordCountOrderByAggregateInput = {
   sleepJson?: Prisma.SortOrder
   loadJson?: Prisma.SortOrder
   subjectiveJson?: Prisma.SortOrder
+  hrvJson?: Prisma.SortOrder
   overrideJson?: Prisma.SortOrder
   computedAt?: Prisma.SortOrder
   syncedAt?: Prisma.SortOrder
@@ -699,6 +715,7 @@ export type DailyReadinessRecordCreateWithoutUserInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Date | string | null
   syncedAt?: Date | string | null
@@ -720,6 +737,7 @@ export type DailyReadinessRecordUncheckedCreateWithoutUserInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Date | string | null
   syncedAt?: Date | string | null
@@ -771,6 +789,7 @@ export type DailyReadinessRecordScalarWhereInput = {
   sleepJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   loadJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   subjectiveJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
+  hrvJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   overrideJson?: Prisma.JsonNullableFilter<"DailyReadinessRecord">
   computedAt?: Prisma.DateTimeNullableFilter<"DailyReadinessRecord"> | Date | string | null
   syncedAt?: Prisma.DateTimeNullableFilter<"DailyReadinessRecord"> | Date | string | null
@@ -792,6 +811,7 @@ export type DailyReadinessRecordCreateManyUserInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Date | string | null
   syncedAt?: Date | string | null
@@ -813,6 +833,7 @@ export type DailyReadinessRecordUpdateWithoutUserInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -834,6 +855,7 @@ export type DailyReadinessRecordUncheckedUpdateWithoutUserInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -855,6 +877,7 @@ export type DailyReadinessRecordUncheckedUpdateManyWithoutUserInput = {
   sleepJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   loadJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   subjectiveJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  hrvJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   overrideJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   computedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -879,6 +902,7 @@ export type DailyReadinessRecordSelect<ExtArgs extends runtime.Types.Extensions.
   sleepJson?: boolean
   loadJson?: boolean
   subjectiveJson?: boolean
+  hrvJson?: boolean
   overrideJson?: boolean
   computedAt?: boolean
   syncedAt?: boolean
@@ -902,6 +926,7 @@ export type DailyReadinessRecordSelectCreateManyAndReturn<ExtArgs extends runtim
   sleepJson?: boolean
   loadJson?: boolean
   subjectiveJson?: boolean
+  hrvJson?: boolean
   overrideJson?: boolean
   computedAt?: boolean
   syncedAt?: boolean
@@ -925,6 +950,7 @@ export type DailyReadinessRecordSelectUpdateManyAndReturn<ExtArgs extends runtim
   sleepJson?: boolean
   loadJson?: boolean
   subjectiveJson?: boolean
+  hrvJson?: boolean
   overrideJson?: boolean
   computedAt?: boolean
   syncedAt?: boolean
@@ -948,6 +974,7 @@ export type DailyReadinessRecordSelectScalar = {
   sleepJson?: boolean
   loadJson?: boolean
   subjectiveJson?: boolean
+  hrvJson?: boolean
   overrideJson?: boolean
   computedAt?: boolean
   syncedAt?: boolean
@@ -957,7 +984,7 @@ export type DailyReadinessRecordSelectScalar = {
   updatedAt?: boolean
 }
 
-export type DailyReadinessRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "date" | "compositeScore" | "state" | "confidence" | "componentScores" | "reasons" | "rhrJson" | "sleepJson" | "loadJson" | "subjectiveJson" | "overrideJson" | "computedAt" | "syncedAt" | "maxHr" | "restingHr" | "createdAt" | "updatedAt", ExtArgs["result"]["dailyReadinessRecord"]>
+export type DailyReadinessRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "date" | "compositeScore" | "state" | "confidence" | "componentScores" | "reasons" | "rhrJson" | "sleepJson" | "loadJson" | "subjectiveJson" | "hrvJson" | "overrideJson" | "computedAt" | "syncedAt" | "maxHr" | "restingHr" | "createdAt" | "updatedAt", ExtArgs["result"]["dailyReadinessRecord"]>
 export type DailyReadinessRecordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -986,6 +1013,7 @@ export type $DailyReadinessRecordPayload<ExtArgs extends runtime.Types.Extension
     sleepJson: runtime.JsonValue | null
     loadJson: runtime.JsonValue | null
     subjectiveJson: runtime.JsonValue | null
+    hrvJson: runtime.JsonValue | null
     overrideJson: runtime.JsonValue | null
     computedAt: Date | null
     syncedAt: Date | null
@@ -1429,6 +1457,7 @@ export interface DailyReadinessRecordFieldRefs {
   readonly sleepJson: Prisma.FieldRef<"DailyReadinessRecord", 'Json'>
   readonly loadJson: Prisma.FieldRef<"DailyReadinessRecord", 'Json'>
   readonly subjectiveJson: Prisma.FieldRef<"DailyReadinessRecord", 'Json'>
+  readonly hrvJson: Prisma.FieldRef<"DailyReadinessRecord", 'Json'>
   readonly overrideJson: Prisma.FieldRef<"DailyReadinessRecord", 'Json'>
   readonly computedAt: Prisma.FieldRef<"DailyReadinessRecord", 'DateTime'>
   readonly syncedAt: Prisma.FieldRef<"DailyReadinessRecord", 'DateTime'>

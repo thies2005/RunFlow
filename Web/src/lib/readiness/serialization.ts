@@ -21,6 +21,7 @@ export function serializeDailyRecord(record: {
   sleepJson: unknown;
   loadJson: unknown;
   subjectiveJson: unknown;
+  hrvJson: unknown;
   overrideJson: unknown;
   computedAt: Date | null;
   syncedAt: Date | null;
@@ -41,6 +42,7 @@ export function serializeDailyRecord(record: {
     sleepJson: record.sleepJson,
     loadJson: record.loadJson,
     subjectiveJson: record.subjectiveJson,
+    hrvJson: record.hrvJson,
     overrideJson: record.overrideJson,
     computedAt: record.computedAt?.toISOString() ?? null,
     syncedAt: record.syncedAt?.toISOString() ?? null,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Heart, Moon, Activity, Zap, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Heart, HeartPulse, Moon, Activity, Zap, RefreshCw, AlertTriangle } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { getCurrentUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
 
@@ -13,6 +13,12 @@ interface DailyReadiness {
     confidence: string;
     componentScores: Record<string, number> | null;
     reasons: string[] | null;
+    hrvJson?: {
+        todayHrv?: number;
+        baselineHrv?: number;
+        hrvDelta?: number;
+        trendDirection?: string;
+    } | null;
     computedAt: string | null;
     syncedAt: string | null;
 }
@@ -168,6 +174,7 @@ export default function ReadinessCard() {
     const sleepScore = components['sleep'] ?? components['SLEEP'] ?? null;
     const loadScore = components['load'] ?? components['LOAD'] ?? null;
     const feelScore = components['subjective'] ?? components['SUBJECTIVE'] ?? null;
+    const todayHrv = daily.hrvJson?.todayHrv ?? null;
 
     const chartData = history.map((r) => ({
         date: r.date.slice(5),
@@ -209,11 +216,18 @@ export default function ReadinessCard() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-2 mb-4">
+            <div className={`grid ${todayHrv !== null ? 'grid-cols-5' : 'grid-cols-4'} gap-2 mb-4`}>
                 <ComponentIndicator icon={<Activity className="w-3.5 h-3.5" />} label="HRR" value={hrrScore} color="text-green-400" />
                 <ComponentIndicator icon={<Moon className="w-3.5 h-3.5" />} label="Sleep" value={sleepScore} color="text-indigo-400" />
                 <ComponentIndicator icon={<Zap className="w-3.5 h-3.5" />} label="Load" value={loadScore} color="text-amber-400" />
                 <ComponentIndicator icon={<Heart className="w-3.5 h-3.5" />} label="Feel" value={feelScore} color="text-pink-400" />
+                {todayHrv !== null && (
+                    <div className="flex flex-col items-center gap-1">
+                        <div className="text-foreground-secondary"><HeartPulse className="w-3.5 h-3.5" /></div>
+                        <span className="text-[10px] text-foreground-muted uppercase tracking-wider">HRV</span>
+                        <span className="text-sm font-semibold text-foreground">{Math.round(todayHrv)} ms</span>
+                    </div>
+                )}
             </div>
 
             {chartData.length > 1 && (

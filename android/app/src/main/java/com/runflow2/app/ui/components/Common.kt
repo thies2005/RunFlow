@@ -75,6 +75,9 @@ fun TsbStatus.color(): Color = when (this) {
     TsbStatus.VERY_FATIGUED -> StatusVeryFatigued
 }
 
+/** Green used for "good direction" delta captions (the scheme primary is orange). */
+val DeltaGood = Color(0xFF4CAF50)
+
 /** Icon chip + label + value tile used across dashboard & analytics. */
 @Composable
 fun StatTile(
@@ -83,6 +86,8 @@ fun StatTile(
     icon: ImageVector,
     accent: Color = MaterialTheme.colorScheme.primary,
     modifier: Modifier = Modifier,
+    caption: String? = null,
+    captionGood: Boolean? = null,
 ) {
     Row(
         modifier = modifier,
@@ -112,6 +117,19 @@ fun StatTile(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (caption != null) {
+                Text(
+                    caption,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = when (captionGood) {
+                        true -> DeltaGood
+                        false -> MaterialTheme.colorScheme.error
+                        null -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

@@ -67,6 +67,7 @@ import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.analytics.AnalyticsBundle
 import com.runflow2.app.ui.components.DailyFormSheet
+import com.runflow2.app.ui.components.DeltaGood
 import com.runflow2.app.ui.components.InfoChip
 import com.runflow2.app.ui.components.ProgressRing
 import com.runflow2.app.ui.components.SectionTitle
@@ -98,7 +99,9 @@ fun DashboardScreen(
 ) {
     val settings by container.settings.settings.collectAsState(initial = AppSettings())
     val unit = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
-    val today = androidx.compose.runtime.remember { LocalDate.now() }
+    // Evaluated on every recomposition so "this week" rolls over at midnight
+    // instead of freezing to the date of the first composition.
+    val today = LocalDate.now()
 
     val activities by container.repository.activities.collectAsState(initial = emptyList())
     val activeGoal by container.repository.activeGoal.collectAsState(initial = null)
@@ -176,6 +179,22 @@ fun DashboardScreen(
                 // ---- This week hero ----
                 item {
                     val a = analytics
+                    // Lifetime metrics get a change caption so they don't look
+                    // frozen: reference is the newest trend/daily entry at
+                    // least N days old (the first entry when the series is
+                    // younger); suppressed when the change rounds to zero.
+                    val vdotDelta = a?.let { bundle ->
+                        bundle.effectiveVdot?.let { current ->
+                            val ref = bundle.vdotTrend.lastOrNull { it.date <= today.minusDays(30) }
+                                ?: bundle.vdotTrend.firstOrNull()
+                            ref?.let { current - it.vdot }
+                        }
+                    }?.takeIf { abs(it) >= 0.05 }
+                    val ctlDelta = a?.let { bundle ->
+                        val ref = bundle.daily.lastOrNull { it.date <= today.minusDays(7) }
+                            ?: bundle.daily.firstOrNull()
+                        ref?.let { bundle.ctl - it.ctl }
+                    }?.takeIf { abs(it) >= 0.05 }
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -214,7 +233,7 @@ fun DashboardScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                             ) {
                                 StatTile(
-                                    label = "Runs",
+                                    label = "Workouts",
                                     value = "$runsThisWeek",
                                     icon = Icons.Outlined.DirectionsRun,
                                 )
@@ -223,12 +242,22 @@ fun DashboardScreen(
                                     value = Format.oneDecimal(a?.effectiveVdot),
                                     icon = Icons.Outlined.MonitorHeart,
                                     accent = MaterialTheme.colorScheme.tertiary,
+                                    caption = vdotDelta?.let {
+                                        if (it > 0) "Δ30d +${Format.oneDecimal(it)}"
+                                        else "Δ30d -${Format.oneDecimal(abs(it))}"
+                                    },
+                                    captionGood = vdotDelta?.let { it > 0 },
                                 )
                                 StatTile(
                                     label = "Fitness",
                                     value = Format.intOrDash(a?.ctl),
                                     icon = Icons.Outlined.Favorite,
                                     accent = MaterialTheme.colorScheme.primary,
+                                    caption = ctlDelta?.let {
+                                        if (it > 0) "Δ7d +${Format.oneDecimal(it)}"
+                                        else "Δ7d -${Format.oneDecimal(abs(it))}"
+                                    },
+                                    captionGood = ctlDelta?.let { it > 0 },
                                 )
                             }
                         }
@@ -790,7 +819,7 @@ private fun MetricDeltaTile(
                     caption,
                     style = MaterialTheme.typography.bodySmall,
                     color = when (captionGood) {
-                        true -> MaterialTheme.colorScheme.primary
+                        true -> DeltaGood
                         false -> MaterialTheme.colorScheme.error
                         null -> MaterialTheme.colorScheme.onSurfaceVariant
                     },

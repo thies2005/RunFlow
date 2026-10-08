@@ -20,10 +20,13 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.MonitorHeart
+import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -64,6 +67,8 @@ import com.runflow2.app.ui.components.HealthTrendChart
 import com.runflow2.app.ui.components.ProgressRing
 import com.runflow2.app.ui.components.ReadinessScoreChart
 import com.runflow2.app.ui.components.SectionTitle
+import com.runflow2.app.ui.components.SleepDurationChart
+import com.runflow2.app.ui.components.SleepStagesChart
 import com.runflow2.app.ui.components.Sparkline
 import com.runflow2.app.ui.components.StatTile
 import com.runflow2.app.ui.components.WeeklyVolumeBars
@@ -518,25 +523,35 @@ fun AnalyticsScreen(container: AppContainer) {
                                 Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                             ) {
+                                // latest value + personal range per metric
                                 StatTile(
-                                    label = "Avg resting HR",
-                                    value = Format.heartRate(rhrValues.takeIf { it.isNotEmpty() }?.average()),
+                                    label = "Resting HR",
+                                    value = Format.heartRate(rhrValues.lastOrNull()),
                                     icon = Icons.Outlined.Favorite,
                                     accent = MaterialTheme.colorScheme.primary,
+                                    caption = if (rhrValues.size >= 2) {
+                                        "range ${rhrValues.min().roundToInt()}–${rhrValues.max().roundToInt()} bpm"
+                                    } else null,
                                     modifier = Modifier.weight(1f),
                                 )
                                 StatTile(
-                                    label = "Avg HRV",
-                                    value = if (hrvValues.isEmpty()) "—" else "${hrvValues.average().roundToInt()} ms",
+                                    label = "HRV",
+                                    value = hrvValues.lastOrNull()?.let { "${it.roundToInt()} ms" } ?: "—",
                                     icon = Icons.Outlined.Bolt,
                                     accent = MaterialTheme.colorScheme.tertiary,
+                                    caption = if (hrvValues.size >= 2) {
+                                        "range ${hrvValues.min().roundToInt()}–${hrvValues.max().roundToInt()} ms"
+                                    } else null,
                                     modifier = Modifier.weight(1f),
                                 )
                                 StatTile(
                                     label = "Readiness",
-                                    value = Format.oneDecimal(scoreValues.takeIf { it.isNotEmpty() }?.average()),
+                                    value = Format.roundedIntOrDash(scoreValues.lastOrNull()),
                                     icon = Icons.Outlined.Speed,
                                     accent = ChartTsb,
+                                    caption = if (scoreValues.size >= 2) {
+                                        "avg ${scoreValues.average().roundToInt()}"
+                                    } else null,
                                     modifier = Modifier.weight(1f),
                                 )
                             }
@@ -556,8 +571,123 @@ fun AnalyticsScreen(container: AppContainer) {
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 } else {
+                                    Text(
+                                        "Latest ${scoreValues.last().roundToInt()} · range " +
+                                            "${scoreValues.min().roundToInt()}–${scoreValues.max().roundToInt()} · " +
+                                            "avg ${scoreValues.average().roundToInt()}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
                                     ReadinessScoreChart(entries = scoredEntries)
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ---- sleep analysis ----
+            item {
+                var sleepRange by rememberSaveable { mutableStateOf(90) }
+                val today = remember { LocalDate.now() }
+                val sleepEntries by produceState<List<DailyEntryEntity>>(emptyList(), sleepRange) {
+                    container.repository.dailyEntryRangeFlow(today.minusDays(sleepRange.toLong()), today)
+                        .collect { value = it }
+                }
+
+                val sleepValues = sleepEntries.mapNotNull { it.sleepMinutes?.toDouble() }
+                // dashed baseline = trailing 7 non-null sleep nights
+                val sleepBaseline = sleepValues.takeLast(7).takeIf { it.isNotEmpty() }?.average()
+                val stageNights = sleepEntries.filter {
+                    it.sleepMinutes != null &&
+                        (it.deepMinutes != null || it.remMinutes != null || it.lightMinutes != null)
+                }
+                val deepShare = stageNights
+                    .map { e ->
+                        val total =
+                            ((e.lightMinutes ?: 0) + (e.deepMinutes ?: 0) + (e.remMinutes ?: 0))
+                                .coerceAtLeast(1)
+                        (e.deepMinutes ?: 0).toDouble() / total * 100.0
+                    }
+                    .takeIf { it.isNotEmpty() }?.average()
+                val remShare = stageNights
+                    .map { e ->
+                        val total =
+                            ((e.lightMinutes ?: 0) + (e.deepMinutes ?: 0) + (e.remMinutes ?: 0))
+                                .coerceAtLeast(1)
+                        (e.remMinutes ?: 0).toDouble() / total * 100.0
+                    }
+                    .takeIf { it.isNotEmpty() }?.average()
+
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SectionTitle("Sleep")
+                        if (sleepValues.isEmpty()) {
+                            Text(
+                                "No sleep data in this window yet. Connect Health Connect or log sleep in the daily form.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        } else {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                listOf(30, 90, 365).forEach { d ->
+                                    FilterChip(
+                                        selected = sleepRange == d,
+                                        onClick = { sleepRange = d },
+                                        label = { Text(if (d == 365) "1Y" else "${d}d") },
+                                    )
+                                }
+                            }
+                            SleepDurationChart(
+                                entries = sleepEntries,
+                                baselineMinutes = sleepBaseline,
+                            )
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            ) {
+                                StatTile(
+                                    label = "Avg duration",
+                                    value = sleepDurationLabel(sleepValues.average()),
+                                    icon = Icons.Outlined.Bedtime,
+                                    accent = MaterialTheme.colorScheme.secondary,
+                                    caption = if (sleepValues.size >= 2) {
+                                        "range ${Format.oneDecimal(sleepValues.min() / 60.0)}–" +
+                                            "${Format.oneDecimal(sleepValues.max() / 60.0)} h"
+                                    } else null,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                StatTile(
+                                    label = "Deep ø",
+                                    value = deepShare?.let { "${it.roundToInt()}%" } ?: "—",
+                                    icon = Icons.Outlined.DarkMode,
+                                    accent = MaterialTheme.colorScheme.primary,
+                                    caption = "healthy 13–23%",
+                                    modifier = Modifier.weight(1f),
+                                )
+                                StatTile(
+                                    label = "REM ø",
+                                    value = remShare?.let { "${it.roundToInt()}%" } ?: "—",
+                                    icon = Icons.Outlined.RemoveRedEye,
+                                    accent = MaterialTheme.colorScheme.tertiary,
+                                    caption = "healthy 18–25%",
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    "Stages · last 14 nights",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                SleepStagesChart(entries = sleepEntries, nights = 14)
                             }
                         }
                     }
@@ -663,4 +793,10 @@ private fun LabelValue(label: String, value: String) {
             fontWeight = FontWeight.SemiBold,
         )
     }
+}
+
+/** Sleep minutes as "7h 32m" (Format.duration is h:mm:ss for seconds — wrong shape here). */
+private fun sleepDurationLabel(minutes: Double): String {
+    val total = minutes.roundToInt()
+    return "${total / 60}h ${total % 60}m"
 }

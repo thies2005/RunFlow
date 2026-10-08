@@ -406,8 +406,10 @@ private fun normFrac(values: List<Double>, v: Double): Float {
 /**
  * Dual-axis recovery trend over one shared date axis: resting HR (drawn
  * INVERTED — a lower RHR plots higher) and HRV, each normalized to its own
- * window min/max, with dashed trailing-7-day-mean baseline lines when
- * available. Draws whichever series has data; safe on 0/1 points.
+ * window min/max. Each series renders as data points only, over a translucent
+ * full-width personal-range band spanning that series' window min→max (≥3
+ * points), plus dashed trailing-7-day-mean baseline lines when available.
+ * Draws whichever series has data; safe on 0/1 points.
  */
 @Composable
 fun HealthTrendChart(
@@ -470,27 +472,39 @@ fun HealthTrendChart(
                 strokeWidth = 1f,
             )
 
-            fun drawSeries(pts: List<Pair<Int, Double>>, py: (Double) -> Float, color: Color, strokeDp: Float) {
+            // translucent full-width personal-range band (window min→max in
+            // the series' own scale); skipped for sparse windows (<3 points)
+            fun drawBand(pts: List<Pair<Int, Double>>, py: (Double) -> Float, color: Color) {
+                val vals = pts.map { it.second }
+                if (vals.size < 3) return
+                val ys = listOf(py(vals.min()), py(vals.max()))
+                drawRect(
+                    color = color.copy(alpha = 0.08f),
+                    topLeft = Offset(0f, ys.min()),
+                    size = androidx.compose.ui.geometry.Size(w, ys.max() - ys.min()),
+                )
+            }
+
+            fun drawSeries(pts: List<Pair<Int, Double>>, py: (Double) -> Float, color: Color, radiusDp: Float) {
                 when {
                     pts.isEmpty() -> Unit
                     pts.size == 1 -> drawCircle(
                         color,
-                        radius = 3.dp.toPx(),
+                        radius = radiusDp.dp.toPx(),
                         center = Offset(
                             if (entries.size <= 1) w / 2f else px(pts[0].first),
                             padTop + plotH / 2,
                         ),
                     )
-                    else -> {
-                        val path = Path()
-                        pts.forEachIndexed { k, (i, v) ->
-                            val o = Offset(px(i), py(v))
-                            if (k == 0) path.moveTo(o.x, o.y) else path.lineTo(o.x, o.y)
-                        }
-                        drawPath(path, color, style = Stroke(width = strokeDp.dp.toPx(), cap = StrokeCap.Round))
+                    else -> pts.forEach { (i, v) ->
+                        drawCircle(color, radius = radiusDp.dp.toPx(), center = Offset(px(i), py(v)))
                     }
                 }
             }
+
+            // bands first so the points sit on top
+            drawBand(hrvPts, ::hrvPy, hrvColor)
+            drawBand(rhrPts, ::rhrPy, rhrColor)
 
             // dashed baseline lines (trailing 7-day means)
             val dash = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()))
@@ -507,8 +521,8 @@ fun HealthTrendChart(
                 }
             }
 
-            drawSeries(hrvPts, ::hrvPy, hrvColor, strokeDp = 1.8f)
-            drawSeries(rhrPts, ::rhrPy, rhrColor, strokeDp = 2.2f)
+            drawSeries(hrvPts, ::hrvPy, hrvColor, radiusDp = 2.5f)
+            drawSeries(rhrPts, ::rhrPy, rhrColor, radiusDp = 3f)
         }
 
         // y-range captions: RHR window on the left, HRV window on the right
@@ -545,8 +559,9 @@ fun HealthTrendChart(
 }
 
 /**
- * Readiness score (0..100) line chart with subtle guide lines at 65 / 80.
- * Simpler sibling of [FitnessChart]: fixed scale, no series toggles, no scrub.
+ * Readiness score (0..100) rendered as data points, with subtle guide lines
+ * at 65 / 80. Simpler sibling of [FitnessChart]: fixed scale, no series
+ * toggles, no scrub.
  */
 @Composable
 fun ReadinessScoreChart(
@@ -587,27 +602,8 @@ fun ReadinessScoreChart(
                 )
             }
 
-            if (pts.isNotEmpty()) {
-                val path = Path()
-                val fillPath = Path()
-                pts.forEachIndexed { k, (i, v) ->
-                    val o = Offset(px(i), py(v))
-                    if (k == 0) {
-                        path.moveTo(o.x, o.y)
-                        fillPath.moveTo(o.x, o.y)
-                    } else {
-                        path.lineTo(o.x, o.y)
-                        fillPath.lineTo(o.x, o.y)
-                    }
-                }
-                drawPath(
-                    fillPath,
-                    Brush.verticalGradient(listOf(scoreColor.copy(alpha = 0.10f), Color.Transparent)),
-                )
-                drawPath(path, scoreColor, style = Stroke(width = 2.2.dp.toPx(), cap = StrokeCap.Round))
-                if (pts.size == 1) {
-                    drawCircle(scoreColor, radius = 4.dp.toPx(), center = Offset(px(pts[0].first), py(pts[0].second)))
-                }
+            pts.forEach { (i, v) ->
+                drawCircle(scoreColor, radius = 3.5.dp.toPx(), center = Offset(px(i), py(v)))
             }
         }
         // x-axis labels
@@ -626,6 +622,228 @@ fun ReadinessScoreChart(
                     style = MaterialTheme.typography.labelSmall,
                     color = labelColor,
                 )
+            }
+        }
+    }
+}
+
+/**
+ * Nightly sleep duration as data points only (no polyline), over a
+ * translucent personal-range band spanning the window min→max (≥3 points),
+ * plus a dashed trailing-7-night-mean baseline when available. Y axis is
+ * sleep minutes; captions show the window in hours and the baseline.
+ * Simpler sibling of [HealthTrendChart]: single series, safe on 0/1 points
+ * (a lone point centers mid-height).
+ */
+@Composable
+fun SleepDurationChart(
+    entries: List<DailyEntryEntity>,
+    baselineMinutes: Double?,
+    modifier: Modifier = Modifier,
+    height: Int = 160,
+) {
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val sleepColor = MaterialTheme.colorScheme.secondary
+
+    val pts = entries.mapIndexedNotNull { i, e -> e.sleepMinutes?.let { i to it.toDouble() } }
+    val values = pts.map { it.second }
+
+    Column(modifier) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height.dp),
+        ) {
+            val w = size.width
+            val h = size.height
+            val padTop = 8f
+            val padBottom = 6f
+            val plotH = h - padTop - padBottom
+            val maxX = (entries.size - 1).coerceAtLeast(1)
+
+            fun px(i: Int) = (if (entries.size <= 1) w / 2f else i.toFloat() / maxX * w)
+            fun py(v: Double) = padTop + (1f - normFrac(values, v)) * plotH
+
+            // translucent personal-range band (window min→max); skipped for
+            // sparse windows (<3 points)
+            if (values.size >= 3) {
+                val ys = listOf(py(values.min()), py(values.max()))
+                drawRect(
+                    color = sleepColor.copy(alpha = 0.08f),
+                    topLeft = Offset(0f, ys.min()),
+                    size = androidx.compose.ui.geometry.Size(w, ys.max() - ys.min()),
+                )
+            }
+
+            // dashed baseline line (trailing 7-night mean)
+            if (values.isNotEmpty()) {
+                baselineMinutes?.let { b ->
+                    val y = py(b).coerceIn(padTop, padTop + plotH)
+                    drawLine(
+                        sleepColor.copy(alpha = 0.55f),
+                        Offset(0f, y),
+                        Offset(w, y),
+                        1.2.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx())),
+                    )
+                }
+            }
+
+            when {
+                pts.isEmpty() -> Unit
+                pts.size == 1 -> drawCircle(
+                    sleepColor,
+                    radius = 3.dp.toPx(),
+                    center = Offset(
+                        if (entries.size <= 1) w / 2f else px(pts[0].first),
+                        padTop + plotH / 2,
+                    ),
+                )
+                else -> pts.forEach { (i, v) ->
+                    drawCircle(sleepColor, radius = 3.dp.toPx(), center = Offset(px(i), py(v)))
+                }
+            }
+        }
+
+        // y-range captions: window min–max on the left, baseline on the right
+        Row(Modifier.fillMaxWidth()) {
+            Text(
+                if (values.isEmpty()) ""
+                else "${Format.oneDecimal(values.min() / 60.0)}–${Format.oneDecimal(values.max() / 60.0)} h",
+                style = MaterialTheme.typography.labelSmall,
+                color = labelColor,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                baselineMinutes?.let { "ø ${Format.oneDecimal(it / 60.0)} h" } ?: "",
+                style = MaterialTheme.typography.labelSmall,
+                color = labelColor,
+            )
+        }
+
+        // sparse x-axis labels: first / middle / last
+        Row(Modifier.fillMaxWidth()) {
+            val first = entries.firstOrNull()?.date?.let(::parseDay)
+            val mid = entries.getOrNull(entries.size / 2)?.date?.let(::parseDay)
+            val last = entries.lastOrNull()?.date?.let(::parseDay)
+            if (first != null && last != null) {
+                Text(first.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+                Spacer(Modifier.weight(1f))
+                if (entries.size >= 3 && mid != null) {
+                    Text(mid.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+                }
+                Spacer(Modifier.weight(1f))
+                Text(last.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+            }
+        }
+    }
+}
+
+/** Mean share of a night's light+deep+rem total for one stage, in percent. */
+private fun meanStageShare(
+    nights: List<DailyEntryEntity>,
+    selector: (DailyEntryEntity) -> Int?,
+): Double? = nights.takeIf { it.isNotEmpty() }?.map { r ->
+    val total = ((r.lightMinutes ?: 0) + (r.deepMinutes ?: 0) + (r.remMinutes ?: 0)).coerceAtLeast(1)
+    (selector(r) ?: 0).toDouble() / total * 100.0
+}?.average()
+
+/**
+ * Stacked sleep-stage bars for the last [nights] nights that report both a
+ * total and at least one stage: LIGHT at the bottom, DEEP in the middle, REM
+ * on top, each segment proportional to its minutes and bars scaled to the
+ * tallest night (60% of the slot width). Sparse first/middle/last x labels
+ * and a caption with the mean deep/REM share across the shown nights;
+ * renders just the legend when no night qualifies.
+ */
+@Composable
+fun SleepStagesChart(
+    entries: List<DailyEntryEntity>,
+    nights: Int = 14,
+    modifier: Modifier = Modifier,
+    height: Int = 150,
+) {
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val lightColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.45f)
+    val deepColor = MaterialTheme.colorScheme.primary
+    val remColor = MaterialTheme.colorScheme.tertiary
+
+    val rows = entries
+        .filter {
+            it.sleepMinutes != null &&
+                (it.deepMinutes != null || it.remMinutes != null || it.lightMinutes != null)
+        }
+        .takeLast(nights)
+    val totals = rows.map { (it.lightMinutes ?: 0) + (it.deepMinutes ?: 0) + (it.remMinutes ?: 0) }
+    val maxTotal = (totals.maxOrNull() ?: 0).coerceAtLeast(1)
+    val deepMeanPct = meanStageShare(rows) { it.deepMinutes }?.roundToInt()
+    val remMeanPct = meanStageShare(rows) { it.remMinutes }?.roundToInt()
+
+    Column(modifier) {
+        // legend (mirrors HealthTrendChart)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 6.dp),
+        ) {
+            listOf("Light" to lightColor, "Deep" to deepColor, "REM" to remColor)
+                .forEachIndexed { i, (label, color) ->
+                    if (i > 0) Spacer(Modifier.width(12.dp))
+                    Canvas(Modifier.size(8.dp)) { drawCircle(color) }
+                    Spacer(Modifier.width(4.dp))
+                    Text(label, style = MaterialTheme.typography.labelMedium, color = labelColor)
+                }
+        }
+
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height.dp),
+        ) {
+            if (rows.isEmpty()) return@Canvas
+            val plotH = size.height - 6f
+            val slot = size.width / rows.size
+            val bw = slot * 0.6f
+            rows.forEachIndexed { i, r ->
+                var y = size.height - 2f
+                val x = i * slot + (slot - bw) / 2f
+                // stacked bottom-up: LIGHT, then DEEP, then REM on top
+                listOf(
+                    r.lightMinutes to lightColor,
+                    r.deepMinutes to deepColor,
+                    r.remMinutes to remColor,
+                ).forEach { (minutes, color) ->
+                    val m = minutes ?: 0
+                    if (m > 0) {
+                        val seg = m.toFloat() / maxTotal * plotH
+                        y -= seg
+                        drawRect(color, topLeft = Offset(x, y), size = androidx.compose.ui.geometry.Size(bw, seg))
+                    }
+                }
+            }
+        }
+
+        if (deepMeanPct != null && remMeanPct != null) {
+            Text(
+                "Deep ø $deepMeanPct% · REM ø $remMeanPct%",
+                style = MaterialTheme.typography.labelSmall,
+                color = labelColor,
+            )
+        }
+
+        // sparse x-axis labels: first / middle / last
+        Row(Modifier.fillMaxWidth()) {
+            val first = rows.firstOrNull()?.date?.let(::parseDay)
+            val mid = rows.getOrNull(rows.size / 2)?.date?.let(::parseDay)
+            val last = rows.lastOrNull()?.date?.let(::parseDay)
+            if (first != null && last != null) {
+                Text(first.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+                Spacer(Modifier.weight(1f))
+                if (rows.size >= 3 && mid != null) {
+                    Text(mid.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+                }
+                Spacer(Modifier.weight(1f))
+                Text(last.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
             }
         }
     }

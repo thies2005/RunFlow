@@ -44,6 +44,7 @@ class AppContainer(app: Application) {
         profileDao = database.profileDao(),
         syncQueueDao = database.syncQueueDao(),
         planSnapshotDao = database.planSnapshotDao(),
+        dailyEntryDao = database.dailyEntryDao(),
         authStore = authStore,
         network = network,
     )

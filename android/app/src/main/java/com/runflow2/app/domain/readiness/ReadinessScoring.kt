@@ -9,10 +9,13 @@ import kotlin.math.min
 /*
  * Daily readiness scoring — a faithful Kotlin port of the deleted Flutter
  * app's ReadinessScoringService (flutter/lib/domain/services/readiness/
- * readiness_scoring_service.dart at commit a4616887). Pure Kotlin: no
- * Android, Room or JSON dependencies; the wire format lives in
- * [ReadinessJson]. HRV is deliberately carried ([HrvMetrics]) but never
- * scored — product decision, mirrors the web contract's hrvJson pass-through.
+ * readiness_scoring_service.dart at commit a4616887), with one deliberate
+ * divergence: HRV ([HrvMetrics]) is a scored component (weight .15) on top
+ * of the Dart HRR/sleep/load/subjective four — product decision — so the
+ * weights and the 5/4/3 availability/confidence ladder no longer mirror the
+ * Dart source. Pure Kotlin: no Android, Room or JSON dependencies; the wire
+ * format lives in [ReadinessJson] (the web contract's hrvJson pass-through
+ * is unchanged).
  */
 
 // ---- Enums (wire names match the Dart enum names used on the server) ----
@@ -56,17 +59,24 @@ enum class TrimpStrategy(override val wireName: String) : WireNamed {
 
 enum class ReadinessComponent(override val wireName: String) : WireNamed {
     HRR("hrr"),
+    HRV("hrv"),
     SLEEP("sleep"),
     LOAD("load"),
     SUBJECTIVE("subjective"),
 }
 
-// ---- Configuration (defaults mirror ReadinessScoringConfig in Dart) ----
+// ---- Configuration (defaults diverge from Dart: HRV weight added) ----
 
+/**
+ * Weights sum to 1.0 across the five components. Dart carried four
+ * (hrr .35 / sleep .30 / load .25 / subjective .10); the HRV weight and the
+ * renormalized remainder are the app's own decision.
+ */
 data class ReadinessScoringConfig(
-    val hrrWeight: Double = 0.35,
-    val sleepWeight: Double = 0.30,
-    val loadWeight: Double = 0.25,
+    val hrrWeight: Double = 0.30,
+    val hrvWeight: Double = 0.15,
+    val sleepWeight: Double = 0.25,
+    val loadWeight: Double = 0.20,
     val subjectiveWeight: Double = 0.10,
     val excellentThreshold: Double = 80.0,
     val goodThreshold: Double = 65.0,
@@ -117,13 +127,15 @@ data class ReadinessInputs(
     val sleep: SleepMetrics? = null,
     val load: LoadMetrics? = null,
     val subjective: SubjectiveInput? = null,
+    val hrv: HrvMetrics? = null,
     val maxHr: Int? = null,
     val restingHr: Int? = null,
 )
 
 /**
- * HRV snapshot for the day. Carried alongside readiness and synced in the
- * daily payload (hrvJson) but intentionally NOT part of the score.
+ * HRV snapshot for the day. Scored as the HRV component (see
+ * [ReadinessScoring.scoreHrv]) and still synced in the daily payload
+ * (hrvJson) for display.
  */
 data class HrvMetrics(
     val todayHrv: Double? = null,
@@ -154,7 +166,11 @@ data class ReadinessResult(
 
 // ---- Scoring engine ----
 
-/** Scores one day of readiness; every threshold mirrors the Dart source. */
+/**
+ * Scores one day of readiness. The HRR/sleep/load/subjective thresholds
+ * mirror the Dart source; the HRV component and the five-component
+ * availability ladder (see [determineConfidence]) are the app's semantics.
+ */
 object ReadinessScoring {
 
     fun score(
@@ -162,14 +178,15 @@ object ReadinessScoring {
         config: ReadinessScoringConfig = ReadinessScoringConfig(),
     ): ReadinessResult {
         val hrrScore = scoreHrr(inputs.rhr)
+        val hrvScore = scoreHrv(inputs.hrv)
         val sleepScore = scoreSleep(inputs.sleep)
         val loadScore = scoreLoad(inputs.load)
         val subjectiveScore = scoreSubjective(inputs.subjective)
 
-        val components = listOf(hrrScore, sleepScore, loadScore, subjectiveScore)
+        val components = listOf(hrrScore, hrvScore, sleepScore, loadScore, subjectiveScore)
         val availableComponents = components.filter { it.isAvailable }
 
-        if (availableComponents.size < 2) {
+        if (availableComponents.size < 3) {
             return ReadinessResult(
                 compositeScore = 0.0,
                 state = ReadinessState.UNAVAILABLE,
@@ -228,6 +245,41 @@ object ReadinessScoring {
         }
 
         return ComponentScore(ReadinessComponent.HRR, score, true, reason)
+    }
+
+    // -- HRV: no todayHrv -> unavailable; no (positive) baseline -> fixed 65;
+    //    else improved / stable / suppressed bands on the % delta vs baseline --
+
+    private fun scoreHrv(hrv: HrvMetrics?): ComponentScore {
+        if (hrv == null || hrv.todayHrv == null) {
+            return ComponentScore(ReadinessComponent.HRV, 0.0, isAvailable = false)
+        }
+
+        if (hrv.baselineHrv == null || hrv.hrvDelta == null || hrv.baselineHrv <= 0) {
+            return ComponentScore(
+                component = ReadinessComponent.HRV,
+                score = 65.0,
+                isAvailable = true,
+                reason = "HRV available but no baseline for comparison",
+            )
+        }
+
+        val deltaPct = hrv.hrvDelta / hrv.baselineHrv * 100.0
+        val score: Double
+        val reason: String
+
+        if (hrv.hrvDelta > 0) {
+            score = 85.0 + min(deltaPct * 1.5, 15.0)
+            reason = "HRV improved by ${fmt1(deltaPct)}% vs 7-day baseline"
+        } else if (abs(deltaPct) < 5) {
+            score = 75.0
+            reason = "HRV stable"
+        } else {
+            score = 75.0 - min((abs(deltaPct) - 5.0) * 3.0, 40.0)
+            reason = "HRV suppressed by ${fmt1(deltaPct)}% vs 7-day baseline"
+        }
+
+        return ComponentScore(ReadinessComponent.HRV, score.coerceIn(0.0, 100.0), true, reason)
     }
 
     // -- Sleep: duration bands + deep%/rem% modifiers, clamped 0..100 --
@@ -372,16 +424,21 @@ object ReadinessScoring {
 
     // -- Composite: weight-normalized sum over the available components --
 
+    /**
+     * Five-component availability ladder: 5 available = FULL, 4 = PARTIAL,
+     * 3 = ESTIMATED, fewer = UNAVAILABLE (the score() gate above).
+     */
     private fun determineConfidence(availableCount: Int): DataConfidence = when (availableCount) {
-        4 -> DataConfidence.FULL
-        3 -> DataConfidence.PARTIAL
-        2 -> DataConfidence.ESTIMATED
+        5 -> DataConfidence.FULL
+        4 -> DataConfidence.PARTIAL
+        3 -> DataConfidence.ESTIMATED
         else -> DataConfidence.UNAVAILABLE
     }
 
     private fun computeComposite(available: List<ComponentScore>, cfg: ReadinessScoringConfig): Double {
         fun weightOf(component: ReadinessComponent): Double = when (component) {
             ReadinessComponent.HRR -> cfg.hrrWeight
+            ReadinessComponent.HRV -> cfg.hrvWeight
             ReadinessComponent.SLEEP -> cfg.sleepWeight
             ReadinessComponent.LOAD -> cfg.loadWeight
             ReadinessComponent.SUBJECTIVE -> cfg.subjectiveWeight

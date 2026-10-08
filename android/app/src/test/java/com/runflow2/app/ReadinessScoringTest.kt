@@ -2,6 +2,7 @@ package com.runflow2.app
 
 import com.runflow2.app.domain.readiness.AdaptationType
 import com.runflow2.app.domain.readiness.DataConfidence
+import com.runflow2.app.domain.readiness.HrvMetrics
 import com.runflow2.app.domain.readiness.LoadMetrics
 import com.runflow2.app.domain.readiness.ReadinessComponent
 import com.runflow2.app.domain.readiness.ReadinessInputs
@@ -20,7 +21,10 @@ import org.junit.Test
 /**
  * Mirrors flutter/test/unit/readiness_scoring_service_test.dart (commit
  * a4616887) case by case, plus a few extra cases locking down verbatim Dart
- * behaviors the Flutter suite did not cover.
+ * behaviors the Flutter suite did not cover. Since the HRV component was
+ * added (weight .15, five-component confidence ladder) the weights and the
+ * availability gate diverge from the Dart source — the component-level
+ * thresholds still mirror it.
  */
 class ReadinessScoringTest {
 
@@ -100,6 +104,66 @@ class ReadinessScoringTest {
         )
         val hrr = findComponent(result.componentScores, ReadinessComponent.HRR)
         assertFalse(hrr.isAvailable)
+    }
+
+    // ---- HRV component scoring ----
+
+    @Test
+    fun `improved HRV ten percent above baseline scores the capped 100`() {
+        // +6 ms on a 60 ms baseline = +10% → 85 + (10 * 1.5, capped at 15) = 100
+        val result = ReadinessScoring.score(
+            ReadinessInputs(date, hrv = HrvMetrics(todayHrv = 66.0, baselineHrv = 60.0, hrvDelta = 6.0)),
+        )
+        val hrv = findComponent(result.componentScores, ReadinessComponent.HRV)
+        assertTrue(hrv.isAvailable)
+        assertEquals(100.0, hrv.score, 0.01)
+    }
+
+    @Test
+    fun `HRV without baseline scores 65`() {
+        // Mirrors the HRR no-baseline behavior: available at the fixed 65.
+        val result = ReadinessScoring.score(
+            ReadinessInputs(date, hrv = HrvMetrics(todayHrv = 55.0)),
+        )
+        val hrv = findComponent(result.componentScores, ReadinessComponent.HRV)
+        assertTrue(hrv.isAvailable)
+        assertEquals(65.0, hrv.score, 0.0)
+    }
+
+    @Test
+    fun `stable HRV within five percent scores 75`() {
+        // -2 ms on a 60 ms baseline = -3.3% — inside the stable band
+        val result = ReadinessScoring.score(
+            ReadinessInputs(date, hrv = HrvMetrics(todayHrv = 58.0, baselineHrv = 60.0, hrvDelta = -2.0)),
+        )
+        val hrv = findComponent(result.componentScores, ReadinessComponent.HRV)
+        assertTrue(hrv.isAvailable)
+        assertEquals(75.0, hrv.score, 0.01)
+    }
+
+    @Test
+    fun `suppressed HRV ten percent below baseline scores 60`() {
+        // -6 ms on a 60 ms baseline = -10% → 75 - (10 - 5) * 3 = 60
+        val result = ReadinessScoring.score(
+            ReadinessInputs(date, hrv = HrvMetrics(todayHrv = 54.0, baselineHrv = 60.0, hrvDelta = -6.0)),
+        )
+        val hrv = findComponent(result.componentScores, ReadinessComponent.HRV)
+        assertTrue(hrv.isAvailable)
+        assertEquals(60.0, hrv.score, 0.01)
+    }
+
+    @Test
+    fun `HRV without a today value is unavailable`() {
+        val result = ReadinessScoring.score(
+            ReadinessInputs(
+                date,
+                hrv = HrvMetrics(todayHrv = null, baselineHrv = 60.0, hrvDelta = null),
+                sleep = SleepMetrics(totalDurationMinutes = 480.0),
+                load = LoadMetrics(workloadRatio = 1.0),
+            ),
+        )
+        val hrv = findComponent(result.componentScores, ReadinessComponent.HRV)
+        assertFalse(hrv.isAvailable)
     }
 
     // ---- Sleep component scoring ----
@@ -348,31 +412,39 @@ class ReadinessScoringTest {
 
     @Test
     fun `weights are normalized for available components only`() {
+        // The confidence ladder needs 3+ available components for a composite,
+        // so this normalization case carries rhr + sleep + load.
         val result = ReadinessScoring.score(
             ReadinessInputs(
                 date,
                 rhr = RhrMetrics(todayRhr = 55.0, baselineRhr = 55.0, rhrDelta = 0.0),
                 sleep = SleepMetrics(totalDurationMinutes = 480.0, deepPercent = 10.0, remPercent = 10.0),
+                load = LoadMetrics(workloadRatio = 1.0),
             ),
         )
         val hrr = findComponent(result.componentScores, ReadinessComponent.HRR)
         val sleep = findComponent(result.componentScores, ReadinessComponent.SLEEP)
+        val load = findComponent(result.componentScores, ReadinessComponent.LOAD)
 
         val defaultCfg = ReadinessScoringConfig()
-        val totalWeight = defaultCfg.hrrWeight + defaultCfg.sleepWeight
+        val totalWeight = defaultCfg.hrrWeight + defaultCfg.sleepWeight + defaultCfg.loadWeight
         val normalizedHrr = defaultCfg.hrrWeight / totalWeight
         val normalizedSleep = defaultCfg.sleepWeight / totalWeight
-        val expected = hrr.score * normalizedHrr + sleep.score * normalizedSleep
+        val normalizedLoad = defaultCfg.loadWeight / totalWeight
+        val expected = hrr.score * normalizedHrr +
+            sleep.score * normalizedSleep +
+            load.score * normalizedLoad
 
         assertEquals(expected, result.compositeScore, 0.01)
     }
 
     @Test
-    fun `all four components available uses full weights`() {
+    fun `all five components available uses full weights`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(
                 date,
                 rhr = RhrMetrics(todayRhr = 55.0, baselineRhr = 55.0, rhrDelta = 0.0),
+                hrv = HrvMetrics(todayHrv = 62.0, baselineHrv = 60.0, hrvDelta = 2.0),
                 sleep = SleepMetrics(totalDurationMinutes = 480.0, deepPercent = 10.0, remPercent = 10.0),
                 load = LoadMetrics(workloadRatio = 1.0),
                 subjective = SubjectiveInput(exhaustionLevel = 3, muscleSoreness = 3, stressLevel = 3),
@@ -380,19 +452,31 @@ class ReadinessScoringTest {
         )
         assertEquals(DataConfidence.FULL, result.confidence)
 
+        // component order: HRR, HRV, SLEEP, LOAD, SUBJECTIVE
+        assertEquals(ReadinessComponent.HRR, result.componentScores[0].component)
+        assertEquals(ReadinessComponent.HRV, result.componentScores[1].component)
+        assertEquals(ReadinessComponent.SLEEP, result.componentScores[2].component)
+        assertEquals(ReadinessComponent.LOAD, result.componentScores[3].component)
+        assertEquals(ReadinessComponent.SUBJECTIVE, result.componentScores[4].component)
+
         val hrr = findComponent(result.componentScores, ReadinessComponent.HRR)
+        val hrv = findComponent(result.componentScores, ReadinessComponent.HRV)
         val sleep = findComponent(result.componentScores, ReadinessComponent.SLEEP)
         val load = findComponent(result.componentScores, ReadinessComponent.LOAD)
         val sub = findComponent(result.componentScores, ReadinessComponent.SUBJECTIVE)
 
         assertTrue(hrr.isAvailable)
+        assertTrue(hrv.isAvailable)
         assertTrue(sleep.isAvailable)
         assertTrue(load.isAvailable)
         assertTrue(sub.isAvailable)
 
+        // weights incl. HRV .15 — they sum to 1.0, so the composite is a
+        // straight weighted mean when all five are available
         val cfg = ReadinessScoringConfig()
-        val totalW = cfg.hrrWeight + cfg.sleepWeight + cfg.loadWeight + cfg.subjectiveWeight
+        val totalW = cfg.hrrWeight + cfg.hrvWeight + cfg.sleepWeight + cfg.loadWeight + cfg.subjectiveWeight
         val expected = (hrr.score * cfg.hrrWeight +
+            hrv.score * cfg.hrvWeight +
             sleep.score * cfg.sleepWeight +
             load.score * cfg.loadWeight +
             sub.score * cfg.subjectiveWeight) / totalW
@@ -401,12 +485,24 @@ class ReadinessScoringTest {
 
     @Test
     fun `custom config weights are respected`() {
+        // Three available components clear the availability gate; zeroing
+        // every weight but HRR collapses the composite onto the HRR score.
         val inputs = ReadinessInputs(
             date,
             rhr = RhrMetrics(todayRhr = 55.0, baselineRhr = 55.0, rhrDelta = 0.0),
             sleep = SleepMetrics(totalDurationMinutes = 480.0, deepPercent = 10.0, remPercent = 10.0),
+            load = LoadMetrics(workloadRatio = 1.0),
         )
-        val result = ReadinessScoring.score(inputs, ReadinessScoringConfig(hrrWeight = 1.0, sleepWeight = 0.0))
+        val result = ReadinessScoring.score(
+            inputs,
+            ReadinessScoringConfig(
+                hrrWeight = 1.0,
+                hrvWeight = 0.0,
+                sleepWeight = 0.0,
+                loadWeight = 0.0,
+                subjectiveWeight = 0.0,
+            ),
+        )
         val hrr = findComponent(result.componentScores, ReadinessComponent.HRR)
         assertEquals(hrr.score, result.compositeScore, 0.01)
     }
@@ -414,11 +510,12 @@ class ReadinessScoringTest {
     // ---- Confidence levels ----
 
     @Test
-    fun `4 available components means full confidence`() {
+    fun `5 available components means full confidence`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(
                 date,
                 rhr = RhrMetrics(todayRhr = 55.0, baselineRhr = 55.0, rhrDelta = 0.0),
+                hrv = HrvMetrics(todayHrv = 62.0, baselineHrv = 60.0, hrvDelta = 2.0),
                 sleep = SleepMetrics(totalDurationMinutes = 480.0),
                 load = LoadMetrics(workloadRatio = 1.0),
                 subjective = SubjectiveInput(exhaustionLevel = 3),
@@ -428,11 +525,13 @@ class ReadinessScoringTest {
     }
 
     @Test
-    fun `3 available components means partial confidence`() {
+    fun `4 available components means partial confidence`() {
+        // rhr + hrv + sleep + load = four available of five
         val result = ReadinessScoring.score(
             ReadinessInputs(
                 date,
                 rhr = RhrMetrics(todayRhr = 55.0, baselineRhr = 55.0, rhrDelta = 0.0),
+                hrv = HrvMetrics(todayHrv = 62.0, baselineHrv = 60.0, hrvDelta = 2.0),
                 sleep = SleepMetrics(totalDurationMinutes = 480.0),
                 load = LoadMetrics(workloadRatio = 1.0),
             ),
@@ -441,7 +540,24 @@ class ReadinessScoringTest {
     }
 
     @Test
-    fun `2 available components means estimated confidence`() {
+    fun `3 available components means estimated confidence`() {
+        // hrv + sleep + load: exactly three available → still a composite,
+        // but only estimated confidence.
+        val result = ReadinessScoring.score(
+            ReadinessInputs(
+                date,
+                hrv = HrvMetrics(todayHrv = 62.0, baselineHrv = 60.0, hrvDelta = 2.0),
+                sleep = SleepMetrics(totalDurationMinutes = 480.0),
+                load = LoadMetrics(workloadRatio = 1.0),
+            ),
+        )
+        assertEquals(DataConfidence.ESTIMATED, result.confidence)
+        assertTrue(result.compositeScore > 0)
+        assertTrue(result.state != ReadinessState.UNAVAILABLE)
+    }
+
+    @Test
+    fun `2 available components means unavailable result`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(
                 date,
@@ -449,7 +565,9 @@ class ReadinessScoringTest {
                 sleep = SleepMetrics(totalDurationMinutes = 480.0),
             ),
         )
-        assertEquals(DataConfidence.ESTIMATED, result.confidence)
+        assertEquals(DataConfidence.UNAVAILABLE, result.confidence)
+        assertEquals(0.0, result.compositeScore, 0.0)
+        assertEquals(ReadinessState.UNAVAILABLE, result.state)
     }
 
     @Test
@@ -505,10 +623,12 @@ class ReadinessScoringTest {
             date,
             rhr = RhrMetrics(todayRhr = 55.0, baselineRhr = 55.0, rhrDelta = 0.5),
             sleep = SleepMetrics(totalDurationMinutes = 450.0, deepPercent = 12.0, remPercent = 15.0),
+            load = LoadMetrics(workloadRatio = 1.0),
         )
         val defaultResult = ReadinessScoring.score(inputs)
         val customResult = ReadinessScoring.score(inputs, ReadinessScoringConfig(excellentThreshold = 60.0))
-        assertEquals(ReadinessState.GOOD, defaultResult.state) // composite is 75
+        // composite is 79.0 — (75·.30 + 75·.25 + 90·.20) / .75, weights incl. HRV .15
+        assertEquals(ReadinessState.GOOD, defaultResult.state)
         assertEquals(ReadinessState.EXCELLENT, customResult.state)
     }
 
@@ -621,7 +741,7 @@ class ReadinessScoringTest {
             ),
         )
         assertTrue(result.state != ReadinessState.UNAVAILABLE)
-        assertEquals(DataConfidence.PARTIAL, result.confidence)
+        assertEquals(DataConfidence.ESTIMATED, result.confidence) // 3 of 5 components
         assertTrue(result.compositeScore > 0)
     }
 
@@ -632,6 +752,7 @@ class ReadinessScoringTest {
                 date,
                 rhr = RhrMetrics(todayRhr = 55.0, baselineRhr = 55.0, rhrDelta = 0.0),
                 sleep = SleepMetrics(totalDurationMinutes = 480.0),
+                load = LoadMetrics(workloadRatio = 1.0),
             ),
         )
         assertTrue(result.state != ReadinessState.UNAVAILABLE)

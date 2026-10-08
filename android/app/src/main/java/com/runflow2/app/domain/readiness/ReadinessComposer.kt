@@ -31,7 +31,8 @@ object ReadinessComposer {
     const val RHR_BASELINE_MIN_VALUES = 7
 
     /** HRV baseline: previous-7-days median (app decision — the Dart/plan
-     * sources are silent on HRV baselining; HRV is display-only anyway). */
+     * sources are silent on HRV baselining; the median keeps the scored
+     * delta comparable day to day). */
     const val HRV_BASELINE_WINDOW_DAYS = 7L
 
     /** Majority of the 7-day window; keeps the delta displayable early. */
@@ -92,16 +93,15 @@ object ReadinessComposer {
      * Maps a day's entry onto the ReadinessInputs tree. Components with no
      * source data stay null exactly like the Dart orchestrator left them
      * unset; [ReadinessScoring] treats null and empty identically.
-     */
-    /**
-     * [hrvBaseline] is accepted for call-site symmetry — HRV is not part of
-     * the inputs tree (never scored); it feeds [hrvMetrics] only.
+     * [hrvBaseline] feeds [hrvMetrics]: HRV is a scored component, so the
+     * same HrvMetrics rides in [ReadinessInputs.hrv] (days without a today
+     * value simply lose that component and its weight).
      */
     fun buildInputs(
         date: LocalDate,
         entry: DailyEntryEntity?,
         rhrBaseline: Double?,
-        @Suppress("UNUSED_PARAMETER") hrvBaseline: Double?,
+        hrvBaseline: Double?,
         load: LoadMetrics?,
         profileMaxHr: Int?,
         profileRestingHr: Int?,
@@ -111,6 +111,7 @@ object ReadinessComposer {
         sleep = sleepMetrics(entry),
         load = load,
         subjective = subjectiveInput(entry),
+        hrv = hrvMetrics(entry, hrvBaseline),
         maxHr = profileMaxHr,
         restingHr = profileRestingHr,
     )
@@ -154,7 +155,10 @@ object ReadinessComposer {
         )
     }
 
-    /** HRV pass-through for the payload (never scored). */
+    /**
+     * HRV metrics: scored as the HRV component via [ReadinessInputs.hrv]
+     * and passed through as the payload's hrvJson for display.
+     */
     fun hrvMetrics(entry: DailyEntryEntity?, hrvBaseline: Double?): HrvMetrics? {
         val today = entry?.hrvMs ?: return null
         val delta = hrvBaseline?.let { today - it }

@@ -207,6 +207,7 @@ class ReadinessJsonTest {
         val inputs = ReadinessInputs(
             date = LocalDate.of(2025, 1, 1),
             rhr = RhrMetrics(todayRhr = 55.0, baselineRhr = 55.0, rhrDelta = 0.0),
+            hrv = HrvMetrics(todayHrv = 62.0, baselineHrv = 60.0, hrvDelta = 2.0),
             sleep = SleepMetrics(totalDurationMinutes = 480.0),
             load = LoadMetrics(workloadRatio = 1.0),
             subjective = SubjectiveInput(exhaustionLevel = 3),
@@ -215,7 +216,7 @@ class ReadinessJsonTest {
         val obj = json.parseToJsonElement(payload.toJson()).jsonObject
         val scores = obj["componentScores"] as JsonObject
 
-        assertEquals(setOf("hrr", "sleep", "load", "subjective"), scores.keys)
+        assertEquals(setOf("hrr", "hrv", "sleep", "load", "subjective"), scores.keys)
         val hrr = scores["hrr"]!!.jsonObject
         assertEquals(75.0, hrr["score"]!!.jsonPrimitive.double, 0.0)
         assertTrue(hrr["isAvailable"]!!.jsonPrimitive.boolean)
@@ -223,10 +224,51 @@ class ReadinessJsonTest {
     }
 
     @Test
+    fun `payload componentScores carries the scored hrv component`() {
+        val hrv = HrvMetrics(todayHrv = 66.0, baselineHrv = 60.0, hrvDelta = 6.0)
+        val inputs = ReadinessInputs(
+            date = LocalDate.of(2025, 1, 1),
+            hrv = hrv,
+            sleep = SleepMetrics(totalDurationMinutes = 480.0),
+            load = LoadMetrics(workloadRatio = 1.0),
+        )
+        val payload = ReadinessJson.buildPayload(inputs, ReadinessScoring.score(inputs))
+
+        // +10% vs baseline → 85 + capped 15 bonus = 100
+        val hrvEntry = payload.componentScores.getValue("hrv")
+        assertEquals(100.0, hrvEntry.score, 0.0)
+        assertTrue(hrvEntry.isAvailable)
+        assertEquals("HRV improved by 10.0% vs 7-day baseline", hrvEntry.reason)
+        // hrvJson pass-through still carries the metrics for display
+        assertEquals(66.0, payload.hrvJson?.todayHrv!!, 0.0)
+
+        // round-trip: a payload with the "hrv" key decodes it back
+        val restored = requireNotNull(ReadinessPayload.fromJson(payload.toJson()))
+        assertEquals(100.0, restored.componentScores.getValue("hrv").score, 0.0)
+        assertTrue(restored.componentScores.getValue("hrv").isAvailable)
+    }
+
+    @Test
+    fun `decode accepts legacy payloads without an hrv component`() {
+        val text = """
+            {"date":"2024-06-15","compositeScore":77.5,"state":"good","confidence":"partial",
+             "componentScores":{"hrr":{"score":85.0,"isAvailable":true},
+                                "sleep":{"score":70.0,"isAvailable":true}}}
+        """.trimIndent()
+        val payload = requireNotNull(ReadinessPayload.fromJson(text))
+        assertEquals(setOf("hrr", "sleep"), payload.componentScores.keys)
+        assertFalse(payload.componentScores.containsKey("hrv"))
+        assertEquals(85.0, payload.componentScores.getValue("hrr").score, 0.0)
+        assertTrue(payload.componentScores.getValue("sleep").isAvailable)
+    }
+
+    @Test
     fun `buildPayload carries date scoring outputs and athlete hr fields`() {
+        val hrv = HrvMetrics(todayHrv = 62.0, baselineHrv = 58.0, hrvDelta = 4.0, trendDirection = "up")
         val inputs = ReadinessInputs(
             date = LocalDate.of(2025, 1, 1),
             rhr = RhrMetrics(todayRhr = 50.0, baselineRhr = 55.0, rhrDelta = -5.0),
+            hrv = hrv,
             sleep = SleepMetrics(totalDurationMinutes = 510.0, deepPercent = 22.0, remPercent = 22.0),
             load = LoadMetrics(workloadRatio = 1.0),
             subjective = SubjectiveInput(exhaustionLevel = 1, muscleSoreness = 1, stressLevel = 1),
@@ -237,7 +279,7 @@ class ReadinessJsonTest {
         val payload = ReadinessJson.buildPayload(
             inputs,
             result,
-            hrv = HrvMetrics(todayHrv = 62.0, baselineHrv = 58.0, hrvDelta = 4.0, trendDirection = "up"),
+            hrv = hrv,
             computedAt = Instant.parse("2026-10-08T06:30:00Z"),
         )
         assertEquals("2025-01-01", payload.date)

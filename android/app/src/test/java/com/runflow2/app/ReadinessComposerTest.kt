@@ -351,6 +351,7 @@ class ReadinessComposerTest {
         val e = entry(
             date = day.toString(),
             restingHr = 55,
+            hrvMs = 62.0,
             sleepMinutes = 480,
             deepMinutes = 100,
             remMinutes = 100,
@@ -361,7 +362,7 @@ class ReadinessComposerTest {
             profileMaxHr = 190, profileRestingHr = 52,
         )
 
-        // two available components (hrr + sleep) → estimated confidence
+        // three available components (hrr + hrv + sleep) → estimated confidence
         assertEquals("estimated", updated.confidence)
         assertNotNull(updated.score)
         assertTrue(updated.score!! > 0.0 && updated.score!! <= 100.0)
@@ -369,8 +370,9 @@ class ReadinessComposerTest {
         assertNotNull(ReadinessJson.readinessStateFromWire(updated.state))
 
         val components = updated.cachedComponentScores()
-        assertEquals(setOf("hrr", "sleep", "load", "subjective"), components.keys)
+        assertEquals(setOf("hrr", "hrv", "sleep", "load", "subjective"), components.keys)
         assertTrue(components.getValue("hrr").isAvailable)
+        assertTrue(components.getValue("hrv").isAvailable)
         assertTrue(components.getValue("sleep").isAvailable)
         assertFalse(components.getValue("load").isAvailable)
 
@@ -382,7 +384,8 @@ class ReadinessComposerTest {
 
     @Test
     fun `computed cache keeps null columns when the day is unscorable`() {
-        // only HRV: no component is available
+        // only HRV: a single available component stays under the three needed
+        // for a composite, so the day is unscorable
         val e = entry(date = day.toString(), hrvMs = 62.0, score = 71.5)
             .copy(state = "good", confidence = "partial", componentScoresJson = "{}")
         val updated = ReadinessComposer.computedCache(

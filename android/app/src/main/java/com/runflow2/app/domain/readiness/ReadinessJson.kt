@@ -18,10 +18,12 @@ import kotlinx.serialization.json.intOrNull
  * models (flutter/lib/data/models/readiness/readiness_models.g.dart at
  * commit a4616887): rhrJson/sleepJson/loadJson/subjectiveJson keep their
  * camelCase fields verbatim, while componentScores is emitted as a map keyed
- * "hrr"|"sleep"|"load"|"subjective" — the shape the web ReadinessCard reads.
+ * "hrr"|"hrv"|"sleep"|"load"|"subjective" (HRV was added as a scored
+ * component after the Flutter port) — the shape the web ReadinessCard reads.
  * Decoding is deliberately tolerant (string-encoded JSON, the legacy Flutter
  * list shape and case-insensitive enum names all parse), mirroring the
- * hand-written Flutter fromJson.
+ * hand-written Flutter fromJson; payloads from before the HRV component
+ * simply lack the "hrv" key and decode unchanged.
  */
 
 // ---- Wire DTOs (all defaults so unknown/missing fields never fail a decode) ----
@@ -65,7 +67,7 @@ data class SubjectiveJson(
     val enteredAt: String? = null, // ISO-8601 timestamp
 )
 
-/** HRV pass-through: synced for display, never part of the score. */
+/** HRV metrics: scored as a component AND synced in this pass-through slot. */
 @Serializable
 data class HrvJson(
     val todayHrv: Double? = null,
@@ -214,7 +216,9 @@ object ReadinessJson {
         sleepJson = inputs.sleep?.toJsonDto(),
         loadJson = inputs.load?.toJsonDto(),
         subjectiveJson = inputs.subjective?.toJsonDto(),
-        hrvJson = hrv?.toJsonDto(),
+        // The explicit [hrv] argument wins; inputs.hrv is the scored thread
+        // (ReadinessScoring sees the same HrvMetrics) used as the fallback.
+        hrvJson = (hrv ?: inputs.hrv)?.toJsonDto(),
         computedAt = computedAt?.toString(),
         maxHr = inputs.maxHr,
         restingHr = inputs.restingHr,

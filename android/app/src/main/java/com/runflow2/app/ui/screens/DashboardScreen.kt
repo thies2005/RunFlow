@@ -112,6 +112,7 @@ fun DashboardScreen(
         dismissed = settings.loginPromptDismissed,
         remindAt = settings.loginPromptRemindAt,
         now = now,
+        offlineModeChosen = settings.offlineModeChosen,
     )
 
     val analytics by produceState<AnalyticsBundle?>(null, activities) {

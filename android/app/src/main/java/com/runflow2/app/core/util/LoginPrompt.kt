@@ -11,13 +11,15 @@ object LoginPrompt {
     fun remindInAWeek(now: Long): Long = now + WEEK_MS
 
     /**
-     * The nudge is shown only when signed out, not permanently dismissed, and
-     * any "remind me later" snooze has elapsed.
+     * The nudge is shown only when signed out, not permanently dismissed, any
+     * "remind me later" snooze has elapsed, and the user has not chosen to
+     * stay offline.
      */
     fun shouldShow(
         loggedIn: Boolean,
         dismissed: Boolean,
         remindAt: Long,
         now: Long,
-    ): Boolean = !loggedIn && !dismissed && now >= remindAt
+        offlineModeChosen: Boolean,
+    ): Boolean = !loggedIn && !dismissed && !offlineModeChosen && now >= remindAt
 }

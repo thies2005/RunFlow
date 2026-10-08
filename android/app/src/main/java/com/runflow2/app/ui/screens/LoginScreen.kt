@@ -68,6 +68,9 @@ fun LoginScreen(
     fun completeSession(auth: com.runflow2.app.data.net.AuthResponse) {
         scope.launch {
             container.authStore.saveSession(auth)
+            // Logging in undoes any "use offline" choice so the sign-in nudge
+            // can return after a future sign-out.
+            container.settings.setOfflineModeChosen(false)
             container.appScope.launch { container.syncManager.syncNow("login") }
             busy = false
             onLoggedIn()

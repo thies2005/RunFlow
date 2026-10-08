@@ -10,6 +10,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.Upsert
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.runflow2.app.domain.model.ActivityType
@@ -198,6 +199,40 @@ data class PlanSnapshotEntity(
     val goalId: String,
     val createdAtEpochMs: Long,
     val workoutsJson: String, // JSON array of WorkoutSnapshotDto
+)
+
+/**
+ * Daily recovery entry powering the readiness score (v11): one row per local
+ * date. Health Connect imports fill restingHr/hrvMs/sleep* (source* = "hc");
+ * manual edits set manuallyEdited and the touched metric's source to
+ * "manual". dirty = local changes awaiting push to the server. The score/
+ * state/confidence/componentScoresJson columns cache the computed readiness
+ * result so the dashboard renders without recomputing.
+ */
+@Entity(tableName = "daily_entries")
+data class DailyEntryEntity(
+    @PrimaryKey val date: String, // local yyyy-MM-dd
+    val restingHr: Int?, // bpm
+    val hrvMs: Double?, // RMSS milliseconds
+    val sleepMinutes: Int?,
+    val deepMinutes: Int?,
+    val remMinutes: Int?,
+    val lightMinutes: Int?,
+    val exhaustionLevel: Int?, // 1..10
+    val muscleSoreness: Int?, // 1..10
+    val stressLevel: Int?, // 1..10
+    val note: String?,
+    val sourceRhr: String?, // hc | manual; null = never set
+    val sourceHrv: String?,
+    val sourceSleep: String?,
+    val manuallyEdited: Boolean = false,
+    val updatedAt: Long,
+    val dirty: Boolean = false, // needs push to server
+    // ---- computed readiness cache ----
+    val score: Double?,
+    val state: String?,
+    val confidence: String?,
+    val componentScoresJson: String?,
 )
 
 @Dao
@@ -429,12 +464,39 @@ interface PlanSnapshotDao {
     suspend fun updateWorkoutsJson(id: Long, json: String)
 }
 
+@Dao
+interface DailyEntryDao {
+    @Upsert
+    suspend fun upsert(entry: DailyEntryEntity)
+
+    @Query("SELECT * FROM daily_entries WHERE date = :date")
+    suspend fun byDate(date: String): DailyEntryEntity?
+
+    /** Inclusive on both ends, ordered by date; also serves the 30-day RHR/HRV baselines. */
+    @Query("SELECT * FROM daily_entries WHERE date BETWEEN :startDate AND :endDate ORDER BY date ASC")
+    suspend fun range(startDate: String, endDate: String): List<DailyEntryEntity>
+
+    @Query("SELECT * FROM daily_entries WHERE date BETWEEN :startDate AND :endDate ORDER BY date ASC")
+    fun rangeFlow(startDate: String, endDate: String): Flow<List<DailyEntryEntity>>
+
+    @Query("SELECT * FROM daily_entries WHERE date = :today")
+    fun todayFlow(today: String): Flow<DailyEntryEntity?>
+
+    @Query("SELECT * FROM daily_entries WHERE dirty = 1")
+    suspend fun dirtyEntries(): List<DailyEntryEntity>
+
+    /** Clears the push flag after the server accepted the listed dates. */
+    @Query("UPDATE daily_entries SET dirty = 0 WHERE date IN (:dates)")
+    suspend fun markClean(dates: List<String>)
+}
+
 @Database(
     entities = [
         ActivityEntity::class, GoalEntity::class, WorkoutEntity::class, ProfileEntity::class,
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
+        DailyEntryEntity::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -445,6 +507,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun syncQueueDao(): SyncQueueDao
     abstract fun chatDao(): ChatDao
     abstract fun planSnapshotDao(): PlanSnapshotDao
+    abstract fun dailyEntryDao(): DailyEntryDao
 
     companion object {
         /**
@@ -579,6 +642,41 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE chat_messages ADD COLUMN activityId TEXT")
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_chat_messages_activityId ON chat_messages(activityId)")
+            }
+        }
+
+        /**
+         * v10 -> v11 adds the daily_entries table powering the readiness
+         * score: one row per local date with Health-Connect-imported or
+         * manually entered recovery metrics, sync flags, and the computed
+         * score cache. Purely additive: a new table, no existing changes.
+         */
+        val MIGRATION_10_11: Migration = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS daily_entries (" +
+                        "date TEXT NOT NULL PRIMARY KEY, " +
+                        "restingHr INTEGER, " +
+                        "hrvMs REAL, " +
+                        "sleepMinutes INTEGER, " +
+                        "deepMinutes INTEGER, " +
+                        "remMinutes INTEGER, " +
+                        "lightMinutes INTEGER, " +
+                        "exhaustionLevel INTEGER, " +
+                        "muscleSoreness INTEGER, " +
+                        "stressLevel INTEGER, " +
+                        "note TEXT, " +
+                        "sourceRhr TEXT, " +
+                        "sourceHrv TEXT, " +
+                        "sourceSleep TEXT, " +
+                        "manuallyEdited INTEGER NOT NULL, " +
+                        "updatedAt INTEGER NOT NULL, " +
+                        "dirty INTEGER NOT NULL, " +
+                        "score REAL, " +
+                        "state TEXT, " +
+                        "confidence TEXT, " +
+                        "componentScoresJson TEXT)"
+                )
             }
         }
     }

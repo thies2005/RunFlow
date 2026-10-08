@@ -37,6 +37,13 @@ data class AppSettings(
     val healthConnectImportEnabled: Boolean = false,
     val healthConnectLastImportAt: Long = 0L,
     val healthConnectLastImportSummary: String = "",
+    // ---- Health Connect metrics + readiness ----
+    val hcRestingHrEnabled: Boolean = false,
+    val hcHrvEnabled: Boolean = false,
+    val hcSleepEnabled: Boolean = false,
+    val healthMetricsSyncEnabled: Boolean = true,
+    val offlineModeChosen: Boolean = false,
+    val readinessLastPushAt: Long = 0L,
 )
 
 class SettingsRepository(private val context: Context) {
@@ -61,6 +68,12 @@ class SettingsRepository(private val context: Context) {
         val HC_IMPORT_ENABLED = booleanPreferencesKey("health_connect_import_enabled")
         val HC_LAST_IMPORT_AT = longPreferencesKey("health_connect_last_import_at")
         val HC_LAST_IMPORT_SUMMARY = stringPreferencesKey("health_connect_last_import_summary")
+        val HC_RESTING_HR_ENABLED = booleanPreferencesKey("hc_resting_hr_enabled")
+        val HC_HRV_ENABLED = booleanPreferencesKey("hc_hrv_enabled")
+        val HC_SLEEP_ENABLED = booleanPreferencesKey("hc_sleep_enabled")
+        val HEALTH_METRICS_SYNC_ENABLED = booleanPreferencesKey("health_metrics_sync_enabled")
+        val OFFLINE_MODE_CHOSEN = booleanPreferencesKey("offline_mode_chosen")
+        val READINESS_LAST_PUSH_AT = longPreferencesKey("readiness_last_push_at")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -85,6 +98,12 @@ class SettingsRepository(private val context: Context) {
             healthConnectImportEnabled = p[Keys.HC_IMPORT_ENABLED] ?: false,
             healthConnectLastImportAt = p[Keys.HC_LAST_IMPORT_AT] ?: 0L,
             healthConnectLastImportSummary = p[Keys.HC_LAST_IMPORT_SUMMARY] ?: "",
+            hcRestingHrEnabled = p[Keys.HC_RESTING_HR_ENABLED] ?: false,
+            hcHrvEnabled = p[Keys.HC_HRV_ENABLED] ?: false,
+            hcSleepEnabled = p[Keys.HC_SLEEP_ENABLED] ?: false,
+            healthMetricsSyncEnabled = p[Keys.HEALTH_METRICS_SYNC_ENABLED] ?: true,
+            offlineModeChosen = p[Keys.OFFLINE_MODE_CHOSEN] ?: false,
+            readinessLastPushAt = p[Keys.READINESS_LAST_PUSH_AT] ?: 0L,
         )
     }
 
@@ -155,4 +174,25 @@ class SettingsRepository(private val context: Context) {
         it[Keys.HC_LAST_IMPORT_AT] = at
         it[Keys.HC_LAST_IMPORT_SUMMARY] = summary
     }
+
+    /** Per-metric Health Connect import toggles feeding the readiness score. */
+    suspend fun setHcRestingHrEnabled(enabled: Boolean) =
+        context.dataStore.edit { it[Keys.HC_RESTING_HR_ENABLED] = enabled }
+
+    suspend fun setHcHrvEnabled(enabled: Boolean) =
+        context.dataStore.edit { it[Keys.HC_HRV_ENABLED] = enabled }
+
+    suspend fun setHcSleepEnabled(enabled: Boolean) =
+        context.dataStore.edit { it[Keys.HC_SLEEP_ENABLED] = enabled }
+
+    /** When true, daily health metrics sync to the server for signed-in users. */
+    suspend fun setHealthMetricsSyncEnabled(enabled: Boolean) =
+        context.dataStore.edit { it[Keys.HEALTH_METRICS_SYNC_ENABLED] = enabled }
+
+    /** "Use offline" on the login nudge: suppress the sign-in prompt until login. */
+    suspend fun setOfflineModeChosen(chosen: Boolean) =
+        context.dataStore.edit { it[Keys.OFFLINE_MODE_CHOSEN] = chosen }
+
+    suspend fun setReadinessLastPushAt(at: Long) =
+        context.dataStore.edit { it[Keys.READINESS_LAST_PUSH_AT] = at }
 }

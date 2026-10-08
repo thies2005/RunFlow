@@ -20,8 +20,11 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.MonitorHeart
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -52,11 +55,14 @@ import com.runflow2.app.core.math.TrainingPaces
 import com.runflow2.app.core.math.VdotMath
 import com.runflow2.app.core.util.DistanceUnit
 import com.runflow2.app.core.util.Format
+import com.runflow2.app.data.db.DailyEntryEntity
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.domain.analytics.AnalyticsBundle
 import com.runflow2.app.domain.model.PaceZone
 import com.runflow2.app.ui.components.FitnessChart
+import com.runflow2.app.ui.components.HealthTrendChart
 import com.runflow2.app.ui.components.ProgressRing
+import com.runflow2.app.ui.components.ReadinessScoreChart
 import com.runflow2.app.ui.components.SectionTitle
 import com.runflow2.app.ui.components.Sparkline
 import com.runflow2.app.ui.components.StatTile
@@ -66,6 +72,7 @@ import com.runflow2.app.ui.components.color
 import com.runflow2.app.ui.theme.ChartAtl
 import com.runflow2.app.ui.theme.ChartCtl
 import com.runflow2.app.ui.theme.ChartTsb
+import java.time.LocalDate
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -457,6 +464,101 @@ fun AnalyticsScreen(container: AppContainer) {
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
+                        }
+                    }
+                }
+            }
+
+            // ---- recovery · RHR & HRV ----
+            item {
+                var healthRange by rememberSaveable { mutableStateOf(90) }
+                val today = remember { LocalDate.now() }
+                val healthEntries by produceState<List<DailyEntryEntity>>(emptyList(), healthRange) {
+                    container.repository.dailyEntryRangeFlow(today.minusDays(healthRange.toLong()), today)
+                        .collect { value = it }
+                }
+
+                val rhrValues = healthEntries.mapNotNull { it.restingHr?.toDouble() }
+                val hrvValues = healthEntries.mapNotNull { it.hrvMs }
+                val scoreValues = healthEntries.mapNotNull { it.score }
+                // dashed baselines = trailing 7 non-null values per metric
+                val rhrBaseline = rhrValues.takeLast(7).takeIf { it.isNotEmpty() }?.average()
+                val hrvBaseline = hrvValues.takeLast(7).takeIf { it.isNotEmpty() }?.average()
+
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SectionTitle("Recovery · RHR & HRV")
+                        if (healthEntries.isEmpty()) {
+                            Text(
+                                "No recovery entries in this window yet.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        } else {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                listOf(30, 90, 365).forEach { d ->
+                                    FilterChip(
+                                        selected = healthRange == d,
+                                        onClick = { healthRange = d },
+                                        label = { Text(if (d == 365) "1Y" else "${d}d") },
+                                    )
+                                }
+                            }
+                            HealthTrendChart(
+                                entries = healthEntries,
+                                rhrBaseline = rhrBaseline,
+                                hrvBaseline = hrvBaseline,
+                            )
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            ) {
+                                StatTile(
+                                    label = "Avg resting HR",
+                                    value = Format.heartRate(rhrValues.takeIf { it.isNotEmpty() }?.average()),
+                                    icon = Icons.Outlined.Favorite,
+                                    accent = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                StatTile(
+                                    label = "Avg HRV",
+                                    value = if (hrvValues.isEmpty()) "—" else "${hrvValues.average().roundToInt()} ms",
+                                    icon = Icons.Outlined.Bolt,
+                                    accent = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                StatTile(
+                                    label = "Readiness",
+                                    value = Format.oneDecimal(scoreValues.takeIf { it.isNotEmpty() }?.average()),
+                                    icon = Icons.Outlined.Speed,
+                                    accent = ChartTsb,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    "Readiness score",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                val scoredEntries = healthEntries.filter { it.score != null }
+                                if (scoredEntries.isEmpty()) {
+                                    Text(
+                                        "Log recovery in the dashboard to see trends",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                } else {
+                                    ReadinessScoreChart(entries = scoredEntries)
+                                }
+                            }
                         }
                     }
                 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.core.math.TrainingLoad
 import com.runflow2.app.core.util.Format
+import com.runflow2.app.data.db.DailyEntryEntity
 import com.runflow2.app.domain.analytics.WeekVolume
 import com.runflow2.app.ui.theme.ChartAtl
 import com.runflow2.app.ui.theme.ChartCtl
@@ -389,5 +391,242 @@ fun Sparkline(
             if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
         }
         drawPath(path, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
+    }
+}
+
+/** Parses the daily-entry yyyy-MM-dd key; null on malformed rows. */
+private fun parseDay(date: String): LocalDate? = runCatching { LocalDate.parse(date) }.getOrNull()
+
+/** Normalizes [v] against the series min/max; flat series spread over 1.0. */
+private fun normFrac(values: List<Double>, v: Double): Float {
+    val range = (values.max() - values.min()).coerceAtLeast(1.0)
+    return ((v - values.min()) / range).toFloat().coerceIn(0f, 1f)
+}
+
+/**
+ * Dual-axis recovery trend over one shared date axis: resting HR (drawn
+ * INVERTED — a lower RHR plots higher) and HRV, each normalized to its own
+ * window min/max, with dashed trailing-7-day-mean baseline lines when
+ * available. Draws whichever series has data; safe on 0/1 points.
+ */
+@Composable
+fun HealthTrendChart(
+    entries: List<DailyEntryEntity>,
+    rhrBaseline: Double?,
+    hrvBaseline: Double?,
+    modifier: Modifier = Modifier,
+    height: Int = 200,
+) {
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val gridColor = MaterialTheme.colorScheme.outlineVariant
+    val rhrColor = MaterialTheme.colorScheme.primary
+    val hrvColor = MaterialTheme.colorScheme.tertiary
+
+    val rhrPts = entries.mapIndexedNotNull { i, e -> e.restingHr?.let { i to it.toDouble() } }
+    val hrvPts = entries.mapIndexedNotNull { i, e -> e.hrvMs?.let { i to it } }
+    val rhrValues = rhrPts.map { it.second }
+    val hrvValues = hrvPts.map { it.second }
+
+    Column(modifier) {
+        // legend (mirrors FitnessChart)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 6.dp),
+        ) {
+            buildList {
+                if (rhrValues.isNotEmpty()) add("RHR" to rhrColor)
+                if (hrvValues.isNotEmpty()) add("HRV" to hrvColor)
+            }.forEachIndexed { i, (label, color) ->
+                if (i > 0) Spacer(Modifier.width(12.dp))
+                Canvas(Modifier.size(8.dp)) { drawCircle(color) }
+                Spacer(Modifier.width(4.dp))
+                Text(label, style = MaterialTheme.typography.labelMedium, color = labelColor)
+            }
+        }
+
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height.dp),
+        ) {
+            val w = size.width
+            val h = size.height
+            val padTop = 10f
+            val padBottom = 8f
+            val plotH = h - padTop - padBottom
+            val maxX = (entries.size - 1).coerceAtLeast(1)
+
+            fun px(i: Int) = i.toFloat() / maxX * w
+            // inverted: min RHR at the top, max at the bottom
+            fun rhrPy(v: Double) = padTop + normFrac(rhrValues, v) * plotH
+            fun hrvPy(v: Double) = padTop + (1f - normFrac(hrvValues, v)) * plotH
+
+            // subtle mid gridline
+            drawLine(
+                gridColor.copy(alpha = 0.35f),
+                Offset(0f, padTop + plotH / 2),
+                Offset(w, padTop + plotH / 2),
+                strokeWidth = 1f,
+            )
+
+            fun drawSeries(pts: List<Pair<Int, Double>>, py: (Double) -> Float, color: Color, strokeDp: Float) {
+                when {
+                    pts.isEmpty() -> Unit
+                    pts.size == 1 -> drawCircle(
+                        color,
+                        radius = 3.dp.toPx(),
+                        center = Offset(
+                            if (entries.size <= 1) w / 2f else px(pts[0].first),
+                            padTop + plotH / 2,
+                        ),
+                    )
+                    else -> {
+                        val path = Path()
+                        pts.forEachIndexed { k, (i, v) ->
+                            val o = Offset(px(i), py(v))
+                            if (k == 0) path.moveTo(o.x, o.y) else path.lineTo(o.x, o.y)
+                        }
+                        drawPath(path, color, style = Stroke(width = strokeDp.dp.toPx(), cap = StrokeCap.Round))
+                    }
+                }
+            }
+
+            // dashed baseline lines (trailing 7-day means)
+            val dash = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()))
+            if (rhrValues.isNotEmpty()) {
+                rhrBaseline?.let { b ->
+                    val y = rhrPy(b).coerceIn(padTop, padTop + plotH)
+                    drawLine(rhrColor.copy(alpha = 0.55f), Offset(0f, y), Offset(w, y), 1.2.dp.toPx(), pathEffect = dash)
+                }
+            }
+            if (hrvValues.isNotEmpty()) {
+                hrvBaseline?.let { b ->
+                    val y = hrvPy(b).coerceIn(padTop, padTop + plotH)
+                    drawLine(hrvColor.copy(alpha = 0.55f), Offset(0f, y), Offset(w, y), 1.2.dp.toPx(), pathEffect = dash)
+                }
+            }
+
+            drawSeries(hrvPts, ::hrvPy, hrvColor, strokeDp = 1.8f)
+            drawSeries(rhrPts, ::rhrPy, rhrColor, strokeDp = 2.2f)
+        }
+
+        // y-range captions: RHR window on the left, HRV window on the right
+        Row(Modifier.fillMaxWidth()) {
+            Text(
+                if (rhrValues.isEmpty()) "" else "RHR ${rhrValues.min().roundToInt()}–${rhrValues.max().roundToInt()}",
+                style = MaterialTheme.typography.labelSmall,
+                color = labelColor,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                if (hrvValues.isEmpty()) "" else "HRV ${hrvValues.min().roundToInt()}–${hrvValues.max().roundToInt()}",
+                style = MaterialTheme.typography.labelSmall,
+                color = labelColor,
+            )
+        }
+
+        // sparse x-axis labels: first / middle / last
+        Row(Modifier.fillMaxWidth()) {
+            val first = entries.firstOrNull()?.date?.let(::parseDay)
+            val mid = entries.getOrNull(entries.size / 2)?.date?.let(::parseDay)
+            val last = entries.lastOrNull()?.date?.let(::parseDay)
+            if (first != null && last != null) {
+                Text(first.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+                Spacer(Modifier.weight(1f))
+                if (entries.size >= 3 && mid != null) {
+                    Text(mid.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+                }
+                Spacer(Modifier.weight(1f))
+                Text(last.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+            }
+        }
+    }
+}
+
+/**
+ * Readiness score (0..100) line chart with subtle guide lines at 65 / 80.
+ * Simpler sibling of [FitnessChart]: fixed scale, no series toggles, no scrub.
+ */
+@Composable
+fun ReadinessScoreChart(
+    entries: List<DailyEntryEntity>,
+    modifier: Modifier = Modifier,
+    height: Int = 160,
+) {
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val gridColor = MaterialTheme.colorScheme.outlineVariant
+    val scoreColor = ChartTsb
+
+    val pts = entries.mapIndexedNotNull { i, e -> e.score?.let { i to it } }
+
+    Column(modifier) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height.dp),
+        ) {
+            val w = size.width
+            val h = size.height
+            val padTop = 8f
+            val padBottom = 6f
+            val plotH = h - padTop - padBottom
+            val maxX = (entries.size - 1).coerceAtLeast(1)
+
+            fun px(i: Int) = (if (entries.size <= 1) w / 2f else i.toFloat() / maxX * w)
+            fun py(v: Double) = padTop + (1f - (v / 100.0).toFloat()) * plotH
+
+            // guide lines at 65 / 80
+            listOf(65.0, 80.0).forEach { g ->
+                drawLine(
+                    gridColor.copy(alpha = 0.6f),
+                    Offset(0f, py(g)),
+                    Offset(w, py(g)),
+                    strokeWidth = 1f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx())),
+                )
+            }
+
+            if (pts.isNotEmpty()) {
+                val path = Path()
+                val fillPath = Path()
+                pts.forEachIndexed { k, (i, v) ->
+                    val o = Offset(px(i), py(v))
+                    if (k == 0) {
+                        path.moveTo(o.x, o.y)
+                        fillPath.moveTo(o.x, o.y)
+                    } else {
+                        path.lineTo(o.x, o.y)
+                        fillPath.lineTo(o.x, o.y)
+                    }
+                }
+                drawPath(
+                    fillPath,
+                    Brush.verticalGradient(listOf(scoreColor.copy(alpha = 0.10f), Color.Transparent)),
+                )
+                drawPath(path, scoreColor, style = Stroke(width = 2.2.dp.toPx(), cap = StrokeCap.Round))
+                if (pts.size == 1) {
+                    drawCircle(scoreColor, radius = 4.dp.toPx(), center = Offset(px(pts[0].first), py(pts[0].second)))
+                }
+            }
+        }
+        // x-axis labels
+        Row(Modifier.fillMaxWidth()) {
+            val first = entries.firstOrNull()?.date?.let(::parseDay)
+            val last = entries.lastOrNull()?.date?.let(::parseDay)
+            if (first != null && last != null) {
+                Text(
+                    first.format(monthFmt),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = labelColor,
+                )
+                Spacer(Modifier.weight(1f))
+                Text(
+                    last.format(monthFmt),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = labelColor,
+                )
+            }
+        }
     }
 }

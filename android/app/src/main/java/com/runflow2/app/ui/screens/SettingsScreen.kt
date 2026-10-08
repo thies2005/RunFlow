@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -359,11 +360,14 @@ fun SettingsScreen(
                 )
             }
 
-            SettingSection("Health Connect") {
+            SettingSection("Data sources") {
                 val hc = container.healthConnect
                 val availability = remember { hc.availability() }
+                val hcUnavailable =
+                    availability is com.runflow2.app.data.health.HealthConnectManager.Availability.Unavailable
                 var importRunning by remember { mutableStateOf(false) }
                 var permissionGranted by remember { mutableStateOf(false) }
+                var importError by remember { mutableStateOf<String?>(null) }
 
                 LaunchedEffect(availability) {
                     if (availability is com.runflow2.app.data.health.HealthConnectManager.Availability.Available) {
@@ -373,30 +377,106 @@ fun SettingsScreen(
                     }
                 }
 
-                if (availability is com.runflow2.app.data.health.HealthConnectManager.Availability.Unavailable) {
+                val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                    androidx.health.connect.client.PermissionController.createRequestPermissionResultContract(),
+                ) { granted ->
+                    permissionGranted = granted.containsAll(hc.permissions)
+                    if (permissionGranted) {
+                        scope.launch {
+                            container.settings.setHealthConnectImportEnabled(true)
+                            importRunning = true
+                            hc.importRuns()
+                            importRunning = false
+                        }
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "Health Connect is not available on this device. It is built into Android 14+ and available as the \"Health Connect by Android\" app on older versions.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        "Web & Strava",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
                     )
-                } else {
-                    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-                        androidx.health.connect.client.PermissionController.createRequestPermissionResultContract(),
-                    ) { granted ->
-                        permissionGranted = granted.containsAll(hc.permissions)
-                        if (permissionGranted) {
-                            scope.launch {
-                                container.settings.setHealthConnectImportEnabled(true)
-                                importRunning = true
-                                hc.importRuns()
-                                importRunning = false
+                    if (auth.loggedIn) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "Connected · ${auth.name ?: auth.email ?: "signed in"}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            TextButton(
+                                onClick = { scope.launch { container.syncManager.syncNow("manual", forceStrava = true) } },
+                                enabled = !syncStatus.running,
+                            ) { Text(if (syncStatus.running) "Syncing…" else "Sync now") }
+                        }
+                    } else {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "Not connected",
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Button(onClick = onLogin) { Text("Connect") }
+                        }
+                        if (!settings.offlineModeChosen) {
+                            TextButton(
+                                onClick = { scope.launch { container.settings.setOfflineModeChosen(true) } },
+                            ) { Text("Stay offline") }
+                        } else {
+                            Text(
+                                "Sign-in hints hidden",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            TextButton(
+                                onClick = { scope.launch { container.settings.setOfflineModeChosen(false) } },
+                            ) { Text("Show hints again") }
+                        }
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Health Connect",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    if (hcUnavailable) {
+                        Text(
+                            "Health Connect is not available on this device. It is built into Android 14+ and available as the \"Health Connect by Android\" app on older versions — the imports below stay off until it is installed.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                if (permissionGranted) "Access granted"
+                                else "Grant read access to import your data",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (!permissionGranted) {
+                                OutlinedButton(onClick = { permissionLauncher.launch(hc.permissions) }) {
+                                    Text("Grant access")
+                                }
                             }
                         }
                     }
                     SwitchRow(
-                        title = "Import runs from Health Connect",
-                        subtitle = "Pull runs recorded in other apps and watches (Strava, Garmin, Fitbit…) into RunFlow on every sync",
+                        title = "Runs",
+                        subtitle = "Import runs recorded by other apps",
                         checked = settings.healthConnectImportEnabled,
+                        enabled = !hcUnavailable,
                         onChecked = { on ->
                             if (!on) {
                                 scope.launch { container.settings.setHealthConnectImportEnabled(false) }
@@ -412,23 +492,58 @@ fun SettingsScreen(
                             }
                         },
                     )
-                    if (settings.healthConnectImportEnabled && !permissionGranted) {
+                    if (settings.healthConnectImportEnabled && !permissionGranted && !hcUnavailable) {
                         Text(
                             "Read permission missing — turn the toggle off and on to grant it in Health Connect.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
                         )
                     }
+                    SwitchRow(
+                        title = "Resting heart rate",
+                        subtitle = "Daily resting HR from wearable data",
+                        checked = settings.hcRestingHrEnabled,
+                        enabled = !hcUnavailable,
+                        onChecked = { scope.launch { container.settings.setHcRestingHrEnabled(it) } },
+                    )
+                    SwitchRow(
+                        title = "Heart-rate variability",
+                        subtitle = "RMSSD values from wearable data",
+                        checked = settings.hcHrvEnabled,
+                        enabled = !hcUnavailable,
+                        onChecked = { scope.launch { container.settings.setHcHrvEnabled(it) } },
+                    )
+                    SwitchRow(
+                        title = "Sleep",
+                        subtitle = "Nightly sleep sessions and stages",
+                        checked = settings.hcSleepEnabled,
+                        enabled = !hcUnavailable,
+                        onChecked = { scope.launch { container.settings.setHcSleepEnabled(it) } },
+                    )
                     OutlinedButton(
                         onClick = {
                             scope.launch {
                                 importRunning = true
-                                hc.importRuns()
+                                importError = null
+                                when (val result = hc.importIfEnabled()) {
+                                    is com.runflow2.app.data.health.HealthConnectManager.ImportResult.NoPermission ->
+                                        importError = "Health Connect permission is missing — grant access and try again."
+                                    is com.runflow2.app.data.health.HealthConnectManager.ImportResult.Failed ->
+                                        importError = "Import failed: ${result.message}"
+                                    else -> Unit
+                                }
                                 importRunning = false
                             }
                         },
-                        enabled = permissionGranted && !importRunning,
+                        enabled = !hcUnavailable && !importRunning,
                     ) { Text(if (importRunning) "Importing…" else "Import now") }
+                    importError?.let {
+                        Text(
+                            it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
                     if (settings.healthConnectLastImportAt > 0) {
                         Text(
                             "Last import: ${settings.healthConnectLastImportSummary.ifBlank { "no new runs" }} · " +
@@ -437,6 +552,20 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Sync",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    SwitchRow(
+                        title = "Sync health metrics to web",
+                        subtitle = "Pushes daily readiness to your account when signed in",
+                        checked = settings.healthMetricsSyncEnabled,
+                        onChecked = { scope.launch { container.settings.setHealthMetricsSyncEnabled(it) } },
+                    )
                 }
             }
 
@@ -552,6 +681,7 @@ private fun SwitchRow(
     subtitle: String,
     checked: Boolean,
     onChecked: (Boolean) -> Unit,
+    enabled: Boolean = true,
 ) {
     Row(
         Modifier.fillMaxWidth(),
@@ -561,6 +691,6 @@ private fun SwitchRow(
             Text(title, style = MaterialTheme.typography.bodyLarge)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(checked = checked, onCheckedChange = onChecked)
+        Switch(checked = checked, onCheckedChange = onChecked, enabled = enabled)
     }
 }

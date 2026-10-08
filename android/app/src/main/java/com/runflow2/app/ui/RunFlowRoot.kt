@@ -33,6 +33,7 @@ import com.runflow2.app.ui.screens.AiCoachScreen
 import com.runflow2.app.ui.screens.AnalyticsScreen
 import com.runflow2.app.ui.screens.AthleteScreen
 import com.runflow2.app.ui.screens.DashboardScreen
+import com.runflow2.app.ui.screens.DataSourceSetupScreen
 import com.runflow2.app.ui.screens.EditProfileScreen
 import com.runflow2.app.ui.screens.HrZonesScreen
 import com.runflow2.app.ui.screens.LoginScreen
@@ -56,6 +57,7 @@ object Routes {
     const val ACTIVITIES = "activities"
     const val SETTINGS = "settings"
     const val LOGIN = "login"
+    const val DATA_SOURCE_SETUP = "data_source_setup"
     const val AI_COACH = "ai_coach"
     const val AI_COACH_ACTIVITY = "ai_coach/activity/{activityId}"
     fun aiCoachActivity(activityId: String) = "ai_coach/activity/$activityId"
@@ -142,13 +144,31 @@ fun RunFlowRoot(container: AppContainer) {
                 modifier = Modifier.padding(padding),
             ) {
                 composable(Routes.ONBOARDING) {
+                    // The carousel no longer finishes onboarding itself —
+                    // both exits lead to the data-source setup step.
                     OnboardingScreen(
+                        onFinish = {
+                            navController.navigate(Routes.DATA_SOURCE_SETUP) { launchSingleTop = true }
+                        },
+                    )
+                }
+
+                composable(Routes.DATA_SOURCE_SETUP) {
+                    DataSourceSetupScreen(
+                        container = container,
                         onDone = {
                             container.appScope.launch { container.settings.setOnboardingDone() }
                             if (!settings.onboardingDone) {
                                 navController.navigate(Routes.DASHBOARD) {
                                     popUpTo(Routes.ONBOARDING) { inclusive = true }
                                 }
+                            }
+                        },
+                        onSignIn = {
+                            container.appScope.launch { container.settings.setOnboardingDone() }
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(Routes.ONBOARDING) { inclusive = true }
+                                launchSingleTop = true
                             }
                         },
                     )
@@ -236,10 +256,23 @@ fun RunFlowRoot(container: AppContainer) {
                 }
 
                 composable(Routes.LOGIN) {
+                    // Entered from the data-source setup, login is the only
+                    // back-stack entry — popping is impossible, so back and
+                    // logged-in both fall through to the dashboard instead
+                    // (onboardingDone is already set; the login nudge takes
+                    // over from there).
+                    fun exitLogin() {
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Routes.DASHBOARD) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
                     LoginScreen(
                         container = container,
-                        onBack = { navController.popBackStack() },
-                        onLoggedIn = { navController.popBackStack() },
+                        onBack = { exitLogin() },
+                        onLoggedIn = { exitLogin() },
                     )
                 }
 

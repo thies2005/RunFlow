@@ -42,8 +42,9 @@ private data class Page(
     val body: String,
 )
 
+/** [onFinish] leaves the carousel — it leads to the data-source setup step. */
 @Composable
-fun OnboardingScreen(onDone: () -> Unit) {
+fun OnboardingScreen(onFinish: () -> Unit) {
     val pages = listOf(
         Page(
             Icons.Outlined.RadioButtonChecked,
@@ -134,7 +135,7 @@ fun OnboardingScreen(onDone: () -> Unit) {
         if (pagerState.currentPage < pages.size - 1) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(
-                    onClick = onDone,
+                    onClick = onFinish,
                     modifier = Modifier.weight(1f),
                 ) { Text("Skip") }
                 Button(
@@ -143,7 +144,7 @@ fun OnboardingScreen(onDone: () -> Unit) {
                 ) { Text("Next") }
             }
         } else {
-            Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onFinish, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Outlined.DirectionsRun, null)
                 Spacer(Modifier.width(8.dp))
                 Text("Let's run")

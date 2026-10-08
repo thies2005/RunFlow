@@ -172,12 +172,6 @@ fun PlanScreen(
                         weeklyKm = g.weeklyKmGoal,
                         targetTime = g.targetTimeSec,
                         unit = unit,
-                        engineLabel = when {
-                            !g.isLocalOnly -> "Web engine · synced"
-                            workouts.any { it.webWorkoutType != null } -> "Web engine · local"
-                            // plans created before the classic engine was removed (v2.3.0)
-                            else -> "Legacy classic plan"
-                        },
                         onRecordResult = { showRaceResult = true },
                     )
                 }
@@ -310,11 +304,7 @@ fun PlanScreen(
             onDismissRequest = { showDeletePlan = false },
             title = { Text("Delete plan?") },
             text = {
-                Text(
-                    "\"${g.name}\" and all ${g.planWeeks} weeks of workouts will be removed. " +
-                        if (g.isLocalOnly) "This plan only exists on this device."
-                        else "It will also be deleted from your account on all devices."
-                )
+                Text("\"${g.name}\" and all ${g.planWeeks} weeks of workouts will be removed.")
             },
             confirmButton = {
                 TextButton(
@@ -379,7 +369,6 @@ private fun GoalHeaderCard(
     weeklyKm: Double,
     targetTime: Int?,
     unit: DistanceUnit,
-    engineLabel: String,
     onRecordResult: () -> Unit,
 ) {
     Card(
@@ -401,13 +390,6 @@ private fun GoalHeaderCard(
                     Text("$daysToGo", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                     Text(if (daysToGo == 1L) "day" else "days", style = MaterialTheme.typography.labelMedium)
                 }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                InfoChip(
-                    engineLabel,
-                    container = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
             LinearProgressIndicator(
                 progress = { if (total > 0) done.toFloat() / total else 0f },

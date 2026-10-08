@@ -835,6 +835,13 @@ class RunFlowRepository(
     /** One local day's recovery entry, or null when nothing was ever recorded. */
     suspend fun dailyEntryByDate(date: String): DailyEntryEntity? = dailyEntryDao.byDate(date)
 
+    /** Observes one day's entry — the dashboard recovery card. */
+    fun dailyEntryFlow(date: LocalDate): Flow<DailyEntryEntity?> = dailyEntryDao.todayFlow(date.toString())
+
+    /** Observes a date range — the analytics health trends. */
+    fun dailyEntryRangeFlow(start: LocalDate, end: LocalDate): Flow<List<DailyEntryEntity>> =
+        dailyEntryDao.rangeFlow(start.toString(), end.toString())
+
     suspend fun saveDailyEntry(entry: DailyEntryEntity) = dailyEntryDao.upsert(entry)
 
     /**

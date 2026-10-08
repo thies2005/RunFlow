@@ -54,7 +54,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
 import com.runflow2.app.core.math.VdotMath
@@ -64,9 +66,11 @@ import com.runflow2.app.core.util.LoginPrompt
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.analytics.AnalyticsBundle
+import com.runflow2.app.ui.components.DailyFormSheet
 import com.runflow2.app.ui.components.InfoChip
 import com.runflow2.app.ui.components.ProgressRing
 import com.runflow2.app.ui.components.SectionTitle
+import com.runflow2.app.ui.components.Sparkline
 import com.runflow2.app.ui.components.StatTile
 import com.runflow2.app.ui.components.WeeklyVolumeBars
 import com.runflow2.app.ui.components.WorkoutVisuals
@@ -78,6 +82,8 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -106,6 +112,7 @@ fun DashboardScreen(
     val auth by container.authStore.state.collectAsState()
     val scope = rememberCoroutineScope()
     var loginPromptHidden by remember { mutableStateOf(false) }
+    var showDailyForm by remember { mutableStateOf(false) }
     val now = remember { System.currentTimeMillis() }
     val showLoginPrompt = auth.initialized && !loginPromptHidden && LoginPrompt.shouldShow(
         loggedIn = auth.loggedIn,
@@ -118,6 +125,12 @@ fun DashboardScreen(
     val analytics by produceState<AnalyticsBundle?>(null, activities) {
         value = container.repository.analytics(365)
     }
+
+    // ---- recovery card: today's entry + the last 30 days for trend/baselines ----
+    val todayEntry by container.repository.dailyEntryFlow(today).collectAsState(initial = null)
+    val last30Entries by container.repository
+        .dailyEntryRangeFlow(today.minusDays(29), today)
+        .collectAsState(initial = emptyList())
 
     val weekStart = today.with(DayOfWeek.MONDAY)
     val runsThisWeek = activities.count {
@@ -217,6 +230,157 @@ fun DashboardScreen(
                                     icon = Icons.Outlined.Favorite,
                                     accent = MaterialTheme.colorScheme.primary,
                                 )
+                            }
+                        }
+                    }
+                }
+
+                // ---- Recovery card ----
+                item {
+                    val todayStr = today.toString()
+                    val entry = todayEntry
+                    // strictly-prior entries within the fetched 30-day window
+                    val history = last30Entries.filter { it.date < todayStr }
+                    val weekStartStr = today.minusDays(7).toString()
+                    val rhrBaseline = history
+                        .filter { it.date >= weekStartStr && it.restingHr != null }
+                        .map { it.restingHr!!.toDouble() }
+                        .takeIf { it.isNotEmpty() }
+                        ?.average()
+                    val hrvBaseline = history
+                        .filter { it.date >= weekStartStr && it.hrvMs != null }
+                        .map { it.hrvMs!! }
+                        .takeIf { it.isNotEmpty() }
+                        ?.average()
+
+                    val hrvSeries = last30Entries.filter { it.hrvMs != null }.map { it.hrvMs!! }
+                    val rhrSeries = last30Entries.filter { it.restingHr != null }.map { it.restingHr!!.toDouble() }
+                    val sparkValues = if (hrvSeries.size >= 2) hrvSeries else rhrSeries
+                    val sparkLabel = if (hrvSeries.size >= 2) "HRV · last 30 days" else "Resting HR · last 30 days"
+
+                    if (entry == null) {
+                        // empty state — one line + button
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showDailyForm = true },
+                        ) {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    "Recovery — log today",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Button(onClick = { showDailyForm = true }) {
+                                    Text("Log now")
+                                }
+                            }
+                        }
+                    } else {
+                        val stateColor = readinessColor(entry.state)
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showDailyForm = true },
+                        ) {
+                            Column(
+                                Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Box(
+                                        Modifier
+                                            .size(12.dp)
+                                            .background(stateColor, CircleShape),
+                                    )
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text("Recovery", style = MaterialTheme.typography.titleMedium)
+                                        Text(
+                                            if (entry.score != null) {
+                                                sparkLabel
+                                            } else {
+                                                "Not enough data to score yet"
+                                            },
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                    if (entry.score != null) {
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text(
+                                                "${entry.score.roundToInt()}",
+                                                style = MaterialTheme.typography.headlineMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = stateColor,
+                                            )
+                                            InfoChip(
+                                                text = entry.state?.replaceFirstChar { it.uppercase() } ?: "—",
+                                                container = stateColor.copy(alpha = 0.15f),
+                                                contentColor = stateColor,
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (entry.restingHr != null || entry.hrvMs != null) {
+                                    val rhrDelta = entry.restingHr?.let { rhr ->
+                                        rhrBaseline?.let { b -> rhr.toDouble() - b }
+                                    }
+                                    val hrvDelta = entry.hrvMs?.let { hrv ->
+                                        hrvBaseline?.let { b -> hrv - b }
+                                    }
+                                    Row(
+                                        Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        MetricDeltaTile(
+                                            label = "Resting HR",
+                                            value = entry.restingHr?.let { "$it bpm" } ?: "—",
+                                            caption = rhrDelta?.let { deltaCaption(it) }
+                                                ?: if (entry.restingHr == null) null else "no 7-day avg yet",
+                                            captionGood = rhrDelta?.let { deltaTone(it, lowerIsBetter = true) },
+                                            icon = Icons.Outlined.Favorite,
+                                            accent = MaterialTheme.colorScheme.primary,
+                                        )
+                                        MetricDeltaTile(
+                                            label = "HRV",
+                                            value = entry.hrvMs?.let { "${it.roundToInt()} ms" } ?: "—",
+                                            caption = hrvDelta?.let { deltaCaption(it) }
+                                                ?: if (entry.hrvMs == null) null else "no 7-day avg yet",
+                                            captionGood = hrvDelta?.let { deltaTone(it, lowerIsBetter = false) },
+                                            icon = Icons.Outlined.MonitorHeart,
+                                            accent = MaterialTheme.colorScheme.tertiary,
+                                        )
+                                    }
+                                }
+
+                                if (sparkValues.size >= 2) {
+                                    Sparkline(
+                                        values = sparkValues,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(36.dp),
+                                        color = stateColor,
+                                    )
+                                }
+
+                                if (entry.score == null) {
+                                    TextButton(
+                                        onClick = { showDailyForm = true },
+                                        modifier = Modifier.align(Alignment.End),
+                                    ) {
+                                        Text("Add how you feel")
+                                    }
+                                }
                             }
                         }
                     }
@@ -547,5 +711,93 @@ fun DashboardScreen(
                 }
             },
         )
+    }
+
+    // ---- daily recovery form sheet ----
+    if (showDailyForm) {
+        DailyFormSheet(container = container, onDismiss = { showDailyForm = false })
+    }
+}
+
+/**
+ * Color for a readiness state wire name ("excellent" | "good" | …), using
+ * scheme tones; "reduced" gets a warning orange (the app's StatusFatigued
+ * tone) since the color scheme has no orange of its own. Null/unavailable
+ * falls back to onSurfaceVariant.
+ */
+@Composable
+private fun readinessColor(state: String?): Color = when (state) {
+    "excellent" -> MaterialTheme.colorScheme.primary
+    "good" -> MaterialTheme.colorScheme.tertiary
+    "moderate" -> MaterialTheme.colorScheme.secondary
+    "reduced" -> Color(0xFFFF9800)
+    "rest" -> MaterialTheme.colorScheme.error
+    else -> MaterialTheme.colorScheme.onSurfaceVariant
+}
+
+/** Deltas under 0.5 count as stable (neutral tone). */
+private fun deltaTone(delta: Double, lowerIsBetter: Boolean): Boolean? = when {
+    abs(delta) < 0.5 -> null
+    lowerIsBetter -> delta < 0
+    else -> delta > 0
+}
+
+private fun deltaCaption(delta: Double): String = when {
+    abs(delta) < 0.5 -> "stable vs 7-day avg"
+    delta < 0 -> "▽ ${abs(delta).roundToInt()} vs 7-day avg"
+    else -> "△ ${abs(delta).roundToInt()} vs 7-day avg"
+}
+
+/** StatTile variant whose third line carries a colored delta vs baseline. */
+@Composable
+private fun MetricDeltaTile(
+    label: String,
+    value: String,
+    caption: String?,
+    captionGood: Boolean?,
+    icon: ImageVector,
+    accent: Color,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .background(accent.copy(alpha = 0.16f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp))
+        }
+        Column {
+            Text(
+                value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (caption != null) {
+                Text(
+                    caption,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = when (captionGood) {
+                        true -> MaterialTheme.colorScheme.primary
+                        false -> MaterialTheme.colorScheme.error
+                        null -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }

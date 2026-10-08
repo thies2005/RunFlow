@@ -274,6 +274,17 @@ object Personalization {
         )
     }
 
+    /**
+     * Feeds the auto zone boundaries ([com.runflow2.app.data.db.ProfileEntity.hrZonesAuto]):
+     * the six CUSTOM-boundary equivalents (Z1..Z6 max bpm) of the Karvonen
+     * model above — note Z6 ends exactly at hrMax. Null when the inputs are
+     * unusable (hrRest >= hrMax).
+     */
+    fun karvonenZoneMaxes(hrMax: Int, hrRest: Int): List<Int>? {
+        val zones = buildKarvonenZones(hrMax, hrRest) ?: return null
+        return zones.take(6).map { zone -> zone.maxBpm ?: return null }
+    }
+
     // -------------------------------------------------------------------
     // Plan defaults — defaults.ts
     // -------------------------------------------------------------------

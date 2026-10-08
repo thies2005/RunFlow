@@ -44,6 +44,8 @@ data class AppSettings(
     val healthMetricsSyncEnabled: Boolean = true,
     val offlineModeChosen: Boolean = false,
     val readinessLastPushAt: Long = 0L,
+    // ---- body auto-refresh (hrRest/hrMax/zones from recorded data) ----
+    val bodyAutoRefreshDay: Long = 0L, // epoch day of the last refresh; 0 = never
 )
 
 class SettingsRepository(private val context: Context) {
@@ -74,6 +76,7 @@ class SettingsRepository(private val context: Context) {
         val HEALTH_METRICS_SYNC_ENABLED = booleanPreferencesKey("health_metrics_sync_enabled")
         val OFFLINE_MODE_CHOSEN = booleanPreferencesKey("offline_mode_chosen")
         val READINESS_LAST_PUSH_AT = longPreferencesKey("readiness_last_push_at")
+        val BODY_AUTO_REFRESH_DAY = longPreferencesKey("body_auto_refresh_day")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -104,6 +107,7 @@ class SettingsRepository(private val context: Context) {
             healthMetricsSyncEnabled = p[Keys.HEALTH_METRICS_SYNC_ENABLED] ?: true,
             offlineModeChosen = p[Keys.OFFLINE_MODE_CHOSEN] ?: false,
             readinessLastPushAt = p[Keys.READINESS_LAST_PUSH_AT] ?: 0L,
+            bodyAutoRefreshDay = p[Keys.BODY_AUTO_REFRESH_DAY] ?: 0L,
         )
     }
 
@@ -195,4 +199,12 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setReadinessLastPushAt(at: Long) =
         context.dataStore.edit { it[Keys.READINESS_LAST_PUSH_AT] = at }
+
+    /** Epoch day of the last body auto-refresh (hrRest/hrMax/zones); 0 = never. */
+    val bodyAutoRefreshDay: Flow<Long> =
+        context.dataStore.data.map { it[Keys.BODY_AUTO_REFRESH_DAY] ?: 0L }
+
+    /** Stamps the body auto-refresh as done for [epochDay] (only on actual change). */
+    suspend fun setBodyAutoRefreshDay(epochDay: Long) =
+        context.dataStore.edit { it[Keys.BODY_AUTO_REFRESH_DAY] = epochDay }
 }

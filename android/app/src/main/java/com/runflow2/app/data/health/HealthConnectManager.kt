@@ -198,6 +198,11 @@ class HealthConnectManager(
                 }
                 settings.setHealthConnectLastImport(nowMs, summaryText)
                 AppLog.i(TAG, "Health Connect import: $summaryText")
+                // Freshly imported runs / daily metrics may move the athlete's
+                // body metrics (resting HR, believable max HR, auto zone
+                // boundaries) — best-effort, never fails the import.
+                runCatching { repository.refreshBodyFromData() }
+                    .onFailure { AppLog.w(TAG, "body auto-refresh failed (${it.message})") }
                 ImportResult.Imported(imported, duplicates)
             } catch (e: Exception) {
                 AppLog.w(TAG, "Health Connect import failed (${e.message})", e)

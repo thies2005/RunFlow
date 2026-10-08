@@ -130,6 +130,13 @@ class SyncManager(
             // ensure running flag always clears even on unexpected throw
             _status.value = _status.value.copy(running = false)
         }
+
+        // Pulled server data may move the athlete's body metrics (resting HR,
+        // believable max HR, auto zone boundaries) — best-effort so a failure
+        // here can never fail the sync.
+        runCatching { repository.refreshBodyFromData() }
+            .onFailure { AppLog.w(TAG, "body auto-refresh failed (${it.message})") }
+
         val now = System.currentTimeMillis()
         val msg = buildString {
             append(if (result.pushed > 0) "↑${result.pushed} " else "")

@@ -153,6 +153,10 @@ data class ProfileEntity(
     val hrZone4Max: Int = 170,
     val hrZone5Max: Int = 178,
     val hrZone6Max: Int = 187,
+    // Auto mode: the six zone boundaries (plus hrRest/hrMax) refresh from
+    // recorded data. defaultValue mirrors the ALTER TABLE used in
+    // MIGRATION_11_12 so Room's post-migration schema validation passes.
+    @ColumnInfo(defaultValue = "1") val hrZonesAuto: Boolean = true,
     val thresholdHr: Int = 172,
     val thresholdPaceSecPerKm: Int = 275,
     val vdotCorrection: Double = 1.0,
@@ -496,7 +500,7 @@ interface DailyEntryDao {
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
         DailyEntryEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -677,6 +681,19 @@ abstract class AppDatabase : RoomDatabase() {
                         "confidence TEXT, " +
                         "componentScoresJson TEXT)"
                 )
+            }
+        }
+
+        /**
+         * v11 -> v12 adds the profile's auto-zones flag: when true the six
+         * zone boundaries (and hrRest/hrMax) refresh automatically from
+         * recorded data. Purely additive; existing rows default to 1 (auto
+         * on) — the ALTER TABLE default matches ProfileEntity.hrZonesAuto's
+         * @ColumnInfo defaultValue.
+         */
+        val MIGRATION_11_12: Migration = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE profile ADD COLUMN hrZonesAuto INTEGER NOT NULL DEFAULT 1")
             }
         }
     }

@@ -52,6 +52,8 @@ import com.runflow2.app.domain.plan.PlanMath
 import com.runflow2.app.domain.plan.PlanSpec
 import com.runflow2.app.domain.plan.WebPlanEngine
 import com.runflow2.app.domain.plan.WebStructuredPlan
+import com.runflow2.app.domain.person.BodyAuto
+import com.runflow2.app.domain.person.Personalization
 import com.runflow2.app.domain.readiness.ReadinessComposer
 import com.runflow2.app.domain.readiness.ReadinessPayload
 import androidx.room.withTransaction
@@ -81,6 +83,11 @@ class RunFlowRepository(
     private val dailyEntryDao: DailyEntryDao,
     private val authStore: AuthStore,
     private val network: NetworkClient,
+    // Settings access for the body auto-refresh day-stamp. Optional so the
+    // container call site stays source-compatible either way; when absent the
+    // once-per-day gate of [refreshBodyFromData] is simply inactive (the
+    // refresh itself still runs — it is read-only unless something changed).
+    private val settings: SettingsRepository? = null,
 ) {
     // ---------- profile ----------
     val profile: Flow<ProfileEntity?> = profileDao.observe()
@@ -108,6 +115,72 @@ class RunFlowRepository(
         } else {
             profileDao.upsert(profile)
         }
+    }
+
+    /**
+     * Auto-updates the athlete's body metrics from recorded data (max once per
+     * day, and only stamped when something actually changed so later saves the
+     * same day still re-check): hrRest from the median of the last 30 days of
+     * daily-entry resting HR (Health Connect / manual form), hrMax raised to
+     * the highest believable observed max HR from recent runs, and — when
+     * hrZonesAuto is on — the six zone boundaries recomputed from Karvonen.
+     * Manual edits win by construction: values only move when the data-driven
+     * candidate differs, hrMax is never lowered, and the zone guard rejects
+     * anything that is not strictly increasing inside 1..hrMax.
+     */
+    suspend fun refreshBodyFromData() {
+        val today = LocalDate.now()
+        val lastDay = settings?.bodyAutoRefreshDay?.first()
+        if (lastDay != null && lastDay == today.toEpochDay()) return
+
+        val profile = profileOnce()
+        val rhrValues = dailyEntryDao.range(
+            startDate = today.minusDays(29).toString(),
+            endDate = today.toString(),
+        ).mapNotNull { it.restingHr?.takeIf { rhr -> rhr > 0 }?.toDouble() }
+
+        // Believable max-HR observations from the last 90 days of activities.
+        val nowMs = System.currentTimeMillis()
+        val sinceMs = nowMs - 90L * 24 * 3600 * 1000
+        val efforts = activityDao.betweenStart(sinceMs, nowMs)
+            .map { BodyAuto.HrEffort(maxHr = it.maxHr, averageHr = it.averageHr) }
+
+        val updates = BodyAuto.compute(profile.hrRest, profile.hrMax, rhrValues, efforts)
+        val newHrRest = updates.hrRest ?: profile.hrRest
+        val newHrMax = updates.hrMax ?: profile.hrMax
+
+        // Zones: only in auto mode, only when the Karvonen result is sane
+        // (strictly increasing, inside 1..hrMax) — otherwise the stored
+        // boundaries stay untouched.
+        val currentZoneMaxes = listOf(
+            profile.hrZone1Max, profile.hrZone2Max, profile.hrZone3Max,
+            profile.hrZone4Max, profile.hrZone5Max, profile.hrZone6Max,
+        )
+        val newZoneMaxes = if (profile.hrZonesAuto) {
+            Personalization.karvonenZoneMaxes(newHrMax, newHrRest)
+                ?.takeIf { z ->
+                    z.zipWithNext().all { (a, b) -> b > a } && z.first() > 0 && z.last() <= newHrMax
+                }
+        } else {
+            null
+        }
+        val zoneChanged = newZoneMaxes != null && newZoneMaxes != currentZoneMaxes
+        if (updates.hrRest == null && updates.hrMax == null && !zoneChanged) return
+
+        saveProfile(
+            profile.copy(
+                hrRest = newHrRest,
+                hrMax = newHrMax,
+                hrZone1Max = newZoneMaxes?.getOrNull(0) ?: profile.hrZone1Max,
+                hrZone2Max = newZoneMaxes?.getOrNull(1) ?: profile.hrZone2Max,
+                hrZone3Max = newZoneMaxes?.getOrNull(2) ?: profile.hrZone3Max,
+                hrZone4Max = newZoneMaxes?.getOrNull(3) ?: profile.hrZone4Max,
+                hrZone5Max = newZoneMaxes?.getOrNull(4) ?: profile.hrZone5Max,
+                hrZone6Max = newZoneMaxes?.getOrNull(5) ?: profile.hrZone6Max,
+            ),
+        )
+        settings?.setBodyAutoRefreshDay(today.toEpochDay())
+        AppLog.i("Body", "auto-refresh: hrRest=$newHrRest hrMax=$newHrMax zones=$newZoneMaxes")
     }
 
     // ---------- activities ----------
@@ -144,6 +217,11 @@ class RunFlowRepository(
         } else {
             activityDao.upsert(a)
         }
+        // A newly saved run can move the athlete's body metrics (believable
+        // max HR) — refresh in the background; a failure here must never
+        // fail or delay the save itself.
+        runCatching { refreshBodyFromData() }
+            .onFailure { AppLog.w("Body", "auto-refresh after save failed (${it.message})") }
     }
 
     suspend fun deleteActivity(id: String) = activityDao.delete(id)

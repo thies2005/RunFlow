@@ -1,6 +1,7 @@
 package com.runflow2.app
 
 import com.runflow2.app.data.net.Api
+import com.runflow2.app.data.net.BaselineDto
 import com.runflow2.app.data.net.CreateActivityRequest
 import com.runflow2.app.data.net.CreatePlanRequest
 import com.runflow2.app.data.net.CreateWorkoutRequest
@@ -10,7 +11,10 @@ import com.runflow2.app.data.net.PatchWorkoutRequest
 import com.runflow2.app.data.net.RefreshRequest
 import com.runflow2.app.data.net.RunFlowApi
 import com.runflow2.app.data.net.UpdateGoalRequest
+import com.runflow2.app.domain.readiness.ReadinessPayload
+import com.runflow2.app.domain.readiness.RhrJson
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.decodeFromJsonElement
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -356,5 +360,99 @@ class ApiContractTest {
         resp = api.generateActivityFeedback(GenerateFeedbackRequest("a1", regenerate = true))
         assertEquals(429, resp.code())
         server.takeRequest()
+    }
+
+    // ---- readiness (daily health metrics + score sync) ----
+
+    @Test
+    fun `readiness daily posts the payload and tolerates the serialized record reply`() = runTest {
+        // the server upserts and answers serializeDailyRecord(record); the
+        // Unit-typed call must accept a JSON body it never reads
+        server.enqueue(
+            MockResponse().setBody(
+                """{"id":"rec-1","date":"2026-10-08","compositeScore":71.5,"state":"good",
+                   "confidence":"partial","componentScores":{},"reasons":[],
+                   "rhrJson":null,"sleepJson":null,"loadJson":null,"subjectiveJson":null,
+                   "hrvJson":null,"overrideJson":null,
+                   "computedAt":"2026-10-08T06:00:00.000Z","syncedAt":"2026-10-08T06:00:05.000Z",
+                   "maxHr":190,"restingHr":52,
+                   "createdAt":"2026-10-08T06:00:00.000Z","updatedAt":"2026-10-08T06:00:05.000Z"}""".trimIndent()
+            )
+        )
+        val resp = api.postReadinessDaily(
+            ReadinessPayload(
+                date = "2026-10-08",
+                compositeScore = 71.5,
+                state = "good",
+                confidence = "partial",
+                maxHr = 190,
+                restingHr = 52,
+            )
+        )
+        val recorded = server.takeRequest()
+        assertEquals("/api/mobile/v1/readiness/daily", recorded.path)
+        assertEquals("POST", recorded.method)
+        val body = recorded.body.readUtf8()
+        assertTrue(body.contains("\"date\":\"2026-10-08\""))
+        assertTrue(body.contains("\"compositeScore\":71.5"))
+        assertTrue(body.contains("\"state\":\"good\""))
+        assertTrue(resp.isSuccessful)
+    }
+
+    @Test
+    fun `readiness history parses the serialized record array`() = runTest {
+        server.enqueue(
+            MockResponse().setBody(
+                """[
+                  {"id":"rec-1","date":"2026-10-06","compositeScore":0,"state":"unavailable",
+                   "confidence":"unavailable","componentScores":{},"reasons":[],
+                   "rhrJson":{"todayRhr":58.0},"sleepJson":null,"loadJson":null,
+                   "subjectiveJson":null,"hrvJson":null,"overrideJson":null,
+                   "computedAt":null,"syncedAt":"2026-10-06T06:00:00.000Z",
+                   "maxHr":null,"restingHr":null,
+                   "createdAt":"2026-10-06T06:00:00.000Z","updatedAt":"2026-10-06T06:00:00.000Z"},
+                  {"id":"rec-2","date":"2026-10-07","compositeScore":71.5,"state":"good",
+                   "confidence":"partial","componentScores":{"hrr":{"score":80.0,"isAvailable":true}},
+                   "reasons":["Resting heart rate stable"],
+                   "rhrJson":{"todayRhr":54.0},"sleepJson":null,"loadJson":null,
+                   "subjectiveJson":null,"hrvJson":null,"overrideJson":null,
+                   "computedAt":null,"syncedAt":null,"maxHr":190,"restingHr":52,
+                   "createdAt":"2026-10-07T06:00:00.000Z","updatedAt":"2026-10-07T09:00:00.000Z"}
+                ]""".trimIndent()
+            )
+        )
+        val history = api.getReadinessHistory(start = "2026-07-10", end = "2026-10-08")
+        assertEquals("/api/mobile/v1/readiness/history?start=2026-07-10&end=2026-10-08", server.takeRequest().path)
+        assertEquals(2, history.size)
+        assertEquals("2026-10-06", history[0].date)
+        assertEquals("unavailable", history[0].state)
+        assertEquals("2026-10-07", history[1].date)
+        assertEquals(71.5, history[1].compositeScore, 0.0)
+        assertEquals(54.0, Api.json
+            .decodeFromJsonElement(
+                RhrJson.serializer(),
+                requireNotNull(history[1].rhrJson),
+            ).todayRhr!!, 0.0)
+    }
+
+    @Test
+    fun `readiness baseline puts the median fields`() = runTest {
+        server.enqueue(
+            MockResponse().setBody(
+                """{"id":"b1","rhrMedian30Day":52.3,"sleepAverage28Day":420.5,
+                   "lastUpdated":"2026-10-08T06:00:00.000Z",
+                   "createdAt":"2026-10-08T06:00:00.000Z","updatedAt":"2026-10-08T06:00:00.000Z"}""".trimIndent()
+            )
+        )
+        val resp = api.putReadinessBaseline(
+            BaselineDto(rhrMedian30Day = 52.3, sleepAverage28Day = 420.5)
+        )
+        val recorded = server.takeRequest()
+        assertEquals("/api/mobile/v1/readiness/baseline", recorded.path)
+        assertEquals("PUT", recorded.method)
+        val body = recorded.body.readUtf8()
+        assertTrue(body.contains("\"rhrMedian30Day\":52.3"))
+        assertTrue(body.contains("\"sleepAverage28Day\":420.5"))
+        assertTrue(resp.isSuccessful)
     }
 }

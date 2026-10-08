@@ -7,6 +7,8 @@ import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.ActivityDao
 import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.data.db.AppDatabase
+import com.runflow2.app.data.db.DailyEntryDao
+import com.runflow2.app.data.db.DailyEntryEntity
 import com.runflow2.app.data.db.GoalDao
 import com.runflow2.app.data.db.GoalEntity
 import com.runflow2.app.data.db.PlanSnapshotDao
@@ -50,6 +52,8 @@ import com.runflow2.app.domain.plan.PlanMath
 import com.runflow2.app.domain.plan.PlanSpec
 import com.runflow2.app.domain.plan.WebPlanEngine
 import com.runflow2.app.domain.plan.WebStructuredPlan
+import com.runflow2.app.domain.readiness.ReadinessComposer
+import com.runflow2.app.domain.readiness.ReadinessPayload
 import androidx.room.withTransaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -60,6 +64,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import retrofit2.HttpException
 import java.io.IOException
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -73,6 +78,7 @@ class RunFlowRepository(
     private val profileDao: ProfileDao,
     private val syncQueueDao: SyncQueueDao,
     private val planSnapshotDao: PlanSnapshotDao,
+    private val dailyEntryDao: DailyEntryDao,
     private val authStore: AuthStore,
     private val network: NetworkClient,
 ) {
@@ -820,6 +826,135 @@ class RunFlowRepository(
         SyncManager.TYPE_WORKOUT_UPDATE,
         SyncManager.TYPE_WORKOUT_DELETE,
     )
+
+    // ---------- daily entries ----------
+    // Health Connect imports and the manual form write them; the readiness
+    // score is computed here (ReadinessComposer) and cached on the row. The
+    // dirty flag marks rows awaiting the server push (health-metrics sync).
+
+    /** One local day's recovery entry, or null when nothing was ever recorded. */
+    suspend fun dailyEntryByDate(date: String): DailyEntryEntity? = dailyEntryDao.byDate(date)
+
+    suspend fun saveDailyEntry(entry: DailyEntryEntity) = dailyEntryDao.upsert(entry)
+
+    /**
+     * Recomputes the readiness score cache for [date]'s entry: loads the
+     * prior-30-days rows for the baselines, the training-load series and the
+     * profile, runs [ReadinessComposer.computedCache] and persists the result.
+     * The row is only written (and flagged dirty) when a cache column actually
+     * changed; updatedAt is left alone — derived data never pretends to be a
+     * user edit in the server-vs-local merge. [loadSeries] lets callers that
+     * recompute many days share one analytics pass.
+     */
+    suspend fun recomputeDailyReadiness(
+        date: LocalDate,
+        loadSeries: List<TrainingLoad.DailyLoad>? = null,
+    ): DailyEntryEntity? {
+        val existing = dailyEntryDao.byDate(date.toString()) ?: return null
+        val updated = readinessCacheFor(existing, date, loadSeries ?: dailyLoadSeries())
+        val changed = updated.score != existing.score ||
+            updated.state != existing.state ||
+            updated.confidence != existing.confidence ||
+            updated.componentScoresJson != existing.componentScoresJson
+        if (!changed) return existing
+        val next = updated.copy(dirty = true)
+        dailyEntryDao.upsert(next)
+        return next
+    }
+
+    /**
+     * Persists a manual daily-entry edit: stamps ownership (manuallyEdited,
+     * dirty, updatedAt = now — the merge rules of both the Health Connect
+     * import and the server pull defer to user-owned rows), then recomputes
+     * the score cache so the caller always sees a consistent row.
+     */
+    suspend fun saveManualDailyEntry(entry: DailyEntryEntity): DailyEntryEntity {
+        val stamped = entry.copy(
+            manuallyEdited = true,
+            dirty = true,
+            updatedAt = System.currentTimeMillis(),
+        )
+        val withCache = readinessCacheFor(stamped, LocalDate.parse(entry.date), dailyLoadSeries())
+        dailyEntryDao.upsert(withCache)
+        return withCache
+    }
+
+    /** Score cache for [entry] at [date], from the shared composer inputs. */
+    private suspend fun readinessCacheFor(
+        entry: DailyEntryEntity,
+        date: LocalDate,
+        loadSeries: List<TrainingLoad.DailyLoad>,
+    ): DailyEntryEntity {
+        val prior = dailyEntryDao.range(
+            startDate = date.minusDays(ReadinessComposer.RHR_BASELINE_WINDOW_DAYS).toString(),
+            endDate = date.minusDays(1).toString(),
+        )
+        val profile = profileOnce()
+        return ReadinessComposer.computedCache(
+            entry = entry,
+            rhrBaseline = ReadinessComposer.rhrBaselineOf(prior, date),
+            hrvBaseline = ReadinessComposer.hrvBaselineOf(prior, date),
+            load = ReadinessComposer.loadMetrics(loadSeries, date),
+            profileMaxHr = profile.hrMax,
+            profileRestingHr = profile.hrRest,
+        )
+    }
+
+    /**
+     * Rebuilds the POST /readiness/daily body for [entry] from its stored
+     * metrics (never from the cache columns, so the payload always carries
+     * the truthful inputs of the day).
+     */
+    suspend fun readinessPayloadFor(
+        entry: DailyEntryEntity,
+        loadSeries: List<TrainingLoad.DailyLoad>,
+    ): ReadinessPayload {
+        val date = LocalDate.parse(entry.date)
+        val prior = dailyEntryDao.range(
+            startDate = date.minusDays(ReadinessComposer.RHR_BASELINE_WINDOW_DAYS).toString(),
+            endDate = date.minusDays(1).toString(),
+        )
+        val profile = profileOnce()
+        val rhrBaseline = ReadinessComposer.rhrBaselineOf(prior, date)
+        val hrvBaseline = ReadinessComposer.hrvBaselineOf(prior, date)
+        val inputs = ReadinessComposer.buildInputs(
+            date = date,
+            entry = entry,
+            rhrBaseline = rhrBaseline,
+            hrvBaseline = hrvBaseline,
+            load = ReadinessComposer.loadMetrics(loadSeries, date),
+            profileMaxHr = profile.hrMax,
+            profileRestingHr = profile.hrRest,
+        )
+        return ReadinessComposer.payloadFor(
+            inputs = inputs,
+            hrv = ReadinessComposer.hrvMetrics(entry, hrvBaseline),
+            computedAt = Instant.ofEpochMilli(entry.updatedAt),
+        )
+    }
+
+    /** CTL/ATL/TRIMP per day, ending today — shared by the readiness paths. */
+    suspend fun dailyLoadSeries(): List<TrainingLoad.DailyLoad> = analytics().daily
+
+    /** Median resting HR over the previous 30 days; null under 7 values. */
+    suspend fun rhrBaseline30d(): Double? {
+        val today = LocalDate.now()
+        val prior = dailyEntryDao.range(
+            startDate = today.minusDays(ReadinessComposer.RHR_BASELINE_WINDOW_DAYS).toString(),
+            endDate = today.minusDays(1).toString(),
+        )
+        return ReadinessComposer.rhrBaselineOf(prior, today)
+    }
+
+    /** Mean sleep minutes over the previous 28 days; null under 7 values. */
+    suspend fun sleepAverage28d(): Double? {
+        val today = LocalDate.now()
+        val prior = dailyEntryDao.range(
+            startDate = today.minusDays(ReadinessComposer.SLEEP_AVERAGE_WINDOW_DAYS).toString(),
+            endDate = today.minusDays(1).toString(),
+        )
+        return ReadinessComposer.sleepAverageOf(prior, today)
+    }
 
     // ---------- analytics ----------
     suspend fun analytics(rangeDays: Int = 365): AnalyticsBundle = withContext(Dispatchers.Default) {

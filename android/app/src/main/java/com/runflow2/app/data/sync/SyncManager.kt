@@ -4,6 +4,7 @@ import com.runflow2.app.core.util.AppLog
 import com.runflow2.app.data.db.AppDatabase
 import com.runflow2.app.data.db.ProfileEntity
 import com.runflow2.app.data.net.AuthStore
+import com.runflow2.app.data.net.BaselineDto
 import com.runflow2.app.data.net.CreateActivityRequest
 import com.runflow2.app.data.net.NetworkClient
 import com.runflow2.app.data.net.PatchWorkoutRequest
@@ -18,6 +19,7 @@ import com.runflow2.app.data.repo.UploadResult
 import com.runflow2.app.data.sync.applyTo
 import com.runflow2.app.data.sync.mergeInto
 import com.runflow2.app.data.sync.reconcileCreatedWorkout
+import com.runflow2.app.data.sync.toDailyEntry
 import com.runflow2.app.data.sync.toWorkoutEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +33,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import retrofit2.HttpException
 import java.io.IOException
+import java.time.LocalDate
 
 data class SyncStatus(
     val running: Boolean = false,
@@ -78,6 +81,10 @@ class SyncManager(
         private const val STRAVA_TRIGGER_INTERVAL_MS = 6 * 60 * 60 * 1000L // 6h
         /** Device-plan uploads per sync cycle, bounding the work per drain. */
         private const val MAX_PLAN_UPLOADS_PER_SYNC = 5
+        /** Readiness day-records pushed per sync cycle (a backlog after long offline periods). */
+        private const val MAX_READINESS_PUSHES_PER_SYNC = 60
+        /** History window pulled on the first readiness sync. */
+        private const val READINESS_PULL_DAYS = 90L
     }
 
     private val mutex = Mutex()
@@ -247,7 +254,85 @@ class SyncManager(
             AppLog.w(TAG, "profile pull failed: HTTP ${e.code()}", e)
         }
 
+        // ---- readiness: daily health metrics + score push / history pull ----
+        try {
+            syncReadiness()
+        } catch (e: IOException) {
+            // offline mid-sync: whatever was pushed stays queued (dirty)
+            AppLog.w(TAG, "readiness sync skipped (${e.message ?: "io error"})")
+        } catch (e: HttpException) {
+            if (e.code() == 401) throw e
+            AppLog.w(TAG, "readiness sync failed: HTTP ${e.code()}", e)
+        }
+
         return SyncResult(pushed = pushed, pulled = pulled, pruned = pruned, failed = failed)
+    }
+
+    /**
+     * Health-metrics reconciliation, gated on [AppSettings.healthMetricsSyncEnabled]:
+     *  1. refresh today's score cache (the Health Connect import ran earlier
+     *     and leaves the cache columns null on fresh rows);
+     *  2. push every dirty day as a POST /readiness/daily upsert and mark the
+     *     accepted dates clean — failures stay dirty and retry next sync;
+     *  3. on the very first sync (no push ever happened) pull the server's
+     *     90-day history so a second device starts from shared data — dirty
+     *     local rows win, otherwise a strictly newer server record replaces
+     *     the local one;
+     *  4. after a successful push, upload the RHR/sleep baselines (skipped
+     *     silently when neither has enough data yet).
+     */
+    private suspend fun syncReadiness() {
+        val s = settings.settingsOnce()
+        if (!s.healthMetricsSyncEnabled) return
+
+        val series = repository.dailyLoadSeries()
+        repository.recomputeDailyReadiness(LocalDate.now(), series)
+
+        // ---- push: dirty days, oldest first, bounded like the plan uploads ----
+        val dirty = db.dailyEntryDao().dirtyEntries().sortedBy { it.date }
+        val pushedDates = ArrayList<String>(dirty.size)
+        for (entry in dirty) {
+            if (pushedDates.size >= MAX_READINESS_PUSHES_PER_SYNC) break
+            try {
+                client.api().postReadinessDaily(repository.readinessPayloadFor(entry, series))
+                pushedDates += entry.date
+            } catch (e: HttpException) {
+                // one bad day must not starve the rest of the queue
+                AppLog.w(TAG, "readiness push for ${entry.date} failed: HTTP ${e.code()}", e)
+            }
+        }
+        if (pushedDates.isNotEmpty()) {
+            db.dailyEntryDao().markClean(pushedDates)
+            settings.setReadinessLastPushAt(System.currentTimeMillis())
+            AppLog.i(TAG, "readiness pushed ${pushedDates.size} day(s)")
+        }
+
+        // ---- first-sync pull: backfill from the server's history ----
+        if (s.readinessLastPushAt == 0L) {
+            val today = LocalDate.now()
+            val history = client.api().getReadinessHistory(
+                start = today.minusDays(READINESS_PULL_DAYS).toString(),
+                end = today.toString(),
+            )
+            var pulledReadiness = 0
+            for (dto in history) {
+                val merged = dto.toDailyEntry(db.dailyEntryDao().byDate(dto.date)) ?: continue
+                db.dailyEntryDao().upsert(merged)
+                pulledReadiness++
+            }
+            if (pulledReadiness > 0) AppLog.i(TAG, "readiness history pulled $pulledReadiness day(s)")
+        }
+
+        // ---- baseline upload after a successful push (best-effort) ----
+        if (pushedDates.isNotEmpty()) {
+            val baseline = BaselineDto(
+                rhrMedian30Day = repository.rhrBaseline30d(),
+                sleepAverage28Day = repository.sleepAverage28d(),
+            )
+            if (baseline.rhrMedian30Day != null || baseline.sleepAverage28Day != null) {
+                client.api().putReadinessBaseline(baseline)
+            }
+        }
     }
 
     /**

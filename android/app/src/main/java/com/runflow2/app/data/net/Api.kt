@@ -532,6 +532,45 @@ data class SendChatRequest(
     val activityId: String? = null,
 )
 
+// ---------- readiness (daily health metrics + score sync) ----------
+//
+// Mirrors Web/src/lib/readiness/serialization.ts serializeDailyRecord: the
+// *Json columns are arbitrary server-side JSON (null when that day had no
+// data), componentScores is whatever the pusher sent (map or legacy list), so
+// they are captured as raw JsonElements and decoded through ReadinessJson's
+// tolerant readers. overrideJson/createdAt are carried for completeness and
+// simply ignored by the merge.
+
+@Serializable
+data class ServerReadinessDto(
+    val id: String? = null,
+    val date: String = "", // yyyy-MM-dd
+    val compositeScore: Double = 0.0,
+    val state: String = "unavailable",
+    val confidence: String = "unavailable",
+    val componentScores: JsonElement? = null,
+    val reasons: JsonElement? = null,
+    val rhrJson: JsonElement? = null,
+    val sleepJson: JsonElement? = null,
+    val loadJson: JsonElement? = null,
+    val subjectiveJson: JsonElement? = null,
+    val hrvJson: JsonElement? = null,
+    val overrideJson: JsonElement? = null,
+    val computedAt: String? = null, // ISO-8601
+    val syncedAt: String? = null, // ISO-8601
+    val maxHr: Int? = null,
+    val restingHr: Int? = null,
+    val createdAt: String? = null, // ISO-8601
+    val updatedAt: String? = null, // ISO-8601
+)
+
+/** Body of PUT /api/mobile/v1/readiness/baseline (server ReadinessBaseline row). */
+@Serializable
+data class BaselineDto(
+    val rhrMedian30Day: Double? = null,
+    val sleepAverage28Day: Double? = null,
+)
+
 /**
  * All paths are absolute (leading slash) so one Retrofit instance serves both
  * the /api/mobile/v1 API and the /api/ai coach endpoints.
@@ -621,6 +660,20 @@ interface RunFlowApi {
     // server-side sync (e.g. Strava import); 409 = already running
     @POST("/api/mobile/v1/sync")
     suspend fun triggerServerSync(): TriggerSyncResponse
+
+    // readiness — daily health metrics + computed score. The POST upserts by
+    // (userId, date) and answers the serialized record; the body is ignored.
+    @POST("/api/mobile/v1/readiness/daily")
+    suspend fun postReadinessDaily(@Body body: com.runflow2.app.domain.readiness.ReadinessPayload): retrofit2.Response<Unit>
+
+    @GET("/api/mobile/v1/readiness/history")
+    suspend fun getReadinessHistory(
+        @Query("start") start: String, // yyyy-MM-dd inclusive
+        @Query("end") end: String, // yyyy-MM-dd inclusive
+    ): List<ServerReadinessDto>
+
+    @PUT("/api/mobile/v1/readiness/baseline")
+    suspend fun putReadinessBaseline(@Body body: BaselineDto): retrofit2.Response<Unit>
 
     // AI coach
     @GET("/api/ai/chat/sessions")

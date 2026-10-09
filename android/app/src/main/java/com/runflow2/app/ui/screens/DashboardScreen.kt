@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Favorite
@@ -64,7 +63,6 @@ import com.runflow2.app.core.math.VdotMath
 import com.runflow2.app.core.util.DistanceUnit
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.core.util.LoginPrompt
-import com.runflow2.app.data.db.DailyEntryEntity
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.analytics.AnalyticsBundle
@@ -73,7 +71,6 @@ import com.runflow2.app.ui.components.DeltaGood
 import com.runflow2.app.ui.components.InfoChip
 import com.runflow2.app.ui.components.ProgressRing
 import com.runflow2.app.ui.components.SectionTitle
-import com.runflow2.app.ui.components.Sparkline
 import com.runflow2.app.ui.components.StatTile
 import com.runflow2.app.ui.components.WeeklyVolumeBars
 import com.runflow2.app.ui.components.WorkoutVisuals
@@ -94,7 +91,7 @@ import kotlin.math.roundToInt
 fun DashboardScreen(
     container: AppContainer,
     onOpenActivity: (String) -> Unit,
-    onOpenAnalytics: () -> Unit,
+    onOpenAnalyticsSection: (String?) -> Unit,
     onStartWorkout: (String?) -> Unit,
     onCreatePlan: () -> Unit,
     onOpenActivities: () -> Unit,
@@ -134,11 +131,8 @@ fun DashboardScreen(
         value = container.repository.analytics(365)
     }
 
-    // ---- recovery hero inputs: today's entry + the last 30 days for trend/baselines ----
+    // ---- recovery square input: today's entry ----
     val todayEntry by container.repository.dailyEntryFlow(today).collectAsState(initial = null)
-    val last30Entries by container.repository
-        .dailyEntryRangeFlow(today.minusDays(29), today)
-        .collectAsState(initial = emptyList())
 
     val weekStart = today.with(DayOfWeek.MONDAY)
     val runsThisWeek = activities.count {
@@ -214,275 +208,6 @@ fun DashboardScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
-                        }
-                    }
-                }
-
-                // ---- Recovery ring hero ----
-                item {
-                    val todayStr = today.toString()
-                    val entry = todayEntry
-                    // strictly-prior entries within the fetched 30-day window
-                    val history = last30Entries.filter { it.date < todayStr }
-                    val weekStartStr = today.minusDays(7).toString()
-                    val rhrBaseline = history
-                        .filter { it.date >= weekStartStr && it.restingHr != null }
-                        .map { it.restingHr!!.toDouble() }
-                        .takeIf { it.isNotEmpty() }
-                        ?.average()
-                    val hrvBaseline = history
-                        .filter { it.date >= weekStartStr && it.hrvMs != null }
-                        .map { it.hrvMs!! }
-                        .takeIf { it.isNotEmpty() }
-                        ?.average()
-
-                    val hrvSeries = last30Entries.filter { it.hrvMs != null }.map { it.hrvMs!! }
-                    val rhrSeries = last30Entries.filter { it.restingHr != null }.map { it.restingHr!!.toDouble() }
-                    val sparkValues = if (hrvSeries.size >= 2) hrvSeries else rhrSeries
-                    val sparkLabel = if (hrvSeries.size >= 2) "HRV · last 30 days" else "Resting HR · last 30 days"
-
-                    if (entry == null) {
-                        // empty state — quiet floating card with a single call to action
-                        Card(
-                            shape = CardShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showDailyForm = true },
-                        ) {
-                            Column(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 20.dp, vertical = 32.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                Icon(
-                                    Icons.Outlined.MonitorHeart,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(64.dp),
-                                )
-                                Text("Log today's recovery", style = MaterialTheme.typography.titleMedium)
-                                Text(
-                                    "Takes 20 seconds — how do you feel?",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Button(onClick = { showDailyForm = true }) {
-                                    Text("Log now")
-                                }
-                            }
-                        }
-                    } else {
-                        val stateColor = readinessColor(entry.state)
-                        Card(
-                            shape = CardShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = stateColor.copy(alpha = 0.12f),
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showDailyForm = true },
-                        ) {
-                            Column(
-                                Modifier.padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                            ) {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                ) {
-                                    Box(
-                                        Modifier.size(130.dp),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        ProgressRing(
-                                            progress = ((entry.score ?: 0.0) / 100.0).toFloat(),
-                                            color = stateColor,
-                                            strokeWidth = 14f,
-                                            modifier = Modifier.size(130.dp),
-                                        )
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text(
-                                                entry.score?.roundToInt()?.toString() ?: "—",
-                                                style = MaterialTheme.typography.headlineLarge,
-                                                fontWeight = FontWeight.Bold,
-                                                color = stateColor,
-                                            )
-                                            Text(
-                                                "READINESS",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                        }
-                                    }
-                                    Column(
-                                        Modifier.weight(1f),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        Text(
-                                            "Recovery",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold,
-                                        )
-                                        InfoChip(
-                                            text = entry.state?.replaceFirstChar { it.uppercase() } ?: "Not scored",
-                                            container = stateColor.copy(alpha = 0.15f),
-                                            contentColor = stateColor,
-                                        )
-                                        val rhrDelta = entry.restingHr?.let { rhr ->
-                                            rhrBaseline?.let { b -> rhr.toDouble() - b }
-                                        }
-                                        val hrvDelta = entry.hrvMs?.let { hrv ->
-                                            hrvBaseline?.let { b -> hrv - b }
-                                        }
-                                        MetricDeltaTile(
-                                            label = "Resting HR",
-                                            value = entry.restingHr?.let { "$it bpm" } ?: "—",
-                                            caption = rhrDelta?.let { deltaCaption(it) }
-                                                ?: if (entry.restingHr == null) null else "no 7-day avg yet",
-                                            captionGood = rhrDelta?.let { deltaTone(it, lowerIsBetter = true) },
-                                            icon = Icons.Outlined.Favorite,
-                                            accent = MaterialTheme.colorScheme.primary,
-                                        )
-                                        MetricDeltaTile(
-                                            label = "HRV",
-                                            value = entry.hrvMs?.let { "${it.roundToInt()} ms" } ?: "—",
-                                            caption = hrvDelta?.let { deltaCaption(it) }
-                                                ?: if (entry.hrvMs == null) null else "no 7-day avg yet",
-                                            captionGood = hrvDelta?.let { deltaTone(it, lowerIsBetter = false) },
-                                            icon = Icons.Outlined.MonitorHeart,
-                                            accent = MaterialTheme.colorScheme.tertiary,
-                                        )
-                                    }
-                                }
-
-                                if (sparkValues.size >= 2) {
-                                    Sparkline(
-                                        values = sparkValues,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(36.dp),
-                                        color = stateColor,
-                                    )
-                                    Text(
-                                        sparkLabel,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // ---- Sleep + Form metric grid ----
-                item {
-                    val a = analytics
-                    // Sleep reads the most recent night WITH data (today usually
-                    // isn't logged yet — last night's value is the meaningful one).
-                    val lastSleepEntry = last30Entries.lastOrNull { it.sleepMinutes != null }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        // Sleep — last night's total from the daily entry
-                        Card(
-                            shape = MetricCardShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { onOpenAnalytics() },
-                        ) {
-                            Column(
-                                Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                Box(
-                                    Modifier
-                                        .size(36.dp)
-                                        .background(
-                                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
-                                            CircleShape,
-                                        ),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Icon(
-                                        Icons.Outlined.Bedtime,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.size(20.dp),
-                                    )
-                                }
-                                Text(
-                                    sleepLabel(lastSleepEntry?.sleepMinutes),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                                Text(
-                                    "Sleep",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                sleepStageCaption(lastSleepEntry)?.let { caption ->
-                                    Text(
-                                        caption,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                        }
-                        // Form — CTL/ATL/TSB quick view
-                        Card(
-                            shape = MetricCardShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { onOpenAnalytics() },
-                        ) {
-                            Column(
-                                Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                val status = a?.tsbStatus ?: TsbStatus.NEUTRAL
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    Box(
-                                        Modifier
-                                            .size(10.dp)
-                                            .background(status.color(), CircleShape),
-                                    )
-                                    Text(
-                                        "Form · ${status.label}",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                    )
-                                }
-                                Text(
-                                    "CTL ${Format.intOrDash(a?.ctl)} · ATL ${Format.intOrDash(a?.atl)} · TSB ${if (a != null && a.tsb > 0) "+" else ""}${Format.intOrDash(a?.tsb)}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                val ctlSeries = a?.daily?.map { it.ctl }?.takeLast(30) ?: emptyList()
-                                if (ctlSeries.size >= 2) {
-                                    Sparkline(
-                                        values = ctlSeries,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(28.dp),
-                                        color = status.color(),
-                                    )
-                                }
-                            }
                         }
                     }
                 }
@@ -569,6 +294,129 @@ fun DashboardScreen(
                                         else "Δ7d -${Format.oneDecimal(abs(it))}"
                                     },
                                     captionGood = ctlDelta?.let { it > 0 },
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // ---- Recovery + Form quick squares ----
+                item {
+                    val a = analytics
+                    val entry = todayEntry
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        // Recovery — today's readiness; tap for the detailed trends
+                        val stateColor = readinessColor(entry?.state)
+                        Card(
+                            shape = MetricCardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (entry != null) stateColor.copy(alpha = 0.12f)
+                                else MaterialTheme.colorScheme.surfaceContainerLow,
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable {
+                                    if (entry == null) showDailyForm = true
+                                    else onOpenAnalyticsSection("recovery")
+                                },
+                        ) {
+                            Column(
+                                Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Box(
+                                        Modifier
+                                            .size(10.dp)
+                                            .background(stateColor, CircleShape),
+                                    )
+                                    Text(
+                                        "Recovery",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Text(
+                                        entry?.score?.roundToInt()?.toString() ?: "—",
+                                        style = MaterialTheme.typography.headlineLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (entry != null) stateColor
+                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    if (entry?.state != null) {
+                                        InfoChip(
+                                            text = entry.state.replaceFirstChar { it.uppercase() },
+                                            container = stateColor.copy(alpha = 0.15f),
+                                            contentColor = stateColor,
+                                        )
+                                    }
+                                }
+                                Text(
+                                    when {
+                                        entry == null -> "Tap to log how you feel"
+                                        entry.restingHr != null || entry.hrvMs != null ->
+                                            listOfNotNull(
+                                                entry.restingHr?.let { "$it bpm" },
+                                                entry.hrvMs?.let { "${it.roundToInt()} ms" },
+                                            ).joinToString(" · ")
+                                        else -> "No vitals yet"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                        // Form — fitness/fatigue status; tap for the detailed trends
+                        val status = a?.tsbStatus ?: TsbStatus.NEUTRAL
+                        Card(
+                            shape = MetricCardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { onOpenAnalyticsSection("form") },
+                        ) {
+                            Column(
+                                Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Box(
+                                        Modifier
+                                            .size(10.dp)
+                                            .background(status.color(), CircleShape),
+                                    )
+                                    Text(
+                                        "Form",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                                Text(
+                                    status.label,
+                                    style = MaterialTheme.typography.headlineLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = status.color(),
+                                )
+                                Text(
+                                    "TSB ${if (a != null && a.tsb > 0) "+" else ""}${Format.intOrDash(a?.tsb)} · CTL ${Format.intOrDash(a?.ctl)} · ATL ${Format.intOrDash(a?.atl)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
                         }
@@ -884,24 +732,6 @@ private fun greetingFor(now: LocalTime): String = when {
     now.hour < 12 -> "Good morning"
     now.hour < 18 -> "Good afternoon"
     else -> "Good evening"
-}
-
-/** "7h 32m" style sleep duration; "—" when last night wasn't logged. */
-private fun sleepLabel(minutes: Int?): String {
-    if (minutes == null || minutes <= 0) return "—"
-    return "${minutes / 60}h ${minutes % 60}m"
-}
-
-/**
- * "Deep 18% · REM 22%" — stage shares of last night's total sleep; null when
- * the total or either stage is missing.
- */
-private fun sleepStageCaption(entry: DailyEntryEntity?): String? {
-    val total = entry?.sleepMinutes ?: return null
-    if (total <= 0) return null
-    val deep = entry?.deepMinutes ?: return null
-    val rem = entry?.remMinutes ?: return null
-    return "Deep ${(deep * 100.0 / total).roundToInt()}% · REM ${(rem * 100.0 / total).roundToInt()}%"
 }
 
 /**

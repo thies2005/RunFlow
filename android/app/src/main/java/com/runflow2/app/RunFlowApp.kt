@@ -74,6 +74,14 @@ class AppContainer(app: Application) {
 
     val recording = RecordingController()
 
+    /**
+     * One-shot deep-link target for the analytics tab ("recovery" | "form"),
+     * set by dashboard cards right before navigating and consumed on entry.
+     * Same pattern as [RecordingController.pendingWorkoutId].
+     */
+    @Volatile
+    var analyticsTargetSection: String? = null
+
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {

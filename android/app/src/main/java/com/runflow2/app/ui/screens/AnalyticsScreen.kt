@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
@@ -42,6 +44,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -83,7 +87,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun AnalyticsScreen(container: AppContainer) {
+fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
     val settings by container.settings.settings.collectAsState(initial = AppSettings())
     val unit = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
 
@@ -97,6 +101,16 @@ fun AnalyticsScreen(container: AppContainer) {
     var showAtl by remember { mutableStateOf(true) }
     var showTsb by remember { mutableStateOf(true) }
 
+    val listState = rememberLazyListState()
+    // Deep-link from the dashboard squares: jump to the requested section.
+    // Re-runs when analytics loads so the first composition (empty scaffold)
+    // still lands on the section once items exist.
+    LaunchedEffect(targetSection, analytics) {
+        when (targetSection) {
+            "form" -> listState.scrollToItem(0)
+            "recovery" -> listState.scrollToKeyedItem("sec-recovery")
+        }
+    }
     val a = analytics ?: return Scaffold { }
 
     Scaffold(
@@ -116,6 +130,7 @@ fun AnalyticsScreen(container: AppContainer) {
         },
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
@@ -123,7 +138,7 @@ fun AnalyticsScreen(container: AppContainer) {
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             // ---- training status (web parity: % of all-time max) ----
-            item {
+            item(key = "sec-fitness") {
                 var showAbsoluteCtl by rememberSaveable { mutableStateOf(false) }
                 var showAbsoluteAtl by rememberSaveable { mutableStateOf(false) }
                 Card(Modifier.fillMaxWidth()) {
@@ -475,7 +490,7 @@ fun AnalyticsScreen(container: AppContainer) {
             }
 
             // ---- recovery · RHR & HRV ----
-            item {
+            item(key = "sec-recovery") {
                 var healthRange by rememberSaveable { mutableStateOf(90) }
                 val today = remember { LocalDate.now() }
                 val healthEntries by produceState<List<DailyEntryEntity>>(emptyList(), healthRange) {
@@ -799,4 +814,26 @@ private fun LabelValue(label: String, value: String) {
 private fun sleepDurationLabel(minutes: Double): String {
     val total = minutes.roundToInt()
     return "${total / 60}h ${total % 60}m"
+}
+
+/**
+ * Scrolls so the item with [key] sits at the top of the viewport. Lazy lists
+ * only know about composed (visible) items — there is no key-to-index lookup
+ * in current Compose — so this walks the list viewport by viewport until the
+ * keyed item appears, then lines it up. Cheap here: a handful of frames.
+ */
+private suspend fun LazyListState.scrollToKeyedItem(key: Any) {
+    var guard = 0
+    while (guard++ < 64) {
+        val info = layoutInfo
+        info.visibleItemsInfo.firstOrNull { it.key == key }?.let {
+            scrollToItem(it.index)
+            return
+        }
+        val last = info.visibleItemsInfo.maxByOrNull { it.index } ?: return
+        if (last.index >= info.totalItemsCount - 1) return
+        // every currently visible index has been checked — skip past them all
+        scrollToItem((last.index + 1).coerceAtMost(info.totalItemsCount - 1))
+        withFrameNanos { }; withFrameNanos { }
+    }
 }

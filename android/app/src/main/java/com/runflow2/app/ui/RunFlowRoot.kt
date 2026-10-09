@@ -15,6 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -122,12 +123,20 @@ fun RunFlowRoot(container: AppContainer) {
                             NavigationBarItem(
                                 selected = currentRoute == tab.route,
                                 onClick = {
+                                    // Already there: navigating would pop and
+                                    // re-push around the start destination and
+                                    // can strand the UI on the wrong screen.
+                                    if (currentRoute == tab.route) return@NavigationBarItem
+                                    // No saveState/restoreState here: this
+                                    // graph's start destination is itself a
+                                    // tab, and the saved-state restoration
+                                    // misfires when the tab is re-entered over
+                                    // a screen that was pushed onto it (the
+                                    // dashboard's analytics cards) — the UI
+                                    // strands on the old screen or worse.
                                     navController.navigate(tab.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
+                                        popUpTo(navController.graph.findStartDestination().id)
                                         launchSingleTop = true
-                                        restoreState = true
                                     }
                                 },
                                 icon = { Icon(tab.icon, contentDescription = tab.label) },
@@ -178,7 +187,16 @@ fun RunFlowRoot(container: AppContainer) {
                     DashboardScreen(
                         container = container,
                         onOpenActivity = { navController.navigate(Routes.activityDetail(it)) },
-                        onOpenAnalytics = { navController.navigate(Routes.ANALYTICS) },
+                        // Cards deep-link to a specific analytics section.
+                        // launchSingleTop only: the stack shape stays exactly
+                        // [dashboard, analytics] so tab navigation behaves the
+                        // same as after a tab tap (see tab onClick).
+                        onOpenAnalyticsSection = { section ->
+                            container.analyticsTargetSection = section
+                            navController.navigate(Routes.ANALYTICS) {
+                                launchSingleTop = true
+                            }
+                        },
                         onStartWorkout = { workoutId ->
                             container.recording.pendingWorkoutId = workoutId
                             navController.navigate(Routes.RECORD) {
@@ -214,7 +232,12 @@ fun RunFlowRoot(container: AppContainer) {
                 }
 
                 composable(Routes.ANALYTICS) {
-                    AnalyticsScreen(container = container)
+                    // One-shot section target set by dashboard cards before
+                    // navigating; consumed (and cleared) exactly once.
+                    val section = remember {
+                        container.analyticsTargetSection.also { container.analyticsTargetSection = null }
+                    }
+                    AnalyticsScreen(container = container, targetSection = section)
                 }
 
                 composable(Routes.ATHLETE) {

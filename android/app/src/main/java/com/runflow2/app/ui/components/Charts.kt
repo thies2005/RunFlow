@@ -505,62 +505,27 @@ private fun AxisLabels(top: String, mid: String, bottom: String, height: Int) {
     }
 }
 
-/**
- * Dual-axis recovery trend over one shared date axis: resting HR (drawn
- * INVERTED — a lower RHR plots higher) and HRV, each normalized to its own
- * window min/max. Each series renders as data points only, over a translucent
- * full-width personal-range band spanning that series' window min→max (≥3
- * points), plus dashed trailing-7-day-mean baseline lines when available.
- * Draws whichever series has data; safe on 0/1 points.
- */
+/** One labelled single-series gradient chart — a stacked half of [HealthTrendChart]. */
 @Composable
-fun HealthTrendChart(
-    entries: List<DailyEntryEntity>,
-    rhrBaseline: Double?,
-    hrvBaseline: Double?,
-    modifier: Modifier = Modifier,
-    height: Int = 200,
-    style: GraphStyle = GraphStyle.LINE_DOTS,
+private fun MiniTrend(
+    label: String,
+    color: Color,
+    values: List<Double>,
+    baseline: Double?,
+    step: Double,
+    height: Int,
 ) {
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val gridColor = MaterialTheme.colorScheme.outlineVariant
-    val rhrColor = MaterialTheme.colorScheme.primary
-    val hrvColor = MaterialTheme.colorScheme.tertiary
+    val (lo, hi) = paddedRange(values, step = step)
 
-    val rhrPts = entries.mapIndexedNotNull { i, e -> e.restingHr?.let { i to it.toDouble() } }
-    val hrvPts = entries.mapIndexedNotNull { i, e -> e.hrvMs?.let { i to it } }
-    val rhrValues = rhrPts.map { it.second }
-    val hrvValues = hrvPts.map { it.second }
-
-    // padded, step-rounded y-ranges: breathing room at the edges + round axis labels
-    val (rhrLo, rhrHi) = paddedRange(rhrValues, step = 1.0)
-    val (hrvLo, hrvHi) = paddedRange(hrvValues, step = 5.0)
-
-    Column(modifier) {
-        // legend (mirrors FitnessChart)
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(bottom = 6.dp),
-        ) {
-            buildList {
-                if (rhrValues.isNotEmpty()) add("RHR" to rhrColor)
-                if (hrvValues.isNotEmpty()) add("HRV" to hrvColor)
-            }.forEachIndexed { i, (label, color) ->
-                if (i > 0) Spacer(Modifier.width(12.dp))
-                Canvas(Modifier.size(8.dp)) { drawCircle(color) }
-                Spacer(Modifier.width(4.dp))
-                Text(label, style = MaterialTheme.typography.labelMedium, color = labelColor)
-            }
-        }
-
+    Column {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = labelColor)
         Row(Modifier.fillMaxWidth()) {
-            // RHR axis (inverted scale: the LOWEST value sits at the top)
-            if (rhrValues.isNotEmpty()) {
+            if (values.isNotEmpty()) {
                 AxisLabels(
-                    top = rhrLo.roundToInt().toString(),
-                    mid = ((rhrLo + rhrHi) / 2).roundToInt().toString(),
-                    bottom = rhrHi.roundToInt().toString(),
+                    top = hi.roundToInt().toString(),
+                    mid = ((lo + hi) / 2).roundToInt().toString(),
+                    bottom = lo.roundToInt().toString(),
                     height = height,
                 )
             }
@@ -569,109 +534,75 @@ fun HealthTrendChart(
                     .weight(1f)
                     .height(height.dp),
             ) {
-            val w = size.width
-            val h = size.height
-            val padTop = 10f
-            val padBottom = 8f
-            val plotH = h - padTop - padBottom
-            val maxX = (entries.size - 1).coerceAtLeast(1)
+                val w = size.width
+                val h = size.height
+                val padTop = 6f
+                val padBottom = 4f
+                val plotH = h - padTop - padBottom
+                if (values.isEmpty()) return@Canvas
+                val maxX = (values.size - 1).coerceAtLeast(1)
 
-            fun px(i: Int) = i.toFloat() / maxX * w
-            // inverted: min RHR at the top, max at the bottom — both scales
-            // padded so the outermost dots keep clear of the plot edges
-            fun rhrPy(v: Double) = padTop + ((v - rhrLo) / (rhrHi - rhrLo)).toFloat().coerceIn(0f, 1f) * plotH
-            fun hrvPy(v: Double) = padTop + (1f - ((v - hrvLo) / (hrvHi - hrvLo)).toFloat().coerceIn(0f, 1f)) * plotH
+                fun px(i: Int) = i.toFloat() / maxX * w
+                fun py(v: Double) = padTop + (1f - ((v - lo) / (hi - lo)).toFloat().coerceIn(0f, 1f)) * plotH
 
-            // subtle mid gridline
-            drawLine(
-                gridColor.copy(alpha = 0.35f),
-                Offset(0f, padTop + plotH / 2),
-                Offset(w, padTop + plotH / 2),
-                strokeWidth = 1f,
-            )
-
-            // translucent full-width personal-range band (window min→max in
-            // the series' own scale); skipped for sparse windows (<3 points)
-            fun drawBand(pts: List<Pair<Int, Double>>, py: (Double) -> Float, color: Color) {
-                val vals = pts.map { it.second }
-                if (vals.size < 3) return
-                val ys = listOf(py(vals.min()), py(vals.max()))
-                drawRect(
-                    color = color.copy(alpha = 0.08f),
-                    topLeft = Offset(0f, ys.min()),
-                    size = androidx.compose.ui.geometry.Size(w, ys.max() - ys.min()),
+                val offsets = values.mapIndexed { i, v -> Offset(px(i), py(v)) }
+                drawPath(
+                    seriesFillPath(offsets, smooth = false, bottomY = h),
+                    Brush.verticalGradient(listOf(color.copy(alpha = 0.14f), Color.Transparent)),
                 )
-            }
-
-            fun drawSeries(pts: List<Pair<Int, Double>>, py: (Double) -> Float, color: Color, radiusDp: Float) {
-                when {
-                    pts.isEmpty() -> Unit
-                    pts.size == 1 -> drawCircle(
-                        color,
-                        radius = radiusDp.dp.toPx(),
-                        center = Offset(
-                            if (entries.size <= 1) w / 2f else px(pts[0].first),
-                            padTop + plotH / 2,
-                        ),
-                    )
-                    else -> drawTrendSeries(
-                        pts.map { (i, v) -> Offset(px(i), py(v)) },
-                        color,
-                        style,
-                        pointRadiusDp = radiusDp,
-                        lineStrokeDp = 1.8f,
+                drawPath(seriesPath(offsets, smooth = false), color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
+                baseline?.let { b ->
+                    val y = py(b).coerceIn(padTop, padTop + plotH)
+                    drawLine(
+                        color.copy(alpha = 0.55f),
+                        Offset(0f, y),
+                        Offset(w, y),
+                        1.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx())),
                     )
                 }
             }
-
-            // bands first so the points sit on top
-            drawBand(hrvPts, ::hrvPy, hrvColor)
-            drawBand(rhrPts, ::rhrPy, rhrColor)
-
-            // dashed baseline lines (trailing 7-day means)
-            val dash = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()))
-            if (rhrValues.isNotEmpty()) {
-                rhrBaseline?.let { b ->
-                    val y = rhrPy(b).coerceIn(padTop, padTop + plotH)
-                    drawLine(rhrColor.copy(alpha = 0.55f), Offset(0f, y), Offset(w, y), 1.2.dp.toPx(), pathEffect = dash)
-                }
-            }
-            if (hrvValues.isNotEmpty()) {
-                hrvBaseline?.let { b ->
-                    val y = hrvPy(b).coerceIn(padTop, padTop + plotH)
-                    drawLine(hrvColor.copy(alpha = 0.55f), Offset(0f, y), Offset(w, y), 1.2.dp.toPx(), pathEffect = dash)
-                }
-            }
-
-            drawSeries(hrvPts, ::hrvPy, hrvColor, radiusDp = 2.5f)
-            drawSeries(rhrPts, ::rhrPy, rhrColor, radiusDp = 3f)
-            }
-
-            // HRV axis (normal scale: the HIGHEST value sits at the top)
-            if (hrvValues.isNotEmpty()) {
-                AxisLabels(
-                    top = hrvHi.roundToInt().toString(),
-                    mid = ((hrvLo + hrvHi) / 2).roundToInt().toString(),
-                    bottom = hrvLo.roundToInt().toString(),
-                    height = height,
-                )
-            }
+            Spacer(Modifier.width(34.dp))
         }
+    }
+}
 
-        // y-range captions: RHR window on the left, HRV window on the right
-        Row(Modifier.fillMaxWidth()) {
-            Text(
-                if (rhrValues.isEmpty()) "" else "RHR ${rhrValues.min().roundToInt()}–${rhrValues.max().roundToInt()}",
-                style = MaterialTheme.typography.labelSmall,
-                color = labelColor,
-            )
-            Spacer(Modifier.weight(1f))
-            Text(
-                if (hrvValues.isEmpty()) "" else "HRV ${hrvValues.min().roundToInt()}–${hrvValues.max().roundToInt()}",
-                style = MaterialTheme.typography.labelSmall,
-                color = labelColor,
-            )
-        }
+/**
+ * Dual recovery trend as two stacked single-series charts — resting HR on
+ * top, HRV below, each with its own padded y-range, real-value axis legend
+ * and a dashed trailing-7-day-mean baseline. Normal axes everywhere (up =
+ * higher value); the daily dots were dropped in favor of clean trend lines
+ * with gradient fill.
+ */
+@Composable
+fun HealthTrendChart(
+    entries: List<DailyEntryEntity>,
+    rhrBaseline: Double?,
+    hrvBaseline: Double?,
+    modifier: Modifier = Modifier,
+    height: Int = 200,
+) {
+    val rhrColor = MaterialTheme.colorScheme.primary
+    val hrvColor = MaterialTheme.colorScheme.tertiary
+
+    Column(modifier) {
+        MiniTrend(
+            label = "Resting HR · bpm",
+            color = rhrColor,
+            values = entries.mapNotNull { it.restingHr?.toDouble() },
+            baseline = rhrBaseline,
+            step = 1.0,
+            height = (height - 12) / 2,
+        )
+        Spacer(Modifier.height(8.dp))
+        MiniTrend(
+            label = "HRV · ms",
+            color = hrvColor,
+            values = entries.mapNotNull { it.hrvMs },
+            baseline = hrvBaseline,
+            step = 5.0,
+            height = (height - 12) / 2,
+        )
 
         // sparse x-axis labels: first / middle / last
         Row(Modifier.fillMaxWidth()) {
@@ -679,13 +610,13 @@ fun HealthTrendChart(
             val mid = entries.getOrNull(entries.size / 2)?.date?.let(::parseDay)
             val last = entries.lastOrNull()?.date?.let(::parseDay)
             if (first != null && last != null) {
-                Text(first.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+                Text(first.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.weight(1f))
                 if (entries.size >= 3 && mid != null) {
-                    Text(mid.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+                    Text(mid.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Spacer(Modifier.weight(1f))
-                Text(last.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+                Text(last.format(monthFmt), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

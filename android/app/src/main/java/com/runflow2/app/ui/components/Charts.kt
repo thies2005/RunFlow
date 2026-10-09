@@ -2,6 +2,7 @@ package com.runflow2.app.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -24,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -403,6 +406,105 @@ private fun normFrac(values: List<Double>, v: Double): Float {
     return ((v - values.min()) / range).toFloat().coerceIn(0f, 1f)
 }
 
+/** Visual style for the recovery/readiness trend charts. */
+enum class GraphStyle {
+    /** Data points only. */
+    DOTS,
+
+    /** Line through the points, points on top. */
+    LINE_DOTS,
+
+    /** Line with a soft gradient fill under it, points on top. */
+    LINE_FILL,
+
+    /** Smoothed curve (midpoint quadratics) with gradient fill, points on top. */
+    SMOOTH_FILL,
+}
+
+/** Builds the through-line for a series: polyline, or midpoint-quadratic smoothing when [smooth]. */
+private fun seriesPath(offsets: List<Offset>, smooth: Boolean): Path {
+    val path = Path()
+    if (offsets.isEmpty()) return path
+    path.moveTo(offsets.first().x, offsets.first().y)
+    if (!smooth || offsets.size < 3) {
+        offsets.drop(1).forEach { path.lineTo(it.x, it.y) }
+    } else {
+        for (i in 1 until offsets.size) {
+            val prev = offsets[i - 1]
+            val curr = offsets[i]
+            path.quadraticTo((prev.x + curr.x) / 2f, prev.y, curr.x, (prev.y + curr.y) / 2f)
+        }
+        path.lineTo(offsets.last().x, offsets.last().y)
+    }
+    return path
+}
+
+/** [seriesPath] closed down to [bottomY] — the shape a gradient fill paints. */
+private fun seriesFillPath(offsets: List<Offset>, smooth: Boolean, bottomY: Float): Path {
+    val path = seriesPath(offsets, smooth)
+    if (offsets.isNotEmpty()) {
+        path.lineTo(offsets.last().x, bottomY)
+        path.lineTo(offsets.first().x, bottomY)
+        path.close()
+    }
+    return path
+}
+
+/** Fill (per style), line (per style), then points on top. Callers handle the 0/1-point cases. */
+private fun DrawScope.drawTrendSeries(
+    offsets: List<Offset>,
+    color: Color,
+    style: GraphStyle,
+    pointRadiusDp: Float,
+    lineStrokeDp: Float = 2f,
+) {
+    if (offsets.isEmpty()) return
+    if (style == GraphStyle.LINE_FILL || style == GraphStyle.SMOOTH_FILL) {
+        val fill = seriesFillPath(offsets, style == GraphStyle.SMOOTH_FILL, size.height)
+        drawPath(fill, Brush.verticalGradient(listOf(color.copy(alpha = 0.16f), Color.Transparent)))
+    }
+    if (style != GraphStyle.DOTS) {
+        drawPath(
+            seriesPath(offsets, style == GraphStyle.SMOOTH_FILL),
+            color,
+            style = Stroke(lineStrokeDp.dp.toPx(), cap = StrokeCap.Round),
+        )
+    }
+    offsets.forEach { drawCircle(color, radius = pointRadiusDp.dp.toPx(), center = it) }
+}
+
+/**
+ * Window min/max expanded 12% of the span to each side, then rounded outward
+ * to [step] — dots never pin to the plot edges and the axis labels get round
+ * numbers. Flat series still spread over at least one step.
+ */
+private fun paddedRange(values: List<Double>, step: Double): Pair<Double, Double> {
+    if (values.isEmpty()) return 0.0 to step
+    val lo = values.min()
+    val hi = values.max()
+    val pad = ((hi - lo).coerceAtLeast(step)) * 0.12
+    val loPadded = Math.floor((lo - pad) / step) * step
+    val hiPadded = Math.ceil((hi + pad) / step) * step
+    return loPadded to hiPadded
+}
+
+/** Three small y-axis value labels (top/middle/bottom) beside a chart of [height] dp. */
+@Composable
+private fun AxisLabels(top: String, mid: String, bottom: String, height: Int) {
+    Column(
+        Modifier
+            .width(34.dp)
+            .height(height.dp)
+            .padding(vertical = 2.dp),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(top, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(mid, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(bottom, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
 /**
  * Dual-axis recovery trend over one shared date axis: resting HR (drawn
  * INVERTED — a lower RHR plots higher) and HRV, each normalized to its own
@@ -418,6 +520,7 @@ fun HealthTrendChart(
     hrvBaseline: Double?,
     modifier: Modifier = Modifier,
     height: Int = 200,
+    style: GraphStyle = GraphStyle.LINE_DOTS,
 ) {
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val gridColor = MaterialTheme.colorScheme.outlineVariant
@@ -428,6 +531,10 @@ fun HealthTrendChart(
     val hrvPts = entries.mapIndexedNotNull { i, e -> e.hrvMs?.let { i to it } }
     val rhrValues = rhrPts.map { it.second }
     val hrvValues = hrvPts.map { it.second }
+
+    // padded, step-rounded y-ranges: breathing room at the edges + round axis labels
+    val (rhrLo, rhrHi) = paddedRange(rhrValues, step = 1.0)
+    val (hrvLo, hrvHi) = paddedRange(hrvValues, step = 5.0)
 
     Column(modifier) {
         // legend (mirrors FitnessChart)
@@ -447,11 +554,21 @@ fun HealthTrendChart(
             }
         }
 
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(height.dp),
-        ) {
+        Row(Modifier.fillMaxWidth()) {
+            // RHR axis (inverted scale: the LOWEST value sits at the top)
+            if (rhrValues.isNotEmpty()) {
+                AxisLabels(
+                    top = rhrLo.roundToInt().toString(),
+                    mid = ((rhrLo + rhrHi) / 2).roundToInt().toString(),
+                    bottom = rhrHi.roundToInt().toString(),
+                    height = height,
+                )
+            }
+            Canvas(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(height.dp),
+            ) {
             val w = size.width
             val h = size.height
             val padTop = 10f
@@ -460,9 +577,10 @@ fun HealthTrendChart(
             val maxX = (entries.size - 1).coerceAtLeast(1)
 
             fun px(i: Int) = i.toFloat() / maxX * w
-            // inverted: min RHR at the top, max at the bottom
-            fun rhrPy(v: Double) = padTop + normFrac(rhrValues, v) * plotH
-            fun hrvPy(v: Double) = padTop + (1f - normFrac(hrvValues, v)) * plotH
+            // inverted: min RHR at the top, max at the bottom — both scales
+            // padded so the outermost dots keep clear of the plot edges
+            fun rhrPy(v: Double) = padTop + ((v - rhrLo) / (rhrHi - rhrLo)).toFloat().coerceIn(0f, 1f) * plotH
+            fun hrvPy(v: Double) = padTop + (1f - ((v - hrvLo) / (hrvHi - hrvLo)).toFloat().coerceIn(0f, 1f)) * plotH
 
             // subtle mid gridline
             drawLine(
@@ -496,9 +614,13 @@ fun HealthTrendChart(
                             padTop + plotH / 2,
                         ),
                     )
-                    else -> pts.forEach { (i, v) ->
-                        drawCircle(color, radius = radiusDp.dp.toPx(), center = Offset(px(i), py(v)))
-                    }
+                    else -> drawTrendSeries(
+                        pts.map { (i, v) -> Offset(px(i), py(v)) },
+                        color,
+                        style,
+                        pointRadiusDp = radiusDp,
+                        lineStrokeDp = 1.8f,
+                    )
                 }
             }
 
@@ -523,6 +645,17 @@ fun HealthTrendChart(
 
             drawSeries(hrvPts, ::hrvPy, hrvColor, radiusDp = 2.5f)
             drawSeries(rhrPts, ::rhrPy, rhrColor, radiusDp = 3f)
+            }
+
+            // HRV axis (normal scale: the HIGHEST value sits at the top)
+            if (hrvValues.isNotEmpty()) {
+                AxisLabels(
+                    top = hrvHi.roundToInt().toString(),
+                    mid = ((hrvLo + hrvHi) / 2).roundToInt().toString(),
+                    bottom = hrvLo.roundToInt().toString(),
+                    height = height,
+                )
+            }
         }
 
         // y-range captions: RHR window on the left, HRV window on the right
@@ -568,6 +701,7 @@ fun ReadinessScoreChart(
     entries: List<DailyEntryEntity>,
     modifier: Modifier = Modifier,
     height: Int = 160,
+    style: GraphStyle = GraphStyle.LINE_DOTS,
 ) {
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val gridColor = MaterialTheme.colorScheme.outlineVariant
@@ -576,9 +710,11 @@ fun ReadinessScoreChart(
     val pts = entries.mapIndexedNotNull { i, e -> e.score?.let { i to it } }
 
     Column(modifier) {
+        Row(Modifier.fillMaxWidth()) {
+            AxisLabels(top = "100", mid = "50", bottom = "0", height = height)
         Canvas(
             modifier = Modifier
-                .fillMaxWidth()
+                .weight(1f)
                 .height(height.dp),
         ) {
             val w = size.width
@@ -602,9 +738,23 @@ fun ReadinessScoreChart(
                 )
             }
 
-            pts.forEach { (i, v) ->
-                drawCircle(scoreColor, radius = 3.5.dp.toPx(), center = Offset(px(i), py(v)))
+            if (pts.size < 2) {
+                pts.forEach { (i, v) ->
+                    drawCircle(scoreColor, radius = 3.5.dp.toPx(), center = Offset(px(i), py(v)))
+                }
+            } else {
+                drawTrendSeries(
+                    pts.map { (i, v) -> Offset(px(i), py(v)) },
+                    scoreColor,
+                    style,
+                    pointRadiusDp = 3.5f,
+                    lineStrokeDp = 2.2f,
+                )
             }
+        }
+
+        // right-side spacer mirroring the label column so the plot stays centered
+        Spacer(Modifier.width(34.dp))
         }
         // x-axis labels
         Row(Modifier.fillMaxWidth()) {
@@ -641,17 +791,26 @@ fun SleepDurationChart(
     baselineMinutes: Double?,
     modifier: Modifier = Modifier,
     height: Int = 160,
+    style: GraphStyle = GraphStyle.LINE_DOTS,
 ) {
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val sleepColor = MaterialTheme.colorScheme.secondary
 
     val pts = entries.mapIndexedNotNull { i, e -> e.sleepMinutes?.let { i to it.toDouble() } }
     val values = pts.map { it.second }
+    val (sleepLo, sleepHi) = paddedRange(values, step = 30.0)
 
     Column(modifier) {
+        Row(Modifier.fillMaxWidth()) {
+            AxisLabels(
+                top = "${Format.oneDecimal(sleepHi / 60.0)}h",
+                mid = "${Format.oneDecimal((sleepLo + sleepHi) / 2 / 60.0)}h",
+                bottom = "${Format.oneDecimal(sleepLo / 60.0)}h",
+                height = height,
+            )
         Canvas(
             modifier = Modifier
-                .fillMaxWidth()
+                .weight(1f)
                 .height(height.dp),
         ) {
             val w = size.width
@@ -662,7 +821,7 @@ fun SleepDurationChart(
             val maxX = (entries.size - 1).coerceAtLeast(1)
 
             fun px(i: Int) = (if (entries.size <= 1) w / 2f else i.toFloat() / maxX * w)
-            fun py(v: Double) = padTop + (1f - normFrac(values, v)) * plotH
+            fun py(v: Double) = padTop + (1f - ((v - sleepLo) / (sleepHi - sleepLo)).toFloat().coerceIn(0f, 1f)) * plotH
 
             // translucent personal-range band (window min→max); skipped for
             // sparse windows (<3 points)
@@ -699,10 +858,18 @@ fun SleepDurationChart(
                         padTop + plotH / 2,
                     ),
                 )
-                else -> pts.forEach { (i, v) ->
-                    drawCircle(sleepColor, radius = 3.dp.toPx(), center = Offset(px(i), py(v)))
-                }
+                else -> drawTrendSeries(
+                    pts.map { (i, v) -> Offset(px(i), py(v)) },
+                    sleepColor,
+                    style,
+                    pointRadiusDp = 3f,
+                    lineStrokeDp = 2f,
+                )
             }
+        }
+
+        // right-side spacer mirroring the label column so the plot stays centered
+        Spacer(Modifier.width(34.dp))
         }
 
         // y-range captions: window min–max on the left, baseline on the right

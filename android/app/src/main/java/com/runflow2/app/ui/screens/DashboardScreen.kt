@@ -310,8 +310,7 @@ fun DashboardScreen(
                         Card(
                             shape = MetricCardShape,
                             colors = CardDefaults.cardColors(
-                                containerColor = if (entry != null) stateColor.copy(alpha = 0.12f)
-                                else MaterialTheme.colorScheme.surfaceContainerLow,
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                             ),
                             modifier = Modifier
                                 .weight(1f)

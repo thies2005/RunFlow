@@ -823,14 +823,26 @@ private fun sleepDurationLabel(minutes: Double): String {
  * keyed item appears, then lines it up. Cheap here: a handful of frames.
  */
 private suspend fun LazyListState.scrollToKeyedItem(key: Any) {
-    var guard = 0
-    while (guard++ < 64) {
+    // Time budget instead of a frame counter: on a cold start the first
+    // analytics computation can outlast any fixed number of frames.
+    val deadline = System.nanoTime() + 4_000_000_000L
+    while (System.nanoTime() < deadline) {
         val info = layoutInfo
-        info.visibleItemsInfo.firstOrNull { it.key == key }?.let {
-            scrollToItem(it.index)
+        info.visibleItemsInfo.firstOrNull { it.key == key }?.let { target ->
+            // final placement can be shifted by later measure passes — settle
+            var tries = 0
+            while (firstVisibleItemIndex != target.index && tries++ < 5) {
+                scrollToItem(target.index)
+                withFrameNanos { }
+            }
             return
         }
-        val last = info.visibleItemsInfo.maxByOrNull { it.index } ?: return
+        // the list may not have had its first measure pass yet — wait, don't give up
+        val last = info.visibleItemsInfo.maxByOrNull { it.index }
+        if (last == null || info.totalItemsCount == 0) {
+            withFrameNanos { }
+            continue
+        }
         if (last.index >= info.totalItemsCount - 1) return
         // every currently visible index has been checked — skip past them all
         scrollToItem((last.index + 1).coerceAtMost(info.totalItemsCount - 1))

@@ -17,9 +17,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Favorite
@@ -63,6 +64,7 @@ import com.runflow2.app.core.math.VdotMath
 import com.runflow2.app.core.util.DistanceUnit
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.core.util.LoginPrompt
+import com.runflow2.app.data.db.DailyEntryEntity
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.analytics.AnalyticsBundle
@@ -82,6 +84,7 @@ import com.runflow2.app.domain.plan.TriathlonTimeEstimator
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -108,6 +111,8 @@ fun DashboardScreen(
     val workouts = activeGoal?.let { goal ->
         container.repository.workoutsForGoal(goal.id).collectAsState(initial = emptyList()).value
     } ?: emptyList()
+    // Athlete profile powers the greeting + initials avatar (same pattern as AthleteScreen).
+    val profile by container.repository.profile.collectAsState(initial = null)
 
     // ---- sign-in nudge: shows until signed in, permanently dismissed, or snoozed ----
     // Gated on auth.initialized so the dialog can't flash for an already
@@ -129,7 +134,7 @@ fun DashboardScreen(
         value = container.repository.analytics(365)
     }
 
-    // ---- recovery card: today's entry + the last 30 days for trend/baselines ----
+    // ---- recovery hero inputs: today's entry + the last 30 days for trend/baselines ----
     val todayEntry by container.repository.dailyEntryFlow(today).collectAsState(initial = null)
     val last30Entries by container.repository
         .dailyEntryRangeFlow(today.minusDays(29), today)
@@ -176,7 +181,313 @@ fun DashboardScreen(
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                // ---- This week hero ----
+                // ---- Greeting header ----
+                item {
+                    val nameWords = (profile?.name?.trim() ?: "")
+                        .split(Regex("\\s+"))
+                        .filter { it.isNotBlank() }
+                    val firstName = nameWords.firstOrNull() ?: "athlete"
+                    val initials = nameWords.take(2)
+                        .mapNotNull { word -> word.firstOrNull()?.uppercaseChar() }
+                        .joinToString("")
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "${greetingFor(LocalTime.now())}, $firstName",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        Box(
+                            Modifier
+                                .size(44.dp)
+                                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                initials,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            )
+                        }
+                    }
+                }
+
+                // ---- Recovery ring hero ----
+                item {
+                    val todayStr = today.toString()
+                    val entry = todayEntry
+                    // strictly-prior entries within the fetched 30-day window
+                    val history = last30Entries.filter { it.date < todayStr }
+                    val weekStartStr = today.minusDays(7).toString()
+                    val rhrBaseline = history
+                        .filter { it.date >= weekStartStr && it.restingHr != null }
+                        .map { it.restingHr!!.toDouble() }
+                        .takeIf { it.isNotEmpty() }
+                        ?.average()
+                    val hrvBaseline = history
+                        .filter { it.date >= weekStartStr && it.hrvMs != null }
+                        .map { it.hrvMs!! }
+                        .takeIf { it.isNotEmpty() }
+                        ?.average()
+
+                    val hrvSeries = last30Entries.filter { it.hrvMs != null }.map { it.hrvMs!! }
+                    val rhrSeries = last30Entries.filter { it.restingHr != null }.map { it.restingHr!!.toDouble() }
+                    val sparkValues = if (hrvSeries.size >= 2) hrvSeries else rhrSeries
+                    val sparkLabel = if (hrvSeries.size >= 2) "HRV · last 30 days" else "Resting HR · last 30 days"
+
+                    if (entry == null) {
+                        // empty state — quiet floating card with a single call to action
+                        Card(
+                            shape = CardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showDailyForm = true },
+                        ) {
+                            Column(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Icon(
+                                    Icons.Outlined.MonitorHeart,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(64.dp),
+                                )
+                                Text("Log today's recovery", style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    "Takes 20 seconds — how do you feel?",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Button(onClick = { showDailyForm = true }) {
+                                    Text("Log now")
+                                }
+                            }
+                        }
+                    } else {
+                        val stateColor = readinessColor(entry.state)
+                        Card(
+                            shape = CardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = stateColor.copy(alpha = 0.12f),
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showDailyForm = true },
+                        ) {
+                            Column(
+                                Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                            ) {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                ) {
+                                    Box(
+                                        Modifier.size(130.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        ProgressRing(
+                                            progress = ((entry.score ?: 0.0) / 100.0).toFloat(),
+                                            color = stateColor,
+                                            strokeWidth = 14f,
+                                            modifier = Modifier.size(130.dp),
+                                        )
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                entry.score?.roundToInt()?.toString() ?: "—",
+                                                style = MaterialTheme.typography.headlineLarge,
+                                                fontWeight = FontWeight.Bold,
+                                                color = stateColor,
+                                            )
+                                            Text(
+                                                "READINESS",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    }
+                                    Column(
+                                        Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Text(
+                                            "Recovery",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                        InfoChip(
+                                            text = entry.state?.replaceFirstChar { it.uppercase() } ?: "Not scored",
+                                            container = stateColor.copy(alpha = 0.15f),
+                                            contentColor = stateColor,
+                                        )
+                                        val rhrDelta = entry.restingHr?.let { rhr ->
+                                            rhrBaseline?.let { b -> rhr.toDouble() - b }
+                                        }
+                                        val hrvDelta = entry.hrvMs?.let { hrv ->
+                                            hrvBaseline?.let { b -> hrv - b }
+                                        }
+                                        MetricDeltaTile(
+                                            label = "Resting HR",
+                                            value = entry.restingHr?.let { "$it bpm" } ?: "—",
+                                            caption = rhrDelta?.let { deltaCaption(it) }
+                                                ?: if (entry.restingHr == null) null else "no 7-day avg yet",
+                                            captionGood = rhrDelta?.let { deltaTone(it, lowerIsBetter = true) },
+                                            icon = Icons.Outlined.Favorite,
+                                            accent = MaterialTheme.colorScheme.primary,
+                                        )
+                                        MetricDeltaTile(
+                                            label = "HRV",
+                                            value = entry.hrvMs?.let { "${it.roundToInt()} ms" } ?: "—",
+                                            caption = hrvDelta?.let { deltaCaption(it) }
+                                                ?: if (entry.hrvMs == null) null else "no 7-day avg yet",
+                                            captionGood = hrvDelta?.let { deltaTone(it, lowerIsBetter = false) },
+                                            icon = Icons.Outlined.MonitorHeart,
+                                            accent = MaterialTheme.colorScheme.tertiary,
+                                        )
+                                    }
+                                }
+
+                                if (sparkValues.size >= 2) {
+                                    Sparkline(
+                                        values = sparkValues,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(36.dp),
+                                        color = stateColor,
+                                    )
+                                    Text(
+                                        sparkLabel,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ---- Sleep + Form metric grid ----
+                item {
+                    val a = analytics
+                    // Sleep reads the most recent night WITH data (today usually
+                    // isn't logged yet — last night's value is the meaningful one).
+                    val lastSleepEntry = last30Entries.lastOrNull { it.sleepMinutes != null }
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        // Sleep — last night's total from the daily entry
+                        Card(
+                            shape = MetricCardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { onOpenAnalytics() },
+                        ) {
+                            Column(
+                                Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Box(
+                                    Modifier
+                                        .size(36.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f),
+                                            CircleShape,
+                                        ),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Bedtime,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                                Text(
+                                    sleepLabel(lastSleepEntry?.sleepMinutes),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "Sleep",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                sleepStageCaption(lastSleepEntry)?.let { caption ->
+                                    Text(
+                                        caption,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
+                        // Form — CTL/ATL/TSB quick view
+                        Card(
+                            shape = MetricCardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { onOpenAnalytics() },
+                        ) {
+                            Column(
+                                Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                val status = a?.tsbStatus ?: TsbStatus.NEUTRAL
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Box(
+                                        Modifier
+                                            .size(10.dp)
+                                            .background(status.color(), CircleShape),
+                                    )
+                                    Text(
+                                        "Form · ${status.label}",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                                Text(
+                                    "CTL ${Format.intOrDash(a?.ctl)} · ATL ${Format.intOrDash(a?.atl)} · TSB ${if (a != null && a.tsb > 0) "+" else ""}${Format.intOrDash(a?.tsb)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                val ctlSeries = a?.daily?.map { it.ctl }?.takeLast(30) ?: emptyList()
+                                if (ctlSeries.size >= 2) {
+                                    Sparkline(
+                                        values = ctlSeries,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(28.dp),
+                                        color = status.color(),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ---- This week ----
                 item {
                     val a = analytics
                     // Lifetime metrics get a change caption so they don't look
@@ -196,9 +507,9 @@ fun DashboardScreen(
                         ref?.let { bundle.ctl - it.ctl }
                     }?.takeIf { abs(it) >= 0.05 }
                     Card(
+                        shape = CardShape,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                         ),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -211,7 +522,7 @@ fun DashboardScreen(
                                     Text(
                                         "THIS WEEK",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                     Text(
                                         Format.distance(a?.currentWeekKm ?: 0.0, unit),
@@ -260,190 +571,6 @@ fun DashboardScreen(
                                     captionGood = ctlDelta?.let { it > 0 },
                                 )
                             }
-                        }
-                    }
-                }
-
-                // ---- Recovery card ----
-                item {
-                    val todayStr = today.toString()
-                    val entry = todayEntry
-                    // strictly-prior entries within the fetched 30-day window
-                    val history = last30Entries.filter { it.date < todayStr }
-                    val weekStartStr = today.minusDays(7).toString()
-                    val rhrBaseline = history
-                        .filter { it.date >= weekStartStr && it.restingHr != null }
-                        .map { it.restingHr!!.toDouble() }
-                        .takeIf { it.isNotEmpty() }
-                        ?.average()
-                    val hrvBaseline = history
-                        .filter { it.date >= weekStartStr && it.hrvMs != null }
-                        .map { it.hrvMs!! }
-                        .takeIf { it.isNotEmpty() }
-                        ?.average()
-
-                    val hrvSeries = last30Entries.filter { it.hrvMs != null }.map { it.hrvMs!! }
-                    val rhrSeries = last30Entries.filter { it.restingHr != null }.map { it.restingHr!!.toDouble() }
-                    val sparkValues = if (hrvSeries.size >= 2) hrvSeries else rhrSeries
-                    val sparkLabel = if (hrvSeries.size >= 2) "HRV · last 30 days" else "Resting HR · last 30 days"
-
-                    if (entry == null) {
-                        // empty state — one line + button
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showDailyForm = true },
-                        ) {
-                            Row(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    "Recovery — log today",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                Button(onClick = { showDailyForm = true }) {
-                                    Text("Log now")
-                                }
-                            }
-                        }
-                    } else {
-                        val stateColor = readinessColor(entry.state)
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showDailyForm = true },
-                        ) {
-                            Column(
-                                Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Box(
-                                        Modifier
-                                            .size(12.dp)
-                                            .background(stateColor, CircleShape),
-                                    )
-                                    Spacer(Modifier.width(10.dp))
-                                    Column(Modifier.weight(1f)) {
-                                        Text("Recovery", style = MaterialTheme.typography.titleMedium)
-                                        Text(
-                                            if (entry.score != null) {
-                                                sparkLabel
-                                            } else {
-                                                "Not enough data to score yet"
-                                            },
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                    if (entry.score != null) {
-                                        Column(horizontalAlignment = Alignment.End) {
-                                            Text(
-                                                "${entry.score.roundToInt()}",
-                                                style = MaterialTheme.typography.headlineMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                color = stateColor,
-                                            )
-                                            InfoChip(
-                                                text = entry.state?.replaceFirstChar { it.uppercase() } ?: "—",
-                                                container = stateColor.copy(alpha = 0.15f),
-                                                contentColor = stateColor,
-                                            )
-                                        }
-                                    }
-                                }
-
-                                if (entry.restingHr != null || entry.hrvMs != null) {
-                                    val rhrDelta = entry.restingHr?.let { rhr ->
-                                        rhrBaseline?.let { b -> rhr.toDouble() - b }
-                                    }
-                                    val hrvDelta = entry.hrvMs?.let { hrv ->
-                                        hrvBaseline?.let { b -> hrv - b }
-                                    }
-                                    Row(
-                                        Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                    ) {
-                                        MetricDeltaTile(
-                                            label = "Resting HR",
-                                            value = entry.restingHr?.let { "$it bpm" } ?: "—",
-                                            caption = rhrDelta?.let { deltaCaption(it) }
-                                                ?: if (entry.restingHr == null) null else "no 7-day avg yet",
-                                            captionGood = rhrDelta?.let { deltaTone(it, lowerIsBetter = true) },
-                                            icon = Icons.Outlined.Favorite,
-                                            accent = MaterialTheme.colorScheme.primary,
-                                        )
-                                        MetricDeltaTile(
-                                            label = "HRV",
-                                            value = entry.hrvMs?.let { "${it.roundToInt()} ms" } ?: "—",
-                                            caption = hrvDelta?.let { deltaCaption(it) }
-                                                ?: if (entry.hrvMs == null) null else "no 7-day avg yet",
-                                            captionGood = hrvDelta?.let { deltaTone(it, lowerIsBetter = false) },
-                                            icon = Icons.Outlined.MonitorHeart,
-                                            accent = MaterialTheme.colorScheme.tertiary,
-                                        )
-                                    }
-                                }
-
-                                if (sparkValues.size >= 2) {
-                                    Sparkline(
-                                        values = sparkValues,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(36.dp),
-                                        color = stateColor,
-                                    )
-                                }
-
-                                if (entry.score == null) {
-                                    TextButton(
-                                        onClick = { showDailyForm = true },
-                                        modifier = Modifier.align(Alignment.End),
-                                    ) {
-                                        Text("Add how you feel")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // ---- Form / TSB quick card ----
-                item {
-                    val a = analytics
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                                .clickable { onOpenAnalytics() },
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Box(
-                                Modifier
-                                    .size(12.dp)
-                                    .background((a?.tsbStatus ?: TsbStatus.NEUTRAL).color(), CircleShape),
-                            )
-                            Spacer(Modifier.width(10.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    "Form · ${(a?.tsbStatus ?: TsbStatus.NEUTRAL).label}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                )
-                                Text(
-                                    "CTL ${Format.intOrDash(a?.ctl)}  ·  ATL ${Format.intOrDash(a?.atl)}  ·  TSB ${if (a != null && a.tsb > 0) "+" else ""}${Format.intOrDash(a?.tsb)}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            Icon(Icons.Outlined.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -746,6 +873,35 @@ fun DashboardScreen(
     if (showDailyForm) {
         DailyFormSheet(container = container, onDismiss = { showDailyForm = false })
     }
+}
+
+/** Floating-card corner radii: hero/week cards 24dp, compact metric cards 20dp. */
+private val CardShape = RoundedCornerShape(24.dp)
+private val MetricCardShape = RoundedCornerShape(20.dp)
+
+/** Time-of-day greeting: morning before noon, afternoon before 6pm, evening after. */
+private fun greetingFor(now: LocalTime): String = when {
+    now.hour < 12 -> "Good morning"
+    now.hour < 18 -> "Good afternoon"
+    else -> "Good evening"
+}
+
+/** "7h 32m" style sleep duration; "—" when last night wasn't logged. */
+private fun sleepLabel(minutes: Int?): String {
+    if (minutes == null || minutes <= 0) return "—"
+    return "${minutes / 60}h ${minutes % 60}m"
+}
+
+/**
+ * "Deep 18% · REM 22%" — stage shares of last night's total sleep; null when
+ * the total or either stage is missing.
+ */
+private fun sleepStageCaption(entry: DailyEntryEntity?): String? {
+    val total = entry?.sleepMinutes ?: return null
+    if (total <= 0) return null
+    val deep = entry?.deepMinutes ?: return null
+    val rem = entry?.remMinutes ?: return null
+    return "Deep ${(deep * 100.0 / total).roundToInt()}% · REM ${(rem * 100.0 / total).roundToInt()}%"
 }
 
 /**

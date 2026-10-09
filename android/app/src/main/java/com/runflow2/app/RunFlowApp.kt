@@ -85,6 +85,15 @@ class AppContainer(app: Application) {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
+        // One-shot: recompute cached readiness scores when the engine version
+        // bumps (v2.8.0's continuous curves made every cached score stale).
+        appScope.launch {
+            if (settings.readinessScoreEngine() < 2) {
+                repository.recomputeAllReadinessScores()
+                settings.setReadinessScoreEngine(2)
+            }
+        }
+
         // Hot-swap the API base URL when the server setting changes. Values
         // are normalized to origin-only so a stored URL that still contains a
         // path (e.g. /api/mobile/v1) can never leak into the OAuth redirect.

@@ -234,17 +234,17 @@ class ReadinessJsonTest {
         )
         val payload = ReadinessJson.buildPayload(inputs, ReadinessScoring.score(inputs))
 
-        // +10% vs baseline → 85 + capped 15 bonus = 100
+        // +10% vs baseline → 75 + 10 * 1.5 = 90
         val hrvEntry = payload.componentScores.getValue("hrv")
-        assertEquals(100.0, hrvEntry.score, 0.0)
+        assertEquals(90.0, hrvEntry.score, 0.0)
         assertTrue(hrvEntry.isAvailable)
-        assertEquals("HRV improved by 10.0% vs 7-day baseline", hrvEntry.reason)
+        assertEquals("HRV up 10.0% vs baseline", hrvEntry.reason)
         // hrvJson pass-through still carries the metrics for display
         assertEquals(66.0, payload.hrvJson?.todayHrv!!, 0.0)
 
         // round-trip: a payload with the "hrv" key decodes it back
         val restored = requireNotNull(ReadinessPayload.fromJson(payload.toJson()))
-        assertEquals(100.0, restored.componentScores.getValue("hrv").score, 0.0)
+        assertEquals(90.0, restored.componentScores.getValue("hrv").score, 0.0)
         assertTrue(restored.componentScores.getValue("hrv").isAvailable)
     }
 

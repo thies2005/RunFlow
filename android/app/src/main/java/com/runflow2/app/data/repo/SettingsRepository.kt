@@ -3,6 +3,7 @@ package com.runflow2.app.data.repo
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -76,6 +77,7 @@ class SettingsRepository(private val context: Context) {
         val HEALTH_METRICS_SYNC_ENABLED = booleanPreferencesKey("health_metrics_sync_enabled")
         val OFFLINE_MODE_CHOSEN = booleanPreferencesKey("offline_mode_chosen")
         val READINESS_LAST_PUSH_AT = longPreferencesKey("readiness_last_push_at")
+        val READINESS_SCORE_ENGINE = intPreferencesKey("readiness_score_engine")
         val BODY_AUTO_REFRESH_DAY = longPreferencesKey("body_auto_refresh_day")
     }
 
@@ -207,4 +209,11 @@ class SettingsRepository(private val context: Context) {
     /** Stamps the body auto-refresh as done for [epochDay] (only on actual change). */
     suspend fun setBodyAutoRefreshDay(epochDay: Long) =
         context.dataStore.edit { it[Keys.BODY_AUTO_REFRESH_DAY] = epochDay }
+
+    /** Which readiness-scoring engine version produced the cached scores (0 = pre-continuous). */
+    suspend fun readinessScoreEngine(): Int =
+        context.dataStore.data.first()[Keys.READINESS_SCORE_ENGINE] ?: 0
+
+    suspend fun setReadinessScoreEngine(version: Int) =
+        context.dataStore.edit { it[Keys.READINESS_SCORE_ENGINE] = version }
 }

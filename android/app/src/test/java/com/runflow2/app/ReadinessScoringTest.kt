@@ -38,49 +38,49 @@ class ReadinessScoringTest {
     // ---- HRR component scoring ----
 
     @Test
-    fun `improving RHR negative delta scores 85 plus bonus`() {
+    fun `improving RHR negative delta adds 7 per bpm`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, rhr = RhrMetrics(todayRhr = 50.0, baselineRhr = 55.0, rhrDelta = -3.0)),
         )
         val hrr = findComponent(result.componentScores, ReadinessComponent.HRR)
         assertTrue(hrr.isAvailable)
-        assertEquals((85 + 3 * 2).toDouble(), hrr.score, 0.01)
+        assertEquals(96.0, hrr.score, 0.01) // 75 + 3 bpm * 7
     }
 
     @Test
-    fun `improving RHR bonus capped at 15`() {
+    fun `improving RHR credit capped at 3 bpm`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, rhr = RhrMetrics(todayRhr = 40.0, baselineRhr = 60.0, rhrDelta = -20.0)),
         )
         val hrr = findComponent(result.componentScores, ReadinessComponent.HRR)
-        assertEquals(100.0, hrr.score, 0.01)
+        assertEquals(96.0, hrr.score, 0.01) // delta clamped to -3 bpm
     }
 
     @Test
-    fun `stable RHR delta near zero scores 75`() {
+    fun `stable RHR delta near zero scores 71_5`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, rhr = RhrMetrics(todayRhr = 55.0, baselineRhr = 55.0, rhrDelta = 0.5)),
         )
         val hrr = findComponent(result.componentScores, ReadinessComponent.HRR)
-        assertEquals(75.0, hrr.score, 0.01)
+        assertEquals(71.5, hrr.score, 0.01) // 75 - 0.5 bpm * 7
     }
 
     @Test
-    fun `declining RHR positive delta scores 75 minus penalty`() {
+    fun `declining RHR positive delta loses 7 per bpm`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, rhr = RhrMetrics(todayRhr = 60.0, baselineRhr = 55.0, rhrDelta = 3.0)),
         )
         val hrr = findComponent(result.componentScores, ReadinessComponent.HRR)
-        assertEquals((75 - 3 * 3).toDouble(), hrr.score, 0.01)
+        assertEquals(54.0, hrr.score, 0.01) // 75 - 3 bpm * 7
     }
 
     @Test
-    fun `declining RHR penalty capped at 40`() {
+    fun `declining RHR penalty capped at 7 bpm`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, rhr = RhrMetrics(todayRhr = 80.0, baselineRhr = 55.0, rhrDelta = 20.0)),
         )
         val hrr = findComponent(result.componentScores, ReadinessComponent.HRR)
-        assertEquals(35.0, hrr.score, 0.01)
+        assertEquals(26.0, hrr.score, 0.01) // delta clamped to +7 bpm
     }
 
     @Test
@@ -109,14 +109,14 @@ class ReadinessScoringTest {
     // ---- HRV component scoring ----
 
     @Test
-    fun `improved HRV ten percent above baseline scores the capped 100`() {
-        // +6 ms on a 60 ms baseline = +10% → 85 + (10 * 1.5, capped at 15) = 100
+    fun `improved HRV ten percent above baseline scores 90`() {
+        // +6 ms on a 60 ms baseline = +10% → 75 + 10 * 1.5 = 90
         val result = ReadinessScoring.score(
             ReadinessInputs(date, hrv = HrvMetrics(todayHrv = 66.0, baselineHrv = 60.0, hrvDelta = 6.0)),
         )
         val hrv = findComponent(result.componentScores, ReadinessComponent.HRV)
         assertTrue(hrv.isAvailable)
-        assertEquals(100.0, hrv.score, 0.01)
+        assertEquals(90.0, hrv.score, 0.01)
     }
 
     @Test
@@ -131,19 +131,20 @@ class ReadinessScoringTest {
     }
 
     @Test
-    fun `stable HRV within five percent scores 75`() {
-        // -2 ms on a 60 ms baseline = -3.3% — inside the stable band
+    fun `slightly down HRV scores continuously`() {
+        // -2 ms on a 60 ms baseline = -3.3% → 75 - 3.33 * 1.5 = 70
         val result = ReadinessScoring.score(
             ReadinessInputs(date, hrv = HrvMetrics(todayHrv = 58.0, baselineHrv = 60.0, hrvDelta = -2.0)),
         )
         val hrv = findComponent(result.componentScores, ReadinessComponent.HRV)
         assertTrue(hrv.isAvailable)
-        assertEquals(75.0, hrv.score, 0.01)
+        assertEquals(70.0, hrv.score, 0.01)
     }
 
     @Test
     fun `suppressed HRV ten percent below baseline scores 60`() {
-        // -6 ms on a 60 ms baseline = -10% → 75 - (10 - 5) * 3 = 60
+        // -6 ms on a 60 ms baseline = -10% → 75 - 10 * 1.5 = 60 (same value
+        // under the continuous curve — coincidence, not a band)
         val result = ReadinessScoring.score(
             ReadinessInputs(date, hrv = HrvMetrics(todayHrv = 54.0, baselineHrv = 60.0, hrvDelta = -6.0)),
         )
@@ -169,61 +170,61 @@ class ReadinessScoringTest {
     // ---- Sleep component scoring ----
 
     @Test
-    fun `8 plus hours sleep base score 85`() {
+    fun `8_3 hours sleep with weak stages scores 82_27`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 500.0, deepPercent = 10.0, remPercent = 10.0)),
         )
         val sleep = findComponent(result.componentScores, ReadinessComponent.SLEEP)
         assertTrue(sleep.isAvailable)
-        assertEquals(85.0, sleep.score, 0.01)
+        assertEquals(83.67, sleep.score, 0.01) // 91.67 duration - 3 deep - 5 REM
     }
 
     @Test
-    fun `7 to 8 hours sleep base score 75`() {
+    fun `7_5 hours sleep with weak stages scores 65_6`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 450.0, deepPercent = 10.0, remPercent = 10.0)),
         )
-        assertEquals(75.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01)
+        assertEquals(67.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01) // 75 - 3 - 5
     }
 
     @Test
-    fun `6 to 7 hours sleep base score 60`() {
+    fun `6_5 hours sleep with weak stages scores 45_6`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 390.0, deepPercent = 10.0, remPercent = 10.0)),
         )
-        assertEquals(60.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01)
+        assertEquals(47.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01) // 55 - 3 - 5
     }
 
     @Test
-    fun `5 to 6 hours sleep base score 45`() {
+    fun `5_5 hours sleep with weak stages scores 25_6`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 330.0, deepPercent = 10.0, remPercent = 10.0)),
         )
-        assertEquals(45.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01)
+        assertEquals(31.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01) // 39 duration - 3 - 5
     }
 
     @Test
-    fun `under 5 hours sleep base score 30`() {
+    fun `4_5 hours sleep with weak stages floors near 17_6`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 270.0, deepPercent = 10.0, remPercent = 10.0)),
         )
-        assertEquals(30.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01)
+        assertEquals(19.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01) // 27 - 3 - 5
     }
 
     @Test
-    fun `deep sleep at least 20 percent adds 5`() {
+    fun `deep sleep 22 percent adds the full 6`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 480.0, deepPercent = 22.0, remPercent = 15.0)),
         )
-        assertEquals(90.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01)
+        assertEquals(88.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01) // 85 + 6 deep - 3 REM
     }
 
     @Test
-    fun `deep sleep at least 15 percent adds 2`() {
+    fun `deep sleep 16 percent adds 3`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 480.0, deepPercent = 16.0, remPercent = 15.0)),
         )
-        assertEquals(87.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01)
+        assertEquals(85.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01) // 85 + 3 deep - 3 REM
     }
 
     @Test
@@ -231,31 +232,31 @@ class ReadinessScoringTest {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 480.0, deepPercent = 8.0, remPercent = 15.0)),
         )
-        assertEquals(80.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01)
+        assertEquals(77.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01) // 85 - 5 deep - 3 REM
     }
 
     @Test
-    fun `REM at least 20 percent adds 3`() {
+    fun `REM 22 percent adds 3_2`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 480.0, deepPercent = 12.0, remPercent = 22.0)),
         )
-        assertEquals(88.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01)
+        assertEquals(88.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01) // 85 - 1 deep + 4 REM
     }
 
     @Test
-    fun `REM below 10 percent subtracts 3`() {
+    fun `REM 8 percent subtracts the full 5`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 480.0, deepPercent = 12.0, remPercent = 8.0)),
         )
-        assertEquals(82.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01)
+        assertEquals(79.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01) // 85 - 1 deep - 5 REM
     }
 
     @Test
-    fun `sleep score clamped to 0-100`() {
+    fun `sleep stage bonuses cap at 96`() {
         val result = ReadinessScoring.score(
             ReadinessInputs(date, sleep = SleepMetrics(totalDurationMinutes = 480.0, deepPercent = 25.0, remPercent = 25.0)),
         )
-        assertEquals(93.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01)
+        assertEquals(96.0, findComponent(result.componentScores, ReadinessComponent.SLEEP).score, 0.01) // 85 + 6 deep + 5 REM
     }
 
     @Test
@@ -273,11 +274,11 @@ class ReadinessScoringTest {
     // ---- Load component scoring ----
 
     @Test
-    fun `workload ratio below 0_8 scores 70 undertrained`() {
+    fun `workload ratio 0_6 scores 74 detrained`() {
         val result = ReadinessScoring.score(ReadinessInputs(date, load = LoadMetrics(workloadRatio = 0.6)))
         val load = findComponent(result.componentScores, ReadinessComponent.LOAD)
         assertTrue(load.isAvailable)
-        assertEquals(70.0, load.score, 0.0)
+        assertEquals(74.0, load.score, 0.0) // 90 - 0.4 * 40
     }
 
     @Test
@@ -287,21 +288,21 @@ class ReadinessScoringTest {
     }
 
     @Test
-    fun `workload ratio 1_3 to 1_5 scores 65 high`() {
+    fun `workload ratio 1_4 scores 62 elevated`() {
         val result = ReadinessScoring.score(ReadinessInputs(date, load = LoadMetrics(workloadRatio = 1.4)))
-        assertEquals(65.0, findComponent(result.componentScores, ReadinessComponent.LOAD).score, 0.0)
+        assertEquals(62.0, findComponent(result.componentScores, ReadinessComponent.LOAD).score, 0.01) // 90 - 0.4 * 70
     }
 
     @Test
-    fun `workload ratio 1_5 to 2_0 scores 45 very high`() {
+    fun `workload ratio 1_7 scores 41 elevated`() {
         val result = ReadinessScoring.score(ReadinessInputs(date, load = LoadMetrics(workloadRatio = 1.7)))
-        assertEquals(45.0, findComponent(result.componentScores, ReadinessComponent.LOAD).score, 0.0)
+        assertEquals(41.0, findComponent(result.componentScores, ReadinessComponent.LOAD).score, 0.0) // 90 - 0.7 * 70
     }
 
     @Test
-    fun `workload ratio above 2_0 scores 25 overreaching`() {
+    fun `workload ratio 2_5 floors at 15`() {
         val result = ReadinessScoring.score(ReadinessInputs(date, load = LoadMetrics(workloadRatio = 2.5)))
-        assertEquals(25.0, findComponent(result.componentScores, ReadinessComponent.LOAD).score, 0.0)
+        assertEquals(15.0, findComponent(result.componentScores, ReadinessComponent.LOAD).score, 0.0) // clamped low
     }
 
     @Test
@@ -697,10 +698,10 @@ class ReadinessScoringTest {
         val result = ReadinessScoring.score(
             ReadinessInputs(
                 date,
-                rhr = RhrMetrics(todayRhr = 65.0, baselineRhr = 55.0, rhrDelta = 10.0),
-                sleep = SleepMetrics(totalDurationMinutes = 270.0),
-                load = LoadMetrics(workloadRatio = 1.7),
-                subjective = SubjectiveInput(exhaustionLevel = 8, muscleSoreness = 8, stressLevel = 8),
+                rhr = RhrMetrics(todayRhr = 60.0, baselineRhr = 55.0, rhrDelta = 5.0),
+                sleep = SleepMetrics(totalDurationMinutes = 330.0),
+                load = LoadMetrics(workloadRatio = 1.5),
+                subjective = SubjectiveInput(exhaustionLevel = 6, muscleSoreness = 6, stressLevel = 6),
             ),
         )
         assertEquals(ReadinessState.REDUCED, result.state)
@@ -792,9 +793,9 @@ class ReadinessScoringTest {
         )
         assertEquals(
             listOf(
-                "Resting heart rate elevated by 3.0 bpm",
+                "Resting HR 3.0 bpm above baseline",
                 "Sleep: 7.5h",
-                "Training load optimal (ratio: 1.25)",
+                "Training load elevated (ratio: 1.25)",
             ),
             result.reasons,
         )

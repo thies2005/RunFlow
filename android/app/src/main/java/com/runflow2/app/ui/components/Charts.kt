@@ -709,12 +709,11 @@ fun ReadinessScoreChart(
 }
 
 /**
- * Nightly sleep duration as data points only (no polyline), over a
- * translucent personal-range band spanning the window min→max (≥3 points),
- * plus a dashed trailing-7-night-mean baseline when available. Y axis is
- * sleep minutes; captions show the window in hours and the baseline.
- * Simpler sibling of [HealthTrendChart]: single series, safe on 0/1 points
- * (a lone point centers mid-height).
+ * Nightly sleep duration as a clean gradient trend line (same language as
+ * the split recovery charts), with a dashed trailing-7-night-mean baseline
+ * when available. Y axis is sleep minutes on a padded 30-minute-stepped
+ * scale with real-value side labels; captions show the window in hours and
+ * the baseline. Safe on 0/1 points (a lone point centers mid-height).
  */
 @Composable
 fun SleepDurationChart(
@@ -754,17 +753,6 @@ fun SleepDurationChart(
             fun px(i: Int) = (if (entries.size <= 1) w / 2f else i.toFloat() / maxX * w)
             fun py(v: Double) = padTop + (1f - ((v - sleepLo) / (sleepHi - sleepLo)).toFloat().coerceIn(0f, 1f)) * plotH
 
-            // translucent personal-range band (window min→max); skipped for
-            // sparse windows (<3 points)
-            if (values.size >= 3) {
-                val ys = listOf(py(values.min()), py(values.max()))
-                drawRect(
-                    color = sleepColor.copy(alpha = 0.08f),
-                    topLeft = Offset(0f, ys.min()),
-                    size = androidx.compose.ui.geometry.Size(w, ys.max() - ys.min()),
-                )
-            }
-
             // dashed baseline line (trailing 7-night mean)
             if (values.isNotEmpty()) {
                 baselineMinutes?.let { b ->
@@ -789,13 +777,15 @@ fun SleepDurationChart(
                         padTop + plotH / 2,
                     ),
                 )
-                else -> drawTrendSeries(
-                    pts.map { (i, v) -> Offset(px(i), py(v)) },
-                    sleepColor,
-                    style,
-                    pointRadiusDp = 3f,
-                    lineStrokeDp = 2f,
-                )
+                else -> {
+                    // same gradient-trend language as the split recovery charts
+                    val offsets = pts.map { (i, v) -> Offset(px(i), py(v)) }
+                    drawPath(
+                        seriesFillPath(offsets, smooth = false, bottomY = h),
+                        Brush.verticalGradient(listOf(sleepColor.copy(alpha = 0.14f), Color.Transparent)),
+                    )
+                    drawPath(seriesPath(offsets, smooth = false), sleepColor, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
+                }
             }
         }
 
@@ -862,6 +852,7 @@ fun SleepStagesChart(
     height: Int = 150,
 ) {
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val gridColor = MaterialTheme.colorScheme.outlineVariant
     val lightColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.45f)
     val deepColor = MaterialTheme.colorScheme.primary
     val remColor = MaterialTheme.colorScheme.tertiary
@@ -899,13 +890,22 @@ fun SleepStagesChart(
                 .height(height.dp),
         ) {
             if (rows.isEmpty()) return@Canvas
-            val plotH = size.height - 6f
+            val plotH = size.height - 10f
             val slot = size.width / rows.size
-            val bw = slot * 0.6f
+            val bw = slot * 0.46f
+            val corner = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx())
+            // faint baseline under the bars
+            drawLine(
+                gridColor.copy(alpha = 0.5f),
+                Offset(0f, size.height - 3f),
+                Offset(size.width, size.height - 3f),
+                strokeWidth = 1f,
+            )
             rows.forEachIndexed { i, r ->
-                var y = size.height - 2f
+                var y = size.height - 4f
                 val x = i * slot + (slot - bw) / 2f
-                // stacked bottom-up: LIGHT, then DEEP, then REM on top
+                // stacked bottom-up: LIGHT, then DEEP, then REM on top —
+                // rounded rects with a 1.5px seam so the stages read apart
                 listOf(
                     r.lightMinutes to lightColor,
                     r.deepMinutes to deepColor,
@@ -915,7 +915,12 @@ fun SleepStagesChart(
                     if (m > 0) {
                         val seg = m.toFloat() / maxTotal * plotH
                         y -= seg
-                        drawRect(color, topLeft = Offset(x, y), size = androidx.compose.ui.geometry.Size(bw, seg))
+                        drawRoundRect(
+                            color,
+                            topLeft = Offset(x, y),
+                            size = androidx.compose.ui.geometry.Size(bw, (seg - 1.5f).coerceAtLeast(2f)),
+                            cornerRadius = corner,
+                        )
                     }
                 }
             }

@@ -948,6 +948,28 @@ class RunFlowRepository(
     }
 
     /**
+     * One-shot migration of cached readiness scores to the current engine
+     * (v2.8.0's continuous curves): recomputes every stored day. Rows only
+     * write when a cache column actually changed, and changed rows flag
+     * dirty so the server receives corrected scores on the next sync.
+     */
+    suspend fun recomputeAllReadinessScores() {
+        val all = dailyEntryDao.range("0001-01-01", "9999-12-31")
+        if (all.isEmpty()) return
+        val series = dailyLoadSeries()
+        all.forEach { entry ->
+            readinessCacheFor(entry, LocalDate.parse(entry.date), series)
+                .takeIf {
+                    it.score != entry.score ||
+                        it.state != entry.state ||
+                        it.confidence != entry.confidence ||
+                        it.componentScoresJson != entry.componentScoresJson
+                }
+                ?.let { dailyEntryDao.upsert(it.copy(dirty = true)) }
+        }
+    }
+
+    /**
      * Persists a manual daily-entry edit: stamps ownership (manuallyEdited,
      * dirty, updatedAt = now — the merge rules of both the Health Connect
      * import and the server pull defer to user-owned rows), then recomputes

@@ -7,15 +7,16 @@ import kotlin.math.abs
 import kotlin.math.min
 
 /*
- * Daily readiness scoring — a faithful Kotlin port of the deleted Flutter
- * app's ReadinessScoringService (flutter/lib/domain/services/readiness/
- * readiness_scoring_service.dart at commit a4616887), with one deliberate
- * divergence: HRV ([HrvMetrics]) is a scored component (weight .15) on top
- * of the Dart HRR/sleep/load/subjective four — product decision — so the
- * weights and the 5/4/3 availability/confidence ladder no longer mirror the
- * Dart source. Pure Kotlin: no Android, Room or JSON dependencies; the wire
- * format lives in [ReadinessJson] (the web contract's hrvJson pass-through
- * is unchanged).
+ * Daily readiness scoring. Originally a faithful Kotlin port of the deleted
+ * Flutter app's ReadinessScoringService (flutter/lib/domain/services/
+ * readiness/readiness_scoring_service.dart at commit a4616887). Two
+ * deliberate divergences since then, both product decisions: HRV
+ * ([HrvMetrics]) is a scored component (weight .15) on a 5/4/3
+ * availability/confidence ladder, and since v2.8.0 every component is a
+ * CONTINUOUS piecewise-linear curve instead of the Dart plateaus, so small
+ * day-to-day changes move the score ("more sensitive"). Pure Kotlin: no
+ * Android, Room or JSON dependencies; the wire format lives in
+ * [ReadinessJson] (the web contract's hrvJson pass-through is unchanged).
  */
 
 // ---- Enums (wire names match the Dart enum names used on the server) ----
@@ -213,7 +214,8 @@ object ReadinessScoring {
         )
     }
 
-    // -- HRR: no todayRhr -> unavailable; no baseline -> fixed 65 --
+    // -- HRR: today's RHR vs baseline, LOWER is better. Continuous: every
+    //    0.15 bpm of delta moves the score ~1 point (no stable plateau). --
 
     private fun scoreHrr(rhr: RhrMetrics?): ComponentScore {
         if (rhr == null || rhr.todayRhr == null) {
@@ -230,32 +232,28 @@ object ReadinessScoring {
         }
 
         val delta = rhr.rhrDelta
-        val score: Double
-        val reason: String
-
-        if (delta < 0) {
-            score = 85.0 + min(abs(delta) * 2, 15.0)
-            reason = "Resting heart rate improved by ${fmt1(abs(delta))} bpm"
-        } else if (abs(delta) < 1) {
-            score = 75.0
-            reason = "Resting heart rate stable"
-        } else {
-            score = 75.0 - min(delta * 3, 40.0)
-            reason = "Resting heart rate elevated by ${fmt1(delta)} bpm"
+        // 7 points per bpm; improvement credit capped at 3 bpm so one
+        // unusually low reading can't max the component
+        val score = (75.0 - delta.coerceIn(-3.0, 7.0) * 7.0).coerceIn(20.0, 100.0)
+        val reason = when {
+            abs(delta) < 0.5 -> "Resting HR stable vs baseline"
+            delta < 0 -> "Resting HR ${fmt1(abs(delta))} bpm below baseline"
+            else -> "Resting HR ${fmt1(delta)} bpm above baseline"
         }
 
         return ComponentScore(ReadinessComponent.HRR, score, true, reason)
     }
 
-    // -- HRV: no todayHrv -> unavailable; no (positive) baseline -> fixed 65;
-    //    else improved / stable / suppressed bands on the % delta vs baseline --
+    // -- HRV: % change vs the 7-day baseline, HIGHER is better. Continuous:
+    //    1.5 points per percent, symmetric ±25 % cap. --
 
     private fun scoreHrv(hrv: HrvMetrics?): ComponentScore {
         if (hrv == null || hrv.todayHrv == null) {
             return ComponentScore(ReadinessComponent.HRV, 0.0, isAvailable = false)
         }
 
-        if (hrv.baselineHrv == null || hrv.hrvDelta == null || hrv.baselineHrv <= 0) {
+        val baseline = hrv.baselineHrv
+        if (baseline == null || baseline <= 0.0) {
             return ComponentScore(
                 component = ReadinessComponent.HRV,
                 score = 65.0,
@@ -264,69 +262,47 @@ object ReadinessScoring {
             )
         }
 
-        val deltaPct = hrv.hrvDelta / hrv.baselineHrv * 100.0
-        val score: Double
-        val reason: String
-
-        if (hrv.hrvDelta > 0) {
-            score = 85.0 + min(deltaPct * 1.5, 15.0)
-            reason = "HRV improved by ${fmt1(deltaPct)}% vs 7-day baseline"
-        } else if (abs(deltaPct) < 5) {
-            score = 75.0
-            reason = "HRV stable"
-        } else {
-            score = 75.0 - min((abs(deltaPct) - 5.0) * 3.0, 40.0)
-            reason = "HRV suppressed by ${fmt1(deltaPct)}% vs 7-day baseline"
+        val pct = (hrv.todayHrv!! - baseline) / baseline * 100.0
+        val score = (75.0 + pct.coerceIn(-25.0, 25.0) * 1.5).coerceIn(20.0, 100.0)
+        val reason = when {
+            abs(pct) < 2.0 -> "HRV stable vs baseline"
+            pct > 0 -> "HRV up ${fmt1(pct)}% vs baseline"
+            else -> "HRV down ${fmt1(abs(pct))}% vs baseline"
         }
 
-        return ComponentScore(ReadinessComponent.HRV, score.coerceIn(0.0, 100.0), true, reason)
+        return ComponentScore(ReadinessComponent.HRV, score, true, reason)
     }
 
-    // -- Sleep: duration bands + deep%/rem% modifiers, clamped 0..100 --
+    // -- Sleep: continuous duration curve with an 8h optimum, plus graded
+    //    deep/REM modifiers. Linear between anchor points — no bands. --
 
     private fun scoreSleep(sleep: SleepMetrics?): ComponentScore {
         if (sleep == null || sleep.totalDurationMinutes == null) {
             return ComponentScore(ReadinessComponent.SLEEP, 0.0, isAvailable = false)
         }
 
-        val durationHours = sleep.totalDurationMinutes / 60.0
+        val hours = sleep.totalDurationMinutes / 60.0
+        val durationScore = when {
+            hours >= 8.5 -> 95.0 - min((hours - 8.5) * 4.0, 15.0) // oversleeping tapers gently
+            hours >= 6.0 -> 45.0 + (hours - 6.0) * 20.0           // 6h -> 45, 7h -> 65, 8h -> 85
+            else -> 45.0 - min((6.0 - hours) * 12.0, 30.0)        // 5h -> 33, 4h -> 21
+        }.coerceIn(15.0, 100.0)
 
-        val baseScore = when {
-            durationHours >= 8 -> 85.0
-            durationHours >= 7 -> 75.0
-            durationHours >= 6 -> 60.0
-            durationHours >= 5 -> 45.0
-            else -> 30.0
-        }
-
-        var score = baseScore
-
-        sleep.deepPercent?.let { deep ->
-            when {
-                deep >= 20 -> score += 5
-                deep >= 15 -> score += 2
-                deep < 10 -> score -= 5
-            }
-        }
-
-        sleep.remPercent?.let { rem ->
-            when {
-                rem >= 20 -> score += 3
-                rem < 10 -> score -= 3
-            }
-        }
-
-        score = score.coerceIn(0.0, 100.0)
+        // graded stage modifiers around healthy midpoints (deep ~13%, REM ~18%)
+        val deepAdj = sleep.deepPercent?.let { (it - 13.0).coerceIn(-6.0, 6.0) } ?: 0.0
+        val remAdj = sleep.remPercent?.let { (it - 18.0).coerceIn(-5.0, 5.0) } ?: 0.0
+        val score = (durationScore + deepAdj + remAdj).coerceIn(15.0, 100.0)
 
         return ComponentScore(
             component = ReadinessComponent.SLEEP,
             score = score,
             isAvailable = true,
-            reason = "Sleep: ${fmt1(durationHours)}h",
+            reason = "Sleep: ${fmt1(hours)}h",
         )
     }
 
-    // -- Load: workloadRatio bands; todayTrimp-only -> 60; else unavailable --
+    // -- Load: atl/ctl ratio, continuous around a balanced 1.0. Pushing
+    //    above 1.0 is penalized steeper than detraining below it. --
 
     private fun scoreLoad(load: LoadMetrics?): ComponentScore {
         if (load == null) {
@@ -334,29 +310,15 @@ object ReadinessScoring {
         }
 
         load.workloadRatio?.let { ratio ->
-            val score: Double
-            val reason: String
-            when {
-                ratio < 0.8 -> {
-                    score = 70.0
-                    reason = "Training load undertrained (ratio: ${fmt2(ratio)})"
-                }
-                ratio <= 1.3 -> {
-                    score = 90.0
-                    reason = "Training load optimal (ratio: ${fmt2(ratio)})"
-                }
-                ratio <= 1.5 -> {
-                    score = 65.0
-                    reason = "Training load high (ratio: ${fmt2(ratio)})"
-                }
-                ratio <= 2.0 -> {
-                    score = 45.0
-                    reason = "Training load very high (ratio: ${fmt2(ratio)})"
-                }
-                else -> {
-                    score = 25.0
-                    reason = "Overreaching risk (ratio: ${fmt2(ratio)})"
-                }
+            val score = if (ratio >= 1.0) {
+                (90.0 - (ratio - 1.0) * 70.0).coerceIn(15.0, 95.0)
+            } else {
+                (90.0 - (1.0 - ratio) * 40.0).coerceIn(15.0, 95.0)
+            }
+            val reason = when {
+                abs(ratio - 1.0) <= 0.1 -> "Training load balanced (ratio: ${fmt2(ratio)})"
+                ratio > 1.0 -> "Training load elevated (ratio: ${fmt2(ratio)})"
+                else -> "Training load detrained (ratio: ${fmt2(ratio)})"
             }
             return ComponentScore(ReadinessComponent.LOAD, score, true, reason)
         }

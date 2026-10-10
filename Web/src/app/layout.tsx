@@ -4,9 +4,8 @@ import './globals.css';
 import { Providers } from './providers';
 import DeepLinkHandler from '@/components/DeepLinkHandler';
 import AdaptiveLayout from './adaptive-layout';
-import CookieBanner from '@/components/CookieBanner';
+import ConsentBanners from '@/components/layout/ConsentBanners';
 import { PendingConsentHandler } from '@/components/PendingConsentHandler';
-import ReconsentBanner from '@/components/layout/ReconsentBanner';
 
 const archivo = Archivo({
     subsets: ['latin'],
@@ -76,9 +75,8 @@ export default function RootLayout({
                         <AdaptiveLayout>{children}</AdaptiveLayout>
                     </main>
                     <PendingConsentHandler />
-                    <ReconsentBanner />
+                    <ConsentBanners />
                 </Providers>
-                <CookieBanner />
                 <DeepLinkHandler />
             </body>
         </html>

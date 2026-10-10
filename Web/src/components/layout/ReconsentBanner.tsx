@@ -5,12 +5,16 @@ import { useSession } from 'next-auth/react';
 import { CheckCircle, Shield } from 'lucide-react';
 import Link from 'next/link';
 
-export default function ReconsentBanner() {
+export default function ReconsentBanner({ onActiveChange }: { onActiveChange?: (active: boolean) => void }) {
     const { data: _session, status } = useSession();
     const [needsConsent, setNeedsConsent] = useState(false);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        onActiveChange?.(!loading && needsConsent);
+    }, [loading, needsConsent, onActiveChange]);
 
     // Checkboxes
     const [termsAccepted, setTermsAccepted] = useState(false);

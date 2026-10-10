@@ -169,11 +169,25 @@ export default function ReadinessCard() {
     }
 
     const score = daily.compositeScore;
-    const components = (daily.componentScores || {}) as Record<string, number>;
-    const hrrScore = components['hrr'] ?? components['HRR'] ?? null;
-    const sleepScore = components['sleep'] ?? components['SLEEP'] ?? null;
-    const loadScore = components['load'] ?? components['LOAD'] ?? null;
-    const feelScore = components['subjective'] ?? components['SUBJECTIVE'] ?? null;
+    const components = (daily.componentScores || {}) as Record<string, unknown>;
+    // The mobile app sends componentScores values as { score, isAvailable, reason? }
+    // (see ReadinessJson.kt); older records may store plain numbers.
+    const componentValue = (keys: string[]): number | null => {
+        for (const key of keys) {
+            const raw = components[key];
+            if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+            if (raw && typeof raw === 'object' && 'score' in raw) {
+                const entry = raw as { score?: unknown; isAvailable?: unknown };
+                if (entry.isAvailable === false) return null;
+                if (typeof entry.score === 'number' && Number.isFinite(entry.score)) return entry.score;
+            }
+        }
+        return null;
+    };
+    const hrrScore = componentValue(['hrr', 'HRR']);
+    const sleepScore = componentValue(['sleep', 'SLEEP']);
+    const loadScore = componentValue(['load', 'LOAD']);
+    const feelScore = componentValue(['subjective', 'SUBJECTIVE']);
     const todayHrv = daily.hrvJson?.todayHrv ?? null;
 
     const chartData = history.map((r) => ({

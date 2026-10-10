@@ -29,7 +29,7 @@ export default function TrendChartsSection({ filteredVo2Trend, filteredShapeTren
                 <div className="h-64 min-h-[256px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={filteredVo2Trend}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                             <XAxis
                                 dataKey="date"
                                 stroke="var(--foreground-muted)"
@@ -38,15 +38,15 @@ export default function TrendChartsSection({ filteredVo2Trend, filteredShapeTren
                                 minTickGap={timeRange === '1M' ? 20 : 50}
                                 tickFormatter={formatXAxis}
                             />
-                            <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
+                            <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
                             <Tooltip
-                                contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                contentStyle={{ background: 'var(--background-secondary)', border: '1px solid var(--line)', borderRadius: '6px' }}
                                 labelStyle={{ color: 'var(--foreground)' }}
                                 itemStyle={{ color: 'var(--foreground)' }}
                                 labelFormatter={formatTooltipLabel}
                             />
-                            <Line type="monotone" dataKey="vo2" stroke="none" isAnimationActive={false} dot={{ r: 3, fill: '#f59e0b', fillOpacity: 1 }} name="VO2max (Run)" />
-                            <Line type="monotone" dataKey="vo2Rolling" stroke="#f59e0b" strokeWidth={2} dot={false} isAnimationActive={false} name="VO2max (Avg)" />
+                            <Line type="monotone" dataKey="vo2" stroke="none" isAnimationActive={false} dot={{ r: 3, fill: 'var(--positive)', fillOpacity: 1 }} name="VO2max (Run)" />
+                            <Line type="monotone" dataKey="vo2Rolling" stroke="var(--positive)" strokeWidth={2} dot={false} isAnimationActive={false} name="VO2max (Avg)" />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
@@ -57,10 +57,10 @@ export default function TrendChartsSection({ filteredVo2Trend, filteredShapeTren
                 <div className="h-64 min-h-[256px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={filteredShapeTrend}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                             <XAxis
                                 dataKey="week"
-                                stroke="#9ca3af"
+                                stroke="var(--foreground-muted)"
                                 fontSize={11}
                                 tickLine={false}
                                 minTickGap={timeRange === '1M' ? 20 : 50}
@@ -68,12 +68,12 @@ export default function TrendChartsSection({ filteredVo2Trend, filteredShapeTren
                             />
                             <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={[0, 120]} />
                             <Tooltip
-                                contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                contentStyle={{ background: 'var(--background-secondary)', border: '1px solid var(--line)', borderRadius: '6px' }}
                                 labelStyle={{ color: 'var(--foreground)' }}
                                 itemStyle={{ color: 'var(--foreground)' }}
                                 labelFormatter={formatTooltipLabel}
                             />
-                            <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} isAnimationActive={false} name="Shape %" />
+                            <Area type="monotone" dataKey="shape" stroke="var(--accent-blue)" fill="var(--accent-blue)" fillOpacity={0.08} isAnimationActive={false} name="Shape %" />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>

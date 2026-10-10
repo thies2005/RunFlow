@@ -14,7 +14,7 @@ export default function TopMetricsSection({ runalyzeMetrics, setIsCalibrationOpe
             {/* Effective VO2max */}
             <div className="glass-card p-6 text-center">
                 <p className="text-foreground-muted text-sm mb-2">Effective VO2max</p>
-                <p className="text-4xl font-bold text-foreground">
+                <p className="text-4xl font-bold text-foreground font-mono tabular-nums">
                     {runalyzeMetrics.effectiveVO2max > 0 ? runalyzeMetrics.effectiveVO2max.toFixed(1) : '-'}
                 </p>
                 <p className="text-xs text-foreground-muted mt-1">Pace + Heart Rate based</p>
@@ -23,12 +23,12 @@ export default function TopMetricsSection({ runalyzeMetrics, setIsCalibrationOpe
             {/* Marathon Shape */}
             <div className="glass-card p-6 text-center">
                 <p className="text-foreground-muted text-sm mb-2">Marathon Shape</p>
-                <p className={`text-4xl font-bold ${runalyzeMetrics.shape >= 100 ? 'text-green-400' :
-                    runalyzeMetrics.shape >= 70 ? 'text-yellow-400' : 'text-red-400'
+                <p className={`text-4xl font-bold font-mono tabular-nums ${runalyzeMetrics.shape >= 100 ? 'text-positive' :
+                    runalyzeMetrics.shape >= 70 ? 'text-workout-tempo' : 'text-negative'
                     }`}>
                     {runalyzeMetrics.shape}%
                 </p>
-                <div className="flex justify-center gap-4 mt-2 text-xs text-foreground-muted">
+                <div className="flex justify-center gap-4 mt-2 text-xs text-foreground-muted font-mono tabular-nums">
                     <span>Mil: {runalyzeMetrics.mileageScore}%</span>
                     <span>LR: {runalyzeMetrics.longRunScore}%</span>
                     {runalyzeMetrics.crossTrainingScore > 0 && (
@@ -41,7 +41,7 @@ export default function TopMetricsSection({ runalyzeMetrics, setIsCalibrationOpe
             <div className="glass-card p-6 text-center relative">
                 <button
                     onClick={() => setIsCalibrationOpen(true)}
-                    className="absolute top-2 right-2 p-2 text-foreground-muted hover:text-accent-pink transition"
+                    className="absolute top-2 right-2 p-2 text-foreground-muted hover:text-foreground transition"
                     title="Calibrate"
                 >
                     <Settings2 className="w-4 h-4" />
@@ -49,8 +49,8 @@ export default function TopMetricsSection({ runalyzeMetrics, setIsCalibrationOpe
                 <p className="text-foreground-muted text-sm mb-2">Marathon Prediction</p>
                 <div className="flex justify-center items-baseline gap-3">
                     <div>
-                        <p className="text-xs text-foreground-muted">Optimal</p>
-                        <p className="text-lg font-semibold text-green-400">
+                                <p className="text-xs text-foreground-muted">Optimal</p>
+                                <p className="text-lg font-semibold text-positive font-mono tabular-nums">
                             {runalyzeMetrics.optimalTime > 0 ? formatTime(runalyzeMetrics.optimalTime) : '-'}
                         </p>
                     </div>
@@ -64,7 +64,7 @@ export default function TopMetricsSection({ runalyzeMetrics, setIsCalibrationOpe
                                 </span>
                             )}
                         </p>
-                        <p className="text-2xl font-bold text-foreground">
+                        <p className="text-2xl font-bold text-foreground font-mono tabular-nums">
                             {runalyzeMetrics.predictedTime > 0 ? formatTime(runalyzeMetrics.predictedTime) : '-'}
                         </p>
                     </div>

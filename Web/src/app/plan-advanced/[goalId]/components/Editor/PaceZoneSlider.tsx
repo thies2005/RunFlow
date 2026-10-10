@@ -8,11 +8,11 @@
  */
 
 const ZONES = [
-    { letter: 'E', label: 'Easy', color: '#4ade80' },
-    { letter: 'M', label: 'Marathon', color: '#a3e635' },
-    { letter: 'T', label: 'Threshold', color: '#facc15' },
-    { letter: 'I', label: 'Interval', color: '#fb923c' },
-    { letter: 'R', label: 'Repetition', color: '#ef4444' },
+    { letter: 'E', label: 'Easy', color: 'var(--zone-1)' },
+    { letter: 'M', label: 'Marathon', color: 'var(--zone-2)' },
+    { letter: 'T', label: 'Threshold', color: 'var(--zone-3)' },
+    { letter: 'I', label: 'Interval', color: 'var(--zone-4)' },
+    { letter: 'R', label: 'Repetition', color: 'var(--zone-5)' },
 ] as const;
 
 interface PaceZoneSliderProps {
@@ -30,7 +30,7 @@ export function PaceZoneSlider({ value, onChange, paceLabels }: PaceZoneSliderPr
     return (
         <div className="w-full">
             <div className="flex items-baseline justify-between mb-0.5">
-                <span className="text-[10px] uppercase tracking-wide text-foreground-muted">Pace</span>
+                <span className="text-[10px] text-foreground-muted">Pace</span>
                 <span className="text-xs font-semibold" style={{ color: zone.color }}>
                     {zone.letter} — {zone.label}
                     {paceLabels?.[index] ? ` (${paceLabels[index]}/km)` : ''}
@@ -59,7 +59,7 @@ export function PaceZoneSlider({ value, onChange, paceLabels }: PaceZoneSliderPr
                             flexGrow: i === 0 || i === ZONES.length - 1 ? 1 : 2,
                             backgroundColor: z.color,
                             opacity: i === index ? 1 : 0.35,
-                            color: '#101010',
+                            color: '#ffffff',
                         }}
                     >
                         {z.letter}

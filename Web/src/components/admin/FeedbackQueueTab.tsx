@@ -79,10 +79,10 @@ export default function FeedbackQueueTab() {
 
     const getStatusStyles = (status: string) => {
         switch (status) {
-            case 'PENDING': return 'bg-background-tertiary text-foreground-secondary border-glass-border';
-            case 'PROCESSING': return 'bg-blue-100 text-blue-600 border-blue-200 animate-pulse';
-            case 'DONE': return 'bg-green-100 text-green-600 border-green-200';
-            case 'FAILED': return 'bg-red-100 text-red-600 border-red-200';
+            case 'PENDING': return 'bg-background-tertiary text-foreground-secondary border-line';
+            case 'PROCESSING': return 'bg-accent-blue/10 text-accent-blue border-accent-blue/30';
+            case 'DONE': return 'bg-positive/10 text-positive border-positive/30';
+            case 'FAILED': return 'bg-negative/10 text-negative border-negative/30';
             default: return 'bg-background-secondary text-foreground-muted';
         }
     };
@@ -97,17 +97,17 @@ export default function FeedbackQueueTab() {
             {/* Header Actions */}
             <div className="flex justify-between items-center">
                 <div className="flex gap-4">
-                    <div className="bg-background-secondary px-4 py-2 rounded-xl border border-glass-border">
+                    <div className="bg-background-secondary px-4 py-2 rounded-md border border-line">
                         <span className="text-sm text-foreground-muted mr-2">Pending:</span>
                         <span className="font-bold text-foreground">{statMap['PENDING'] || 0}</span>
                     </div>
-                    <div className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
-                        <span className="text-sm text-blue-500 mr-2">Processing:</span>
-                        <span className="font-bold text-blue-800">{statMap['PROCESSING'] || 0}</span>
+                    <div className="bg-background-secondary px-4 py-2 rounded-md border border-line">
+                        <span className="text-sm text-foreground-muted mr-2">Processing:</span>
+                        <span className="font-bold font-mono tabular-nums text-accent-blue">{statMap['PROCESSING'] || 0}</span>
                     </div>
-                    <div className="bg-red-50 px-4 py-2 rounded-xl border border-red-100">
-                        <span className="text-sm text-red-500 mr-2">Failed:</span>
-                        <span className="font-bold text-red-800">{statMap['FAILED'] || 0}</span>
+                    <div className="bg-background-secondary px-4 py-2 rounded-md border border-line">
+                        <span className="text-sm text-foreground-muted mr-2">Failed:</span>
+                        <span className="font-bold font-mono tabular-nums text-negative">{statMap['FAILED'] || 0}</span>
                     </div>
                 </div>
 
@@ -115,7 +115,7 @@ export default function FeedbackQueueTab() {
                     <button
                         onClick={() => handleAction('process-now')}
                         disabled={actionLoading === 'process-now'}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition disabled:opacity-60"
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-accent-blue hover:bg-accent-blue/90 rounded-md transition disabled:opacity-60"
                     >
                         {actionLoading === 'process-now' ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                         Process Now
@@ -123,7 +123,7 @@ export default function FeedbackQueueTab() {
                     <button
                         onClick={() => handleAction('retry-failed')}
                         disabled={actionLoading === 'retry-failed'}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition disabled:opacity-60"
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-accent-orange hover:bg-accent-orange/90 rounded-md transition disabled:opacity-60"
                     >
                         {actionLoading === 'retry-failed' ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                         Retry All Failed
@@ -131,14 +131,14 @@ export default function FeedbackQueueTab() {
                     <button
                         onClick={() => handleAction('clear-done')}
                         disabled={actionLoading === 'clear-done'}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition disabled:opacity-60"
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-negative bg-negative/10 hover:bg-negative/20 border border-negative/30 rounded-md transition disabled:opacity-60"
                     >
                         {actionLoading === 'clear-done' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                         Clear Completed
                     </button>
                     <button
                         onClick={fetchData}
-                        className="p-2.5 bg-background-tertiary hover:bg-foreground/15 text-foreground-secondary rounded-xl transition"
+                        className="p-2.5 bg-background-tertiary hover:bg-surface-hover text-foreground-secondary rounded-md transition"
                     >
                         {loading && !actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
                     </button>
@@ -146,19 +146,19 @@ export default function FeedbackQueueTab() {
             </div>
 
             {/* Jobs Table */}
-            <div className="bg-background-secondary rounded-2xl border border-glass-border overflow-hidden shadow-xs">
+            <div className="bg-background-secondary rounded-md border border-line overflow-hidden ">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-background-secondary/50 border-b border-glass-border">
+                        <thead className="bg-background-secondary border-b border-line">
                             <tr>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">User</th>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Activity</th>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Updated</th>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Details</th>
+                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted">Status</th>
+                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted">User</th>
+                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted">Activity</th>
+                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted">Updated</th>
+                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted">Details</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-glass-border">
+                        <tbody className="divide-y divide-line">
                             {jobs.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-6 py-12 text-center text-foreground-muted">
@@ -167,7 +167,7 @@ export default function FeedbackQueueTab() {
                                 </tr>
                             ) : (
                                 jobs.map((job) => (
-                                    <tr key={job.id} className="hover:bg-background-secondary/50 transition-colors">
+                                    <tr key={job.id} className="hover:bg-background-secondary transition-colors">
                                         <td className="px-6 py-4">
                                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${getStatusStyles(job.status)}`}>
                                                 {job.status}
@@ -175,18 +175,18 @@ export default function FeedbackQueueTab() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-background-tertiary border border-glass-border flex items-center justify-center">
+                                                <div className="w-8 h-8 rounded-full bg-background-tertiary border border-line flex items-center justify-center">
                                                     <User className="w-4 h-4 text-foreground-muted" />
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-semibold text-foreground">{job.user.name || 'Anonymous'}</div>
-                                                    <div className="text-[10px] text-foreground-muted font-mono tracking-tighter">{job.user.email}</div>
+                                                    <div className="text-[10px] text-foreground-muted font-mono">{job.user.email}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <ActivityIcon className="w-4 h-4 text-emerald-500" />
+                                                <ActivityIcon className="w-4 h-4 text-positive" />
                                                 <div>
                                                     <div className="text-sm text-foreground-secondary font-medium truncate max-w-[200px]">{job.activity.name}</div>
                                                     <div className="text-[10px] text-foreground-muted">{new Date(job.activity.startDate).toLocaleDateString()}</div>
@@ -201,17 +201,17 @@ export default function FeedbackQueueTab() {
                                         </td>
                                         <td className="px-6 py-4">
                                             {job.status === 'FAILED' ? (
-                                                <div className="flex items-center gap-1.5 text-xs text-red-500 font-medium group cursor-help" title={job.error}>
+                                                <div className="flex items-center gap-1.5 text-xs text-negative font-medium group cursor-help" title={job.error}>
                                                     <AlertCircle className="w-3.5 h-3.5" />
                                                     Fail (Try {job.retryCount})
                                                 </div>
                                             ) : job.status === 'DONE' ? (
-                                                <div className="flex items-center gap-1.5 text-xs text-green-500 font-medium">
+                                                <div className="flex items-center gap-1.5 text-xs text-positive font-medium">
                                                     <CheckCircle className="w-3.5 h-3.5" />
                                                     Success
                                                 </div>
                                             ) : job.status === 'PROCESSING' ? (
-                                                <div className="flex items-center gap-1.5 text-xs text-blue-500 font-medium italic">
+                                                <div className="flex items-center gap-1.5 text-xs text-accent-blue font-medium italic">
                                                     Working...
                                                 </div>
                                             ) : (

@@ -5,7 +5,7 @@ import { Heart } from 'lucide-react';
 
 export const Footer: React.FC = () => {
     return (
-        <footer className="border-t border-foreground/10 mt-12 py-8">
+        <footer className="border-t border-line mt-12 py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-4">
                 <div className="flex items-center gap-4">
                     <PoweredByStravaLogo className="h-4" />
@@ -26,7 +26,7 @@ export const Footer: React.FC = () => {
                         Impressum
                     </Link>
                 </div>
-                <p className="text-foreground-muted text-xs flex items-center gap-1">RunFlow • Built with <Heart className="w-3 h-3 text-red-500" /> for runners</p>
+                <p className="text-foreground-muted text-xs flex items-center gap-1">RunFlow • Built with <Heart className="w-3 h-3 text-accent-pink" /> for runners</p>
                 <span className="text-foreground-muted text-[10px] font-mono">v1.2.0</span>
             </div>
         </footer>

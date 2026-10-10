@@ -11,25 +11,25 @@ type Workout = {
 };
 
 export const PHASE_COLORS: Record<string, string> = {
-    BASE: '#3b82f6',
-    BUILD: '#f97316',
-    PEAK: '#ef4444',
-    TAPER: '#22c55e',
-    RACE_WEEK: '#a855f7',
-    RECOVERY: '#06b6d4',
-    ENDURANCE: '#2563eb',
-    MENTAL_PREP: '#7c3aed',
-    TUNE_UP: '#f59e0b',
-    MAINTAIN: '#6b7280',
-    OFF: '#6b7280',
+    BASE: '#1f4fa8',
+    BUILD: '#b45309',
+    PEAK: '#c0392f',
+    TAPER: '#2e7d5b',
+    RACE_WEEK: '#7a52be',
+    RECOVERY: '#2e7d5b',
+    ENDURANCE: '#1f4fa8',
+    MENTAL_PREP: '#7a52be',
+    TUNE_UP: '#b45309',
+    MAINTAIN: '#6e747b',
+    OFF: '#6e747b',
 };
 
 export const ZONE_COLORS: Record<number, string> = {
-    1: '#4ade80',
-    2: '#a3e635',
-    3: '#facc15',
-    4: '#fb923c',
-    5: '#ef4444',
+    1: '#2e7d5b',
+    2: '#65a30d',
+    3: '#b45309',
+    4: '#c2410c',
+    5: '#c0392f',
 };
 
 const RUN_TYPES = new Set([
@@ -164,26 +164,26 @@ export interface WorkoutTypeSlice {
 }
 
 const WORKOUT_HEX_COLORS: Record<string, string> = {
-    EASY: '#3b82f6',
-    LONG_RUN: '#22c55e',
-    TEMPO: '#f97316',
-    INTERVALS: '#eab308',
-    FARTLEK: '#f59e0b',
-    REPETITIONS: '#ef4444',
-    RECOVERY: '#06b6d4',
-    RACE: '#a855f7',
-    RIDE: '#14b8a6',
-    SWIM: '#6366f1',
-    STRENGTH: '#ec4899',
-    CROSS_TRAIN: '#84cc16',
-    OTHER: '#64748b',
-    BRICK: '#8b5cf6',
-    OPEN_WATER_SWIM: '#0ea5e9',
-    LONG_RIDE: '#10b981',
-    RIDE_INTERVALS: '#14b8a6',
-    SWIM_DRILL: '#60a5fa',
-    TRANSITION_PRACTICE: '#d946ef',
-    DOUBLE_DAY: '#fb7185',
+    EASY: '#6e747b',
+    LONG_RUN: '#2e7d5b',
+    TEMPO: '#b45309',
+    INTERVALS: '#c0392f',
+    FARTLEK: '#b45309',
+    REPETITIONS: '#c0392f',
+    RECOVERY: '#2e7d5b',
+    RACE: '#7a52be',
+    RIDE: '#2e7d5b',
+    SWIM: '#1f4fa8',
+    STRENGTH: '#1f4fa8',
+    CROSS_TRAIN: '#6e747b',
+    OTHER: '#6e747b',
+    BRICK: '#7a52be',
+    OPEN_WATER_SWIM: '#1f4fa8',
+    LONG_RIDE: '#2e7d5b',
+    RIDE_INTERVALS: '#2e7d5b',
+    SWIM_DRILL: '#1f4fa8',
+    TRANSITION_PRACTICE: '#7a52be',
+    DOUBLE_DAY: '#c0392f',
 };
 
 export function workoutTypeDistribution(workouts: Workout[]): WorkoutTypeSlice[] {
@@ -194,7 +194,7 @@ export function workoutTypeDistribution(workouts: Workout[]): WorkoutTypeSlice[]
     }
 
     let entries = Array.from(counts.entries())
-        .map(([type, count]) => ({ type, count, color: WORKOUT_HEX_COLORS[type] || '#64748b' }))
+        .map(([type, count]) => ({ type, count, color: WORKOUT_HEX_COLORS[type] || '#6e747b' }))
         .sort((a, b) => b.count - a.count);
 
     const total = entries.reduce((s, e) => s + e.count, 0);
@@ -203,7 +203,7 @@ export function workoutTypeDistribution(workouts: Workout[]): WorkoutTypeSlice[]
         const top = entries.slice(0, 7);
         const otherEntries = entries.slice(7);
         const otherCount = otherEntries.reduce((s, e) => s + e.count, 0);
-        top.push({ type: 'Other', count: otherCount, color: '#64748b' });
+        top.push({ type: 'Other', count: otherCount, color: '#6e747b' });
         entries = top;
     }
 
@@ -270,7 +270,7 @@ export function computePhaseBands(weeks: WeekGroup[]): PhaseBand[] {
                 startLabel,
                 endLabel: weeks[i - 1].weekLabel,
                 phase: currentPhase,
-                color: PHASE_COLORS[currentPhase] || '#6b7280',
+                color: PHASE_COLORS[currentPhase] || '#6e747b',
             });
             currentPhase = weekPhase;
             startLabel = weeks[i].weekLabel;
@@ -281,7 +281,7 @@ export function computePhaseBands(weeks: WeekGroup[]): PhaseBand[] {
         startLabel,
         endLabel: weeks[weeks.length - 1].weekLabel,
         phase: currentPhase,
-        color: PHASE_COLORS[currentPhase] || '#6b7280',
+        color: PHASE_COLORS[currentPhase] || '#6e747b',
     });
 
     return bands;

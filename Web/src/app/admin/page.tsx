@@ -23,13 +23,13 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, subtext, icon: Icon }: StatCardProps) => (
-    <div className="bg-background-secondary p-6 rounded-xl shadow-xs border border-glass-border flex items-start space-x-4">
-        <div className="bg-blue-50 text-blue-600 rounded-lg p-3">
+    <div className="glass-card p-6 flex items-start space-x-4">
+        <div className="bg-background-tertiary text-accent-blue rounded-md p-3">
             <Icon className="w-6 h-6" />
         </div>
         <div>
             <p className="text-foreground-muted text-sm">{title}</p>
-            <h3 className="text-2xl font-bold text-foreground">{value}</h3>
+            <h3 className="text-2xl font-bold font-mono tabular-nums text-foreground">{value}</h3>
             {subtext && <p className="text-xs text-foreground-muted mt-1">{subtext}</p>}
         </div>
     </div>
@@ -53,16 +53,16 @@ const DashboardWidget = ({ title, icon: Icon, value, change, subtext, onClick, c
     return (
         <button
             onClick={onClick}
-            className="bg-background-secondary p-6 rounded-xl shadow-xs border border-glass-border hover:shadow-md hover:border-foreground/20 transition-all text-left group"
+            className="bg-background-secondary p-6 rounded-md border border-line hover:border-line-strong transition-colors text-left group"
         >
             <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
-                    <div className={`p-3 rounded-lg ${color}`}>
+                    <div className={`p-3 rounded-md ${color}`}>
                         <Icon className="w-6 h-6" />
                     </div>
                     <div>
                         <p className="text-foreground-muted text-sm font-medium">{title}</p>
-                        <h3 className="text-2xl font-bold text-foreground mt-1">{value}</h3>
+                        <h3 className="text-2xl font-bold font-mono tabular-nums text-foreground mt-1">{value}</h3>
                     </div>
                 </div>
                 <ArrowRight className="w-5 h-5 text-foreground-muted group-hover:text-foreground-secondary transition-colors" />
@@ -70,7 +70,7 @@ const DashboardWidget = ({ title, icon: Icon, value, change, subtext, onClick, c
             <div className="mt-4 flex items-center justify-between">
                 {subtext && <p className="text-xs text-foreground-muted">{subtext}</p>}
                 {changeText && (
-                    <div className={`flex items-center text-xs font-medium ${isPositive ? 'text-emerald-600' : isNegative ? 'text-red-600' : 'text-foreground-muted'}`}>
+                    <div className={`flex items-center text-xs font-medium font-mono tabular-nums ${isPositive ? 'text-positive' : isNegative ? 'text-negative' : 'text-foreground-muted'}`}>
                         {isPositive && <TrendingUp className="w-3 h-3 mr-1" />}
                         {isNegative && <TrendingDown className="w-3 h-3 mr-1" />}
                         {changeText} vs avg
@@ -203,7 +203,7 @@ function DashboardContent() {
     if (loading && !stats) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-orange"></div>
             </div>
         );
     }
@@ -239,19 +239,19 @@ function DashboardContent() {
                     <button
                         onClick={runMigration}
                         disabled={processing}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-2 text-accent-blue hover:bg-accent-blue/10 rounded-md transition disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Run Database Migration"
                     >
                         <Database className="w-5 h-5" />
                     </button>
                     <button
                         onClick={fetchAllData}
-                        className="p-2 text-foreground-muted hover:bg-background-tertiary rounded-lg transition"
+                        className="p-2 text-foreground-muted hover:bg-background-tertiary rounded-md transition"
                         title="Refresh Data"
                     >
                         <RefreshCw className="w-5 h-5" />
                     </button>
-                    <div className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-medium flex items-center">
+                    <div className="bg-positive/10 text-positive border border-positive/30 px-3 py-1 rounded-full text-xs font-medium flex items-center">
                         <CheckCircle className="w-3 h-3 mr-1" />
                         System Healthy
                     </div>
@@ -259,7 +259,7 @@ function DashboardContent() {
             </div>
 
             {actionMessage && (
-                <div className={`p-4 rounded-lg flex items-center ${actionMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                <div className={`p-4 rounded-md flex items-center ${actionMessage.type === 'success' ? 'bg-positive/10 text-positive' : 'bg-negative/10 text-negative'}`}>
                     {actionMessage.type === 'success' ? (
                         <CheckCircle className="w-5 h-5 mr-2" />
                     ) : (
@@ -279,7 +279,7 @@ function DashboardContent() {
                             change={usersChange}
                             subtext="Today"
                             onClick={() => router.push('/admin?tab=users')}
-                            color="bg-blue-50 text-blue-600"
+                            color="bg-background-tertiary text-accent-blue"
                         />
                         <DashboardWidget
                             title="AI Enabled Users"
@@ -288,7 +288,7 @@ function DashboardContent() {
                             change={aiUsageChange}
                             subtext="Total active"
                             onClick={() => router.push('/admin?tab=analytics')}
-                            color="bg-purple-50 text-purple-600"
+                            color="bg-background-tertiary text-workout-long-run"
                         />
                         <DashboardWidget
                             title="Feedback Handled"
@@ -297,7 +297,7 @@ function DashboardContent() {
                             change={feedbackHandledChange}
                             subtext="Today"
                             onClick={() => router.push('/admin?tab=feedback-queue')}
-                            color="bg-emerald-50 text-emerald-600"
+                            color="bg-background-tertiary text-positive"
                         />
                         <DashboardWidget
                             title="Performance"
@@ -305,7 +305,7 @@ function DashboardContent() {
                             value={`${performanceScore}%`}
                             subtext="Score"
                             onClick={() => router.push('/admin?tab=performance')}
-                            color="bg-orange-50 text-orange-600"
+                            color="bg-background-tertiary text-workout-tempo"
                         />
                     </div>
 
@@ -339,7 +339,7 @@ function DashboardContent() {
             )}
 
             {activeTab && (
-                <div className="bg-background-secondary rounded-xl shadow-xs border border-glass-border overflow-hidden">
+                <div className="bg-background-secondary rounded-md border border-line overflow-hidden">
                     <div className="p-4 sm:p-6">
                         {activeTab === 'users' && (
                             <UsersTab
@@ -404,7 +404,7 @@ export default function AdminDashboard() {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-orange"></div>
             </div>
         }>
             <DashboardContent />

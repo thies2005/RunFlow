@@ -101,18 +101,18 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
 
     const isSteps = metric === 'steps';
     const MetricIcon = isSteps ? ActivitySquare : Activity;
-    const metricColor = isSteps ? '#4ade80' : '#60a5fa'; // green-400 : blue-400
+    const metricColor = isSteps ? 'var(--positive)' : 'var(--accent-blue)';
     const title = isSteps ? 'Steps History' : 'Weight History';
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-xs sm:items-center sm:justify-center">
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 sm:items-center sm:justify-center">
             <div
-                className="bg-background-secondary w-full max-w-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom"
+                className="bg-background-secondary border border-line w-full max-w-2xl rounded-t-md sm:rounded-md flex flex-col max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom"
             >
                 {/* Header */}
-                <div className="flex flex-col border-b border-foreground/10 shrink-0">
+                <div className="flex flex-col border-b border-line shrink-0">
                     <div className="flex items-center justify-between p-4 pb-2">
-                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                             <MetricIcon className="w-5 h-5" style={{ color: metricColor }} />
                             {metric === 'weight' ? 'Body Metrics' : title}
                         </h2>
@@ -120,7 +120,7 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                             {metric === 'weight' && activeTab === 'weight' && (
                                 <button
                                     onClick={() => setIsEnteringWeight(true)}
-                                    className="p-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors text-xs font-semibold flex items-center gap-1"
+                                    className="p-1.5 bg-accent-blue/10 text-accent-blue hover:bg-accent-blue/20 rounded-md transition-colors text-xs font-semibold flex items-center gap-1"
                                 >
                                     <Plus className="w-4 h-4" /> Log
                                 </button>
@@ -134,18 +134,18 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                             </button>
                         </div>
                     </div>
-                    
+
                     {metric === 'weight' && (
                         <div className="flex gap-4 px-4">
-                            <button 
+                            <button
                                 onClick={() => setActiveTab('weight')}
-                                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'weight' ? 'text-foreground border-blue-500' : 'text-foreground-muted border-transparent hover:text-foreground-muted'}`}
+                                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'weight' ? 'text-foreground border-accent-blue' : 'text-foreground-muted border-transparent hover:text-foreground-muted'}`}
                             >
                                 Weight History
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setActiveTab('composition')}
-                                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'composition' ? 'text-foreground border-orange-500' : 'text-foreground-muted border-transparent hover:text-foreground-muted'}`}
+                                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'composition' ? 'text-foreground border-accent-orange' : 'text-foreground-muted border-transparent hover:text-foreground-muted'}`}
                             >
                                 Body Composition
                             </button>
@@ -155,14 +155,14 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
 
                 {/* Manual Weight Entry */}
                 {isEnteringWeight && metric === 'weight' && (
-                    <div className="px-4 py-3 bg-foreground/5 border-b border-foreground/10 flex items-center gap-2">
+                    <div className="px-4 py-3 bg-background-tertiary border-b border-line flex items-center gap-2">
                         <input
                             type="number"
                             step="0.1"
                             value={manualWeight}
                             onChange={(e) => setManualWeight(e.target.value)}
                             placeholder="Weight in kg"
-                            className="flex-1 bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-foreground-muted focus:border-blue-500 focus:outline-hidden"
+                            className="flex-1 bg-background-tertiary border border-line rounded-md px-3 py-2 text-sm text-foreground placeholder-foreground-muted focus:outline-hidden"
                             autoFocus
                         />
                         <button
@@ -171,13 +171,13 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                                 if (!isNaN(w) && w > 0) logWeightMutation.mutate(w);
                             }}
                             disabled={logWeightMutation.isPending || !manualWeight}
-                            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
+                            className="px-4 py-2 bg-accent-orange hover:bg-accent-orange/90 text-white text-sm font-semibold rounded-md transition-colors disabled:opacity-50"
                         >
                             {logWeightMutation.isPending ? '...' : 'Save'}
                         </button>
                         <button
                             onClick={() => setIsEnteringWeight(false)}
-                            className="px-4 py-2 bg-background-tertiary hover:bg-foreground/10 text-foreground-muted text-sm font-semibold rounded-lg transition-colors"
+                            className="px-4 py-2 bg-background-tertiary hover:bg-glass-bg-hover text-foreground-muted text-sm font-semibold rounded-md transition-colors"
                         >
                             Cancel
                         </button>
@@ -191,13 +191,13 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                     ) : (
                         <>
                             {/* Time Range Selector */}
-                            <div className="flex bg-foreground/5 p-1 rounded-lg border border-foreground/10 mb-6 shrink-0 w-full sm:w-auto self-start sm:self-end">
+                            <div className="flex bg-background-tertiary p-1 rounded-md border border-line mb-6 shrink-0 w-full sm:w-auto self-start sm:self-end">
                         {RANGES.map(range => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range)}
-                                className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md transition-colors ${timeRange === range
-                                    ? 'bg-foreground/10 text-foreground shadow-xs'
+                                className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-sm transition-colors ${timeRange === range
+                                    ? 'bg-glass-bg text-foreground'
                                     : 'text-foreground-muted hover:text-foreground-muted'
                                     }`}
                             >
@@ -210,7 +210,7 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                     <div className="flex-1 w-full relative min-h-[300px]">
                         {isLoading ? (
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="animate-pulse text-foreground-muted">Loading chart data...</div>
+                                <div className="text-foreground-muted">Loading chart data...</div>
                             </div>
                         ) : chartData.length === 0 ? (
                             <div className="absolute inset-0 flex items-center justify-center">
@@ -234,12 +234,12 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                                                  return formatChartDate(val, { month: 'short', year: '2-digit' });
                                              }}
                                          />
-                                        <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                        <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                         <Tooltip
-                                            contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                            contentStyle={{ background: 'var(--panel-bg)', border: '1px solid var(--line)', borderRadius: '6px' }}
                                              labelStyle={{ color: 'var(--foreground)' }}
                                              itemStyle={{ color: 'var(--foreground)' }}
-                                             cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                             cursor={{ fill: 'rgba(127,127,127,0.1)' }}
                                              labelFormatter={(val) => formatChartDate(val, { weekday: 'long', month: 'short', day: 'numeric' })}
                                          />
                                         <Bar
@@ -266,9 +266,9 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                                                  return formatChartDate(val, { month: 'short', year: '2-digit' });
                                              }}
                                          />
-                                        <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['dataMin - 1', 'auto']} />
+                                        <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={['dataMin - 1', 'auto']} />
                                         <Tooltip
-                                             contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                             contentStyle={{ background: 'var(--panel-bg)', border: '1px solid var(--line)', borderRadius: '6px' }}
                                              labelStyle={{ color: 'var(--foreground)' }}
                                              itemStyle={{ color: 'var(--foreground)' }}
                                              labelFormatter={(val) => formatChartDate(val, { weekday: 'long', month: 'short', day: 'numeric' })}
@@ -279,7 +279,8 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                                             type="monotone"
                                             dataKey="weight"
                                             name="Daily Weight (kg) "
-                                            stroke="rgba(96, 165, 250, 0.3)"
+                                            stroke={metricColor}
+                                            strokeOpacity={0.3}
                                             strokeWidth={1}
                                             dot={{ r: 2, fill: metricColor, fillOpacity: 0.5 }}
                                             isAnimationActive={false}

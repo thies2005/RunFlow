@@ -34,9 +34,9 @@ interface Props {
 }
 
 const CONFIDENCE_COLORS = {
-    high: 'text-green-400 bg-green-500/10 border-green-500/20',
-    medium: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    low: 'text-red-400 bg-red-500/10 border-red-500/20',
+    high: 'text-positive bg-positive/10 border-positive/20',
+    medium: 'text-workout-tempo bg-workout-tempo/10 border-workout-tempo/20',
+    low: 'text-negative bg-negative/10 border-negative/20',
 };
 
 export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Props) {
@@ -169,16 +169,16 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-background-secondary w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
+            <div className="bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-foreground/10 shrink-0">
+                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-line shrink-0">
                     <div className="flex items-center gap-2">
                         <button onClick={onClose} className="p-1 -ml-2 text-foreground-muted hover:text-foreground">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <ChefHat className="w-5 h-5 text-amber-400" />
-                        <h2 className="text-lg font-bold text-foreground">Meal Breakdown</h2>
+                        <ChefHat className="w-5 h-5 text-workout-tempo" />
+                        <h2 className="text-lg font-semibold text-foreground">Meal Breakdown</h2>
                     </div>
                     <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
                         <X className="w-5 h-5" />
@@ -188,7 +188,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                 <div className="flex-1 flex flex-col overflow-y-auto">
                     {/* Meal Name + Confidence */}
                     <div className="p-4 pb-0">
-                        <h3 className="text-xl font-bold text-foreground mb-2">{result.mealName}</h3>
+                        <h3 className="text-xl font-semibold text-foreground mb-2">{result.mealName}</h3>
                         <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${CONFIDENCE_COLORS[result.confidence]}`}>
                             {result.confidence === 'high' ? '✓' : result.confidence === 'medium' ? '~' : '!'} {result.confidence} confidence
                         </span>
@@ -196,26 +196,26 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
 
                     {/* Totals Bar */}
                     <div className="p-4">
-                        <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-xl p-4">
+                        <div className="bg-accent-orange/10 border border-accent-orange/20 rounded-md p-4">
                             <div className="grid grid-cols-4 gap-2 text-center">
                                 <div>
                                     <div className="flex items-center justify-center gap-1 mb-1">
-                                        <Flame className="w-3 h-3 text-amber-400" />
-                                        <span className="text-[10px] text-foreground-muted uppercase">Cals</span>
+                                        <Flame className="w-3 h-3 text-accent-orange" />
+                                        <span className="text-[10px] text-foreground-muted">Cals</span>
                                     </div>
-                                    <p className="text-lg font-bold text-amber-400">{totals.calories}</p>
+                                    <p className="text-lg font-semibold font-mono tabular-nums text-accent-orange">{totals.calories}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-foreground-muted uppercase mb-1">Protein</p>
-                                    <p className="text-lg font-bold text-blue-400">{totals.protein}g</p>
+                                    <p className="text-[10px] text-foreground-muted mb-1">Protein</p>
+                                    <p className="text-lg font-semibold font-mono tabular-nums text-accent-blue">{totals.protein}g</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-foreground-muted uppercase mb-1">Carbs</p>
-                                    <p className="text-lg font-bold text-green-400">{totals.carbs}g</p>
+                                    <p className="text-[10px] text-foreground-muted mb-1">Carbs</p>
+                                    <p className="text-lg font-semibold font-mono tabular-nums text-positive">{totals.carbs}g</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-foreground-muted uppercase mb-1">Fats</p>
-                                    <p className="text-lg font-bold text-pink-400">{totals.fats}g</p>
+                                    <p className="text-[10px] text-foreground-muted mb-1">Fats</p>
+                                    <p className="text-lg font-semibold font-mono tabular-nums text-accent-pink">{totals.fats}g</p>
                                 </div>
                             </div>
                         </div>
@@ -223,31 +223,31 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
 
                     {/* Component List */}
                     <div className="px-4 pb-4">
-                        <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-widest mb-3">
+                        <h4 className="text-xs font-semibold text-foreground-muted mb-3">
                             Ingredients ({adjustedItems.length})
                         </h4>
                         <div className="space-y-2">
                             {adjustedItems.map((item, index) => (
                                 <div
                                     key={index}
-                                    className="bg-foreground/5 border border-foreground/10 rounded-xl p-3"
+                                    className="bg-background-tertiary border border-line rounded-md p-3"
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium text-foreground text-sm">{item.name}</p>
-                                            <p className="text-xs text-foreground-muted">{item.estimatedGrams}g</p>
+                                            <p className="text-xs font-mono text-foreground-muted">{item.estimatedGrams}g</p>
                                         </div>
                                         <div className="text-right shrink-0 ml-2">
-                                            <p className="text-sm font-bold text-amber-400">{item.calories}</p>
-                                            <p className="text-[10px] text-foreground-muted uppercase">kcal</p>
+                                            <p className="text-sm font-semibold font-mono tabular-nums text-accent-orange">{item.calories}</p>
+                                            <p className="text-[10px] text-foreground-muted">kcal</p>
                                         </div>
                                     </div>
 
                                     {/* Macros row */}
-                                    <div className="flex items-center gap-3 text-[11px] text-foreground-muted mb-2">
-                                        <span>P: <span className="text-blue-400 font-medium">{item.protein}g</span></span>
-                                        <span>C: <span className="text-green-400 font-medium">{item.carbs}g</span></span>
-                                        <span>F: <span className="text-pink-400 font-medium">{item.fats}g</span></span>
+                                    <div className="flex items-center gap-3 text-[11px] text-foreground-muted mb-2 font-mono tabular-nums">
+                                        <span>P: <span className="text-accent-blue font-medium">{item.protein}g</span></span>
+                                        <span>C: <span className="text-positive font-medium">{item.carbs}g</span></span>
+                                        <span>F: <span className="text-accent-pink font-medium">{item.fats}g</span></span>
                                     </div>
 
                                     {/* Quantity adjuster */}
@@ -255,16 +255,16 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                                         <span className="text-[11px] text-foreground-muted">Portion:</span>
                                         <button
                                             onClick={() => adjustMultiplier(index, -0.5)}
-                                            className="w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 transition-colors"
+                                            className="w-6 h-6 rounded-full bg-glass-bg flex items-center justify-center hover:bg-background-tertiary transition-colors"
                                         >
                                             <Minus className="w-3 h-3 text-foreground-muted" />
                                         </button>
-                                        <span className="text-sm font-medium text-foreground w-10 text-center">
+                                        <span className="text-sm font-medium font-mono tabular-nums text-foreground w-10 text-center">
                                             {multipliers[index]}x
                                         </span>
                                         <button
                                             onClick={() => adjustMultiplier(index, 0.5)}
-                                            className="w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 transition-colors"
+                                            className="w-6 h-6 rounded-full bg-glass-bg flex items-center justify-center hover:bg-background-tertiary transition-colors"
                                         >
                                             <Plus className="w-3 h-3 text-foreground-muted" />
                                         </button>
@@ -276,12 +276,12 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                 </div>
 
                 {/* Actions Footer */}
-                <div className="p-4 border-t border-foreground/10 shrink-0 space-y-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <div className="p-4 border-t border-line shrink-0 space-y-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                     {/* Global Portion Slider */}
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <label className="text-sm font-medium text-foreground">Overall Portion Size</label>
-                            <span className="text-sm font-bold text-amber-400">{globalMultiplier}x</span>
+                            <span className="text-sm font-semibold font-mono tabular-nums text-accent-orange">{globalMultiplier}x</span>
                         </div>
                         <input
                             type="range"
@@ -290,9 +290,9 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                             step="0.25"
                             value={globalMultiplier}
                             onChange={(e) => setGlobalMultiplier(parseFloat(e.target.value))}
-                            className="w-full accent-amber-500 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer"
+                            className="w-full accent-accent-orange h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer"
                         />
-                        <div className="flex justify-between text-[10px] text-foreground-muted mt-1 px-1">
+                        <div className="flex justify-between text-[10px] text-foreground-muted mt-1 px-1 font-mono">
                             <span>0.25x</span>
                             <span>1x</span>
                             <span>2x</span>
@@ -304,7 +304,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                     <select
                         value={mealType}
                         onChange={e => setMealType(e.target.value)}
-                        className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-3 py-2.5 text-foreground focus:outline-hidden appearance-none text-sm"
+                        className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2.5 text-foreground focus:outline-hidden appearance-none text-sm"
                     >
                         <option value="BREAKFAST">🌅 Breakfast</option>
                         <option value="LUNCH">☀️ Lunch</option>
@@ -317,15 +317,15 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                         <button
                             onClick={handleSaveMeal}
                             disabled={isSaving || !!savedMessage}
-                            className="flex-shrink-0 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 transition-colors rounded-xl px-4 py-3 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                            className="flex-shrink-0 bg-background-tertiary hover:bg-glass-bg-hover border border-line transition-colors rounded-md px-4 py-3 flex items-center justify-center gap-1.5 disabled:opacity-50"
                         >
                             {isSaving ? (
-                                <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                                <Loader2 className="w-4 h-4 animate-spin text-workout-tempo" />
                             ) : savedMessage ? (
-                                <span className="text-xs text-green-400 font-medium">✓ Saved</span>
+                                <span className="text-xs text-positive font-medium">✓ Saved</span>
                             ) : (
                                 <>
-                                    <Bookmark className="w-4 h-4 text-amber-400" />
+                                    <Bookmark className="w-4 h-4 text-workout-tempo" />
                                     <span className="text-xs text-foreground-muted font-medium">Save</span>
                                 </>
                             )}
@@ -335,7 +335,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                         <button
                             onClick={() => logMutation.mutate()}
                             disabled={logMutation.isPending}
-                            className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-foreground/15 disabled:opacity-50 transition-colors"
+                            className="flex-1 py-3 bg-accent-orange text-white font-semibold rounded-md flex items-center justify-center gap-2 hover:bg-accent-orange/90 disabled:opacity-50 transition-colors"
                         >
                             {logMutation.isPending ? (
                                 <><Loader2 className="w-4 h-4 animate-spin" /> Logging...</>

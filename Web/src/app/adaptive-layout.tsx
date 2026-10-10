@@ -34,7 +34,7 @@ export function AdaptiveLayout({ children }: AdaptiveLayoutProps) {
                         alt="RunFlow Loading"
                         fill
                         sizes="96px"
-                        className="object-contain rounded-2xl animate-pulse"
+                        className="object-contain rounded-md"
                     />
                 </div>
                 <div className="w-8 h-8 rounded-full border-4 border-accent-orange border-t-transparent animate-spin"></div>

@@ -42,10 +42,10 @@ export default function ApiRoutesTable({
   const getHealthStatus = (route: RouteStats) => {
     const errorRate = route.requestCount > 0 ? (route.errorCount / route.requestCount) * 100 : 0;
     
-    if (errorRate > 5) return { status: 'critical', color: 'bg-red-500' };
-    if (errorRate > 1) return { status: 'warning', color: 'bg-yellow-500' };
-    if (route.avgResponseTime > 1000) return { status: 'slow', color: 'bg-orange-500' };
-    return { status: 'healthy', color: 'bg-green-500' };
+    if (errorRate > 5) return { status: 'critical', color: 'bg-negative' };
+    if (errorRate > 1) return { status: 'warning', color: 'bg-workout-tempo' };
+    if (route.avgResponseTime > 1000) return { status: 'slow', color: 'bg-workout-race' };
+    return { status: 'healthy', color: 'bg-positive' };
   };
 
   const formatResponseTime = (ms: number | null | undefined) => {
@@ -57,15 +57,15 @@ export default function ApiRoutesTable({
   const getTrendIcon = (value: number, threshold: number, inverse?: boolean) => {
     const isGood = inverse ? value < threshold : value <= threshold;
     return isGood ? (
-      <TrendingDown className="w-4 h-4 text-green-500" />
+      <TrendingDown className="w-4 h-4 text-positive" />
     ) : (
-      <TrendingUp className="w-4 h-4 text-red-500" />
+      <TrendingUp className="w-4 h-4 text-negative" />
     );
   };
 
   return (
-    <div className="bg-background-secondary rounded-xl shadow-xs border border-glass-border overflow-hidden">
-      <div className="p-6 border-b border-glass-border">
+    <div className="bg-background-secondary rounded-md  border border-line overflow-hidden">
+      <div className="p-6 border-b border-line">
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <Zap className="w-5 h-5" />
           API Routes
@@ -143,7 +143,7 @@ export default function ApiRoutesTable({
                     <TableCell>{formatResponseTime(route.p99ResponseTime)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className={route.errorCount > 0 ? 'text-red-600 font-medium' : ''}>
+                        <span className={route.errorCount > 0 ? 'text-negative font-medium' : ''}>
                           {route.errorCount}
                         </span>
                         <span className="text-foreground-muted">({errorRate}%)</span>

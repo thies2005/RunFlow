@@ -179,50 +179,50 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
         <div className="space-y-8">
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-purple-500/10 p-4 rounded-lg border border-purple-500/30">
-                    <p className="text-purple-600 text-sm font-medium">Total Users</p>
-                    <p className="text-2xl font-bold text-purple-800">{stats?.totalUsers || 0}</p>
+                <div className="bg-background-secondary p-4 rounded-md border border-line">
+                    <p className="text-foreground-muted text-sm font-medium">Total Users</p>
+                    <p className="text-2xl font-bold font-mono tabular-nums text-foreground">{stats?.totalUsers || 0}</p>
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-                    <p className="text-green-600 text-sm font-medium">AI Enabled</p>
-                    <p className="text-2xl font-bold text-green-800">{stats?.enabledUsers || 0}</p>
+                <div className="bg-background-secondary p-4 rounded-md border border-line">
+                    <p className="text-foreground-muted text-sm font-medium">AI Enabled</p>
+                    <p className="text-2xl font-bold font-mono tabular-nums text-foreground">{stats?.enabledUsers || 0}</p>
                 </div>
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                    <p className="text-blue-600 text-sm font-medium">Custom API Keys</p>
-                    <p className="text-2xl font-bold text-blue-800">{stats?.usersWithCustomKey || 0}</p>
+                <div className="bg-background-secondary p-4 rounded-md border border-line">
+                    <p className="text-foreground-muted text-sm font-medium">Custom API Keys</p>
+                    <p className="text-2xl font-bold font-mono tabular-nums text-foreground">{stats?.usersWithCustomKey || 0}</p>
                 </div>
             </div>
 
             {/* Providers Section */}
-            <div className="bg-background-secondary p-6 rounded-lg border border-glass-border space-y-4">
+            <div className="bg-background-secondary p-6 rounded-md border border-line space-y-4">
                 <div className="flex justify-between items-center">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
-                        <Bot className="w-5 h-5 text-purple-600" />
+                        <Bot className="w-5 h-5 text-foreground-muted" />
                         AI Providers
                     </h3>
                     <button
                         onClick={() => { setEditingProvider(null); setShowProviderForm(true); }}
-                        className="px-3 py-1.5 bg-purple-500/10 text-purple-600 rounded-lg hover:bg-purple-100 text-sm font-medium flex items-center gap-1 transition"
+                        className="px-3 py-1.5 bg-accent-orange/10 text-accent-orange rounded-md hover:bg-accent-orange/20 text-sm font-medium flex items-center gap-1 transition-colors"
                     >
                         <Plus className="w-4 h-4" /> Add Provider
                     </button>
                 </div>
 
                 {providers.length === 0 ? (
-                    <div className="text-center py-8 bg-background-secondary rounded-lg border border-dashed border-foreground/20">
+                    <div className="text-center py-8 bg-background-secondary rounded-md border border-dashed border-line-strong">
                         <p className="text-foreground-muted">No providers configured.</p>
-                        <button onClick={() => setShowProviderForm(true)} className="text-purple-600 hover:underline mt-2 text-sm">Add one now</button>
+                        <button onClick={() => setShowProviderForm(true)} className="text-accent-blue hover:underline mt-2 text-sm">Add one now</button>
                     </div>
                 ) : (
                     <div className="grid gap-4">
                         {providers.map(provider => (
-                            <div key={provider.id} className={`p-4 rounded-lg border flex items-center justify-between ${activeProviderId === provider.id ? 'border-purple-500 bg-purple-500/10 ring-1 ring-purple-500' : fallbackProviderId === provider.id ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500' : 'border-glass-border bg-background-secondary'}`}>
+                            <div key={provider.id} className={`p-4 rounded-md border flex items-center justify-between ${activeProviderId === provider.id ? 'border-accent-orange bg-accent-orange/10' : fallbackProviderId === provider.id ? 'border-workout-tempo bg-workout-tempo/10' : 'border-line bg-background-secondary'}`}>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-3 h-3 rounded-full ${activeProviderId === provider.id ? 'bg-purple-600' : fallbackProviderId === provider.id ? 'bg-amber-500' : 'bg-foreground/25'}`} />
+                                    <div className={`w-3 h-3 rounded-full ${activeProviderId === provider.id ? 'bg-accent-orange' : fallbackProviderId === provider.id ? 'bg-workout-tempo' : 'bg-line-strong'}`} />
                                     <div>
                                         <h4 className="font-medium text-foreground">{provider.name} {activeProviderId === provider.id && '(Active)'} {fallbackProviderId === provider.id && '(Fallback)'}</h4>
                                         <p className="text-xs text-foreground-muted flex gap-2">
-                                            <span className="uppercase bg-background-tertiary px-1.5 rounded">{provider.type}</span>
+                                            <span className="bg-background-tertiary px-1.5 rounded-sm">{provider.type}</span>
                                             <span>{provider.models.join(', ')}</span>
                                         </p>
                                     </div>
@@ -231,7 +231,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                                     {activeProviderId !== provider.id && (
                                         <button
                                             onClick={() => setActiveProviderId(provider.id)}
-                                            className="px-3 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded border border-purple-200"
+                                            className="px-3 py-1 text-xs font-medium text-accent-orange hover:bg-accent-orange/10 rounded-sm border border-accent-orange/30"
                                         >
                                             Set Active
                                         </button>
@@ -239,7 +239,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                                     {fallbackProviderId !== provider.id && activeProviderId !== provider.id && (
                                         <button
                                             onClick={() => setFallbackProviderId(provider.id)}
-                                            className="px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 rounded border border-amber-200"
+                                            className="px-3 py-1 text-xs font-medium text-workout-tempo hover:bg-workout-tempo/10 rounded-sm border border-workout-tempo/30"
                                         >
                                             Set Fallback
                                         </button>
@@ -252,7 +252,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                                     </button>
                                     <button
                                         onClick={() => handleDeleteProvider(provider.id)}
-                                        className="p-2 text-foreground-muted hover:text-red-500"
+                                        className="p-2 text-foreground-muted hover:text-negative"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
@@ -264,7 +264,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             </div>
 
             {/* Global Limits & Prompt */}
-            <div className="bg-background-secondary p-6 rounded-lg border border-glass-border space-y-4">
+            <div className="bg-background-secondary p-6 rounded-md border border-line space-y-4">
                 <h3 className="font-semibold text-foreground">Usage Limits & Persona</h3>
 
                 {/* Usage Tiers */}
@@ -274,13 +274,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     <TierInputGroup tier={3} formData={formData} setFormData={setFormData} />
                 </div>
 
-                <div className="pt-4 border-t border-glass-border">
+                <div className="pt-4 border-t border-line">
                     <label className="block text-sm font-medium text-foreground-secondary mb-1">CalorieSnap (AI Food Scanner) Model ID</label>
                     <input
                         type="text"
                         value={formData.calorieSnapModel}
                         onChange={(e) => setFormData({ ...formData, calorieSnapModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                         placeholder="e.g. gemini-1.5-flash"
                     />
                     <p className="text-xs text-foreground-muted mt-1">
@@ -288,13 +288,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     </p>
                 </div>
 
-                <div className="pt-4 border-t border-glass-border">
+                <div className="pt-4 border-t border-line">
                     <label className="block text-sm font-medium text-foreground-secondary mb-1">Meal Suggestions Model ID</label>
                     <input
                         type="text"
                         value={formData.mealSuggestModel}
                         onChange={(e) => setFormData({ ...formData, mealSuggestModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                         placeholder="e.g. gemini-1.5-flash"
                     />
                     <p className="text-xs text-foreground-muted mt-1">
@@ -302,13 +302,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     </p>
                 </div>
 
-                <div className="pt-4 border-t border-glass-border">
+                <div className="pt-4 border-t border-line">
                     <label className="block text-sm font-medium text-foreground-secondary mb-1">Activity Feedback Model ID</label>
                     <input
                         type="text"
                         value={formData.activityFeedbackModel}
                         onChange={(e) => setFormData({ ...formData, activityFeedbackModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                         placeholder="e.g. gemini-1.5-flash"
                     />
                     <p className="text-xs text-foreground-muted mt-1">
@@ -316,12 +316,12 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     </p>
                 </div>
 
-                <div className="pt-4 border-t border-glass-border">
+                <div className="pt-4 border-t border-line">
                     <label className="block text-sm font-medium text-foreground-secondary mb-1">System Prompt</label>
                     <textarea
                         value={formData.systemPrompt}
                         onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 h-32"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange h-32"
                     />
                 </div>
 
@@ -329,7 +329,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     <button
                         onClick={handleSaveGlobal}
                         disabled={processing}
-                        className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50"
+                        className="px-6 py-2 bg-accent-orange hover:bg-accent-orange/90 text-white rounded-md font-medium transition flex items-center gap-2 disabled:opacity-50"
                     >
                         <Save className="w-4 h-4" />
                         {processing ? 'Saving...' : 'Save All Settings'}
@@ -338,9 +338,9 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             </div>
 
             {/* Plan Builder AI Settings */}
-            <div className="bg-background-secondary p-6 rounded-lg border border-glass-border space-y-4">
+            <div className="bg-background-secondary p-6 rounded-md border border-line space-y-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-indigo-600" />
+                    <Sparkles className="w-5 h-5 text-accent-blue" />
                     Plan Builder AI
                 </h3>
                 <p className="text-xs text-foreground-muted">
@@ -353,7 +353,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                         type="text"
                         value={formData.planBuilderModel}
                         onChange={(e) => setFormData({ ...formData, planBuilderModel: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                         placeholder="e.g. gpt-4o"
                     />
                     <p className="text-xs text-foreground-muted mt-1">
@@ -367,7 +367,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                         type="number"
                         value={formData.planMaxTokensPerAnalysis}
                         onChange={(e) => setFormData({ ...formData, planMaxTokensPerAnalysis: parseInt(e.target.value, 10) || 8000 })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                         min={1000}
                         max={16000}
                     />
@@ -380,7 +380,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             {/* Provider Modal/Form Overlay */}
             {showProviderForm && (
                 <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity)] flex items-center justify-center z-50 p-4">
-                    <div className="bg-background-secondary rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
+                    <div className="bg-background-secondary rounded-md border border-line shadow-lg max-w-lg w-full p-6 space-y-4">
                         <h3 className="text-lg font-bold text-foreground">{editingProvider ? 'Edit Provider' : 'Add New Provider'}</h3>
                         <ProviderForm
                             initialData={editingProvider}
@@ -498,7 +498,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
                         placeholder="e.g. OpenAI"
                     />
                 </div>
@@ -508,7 +508,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                         type="text"
                         value={formData.slug}
                         onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
                         placeholder="openai"
                     />
                 </div>
@@ -520,7 +520,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     <select
                         value={formData.type}
                         onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
                     >
                         <option value="openai">OpenAI Compatible</option>
                         <option value="anthropic">Anthropic</option>
@@ -536,7 +536,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                         value={formData.monthlyTokenLimit}
                         onChange={(e) => setFormData({ ...formData, monthlyTokenLimit: e.target.value })}
                         placeholder="Optional (e.g. 1000000)"
-                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted"
+                        className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
                     />
                 </div>
             </div>
@@ -547,7 +547,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     type="text"
                     value={formData.baseUrl}
                     onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-                    className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted"
+                    className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
                 />
             </div>
 
@@ -562,20 +562,20 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     <textarea
                         value={formData.apiKey}
                         onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-                        className="flex-1 px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted min-h-[80px] font-mono text-sm leading-relaxed"
+                        className="flex-1 px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted min-h-[80px] font-mono text-sm leading-relaxed"
                         placeholder="sk-key1,&#10;sk-key2..."
                     />
                     <button
                         onClick={handleTest}
                         disabled={testing || (!formData.apiKey && !initialData)}
-                        className="px-3 py-2 bg-background-tertiary text-foreground-secondary rounded-lg hover:bg-foreground/15 text-sm font-medium flex items-center gap-1 mt-1 shrink-0"
+                        className="px-3 py-2 bg-background-tertiary text-foreground-secondary rounded-md hover:bg-surface-hover text-sm font-medium flex items-center gap-1 mt-1 shrink-0"
                     >
                         {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                         Test
                     </button>
                 </div>
                 {testResult && (
-                    <p className={`text-xs mt-2 ${testResult.success ? 'text-green-600' : 'text-red-500'}`}>
+                    <p className={`text-xs mt-2 ${testResult.success ? 'text-positive' : 'text-negative'}`}>
                         {testResult.success ? <CheckCircle className="w-3 h-3 inline mr-1" /> : <AlertTriangle className="w-3 h-3 inline mr-1" />}
                         {testResult.message}
                     </p>
@@ -588,24 +588,24 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     type="text"
                     value={formData.models}
                     onChange={(e) => setFormData({ ...formData, models: e.target.value })}
-                    className="w-full px-3 py-2 bg-background-secondary text-foreground border border-foreground/20 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-foreground-muted"
+                    className="w-full px-3 py-2 bg-background-secondary text-foreground border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange placeholder-foreground-muted"
                     placeholder="gpt-4, gpt-4o-mini"
                 />
             </div>
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && <p className="text-negative text-sm">{error}</p>}
 
             <div className="flex justify-end gap-3 pt-4">
                 <button
                     onClick={onClose}
-                    className="px-4 py-2 text-foreground-secondary hover:bg-background-tertiary rounded-lg font-medium transition"
+                    className="px-4 py-2 text-foreground-secondary hover:bg-background-tertiary rounded-md font-medium transition"
                 >
                     Cancel
                 </button>
                 <button
                     onClick={handleSave}
                     disabled={loading}
-                    className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition flex items-center gap-2"
+                    className="px-6 py-2 bg-accent-orange hover:bg-accent-orange/90 text-white rounded-md font-medium transition flex items-center gap-2"
                 >
                     {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                     {initialData ? 'Update Provider' : 'Add Provider'}

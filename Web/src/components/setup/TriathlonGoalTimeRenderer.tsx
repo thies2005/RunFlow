@@ -75,10 +75,10 @@ export default function TriathlonGoalTimeRenderer({
         };
 
         return (
-            <div className="mt-6 p-5 bg-background-secondary border border-glass-border rounded-lg">
-                <div className="flex items-center gap-2 text-orange-400 mb-3">
+            <div className="mt-6 p-5 bg-background-secondary border border-glass-border rounded-md">
+                <div className="flex items-center gap-2 text-accent-orange mb-3">
                     <Target className="w-5 h-5" />
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                    <h3 className="text-sm font-semibold text-foreground">
                         Goal Finish Time (Optional)
                     </h3>
                 </div>
@@ -88,7 +88,7 @@ export default function TriathlonGoalTimeRenderer({
                 <div className="flex gap-2 items-center justify-center">
                     <input
                         type="number"
-                        className="w-16 bg-background-tertiary border border-foreground/20 rounded-lg p-3 text-foreground text-center"
+                        className="w-16 bg-background-tertiary border border-line rounded-md p-3 text-foreground text-center"
                         placeholder="HH"
                         value={manualHours}
                         onChange={(e) => {
@@ -100,7 +100,7 @@ export default function TriathlonGoalTimeRenderer({
                     <span className="text-foreground-muted">:</span>
                     <input
                         type="number"
-                        className="w-16 bg-background-tertiary border border-foreground/20 rounded-lg p-3 text-foreground text-center"
+                        className="w-16 bg-background-tertiary border border-line rounded-md p-3 text-foreground text-center"
                         placeholder="MM"
                         value={manualMinutes}
                         onChange={(e) => {
@@ -113,7 +113,7 @@ export default function TriathlonGoalTimeRenderer({
                     <span className="text-foreground-muted">:</span>
                     <input
                         type="number"
-                        className="w-16 bg-background-tertiary border border-foreground/20 rounded-lg p-3 text-foreground text-center"
+                        className="w-16 bg-background-tertiary border border-line rounded-md p-3 text-foreground text-center"
                         placeholder="SS"
                         value={manualSeconds}
                         onChange={(e) => {
@@ -159,10 +159,10 @@ export default function TriathlonGoalTimeRenderer({
         };
 
         return (
-            <div className="mt-6 p-5 bg-background-secondary border border-glass-border rounded-lg">
-                <div className="flex items-center gap-2 text-orange-400 mb-3">
+            <div className="mt-6 p-5 bg-background-secondary border border-glass-border rounded-md">
+                <div className="flex items-center gap-2 text-accent-orange mb-3">
                     <Target className="w-5 h-5" />
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                    <h3 className="text-sm font-semibold text-foreground">
                         Goal Finish Time
                     </h3>
                 </div>
@@ -172,7 +172,7 @@ export default function TriathlonGoalTimeRenderer({
                 <div className="flex gap-2 items-center justify-center">
                     <input
                         type="number"
-                        className="w-16 bg-background-tertiary border border-foreground/20 rounded-lg p-3 text-foreground text-center"
+                        className="w-16 bg-background-tertiary border border-line rounded-md p-3 text-foreground text-center"
                         placeholder="HH"
                         value={manualHours}
                         onChange={(e) => {
@@ -184,7 +184,7 @@ export default function TriathlonGoalTimeRenderer({
                     <span className="text-foreground-muted">:</span>
                     <input
                         type="number"
-                        className="w-16 bg-background-tertiary border border-foreground/20 rounded-lg p-3 text-foreground text-center"
+                        className="w-16 bg-background-tertiary border border-line rounded-md p-3 text-foreground text-center"
                         placeholder="MM"
                         value={manualMinutes}
                         onChange={(e) => {
@@ -197,7 +197,7 @@ export default function TriathlonGoalTimeRenderer({
                     <span className="text-foreground-muted">:</span>
                     <input
                         type="number"
-                        className="w-16 bg-background-tertiary border border-foreground/20 rounded-lg p-3 text-foreground text-center"
+                        className="w-16 bg-background-tertiary border border-line rounded-md p-3 text-foreground text-center"
                         placeholder="SS"
                         value={manualSeconds}
                         onChange={(e) => {
@@ -261,11 +261,11 @@ export default function TriathlonGoalTimeRenderer({
     };
 
     return (
-        <div className="mt-6 p-5 bg-background-secondary border border-glass-border rounded-lg">
+        <div className="mt-6 p-5 bg-background-secondary border border-glass-border rounded-md">
             <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2 text-orange-400">
+                <div className="flex items-center gap-2 text-accent-orange">
                     <Target className="w-5 h-5" />
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                    <h3 className="text-sm font-semibold text-foreground">
                         Goal Finish Time
                     </h3>
                 </div>
@@ -284,7 +284,7 @@ export default function TriathlonGoalTimeRenderer({
                     <div className="flex items-center justify-center gap-1 mb-2">
                         <input
                             type="number"
-                            className="w-14 bg-background-tertiary border border-foreground/20 rounded p-2 text-center text-2xl font-bold text-foreground"
+                            className="w-14 bg-background-tertiary border border-line rounded p-2 text-center text-2xl font-bold text-foreground font-mono tabular-nums"
                             placeholder="HH"
                             value={manualHours}
                             onChange={(e) => setManualHours(e.target.value)}
@@ -293,7 +293,7 @@ export default function TriathlonGoalTimeRenderer({
                         <span className="text-2xl text-foreground-muted">:</span>
                         <input
                             type="number"
-                            className="w-14 bg-background-tertiary border border-foreground/20 rounded p-2 text-center text-2xl font-bold text-foreground"
+                            className="w-14 bg-background-tertiary border border-line rounded p-2 text-center text-2xl font-bold text-foreground font-mono tabular-nums"
                             placeholder="MM"
                             value={manualMinutes}
                             onChange={(e) => setManualMinutes(e.target.value)}
@@ -303,7 +303,7 @@ export default function TriathlonGoalTimeRenderer({
                         <span className="text-2xl text-foreground-muted">:</span>
                         <input
                             type="number"
-                            className="w-14 bg-background-tertiary border border-foreground/20 rounded p-2 text-center text-2xl font-bold text-foreground"
+                            className="w-14 bg-background-tertiary border border-line rounded p-2 text-center text-2xl font-bold text-foreground font-mono tabular-nums"
                             placeholder="SS"
                             value={manualSeconds}
                             onChange={(e) => setManualSeconds(e.target.value)}
@@ -312,14 +312,14 @@ export default function TriathlonGoalTimeRenderer({
                         />
                         <button
                             onClick={confirmManualEntry}
-                            className="ml-2 p-2 bg-orange-500/20 text-orange-400 rounded-lg hover:bg-orange-500/30 transition-colors"
+                            className="ml-2 p-2 bg-accent-orange/15 text-accent-orange rounded-md hover:bg-accent-orange/25 transition-colors"
                         >
                             <Check className="w-5 h-5" />
                         </button>
                     </div>
                 ) : (
                     <>
-                        <div className="text-3xl font-bold text-foreground mb-1">
+                        <div className="text-3xl font-bold text-foreground mb-1 font-mono tabular-nums">
                             {formatTime(displayTime)}
                         </div>
                         <button
@@ -332,7 +332,7 @@ export default function TriathlonGoalTimeRenderer({
                 )}
                 <p className="text-xs text-foreground-muted mt-1">
                     {goalTimeSeconds !== null ? (
-                        <span className="text-orange-400">Custom goal</span>
+                        <span className="text-accent-orange">Custom goal</span>
                     ) : (
                         <>Projected based on VDOT {vdot.toFixed(1)}</>
                     )}
@@ -347,12 +347,12 @@ export default function TriathlonGoalTimeRenderer({
                         max={sliderMax}
                         step={stepSeconds}
                         value={displayTime}
-                        className="w-full h-2 bg-background-tertiary rounded-lg appearance-none cursor-pointer accent-orange-500"
+                        className="w-full h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer accent-accent-orange"
                         onChange={(e) => onGoalTimeChange(parseInt(e.target.value))}
                     />
                     <div className="flex justify-between text-xs mt-1">
-                        <span className="text-green-400">{formatTime(projection.optimal.totalSeconds)} (Optimal)</span>
-                        <span className="text-orange-400">{formatTime(projection.conservative.totalSeconds)} (Conservative)</span>
+                        <span className="text-positive font-mono tabular-nums">{formatTime(projection.optimal.totalSeconds)} (Optimal)</span>
+                        <span className="text-accent-orange font-mono tabular-nums">{formatTime(projection.conservative.totalSeconds)} (Conservative)</span>
                     </div>
                 </div>
             )}
@@ -368,47 +368,47 @@ export default function TriathlonGoalTimeRenderer({
 
                 {showSplits && (
                     <div className="mt-3 space-y-2">
-                        <div className="bg-background-tertiary border border-foreground/20 rounded-lg p-3 flex justify-between items-center">
+                        <div className="bg-background-tertiary border border-line rounded-md p-3 flex justify-between items-center">
                             <span className="text-foreground-secondary text-xs">Swim</span>
                             <div className="text-right">
-                                <span className="text-foreground text-sm font-medium">
+                                <span className="text-foreground text-sm font-medium font-mono tabular-nums">
                                     {formatTime(projection.projected.swimSeconds)}
                                 </span>
-                                <span className="text-foreground-muted text-xs ml-2">
+                                <span className="text-foreground-muted text-xs ml-2 font-mono tabular-nums">
                                     {formatSwimPace(swimPacePer100m)}
                                 </span>
                             </div>
                         </div>
-                        <div className="bg-background-tertiary border border-foreground/20 rounded-lg p-3 flex justify-between items-center">
+                        <div className="bg-background-tertiary border border-line rounded-md p-3 flex justify-between items-center">
                             <span className="text-foreground-secondary text-xs">T1</span>
-                            <span className="text-foreground text-sm font-medium">
+                            <span className="text-foreground text-sm font-medium font-mono tabular-nums">
                                 {formatTime(projection.projected.t1Seconds)}
                             </span>
                         </div>
-                        <div className="bg-background-tertiary border border-foreground/20 rounded-lg p-3 flex justify-between items-center">
+                        <div className="bg-background-tertiary border border-line rounded-md p-3 flex justify-between items-center">
                             <span className="text-foreground-secondary text-xs">Bike</span>
                             <div className="text-right">
-                                <span className="text-foreground text-sm font-medium">
+                                <span className="text-foreground text-sm font-medium font-mono tabular-nums">
                                     {formatTime(projection.projected.bikeSeconds)}
                                 </span>
-                                <span className="text-foreground-muted text-xs ml-2">
+                                <span className="text-foreground-muted text-xs ml-2 font-mono tabular-nums">
                                     ~{bikePower} W · {bikeKmh.toFixed(1)} km/h
                                 </span>
                             </div>
                         </div>
-                        <div className="bg-background-tertiary border border-foreground/20 rounded-lg p-3 flex justify-between items-center">
+                        <div className="bg-background-tertiary border border-line rounded-md p-3 flex justify-between items-center">
                             <span className="text-foreground-secondary text-xs">T2</span>
-                            <span className="text-foreground text-sm font-medium">
+                            <span className="text-foreground text-sm font-medium font-mono tabular-nums">
                                 {formatTime(projection.projected.t2Seconds)}
                             </span>
                         </div>
-                        <div className="bg-background-tertiary border border-foreground/20 rounded-lg p-3 flex justify-between items-center">
+                        <div className="bg-background-tertiary border border-line rounded-md p-3 flex justify-between items-center">
                             <span className="text-foreground-secondary text-xs">Run</span>
                             <div className="text-right">
-                                <span className="text-foreground text-sm font-medium">
+                                <span className="text-foreground text-sm font-medium font-mono tabular-nums">
                                     {formatTime(projection.projected.runSeconds)}
                                 </span>
-                                <span className="text-foreground-muted text-xs ml-2">
+                                <span className="text-foreground-muted text-xs ml-2 font-mono tabular-nums">
                                     {formatRunPace(runPacePerKm)}
                                 </span>
                             </div>

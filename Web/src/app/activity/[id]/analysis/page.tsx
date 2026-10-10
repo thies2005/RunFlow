@@ -21,7 +21,7 @@ export default async function AnalysisPage({ params }: { params: Promise<{ id: s
     }
 
     if (activity.userId !== session.user.id) {
-        return <div className="p-8 text-center text-red-400">Unauthorized</div>;
+        return <div className="p-8 text-center text-accent-pink">Unauthorized</div>;
     }
 
     return <ClientAnalysis activity={activity as unknown as Activity} />;

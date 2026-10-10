@@ -13,10 +13,10 @@ interface RacePredictionChartProps {
 }
 
 const RACE_COLORS = {
-    '5K': '#10b981',
-    '10K': '#3b82f6',
-    'Half': '#f59e0b',
-    'Marathon': '#ef4444',
+    '5K': 'var(--positive)',
+    '10K': 'var(--accent-blue)',
+    'Half': 'var(--workout-tempo)',
+    'Marathon': 'var(--accent-orange)',
 };
 
 
@@ -96,7 +96,7 @@ function RacePredictionChart({
                         value={simulatedVO2Max}
                         onChange={(e) => setSimulatedVO2Max(parseFloat(e.target.value) || 0)}
                         step="0.1"
-                        className="w-16 bg-transparent text-accent-orange font-bold text-right focus:outline-hidden focus:border-b focus:border-accent-orange"
+                        className="w-16 bg-transparent text-accent-cyan font-semibold font-mono text-right focus:outline-hidden focus:border-b focus:border-accent-cyan"
                     />
                 </div>
             </div>
@@ -104,10 +104,10 @@ function RacePredictionChart({
             {/* Sliders Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {/* VO2 Max Slider */}
-                <div className="p-3 bg-foreground/5 rounded-lg">
+                <div className="p-3 bg-background-tertiary rounded-md">
                     <div className="flex items-center justify-between mb-2">
                         <label className="text-xs text-foreground-muted">Simulated VO2 Max</label>
-                        <span className="text-base font-bold text-accent-orange">{simulatedVO2Max.toFixed(1)}</span>
+                        <span className="text-base font-semibold text-accent-cyan font-mono tabular-nums">{simulatedVO2Max.toFixed(1)}</span>
                     </div>
                     <input
                         type="range"
@@ -116,20 +116,20 @@ function RacePredictionChart({
                         step="0.1"
                         value={simulatedVO2Max}
                         onChange={(e) => setSimulatedVO2Max(parseFloat(e.target.value))}
-                        className="w-full h-2 bg-foreground/15 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                        className="w-full h-2 bg-foreground/15 rounded-md appearance-none cursor-pointer accent-accent-cyan"
                     />
                     <div className="flex justify-between text-[10px] text-foreground-muted mt-1">
                         <span>20 (Low)</span>
-                        <span className="text-accent-orange">Current: {effectiveVO2max.toFixed(1)}</span>
+                        <span className="text-accent-cyan">Current: {effectiveVO2max.toFixed(1)}</span>
                         <span>80 (Elite)</span>
                     </div>
                 </div>
 
                 {/* Shape Slider */}
-                <div className="p-3 bg-foreground/5 rounded-lg">
+                <div className="p-3 bg-background-tertiary rounded-md">
                     <div className="flex items-center justify-between mb-2">
                         <label className="text-xs text-foreground-muted">Marathon Shape</label>
-                        <span className="text-base font-bold text-accent-cyan">{shapePercent}%</span>
+                        <span className="text-base font-semibold text-accent-cyan font-mono tabular-nums">{shapePercent}%</span>
                     </div>
                     <input
                         type="range"
@@ -137,7 +137,7 @@ function RacePredictionChart({
                         max="100"
                         value={shapePercent}
                         onChange={(e) => setShapePercent(parseInt(e.target.value))}
-                        className="w-full h-2 bg-foreground/15 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
+                        className="w-full h-2 bg-foreground/15 rounded-md appearance-none cursor-pointer accent-accent-cyan"
                     />
                     <div className="flex justify-between text-[10px] text-foreground-muted mt-1">
                         <span>0% (Unfit)</span>
@@ -150,14 +150,14 @@ function RacePredictionChart({
             {/* Prediction Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {predictions.map((p) => (
-                    <div key={p.name} className="text-center p-3 bg-foreground/5 rounded-lg border-l-4" style={{ borderColor: p.color }}>
+                    <div key={p.name} className="text-center p-3 bg-background-tertiary rounded-md border-l-4" style={{ borderColor: p.color }}>
                         <p className="text-xs text-foreground-muted mb-1">{p.name}</p>
-                        <p className="text-lg font-bold text-foreground">{p.predictedFormatted}</p>
-                        <p className="text-xs text-foreground-muted">
+                        <p className="text-lg font-semibold text-foreground font-mono tabular-nums">{p.predictedFormatted}</p>
+                        <p className="text-xs text-foreground-muted font-mono tabular-nums">
                             Optimal: {p.optimalFormatted}
                         </p>
                         {parseFloat(p.diffPercent) > 0 && (
-                            <p className="text-xs text-red-400 mt-1">
+                            <p className="text-xs text-negative mt-1 font-mono tabular-nums">
                                 +{p.diffPercent}%
                             </p>
                         )}
@@ -169,11 +169,11 @@ function RacePredictionChart({
             <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
-                        <XAxis type="number" stroke="#9ca3af" fontSize={12} tickFormatter={(v) => `${Math.round(v)}m`} />
-                        <YAxis type="category" dataKey="name" stroke="#9ca3af" fontSize={12} width={60} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" horizontal={false} />
+                        <XAxis type="number" stroke="var(--foreground-muted)" fontSize={12} tickFormatter={(v) => `${Math.round(v)}m`} />
+                        <YAxis type="category" dataKey="name" stroke="var(--foreground-muted)" fontSize={12} width={60} />
                         <Tooltip content={<ChartTooltip formatter={(value: any) => formatTime(Math.round(Number(value) * 60))} />} />
-                        <Bar dataKey="optimalMin" fill="#4ade80" opacity={0.3} name="Optimal" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="optimalMin" fill="var(--foreground-muted)" opacity={0.3} name="Optimal" radius={[0, 4, 4, 0]} />
                         <Bar dataKey="predictedMin" name="Current Prediction" radius={[0, 4, 4, 0]}>
                             {chartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.color} />

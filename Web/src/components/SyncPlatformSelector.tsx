@@ -26,7 +26,7 @@ const platforms: SyncPlatform[] = [
         id: 'strava',
         name: 'Strava',
         icon: <Activity className="w-8 h-8" />,
-        color: 'bg-orange-500',
+        color: 'bg-[#FC4C02]',
         available: true,
         description: 'Sync runs, rides, and more',
     },
@@ -34,7 +34,7 @@ const platforms: SyncPlatform[] = [
         id: 'health-connect',
         name: 'Health Connect',
         icon: <Heart className="w-8 h-8" />,
-        color: 'bg-green-600',
+        color: 'bg-positive',
         available: true,
         mobileOnly: true,
         description: 'Sync from Android Health',
@@ -43,7 +43,7 @@ const platforms: SyncPlatform[] = [
         id: 'garmin',
         name: 'Garmin Connect',
         icon: <Watch className="w-8 h-8" />,
-        color: 'bg-blue-600',
+        color: 'bg-accent-blue',
         available: false,
         description: 'Coming soon',
     },
@@ -51,7 +51,7 @@ const platforms: SyncPlatform[] = [
         id: 'polar',
         name: 'Polar Flow',
         icon: <Timer className="w-8 h-8" />,
-        color: 'bg-red-500',
+        color: 'bg-negative',
         available: false,
         description: 'Coming soon',
     },
@@ -59,7 +59,7 @@ const platforms: SyncPlatform[] = [
         id: 'coros',
         name: 'COROS',
         icon: <Mountain className="w-8 h-8" />,
-        color: 'bg-teal-500',
+        color: 'bg-accent-cyan',
         available: false,
         description: 'Coming soon',
     },
@@ -67,7 +67,7 @@ const platforms: SyncPlatform[] = [
         id: 'suunto',
         name: 'Suunto',
         icon: <Dumbbell className="w-8 h-8" />,
-        color: 'bg-yellow-500',
+        color: 'bg-workout-tempo',
         available: false,
         description: 'Coming soon',
     },
@@ -75,7 +75,7 @@ const platforms: SyncPlatform[] = [
         id: 'huawei',
         name: 'Huawei Health',
         icon: <Waves className="w-8 h-8" />,
-        color: 'bg-rose-500',
+        color: 'bg-accent-pink',
         available: false,
         description: 'Coming soon',
     },
@@ -199,7 +199,7 @@ export default function SyncPlatformSelector({
                             {/* Android Only Badge */}
                             {platform.mobileOnly && platform.available && (
                                 <div className="absolute top-2 right-2">
-                                    <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+                                    <span className="text-[10px] bg-positive/15 text-positive px-2 py-0.5 rounded-full">
                                         Android
                                     </span>
                                 </div>
@@ -208,15 +208,15 @@ export default function SyncPlatformSelector({
                             {/* Connected Badge */}
                             {isConnected && (
                                 <div className="absolute top-2 right-2">
-                                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                                        <Check className="w-3 h-3 text-foreground" />
+                                    <div className="w-5 h-5 bg-positive rounded-full flex items-center justify-center">
+                                        <Check className="w-3 h-3 text-white" />
                                     </div>
                                 </div>
                             )}
 
                             {/* Icon */}
                             <div
-                                className={`w-14 h-14 ${platform.color} rounded-xl flex items-center justify-center mx-auto mb-3 text-foreground`}
+                                className={`w-14 h-14 ${platform.color} rounded-md flex items-center justify-center mx-auto mb-3 text-white`}
                             >
                                 {platform.icon}
                             </div>
@@ -236,14 +236,14 @@ export default function SyncPlatformSelector({
                                 isConnected ? (
                                     <button
                                         disabled
-                                        className="w-full py-2 px-3 bg-green-500/20 text-green-400 rounded-lg text-sm font-medium cursor-default"
+                                        className="w-full py-2 px-3 bg-positive/15 text-positive rounded-md text-sm font-medium cursor-default"
                                     >
                                         Connected
                                     </button>
                                 ) : isSyncing ? (
                                     <button
                                         disabled
-                                        className="w-full py-2 px-3 bg-accent-orange/50 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2"
+                                        className="w-full py-2 px-3 bg-accent-orange/50 text-white rounded-md text-sm font-medium flex items-center justify-center gap-2"
                                     >
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                         Syncing...
@@ -252,14 +252,14 @@ export default function SyncPlatformSelector({
                                     platform.id === 'strava' ? (
                                         <button
                                             onClick={() => handleConnect(platform.id)}
-                                            className="w-full py-2 px-3 bg-[#FC4C02] text-white rounded-lg text-sm font-bold hover:bg-[#E34402] transition-colors flex items-center justify-center gap-1"
+                                            className="w-full py-2 px-3 bg-[#FC4C02] text-white rounded-md text-sm font-semibold hover:bg-[#E34402] transition-colors flex items-center justify-center gap-1"
                                         >
                                             Connect with <span className="uppercase">Strava</span>
                                         </button>
                                     ) : (
                                         <button
                                             onClick={() => handleConnect(platform.id)}
-                                            className="w-full py-2 px-3 bg-accent-orange text-white rounded-lg text-sm font-medium hover:bg-accent-orange/90 transition-colors"
+                                            className="w-full py-2 px-3 bg-accent-orange text-white rounded-md text-sm font-medium hover:bg-accent-orange/90 transition-colors"
                                         >
                                             Connect
                                         </button>
@@ -268,7 +268,7 @@ export default function SyncPlatformSelector({
                             ) : (
                                 <button
                                     disabled
-                                    className="w-full py-2 px-3 bg-foreground/5 text-foreground-muted rounded-lg text-sm cursor-not-allowed"
+                                    className="w-full py-2 px-3 bg-background-tertiary text-foreground-muted rounded-md text-sm cursor-not-allowed"
                                 >
                                     Coming Soon
                                 </button>
@@ -281,7 +281,7 @@ export default function SyncPlatformSelector({
             {/* Health Connect Error Message */}
             {healthConnectError && (
                 <div className="text-center">
-                    <p className="text-sm text-red-400">{healthConnectError}</p>
+                    <p className="text-sm text-negative">{healthConnectError}</p>
                 </div>
             )}
 

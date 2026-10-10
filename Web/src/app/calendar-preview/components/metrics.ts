@@ -65,13 +65,13 @@ export interface MonthEntry {
  * visually communicates training stress at a glance (darker = harder day).
  */
 export function trimpFill(trimp: number): { bg: string; text: string; tier: string } {
-    if (trimp <= 0) return { bg: 'bg-background-secondary/40', text: 'text-foreground-muted', tier: 'rest' };
-    if (trimp < 20) return { bg: 'bg-emerald-500/15', text: 'text-emerald-400', tier: 'very easy' };
-    if (trimp < 40) return { bg: 'bg-emerald-500/20', text: 'text-emerald-400', tier: 'easy' };
-    if (trimp < 70) return { bg: 'bg-yellow-500/20', text: 'text-yellow-400', tier: 'moderate' };
-    if (trimp < 100) return { bg: 'bg-orange-500/25', text: 'text-orange-400', tier: 'hard' };
-    if (trimp < 140) return { bg: 'bg-red-500/30', text: 'text-red-400', tier: 'very hard' };
-    return { bg: 'bg-red-600/40', text: 'text-red-300', tier: 'overload' };
+    if (trimp <= 0) return { bg: 'bg-background-secondary', text: 'text-foreground-muted', tier: 'rest' };
+    if (trimp < 20) return { bg: 'bg-zone-1/15', text: 'text-zone-1', tier: 'very easy' };
+    if (trimp < 40) return { bg: 'bg-zone-1/25', text: 'text-zone-1', tier: 'easy' };
+    if (trimp < 70) return { bg: 'bg-zone-3/25', text: 'text-zone-3', tier: 'moderate' };
+    if (trimp < 100) return { bg: 'bg-zone-4/30', text: 'text-zone-4', tier: 'hard' };
+    if (trimp < 140) return { bg: 'bg-zone-5/35', text: 'text-zone-5', tier: 'very hard' };
+    return { bg: 'bg-zone-5/50', text: 'text-negative', tier: 'overload' };
 }
 
 /** Compact label for a TRIMP value in a tooltip / detail. */

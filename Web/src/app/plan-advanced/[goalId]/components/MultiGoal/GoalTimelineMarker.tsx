@@ -21,9 +21,9 @@ export function GoalTimelineMarker({ goal, x, onClick }: GoalTimelineMarkerProps
         >
             <div
                 className="w-0.5 h-3 mx-auto"
-                style={{ backgroundColor: goal.priority === 'PRIMARY' ? '#facc15' : undefined }}
+                style={{ backgroundColor: goal.priority === 'PRIMARY' ? 'var(--accent-orange)' : undefined }}
             >
-                <div className={`w-2.5 h-2.5 rounded-full -mt-1 mx-auto cursor-pointer hover:scale-125 transition-transform ${config.dotColor}`} />
+                <div className={`w-2.5 h-2.5 rounded-full -mt-1 mx-auto cursor-pointer transition-transform ${config.dotColor}`} />
             </div>
             <button
                 type="button"

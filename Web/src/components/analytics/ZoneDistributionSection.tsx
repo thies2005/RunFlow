@@ -50,13 +50,13 @@ export default function ZoneDistributionSection({ activities, userData }: ZoneDi
     const z6Max = userData?.hrZone6Max || 187;
 
     const pieData = [
-        { name: 'Z1 Recovery', value: zoneTotals.Z1, color: '#10b981', hrRange: `<${z1Max}` },
-        { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: '#84cc16', hrRange: `${z1Max}-${z2Max}` },
-        { name: 'Z3 Tempo', value: zoneTotals.Z3, color: '#eab308', hrRange: `${z2Max}-${z3Max}` },
-        { name: 'Z4 Threshold', value: zoneTotals.Z4, color: '#f97316', hrRange: `${z3Max}-${z4Max}` },
-        { name: 'Z5 VO2max', value: zoneTotals.Z5, color: '#ef4444', hrRange: `${z4Max}-${z5Max}` },
-        { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: '#6366f1', hrRange: `${z5Max}-${z6Max}` },
-        { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: '#9333ea', hrRange: `>${z6Max}` },
+        { name: 'Z1 Recovery', value: zoneTotals.Z1, color: 'var(--zone-1)', hrRange: `<${z1Max}` },
+        { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: 'var(--zone-2)', hrRange: `${z1Max}-${z2Max}` },
+        { name: 'Z3 Tempo', value: zoneTotals.Z3, color: 'var(--zone-3)', hrRange: `${z2Max}-${z3Max}` },
+        { name: 'Z4 Threshold', value: zoneTotals.Z4, color: 'var(--zone-4)', hrRange: `${z3Max}-${z4Max}` },
+        { name: 'Z5 VO2max', value: zoneTotals.Z5, color: 'var(--zone-5)', hrRange: `${z4Max}-${z5Max}` },
+        { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: 'var(--workout-strength)', hrRange: `${z5Max}-${z6Max}` },
+        { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: 'var(--workout-long-run)', hrRange: `>${z6Max}` },
     ].filter(d => d.value > 0);
 
     const formatZoneTime = (seconds: number) => {
@@ -74,16 +74,15 @@ export default function ZoneDistributionSection({ activities, userData }: ZoneDi
         <div className="glass-card p-6">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-foreground">Time in Zones Distribution</h3>
-                <div className="flex bg-background-secondary rounded-lg p-1 border border-glass-border">
+                <div className="flex bg-background-secondary rounded-md p-1 border border-line">
                     {zonesRanges.map(range => (
                         <button
                             key={range}
                             onClick={() => setZonesTimeRange(range)}
-                            className={`px-2 py-1 text-xs font-medium rounded transition-all ${zonesTimeRange === range
-                                ? 'bg-foreground/15 text-foreground shadow-xs'
+                            className={`px-2 py-1 text-xs font-medium rounded transition-colors ${zonesTimeRange === range
+                                ? 'bg-background-tertiary text-foreground'
                                 : 'text-foreground-muted hover:text-foreground'
                                 }`}
-                            style={zonesTimeRange === range ? { backgroundColor: 'var(--accent-purple)' } : {}}
                         >
                             {range}
                         </button>
@@ -111,7 +110,7 @@ export default function ZoneDistributionSection({ activities, userData }: ZoneDi
                                 ))}
                             </Pie>
                             <Tooltip
-                                contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
+                                contentStyle={{ background: 'var(--background-secondary)', border: '1px solid var(--line)', borderRadius: '6px' }}
                                 formatter={(value: number) => formatZoneTime(value)}
                             />
                         </PieChart>
@@ -135,7 +134,7 @@ export default function ZoneDistributionSection({ activities, userData }: ZoneDi
                             </div>
                         );
                     })}
-                    <div className="border-t border-glass-border pt-2 mt-2 flex justify-between">
+                    <div className="border-t border-line pt-2 mt-2 flex justify-between">
                         <span className="text-foreground-muted text-sm">Total</span>
                         <span className="text-foreground font-mono text-sm">{formatZoneTime(total)}</span>
                     </div>

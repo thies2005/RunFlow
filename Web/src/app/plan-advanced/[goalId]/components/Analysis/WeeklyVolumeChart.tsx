@@ -15,7 +15,7 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
     if (!active || !payload?.length) return null;
     const d = payload[0].payload;
     return (
-        <div className="bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 shadow-xl">
+        <div className="bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2">
             <p className="text-xs text-foreground-secondary">{d.label}</p>
             <p className="text-sm font-medium text-foreground">{d.km} km</p>
             <p className="text-[10px] text-foreground-muted">{d.phase}</p>
@@ -34,15 +34,15 @@ export function WeeklyVolumeChart({ data, phaseBands }: WeeklyVolumeChartProps) 
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,140,0.3)" />
                 <XAxis
                     dataKey="label"
-                    tick={{ fontSize: 11, fill: "#71717a" }}
+                    tick={{ fontSize: 11, fill: "#6e747b" }}
                     axisLine={{ stroke: 'rgba(128,128,140,0.45)' }}
                     tickLine={false}
                 />
                 <YAxis
-                    tick={{ fontSize: 11, fill: "#71717a" }}
+                    tick={{ fontSize: 11, fill: "#6e747b" }}
                     axisLine={false}
                     tickLine={false}
-                    label={{ value: 'Running (km)', angle: -90, position: 'insideLeft', style: { fontSize: 11, fill: "#71717a" } }}
+                    label={{ value: 'Running (km)', angle: -90, position: 'insideLeft', style: { fontSize: 11, fill: "#6e747b" } }}
                     domain={[0, Math.ceil(maxKm + 5)]}
                 />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
@@ -65,7 +65,7 @@ export function WeeklyVolumeChart({ data, phaseBands }: WeeklyVolumeChartProps) 
                 ))}
                 <Bar dataKey="km" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                     {data.map((d, i) => (
-                        <Cell key={i} fill={PHASE_COLORS[d.phase] || '#3b82f6'} />
+                        <Cell key={i} fill={PHASE_COLORS[d.phase] || '#1f4fa8'} />
                     ))}
                 </Bar>
             </BarChart>

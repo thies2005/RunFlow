@@ -106,11 +106,11 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-background-secondary border border-glass-border rounded-xl w-full max-w-lg mx-4 shadow-2xl max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="bg-background-secondary border border-glass-border rounded-md w-full max-w-lg mx-4 max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b border-glass-border shrink-0">
                     <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                        <Download className="w-4 h-4 text-orange-400" />
+                        <Download className="w-4 h-4 text-accent-orange" />
                         Export CSV
                     </h2>
                     <button
@@ -163,15 +163,15 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
 
                     {exportMutation.isPending && (
                         <div className="flex flex-col items-center py-6 gap-3">
-                            <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
+                            <Loader2 className="w-5 h-5 text-accent-orange animate-spin" />
                             <p className="text-xs text-foreground-muted">Loading preview...</p>
                         </div>
                     )}
 
                     {!exportMutation.isPending && previewRows.length > 0 && (
                         <>
-                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background-tertiary/50 border border-glass-border">
-                                <FileSpreadsheet className="w-4 h-4 text-green-400 shrink-0" />
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-background-tertiary border border-glass-border">
+                                <FileSpreadsheet className="w-4 h-4 text-positive shrink-0" />
                                 <span className="text-xs text-foreground-secondary">
                                     Preview ready — first {previewRows.length} rows
                                 </span>
@@ -181,9 +181,9 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
                     )}
 
                     {!exportMutation.isPending && previewRows.length === 0 && exportMutation.isError && (
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
-                            <X className="w-4 h-4 text-red-400 shrink-0" />
-                            <span className="text-xs text-red-400">{exportMutation.error?.message}</span>
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-negative/10 border border-negative/30">
+                            <X className="w-4 h-4 text-negative shrink-0" />
+                            <span className="text-xs text-negative">{exportMutation.error?.message}</span>
                         </div>
                     )}
                 </div>
@@ -210,7 +210,7 @@ export function CsvExportDialog({ goalId, isOpen, onClose }: CsvExportDialogProp
                             type="button"
                             onClick={handleDownload}
                             disabled={downloadMutation.isPending}
-                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-orange-500 text-white text-xs font-medium hover:bg-orange-400 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-accent-orange text-white text-xs font-medium hover:bg-accent-orange/85 transition-colors disabled:opacity-50"
                         >
                             {downloadMutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                             <Download className="w-3 h-3" />

@@ -25,7 +25,7 @@ export function MassEditToolbar({ goalId, onOperationComplete }: MassEditToolbar
 
     return (
         <>
-            <div className="h-12 border-t border-glass-border flex items-center justify-between px-4 shrink-0 bg-background-secondary/95 backdrop-blur-sm z-20">
+            <div className="h-12 border-t border-glass-border flex items-center justify-between px-4 shrink-0 bg-background-secondary z-20">
                 <span className="text-xs text-foreground-secondary">
                     {selectedCount} workout{selectedCount !== 1 ? 's' : ''} selected
                 </span>

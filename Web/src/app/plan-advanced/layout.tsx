@@ -6,9 +6,9 @@ import { Trophy, Zap, Calendar, Lock, ChevronRight, Brain, FileSpreadsheet, BarC
 
 function FeatureCard({ icon: Icon, title, description }: { icon: typeof Zap; title: string; description: string }) {
     return (
-        <div className="bg-background-secondary/50 border border-glass-border rounded-xl p-4 text-left">
-            <div className="w-8 h-8 rounded-lg bg-background-tertiary flex items-center justify-center mb-3">
-                <Icon className="w-4 h-4 text-orange-400" />
+        <div className="bg-background-secondary border border-glass-border rounded-md p-4 text-left">
+            <div className="w-8 h-8 rounded-md bg-background-tertiary flex items-center justify-center mb-3">
+                <Icon className="w-4 h-4 text-accent-orange" />
             </div>
             <h3 className="text-xs font-semibold text-foreground mb-1">{title}</h3>
             <p className="text-[11px] text-foreground-muted leading-relaxed">{description}</p>
@@ -21,12 +21,12 @@ function PremiumUpsell() {
         <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
             <div className="max-w-lg w-full space-y-8">
                 <div className="text-center space-y-3">
-                    <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mx-auto">
-                        <Lock className="w-8 h-8 text-orange-400" />
+                    <div className="w-16 h-16 rounded-md bg-accent-orange/10 border border-accent-orange/30 flex items-center justify-center mx-auto">
+                        <Lock className="w-8 h-8 text-accent-orange" />
                     </div>
                     <div>
                         <h1 className="text-xl font-bold text-foreground flex items-center justify-center gap-2">
-                            <Trophy className="w-5 h-5 text-orange-400" />
+                            <Trophy className="w-5 h-5 text-accent-orange" />
                             Advanced Plan Builder
                         </h1>
                         <p className="text-sm text-foreground-muted mt-2">
@@ -58,7 +58,7 @@ function PremiumUpsell() {
                     />
                 </div>
 
-                <div className="bg-background-secondary border border-glass-border rounded-xl p-4 text-left space-y-2.5">
+                <div className="bg-background-secondary border border-glass-border rounded-md p-4 text-left space-y-2.5">
                     <h3 className="text-xs font-semibold text-foreground-secondary">Also includes:</h3>
                     <ul className="space-y-1.5">
                         {[
@@ -70,7 +70,7 @@ function PremiumUpsell() {
                             'Plan snapshots and undo history',
                         ].map((f) => (
                             <li key={f} className="flex items-start gap-2 text-xs text-foreground-muted">
-                                <ChevronRight className="w-3 h-3 text-orange-400 mt-0.5 shrink-0" />
+                                <ChevronRight className="w-3 h-3 text-accent-orange mt-0.5 shrink-0" />
                                 {f}
                             </li>
                         ))}
@@ -83,7 +83,7 @@ function PremiumUpsell() {
                         onClick={() => {
                             window.location.href = '/settings?tab=subscription';
                         }}
-                        className="w-full px-4 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-white font-medium text-sm transition-colors"
+                        className="w-full px-4 py-2.5 rounded-md bg-accent-orange hover:bg-accent-orange/85 text-white font-medium text-sm transition-colors"
                     >
                         Upgrade to Pro
                     </button>
@@ -92,7 +92,7 @@ function PremiumUpsell() {
                         onClick={() => {
                             window.location.href = '/settings?tab=subscription';
                         }}
-                        className="w-full px-4 py-2 rounded-lg border border-foreground/20 text-foreground-secondary hover:text-foreground hover:border-foreground/30 text-xs transition-colors"
+                        className="w-full px-4 py-2 rounded-md border border-foreground/20 text-foreground-secondary hover:text-foreground hover:border-foreground/30 text-xs transition-colors"
                     >
                         View pricing plans
                     </button>

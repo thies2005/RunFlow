@@ -68,9 +68,9 @@ export function ProgressionWeekCard({
 
     if (isEditing) {
         return (
-            <div className="bg-background-tertiary/50 border border-foreground/20 rounded-lg p-3 space-y-2">
+            <div className="bg-background-tertiary border border-foreground/20 rounded-md p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-foreground-secondary">Week {weekIndex}</span>
+                    <span className="text-xs font-medium text-foreground-secondary">Week <span className="font-mono tabular-nums">{weekIndex}</span></span>
                     <div className="flex items-center gap-1">
                         <button
                             type="button"
@@ -82,7 +82,7 @@ export function ProgressionWeekCard({
                         <button
                             type="button"
                             onClick={handleSave}
-                            className="px-2 py-0.5 rounded text-[10px] bg-blue-600 text-white hover:bg-blue-500 transition-colors"
+                            className="px-2 py-0.5 rounded text-[10px] bg-foreground text-background hover:bg-foreground/85 transition-colors"
                         >
                             Save
                         </button>
@@ -90,7 +90,7 @@ export function ProgressionWeekCard({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                        <span className="text-[10px] text-foreground-muted uppercase">Warmup</span>
+                        <span className="text-[10px] text-foreground-muted">Warmup</span>
                         <div className="flex items-center gap-1">
                             <input
                                 type="number"
@@ -112,7 +112,7 @@ export function ProgressionWeekCard({
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <span className="text-[10px] text-foreground-muted uppercase">Cooldown</span>
+                        <span className="text-[10px] text-foreground-muted">Cooldown</span>
                         <div className="flex items-center gap-1">
                             <input
                                 type="number"
@@ -136,7 +136,7 @@ export function ProgressionWeekCard({
                 </div>
                 <div>
                     <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] text-foreground-muted uppercase">Main Set</span>
+                        <span className="text-[10px] text-foreground-muted">Main Set</span>
                         <button
                             type="button"
                             onClick={addMainStep}
@@ -185,7 +185,7 @@ export function ProgressionWeekCard({
                                     type="button"
                                     onClick={() => removeMainStep(i)}
                                     disabled={editData.main.length <= 1}
-                                    className="ml-auto p-0.5 text-foreground-muted hover:text-red-400 disabled:opacity-30 transition-colors"
+                                    className="ml-auto p-0.5 text-foreground-muted hover:text-negative disabled:opacity-30 transition-colors"
                                 >
                                     <X className="w-3 h-3" />
                                 </button>
@@ -198,10 +198,10 @@ export function ProgressionWeekCard({
     }
 
     return (
-        <div className="bg-background-secondary border border-glass-border rounded-lg p-3 hover:border-foreground/20 transition-colors">
+        <div className="bg-background-secondary border border-glass-border rounded-md p-3 hover:border-foreground/20 transition-colors">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground">Week {weekIndex}</span>
+                    <span className="text-xs font-semibold text-foreground">Week <span className="font-mono tabular-nums">{weekIndex}</span></span>
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${typeColor.bg} ${typeColor.text}`}>
                         {workoutType}
                     </span>
@@ -217,7 +217,7 @@ export function ProgressionWeekCard({
                     <button
                         type="button"
                         onClick={onDelete}
-                        className="p-1 text-foreground-muted hover:text-red-400 transition-colors"
+                        className="p-1 text-foreground-muted hover:text-negative transition-colors"
                     >
                         <Trash2 className="w-3 h-3" />
                     </button>

@@ -20,9 +20,9 @@ function formatTime(seconds: number): string {
 }
 
 const TRAJECTORY_CONFIG: Record<string, { label: string; color: string; icon: typeof TrendingUp }> = {
-    on_track: { label: 'On Track', color: 'text-green-400', icon: TrendingUp },
-    at_risk: { label: 'At Risk', color: 'text-amber-400', icon: TrendingDown },
-    behind: { label: 'Behind', color: 'text-red-400', icon: Minus },
+    on_track: { label: 'On Track', color: 'text-positive', icon: TrendingUp },
+    at_risk: { label: 'At Risk', color: 'text-workout-tempo', icon: TrendingDown },
+    behind: { label: 'Behind', color: 'text-negative', icon: Minus },
 };
 
 export function RaceReadinessCard({ predictedTime, confidence, trajectory, targetTime }: RaceReadinessCardProps) {
@@ -38,13 +38,13 @@ export function RaceReadinessCard({ predictedTime, confidence, trajectory, targe
     }
     let diffColor = '';
     if (diff != null) {
-        if (diff > 0) diffColor = 'text-red-400';
-        else if (diff < 0) diffColor = 'text-green-400';
+        if (diff > 0) diffColor = 'text-negative';
+        else if (diff < 0) diffColor = 'text-positive';
         else diffColor = 'text-foreground-secondary';
     }
 
     return (
-        <div className="rounded-lg border border-glass-border bg-background-secondary p-4 space-y-3">
+        <div className="rounded-md border border-glass-border bg-background-secondary p-4 space-y-3">
             <div className="flex items-center justify-between">
                 <h4 className="text-xs font-semibold text-foreground-secondary flex items-center gap-1.5">
                     <Target className="w-3.5 h-3.5" />
@@ -58,14 +58,14 @@ export function RaceReadinessCard({ predictedTime, confidence, trajectory, targe
 
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <p className="text-[10px] text-foreground-muted uppercase tracking-wide">Predicted</p>
+                    <p className="text-[10px] text-foreground-muted">Predicted</p>
                     <p className="text-lg font-bold text-foreground">
                         {predictedTime != null ? formatTime(predictedTime) : '--:--'}
                     </p>
                 </div>
                 {targetTime != null && (
                     <div>
-                        <p className="text-[10px] text-foreground-muted uppercase tracking-wide">Target</p>
+                        <p className="text-[10px] text-foreground-muted">Target</p>
                         <p className="text-lg font-bold text-foreground">{formatTime(targetTime)}</p>
                     </div>
                 )}
@@ -87,7 +87,7 @@ export function RaceReadinessCard({ predictedTime, confidence, trajectory, targe
                         className="h-full rounded-full transition-all duration-500"
                         style={{
                             width: `${Math.min(100, confidence)}%`,
-                            backgroundColor: confidence >= 70 ? '#22c55e' : confidence >= 40 ? '#eab308' : '#ef4444',
+                            backgroundColor: confidence >= 70 ? 'var(--positive)' : confidence >= 40 ? 'var(--zone-3)' : 'var(--negative)',
                         }}
                     />
                 </div>

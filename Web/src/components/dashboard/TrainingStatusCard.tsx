@@ -25,11 +25,11 @@ export default function TrainingStatusCard() {
     const shapePercent = marathonShape?.shape || 0;
 
     const workloadStatus = (ratio: number) => {
-        if (ratio <= 0) return { label: 'No Data', color: 'text-foreground-muted', bg: 'bg-background-secondary0' };
-        if (ratio < 0.8) return { label: 'Recovery', color: 'text-teal-400', bg: 'bg-teal-500' };
-        if (ratio <= 1.3) return { label: 'Optimal', color: 'text-green-500', bg: 'bg-green-500' };
-        if (ratio <= 1.5) return { label: 'Caution', color: 'text-orange-400', bg: 'bg-orange-500' };
-        return { label: 'Overload', color: 'text-red-500', bg: 'bg-red-500' };
+        if (ratio <= 0) return { label: 'No Data', color: 'text-foreground-muted', bg: 'bg-foreground-muted' };
+        if (ratio < 0.8) return { label: 'Recovery', color: 'text-accent-cyan', bg: 'bg-accent-cyan' };
+        if (ratio <= 1.3) return { label: 'Optimal', color: 'text-positive', bg: 'bg-positive' };
+        if (ratio <= 1.5) return { label: 'Caution', color: 'text-workout-tempo', bg: 'bg-workout-tempo' };
+        return { label: 'Overload', color: 'text-negative', bg: 'bg-negative' };
     };
 
     const status = workloadStatus(workloadRatio);
@@ -42,7 +42,7 @@ export default function TrainingStatusCard() {
     if (!hasData) {
         return (
             <div className="glass-card p-6 h-full flex flex-col items-center justify-center min-h-[400px] text-center">
-                <div className="w-16 h-16 bg-foreground/5 rounded-full flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-background-tertiary rounded-full flex items-center justify-center mb-4">
                     <Activity className="w-8 h-8 text-foreground-muted" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground-muted mb-2">No Training Data</h3>
@@ -63,28 +63,28 @@ export default function TrainingStatusCard() {
             <div className="grid grid-cols-2 gap-4 mb-8 shrink-0">
                 {/* Marathon Shape */}
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-900/20">
-                        <TrendingUp className="w-5 h-5 text-foreground" />
+                    <div className="w-10 h-10 rounded-md bg-workout-recovery/15 flex items-center justify-center shrink-0">
+                        <TrendingUp className="w-5 h-5 text-workout-recovery" />
                     </div>
                     <div>
-                        <p className="text-xs text-foreground-muted uppercase tracking-widest font-bold leading-tight">Shape</p>
-                        <p className="text-2xl font-black text-foreground leading-tight">{shapePercent}%</p>
+                        <p className="text-xs text-foreground-muted font-semibold leading-tight">Shape</p>
+                        <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">{shapePercent}%</p>
                     </div>
                 </div>
 
                 {/* Effective VO2max */}
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shrink-0 shadow-lg shadow-teal-900/20">
-                        <Activity className="w-5 h-5 text-foreground" />
+                    <div className="w-10 h-10 rounded-md bg-accent-cyan/15 flex items-center justify-center shrink-0">
+                        <Activity className="w-5 h-5 text-accent-cyan" />
                     </div>
                     <div className="flex-1">
-                        <p className="text-xs text-foreground-muted uppercase tracking-widest font-bold leading-tight">VO2max</p>
+                        <p className="text-xs text-foreground-muted font-semibold leading-tight">VO2max</p>
                         <div className="flex items-baseline justify-between">
-                            <p className="text-2xl font-black text-foreground leading-tight">
+                            <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
                                 {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
                             </p>
                             {correctionFactor !== 1.0 && (
-                                <span className="text-xs text-accent-cyan font-bold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
+                                <span className="text-xs font-mono tabular-nums text-accent-cyan font-semibold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
                                     {correctionFactor.toFixed(1)}x
                                 </span>
                             )}
@@ -94,56 +94,54 @@ export default function TrainingStatusCard() {
             </div>
 
             {/* Workload Balance Diagram */}
-            <div className="bg-foreground/5 rounded-2xl p-4 mb-8 border border-foreground/5 relative group overflow-hidden shrink-0">
-                <div className={`absolute -right-4 -top-4 w-16 h-16 rounded-full blur-2xl ${status.bg} opacity-10 transition-all duration-1000 group-hover:opacity-20`} />
-
+            <div className="bg-background-tertiary rounded-md p-4 mb-8 border border-line relative overflow-hidden shrink-0">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                         <Gauge className={`w-3.5 h-3.5 ${status.color}`} />
-                        <span className="text-xs text-foreground-muted uppercase tracking-widest font-bold">Workload Balance</span>
+                        <span className="text-xs text-foreground-muted font-semibold">Workload Balance</span>
                     </div>
-                    <span className={`text-xs font-black ${status.color} px-2 py-0.5 rounded-full bg-foreground/5 border border-foreground/10 uppercase tracking-tighter`}>
+                    <span className={`text-xs font-semibold ${status.color} px-2 py-0.5 rounded-full bg-background-secondary border border-line`}>
                         {status.label}
                     </span>
                 </div>
 
-                <div className="relative h-2 w-full bg-foreground/5 rounded-full mb-3 shadow-inner">
+                <div className="relative h-2 w-full bg-background-secondary rounded-full mb-3">
                     {/* Zones (Scale 0 - 2.0) */}
-                    <div className="absolute left-0 w-[40%] h-full bg-background-secondary0/10 rounded-l-full border-r border-foreground/5" />
-                    <div className="absolute left-[40%] w-[25%] h-full bg-green-500/20" />
-                    <div className="absolute left-[65%] w-[10%] h-full bg-orange-500/20" />
-                    <div className="absolute left-[75%] w-[25%] h-full bg-red-500/20 rounded-r-full border-l border-foreground/5" />
+                    <div className="absolute left-0 w-[40%] h-full bg-background-secondary rounded-l-full border-r border-line" />
+                    <div className="absolute left-[40%] w-[25%] h-full bg-positive/20" />
+                    <div className="absolute left-[65%] w-[10%] h-full bg-workout-tempo/20" />
+                    <div className="absolute left-[75%] w-[25%] h-full bg-negative/20 rounded-r-full border-l border-line" />
 
                     {/* Sweet Spot Guide */}
-                    <div className="absolute left-[40%] -top-1 w-[25%] h-4 border-x border-foreground/10 pointer-events-none" />
+                    <div className="absolute left-[40%] -top-1 w-[25%] h-4 border-x border-line pointer-events-none" />
 
                     {/* Marker */}
                     <div
-                        className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full border-2 ${status.bg} shadow-[0_0_12px_rgba(255,255,255,0.4)] z-20 transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)]`}
+                        className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-background-secondary rounded-full border-2 ${status.bg} z-20 transition-all duration-1000`}
                         style={{ left: `calc(${markerPos}% - 8px)` }}
                     />
                 </div>
 
-                <div className="flex justify-between text-xs text-foreground-muted font-black uppercase tracking-widest px-1">
+                <div className="flex justify-between text-xs text-foreground-muted font-semibold px-1">
                     <span>Low</span>
-                    <span className="text-green-500/60 font-black absolute left-[35%] -translate-x-1/2">Sweet Spot (0.8 - 1.3)</span>
-                    <span>{workloadRatio > 2 ? workloadRatio.toFixed(2) : '2.0+'}</span>
+                    <span className="text-positive/70 font-semibold absolute left-[35%] -translate-x-1/2">Sweet Spot (0.8 - 1.3)</span>
+                    <span className="font-mono tabular-nums">{workloadRatio > 2 ? workloadRatio.toFixed(2) : '2.0+'}</span>
                 </div>
             </div>
 
             {/* Metrics List (Runalyze Style) */}
-            <div className="space-y-5 flex-1 flex flex-col justify-center border-t border-foreground/5 pt-6">
+            <div className="space-y-5 flex-1 flex flex-col justify-center border-t border-line pt-6">
                 {/* Fatigue (ATL) */}
                 <div
                     className="flex items-center gap-3 cursor-pointer group"
                     title={`${Math.round(atlPercent)}% (Abs: ${atl} / Max: ${maxAtl})`}
                     onClick={() => setShowAbsoluteAtl(!showAbsoluteAtl)}
                 >
-                    <div className="w-32 text-xs text-foreground-muted uppercase tracking-tighter font-bold truncate group-hover:text-foreground-muted transition-colors">Fatigue (ATL)</div>
-                    <div className="flex-1 h-1.5 bg-foreground/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${Math.min(100, atlPercent)}%` }} />
+                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Fatigue (ATL)</div>
+                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                        <div className="h-full bg-negative transition-all duration-500" style={{ width: `${Math.min(100, atlPercent)}%` }} />
                     </div>
-                    <div className="w-14 text-right text-sm font-black text-red-400">
+                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-negative">
                         {atl > 0 ? (showAbsoluteAtl ? atl : `${Math.round(atlPercent)}%`) : '-'}
                     </div>
                 </div>
@@ -154,40 +152,40 @@ export default function TrainingStatusCard() {
                     title={`${Math.round(ctlPercent)}% (Abs: ${ctl} / Max: ${maxCtl})`}
                     onClick={() => setShowAbsoluteCtl(!showAbsoluteCtl)}
                 >
-                    <div className="w-32 text-xs text-foreground-muted uppercase tracking-tighter font-bold truncate group-hover:text-foreground-muted transition-colors">Fitness (CTL)</div>
-                    <div className="flex-1 h-1.5 bg-foreground/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${Math.min(100, ctlPercent)}%` }} />
+                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Fitness (CTL)</div>
+                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                        <div className="h-full bg-accent-blue transition-all duration-500" style={{ width: `${Math.min(100, ctlPercent)}%` }} />
                     </div>
-                    <div className="w-14 text-right text-sm font-black text-blue-400">
+                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-blue">
                         {ctl > 0 ? (showAbsoluteCtl ? ctl : `${Math.round(ctlPercent)}%`) : '-'}
                     </div>
                 </div>
 
                 {/* Stress Balance (TSB) */}
                 <div className="flex items-center gap-3">
-                    <div className="w-32 text-xs text-foreground-muted uppercase tracking-tighter font-bold truncate">Stress Balance</div>
-                    <div className="flex-1 h-1.5 bg-foreground/5 rounded-full overflow-hidden relative">
-                        <div className="absolute left-1/2 w-[1px] h-full bg-foreground/10" />
+                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Stress Balance</div>
+                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden relative">
+                        <div className="absolute left-1/2 w-[1px] h-full bg-line" />
                         <div
-                            className={`h-full ${tsb >= 0 ? 'bg-emerald-500' : 'bg-orange-500'} absolute transition-all duration-500`}
+                            className={`h-full ${tsb >= 0 ? 'bg-positive' : 'bg-workout-tempo'} absolute transition-all duration-500`}
                             style={{
                                 width: `${Math.min(50, Math.abs(tsb))}%`,
                                 left: tsb >= 0 ? '50%' : `${50 - Math.min(50, Math.abs(tsb))}%`
                             }}
                         />
                     </div>
-                    <div className={`w-14 text-right text-sm font-black ${tsbStatus.color}`}>
+                    <div className={`w-14 text-right text-sm font-mono tabular-nums font-semibold ${tsbStatus.color}`}>
                         {tsb >= 0 ? `+${tsb}` : tsb}
                     </div>
                 </div>
 
                 {/* Weekly TRIMP */}
                 <div className="flex items-center gap-3">
-                    <div className="w-32 text-xs text-foreground-muted uppercase tracking-tighter font-bold truncate">Weekly TRIMP</div>
-                    <div className="flex-1 h-1.5 bg-foreground/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-500 transition-all duration-500" style={{ width: `${Math.min(100, easyTrimp / 5)}%` }} />
+                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Weekly TRIMP</div>
+                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                        <div className="h-full bg-workout-long-run transition-all duration-500" style={{ width: `${Math.min(100, easyTrimp / 5)}%` }} />
                     </div>
-                    <div className="w-14 text-right text-sm font-black text-purple-400 underline decoration-purple-500/30 underline-offset-2">
+                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-workout-long-run underline decoration-workout-long-run/30 underline-offset-2">
                         {easyTrimp > 0 ? easyTrimp : '-'}
                     </div>
                 </div>

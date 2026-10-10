@@ -67,10 +67,10 @@ export interface PlanPhase {
 }
 
 export const PRIORITY_CONFIG: Record<GoalPriority, { label: string; color: string; dotColor: string }> = {
-    PRIMARY: { label: 'Primary', color: 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30', dotColor: 'bg-yellow-400' },
-    SECONDARY: { label: 'Secondary', color: 'text-blue-400 bg-blue-500/20 border-blue-500/30', dotColor: 'bg-blue-400' },
+    PRIMARY: { label: 'Primary', color: 'text-accent-orange bg-accent-orange/10 border-accent-orange/30', dotColor: 'bg-accent-orange' },
+    SECONDARY: { label: 'Secondary', color: 'text-accent-blue bg-accent-blue/10 border-accent-blue/30', dotColor: 'bg-accent-blue' },
     TUNE_UP: { label: 'Tune-up', color: 'text-foreground-muted bg-foreground/20 border-foreground/30', dotColor: 'bg-foreground/30' },
-    MILESTONE: { label: 'Milestone', color: 'text-green-400 bg-green-500/20 border-green-500/30', dotColor: 'bg-green-400' },
+    MILESTONE: { label: 'Milestone', color: 'text-positive bg-positive/10 border-positive/30', dotColor: 'bg-positive' },
 };
 
 export function weekTotalDistance(w: ProgressionWeekData): number {

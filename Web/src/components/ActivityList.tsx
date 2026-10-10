@@ -62,7 +62,7 @@ const getWorkoutTypeStyle = (type: WorkoutType) => {
         case 'LONG_RUN': return 'bg-workout-long-run/10 text-workout-long-run border-workout-long-run/20';
         case 'TEMPO': return 'bg-workout-tempo/10 text-workout-tempo border-workout-tempo/20';
         case 'INTERVALS': return 'bg-workout-interval/10 text-workout-interval border-workout-interval/20';
-        case 'FARTLEK': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+        case 'FARTLEK': return 'bg-accent-orange/10 text-accent-orange border-accent-orange/20';
         case 'RACE': return 'bg-workout-race/10 text-workout-race border-workout-race/20';
         case 'RECOVERY': return 'bg-workout-recovery/10 text-workout-recovery border-workout-recovery/20';
         case 'STRENGTH': return 'bg-workout-strength/10 text-workout-strength border-workout-strength/20';
@@ -82,9 +82,9 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
         >
             <div className="flex items-start gap-4">
                 {/* Activity type icon */}
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${crossTraining
-                    ? 'bg-gradient-to-br from-cyan-500/20 to-green-500/20 text-cyan-400'
-                    : 'bg-gradient-to-br from-orange-500/20 to-pink-500/20 text-orange-400'
+                <div className={`w-12 h-12 rounded-md flex items-center justify-center shrink-0 ${crossTraining
+                    ? 'bg-accent-cyan/15 text-accent-cyan'
+                    : 'bg-accent-orange/15 text-accent-orange'
                     }`}>
                     {activityIcons[activity.type]}
                 </div>
@@ -113,7 +113,7 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                                     {format(d, 'EEE, MMM d')}
                                 </>
                             ) : (
-                                <span className="text-red-400">Invalid Date</span>
+                                <span className="text-accent-pink">Invalid Date</span>
                             );
                         })()}
                     </p>
@@ -123,7 +123,7 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                         {/* Distance */}
                         <div className="flex items-center gap-1">
                             <TrendingUp className="w-4 h-4 text-foreground-muted" />
-                            <span className="text-foreground font-medium">
+                            <span className="text-foreground font-medium font-mono tabular-nums">
                                 {(activity.distance / 1000).toFixed(2)} km
                             </span>
                         </div>
@@ -131,14 +131,14 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                         {/* Duration */}
                         <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4 text-foreground-muted" />
-                            <span className="text-foreground font-medium">
+                            <span className="text-foreground font-medium font-mono tabular-nums">
                                 {formatDuration(activity.movingTime)}
                             </span>
                         </div>
 
                         {/* Pace (for runs) */}
                         {activity.type === 'RUN' && activity.averageSpeed && (
-                            <div className="text-foreground-muted">
+                            <div className="text-foreground-muted font-mono tabular-nums">
                                 {formatPace(activity.averageSpeed)}
                             </div>
                         )}
@@ -146,8 +146,8 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                         {/* Heart rate */}
                         {activity.hasHeartrate && activity.averageHr && (
                             <div className="flex items-center gap-1">
-                                <Heart className="w-4 h-4 text-red-400" />
-                                <span className="text-foreground-muted">{Math.round(activity.averageHr)} bpm</span>
+                                <Heart className="w-4 h-4 text-accent-pink" />
+                                <span className="text-foreground-muted font-mono tabular-nums">{Math.round(activity.averageHr)} bpm</span>
                             </div>
                         )}
 
@@ -155,7 +155,7 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                         {activity.totalElevation && activity.totalElevation > 10 && (
                             <div className="flex items-center gap-1">
                                 <Mountain className="w-4 h-4 text-foreground-muted" />
-                                <span className="text-foreground-muted">{Math.round(activity.totalElevation)}m</span>
+                                <span className="text-foreground-muted font-mono tabular-nums">{Math.round(activity.totalElevation)}m</span>
                             </div>
                         )}
                     </div>
@@ -165,12 +165,12 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                         <div className="flex items-center gap-4 mt-2">
                             {activity.trimp && (
                                 <span className="text-xs text-foreground-muted">
-                                    TRIMP: <span className="text-cyan-400">{activity.trimp.toFixed(0)}</span>
+                                    TRIMP: <span className="text-accent-cyan font-mono tabular-nums">{activity.trimp.toFixed(0)}</span>
                                 </span>
                             )}
                             {activity.runningTss && (
                                 <span className="text-xs text-foreground-muted">
-                                    rTSS: <span className="text-orange-400">{activity.runningTss.toFixed(0)}</span>
+                                    rTSS: <span className="text-accent-orange font-mono tabular-nums">{activity.runningTss.toFixed(0)}</span>
                                 </span>
                             )}
                         </div>
@@ -202,7 +202,7 @@ const ActivityRow = ({ index, style, activities, onClick, ariaAttributes }: Acti
         <div {...ariaAttributes} style={{ ...style, top: (style.top as number) + 12, height: (style.height as number) - 12 }}>
             <button
                 type="button"
-                className="appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
+                className="appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
                 onClick={() => onClick(activity)}
                 aria-label={`View details for ${activity.name}`}
             >
@@ -236,9 +236,9 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
         return (
             <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                    <div key={i} className="glass-card p-4 animate-pulse">
+                    <div key={i} className="glass-card p-4">
                         <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-background-tertiary" />
+                            <div className="w-12 h-12 rounded-md bg-background-tertiary" />
                             <div className="flex-1">
                                 <div className="h-5 bg-background-tertiary rounded w-1/3 mb-2" />
                                 <div className="h-4 bg-background-tertiary rounded w-1/4 mb-3" />
@@ -283,7 +283,7 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
                         <button
                             key={activity.id}
                             type="button"
-                            className="animate-slide-in appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
+                            className="animate-slide-in appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
                             style={{ animationDelay: `${index * 0.05}s` }}
                             onClick={() => handleActivityClick(activity)}
                             aria-label={`View details for ${activity.name}`}

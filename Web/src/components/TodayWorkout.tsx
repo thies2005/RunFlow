@@ -22,69 +22,69 @@ interface TodayWorkoutProps {
 const workoutConfig = {
     EASY: {
         label: 'Easy Run',
-        color: 'from-green-500 to-emerald-600',
+        color: 'bg-workout-recovery/15',
         badge: 'badge-easy',
-        icon: <Activity className="w-8 h-8 text-foreground" />,
+        icon: <Activity className="w-8 h-8 text-workout-recovery" />,
     },
     LONG_RUN: {
         label: 'Long Run',
-        color: 'from-blue-500 to-indigo-600',
+        color: 'bg-workout-long-run/15',
         badge: 'badge-easy',
-        icon: <Route className="w-8 h-8 text-foreground" />,
+        icon: <Route className="w-8 h-8 text-workout-long-run" />,
     },
     TEMPO: {
         label: 'Tempo',
-        color: 'from-yellow-500 to-orange-600',
+        color: 'bg-workout-tempo/15',
         badge: 'badge-tempo',
-        icon: <Zap className="w-8 h-8 text-foreground" />,
+        icon: <Zap className="w-8 h-8 text-workout-tempo" />,
     },
     INTERVALS: {
         label: 'Intervals',
-        color: 'from-red-500 to-pink-600',
+        color: 'bg-workout-interval/15',
         badge: 'badge-interval',
-        icon: <Flame className="w-8 h-8 text-foreground" />,
+        icon: <Flame className="w-8 h-8 text-workout-interval" />,
     },
     FARTLEK: {
         label: 'Fartlek',
-        color: 'from-orange-500 to-amber-600',
+        color: 'bg-accent-orange/15',
         badge: 'badge-tempo',
-        icon: <Zap className="w-8 h-8 text-foreground" />,
+        icon: <Zap className="w-8 h-8 text-accent-orange" />,
     },
     RECOVERY: {
         label: 'Recovery',
-        color: 'from-cyan-500 to-teal-600',
+        color: 'bg-accent-cyan/15',
         badge: 'badge-recovery',
-        icon: <Sparkles className="w-8 h-8 text-foreground" />,
+        icon: <Sparkles className="w-8 h-8 text-accent-cyan" />,
     },
     REST: {
         label: 'Rest Day',
-        color: 'from-gray-500 to-gray-600',
+        color: 'bg-foreground-muted/15',
         badge: 'badge-recovery',
-        icon: <Moon className="w-8 h-8 text-foreground" />,
+        icon: <Moon className="w-8 h-8 text-foreground-muted" />,
     },
     RIDE: {
         label: 'Ride',
-        color: 'from-orange-500 to-red-600',
+        color: 'bg-workout-tempo/15',
         badge: 'badge-tempo',
-        icon: <Bike className="w-8 h-8 text-foreground" />,
+        icon: <Bike className="w-8 h-8 text-workout-tempo" />,
     },
     SWIM: {
         label: 'Swim',
-        color: 'from-cyan-500 to-blue-600',
+        color: 'bg-accent-blue/15',
         badge: 'badge-interval',
-        icon: <Waves className="w-8 h-8 text-foreground" />,
+        icon: <Waves className="w-8 h-8 text-accent-blue" />,
     },
     STRENGTH: {
         label: 'Strength',
-        color: 'from-purple-500 to-pink-600',
+        color: 'bg-workout-strength/15',
         badge: 'badge-recovery',
-        icon: <Dumbbell className="w-8 h-8 text-foreground" />,
+        icon: <Dumbbell className="w-8 h-8 text-workout-strength" />,
     },
     OTHER: {
         label: 'Other',
-        color: 'from-gray-500 to-gray-600',
+        color: 'bg-foreground-muted/15',
         badge: 'badge-easy',
-        icon: <Target className="w-8 h-8 text-foreground" />,
+        icon: <Target className="w-8 h-8 text-foreground-muted" />,
     },
 };
 
@@ -120,14 +120,14 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
     const config = workoutConfig[workout.type] || workoutConfig.EASY;
 
     return (
-        <div className="glass-card intensity-border p-6 animate-pulse-glow animate-slide-in">
+        <div className="glass-card intensity-border p-6 animate-slide-in">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-foreground-muted">Today&apos;s Workout</h2>
                 <span className={`badge ${config.badge}`}>{config.label}</span>
             </div>
 
             <div className="flex items-start gap-4 mb-6">
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${config.color} flex items-center justify-center text-3xl`}>
+                <div className={`w-16 h-16 rounded-md ${config.color} flex items-center justify-center`}>
                     {config.icon}
                 </div>
                 <div className="flex-1">
@@ -141,9 +141,9 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
                     <div className="text-center">
                         <div className="flex items-center justify-center gap-1 text-foreground-muted mb-1">
                             <TrendingUp className="w-4 h-4" />
-                            <span className="text-xs uppercase tracking-wide">Distance</span>
+                            <span className="text-xs">Distance</span>
                         </div>
-                        <p className="text-xl font-bold text-foreground">
+                        <p className="text-xl font-semibold font-mono tabular-nums text-foreground">
                             {(workout.targetDistance / 1000).toFixed(1)} km
                         </p>
                     </div>
@@ -153,9 +153,9 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
                     <div className="text-center">
                         <div className="flex items-center justify-center gap-1 text-foreground-muted mb-1">
                             <Clock className="w-4 h-4" />
-                            <span className="text-xs uppercase tracking-wide">Duration</span>
+                            <span className="text-xs">Duration</span>
                         </div>
-                        <p className="text-xl font-bold text-foreground">
+                        <p className="text-xl font-semibold font-mono tabular-nums text-foreground">
                             {formatDuration(workout.targetDuration)}
                         </p>
                     </div>
@@ -164,9 +164,9 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
                 {workout.targetPace && (
                     <div className="text-center">
                         <div className="flex items-center justify-center gap-1 text-foreground-muted mb-1">
-                            <span className="text-xs uppercase tracking-wide">Pace</span>
+                            <span className="text-xs">Pace</span>
                         </div>
-                        <p className="text-xl font-bold text-foreground">
+                        <p className="text-xl font-semibold font-mono tabular-nums text-foreground">
                             {formatPace(workout.targetPace.min)}-{formatPace(workout.targetPace.max)}
                         </p>
                     </div>
@@ -176,9 +176,9 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
                     <div className="text-center">
                         <div className="flex items-center justify-center gap-1 text-foreground-muted mb-1">
                             <Heart className="w-4 h-4" />
-                            <span className="text-xs uppercase tracking-wide">HR Zone</span>
+                            <span className="text-xs">HR Zone</span>
                         </div>
-                        <p className={`text-xl font-bold zone-${workout.targetHrZone}`}>
+                        <p className={`text-xl font-semibold zone-${workout.targetHrZone}`}>
                             Zone {workout.targetHrZone}
                         </p>
                     </div>
@@ -197,7 +197,7 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
             )}
 
             {workout.isCompleted && (
-                <div className="w-full py-3 bg-green-500/20 border border-green-500/30 rounded-xl flex items-center justify-center gap-2 text-green-400">
+                <div className="w-full py-3 bg-positive/10 border border-positive/30 rounded-md flex items-center justify-center gap-2 text-positive">
                     <CheckCircle className="w-5 h-5" />
                     <span className="font-semibold">Workout Completed</span>
                 </div>

@@ -166,11 +166,11 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-background-secondary border border-glass-border rounded-xl w-full max-w-lg mx-4 shadow-2xl max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="bg-background-secondary border border-glass-border rounded-md w-full max-w-lg mx-4 max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b border-glass-border shrink-0">
                     <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                        <Upload className="w-4 h-4 text-orange-400" />
+                        <Upload className="w-4 h-4 text-accent-orange" />
                         Import CSV
                     </h2>
                     <button
@@ -190,13 +190,13 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onClick={() => fileInputRef.current?.click()}
-                                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+                                className={`border-2 border-dashed rounded-md p-8 text-center cursor-pointer transition-colors ${
                                     isDragOver
-                                        ? 'border-orange-500/50 bg-orange-500/5'
-                                        : 'border-foreground/20 bg-background-secondary/50 hover:border-foreground/30 hover:bg-background-tertiary/50'
+                                        ? 'border-accent-orange/50 bg-accent-orange/5'
+                                        : 'border-foreground/20 bg-background-secondary hover:border-foreground/30 hover:bg-background-tertiary'
                                 }`}
                             >
-                                <Upload className={`w-8 h-8 mx-auto mb-3 ${isDragOver ? 'text-orange-400' : 'text-foreground-muted'}`} />
+                                <Upload className={`w-8 h-8 mx-auto mb-3 ${isDragOver ? 'text-accent-orange' : 'text-foreground-muted'}`} />
                                 <p className="text-sm text-foreground-secondary font-medium">
                                     Drop your CSV file here
                                 </p>
@@ -248,7 +248,7 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
 
                             {previewMutation.isPending && (
                                 <div className="flex flex-col items-center py-8 gap-3">
-                                    <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
+                                    <Loader2 className="w-6 h-6 text-accent-orange animate-spin" />
                                     <p className="text-xs text-foreground-muted">Parsing CSV...</p>
                                 </div>
                             )}
@@ -263,14 +263,14 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
 
                             {!previewMutation.isPending && previewData && (
                                 <>
-                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background-tertiary/50 border border-glass-border">
-                                        <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                                    <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-background-tertiary border border-glass-border">
+                                        <CheckCircle2 className="w-4 h-4 text-positive shrink-0" />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs text-foreground-secondary">
                                                 {previewData.validRows} valid workouts found
                                             </p>
                                             {previewData.invalidRows > 0 && (
-                                                <p className="text-[10px] text-amber-400">
+                                                <p className="text-[10px] text-workout-tempo">
                                                     {previewData.invalidRows} rows skipped or had errors
                                                 </p>
                                             )}
@@ -286,7 +286,7 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
 
                             {step === 'confirming' && (
                                 <div className="flex flex-col items-center py-4 gap-3">
-                                    <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
+                                    <Loader2 className="w-6 h-6 text-accent-orange animate-spin" />
                                     <p className="text-xs text-foreground-muted">Importing workouts...</p>
                                 </div>
                             )}
@@ -341,7 +341,7 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                                         confirmMutation.mutate();
                                     }}
                                     disabled={confirmMutation.isPending}
-                                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-orange-500 text-white text-xs font-medium hover:bg-orange-400 transition-colors disabled:opacity-50"
+                                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-accent-orange text-white text-xs font-medium hover:bg-accent-orange/85 transition-colors disabled:opacity-50"
                                 >
                                     {confirmMutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                                     Confirm Import ({previewData.validRows})

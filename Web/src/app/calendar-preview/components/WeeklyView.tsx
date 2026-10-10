@@ -38,7 +38,7 @@ function WeekCard({ week, highlight }: { week: WeekEntry; highlight: boolean }) 
     );
 
     return (
-        <div className={`rounded-xl border bg-background-secondary overflow-hidden ${highlight ? 'border-orange-500/30' : 'border-glass-border'}`}>
+        <div className={`rounded-md border bg-background-secondary overflow-hidden ${highlight ? 'border-accent-orange/40' : 'border-line'}`}>
             {/* summary bar */}
             <WeekSummary week={week} />
 
@@ -57,24 +57,24 @@ function WeekCard({ week, highlight }: { week: WeekEntry; highlight: boolean }) 
 function WeekSummary({ week }: { week: WeekEntry }) {
     const tsbPositive = week.tsb >= 0;
     return (
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 border-b border-glass-border bg-background-secondary/80">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 border-b border-line bg-background-secondary">
             <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-foreground">{week.label}</span>
             </div>
             <div className="flex items-center gap-3 text-xs">
-                <Stat label="TRIMP" value={week.trimp.toFixed(0)} className="text-red-400" />
-                <Stat label="Distance" value={fmtKm(week.distance)} className="text-blue-400" />
+                <Stat label="TRIMP" value={week.trimp.toFixed(0)} className="text-negative" />
+                <Stat label="Distance" value={fmtKm(week.distance)} className="text-accent-blue" />
                 <Stat
                     label="VO₂"
                     value={week.avgVdot != null ? week.avgVdot.toFixed(1) : '—'}
-                    className="text-emerald-400"
+                    className="text-positive"
                 />
-                <Stat label="CTL" value={week.ctl.toFixed(0)} className="text-green-400" />
-                <Stat label="ATL" value={week.atl.toFixed(0)} className="text-orange-400" />
+                <Stat label="CTL" value={week.ctl.toFixed(0)} className="text-accent-blue" />
+                <Stat label="ATL" value={week.atl.toFixed(0)} className="text-workout-tempo" />
                 <Stat
                     label="TSB"
                     value={`${week.tsb >= 0 ? '+' : ''}${week.tsb.toFixed(0)}`}
-                    className={tsbPositive ? 'text-green-400' : 'text-red-400'}
+                    className={tsbPositive ? 'text-positive' : 'text-negative'}
                 />
                 {week.plannedTss > 0 && (
                     <Stat
@@ -91,8 +91,8 @@ function WeekSummary({ week }: { week: WeekEntry }) {
 function Stat({ label, value, className }: { label: string; value: string; className?: string }) {
     return (
         <span className="inline-flex items-baseline gap-1">
-            <span className="text-[10px] text-foreground-muted uppercase tracking-wide">{label}</span>
-            <span className={`font-medium ${className ?? 'text-foreground-secondary'}`}>{value}</span>
+            <span className="text-[10px] text-foreground-muted">{label}</span>
+            <span className={`font-medium font-mono ${className ?? 'text-foreground-secondary'}`}>{value}</span>
         </span>
     );
 }
@@ -107,14 +107,14 @@ function DayRow({ day, dayName, entry }: { day: Date; dayName: string; entry?: i
     const unfulfilled = planned.filter((w) => !w.completed);
 
     return (
-        <div className={`flex items-stretch hover:bg-background-tertiary/30 transition-colors ${fill}`}>
+        <div className={`flex items-stretch hover:bg-background-tertiary transition-colors ${fill}`}>
             {/* date column */}
-            <div className="w-16 shrink-0 flex flex-col items-center justify-center py-2 border-r border-glass-border">
-                <span className="text-[10px] text-foreground-muted uppercase">{dayName}</span>
-                <span className={`text-base font-semibold ${today ? 'text-orange-400' : 'text-foreground'}`}>
+            <div className="w-16 shrink-0 flex flex-col items-center justify-center py-2 border-r border-line">
+                <span className="text-[10px] text-foreground-muted">{dayName}</span>
+                <span className={`text-base font-semibold font-mono ${today ? 'text-accent-orange' : 'text-foreground'}`}>
                     {format(day, 'd')}
                 </span>
-                {trimp > 0 && <span className="text-[9px] text-foreground-muted">{trimp.toFixed(0)}</span>}
+                {trimp > 0 && <span className="text-[9px] text-foreground-muted font-mono">{trimp.toFixed(0)}</span>}
             </div>
 
             {/* cards */}
@@ -132,31 +132,31 @@ function DayRow({ day, dayName, entry }: { day: Date; dayName: string; entry?: i
                             key={a.id}
                             className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs ${c.bg} ${c.text} ring-1 ring-inset ring-foreground/40`}
                         >
-                            <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <Check className="w-3 h-3 text-positive shrink-0" />
                             <span className="font-medium">{a.name}</span>
-                            <span className="flex items-center gap-0.5 text-foreground-secondary">
+                            <span className="flex items-center gap-0.5 text-foreground-secondary font-mono">
                                 <MapPin className="w-3 h-3" />
                                 {fmtKm(a.distance)}
                             </span>
-                            <span className="flex items-center gap-0.5 text-foreground-secondary">
+                            <span className="flex items-center gap-0.5 text-foreground-secondary font-mono">
                                 <Clock className="w-3 h-3" />
                                 {fmtDuration(a.duration)}
                             </span>
-                            {pace && <span className="text-foreground-secondary">{pace}</span>}
+                            {pace && <span className="text-foreground-secondary font-mono">{pace}</span>}
                             {a.averageHr != null && (
-                                <span className="flex items-center gap-0.5 text-foreground-secondary">
+                                <span className="flex items-center gap-0.5 text-foreground-secondary font-mono">
                                     <Heart className="w-3 h-3" />
                                     {a.averageHr}
                                 </span>
                             )}
                             {a.vdot != null && (
-                                <span className="flex items-center gap-0.5 text-emerald-400">
+                                <span className="flex items-center gap-0.5 text-positive font-mono">
                                     <TrendingUp className="w-3 h-3" />
                                     {a.vdot.toFixed(1)}
                                 </span>
                             )}
                             {a.trimp != null && (
-                                <span className="text-red-400/80">TRIMP {a.trimp.toFixed(0)}</span>
+                                <span className="text-negative/80 font-mono">TRIMP {a.trimp.toFixed(0)}</span>
                             )}
                         </div>
                     );
@@ -171,22 +171,22 @@ function DayRow({ day, dayName, entry }: { day: Date; dayName: string; entry?: i
                             className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs ${c.bg} ${c.text} border border-dashed border-foreground/20 opacity-80`}
                             title="Planned — not yet completed"
                         >
-                            <AlertCircle className="w-3 h-3 text-amber-400 shrink-0" />
+                            <AlertCircle className="w-3 h-3 text-workout-tempo shrink-0" />
                             <span className="font-medium">{w.name}</span>
                             {w.targetDistance ? (
-                                <span className="flex items-center gap-0.5 text-foreground-secondary">
+                                <span className="flex items-center gap-0.5 text-foreground-secondary font-mono">
                                     <MapPin className="w-3 h-3" />
                                     {fmtKm(w.targetDistance)}
                                 </span>
                             ) : null}
                             {w.targetDuration ? (
-                                <span className="flex items-center gap-0.5 text-foreground-secondary">
+                                <span className="flex items-center gap-0.5 text-foreground-secondary font-mono">
                                     <Clock className="w-3 h-3" />
                                     {fmtDuration(w.targetDuration)}
                                 </span>
                             ) : null}
                             {w.plannedTss ? (
-                                <span className="text-foreground-muted">TSS {w.plannedTss.toFixed(0)}</span>
+                                <span className="text-foreground-muted font-mono">TSS {w.plannedTss.toFixed(0)}</span>
                             ) : null}
                         </div>
                     );
@@ -198,10 +198,10 @@ function DayRow({ day, dayName, entry }: { day: Date; dayName: string; entry?: i
 
 function trimpFillBg(trimp: number): string {
     if (trimp <= 0) return '';
-    if (trimp < 20) return 'bg-emerald-500/5';
-    if (trimp < 40) return 'bg-emerald-500/10';
-    if (trimp < 70) return 'bg-yellow-500/10';
-    if (trimp < 100) return 'bg-orange-500/12';
-    if (trimp < 140) return 'bg-red-500/15';
-    return 'bg-red-600/20';
+    if (trimp < 20) return 'bg-zone-1/5';
+    if (trimp < 40) return 'bg-zone-1/10';
+    if (trimp < 70) return 'bg-zone-3/10';
+    if (trimp < 100) return 'bg-zone-4/15';
+    if (trimp < 140) return 'bg-zone-5/20';
+    return 'bg-zone-5/30';
 }

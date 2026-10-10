@@ -147,7 +147,7 @@ export default function UsersTab({
                 <button
                     onClick={() => handleRecalculateFitness()}
                     disabled={processing}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium disabled:opacity-50"
+                    className="flex items-center gap-2 px-3 py-2 bg-background-tertiary text-accent-blue hover:bg-surface-hover transition text-sm font-medium disabled:opacity-50"
                 >
                     <Activity className="w-4 h-4" />
                     Recalculate All Fitness
@@ -156,7 +156,7 @@ export default function UsersTab({
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
                     <thead>
-                        <tr className="border-b border-glass-border">
+                        <tr className="border-b border-line">
                             <th className="pb-3 font-semibold text-foreground-secondary text-sm">User</th>
                             <th className="pb-3 font-semibold text-foreground-secondary text-sm">Joined</th>
                             <th className="pb-3 font-semibold text-foreground-secondary text-sm">Last Sync</th>
@@ -166,7 +166,7 @@ export default function UsersTab({
                             <th className="pb-3 font-semibold text-foreground-secondary text-sm text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-glass-border">
+                    <tbody className="divide-y divide-line">
                         {users.map((user: AdminUser) => (
                             <tr key={user.id} className="group hover:bg-background-secondary transition">
                                 <td className="py-4">
@@ -186,26 +186,26 @@ export default function UsersTab({
                                         </div>
                                     </div>
                                 </td>
-                                <td className="py-4 text-sm text-foreground-muted">
+                                <td className="py-4 text-sm font-mono tabular-nums text-foreground-muted">
                                     {new Date(user.createdAt).toLocaleDateString()}
                                 </td>
-                                <td className="py-4 text-sm text-foreground-muted">
+                                <td className="py-4 text-sm font-mono tabular-nums text-foreground-muted">
                                     {user.lastSyncAt ? new Date(user.lastSyncAt).toLocaleString() : 'Never'}
                                 </td>
-                                <td className="py-4 text-sm text-foreground-muted">
+                                <td className="py-4 text-sm font-mono tabular-nums text-foreground-muted">
                                     {user.activityCount}
                                 </td>
                                 <td className="py-4">
                                     <div className="flex flex-col items-center gap-1">
                                         <div className="flex gap-2">
                                             <span
-                                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${user.aiSettings?.adminAllowed ? 'bg-green-100 text-green-700' : 'bg-background-tertiary text-foreground-muted'}`}
+                                                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${user.aiSettings?.adminAllowed ? 'bg-accent-blue/10 text-accent-blue' : 'bg-background-tertiary text-foreground-muted'}`}
                                                 title={user.aiSettings?.adminAllowed ? 'Admin has allowed access' : 'Admin has not allowed access'}
                                             >
                                                 {user.aiSettings?.adminAllowed ? 'Allowed' : 'Locked'}
                                             </span>
                                             <span
-                                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${user.aiSettings?.aiEnabled ? 'bg-purple-100 text-purple-700' : 'bg-background-tertiary text-foreground-muted'}`}
+                                                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${user.aiSettings?.aiEnabled ? 'bg-positive/10 text-positive' : 'bg-background-tertiary text-foreground-muted'}`}
                                                 title={user.aiSettings?.aiEnabled ? 'User has opted-in' : 'User has not opted-in'}
                                             >
                                                 {user.aiSettings?.aiEnabled ? 'Opt-in' : 'Off'}
@@ -213,12 +213,12 @@ export default function UsersTab({
                                         </div>
                                     </div>
                                 </td>
-                                <td className="py-4 text-sm text-foreground-muted">
+                                <td className="py-4 text-sm font-mono tabular-nums text-foreground-muted">
                                     <select
                                         value={user.aiSettings?.usageTier || 'none'}
                                         onChange={(e) => handleToggleAi(user.id, e.target.value)}
                                         disabled={processing}
-                                        className="bg-background-secondary border border-foreground/20 text-foreground-secondary text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2"
+                                        className="bg-background-secondary border border-line text-foreground-secondary text-sm rounded-md focus:ring-accent-orange focus:border-accent-orange block w-full p-2"
                                     >
                                         <option value="none">No Access</option>
                                         <option value="tier1">{aiSettings?.settings?.tier1Name || 'Tier 1'}</option>
@@ -231,7 +231,7 @@ export default function UsersTab({
                                         <button
                                             onClick={() => handleRecalculateFitness(user.id, user.name || user.email)}
                                             disabled={processing}
-                                            className="text-foreground-muted hover:text-blue-500 transition p-2 hover:bg-blue-50 rounded-lg"
+                                            className="text-foreground-muted hover:text-accent-blue transition p-2 hover:bg-accent-blue/10 rounded-md"
                                             title="Recalculate Fitness"
                                         >
                                             <Activity className="w-4 h-4" />
@@ -239,7 +239,7 @@ export default function UsersTab({
                                         <button
                                             onClick={() => handleResetPassword(user.id, user.email)}
                                             disabled={processing}
-                                            className="text-foreground-muted hover:text-emerald-500 transition p-2 hover:bg-emerald-50 rounded-lg"
+                                            className="text-foreground-muted hover:text-positive transition p-2 hover:bg-positive/10 rounded-md"
                                             title="Send Reset Password Email"
                                         >
                                             <Mail className="w-4 h-4" />
@@ -247,7 +247,7 @@ export default function UsersTab({
                                         <button
                                             onClick={() => handleDeleteUser(user.id)}
                                             disabled={processing}
-                                            className="text-foreground-muted hover:text-red-500 transition p-2 hover:bg-red-50 rounded-lg"
+                                            className="text-foreground-muted hover:text-negative transition p-2 hover:bg-negative/10 rounded-md"
                                             title="Delete User"
                                         >
                                             <Trash2 className="w-4 h-4" />

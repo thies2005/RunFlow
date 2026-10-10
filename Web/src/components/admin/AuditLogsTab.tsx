@@ -59,10 +59,10 @@ export default function AuditLogsTab() {
     };
 
     const getActionColor = (action: string) => {
-        if (action.includes('DELETE')) return 'bg-red-50 text-red-600 border-red-200';
-        if (action.includes('UPLOAD') || action.includes('RESTORE')) return 'bg-orange-50 text-orange-600 border-orange-200';
-        if (action.includes('MODIFY') || action.includes('TOGGLE') || action.includes('RESET')) return 'bg-amber-50 text-amber-600 border-amber-200';
-        return 'bg-blue-50 text-blue-600 border-blue-200';
+        if (action.includes('DELETE')) return 'bg-negative/10 text-negative border-negative/30';
+        if (action.includes('UPLOAD') || action.includes('RESTORE')) return 'bg-workout-tempo/10 text-workout-tempo border-workout-tempo/30';
+        if (action.includes('MODIFY') || action.includes('TOGGLE') || action.includes('RESET')) return 'bg-accent-blue/10 text-accent-blue border-accent-blue/30';
+        return 'bg-background-tertiary text-foreground-secondary border-line';
     };
 
     const formatDetails = (details: string | null) => {
@@ -70,7 +70,7 @@ export default function AuditLogsTab() {
         try {
             const parsed = JSON.parse(details);
             return (
-                <pre className="text-xs bg-background-secondary text-foreground-secondary p-3 rounded-lg overflow-x-auto whitespace-pre-wrap font-mono mt-2 border border-glass-border">
+                <pre className="text-xs bg-background-secondary text-foreground-secondary p-3 rounded-md overflow-x-auto whitespace-pre-wrap font-mono mt-2 border border-line">
                     {JSON.stringify(parsed, null, 2)}
                 </pre>
             );
@@ -88,7 +88,7 @@ export default function AuditLogsTab() {
                 </div>
                 <button
                     onClick={() => fetchLogs(page)}
-                    className="flex items-center px-3 py-2 bg-background-secondary border border-glass-border rounded-lg text-sm text-foreground-secondary hover:bg-background-secondary transition"
+                    className="flex items-center px-3 py-2 bg-background-secondary border border-line rounded-md text-sm text-foreground-secondary hover:bg-background-secondary transition"
                     disabled={loading}
                 >
                     <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -97,14 +97,14 @@ export default function AuditLogsTab() {
             </div>
 
             {error && (
-                <div className="p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-3 border border-red-100">
+                <div className="p-4 bg-negative/10 text-negative rounded-md flex items-center gap-3 border border-negative/30">
                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     <p>{error}</p>
                 </div>
             )}
 
-            <div className="bg-background-secondary rounded-xl shadow-xs border border-glass-border">
-                <div className="p-5 border-b border-glass-border">
+            <div className="bg-background-secondary rounded-md  border border-line">
+                <div className="p-5 border-b border-line">
                     <h3 className="font-semibold text-foreground text-lg">Recent Actions</h3>
                     <p className="text-sm text-foreground-muted mt-1">
                         Showing page {page} of {totalPages} ({totalLogs} total logs)
@@ -114,7 +114,7 @@ export default function AuditLogsTab() {
                     {loading && logs.length === 0 ? (
                         <div className="space-y-4">
                             {[...Array(5)].map((_, i) => (
-                                <div key={i} className="animate-pulse flex space-x-4 p-4 border border-glass-border rounded-xl">
+                                <div key={i} className="flex space-x-4 p-4 border border-line rounded-md">
                                     <div className="h-10 w-10 bg-foreground/15 rounded-full"></div>
                                     <div className="flex-1 space-y-3 py-1">
                                         <div className="h-4 bg-foreground/15 rounded w-3/4"></div>
@@ -131,10 +131,10 @@ export default function AuditLogsTab() {
                     ) : (
                         <div className="space-y-4">
                             {logs.map((log) => (
-                                <div key={log.id} className="p-4 border border-glass-border rounded-xl hover:shadow-md transition-shadow bg-background-secondary/50">
+                                <div key={log.id} className="p-4 border border-line rounded-md hover:border-line-strong transition-colors bg-background-secondary">
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                                         <div className="flex items-start gap-4">
-                                            <div className="mt-1 p-2 bg-background-secondary border border-glass-border rounded-lg text-foreground-secondary shadow-xs">
+                                            <div className="mt-1 p-2 bg-background-secondary border border-line rounded-md text-foreground-secondary ">
                                                 {getActionIcon(log.action)}
                                             </div>
                                             <div>
@@ -148,7 +148,7 @@ export default function AuditLogsTab() {
 
                                                 <div className="text-sm text-foreground-muted flex flex-wrap items-center gap-x-4 gap-y-2 mt-2">
                                                     {log.targetType && log.targetId && (
-                                                        <div className="flex items-center gap-1.5 bg-background-secondary px-2 py-1 rounded border border-glass-border">
+                                                        <div className="flex items-center gap-1.5 bg-background-secondary px-2 py-1 rounded border border-line">
                                                             <Target className="w-3 h-3" />
                                                             <span>{log.targetType}: {log.targetId}</span>
                                                         </div>
@@ -161,13 +161,13 @@ export default function AuditLogsTab() {
 
                                                 {(log.details && log.details !== '{}') && (
                                                     <div className="mt-4">
-                                                        <span className="text-xs font-semibold text-foreground-muted uppercase tracking-wider mb-1 block">Context & Data</span>
+                                                        <span className="text-xs font-semibold text-foreground-muted mb-1 block">Context & Data</span>
                                                         {formatDetails(log.details)}
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="text-sm text-foreground-muted sm:text-right shrink-0 bg-background-secondary px-3 py-2 rounded-lg border border-glass-border flex flex-row sm:flex-col gap-2 sm:gap-0 items-center sm:items-end">
+                                        <div className="text-sm text-foreground-muted sm:text-right shrink-0 bg-background-secondary px-3 py-2 rounded-md border border-line flex flex-row sm:flex-col gap-2 sm:gap-0 items-center sm:items-end">
                                             <div className="font-medium text-foreground">{new Date(log.createdAt).toLocaleDateString()}</div>
                                             <div>{new Date(log.createdAt).toLocaleTimeString()}</div>
                                         </div>
@@ -179,20 +179,20 @@ export default function AuditLogsTab() {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-between mt-8 pt-6 border-t border-glass-border">
+                        <div className="flex items-center justify-between mt-8 pt-6 border-t border-line">
                             <div className="text-sm text-foreground-muted">
                                 Showing {(page - 1) * 50 + 1} to {Math.min(page * 50, totalLogs)} of {totalLogs} entries
                             </div>
                             <div className="flex gap-2">
                                 <button
-                                    className="px-4 py-2 border border-glass-border rounded-lg text-sm font-medium hover:bg-background-secondary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="px-4 py-2 border border-line rounded-md text-sm font-medium hover:bg-background-secondary disabled:opacity-50 disabled:cursor-not-allowed transition"
                                     onClick={() => setPage(p => Math.max(1, p - 1))}
                                     disabled={page === 1 || loading}
                                 >
                                     Previous
                                 </button>
                                 <button
-                                    className="px-4 py-2 border border-glass-border rounded-lg text-sm font-medium hover:bg-background-secondary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="px-4 py-2 border border-line rounded-md text-sm font-medium hover:bg-background-secondary disabled:opacity-50 disabled:cursor-not-allowed transition"
                                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages || loading}
                                 >

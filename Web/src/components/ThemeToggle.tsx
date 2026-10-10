@@ -14,8 +14,8 @@ export function ThemeToggle() {
 
     if (!mounted) {
         return (
-            <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center">
-                <div className="w-4 h-4 bg-foreground-muted animate-pulse rounded-full" />
+            <div className="w-8 h-8 rounded-md bg-surface flex items-center justify-center">
+                <div className="w-4 h-4 bg-foreground-muted rounded-full" />
             </div>
         );
     }

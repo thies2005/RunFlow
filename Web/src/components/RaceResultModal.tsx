@@ -98,7 +98,7 @@ function TimeInputGroup({
     onChange: (_next: TimeParts) => void;
     placeholder?: string;
 }) {
-    const inputClass = 'w-full bg-foreground/5 border border-foreground/10 rounded-lg px-3 py-2 text-foreground text-sm placeholder-foreground-muted outline-hidden focus:ring-2 focus:ring-accent-orange transition-all';
+    const inputClass = 'w-full bg-background-secondary border border-line rounded-md px-3 py-2 text-foreground text-sm placeholder-foreground-muted outline-hidden focus:ring-2 focus:ring-accent-orange transition-colors font-mono tabular-nums';
 
     return (
         <div>
@@ -260,17 +260,17 @@ export default function RaceResultModal({
                 {/* SUGGEST MODE */}
                 {mode === 'suggest' && suggestedActivity && (
                     <div className="space-y-4">
-                        <div className="bg-accent-orange/10 border border-accent-orange/30 rounded-xl p-4">
+                        <div className="bg-accent-orange/10 border border-accent-orange/30 rounded-md p-4">
                             <p className="text-sm text-accent-orange font-medium mb-1">
                                 We found a run near your race date!
                             </p>
                             <p className="text-xs text-foreground-muted">Is this your race?</p>
                         </div>
 
-                        <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
+                        <div className="bg-background-tertiary border border-line rounded-md p-4">
                             <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
-                                    <Trophy className="w-5 h-5 text-foreground" />
+                                <div className="w-10 h-10 rounded-full bg-accent-orange/15 flex items-center justify-center">
+                                    <Trophy className="w-5 h-5 text-accent-orange" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-medium text-foreground truncate">{suggestedActivity.name}</p>
@@ -278,16 +278,16 @@ export default function RaceResultModal({
                                 </div>
                             </div>
                             <div className="grid grid-cols-3 gap-3 text-center">
-                                <div className="bg-foreground/5 rounded-lg p-2">
-                                    <p className="text-lg font-bold text-foreground">{formatDistanceWithUnit(suggestedActivity.distance, useImperial, 1)}</p>
+                                <div className="bg-background-secondary rounded-md p-2">
+                                    <p className="text-lg font-semibold text-foreground font-mono tabular-nums">{formatDistanceWithUnit(suggestedActivity.distance, useImperial, 1)}</p>
                                     <p className="text-[10px] text-foreground-muted">distance</p>
                                 </div>
-                                <div className="bg-foreground/5 rounded-lg p-2">
-                                    <p className="text-lg font-bold text-foreground">{formatTime(suggestedActivity.movingTime)}</p>
+                                <div className="bg-background-secondary rounded-md p-2">
+                                    <p className="text-lg font-semibold text-foreground font-mono tabular-nums">{formatTime(suggestedActivity.movingTime)}</p>
                                     <p className="text-[10px] text-foreground-muted">time</p>
                                 </div>
-                                <div className="bg-foreground/5 rounded-lg p-2">
-                                    <p className="text-lg font-bold text-foreground">
+                                <div className="bg-background-secondary rounded-md p-2">
+                                    <p className="text-lg font-semibold text-foreground font-mono tabular-nums">
                                         {suggestedActivity.averageSpeed
                                             ? formatPaceWithUnits(1000 / suggestedActivity.averageSpeed, useImperial)
                                             : '-'}
@@ -307,7 +307,7 @@ export default function RaceResultModal({
                             </button>
                             <button
                                 onClick={() => setMode('pick')}
-                                className="flex-1 py-3 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 transition-colors text-sm"
+                                className="flex-1 py-3 border border-line text-foreground-muted rounded-md hover:bg-surface-hover transition-colors text-sm"
                             >
                                 Pick a different run
                             </button>
@@ -315,7 +315,7 @@ export default function RaceResultModal({
 
                         <button
                             onClick={onClose}
-                            className="w-full text-xs text-foreground-muted hover:text-foreground-muted transition-colors py-1"
+                            className="w-full text-xs text-foreground-muted hover:text-foreground transition-colors py-1"
                         >
                             I didn&apos;t race / Skip for now
                         </button>
@@ -340,7 +340,7 @@ export default function RaceResultModal({
                             </button>
                             <button
                                 onClick={onClose}
-                                className="flex-1 py-3 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 transition-colors text-sm"
+                                className="flex-1 py-3 border border-line text-foreground-muted rounded-md hover:bg-surface-hover transition-colors text-sm"
                             >
                                 Skip for now
                             </button>
@@ -368,7 +368,7 @@ export default function RaceResultModal({
                             </button>
                             <button
                                 onClick={() => setMode('suggest')}
-                                className="flex-1 py-3 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 transition-colors text-sm"
+                                className="flex-1 py-3 border border-line text-foreground-muted rounded-md hover:bg-surface-hover transition-colors text-sm"
                             >
                                 Back
                             </button>
@@ -381,39 +381,39 @@ export default function RaceResultModal({
                     <div className="space-y-4">
                         {/* Time Comparison */}
                         {goal.targetTime && actualTimeSeconds !== null && (
-                            <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
-                                <p className="text-xs text-foreground-muted uppercase tracking-wider mb-3 text-center">Race Result</p>
+                            <div className="bg-background-tertiary border border-line rounded-md p-4">
+                                <p className="text-xs text-foreground-muted mb-3 text-center">Race Result</p>
                                 <div className="grid grid-cols-3 gap-3">
                                     <div className="text-center">
-                                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
-                                            <Clock className="w-5 h-5 text-foreground" />
+                                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-workout-long-run/15 flex items-center justify-center">
+                                            <Clock className="w-5 h-5 text-workout-long-run" />
                                         </div>
-                                        <p className="text-[10px] text-foreground-muted uppercase">Goal Time</p>
-                                        <p className="text-xl font-bold text-foreground">{formatTime(goal.targetTime)}</p>
+                                        <p className="text-[10px] text-foreground-muted">Goal Time</p>
+                                        <p className="text-xl font-semibold font-mono tabular-nums text-foreground">{formatTime(goal.targetTime)}</p>
                                     </div>
                                     <div className="text-center">
-                                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
-                                            <Trophy className="w-5 h-5 text-foreground" />
+                                        <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-accent-orange/15 flex items-center justify-center">
+                                            <Trophy className="w-5 h-5 text-accent-orange" />
                                         </div>
-                                        <p className="text-[10px] text-foreground-muted uppercase">Actual Time</p>
-                                        <p className="text-xl font-bold text-foreground">{formatTime(actualTimeSeconds)}</p>
+                                        <p className="text-[10px] text-foreground-muted">Actual Time</p>
+                                        <p className="text-xl font-semibold font-mono tabular-nums text-foreground">{formatTime(actualTimeSeconds)}</p>
                                     </div>
                                     <div className="text-center">
                                         <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center ${!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive
-                                                ? 'bg-green-500/20'
-                                                : 'bg-red-500/20'
+                                                ? 'bg-positive/15'
+                                                : 'bg-negative/15'
                                             }`}>
-                                            <span className={`text-lg font-bold ${!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive
-                                                    ? 'text-green-400'
-                                                    : 'text-red-400'
+                                            <span className={`text-lg font-semibold font-mono tabular-nums ${!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive
+                                                    ? 'text-positive'
+                                                    : 'text-negative'
                                                 }`}>
                                                 {!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive ? '-' : '+'}
                                             </span>
                                         </div>
-                                        <p className="text-[10px] text-foreground-muted uppercase">Difference</p>
-                                        <p className={`text-xl font-bold ${!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive
-                                                ? 'text-green-400'
-                                                : 'text-red-400'
+                                        <p className="text-[10px] text-foreground-muted">Difference</p>
+                                        <p className={`text-xl font-semibold font-mono tabular-nums ${!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive
+                                                ? 'text-positive'
+                                                : 'text-negative'
                                             }`}>
                                             {formatTimeDelta(goal.targetTime, actualTimeSeconds).text}
                                         </p>
@@ -441,11 +441,11 @@ export default function RaceResultModal({
                         </div>
 
                         {/* Expandable Race Details */}
-                        <div className="border border-foreground/10 rounded-xl overflow-hidden">
+                        <div className="border border-line rounded-md overflow-hidden">
                             <button
                                 type="button"
                                 onClick={() => setShowDetails(!showDetails)}
-                                className="w-full flex items-center justify-between p-3 bg-foreground/5 hover:bg-foreground/10 transition-colors"
+                                className="w-full flex items-center justify-between p-3 bg-background-tertiary hover:bg-surface-hover transition-colors"
                             >
                                 <div className="flex items-center gap-2">
                                     <Edit3 className="w-4 h-4 text-accent-orange" />
@@ -457,7 +457,7 @@ export default function RaceResultModal({
                             </button>
 
                             {showDetails && (
-                                <div className="p-3 space-y-3 border-t border-foreground/5">
+                                <div className="p-3 space-y-3 border-t border-line">
                                     <p className="text-[10px] text-foreground-muted">Add details about your race. You can edit these later in your Profile.</p>
 
                                     <div className="grid grid-cols-2 gap-3">
@@ -526,7 +526,7 @@ export default function RaceResultModal({
                                                 max="10"
                                                 value={feltLike || '5'}
                                                 onChange={e => setFeltLike(e.target.value)}
-                                                className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                                                className="w-full h-2 rounded-full appearance-none cursor-pointer accent-accent-orange"
                                             />
                                             <div className="flex justify-between text-[10px] text-foreground-muted">
                                                 <span>Easy</span>
@@ -542,7 +542,7 @@ export default function RaceResultModal({
                                             onChange={e => setNotes(e.target.value)}
                                             placeholder="How did the race go? What went well? What would you change?"
                                             rows={3}
-                                            className="w-full bg-foreground/5 border border-foreground/10 rounded-lg p-3 text-foreground text-sm placeholder-foreground-muted outline-hidden focus:ring-2 focus:ring-accent-orange transition-all resize-none"
+                                            className="w-full bg-background-secondary border border-line rounded-md p-3 text-foreground text-sm placeholder-foreground-muted outline-hidden focus:ring-2 focus:ring-accent-orange transition-colors resize-none"
                                         />
                                     </div>
                                 </div>
@@ -550,24 +550,24 @@ export default function RaceResultModal({
                         </div>
 
                         {/* Training Summary */}
-                        <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
-                            <p className="text-xs text-foreground-muted uppercase tracking-wider mb-2">Training Summary</p>
+                        <div className="bg-background-tertiary border border-line rounded-md p-4">
+                            <p className="text-xs text-foreground-muted mb-2">Training Summary</p>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-lg font-bold text-foreground">{workoutStats.completed}/{workoutStats.total}</p>
+                                    <p className="text-lg font-semibold font-mono tabular-nums text-foreground">{workoutStats.completed}/{workoutStats.total}</p>
                                     <p className="text-xs text-foreground-muted">workouts completed</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className={`text-lg font-bold ${completionRate >= 80 ? 'text-green-400' : completionRate >= 60 ? 'text-yellow-400' : 'text-red-400'
+                                    <p className={`text-lg font-semibold font-mono tabular-nums ${completionRate >= 80 ? 'text-positive' : completionRate >= 60 ? 'text-workout-tempo' : 'text-negative'
                                         }`}>
                                         {completionRate}%
                                     </p>
                                     <p className="text-xs text-foreground-muted">completion rate</p>
                                 </div>
                             </div>
-                            <div className="mt-2 h-2 bg-foreground/5 rounded-full overflow-hidden">
+                            <div className="mt-2 h-2 bg-background-secondary rounded-full overflow-hidden">
                                 <div
-                                    className={`h-full rounded-full transition-all ${completionRate >= 80 ? 'bg-green-500' : completionRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                    className={`h-full rounded-full transition-all ${completionRate >= 80 ? 'bg-positive' : completionRate >= 60 ? 'bg-workout-tempo' : 'bg-negative'
                                         }`}
                                     style={{ width: `${completionRate}%` }}
                                 />
@@ -580,7 +580,7 @@ export default function RaceResultModal({
 
                         {/* Actions */}
                         {completeMutation.isError && (
-                            <div className="p-3 rounded-lg bg-red-500/10 text-red-400 text-sm">
+                            <div className="p-3 rounded-md bg-accent-pink/10 text-accent-pink text-sm">
                                 {completeMutation.error?.message || 'Failed to complete goal'}
                             </div>
                         )}
@@ -588,7 +588,7 @@ export default function RaceResultModal({
                         <div className="flex gap-2">
                             <button
                                 onClick={onClose}
-                                className="flex-1 py-3 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 transition-colors text-sm"
+                                className="flex-1 py-3 border border-line text-foreground-muted rounded-md hover:bg-surface-hover transition-colors text-sm"
                             >
                                 Cancel
                             </button>

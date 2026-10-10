@@ -98,15 +98,15 @@ interface AnalyticsData {
 
 type DateRangePreset = '7days' | '30days' | '90days';
 
-// Chart colors - matching app theme
+// Chart colors - semantic tokens (work in light and dark mode)
 const COLORS = {
-  protein: '#f72585',  // Pink
-  carbs: '#4361ee',    // Blue
-  fats: '#fca311',     // Yellow/Orange
-  calories: '#7209b7', // Purple
-  fiber: '#4cc9f0',    // Cyan
-  warning: '#ef4444',  // Red
-  success: '#22c55e',  // Green
+  protein: 'var(--accent-pink)',
+  carbs: 'var(--accent-blue)',
+  fats: 'var(--workout-tempo)',
+  calories: 'var(--accent-orange)',
+  fiber: 'var(--accent-cyan)',
+  warning: 'var(--negative)',
+  success: 'var(--positive)',
 };
 
 const MICRO_LIMITS = {
@@ -168,7 +168,7 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
       return (
         <div className="flex items-center justify-center h-[60vh]">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-accent-pink border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-foreground-muted">Loading analytics...</p>
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
       return (
         <div className="flex items-center justify-center h-[60vh] px-4">
           <div className="text-center">
-            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <AlertTriangle className="w-12 h-12 text-negative mx-auto mb-4" />
             <p className="text-foreground font-semibold mb-2">Failed to load analytics</p>
             <p className="text-foreground-muted text-sm">Please try again later</p>
           </div>
@@ -190,14 +190,14 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
     if (analytics.daysWithLogs === 0 && analytics.target.isDefault) {
       return (
         <div className="p-4">
-          <div className="bg-pink-500/10 border border-pink-500/20 rounded-2xl p-4 flex items-start gap-3 mb-6">
-            <Target className="w-5 h-5 text-pink-400 shrink-0 mt-0.5" />
+          <div className="glass-card border-accent-pink/20 p-4 flex items-start gap-3 mb-6">
+            <Target className="w-5 h-5 text-accent-pink shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-pink-400 mb-1">Set Up Your Goals</h4>
-              <p className="text-xs text-pink-200/70 mb-3">Set your calorie and macro targets for personalized adherence scoring.</p>
+              <h4 className="text-sm font-semibold text-accent-pink mb-1">Set Up Your Goals</h4>
+              <p className="text-xs text-foreground-muted mb-3">Set your calorie and macro targets for personalized adherence scoring.</p>
               <button
                 onClick={handleOpenGoals}
-                className="bg-pink-500/20 text-pink-400 px-4 py-2 rounded-lg text-xs font-semibold"
+                className="bg-accent-pink/10 text-accent-pink px-4 py-2 rounded-md text-xs font-semibold border border-accent-pink/20 hover:bg-accent-pink/20 transition-colors"
               >
                 Set Nutrition Goals
               </button>
@@ -219,9 +219,9 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
             <button
               key={key}
               onClick={() => setDateRange(key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${dateRange === key
-                ? 'bg-pink-500/20 text-pink-400 border border-pink-500/30'
-                : 'bg-foreground/5 text-foreground-muted border border-foreground/10'
+              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${dateRange === key
+                ? 'bg-accent-pink/10 text-accent-pink border border-accent-pink/30'
+                : 'bg-background-tertiary text-foreground-muted border border-line'
                 }`}
             >
               {label}
@@ -232,7 +232,7 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
         {/* Daily Goal Ring */}
         <div className="glass-card p-4">
           <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
-            <Target className="w-4 h-4 text-pink-500" />
+            <Target className="w-4 h-4 text-accent-pink" />
             Today&apos;s Progress
           </h3>
           <div className="flex items-center gap-6">
@@ -255,17 +255,17 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
                     dataKey="value"
                   >
                     <Cell fill={COLORS.calories} />
-                    <Cell fill="rgba(255,255,255,0.1)" />
+                    <Cell fill="var(--line)" />
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xl font-bold text-foreground">
+                <span className="text-xl font-semibold font-mono tabular-nums text-foreground">
                   {Math.round(analytics.today.calories)}
                 </span>
-                <span className="text-xs text-foreground-muted">/ {effectiveTarget}</span>
+                <span className="text-xs text-foreground-muted font-mono tabular-nums">/ {effectiveTarget}</span>
               {analytics.exerciseBudget > 0 && (
-                <span className="text-[10px] text-green-400 block">+{analytics.exerciseBudget} active</span>
+                <span className="text-[10px] text-positive font-mono tabular-nums block">+{analytics.exerciseBudget} active</span>
               )}
               </div>
             </div>
@@ -275,11 +275,11 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-foreground-muted">Protein</span>
-                  <span className="text-foreground">
+                  <span className="text-foreground font-mono tabular-nums">
                     {Math.round(analytics.today.protein)}g / {analytics.target.targetProtein}g
                   </span>
                 </div>
-                <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
+                <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
@@ -292,11 +292,11 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-foreground-muted">Carbs</span>
-                  <span className="text-foreground">
+                  <span className="text-foreground font-mono tabular-nums">
                     {Math.round(analytics.today.carbs)}g / {analytics.target.targetCarbs}g
                   </span>
                 </div>
-                <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
+                <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
@@ -309,11 +309,11 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-foreground-muted">Fats</span>
-                  <span className="text-foreground">
+                  <span className="text-foreground font-mono tabular-nums">
                     {Math.round(analytics.today.fats)}g / {analytics.target.targetFats}g
                   </span>
                 </div>
-                <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
+                <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
@@ -332,7 +332,7 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-foreground font-semibold flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-green-500" />
+                <TrendingUp className="w-4 h-4 text-positive" />
                 Macro Adherence
               </h3>
               <p className="text-xs text-foreground-muted mt-1">
@@ -340,9 +340,9 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
               </p>
             </div>
             <div className="text-right">
-              <div className={`text-3xl font-bold ${analytics.adherenceScore >= 80 ? 'text-green-400' :
-                analytics.adherenceScore >= 60 ? 'text-yellow-400' :
-                  'text-red-400'
+              <div className={`text-3xl font-semibold font-mono tabular-nums ${analytics.adherenceScore >= 80 ? 'text-positive' :
+                analytics.adherenceScore >= 60 ? 'text-workout-tempo' :
+                  'text-negative'
                 }`}>
                 {analytics.adherenceScore}%
               </div>
@@ -353,31 +353,31 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
         {/* Historical Trend Chart */}
         <div className="glass-card p-4">
           <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-blue-500" />
+            <Calendar className="w-4 h-4 text-accent-blue" />
             Calorie Trend
           </h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
                 <XAxis
                   dataKey="date"
-                  stroke="#888"
+                  stroke="var(--foreground-muted)"
                   fontSize={10}
                   tickLine={false}
                 />
                 <YAxis
-                  stroke="#888"
+                  stroke="var(--foreground-muted)"
                   fontSize={10}
                   tickLine={false}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '8px',
+                    backgroundColor: 'var(--panel-bg)',
+                    border: '1px solid var(--line)',
+                    borderRadius: '6px',
                   }}
-                  labelStyle={{ color: '#fff' }}
+                  labelStyle={{ color: 'var(--foreground)' }}
                   formatter={(value: any, name: string, props: any) => {
                     const payload = props.payload;
                     if (name.includes('Protein')) return [`${value} kcal (${payload.proteinGrams}g)`, 'Protein'];
@@ -391,9 +391,9 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
                 />
                 <ReferenceLine
                   y={analytics.target.dailyCalories}
-                  stroke="rgba(255,255,255,0.3)"
+                  stroke="var(--line-strong)"
                   strokeDasharray="3 3"
-                  label={{ value: 'Goal', fill: 'rgba(255,255,255,0.5)', fontSize: 10 }}
+                  label={{ value: 'Goal', fill: 'var(--foreground-muted)', fontSize: 10 }}
                 />
                 <Bar dataKey="protein" stackId="macros" fill={COLORS.protein} name="Protein (kcal)" />
                 <Bar dataKey="carbs" stackId="macros" fill={COLORS.carbs} name="Carbs (kcal)" />
@@ -408,41 +408,41 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
         {/* Micronutrient Details */}
         <div className="glass-card p-4">
           <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
-            <Zap className="w-4 h-4 text-cyan-500" />
+            <Zap className="w-4 h-4 text-accent-cyan" />
             Average Daily Micronutrients
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {analytics.avgDaily && (
               <>
                 {/* Fiber */}
-                <div className={`p-3 rounded-lg border ${analytics.avgDaily.fiber >= 25
-                  ? 'bg-green-500/10 border-green-500/20'
-                  : 'bg-foreground/5 border-foreground/10'
+                <div className={`p-3 rounded-md border ${analytics.avgDaily.fiber >= 25
+                  ? 'bg-positive/10 border-positive/20'
+                  : 'bg-background-tertiary border-line'
                   }`}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-foreground-muted">Fiber</span>
                     {analytics.avgDaily.fiber < 25 && (
-                      <AlertTriangle className="w-3 h-3 text-yellow-500" />
+                      <AlertTriangle className="w-3 h-3 text-workout-tempo" />
                     )}
                   </div>
-                  <div className="text-lg font-bold text-foreground mt-1">
+                  <div className="text-lg font-semibold font-mono tabular-nums text-foreground mt-1">
                     {analytics.avgDaily.fiber.toFixed(1)}g
                   </div>
                   <div className="text-xs text-foreground-muted">Goal: 30g+</div>
                 </div>
 
                 {/* Sugar */}
-                <div className={`p-3 rounded-lg border ${analytics.avgDaily.sugar <= MICRO_LIMITS.sugar
-                  ? 'bg-green-500/10 border-green-500/20'
-                  : 'bg-red-500/10 border-red-500/20'
+                <div className={`p-3 rounded-md border ${analytics.avgDaily.sugar <= MICRO_LIMITS.sugar
+                  ? 'bg-positive/10 border-positive/20'
+                  : 'bg-negative/10 border-negative/20'
                   }`}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-foreground-muted">Sugar</span>
                     {analytics.avgDaily.sugar > MICRO_LIMITS.sugar && (
-                      <AlertTriangle className="w-3 h-3 text-red-500" />
+                      <AlertTriangle className="w-3 h-3 text-negative" />
                     )}
                   </div>
-                  <div className={`text-lg font-bold mt-1 ${analytics.avgDaily.sugar > MICRO_LIMITS.sugar ? 'text-red-400' : 'text-foreground'
+                  <div className={`text-lg font-semibold font-mono tabular-nums mt-1 ${analytics.avgDaily.sugar > MICRO_LIMITS.sugar ? 'text-negative' : 'text-foreground'
                     }`}>
                     {analytics.avgDaily.sugar.toFixed(1)}g
                   </div>
@@ -450,17 +450,17 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
                 </div>
 
                 {/* Sodium */}
-                <div className={`p-3 rounded-lg border ${analytics.avgDaily.sodium <= MICRO_LIMITS.sodium
-                  ? 'bg-green-500/10 border-green-500/20'
-                  : 'bg-red-500/10 border-red-500/20'
+                <div className={`p-3 rounded-md border ${analytics.avgDaily.sodium <= MICRO_LIMITS.sodium
+                  ? 'bg-positive/10 border-positive/20'
+                  : 'bg-negative/10 border-negative/20'
                   }`}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-foreground-muted">Sodium</span>
                     {analytics.avgDaily.sodium > MICRO_LIMITS.sodium && (
-                      <AlertTriangle className="w-3 h-3 text-red-500" />
+                      <AlertTriangle className="w-3 h-3 text-negative" />
                     )}
                   </div>
-                  <div className={`text-lg font-bold mt-1 ${analytics.avgDaily.sodium > MICRO_LIMITS.sodium ? 'text-red-400' : 'text-foreground'
+                  <div className={`text-lg font-semibold font-mono tabular-nums mt-1 ${analytics.avgDaily.sodium > MICRO_LIMITS.sodium ? 'text-negative' : 'text-foreground'
                     }`}>
                     {analytics.avgDaily.sodium.toFixed(0)}mg
                   </div>
@@ -468,27 +468,27 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
                 </div>
 
                 {/* Potassium */}
-                <div className="p-3 rounded-lg bg-foreground/5 border border-foreground/10">
+                <div className="p-3 rounded-md bg-background-tertiary border border-line">
                   <span className="text-xs text-foreground-muted">Potassium</span>
-                  <div className="text-lg font-bold text-foreground mt-1">
+                  <div className="text-lg font-semibold font-mono tabular-nums text-foreground mt-1">
                     {analytics.avgDaily.potassium.toFixed(0)}mg
                   </div>
                   <div className="text-xs text-foreground-muted">Goal: 3500mg+</div>
                 </div>
 
                 {/* Saturated Fat */}
-                <div className="p-3 rounded-lg bg-foreground/5 border border-foreground/10">
+                <div className="p-3 rounded-md bg-background-tertiary border border-line">
                   <span className="text-xs text-foreground-muted">Sat. Fat</span>
-                  <div className="text-lg font-bold text-foreground mt-1">
+                  <div className="text-lg font-semibold font-mono tabular-nums text-foreground mt-1">
                     {analytics.avgDaily.saturatedFat.toFixed(1)}g
                   </div>
                   <div className="text-xs text-foreground-muted">Limit: 20g</div>
                 </div>
 
                 {/* Iron */}
-                <div className="p-3 rounded-lg bg-foreground/5 border border-foreground/10">
+                <div className="p-3 rounded-md bg-background-tertiary border border-line">
                   <span className="text-xs text-foreground-muted">Iron</span>
-                  <div className="text-lg font-bold text-foreground mt-1">
+                  <div className="text-lg font-semibold font-mono tabular-nums text-foreground mt-1">
                     {analytics.avgDaily.iron.toFixed(1)}mg
                   </div>
                   <div className="text-xs text-foreground-muted">Goal: 8-18mg</div>
@@ -501,27 +501,27 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
         {/* Top Contributors */}
         <div className="glass-card p-4">
           <h3 className="text-foreground font-semibold mb-4 flex items-center gap-2">
-            <PieChartIcon className="w-4 h-4 text-orange-500" />
+            <PieChartIcon className="w-4 h-4 text-accent-orange" />
             Top Contributors
           </h3>
           <div className="space-y-4">
             {/* Sodium */}
             {analytics.topContributors.sodium.length > 0 && (
               <div>
-                <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-widest mb-2">
-                  Highest Sodium
+                <h4 className="text-xs font-semibold text-foreground-muted mb-2">
+                  Highest sodium
                 </h4>
                 <div className="space-y-2">
                   {analytics.topContributors.sodium.map((food, idx) => (
                     <div
                       key={`${food.foodItemId}-sodium`}
-                      className="flex items-center justify-between p-2 rounded-lg bg-foreground/5"
+                      className="flex items-center justify-between p-2 rounded-md bg-background-tertiary"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-foreground-muted">#{idx + 1}</span>
                         <span className="text-sm text-foreground">{food.foodName}</span>
                       </div>
-                      <span className="text-sm font-medium text-orange-400">
+                      <span className="text-sm font-medium font-mono tabular-nums text-workout-tempo">
                         {food.amount}mg
                       </span>
                     </div>
@@ -533,20 +533,20 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
             {/* Sugar */}
             {analytics.topContributors.sugar.length > 0 && (
               <div>
-                <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-widest mb-2">
-                  Highest Sugar
+                <h4 className="text-xs font-semibold text-foreground-muted mb-2">
+                  Highest sugar
                 </h4>
                 <div className="space-y-2">
                   {analytics.topContributors.sugar.map((food, idx) => (
                     <div
                       key={`${food.foodItemId}-sugar`}
-                      className="flex items-center justify-between p-2 rounded-lg bg-foreground/5"
+                      className="flex items-center justify-between p-2 rounded-md bg-background-tertiary"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-foreground-muted">#{idx + 1}</span>
                         <span className="text-sm text-foreground">{food.foodName}</span>
                       </div>
-                      <span className="text-sm font-medium text-pink-400">
+                      <span className="text-sm font-medium font-mono tabular-nums text-accent-pink">
                         {food.amount}g
                       </span>
                     </div>
@@ -558,20 +558,20 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
             {/* Calories */}
             {analytics.topContributors.calories.length > 0 && (
               <div>
-                <h4 className="text-xs font-semibold text-foreground-muted uppercase tracking-widest mb-2">
-                  Most Calories
+                <h4 className="text-xs font-semibold text-foreground-muted mb-2">
+                  Most calories
                 </h4>
                 <div className="space-y-2">
                   {analytics.topContributors.calories.map((food, idx) => (
                     <div
                       key={`${food.foodItemId}-calories`}
-                      className="flex items-center justify-between p-2 rounded-lg bg-foreground/5"
+                      className="flex items-center justify-between p-2 rounded-md bg-background-tertiary"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-foreground-muted">#{idx + 1}</span>
                         <span className="text-sm text-foreground">{food.foodName}</span>
                       </div>
-                      <span className="text-sm font-medium text-purple-400">
+                      <span className="text-sm font-medium font-mono tabular-nums text-accent-orange">
                         {food.amount}kcal
                       </span>
                     </div>
@@ -587,19 +587,19 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
 
   return (
     <div className="min-h-full bg-background pb-20">
-      <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50">
+      <header className="border-b border-line bg-background sticky top-0 z-50">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center">
             <button onClick={onClose} className="mr-3">
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
-            <span className="text-lg font-bold text-foreground flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-pink-500" /> Nutrition Analytics
+            <span className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Utensils className="w-5 h-5 text-accent-pink" /> Nutrition Analytics
             </span>
           </div>
           <button
             onClick={handleOpenGoals}
-            className="bg-pink-500/20 text-pink-400 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
+            className="bg-accent-pink/10 text-accent-pink px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 border border-accent-pink/20"
           >
             <Target className="w-3.5 h-3.5" /> Goals
           </button>

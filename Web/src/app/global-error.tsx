@@ -24,8 +24,8 @@ export default function GlobalError({
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '1rem',
-                    backgroundColor: '#0a0a0a',
-                    color: '#ffffff',
+                    backgroundColor: '#16181a',
+                    color: '#f6f7f5',
                     fontFamily: 'system-ui, -apple-system, sans-serif',
                 }}
             >
@@ -35,9 +35,9 @@ export default function GlobalError({
                         width: '100%',
                         padding: '2rem',
                         textAlign: 'center',
-                        borderRadius: '0.75rem',
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '6px',
+                        backgroundColor: '#1a1d21',
+                        border: '1px solid #2a2d31',
                     }}
                 >
                     <div
@@ -49,16 +49,17 @@ export default function GlobalError({
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            background: 'linear-gradient(to bottom right, rgba(239,68,68,0.2), rgba(249,115,22,0.2))',
+                            background: '#22262b',
+                            border: '1px solid #2a2d31',
                         }}
                     >
-                        <AlertTriangle size={40} color="#ef4444" />
+                        <AlertTriangle size={40} color="#e06552" />
                     </div>
 
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.75rem' }}>
                         Something Went Wrong
                     </h1>
-                    <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '2rem', lineHeight: 1.6 }}>
+                    <p style={{ color: '#a6aba5', fontSize: '0.875rem', marginBottom: '2rem', lineHeight: 1.6 }}>
                         An unexpected application error occurred. Please try again.
                     </p>
 
@@ -67,12 +68,12 @@ export default function GlobalError({
                         style={{
                             width: '100%',
                             padding: '0.625rem 1rem',
-                            borderRadius: '0.5rem',
+                            borderRadius: '6px',
                             border: 'none',
                             cursor: 'pointer',
-                            fontWeight: 500,
+                            fontWeight: 600,
                             color: '#ffffff',
-                            backgroundColor: '#f97316',
+                            backgroundColor: '#e8501a',
                         }}
                     >
                         Try Again

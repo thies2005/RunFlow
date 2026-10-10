@@ -44,12 +44,12 @@ const WORKOUT_TYPES: WorkoutType[] = [
 const PHASES: PlanPhase[] = ['BASE', 'BUILD', 'PEAK', 'TAPER', 'RACE_WEEK', 'RECOVERY', 'OFF'];
 
 const PHASE_COLORS: Record<PlanPhase, string> = {
-    BASE: 'bg-blue-500/20 text-blue-400',
-    BUILD: 'bg-orange-500/20 text-orange-400',
-    PEAK: 'bg-purple-500/20 text-purple-400',
-    TAPER: 'bg-cyan-500/20 text-cyan-400',
-    RACE_WEEK: 'bg-green-500/20 text-green-400',
-    RECOVERY: 'bg-teal-500/20 text-teal-400',
+    BASE: 'bg-accent-blue/15 text-accent-blue',
+    BUILD: 'bg-workout-tempo/10 text-workout-tempo',
+    PEAK: 'bg-workout-long-run/15 text-workout-long-run',
+    TAPER: 'bg-workout-recovery/10 text-workout-recovery',
+    RACE_WEEK: 'bg-positive/15 text-positive',
+    RECOVERY: 'bg-workout-recovery/15 text-workout-recovery',
     OFF: 'bg-foreground/20 text-foreground-secondary',
 };
 
@@ -217,7 +217,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                         </span>
                     )}
                     {saveState === 'saved' && (
-                        <span className="flex items-center gap-1 text-xs text-green-500">
+                        <span className="flex items-center gap-1 text-xs text-positive">
                             <Check className="w-3 h-3" />
                             Saved
                         </span>
@@ -400,7 +400,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
 
                 {showDeleteConfirm ? (
                     <div className="space-y-2">
-                        <p className="text-xs text-red-400 text-center">Delete this workout?</p>
+                        <p className="text-xs text-negative text-center">Delete this workout?</p>
                         <div className="flex gap-2">
                             <button
                                 type="button"
@@ -413,7 +413,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                                 type="button"
                                 onClick={() => deleteMutation.mutate()}
                                 disabled={deleteMutation.isPending}
-                                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-md bg-red-600 text-white text-xs hover:bg-red-500 disabled:opacity-50 transition-colors"
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-md bg-negative text-white text-xs hover:bg-negative/85 disabled:opacity-50 transition-colors"
                             >
                                 <Trash2 className="w-3 h-3" />
                                 Delete
@@ -424,7 +424,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                     <button
                         type="button"
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-red-400 text-sm hover:bg-red-500/10 transition-colors"
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-negative text-sm hover:bg-negative/10 transition-colors"
                     >
                         <Trash2 className="w-3.5 h-3.5" />
                         Delete Workout

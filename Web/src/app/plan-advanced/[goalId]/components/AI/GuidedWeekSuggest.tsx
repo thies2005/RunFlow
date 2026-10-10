@@ -139,11 +139,11 @@ export function GuidedWeekSuggest({ goalId, weekIndex, weekStartDate, phase, vdo
     const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return (
-        <div className="mx-4 mb-2 rounded-lg border border-purple-500/20 bg-background-secondary p-3">
+        <div className="mx-4 mb-2 rounded-md border border-workout-long-run/30 bg-background-secondary p-3">
             <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-workout-long-run flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" />
-                    Suggested Week {weekIndex} ({phase})
+                    Suggested Week <span className="font-mono tabular-nums">{weekIndex}</span> ({phase})
                 </span>
                 <button
                     type="button"
@@ -169,7 +169,7 @@ export function GuidedWeekSuggest({ goalId, weekIndex, weekStartDate, phase, vdo
                     type="button"
                     onClick={() => applyMutation.mutate()}
                     disabled={applyMutation.isPending}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-50 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-foreground text-background hover:bg-foreground/85 disabled:opacity-50 transition-colors"
                 >
                     {applyMutation.isPending ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />

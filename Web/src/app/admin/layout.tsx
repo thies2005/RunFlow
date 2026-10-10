@@ -63,8 +63,8 @@ function AdminLayoutContent({
                 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
                 md:translate-x-0 md:static md:z-0
             `}>
-                <div className="p-6 flex items-center space-x-2 border-b border-glass-border">
-                    <Shield className="w-8 h-8 text-emerald-500" />
+                <div className="p-6 flex items-center space-x-2 border-b border-line">
+                    <Shield className="w-8 h-8 text-foreground" />
                     <span className="text-xl font-bold text-foreground">Admin</span>
                 </div>
 
@@ -78,10 +78,10 @@ function AdminLayoutContent({
                                 href={item.href}
                                 onClick={closeMobileMenu}
                                 className={`
-                                    flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors
+                                    flex items-center space-x-3 px-4 py-3 rounded-md transition-colors
                                     ${isActive
-                                        ? 'bg-emerald-600 text-white'
-                                        : 'text-foreground-secondary hover:bg-foreground/10'
+                                        ? 'bg-background-secondary text-accent-orange'
+                                        : 'text-foreground-secondary hover:bg-surface-hover'
                                     }
                                 `}
                             >
@@ -92,7 +92,7 @@ function AdminLayoutContent({
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-glass-border">
+                <div className="p-4 border-t border-line">
                     <button
                         onClick={() => {
                             // Server-side logout: the runflow_admin_token cookie
@@ -114,7 +114,7 @@ function AdminLayoutContent({
                                 router.push('/admin/login');
                             })();
                         }}
-                        className="flex items-center space-x-3 px-4 py-3 w-full text-foreground-secondary hover:bg-foreground/10 rounded-lg transition-colors"
+                        className="flex items-center space-x-3 px-4 py-3 w-full text-foreground-secondary hover:bg-surface-hover rounded-md transition-colors"
                     >
                         <LogOut className="w-5 h-5" />
                         <span>Logout</span>
@@ -126,11 +126,11 @@ function AdminLayoutContent({
             </aside>
 
             <div className="flex-1 flex flex-col min-w-0">
-                <header className="h-16 bg-background-secondary border-b border-glass-border flex items-center justify-between px-4 md:px-6 shrink-0 z-10">
+                <header className="topbar h-16 sticky top-0 z-50 flex items-center justify-between px-4 md:px-6 shrink-0">
                     <div className="flex items-center space-x-4">
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden p-2 rounded-lg hover:bg-background-tertiary text-foreground-secondary"
+                            className="topbar-btn md:hidden p-2"
                             aria-label="Toggle menu"
                         >
                             {mobileMenuOpen ? (

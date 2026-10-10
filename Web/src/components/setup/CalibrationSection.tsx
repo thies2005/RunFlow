@@ -44,7 +44,7 @@ export default function CalibrationSection({
     effectiveVO2max,
     raceActivities
 }: CalibrationSectionProps) {
-    const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
+    const inputClass = "bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     const formatActivityOption = (activity: RaceActivity) => {
         const date = new Date(activity.startDate).toLocaleDateString();
@@ -56,7 +56,7 @@ export default function CalibrationSection({
     return (
         <div className="border-t border-glass-border pt-6">
             <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide">Performance Calibration</h3>
+                <h3 className="text-sm font-semibold text-foreground-muted">Performance Calibration</h3>
             </div>
             <p className="text-sm text-foreground-muted mb-4">
                 Fine-tune predictions based on a recent race or time trial result.
@@ -64,11 +64,11 @@ export default function CalibrationSection({
 
             {/* Calibration Step 1: Mode */}
             <div className="mb-2">
-                <span className="text-xs font-semibold text-accent-orange uppercase tracking-wide">Step 1 of 3: Choose Calibration Method</span>
+                <span className="text-xs font-semibold text-accent-orange">Step 1 of 3: Choose Calibration Method</span>
             </div>
 
             {/* Calibration Mode Toggle */}
-            <div className="flex bg-surface rounded-lg p-1 mb-4">
+            <div className="flex bg-surface rounded-md p-1 mb-4">
                 <button
                     type="button"
                     onClick={() => {
@@ -100,14 +100,14 @@ export default function CalibrationSection({
 
             {/* Calibration Step 2: Activity/Details Selection */}
             <div className="mb-2 mt-4">
-                <span className="text-xs font-semibold text-accent-orange uppercase tracking-wide">Step 2 of 3: Provide Race Details</span>
+                <span className="text-xs font-semibold text-accent-orange">Step 2 of 3: Provide Race Details</span>
             </div>
 
             {/* Activity Selection */}
             {calibrationMode === 'activity' && (
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Select Race Activity</label>
+                        <label className="block text-xs text-foreground-muted mb-1">Select Race Activity</label>
                         <select
                             value={selectedActivityId}
                             onChange={(e) => setSelectedActivityId(e.target.value)}
@@ -129,7 +129,7 @@ export default function CalibrationSection({
 
                     {selectedActivityId && (
                         <div>
-                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Race Distance</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Race Distance</label>
                             <select
                                 value={calibrationDistance}
                                 onChange={(e) => setCalibrationDistance(e.target.value)}
@@ -149,7 +149,7 @@ export default function CalibrationSection({
             {calibrationMode === 'manual' && (
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Race Distance</label>
+                        <label className="block text-xs text-foreground-muted mb-1">Race Distance</label>
                         <select
                             value={calibrationDistance}
                             onChange={(e) => setCalibrationDistance(e.target.value)}
@@ -162,11 +162,11 @@ export default function CalibrationSection({
                         </select>
                     </div>
                     <div>
-                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Your Race Time</label>
+                        <label className="block text-xs text-foreground-muted mb-1">Your Race Time</label>
                         <div className="flex gap-4 items-center">
                             <input
                                 type="number"
-                                className="w-16 bg-surface border border-glass-border rounded-lg p-2 text-foreground text-center"
+                                className="w-16 bg-surface border border-glass-border rounded-md p-2 text-foreground text-center"
                                 placeholder="HH"
                                 value={hours}
                                 onChange={e => {
@@ -183,7 +183,7 @@ export default function CalibrationSection({
                             <span className="text-foreground-muted">:</span>
                             <input
                                 type="number"
-                                className="w-16 bg-surface border border-glass-border rounded-lg p-2 text-foreground text-center"
+                                className="w-16 bg-surface border border-glass-border rounded-md p-2 text-foreground text-center"
                                 placeholder="MM"
                                 value={minutes}
                                 onChange={e => {
@@ -200,7 +200,7 @@ export default function CalibrationSection({
                             <span className="text-foreground-muted">:</span>
                             <input
                                 type="number"
-                                className="w-16 bg-surface border border-glass-border rounded-lg p-2 text-foreground text-center"
+                                className="w-16 bg-surface border border-glass-border rounded-md p-2 text-foreground text-center"
                                 placeholder="SS"
                                 value={seconds}
                                 onChange={e => {
@@ -244,9 +244,9 @@ export default function CalibrationSection({
                 return (
                     <div className="mt-6">
                         <div className="mb-2">
-                            <span className="text-xs font-semibold text-accent-orange uppercase tracking-wide">Step 3 of 3: Review Result</span>
+                            <span className="text-xs font-semibold text-accent-orange">Step 3 of 3: Review Result</span>
                         </div>
-                        <div className="p-4 bg-surface rounded-lg border border-glass-border">
+                        <div className="p-4 bg-surface rounded-md border border-glass-border">
                             <h4 className="text-xs font-semibold text-foreground-muted mb-3 flex items-center gap-2">
                                 <BarChart2 className="w-4 h-4" /> Calibration Result
                             </h4>
@@ -254,18 +254,18 @@ export default function CalibrationSection({
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-foreground-muted">Your {distanceName} VDOT:</span>
-                                    <span className="text-lg font-bold text-accent-cyan">{raceVdot.toFixed(1)}</span>
+                                    <span className="text-lg font-bold text-accent-cyan font-mono tabular-nums">{raceVdot.toFixed(1)}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-foreground-muted">Training VO2max:</span>
-                                    <span className="text-sm text-foreground">{effectiveVO2max.toFixed(1)}</span>
+                                    <span className="text-sm text-foreground font-mono tabular-nums">{effectiveVO2max.toFixed(1)}</span>
                                 </div>
 
                                 <div className="border-t border-glass-border pt-3">
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-foreground-muted">Calibrated VO2max:</span>
-                                        <span className={`text-lg font-bold ${factorPercent >= 0 ? 'text-green-400' : 'text-amber-400'}`}>
+                                        <span className={`text-lg font-bold font-mono tabular-nums ${factorPercent >= 0 ? 'text-positive' : 'text-negative'}`}>
                                             {raceVdot.toFixed(1)} ({factorPercent >= 0 ? '+' : ''}{factorPercent.toFixed(1)}%)
                                         </span>
                                     </div>

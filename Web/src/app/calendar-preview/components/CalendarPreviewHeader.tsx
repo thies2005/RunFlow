@@ -11,7 +11,7 @@ import { ArrowLeft, CalendarRange, FlaskConical } from 'lucide-react';
 export function CalendarPreviewHeader() {
     const router = useRouter();
     return (
-        <div className="flex items-center justify-between px-3 py-2 border-b border-glass-border bg-gradient-to-r from-background to-background-secondary shrink-0">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-line bg-background shrink-0">
             <div className="flex items-center gap-2">
                 <button
                     type="button"
@@ -21,10 +21,10 @@ export function CalendarPreviewHeader() {
                 >
                     <ArrowLeft className="w-4 h-4" />
                 </button>
-                <CalendarRange className="w-4 h-4 text-orange-400" />
+                <CalendarRange className="w-4 h-4 text-accent-orange" />
                 <h1 className="text-sm font-semibold text-foreground">Training Calendar</h1>
             </div>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] border border-amber-500/20">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-background-tertiary text-foreground-muted text-[10px] border border-line">
                 <FlaskConical className="w-3 h-3" />
                 Sample
             </span>

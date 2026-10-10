@@ -68,7 +68,7 @@ export function ProgressionTimeline({ progression, currentWeek, onWeekClick }: P
                 </span>
                 {currentWeek !== undefined && (
                     <span className="ml-auto">
-                        Current: Week {currentWeek}
+                        Current: Week <span className="font-mono tabular-nums">{currentWeek}</span>
                     </span>
                 )}
             </div>

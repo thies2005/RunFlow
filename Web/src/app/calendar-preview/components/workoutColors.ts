@@ -1,23 +1,23 @@
 /**
- * Workout-type colour tokens — mirrors the advanced plan editor's palette
- * (`plan-advanced/.../Shared/WorkoutTypeColors.ts`) so the calendar dots/cards
- * match the rest of the app.
+ * Workout-type colour tokens — mapped onto the "Race Timing" design-system
+ * tokens (workout-*, zone-*, accent-*) so the calendar dots/cards match the
+ * rest of the app and stay correct in both light and dark mode.
  */
 export const WORKOUT_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-    EASY:         { bg: 'bg-blue-500/20',  text: 'text-blue-400',  dot: 'bg-blue-400' },
-    LONG_RUN:     { bg: 'bg-green-500/20', text: 'text-green-400', dot: 'bg-green-400' },
-    TEMPO:        { bg: 'bg-orange-500/20', text: 'text-orange-400', dot: 'bg-orange-400' },
-    INTERVALS:    { bg: 'bg-yellow-500/20', text: 'text-yellow-400', dot: 'bg-yellow-400' },
-    FARTLEK:      { bg: 'bg-amber-500/20',  text: 'text-amber-400',  dot: 'bg-amber-400' },
-    REPETITIONS:  { bg: 'bg-red-500/20',    text: 'text-red-400',    dot: 'bg-red-400' },
-    RECOVERY:     { bg: 'bg-cyan-500/20',   text: 'text-cyan-400',   dot: 'bg-cyan-400' },
-    RACE:         { bg: 'bg-purple-500/20', text: 'text-purple-400', dot: 'bg-purple-400' },
-    REST:         { bg: 'bg-foreground/20',   text: 'text-foreground-muted',   dot: 'bg-foreground/30' },
-    RIDE:         { bg: 'bg-teal-500/20',   text: 'text-teal-400',   dot: 'bg-teal-400' },
-    SWIM:         { bg: 'bg-indigo-500/20', text: 'text-indigo-400', dot: 'bg-indigo-400' },
-    STRENGTH:     { bg: 'bg-pink-500/20',   text: 'text-pink-400',   dot: 'bg-pink-400' },
-    BRICK:        { bg: 'bg-violet-500/20', text: 'text-violet-400', dot: 'bg-violet-400' },
-    OTHER:        { bg: 'bg-foreground/20',  text: 'text-foreground-muted',  dot: 'bg-foreground/30' },
+    EASY:         { bg: 'bg-workout-easy/15',       text: 'text-workout-easy',       dot: 'bg-workout-easy' },
+    LONG_RUN:     { bg: 'bg-workout-long-run/15',   text: 'text-workout-long-run',   dot: 'bg-workout-long-run' },
+    TEMPO:        { bg: 'bg-workout-tempo/15',      text: 'text-workout-tempo',      dot: 'bg-workout-tempo' },
+    INTERVALS:    { bg: 'bg-workout-interval/15',   text: 'text-workout-interval',   dot: 'bg-workout-interval' },
+    FARTLEK:      { bg: 'bg-workout-race/15',       text: 'text-workout-race',       dot: 'bg-workout-race' },
+    REPETITIONS:  { bg: 'bg-accent-pink/15',        text: 'text-accent-pink',        dot: 'bg-accent-pink' },
+    RECOVERY:     { bg: 'bg-workout-recovery/15',   text: 'text-workout-recovery',   dot: 'bg-workout-recovery' },
+    RACE:         { bg: 'bg-accent-orange/15',      text: 'text-accent-orange',      dot: 'bg-accent-orange' },
+    REST:         { bg: 'bg-foreground-muted/15',   text: 'text-foreground-muted',   dot: 'bg-foreground-muted' },
+    RIDE:         { bg: 'bg-accent-blue/15',        text: 'text-accent-blue',        dot: 'bg-accent-blue' },
+    SWIM:         { bg: 'bg-zone-2/15',             text: 'text-zone-2',             dot: 'bg-zone-2' },
+    STRENGTH:     { bg: 'bg-workout-strength/15',   text: 'text-workout-strength',   dot: 'bg-workout-strength' },
+    BRICK:        { bg: 'bg-zone-4/15',             text: 'text-zone-4',             dot: 'bg-zone-4' },
+    OTHER:        { bg: 'bg-foreground-muted/15',   text: 'text-foreground-muted',   dot: 'bg-foreground-muted' },
 };
 
 export function colorsFor(type: string) {
@@ -25,13 +25,13 @@ export function colorsFor(type: string) {
 }
 
 export const PHASE_COLORS: Record<string, string> = {
-    BASE: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    BUILD: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-    PEAK: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    TAPER: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
-    RACE_WEEK: 'bg-green-500/20 text-green-400 border-green-500/30',
-    RECOVERY: 'bg-teal-500/20 text-teal-400 border-teal-500/30',
-    OFF: 'bg-foreground/20 text-foreground-secondary border-foreground/30',
+    BASE: 'bg-workout-strength/15 text-workout-strength border-workout-strength/30',
+    BUILD: 'bg-workout-tempo/15 text-workout-tempo border-workout-tempo/30',
+    PEAK: 'bg-workout-long-run/15 text-workout-long-run border-workout-long-run/30',
+    TAPER: 'bg-positive/15 text-positive border-positive/30',
+    RACE_WEEK: 'bg-accent-orange/15 text-accent-orange border-accent-orange/30',
+    RECOVERY: 'bg-workout-recovery/15 text-workout-recovery border-workout-recovery/30',
+    OFF: 'bg-foreground-muted/15 text-foreground-secondary border-foreground-muted/30',
 };
 
 export function phaseColor(phase: string): string {

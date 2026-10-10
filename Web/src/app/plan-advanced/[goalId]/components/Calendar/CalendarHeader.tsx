@@ -19,7 +19,7 @@ export function CalendarHeader({ month, onPrevMonth, onNextMonth }: CalendarHead
             >
                 <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-xs font-semibold text-foreground-secondary uppercase tracking-wide">
+            <span className="text-xs font-semibold text-foreground-secondary">
                 {format(month, 'MMMM yyyy')}
             </span>
             <button

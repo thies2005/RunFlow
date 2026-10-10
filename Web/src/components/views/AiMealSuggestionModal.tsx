@@ -120,16 +120,16 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center p-4">
-            <div className="bg-background-secondary w-full max-w-md rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-foreground/10 animate-in zoom-in-95">
-                
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center p-4">
+            <div className="bg-background-secondary border border-line w-full max-w-md rounded-md flex flex-col overflow-hidden animate-in zoom-in-95">
+
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-foreground/10 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
+                <div className="flex items-center justify-between p-4 border-b border-line bg-background-tertiary">
                     <div className="flex items-center gap-2 text-foreground">
-                        <Sparkles className="w-5 h-5 text-amber-400" />
-                        <h2 className="text-lg font-bold">What should I eat?</h2>
+                        <Sparkles className="w-5 h-5 text-workout-tempo" />
+                        <h2 className="text-lg font-semibold">What should I eat?</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors rounded-full hover:bg-foreground/10">
+                    <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors rounded-full hover:bg-glass-bg-hover">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -139,9 +139,9 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                         <div className="flex flex-col items-center justify-center py-8 text-center">
                             {suggestMutation.isPending ? (
                                 <>
-                                    <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 relative">
-                                        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-500 animate-spin"></div>
-                                        <Sparkles className="w-8 h-8 text-blue-400 animate-pulse" />
+                                    <div className="w-16 h-16 rounded-full bg-accent-blue/10 flex items-center justify-center mb-4 relative">
+                                        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-accent-blue animate-spin"></div>
+                                        <Sparkles className="w-8 h-8 text-accent-blue" />
                                     </div>
                                     <h3 className="text-foreground font-semibold flex items-center gap-2">
                                         Analyzing your macros...
@@ -152,16 +152,16 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                                 </>
                             ) : (
                                 <>
-                                    <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mb-4">
-                                        <Sparkles className="w-8 h-8 text-amber-400" />
+                                    <div className="w-16 h-16 rounded-full bg-workout-tempo/10 flex items-center justify-center mb-4">
+                                        <Sparkles className="w-8 h-8 text-workout-tempo" />
                                     </div>
                                     <h3 className="text-foreground font-semibold mb-2">Find the Perfect Meal</h3>
                                     <p className="text-sm text-foreground-muted max-w-[280px]">
                                         Let AI suggest a meal from your recipes or history that perfectly fits your remaining {Math.round(remainingMacros.calories)} calories.
                                     </p>
-                                    <button 
+                                    <button
                                         onClick={() => suggestMutation.mutate()}
-                                        className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95"
+                                        className="mt-6 w-full py-3 rounded-md bg-accent-orange text-white font-semibold hover:bg-accent-orange/90 transition-colors flex items-center justify-center gap-2"
                                     >
                                         <Sparkles className="w-4 h-4" />
                                         Generate Suggestion
@@ -171,48 +171,48 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                         </div>
                     ) : (
                         <div className="flex flex-col gap-4 animate-in slide-in-from-bottom-4 fade-in">
-                            <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
-                                <h3 className="text-xl font-bold text-foreground mb-2">{suggestion.suggestionName}</h3>
+                            <div className="bg-background-tertiary border border-line rounded-md p-4">
+                                <h3 className="text-xl font-semibold text-foreground mb-2">{suggestion.suggestionName}</h3>
                                 <p className="text-sm text-foreground-muted italic mb-4">&ldquo;{suggestion.reasoning}&rdquo;</p>
-                                
+
                                 <div className="grid grid-cols-4 gap-2 mb-4">
-                                    <div className="bg-foreground/10 rounded-lg p-2 text-center">
-                                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-1">Cals</div>
-                                        <div className="text-foreground font-bold">{suggestion.totalCalories}</div>
+                                    <div className="bg-glass-bg rounded-md p-2 text-center">
+                                        <div className="text-[10px] text-foreground-muted font-semibold mb-1">Cals</div>
+                                        <div className="text-foreground font-semibold font-mono tabular-nums">{suggestion.totalCalories}</div>
                                     </div>
-                                    <div className="bg-foreground/10 rounded-lg p-2 text-center border-b-2 border-pink-500">
-                                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-1">Pro</div>
-                                        <div className="text-foreground font-bold">{suggestion.totalProtein}</div>
+                                    <div className="bg-glass-bg rounded-md p-2 text-center border-b-2 border-accent-pink">
+                                        <div className="text-[10px] text-foreground-muted font-semibold mb-1">Pro</div>
+                                        <div className="text-foreground font-semibold font-mono tabular-nums">{suggestion.totalProtein}</div>
                                     </div>
-                                    <div className="bg-foreground/10 rounded-lg p-2 text-center border-b-2 border-blue-500">
-                                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-1">Carb</div>
-                                        <div className="text-foreground font-bold">{suggestion.totalCarbs}</div>
+                                    <div className="bg-glass-bg rounded-md p-2 text-center border-b-2 border-accent-blue">
+                                        <div className="text-[10px] text-foreground-muted font-semibold mb-1">Carb</div>
+                                        <div className="text-foreground font-semibold font-mono tabular-nums">{suggestion.totalCarbs}</div>
                                     </div>
-                                    <div className="bg-foreground/10 rounded-lg p-2 text-center border-b-2 border-orange-500">
-                                        <div className="text-[10px] uppercase text-foreground-muted font-bold mb-1">Fat</div>
-                                        <div className="text-foreground font-bold">{suggestion.totalFats}</div>
+                                    <div className="bg-glass-bg rounded-md p-2 text-center border-b-2 border-workout-tempo">
+                                        <div className="text-[10px] text-foreground-muted font-semibold mb-1">Fat</div>
+                                        <div className="text-foreground font-semibold font-mono tabular-nums">{suggestion.totalFats}</div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
                                     {suggestion.items?.map((item: any, i: number) => (
-                                        <div key={i} className="flex justify-between text-sm py-1 border-b border-foreground/5 last:border-0">
+                                        <div key={i} className="flex justify-between text-sm py-1 border-b border-line last:border-0">
                                             <span className="text-foreground-muted">{item.name}</span>
-                                            <span className="text-foreground-muted">{item.calories} kcal</span>
+                                            <span className="text-foreground-muted font-mono tabular-nums">{item.calories} kcal</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            <button 
+                            <button
                                 onClick={() => logMutation.mutate()}
                                 disabled={logMutation.isPending}
-                                className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                                className="w-full py-3 rounded-md bg-accent-orange text-white font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 {logMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Log This Meal <ArrowRight className="w-4 h-4" /></>}
                             </button>
-                            
-                            <button 
+
+                            <button
                                 onClick={() => setSuggestion(null)}
                                 className="w-full py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
                             >

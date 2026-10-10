@@ -83,7 +83,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
   if (!metrics) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-orange"></div>
       </div>
     );
   }
@@ -106,7 +106,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="Requests/sec"
           value={metrics.requestsPerSecond.toFixed(2)}
           icon={Zap}
-          color="bg-blue-500"
+          color="bg-accent-blue"
           change={getChange(metrics.requestsPerSecond, previousMetrics?.requestsPerSecond)}
           inverse={true}
         />
@@ -114,7 +114,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="Errors/sec"
           value={metrics.errorsPerSecond.toFixed(2)}
           icon={AlertTriangle}
-          color="bg-red-500"
+          color="bg-negative"
           change={getChange(metrics.errorsPerSecond, previousMetrics?.errorsPerSecond)}
           inverse={true}
         />
@@ -122,7 +122,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="Avg Response"
           value={`${metrics.avgResponseTime.toFixed(0)}ms`}
           icon={Clock}
-          color="bg-purple-500"
+          color="bg-workout-long-run"
           change={getChange(metrics.avgResponseTime, previousMetrics?.avgResponseTime)}
           inverse={true}
         />
@@ -130,7 +130,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="Error Rate"
           value={`${metrics.errorRate.toFixed(2)}%`}
           icon={AlertTriangle}
-          color={metrics.errorRate > 1 ? 'bg-red-500' : 'bg-green-500'}
+          color={metrics.errorRate > 1 ? 'bg-negative' : 'bg-positive'}
           change={getChange(metrics.errorRate, previousMetrics?.errorRate)}
           inverse={true}
         />
@@ -138,7 +138,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="CPU Usage"
           value={`${metrics.cpuUsage.toFixed(1)}%`}
           icon={Cpu}
-          color={metrics.cpuUsage > 80 ? 'bg-red-500' : metrics.cpuUsage > 60 ? 'bg-yellow-500' : 'bg-green-500'}
+          color={metrics.cpuUsage > 80 ? 'bg-negative' : metrics.cpuUsage > 60 ? 'bg-workout-tempo' : 'bg-positive'}
           change={getChange(metrics.cpuUsage, previousMetrics?.cpuUsage)}
           inverse={true}
         />
@@ -146,37 +146,37 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
           title="Memory Usage"
           value={`${metrics.memoryUsage.toFixed(0)}MB`}
           icon={HardDrive}
-          color={metrics.memoryUsage > 1024 ? 'bg-red-500' : metrics.memoryUsage > 512 ? 'bg-yellow-500' : 'bg-green-500'}
+          color={metrics.memoryUsage > 1024 ? 'bg-negative' : metrics.memoryUsage > 512 ? 'bg-workout-tempo' : 'bg-positive'}
           change={getChange(metrics.memoryUsage, previousMetrics?.memoryUsage)}
           inverse={true}
         />
       </div>
 
-      <div className="bg-background-secondary rounded-lg p-4">
+      <div className="bg-background-secondary rounded-md p-4">
         <h4 className="text-sm font-medium text-foreground-secondary mb-3">Trends (last 60 readings)</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Sparkline
             label="Requests/sec"
             data={history.requests}
-            color="#3B82F6"
+            color="var(--accent-blue)"
             height={60}
           />
           <Sparkline
             label="Response Time (ms)"
             data={history.responseTime}
-            color="#8B5CF6"
+            color="var(--workout-long-run)"
             height={60}
           />
           <Sparkline
             label="CPU %"
             data={history.cpu}
-            color="#10B981"
+            color="var(--positive)"
             height={60}
           />
           <Sparkline
             label="Memory (MB)"
             data={history.memory}
-            color="#F59E0B"
+            color="var(--workout-tempo)"
             height={60}
           />
         </div>
@@ -196,18 +196,18 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, icon: Icon, color, change, inverse = false }: MetricCardProps) {
   return (
-    <div className="bg-background-secondary p-6 rounded-xl shadow-xs border border-glass-border">
+    <div className="bg-background-secondary p-6 rounded-md  border border-line">
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-4">
-          <div className={`p-3 rounded-lg ${color}`}>
-            <Icon className="w-6 h-6 text-foreground" />
+          <div className={`p-3 rounded-md ${color}`}>
+            <Icon className="w-6 h-6 text-white" />
           </div>
           <div>
             <p className="text-foreground-muted text-sm font-medium">{title}</p>
-            <h3 className="text-2xl font-bold text-foreground mt-1">{value}</h3>
+            <h3 className="text-2xl font-bold font-mono tabular-nums text-foreground mt-1">{value}</h3>
             {change && (
               <div className={`flex items-center text-xs mt-1 ${
-                (change.positive && !inverse) || (!change.positive && inverse) ? 'text-red-500' : 'text-green-500'
+                (change.positive && !inverse) || (!change.positive && inverse) ? 'text-negative' : 'text-positive'
               }`}>
                 <span className="mr-1">{change.positive ? '\u2191' : '\u2193'}</span>
                 {change.value}%
@@ -233,9 +233,9 @@ function Sparkline({ label, data, color, height }: SparklineProps) {
       <div>
         <p className="text-xs text-foreground-muted mb-2">{label}</p>
         <div
-          className="rounded-lg flex items-center justify-center"
+          className="rounded-md flex items-center justify-center border border-line"
           style={{
-            background: `linear-gradient(135deg, ${color}20, ${color}05)`,
+            background: 'var(--background-tertiary)',
             height: `${height}px`,
           }}
         >
@@ -265,21 +265,21 @@ function Sparkline({ label, data, color, height }: SparklineProps) {
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs text-foreground-muted">{label}</p>
         {data.length > 0 && (
-          <span className="text-xs font-medium" style={{ color }}>
+          <span className="text-xs font-medium font-mono tabular-nums" style={{ color }}>
             {data[data.length - 1].value < 10
               ? data[data.length - 1].value.toFixed(2)
               : data[data.length - 1].value.toFixed(0)}
           </span>
         )}
       </div>
-      <div className="rounded-lg overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}10, ${color}05)` }}>
+      <div className="rounded-md overflow-hidden border border-line" style={{ background: 'var(--background-tertiary)' }}>
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${svgWidth} ${height}`}
           preserveAspectRatio="none"
         >
-          <polygon points={areaPoints} fill={`${color}15`} />
+          <polygon points={areaPoints} fill="none" />
           <polyline
             points={points}
             fill="none"

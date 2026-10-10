@@ -76,7 +76,7 @@ export function EditSubGoalDialog({ subGoal, isOpen, onClose, onUpdated }: EditS
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl p-5 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-md p-5 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-semibold text-foreground">Edit Event</h3>
                     <button
@@ -95,7 +95,7 @@ export function EditSubGoalDialog({ subGoal, isOpen, onClose, onUpdated }: EditS
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                            className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                         />
                     </div>
 
@@ -105,7 +105,7 @@ export function EditSubGoalDialog({ subGoal, isOpen, onClose, onUpdated }: EditS
                             <select
                                 value={raceType}
                                 onChange={(e) => setRaceType(e.target.value)}
-                                className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             >
                                 <option value="">Select...</option>
                                 <optgroup label="Running">
@@ -141,7 +141,7 @@ export function EditSubGoalDialog({ subGoal, isOpen, onClose, onUpdated }: EditS
                                 type="date"
                                 value={raceDate}
                                 onChange={(e) => setRaceDate(e.target.value)}
-                                className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             />
                         </div>
                     </div>
@@ -159,19 +159,19 @@ export function EditSubGoalDialog({ subGoal, isOpen, onClose, onUpdated }: EditS
                             <button
                                 type="button"
                                 onClick={() => setShowDeleteConfirm(true)}
-                                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs text-red-400 hover:bg-red-500/10 transition-colors"
+                                className="flex items-center gap-1 px-3 py-2 rounded-md text-xs text-negative hover:bg-negative/10 transition-colors"
                             >
                                 <Trash2 className="w-3 h-3" />
                                 Remove
                             </button>
                         ) : (
                             <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-red-400">Confirm?</span>
+                                <span className="text-[10px] text-negative">Confirm?</span>
                                 <button
                                     type="button"
                                     onClick={() => deleteMutation.mutate()}
                                     disabled={deleteMutation.isPending}
-                                    className="px-3 py-2 rounded-lg text-xs bg-red-600 text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
+                                    className="px-3 py-2 rounded-md text-xs bg-negative text-white hover:bg-negative/85 disabled:opacity-50 transition-colors"
                                 >
                                     {deleteMutation.isPending ? (
                                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -182,7 +182,7 @@ export function EditSubGoalDialog({ subGoal, isOpen, onClose, onUpdated }: EditS
                                 <button
                                     type="button"
                                     onClick={() => setShowDeleteConfirm(false)}
-                                    className="px-3 py-2 rounded-lg text-xs text-foreground-secondary hover:bg-background-tertiary transition-colors"
+                                    className="px-3 py-2 rounded-md text-xs text-foreground-secondary hover:bg-background-tertiary transition-colors"
                                 >
                                     Cancel
                                 </button>
@@ -193,7 +193,7 @@ export function EditSubGoalDialog({ subGoal, isOpen, onClose, onUpdated }: EditS
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 rounded-lg bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 transition-colors"
+                            className="px-4 py-2 rounded-md bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 transition-colors"
                         >
                             Cancel
                         </button>
@@ -201,7 +201,7 @@ export function EditSubGoalDialog({ subGoal, isOpen, onClose, onUpdated }: EditS
                             type="button"
                             onClick={() => saveMutation.mutate()}
                             disabled={saveMutation.isPending || !name}
-                            className="flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-xs hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                            className="flex items-center gap-1 px-4 py-2 rounded-md bg-foreground text-background hover:bg-foreground/85 disabled:opacity-50 transition-colors"
                         >
                             {saveMutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                             Save

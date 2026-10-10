@@ -107,13 +107,13 @@ export function Modal({
     const modalContent = (
         <div
             ref={dialogRef}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity,0.5)] backdrop-blur-xs animate-fade-in p-4 sm:p-4 pt-safe pb-safe overflow-y-auto"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity,0.55)] animate-fade-in p-4 sm:p-4 pt-safe pb-safe overflow-y-auto"
             role="dialog"
             aria-modal="true"
             tabIndex={-1}
             aria-labelledby={title ? titleId : undefined}
         >
-            <div className={`w-full ${maxWidthClasses[maxWidth]} p-6 relative animate-slide-in my-auto mx-auto bg-background/95 backdrop-blur-xl border border-glass-border shadow-2xl`} onClick={e => e.stopPropagation()}>
+            <div className={`w-full ${maxWidthClasses[maxWidth]} p-6 relative animate-slide-in my-auto mx-auto bg-background-secondary border border-line rounded-md shadow-lg`} onClick={e => e.stopPropagation()}>
                 {!hideCloseButton && (
                     <button
                         onClick={onClose}

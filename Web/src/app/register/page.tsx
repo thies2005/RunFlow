@@ -112,7 +112,7 @@ export default function RegisterPage() {
                             alt="RunFlow"
                             width={64}
                             height={64}
-                            className="rounded-xl mx-auto mb-4"
+                            className="rounded-md mx-auto mb-4"
                         />
                         <h1 className="text-3xl font-bold text-foreground mb-2">
                             Create your account
@@ -135,11 +135,11 @@ export default function RegisterPage() {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Name (optional)"
-                                className="w-full bg-foreground/5 border border-foreground/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
-                            />
-                        </div>
+                                    className="w-full bg-background-secondary border border-line rounded-md py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                />
+                            </div>
 
-                        {/* Email */}
+                            {/* Email */}
                         <div className="relative">
                             <label htmlFor="register-email" className="sr-only">Email</label>
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
@@ -151,12 +151,12 @@ export default function RegisterPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Email address"
-                                className="w-full bg-foreground/5 border border-foreground/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
-                                required
-                            />
-                        </div>
+                                    className="w-full bg-background-secondary border border-line rounded-md py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                    required
+                                />
+                            </div>
 
-                        {/* Password */}
+                            {/* Password */}
                         <div className="relative">
                             <label htmlFor="register-password" className="sr-only">Password</label>
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
@@ -168,18 +168,18 @@ export default function RegisterPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Password"
-                                className="w-full bg-foreground/5 border border-foreground/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
-                                required
-                            />
-                        </div>
+                                    className="w-full bg-background-secondary border border-line rounded-md py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                    required
+                                />
+                            </div>
 
-                        {/* Password Requirements */}
+                            {/* Password Requirements */}
                         {password.length > 0 && (
                             <div className="glass-card p-3 space-y-1">
                                 {passwordRequirements.map((req, idx) => (
                                     <div key={idx} className="flex items-center gap-2 text-sm">
-                                        <Check className={`w-4 h-4 ${req.met ? 'text-green-500' : 'text-foreground-muted'}`} />
-                                        <span className={req.met ? 'text-green-400' : 'text-foreground-muted'}>
+                                        <Check className={`w-4 h-4 ${req.met ? 'text-positive' : 'text-foreground-muted'}`} />
+                                        <span className={req.met ? 'text-positive' : 'text-foreground-muted'}>
                                             {req.label}
                                         </span>
                                     </div>
@@ -199,21 +199,21 @@ export default function RegisterPage() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="Confirm password"
-                                className={`w-full bg-foreground/5 border rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden ${confirmPassword.length > 0
-                                    ? passwordsMatch
-                                        ? 'border-green-500/50'
-                                        : 'border-red-500/50'
-                                    : 'border-foreground/10'
-                                    }`}
+                                    className={`w-full bg-background-secondary border rounded-md py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden ${confirmPassword.length > 0
+                                        ? passwordsMatch
+                                            ? 'border-positive'
+                                            : 'border-negative'
+                                        : 'border-line'
+                                        }`}
                                 required
                             />
                         </div>
 
                         {error && (
-                            <p className="text-red-400 text-sm text-center">{error}</p>
+                            <p className="text-negative text-sm text-center">{error}</p>
                         )}
 
-                        <div className="bg-foreground/5 p-4 rounded-xl border border-foreground/10 space-y-3 text-left">
+                        <div className="bg-background-secondary p-4 rounded-md border border-line space-y-3 text-left">
                             <label className="flex items-start gap-3 cursor-pointer group">
                                 <div className="relative flex items-start pt-0.5">
                                     <input
@@ -222,14 +222,14 @@ export default function RegisterPage() {
                                         checked={termsAccepted}
                                         onChange={(e) => setTermsAccepted(e.target.checked)}
                                     />
-                                    <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                        <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                    <div className="w-5 h-5 rounded-sm border border-line-strong peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-colors flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
                                 </div>
                                 <span className="text-sm text-foreground-muted leading-tight">
-                                    I have read and agree to the <Link href="/terms" className="text-orange-500 hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-orange-500 hover:underline">Privacy Policy</Link>.
+                                    I have read and agree to the <Link href="/terms" className="text-accent-orange hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-accent-orange hover:underline">Privacy Policy</Link>.
                                 </span>
                             </label>
 
@@ -241,8 +241,8 @@ export default function RegisterPage() {
                                         checked={healthAccepted}
                                         onChange={(e) => setHealthAccepted(e.target.checked)}
                                     />
-                                    <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                        <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                    <div className="w-5 h-5 rounded-sm border border-line-strong peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-colors flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>
@@ -260,8 +260,8 @@ export default function RegisterPage() {
                                         checked={isOver16}
                                         onChange={(e) => setIsOver16(e.target.checked)}
                                     />
-                                    <div className="w-5 h-5 rounded border-2 border-foreground/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
-                                        <svg className="w-3.5 h-3.5 text-foreground opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                    <div className="w-5 h-5 rounded-sm border border-line-strong peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-colors flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                         </svg>
                                     </div>

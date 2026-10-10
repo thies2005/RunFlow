@@ -158,26 +158,26 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStre
             )}
 
             <div className="flex justify-between items-center p-4 pt-12 relative z-10">
-                <h2 className="text-foreground font-bold text-lg">Scan Barcode</h2>
-                <button onClick={onClose} className="p-2 bg-foreground/10 rounded-full">
-                    <X className="w-6 h-6 text-foreground" />
+                <h2 className="text-white font-semibold text-lg">Scan Barcode</h2>
+                <button onClick={onClose} className="p-2 bg-white/10 rounded-full">
+                    <X className="w-6 h-6 text-white" />
                 </button>
             </div>
 
             <div className="flex-1 relative flex items-center justify-center">
                 {error ? (
                     <div className="flex flex-col items-center gap-4 p-6 max-w-xs text-center">
-                        <AlertTriangle className="w-12 h-12 text-yellow-400" />
+                        <AlertTriangle className="w-12 h-12 text-workout-tempo" />
                         <p className="text-foreground text-sm">{error}</p>
                         <button
                             onClick={onClose}
-                            className="mt-2 px-6 py-2 bg-foreground/15 hover:bg-foreground/25 text-foreground rounded-full text-sm transition-colors"
+                            className="mt-2 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm transition-colors"
                         >
                             Close
                         </button>
                     </div>
                 ) : IS_NATIVE ? (
-                    <div className="w-64 h-64 border-2 border-green-500 bg-transparent rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
+                    <div className="w-64 h-64 border-2 border-positive bg-transparent rounded-md shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
                 ) : (
                     <div id="web-reader" className="w-full max-w-sm bg-white rounded-lg overflow-hidden"></div>
                 )}

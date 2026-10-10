@@ -190,7 +190,7 @@ export function ProgressionBuilder({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col">
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-md w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-glass-border">
                     <h3 className="text-sm font-semibold text-foreground">
                         {existingProgression ? 'Edit Progression' : 'Create Progression'}
@@ -212,7 +212,7 @@ export function ProgressionBuilder({
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g. Tuesday Intervals"
-                            className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                            className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                         />
                     </div>
 
@@ -222,7 +222,7 @@ export function ProgressionBuilder({
                             <select
                                 value={workoutType}
                                 onChange={(e) => setWorkoutType(e.target.value as ProgressionWorkoutType)}
-                                className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             >
                                 {WORKOUT_TYPES.map((t) => (
                                     <option key={t} value={t}>{t}</option>
@@ -236,7 +236,7 @@ export function ProgressionBuilder({
                                 min={1}
                                 value={startWeek}
                                 onChange={(e) => setStartWeek(Math.max(1, Number(e.target.value)))}
-                                className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -246,7 +246,7 @@ export function ProgressionBuilder({
                                 min={startWeek}
                                 value={endWeek}
                                 onChange={(e) => setEndWeek(Math.max(startWeek, Number(e.target.value)))}
-                                className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             />
                         </div>
                     </div>
@@ -268,7 +268,7 @@ export function ProgressionBuilder({
                             <button
                                 type="button"
                                 onClick={generateWeeks}
-                                className="w-full py-3 border border-dashed border-foreground/20 rounded-lg text-xs text-foreground-secondary hover:text-foreground hover:border-foreground/30 transition-colors"
+                                className="w-full py-3 border border-dashed border-foreground/20 rounded-md text-xs text-foreground-secondary hover:text-foreground hover:border-foreground/30 transition-colors"
                             >
                                 Generate {endWeek - startWeek + 1} weeks
                             </button>
@@ -330,7 +330,7 @@ export function ProgressionBuilder({
                                 <button
                                     type="button"
                                     onClick={addWeek}
-                                    className="flex items-center gap-1 w-full py-2 border border-dashed border-foreground/20 rounded-lg text-[10px] text-foreground-muted hover:text-foreground-secondary hover:border-foreground/30 transition-colors"
+                                    className="flex items-center gap-1 w-full py-2 border border-dashed border-foreground/20 rounded-md text-[10px] text-foreground-muted hover:text-foreground-secondary hover:border-foreground/30 transition-colors"
                                 >
                                     <Plus className="w-3 h-3" />
                                     Add week
@@ -344,7 +344,7 @@ export function ProgressionBuilder({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 rounded-lg bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 transition-colors"
+                        className="px-4 py-2 rounded-md bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 transition-colors"
                     >
                         Cancel
                     </button>
@@ -354,7 +354,7 @@ export function ProgressionBuilder({
                                 type="button"
                                 onClick={() => saveMutation.mutate()}
                                 disabled={saveMutation.isPending || !name}
-                                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-foreground/15 text-foreground text-xs hover:bg-foreground/20 disabled:opacity-50 transition-colors"
+                                className="flex items-center gap-1 px-4 py-2 rounded-md bg-foreground/15 text-foreground text-xs hover:bg-foreground/20 disabled:opacity-50 transition-colors"
                             >
                                 {saveMutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                                 Save
@@ -365,7 +365,7 @@ export function ProgressionBuilder({
                                 type="button"
                                 onClick={() => applyMutation.mutate()}
                                 disabled={applyMutation.isPending || !name}
-                                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-xs hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                                className="flex items-center gap-1 px-4 py-2 rounded-md bg-foreground text-background hover:bg-foreground/85 disabled:opacity-50 transition-colors"
                             >
                                 {applyMutation.isPending ? (
                                     <Loader2 className="w-3 h-3 animate-spin" />

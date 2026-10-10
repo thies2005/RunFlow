@@ -9,10 +9,10 @@ export default function TermsPage() {
     return (
         <div className="min-h-screen bg-background text-foreground py-16 px-4">
             <div className="max-w-3xl mx-auto prose dark:prose-invert prose-orange">
-                <Link href="/" className="text-orange-500 hover:text-orange-400 no-underline mb-8 inline-block transition-colors">
+                <Link href="/" className="text-accent-orange no-underline mb-8 inline-block transition-colors">
                     &larr; Back to Home
                 </Link>
-                <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-500">Terms of Service</h1>
+                <h1 className="text-4xl font-bold mb-4 text-foreground">Terms of Service</h1>
                 <p className="text-foreground-muted text-sm mb-8">Last updated: {new Date().toLocaleDateString('en-GB')}</p>
 
                 <h2>1. Acceptance of Terms</h2>
@@ -87,13 +87,13 @@ export default function TermsPage() {
                     These Terms of Service are governed by and construed in accordance with the laws of the Federal Republic of Germany, without regard to its conflict of law principles. If you are a consumer residing in the EU, you also enjoy the protection of the mandatory provisions of the law of your country of residence.
                 </p>
                 <p>
-                    The European Commission provides a platform for online dispute resolution (ODR), which is available at <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">https://ec.europa.eu/consumers/odr</a>. We are neither obligated nor willing to participate in dispute resolution proceedings before a consumer arbitration board.
+                    The European Commission provides a platform for online dispute resolution (ODR), which is available at <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" className="text-accent-orange hover:underline">https://ec.europa.eu/consumers/odr</a>. We are neither obligated nor willing to participate in dispute resolution proceedings before a consumer arbitration board.
                 </p>
 
                 <h2>12. Contact Information</h2>
                 <p>
                     If you have any questions about these Terms of Service, please contact us at:{' '}
-                    <a href="mailto:privacy@schuelken.uk" className="text-orange-500 hover:underline">
+                    <a href="mailto:privacy@schuelken.uk" className="text-accent-orange hover:underline">
                         privacy@schuelken.uk
                     </a>.
                 </p>

@@ -29,10 +29,10 @@ interface RacePredictionTimeChartProps {
 
 // Race colors matching existing RacePredictionChart
 const RACE_COLORS = {
-    '5K': '#10b981',
-    '10K': '#3b82f6',
-    'Half': '#f59e0b',
-    'Marathon': '#ef4444',
+    '5K': 'var(--positive)',
+    '10K': 'var(--accent-blue)',
+    'Half': 'var(--workout-tempo)',
+    'Marathon': 'var(--accent-orange)',
 };
 
 type RaceKey = keyof typeof RACE_COLORS;
@@ -143,9 +143,9 @@ function RacePredictionTimeChart({
                         <button
                             key={key}
                             onClick={() => toggleRace(key)}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${visibleRaces[key]
-                                ? 'border-transparent text-foreground shadow-xs'
-                                : 'border-glass-border text-foreground-muted hover:text-foreground bg-transparent'
+                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors border ${visibleRaces[key]
+                                ? 'border-transparent text-background'
+                                : 'border-line text-foreground-muted hover:text-foreground bg-transparent'
                                 }`}
                             style={visibleRaces[key] ? { backgroundColor: RACE_COLORS[key] } : {}}
                         >
@@ -158,7 +158,7 @@ function RacePredictionTimeChart({
             <div className="h-72 min-h-[288px] w-full relative" style={{ minWidth: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                         <XAxis
                             dataKey="date"
                             stroke="var(--foreground-muted)"

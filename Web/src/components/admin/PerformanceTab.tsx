@@ -70,7 +70,7 @@ export default function PerformanceTab() {
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-              className="text-sm border border-foreground/20 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="text-sm border border-line rounded-md px-3 py-2 focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
             >
               {timeRanges.map((range) => (
                 <option key={range.value} value={range.value}>
@@ -86,7 +86,7 @@ export default function PerformanceTab() {
         </div>
       </div>
 
-      <div className="border-b border-glass-border">
+      <div className="border-b border-line">
         <nav className="flex gap-4">
           {tabs.map((tab) => (
             <button
@@ -94,7 +94,7 @@ export default function PerformanceTab() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-accent-blue text-accent-blue'
                   : 'border-transparent text-foreground-muted hover:text-foreground-secondary'
               }`}
             >
@@ -159,11 +159,11 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
   const getDataSourceBadge = () => {
     switch (dataSource) {
       case 'aggregated':
-        return { label: 'Pre-aggregated', icon: Database, color: 'text-green-600 bg-green-50' };
+        return { label: 'Pre-aggregated', icon: Database, color: 'text-positive bg-positive/10' };
       case 'database':
-        return { label: 'Live from DB', icon: Database, color: 'text-blue-600 bg-blue-50' };
+        return { label: 'Live from DB', icon: Database, color: 'text-accent-blue bg-accent-blue/10' };
       case 'memory':
-        return { label: 'In-memory (current session)', icon: MemoryStick, color: 'text-yellow-600 bg-yellow-50' };
+        return { label: 'In-memory (current session)', icon: MemoryStick, color: 'text-workout-tempo bg-workout-tempo/10' };
       default:
         return { label: 'Unknown', icon: Wifi, color: 'text-foreground-secondary bg-background-secondary' };
     }
@@ -172,7 +172,7 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-orange"></div>
       </div>
     );
   }
@@ -182,7 +182,7 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-background-secondary p-6 rounded-xl shadow-xs border border-glass-border">
+      <div className="bg-background-secondary p-6 rounded-md  border border-line">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-foreground">API Routes Performance</h3>
           <div className="flex items-center gap-3">

@@ -24,7 +24,7 @@ export function UserAvatar({ name, image, className = "" }: UserAvatarProps) {
 
     // Use a simple div placeholder during SSR/multration to match dimensions
     if (!mounted) {
-        return <div className={`bg-foreground/10 animate-pulse rounded-full ${className}`} />;
+        return <div className={`bg-foreground/10 rounded-full ${className}`} />;
     }
 
     if (image && !imageError) {
@@ -46,9 +46,9 @@ export function UserAvatar({ name, image, className = "" }: UserAvatarProps) {
 
     // Generate a consistent background color based on name hash
     const colors = [
-        'bg-blue-500', 'bg-green-500', 'bg-yellow-500',
-        'bg-red-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500',
-        'bg-orange-500', 'bg-teal-500', 'bg-cyan-500'
+        'bg-accent-blue/20 text-accent-blue', 'bg-positive/20 text-positive', 'bg-workout-tempo/20 text-workout-tempo',
+        'bg-negative/20 text-negative', 'bg-workout-long-run/20 text-workout-long-run', 'bg-accent-pink/20 text-accent-pink', 'bg-accent-blue/20 text-accent-blue',
+        'bg-accent-orange/20 text-accent-orange', 'bg-accent-cyan/20 text-accent-cyan', 'bg-workout-strength/20 text-workout-strength'
     ];
 
     let colorIndex = 0;
@@ -60,7 +60,7 @@ export function UserAvatar({ name, image, className = "" }: UserAvatarProps) {
     const bgColor = colors[colorIndex % colors.length];
 
     return (
-        <div className={`flex items-center justify-center text-foreground font-medium rounded-full ${bgColor} ${className}`}>
+        <div className={`flex items-center justify-center font-medium rounded-full ${bgColor} ${className}`}>
             {initials ? (
                 <span className="text-xs sm:text-sm">{initials}</span>
             ) : (

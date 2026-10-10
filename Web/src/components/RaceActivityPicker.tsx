@@ -75,7 +75,7 @@ export default function RaceActivityPicker({ raceDate, selectedId, onSelect }: R
 
     return (
         <div className="space-y-2">
-            <label className="block text-xs text-foreground-muted mb-2 uppercase">
+            <label className="block text-xs text-foreground-muted mb-2">
                 Select your race run ({format(fromDate, 'MMM d')} - {format(toDate, 'MMM d')})
             </label>
 
@@ -86,7 +86,7 @@ export default function RaceActivityPicker({ raceDate, selectedId, onSelect }: R
                     placeholder="Search by name..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full bg-foreground/5 border border-foreground/10 rounded-lg pl-9 pr-3 py-2 text-sm text-foreground placeholder-foreground-muted outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
+                    className="w-full bg-background-secondary border border-line rounded-md pl-9 pr-3 py-2 text-sm text-foreground placeholder-foreground-muted outline-hidden focus:ring-2 focus:ring-accent-orange transition-colors"
                 />
             </div>
 
@@ -102,13 +102,13 @@ export default function RaceActivityPicker({ raceDate, selectedId, onSelect }: R
                             key={activity.id}
                             type="button"
                             onClick={() => onSelect(activity.id)}
-                            className={`w-full p-3 rounded-lg border text-left transition-all ${selectedId === activity.id
+                            className={`w-full p-3 rounded-md border text-left transition-colors ${selectedId === activity.id
                                     ? 'border-accent-orange bg-accent-orange/10'
-                                    : 'border-foreground/10 bg-foreground/5 hover:bg-foreground/10'
+                                    : 'border-line bg-background-secondary hover:bg-surface-hover'
                                 }`}
                         >
                             <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedId === activity.id ? 'bg-accent-orange/20 text-accent-orange' : 'bg-foreground/10 text-foreground-muted'
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedId === activity.id ? 'bg-accent-orange/20 text-accent-orange' : 'bg-background-tertiary text-foreground-muted'
                                     }`}>
                                     {selectedId === activity.id
                                         ? <Check className="w-4 h-4" />
@@ -118,7 +118,7 @@ export default function RaceActivityPicker({ raceDate, selectedId, onSelect }: R
                                     <p className={`text-sm font-medium truncate ${selectedId === activity.id ? 'text-accent-orange' : 'text-foreground'}`}>
                                         {activity.name}
                                     </p>
-                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-foreground-muted">
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-foreground-muted tabular-nums">
                                         <span>{format(new Date(activity.startDate), 'MMM d, yyyy')}</span>
                                         <span>{formatDistanceWithUnit(activity.distance, useImperial, 1)}</span>
                                         <span>{formatDuration(activity.movingTime)}</span>

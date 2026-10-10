@@ -34,7 +34,7 @@ export function PrioritySelector({ value, onChange, hasPrimary }: PrioritySelect
                             type="button"
                             onClick={() => !isDisabled && onChange(p)}
                             disabled={isDisabled}
-                            className={`flex flex-col items-start px-2.5 py-2 rounded-lg border text-left transition-colors ${
+                            className={`flex flex-col items-start px-2.5 py-2 rounded-md border text-left transition-colors ${
                                 isDisabled
                                     ? 'opacity-30 cursor-not-allowed border-glass-border'
                                     : isSelected

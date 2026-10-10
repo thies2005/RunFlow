@@ -71,14 +71,14 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
     const chartData = generateChartData();
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-background-secondary w-full max-w-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 sm:items-center sm:justify-center">
+            <div className="bg-background-secondary border border-line w-full max-w-2xl rounded-t-md sm:rounded-md flex flex-col max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-foreground/10 shrink-0">
+                <div className="flex items-center justify-between p-4 border-b border-line shrink-0">
                     <div>
-                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                            <ActivityIcon className="w-5 h-5 text-blue-400" />
+                        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                            <ActivityIcon className="w-5 h-5 text-accent-blue" />
                             Statistics
                         </h2>
                         <p className="text-xs text-foreground-muted mt-0.5">{targetName}</p>
@@ -91,13 +91,13 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
                 {/* Body */}
                 <div className="p-5 overflow-y-auto flex-1 space-y-6">
                     {/* Time Range Selector */}
-                    <div className="flex bg-foreground/5 p-1 rounded-lg border border-foreground/10 shrink-0 w-full sm:w-auto self-start sm:self-end">
+                    <div className="flex bg-background-tertiary p-1 rounded-md border border-line shrink-0 w-full sm:w-auto self-start sm:self-end">
                         {RANGES.map(range => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range)}
-                                className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md transition-colors ${timeRange === range
-                                    ? 'bg-foreground/10 text-foreground shadow-xs'
+                                className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-sm transition-colors ${timeRange === range
+                                    ? 'bg-glass-bg text-foreground'
                                     : 'text-foreground-muted hover:text-foreground-muted'
                                     }`}
                             >
@@ -108,16 +108,16 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
 
                     {isLoading ? (
                         <div className="flex justify-center py-8">
-                            <div className="w-8 h-8 rounded-full border-2 border-blue-500/30 border-t-blue-500 animate-spin" />
+                            <div className="w-8 h-8 rounded-full border-2 border-accent-blue/30 border-t-accent-blue animate-spin" />
                         </div>
                     ) : (
                         <>
                             {/* Hero Stat */}
-                            <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-5 flex flex-col items-center justify-center text-center">
-                                <span className="text-4xl font-black text-foreground mb-1">
-                                    {statsData?.successRate || 0}<span className="text-xl text-blue-400">%</span>
+                            <div className="bg-background-tertiary border border-line rounded-md p-5 flex flex-col items-center justify-center text-center">
+                                <span className="text-4xl font-semibold font-mono tabular-nums text-foreground mb-1">
+                                    {statsData?.successRate || 0}<span className="text-xl text-accent-blue">%</span>
                                 </span>
-                                <span className="text-xs font-semibold uppercase tracking-widest text-foreground-muted">{timeRange} Adherence</span>
+                                <span className="text-xs font-semibold text-foreground-muted">{timeRange} Adherence</span>
                             </div>
 
                             {/* Chart Map */}
@@ -128,10 +128,10 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
                                 <div className="h-[200px] w-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                                             <XAxis
                                                 dataKey="dateStr"
-                                                stroke="#4b5563"
+                                                stroke="var(--foreground-muted)"
                                                 fontSize={10}
                                                 tickLine={false}
                                                 minTickGap={timeRange === '1M' ? 5 : 20}
@@ -145,17 +145,17 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
                                             />
                                             <YAxis hide domain={[0, 1]} />
                                             <Tooltip
-                                                contentStyle={{ background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                                                labelStyle={{ color: '#fff' }}
-                                                itemStyle={{ color: '#fff' }}
-                                                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                                contentStyle={{ background: 'var(--panel-bg)', border: '1px solid var(--line)', borderRadius: '6px' }}
+                                                labelStyle={{ color: 'var(--foreground)' }}
+                                                itemStyle={{ color: 'var(--foreground)' }}
+                                                cursor={{ fill: 'rgba(127,127,127,0.1)' }}
                                                 labelFormatter={(val) => format(new Date(val), 'EEEE, MMM d, yyyy')}
                                                 formatter={(value) => [value === 1 ? 'Taken' : 'Missed', 'Status']}
                                             />
                                             <Bar
                                                 dataKey="takenValue"
                                                 name="Status"
-                                                fill="#4ade80" // green-400
+                                                fill="var(--positive)"
                                                 radius={[2, 2, 0, 0]}
                                                 isAnimationActive={false}
                                             />
@@ -164,10 +164,10 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
                                 </div>
                                 <div className="flex items-center gap-4 mt-3 text-xs text-foreground-muted justify-end">
                                     <div className="flex items-center gap-1.5">
-                                        <div className="w-3 h-3 rounded bg-foreground/5 border border-foreground/5" /> Missed
+                                        <div className="w-3 h-3 rounded bg-background-tertiary border border-line" /> Missed
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                        <div className="w-3 h-3 rounded bg-green-500" /> Taken
+                                        <div className="w-3 h-3 rounded bg-positive" /> Taken
                                     </div>
                                 </div>
                             </div>

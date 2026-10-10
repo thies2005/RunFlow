@@ -85,13 +85,13 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-background-secondary w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
+            <div className="bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-foreground/10 shrink-0">
+                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-line shrink-0">
                     <div className="flex items-center gap-2">
-                        <BookOpen className="w-5 h-5 text-amber-400" />
-                        <h2 className="text-lg font-bold text-foreground">Meal Library</h2>
+                        <BookOpen className="w-5 h-5 text-workout-tempo" />
+                        <h2 className="text-lg font-semibold text-foreground">Meal Library</h2>
                     </div>
                     <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
                         <X className="w-5 h-5" />
@@ -99,7 +99,7 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                 </div>
 
                 {/* Search Bar */}
-                <div className="p-4 border-b border-foreground/5 shrink-0 bg-background-secondary sticky top-0 z-10">
+                <div className="p-4 border-b border-line shrink-0 bg-background-secondary sticky top-0 z-10">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-muted" />
                         <input
@@ -107,7 +107,7 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                             placeholder="Search meals..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-foreground/5 border border-foreground/10 rounded-xl pl-9 pr-4 py-2.5 text-sm text-foreground placeholder-foreground-muted focus:outline-hidden focus:border-amber-500/50 transition-colors"
+                            className="w-full bg-background-tertiary border border-line rounded-md pl-9 pr-4 py-2.5 text-sm text-foreground placeholder-foreground-muted focus:outline-hidden transition-colors"
                         />
                         {searchQuery && (
                             <button
@@ -127,7 +127,7 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                         </div>
                     ) : !meals?.length ? (
                         <div className="text-center py-12">
-                            <div className="w-16 h-16 rounded-full bg-foreground/5 flex items-center justify-center mx-auto mb-4">
+                            <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mx-auto mb-4">
                                 <BookOpen className="w-8 h-8 text-foreground-secondary" />
                             </div>
                             <p className="text-foreground-muted font-medium mb-1">No saved meals yet</p>
@@ -145,16 +145,16 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                                 meals.filter(meal => meal.name.toLowerCase().includes(searchQuery.toLowerCase())).map(meal => (
                                     <div
                                         key={meal.id}
-                                        className="bg-foreground/5 border border-foreground/10 rounded-xl overflow-hidden"
+                                        className="bg-background-tertiary border border-line rounded-md overflow-hidden"
                                     >
                                         <button
                                             onClick={() => onSelectMeal(meal)}
-                                            className="w-full text-left p-4 hover:bg-foreground/5 transition-colors flex items-center gap-3"
+                                            className="w-full text-left p-4 hover:bg-glass-bg-hover transition-colors flex items-center gap-3"
                                         >
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-medium text-foreground text-sm line-clamp-1">{meal.name}</p>
-                                                <div className="flex items-center gap-2 mt-1 text-[11px] text-foreground-muted">
-                                                    <span className="text-amber-400 font-medium">{Math.round(meal.totalCalories)} kcal</span>
+                                                <div className="flex items-center gap-2 mt-1 text-[11px] text-foreground-muted font-mono tabular-nums">
+                                                    <span className="text-workout-tempo font-medium">{Math.round(meal.totalCalories)} kcal</span>
                                                     <span>•</span>
                                                     <span>P: {Math.round(meal.totalProtein)}g</span>
                                                     <span>C: {Math.round(meal.totalCarbs)}g</span>
@@ -166,7 +166,7 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                                             </div>
                                             <ChevronRight className="w-4 h-4 text-foreground-muted shrink-0" />
                                         </button>
-                                        <div className="border-t border-foreground/5 px-4 py-2 flex justify-end">
+                                        <div className="border-t border-line px-4 py-2 flex justify-end">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -175,7 +175,7 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
                                                     }
                                                 }}
                                                 disabled={deletingId === meal.id}
-                                                className="text-xs text-red-400/70 hover:text-red-400 flex items-center gap-1 transition-colors disabled:opacity-50"
+                                                className="text-xs text-negative/80 hover:text-negative flex items-center gap-1 transition-colors disabled:opacity-50"
                                             >
                                                 {deletingId === meal.id ? (
                                                     <Loader2 className="w-3 h-3 animate-spin" />

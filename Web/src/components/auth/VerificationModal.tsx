@@ -94,7 +94,7 @@ export default function VerificationModal({ isOpen, onClose, email, onVerified }
                             value={code[i] || ''}
                             onChange={(e) => handleCodeChange(i, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(i, e)}
-                            className="w-12 h-14 text-center text-2xl font-semibold bg-background border border-glass-border rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden uppercase transition-all"
+                            className="w-12 h-14 text-center font-mono text-2xl font-semibold bg-background-secondary border border-line rounded-md focus:ring-2 focus:ring-accent-orange outline-hidden uppercase transition-colors"
                             maxLength={6}
                         />
                     ))}
@@ -104,14 +104,14 @@ export default function VerificationModal({ isOpen, onClose, email, onVerified }
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 py-2.5 px-4 text-sm font-medium text-foreground bg-background-tertiary hover:bg-foreground/15 rounded-lg transition-colors"
+                        className="flex-1 py-2.5 px-4 text-sm font-medium text-foreground bg-background-tertiary hover:bg-surface-hover rounded-md transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={isLoading || code.length !== 6}
-                        className="flex-1 py-2.5 px-4 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:text-foreground-muted disabled:cursor-not-allowed rounded-lg transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 py-2.5 px-4 text-sm font-medium text-white bg-accent-orange hover:bg-accent-orange/90 disabled:opacity-50 disabled:text-foreground-muted disabled:cursor-not-allowed rounded-md transition-colors flex items-center justify-center gap-2"
                     >
                         {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                         Verify

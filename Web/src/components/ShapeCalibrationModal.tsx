@@ -262,14 +262,14 @@ export default function ShapeCalibrationModal({
             isOpen={isOpen}
             onClose={onClose}
             title="Calibration"
-            icon={<Calculator className="w-5 h-5 text-accent-cyan" />}
+            icon={<Calculator className="w-5 h-5 text-accent-blue" />}
             maxWidth="md"
         >
             {/* Tabs */}
-            <div className="flex border-b border-glass-border -mx-6 mb-6 px-6">
+            <div className="flex border-b border-line -mx-6 mb-6 px-6">
                 <button
                     onClick={() => setMode('VDOT')}
-                    className={`flex-1 py-3 text-sm font-medium transition ${mode === 'VDOT' ? 'text-accent-cyan border-b-2 border-accent-cyan' : 'text-foreground-muted hover:text-foreground'}`}
+                    className={`flex-1 py-3 text-sm font-medium transition ${mode === 'VDOT' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-foreground-muted hover:text-foreground'}`}
                 >
                     VDOT Correction
                 </button>
@@ -291,8 +291,8 @@ export default function ShapeCalibrationModal({
             <div className="space-y-6">
                 {mode === 'VDOT' && (
                     <div className="space-y-4">
-                        <div className="bg-accent-cyan/10 p-3 rounded-lg border border-accent-cyan/20">
-                            <p className="text-sm text-accent-cyan">
+                        <div className="bg-accent-blue/10 p-3 rounded-md border border-accent-blue/20">
+                            <p className="text-sm text-accent-blue">
                                 Calibrate your global Effective VO2max to match your actual race performance.
                                 This updates all your historical data.
                             </p>
@@ -302,7 +302,7 @@ export default function ShapeCalibrationModal({
                         <div className="space-y-2">
                             <label className="text-sm text-foreground-muted">Auto-fill from Recent Activity</label>
                             <select
-                                className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground text-sm focus:border-accent-cyan outline-hidden"
+                                className="w-full bg-background-secondary border border-line rounded-md px-3 py-2 text-foreground text-sm focus:border-accent-blue outline-hidden"
                                 value={selectedActivityId}
                                 onChange={(e) => handleActivitySelect(e.target.value)}
                             >
@@ -327,14 +327,14 @@ export default function ShapeCalibrationModal({
                                     <div className="flex gap-2">
                                         <input
                                             type="number"
-                                            className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground focus:border-accent-cyan outline-hidden"
+                                            className="w-full bg-background-secondary border border-line rounded-md px-3 py-2 text-foreground focus:border-accent-blue outline-hidden font-mono"
                                             placeholder="Meters"
                                             value={customDistanceMeters}
                                             onChange={(e) => setCustomDistanceMeters(e.target.value)}
                                         />
                                         <button
                                             onClick={() => setIsCustomDistance(false)}
-                                            className="text-xs text-accent-cyan underline whitespace-nowrap"
+                                            className="text-xs text-accent-blue underline whitespace-nowrap"
                                         >
                                             Standard
                                         </button>
@@ -342,7 +342,7 @@ export default function ShapeCalibrationModal({
                                 ) : (
                                     <div className="flex gap-2">
                                         <select
-                                            className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground focus:border-accent-cyan outline-hidden"
+                                            className="w-full bg-background-secondary border border-line rounded-md px-3 py-2 text-foreground focus:border-accent-blue outline-hidden"
                                             value={vdotRaceType}
                                             onChange={(e) => setVdotRaceType(e.target.value as RaceType)}
                                         >
@@ -353,7 +353,7 @@ export default function ShapeCalibrationModal({
                                         </select>
                                         <button
                                             onClick={() => { setIsCustomDistance(true); setCustomDistanceMeters(''); }}
-                                            className="text-xs text-accent-cyan underline whitespace-nowrap"
+                                            className="text-xs text-accent-blue underline whitespace-nowrap"
                                         >
                                             Custom
                                         </button>
@@ -366,21 +366,21 @@ export default function ShapeCalibrationModal({
                             <input
                                 type="number" placeholder="HH" value={vdotHours}
                                 onChange={e => setVdotHours(validateTimeInput(e.target.value, 23))}
-                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                                className="w-16 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
                                 min="0" max="23"
                             />
                             <span className="text-foreground-muted">:</span>
                             <input
                                 type="number" placeholder="MM" value={vdotMinutes}
                                 onChange={e => setVdotMinutes(validateTimeInput(e.target.value, 59))}
-                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                                className="w-16 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
                                 min="0" max="59"
                             />
                             <span className="text-foreground-muted">:</span>
                             <input
                                 type="number" placeholder="SS" value={vdotSeconds}
                                 onChange={e => setVdotSeconds(validateTimeInput(e.target.value, 59))}
-                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                                className="w-16 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
                                 min="0" max="59"
                             />
                         </div>
@@ -389,27 +389,27 @@ export default function ShapeCalibrationModal({
                         {vdotCalcData && (
                             <div className="space-y-2">
                                 <div className="grid grid-cols-3 gap-2 text-sm">
-                                    <div className="p-2 bg-background-secondary rounded text-center">
+                                    <div className="p-2 bg-background-secondary rounded-md text-center">
                                         <p className="text-foreground-muted text-xs">Race VDOT</p>
-                                        <p className="text-foreground font-mono text-lg">{vdotCalcData.impliedVdot.toFixed(1)}</p>
+                                        <p className="text-foreground font-mono text-lg tabular-nums">{vdotCalcData.impliedVdot.toFixed(1)}</p>
                                     </div>
-                                    <div className="p-2 bg-background-secondary rounded text-center">
+                                    <div className="p-2 bg-background-secondary rounded-md text-center">
                                         <p className="text-foreground-muted text-xs">Current VDOT</p>
-                                        <p className="text-foreground-muted font-mono text-lg">{vdotCalcData.baseVdot.toFixed(1)}</p>
+                                        <p className="text-foreground-muted font-mono text-lg tabular-nums">{vdotCalcData.baseVdot.toFixed(1)}</p>
                                     </div>
-                                    <div className="p-2 bg-background-secondary rounded text-center">
+                                    <div className="p-2 bg-background-secondary rounded-md text-center">
                                         <p className="text-foreground-muted text-xs">Correction</p>
-                                        <p className={`font-mono text-lg ${vdotCorrectionValid ? 'text-green-400' : 'text-red-400'}`}>
+                                        <p className={`font-mono text-lg tabular-nums ${vdotCorrectionValid ? 'text-positive' : 'text-negative'}`}>
                                             {vdotCalcData.newFactor.toFixed(3)}x
                                         </p>
                                     </div>
                                 </div>
                                 {!vdotCorrectionValid && (
-                                    <p className="text-xs text-red-400">
+                                    <p className="text-xs text-negative">
                                         Correction factor must be between 0.5x and 1.5x. Your race result differs too much from current data.
                                     </p>
                                 )}
-                                <div className="text-xs text-foreground-muted text-center">
+                                <div className="text-xs text-foreground-muted text-center font-mono">
                                     Current correction: {vdotCorrectionFactor.toFixed(3)}x
                                 </div>
                             </div>
@@ -428,13 +428,13 @@ export default function ShapeCalibrationModal({
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setShapeRaceType('MARATHON')}
-                                className={`px-3 py-1.5 rounded text-sm ${shapeRaceType === 'MARATHON' ? 'bg-blue-600 text-white' : 'bg-background-secondary text-foreground-muted'}`}
+                                className={`px-3 py-1.5 rounded-md text-sm ${shapeRaceType === 'MARATHON' ? 'bg-accent-blue text-white' : 'bg-background-secondary text-foreground-muted'}`}
                             >
                                 Marathon
                             </button>
                             <button
                                 onClick={() => setShapeRaceType('HALF')}
-                                className={`px-3 py-1.5 rounded text-sm ${shapeRaceType === 'HALF' ? 'bg-blue-600 text-white' : 'bg-background-secondary text-foreground-muted'}`}
+                                className={`px-3 py-1.5 rounded-md text-sm ${shapeRaceType === 'HALF' ? 'bg-accent-blue text-white' : 'bg-background-secondary text-foreground-muted'}`}
                             >
                                 Half Marathon
                             </button>
@@ -444,17 +444,17 @@ export default function ShapeCalibrationModal({
                         <div className="flex gap-2 items-center">
                             <input
                                 type="number" placeholder="HH" value={shapeHours} onChange={e => setShapeHours(e.target.value)}
-                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                                className="w-16 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
                             />
                             <span className="text-foreground-muted">:</span>
                             <input
                                 type="number" placeholder="MM" value={shapeMinutes} onChange={e => setShapeMinutes(e.target.value)}
-                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                                className="w-16 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
                             />
                             <span className="text-foreground-muted">:</span>
                             <input
                                 type="number" placeholder="SS" value={shapeSeconds} onChange={e => setShapeSeconds(e.target.value)}
-                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                                className="w-16 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
                             />
                         </div>
 
@@ -462,23 +462,23 @@ export default function ShapeCalibrationModal({
                         {shapeCalcData && (
                             <div className="space-y-2">
                                 <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div className="p-2 bg-background-secondary rounded text-center">
+                                    <div className="p-2 bg-background-secondary rounded-md text-center">
                                         <p className="text-foreground-muted text-xs">Expected</p>
-                                        <p className="text-foreground-muted font-mono">{formatTime(Math.round(shapeCalcData.basePredictedSeconds))}</p>
+                                        <p className="text-foreground-muted font-mono tabular-nums">{formatTime(Math.round(shapeCalcData.basePredictedSeconds))}</p>
                                     </div>
-                                    <div className="p-2 bg-background-secondary rounded text-center">
+                                    <div className="p-2 bg-background-secondary rounded-md text-center">
                                         <p className="text-foreground-muted text-xs">Your Time</p>
-                                        <p className="text-foreground font-mono">{formatTime(shapeCalcData.actualSeconds)}</p>
+                                        <p className="text-foreground font-mono tabular-nums">{formatTime(shapeCalcData.actualSeconds)}</p>
                                     </div>
                                 </div>
-                                <div className={`p-3 rounded-lg flex justify-between items-center ${isShapeInputValid ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                                <div className={`p-3 rounded-md flex justify-between items-center ${isShapeInputValid ? 'bg-positive/10 border border-positive/20' : 'bg-negative/10 border border-negative/20'}`}>
                                     <span className="text-sm text-foreground-muted">Shape Factor:</span>
-                                    <span className={`font-mono text-lg font-bold ${isShapeInputValid ? 'text-green-400' : 'text-red-400'}`}>
+                                    <span className={`font-mono text-lg font-semibold tabular-nums ${isShapeInputValid ? 'text-positive' : 'text-negative'}`}>
                                         {shapeFactor?.toFixed(2)}x
                                     </span>
                                 </div>
                                 {!isShapeInputValid && shapeFactor !== null && (
-                                    <p className="text-xs text-red-400">
+                                    <p className="text-xs text-negative">
                                         Factor must be between -2.0x and 2.0x.
                                     </p>
                                 )}
@@ -504,20 +504,20 @@ export default function ShapeCalibrationModal({
                                 type="range" min="0.8" max="1.5" step="0.01"
                                 value={manualFactor}
                                 onChange={e => setManualFactor(e.target.value)}
-                                className="flex-1 accent-accent-pink"
+                                className="flex-1 accent-accent-orange"
                             />
                             <input
                                 type="number" step="0.01"
                                 value={manualFactor}
                                 onChange={e => setManualFactor(e.target.value)}
-                                className="w-20 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center font-mono"
+                                className="w-20 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
                             />
                         </div>
                     </div>
                 )}
 
                 {/* Footer / Status */}
-                <div className="pt-4 mt-6 border-t border-glass-border flex justify-end gap-3">
+                <div className="pt-4 mt-6 border-t border-line flex justify-end gap-3">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"

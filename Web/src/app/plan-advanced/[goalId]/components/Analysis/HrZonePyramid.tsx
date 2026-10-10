@@ -13,7 +13,7 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
     if (!active || !payload?.length) return null;
     const d = payload[0].payload;
     return (
-        <div className="bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 shadow-xl">
+        <div className="bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2">
             <p className="text-xs text-foreground-secondary">{d.name}</p>
             <p className="text-sm font-medium text-foreground">{d.km} km</p>
         </div>
@@ -51,13 +51,13 @@ export function HrZonePyramid({ data }: HrZonePyramidProps) {
                     {pct8020 > 0 && (
                         <ReferenceLine
                             x={totalKm * 0.8}
-                            stroke="#facc15"
+                            stroke="#b45309"
                             strokeDasharray="4 4"
                             label={{
                                 value: `80/20 threshold`,
                                 position: 'top',
                                 fontSize: 9,
-                                fill: '#facc15',
+                                fill: '#b45309',
                             }}
                         />
                     )}

@@ -26,15 +26,15 @@ import { syncLocalNotifications } from '@/lib/mobile/notifications';
 
 const DashboardView = dynamic(() => import('@/components/views/DashboardView'), {
     ssr: false,
-    loading: () => <div className="h-full w-full animate-pulse bg-background" />,
+    loading: () => <div className="h-full w-full bg-background" />,
 });
 const PlanView = dynamic(() => import('@/components/views/PlanView'), {
     ssr: false,
-    loading: () => <div className="h-full w-full animate-pulse bg-background" />,
+    loading: () => <div className="h-full w-full bg-background" />,
 });
 const AnalyticsView = dynamic(() => import('@/components/views/AnalyticsView'), {
     ssr: false,
-    loading: () => <div className="h-full w-full animate-pulse bg-background" />,
+    loading: () => <div className="h-full w-full bg-background" />,
 });
 const SettingsModal = dynamic(() => import('@/components/SettingsModal'), { ssr: false, loading: () => null });
 const EditWorkoutModal = dynamic(() => import('@/components/EditWorkoutModal'), { ssr: false, loading: () => null });

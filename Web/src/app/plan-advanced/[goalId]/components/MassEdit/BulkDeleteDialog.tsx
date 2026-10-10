@@ -41,10 +41,10 @@ export function BulkDeleteDialog({ goalId, workoutIds, onClose, onComplete }: Bu
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-md p-6 w-full max-w-sm mx-4">
                 <div className="flex items-start gap-3 mb-4">
-                    <div className="p-2 rounded-full bg-red-500/10">
-                        <AlertTriangle className="w-5 h-5 text-red-400" />
+                    <div className="p-2 rounded-full bg-negative/10">
+                        <AlertTriangle className="w-5 h-5 text-negative" />
                     </div>
                     <div>
                         <h3 className="text-sm font-semibold text-foreground">Delete {workoutIds.length} workout{workoutIds.length !== 1 ? 's' : ''}?</h3>
@@ -63,7 +63,7 @@ export function BulkDeleteDialog({ goalId, workoutIds, onClose, onComplete }: Bu
                         type="button"
                         onClick={() => mutation.mutate()}
                         disabled={mutation.isPending}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-red-600 text-white text-xs hover:bg-red-500 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-negative text-white text-xs hover:bg-negative/85 disabled:opacity-50 transition-colors"
                     >
                         {mutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                         Delete

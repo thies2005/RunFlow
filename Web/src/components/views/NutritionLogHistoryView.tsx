@@ -164,15 +164,15 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
     const sortedDates = historyGroups ? Object.keys(historyGroups).sort((a, b) => b.localeCompare(a)) : [];
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-background-secondary w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
+            <div className="bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-foreground/10 shrink-0">
+                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-line shrink-0">
                     <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-pink-400" />
-                        <h2 className="text-lg font-bold text-foreground">Food History</h2>
+                        <Calendar className="w-5 h-5 text-accent-pink" />
+                        <h2 className="text-lg font-semibold text-foreground">Food History</h2>
                     </div>
-                    <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors rounded-full hover:bg-foreground/10">
+                    <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors rounded-full hover:bg-background-tertiary">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -184,7 +184,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                         </div>
                     ) : sortedDates.length === 0 ? (
                         <div className="text-center py-12">
-                            <div className="w-16 h-16 rounded-full bg-foreground/5 flex items-center justify-center mx-auto mb-4">
+                            <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mx-auto mb-4">
                                 <Calendar className="w-8 h-8 text-foreground-secondary" />
                             </div>
                             <p className="text-foreground-muted font-medium mb-1">No food logged yet</p>
@@ -206,7 +206,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                 const isEditing = editingId === log.id;
 
                                                 return (
-                                                    <div key={log.id} className={`bg-foreground/5 border ${isEditing ? 'border-pink-500/50 block shadow-[0_0_15px_rgba(236,72,153,0.15)]' : 'border-foreground/10'} rounded-xl overflow-hidden transition-all duration-200`}>
+                                                    <div key={log.id} className={`bg-background-tertiary border ${isEditing ? 'border-accent-pink/50' : 'border-line'} rounded-md overflow-hidden`}>
                                                         <div className="p-3">
                                                             <div className="flex justify-between items-start mb-2">
                                                                 <div className="flex-1 pr-3">
@@ -216,22 +216,22 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                     )}
                                                                     {!isEditing && (
                                                                         <p className="text-xs text-foreground-muted mt-1">
-                                                                            <span className="text-foreground font-medium">{log.quantity}x</span> {log.mealType || 'SNACK'}
+                                                                            <span className="text-foreground font-medium font-mono">{log.quantity}x</span> {log.mealType || 'SNACK'}
                                                                             {log.foodItem?.servingSize ? ` (${log.foodItem.servingSize})` : ''}
                                                                         </p>
                                                                     )}
                                                                 </div>
                                                                 <div className="text-right shrink-0">
-                                                                    <p className="text-sm font-bold text-pink-400">{Math.round(log.calories)} kcal</p>
-                                                                    <p className="text-[10px] text-foreground-muted mt-0.5">{Math.round(log.protein)}g P · {Math.round(log.carbs)}g C · {Math.round(log.fats)}g F</p>
+                                                                    <p className="text-sm font-semibold font-mono tabular-nums text-foreground">{Math.round(log.calories)} kcal</p>
+                                                                    <p className="text-[10px] font-mono text-foreground-muted mt-0.5">{Math.round(log.protein)}g P · {Math.round(log.carbs)}g C · {Math.round(log.fats)}g F</p>
                                                                 </div>
                                                             </div>
 
                                                             {isEditing && (
-                                                                <div className="mt-3 bg-foreground/5 rounded-lg p-3 border border-foreground/5">
+                                                                <div className="mt-3 bg-glass-bg rounded-md p-3 border border-line">
                                                                     <div className="flex items-center gap-3">
                                                                         <div className="flex-1">
-                                                                            <label className="text-[10px] text-foreground-muted uppercase tracking-wider font-semibold mb-1 block">Quantity</label>
+                                                                            <label className="text-[10px] text-foreground-muted font-semibold mb-1 block">Quantity</label>
                                                                             <div className="flex">
                                                                                 <input
                                                                                     type="number"
@@ -239,19 +239,19 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                                     step="0.1"
                                                                                     value={editQuantity}
                                                                                     onChange={(e) => setEditQuantity(e.target.value)}
-                                                                                    className="w-full bg-foreground/5 border border-foreground/10 rounded-l-lg px-3 py-1.5 text-sm text-foreground focus:outline-hidden focus:border-pink-500/50"
+                                                                                    className="w-full bg-glass-bg border border-line rounded-l-md px-3 py-1.5 text-sm font-mono text-foreground focus:outline-hidden"
                                                                                 />
-                                                                                <div className="bg-foreground/10 border border-foreground/10 border-l-0 rounded-r-lg px-3 py-1.5 flex items-center justify-center text-xs text-foreground-muted">
+                                                                                <div className="bg-background-tertiary border border-line border-l-0 rounded-r-md px-3 py-1.5 flex items-center justify-center text-xs text-foreground-muted">
                                                                                     srv
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                         <div className="flex-1">
-                                                                            <label className="text-[10px] text-foreground-muted uppercase tracking-wider font-semibold mb-1 block">Meal</label>
+                                                                            <label className="text-[10px] text-foreground-muted font-semibold mb-1 block">Meal</label>
                                                                             <select
                                                                                 value={editMealType}
                                                                                 onChange={(e) => setEditMealType(e.target.value)}
-                                                                                className="w-full bg-foreground/5 border border-foreground/10 rounded-lg px-2 py-1.5 text-sm text-foreground focus:outline-hidden focus:border-pink-500/50"
+                                                                                className="w-full bg-glass-bg border border-line rounded-md px-2 py-1.5 text-sm text-foreground focus:outline-hidden"
                                                                             >
                                                                                 <option value="BREAKFAST" className="bg-background-secondary">Breakfast</option>
                                                                                 <option value="LUNCH" className="bg-background-secondary">Lunch</option>
@@ -264,7 +264,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                             )}
                                                         </div>
 
-                                                        <div className="border-t border-foreground/5 px-2 py-1.5 flex justify-between items-center bg-foreground/5">
+                                                        <div className="border-t border-line px-2 py-1.5 flex justify-between items-center bg-glass-bg">
                                                             {isEditing ? (
                                                                 <>
                                                                     <button
@@ -276,7 +276,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                     <button
                                                                         onClick={() => editMutation.mutate(log.id)}
                                                                         disabled={isSavingEdit || !editQuantity || isNaN(Number(editQuantity))}
-                                                                        className="text-[11px] bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 px-3 py-1 rounded transition-colors flex items-center gap-1 disabled:opacity-50"
+                                                                        className="text-[11px] bg-accent-pink/10 text-accent-pink hover:bg-accent-pink/20 px-3 py-1 rounded-md transition-colors flex items-center gap-1 disabled:opacity-50"
                                                                     >
                                                                         {isSavingEdit ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
                                                                         Save
@@ -284,7 +284,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <span className="text-[10px] text-foreground-muted pl-1">{format(parseISO(log.createdAt), 'h:mm a')}</span>
+                                                                    <span className="text-[10px] font-mono text-foreground-muted pl-1">{format(parseISO(log.createdAt), 'h:mm a')}</span>
                                                                     <div className="flex gap-1">
                                                                         <button
                                                                             onClick={() => {
@@ -293,12 +293,12 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                                 }
                                                                             }}
                                                                             disabled={savingMealId === log.id || savedMealIds.has(log.id)}
-                                                                            className="text-[11px] text-amber-400/80 hover:text-amber-400 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-foreground/5 disabled:opacity-50"
+                                                                            className="text-[11px] text-workout-tempo hover:text-workout-tempo/80 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-background-tertiary disabled:opacity-50"
                                                                         >
                                                                             {savingMealId === log.id ? (
                                                                                 <Loader2 className="w-3 h-3 animate-spin" />
                                                                             ) : savedMealIds.has(log.id) ? (
-                                                                                <Check className="w-3 h-3 text-green-400" />
+                                                                                <Check className="w-3 h-3 text-positive" />
                                                                             ) : (
                                                                                 <Bookmark className="w-3 h-3" />
                                                                             )}
@@ -306,7 +306,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                         </button>
                                                                         <button
                                                                             onClick={() => startEditing(log)}
-                                                                            className="text-[11px] text-foreground-muted hover:text-foreground flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-foreground/5"
+                                                                            className="text-[11px] text-foreground-muted hover:text-foreground flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-background-tertiary"
                                                                         >
                                                                             <Edit2 className="w-3 h-3" />
                                                                             Edit
@@ -318,7 +318,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                                 }
                                                                             }}
                                                                             disabled={deletingId === log.id}
-                                                                            className="text-[11px] text-red-400/70 hover:text-red-400 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-foreground/5 disabled:opacity-50"
+                                                                            className="text-[11px] text-negative/80 hover:text-negative flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-background-tertiary disabled:opacity-50"
                                                                         >
                                                                             {deletingId === log.id ? (
                                                                                 <Loader2 className="w-3 h-3 animate-spin" />

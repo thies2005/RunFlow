@@ -102,7 +102,7 @@ export function WorkoutListPanel({ week, goalId, focusGoal, onWorkoutClick, onPh
     const allWorkoutsSelected = week.workouts.length > 0 && week.workouts.every((w) => isSelected(w.id));
 
     return (
-        <div className="mx-4 mb-3 rounded-xl border border-glass-border bg-background-secondary overflow-hidden">
+        <div className="mx-4 mb-3 rounded-md border border-glass-border bg-background-secondary overflow-hidden">
             <WeekSummaryBar
                 weekIndex={week.weekNumber}
                 phase={weekPhase}
@@ -121,7 +121,7 @@ export function WorkoutListPanel({ week, goalId, focusGoal, onWorkoutClick, onPh
                     onChange={() => selectAllInWeek(week.workouts)}
                     className="w-3.5 h-3.5 rounded border-foreground/25 bg-background-tertiary text-foreground-secondary focus:ring-foreground-muted"
                 />
-                <span className="text-[10px] text-foreground-muted uppercase tracking-wide">Select all in week</span>
+                <span className="text-[10px] text-foreground-muted">Select all in week</span>
             </div>
 
             <div className="divide-y divide-glass-border">

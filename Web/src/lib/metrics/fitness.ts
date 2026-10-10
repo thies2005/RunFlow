@@ -231,33 +231,33 @@ export function interpretTsb(tsb: number): {
         return {
             status: 'peaked',
             description: 'Peaked - Ready to race!',
-            color: 'text-green-400', // Green
+            color: 'text-positive',
         };
     }
     if (tsb >= 5) {
         return {
             status: 'fresh',
             description: 'Fresh - Good form',
-            color: 'text-lime-400', // Lime
+            color: 'text-positive',
         };
     }
     if (tsb >= -10) {
         return {
             status: 'neutral',
             description: 'Optimal training zone',
-            color: 'text-yellow-400', // Yellow
+            color: 'text-workout-tempo',
         };
     }
     if (tsb >= -30) {
         return {
             status: 'fatigued',
             description: 'Fatigued - Monitor recovery',
-            color: 'text-orange-400', // Orange
+            color: 'text-accent-orange',
         };
     }
     return {
         status: 'very_fatigued',
         description: 'Very fatigued - Risk of overtraining',
-        color: 'text-red-500', // Red
+        color: 'text-negative',
     };
 }

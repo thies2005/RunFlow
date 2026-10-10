@@ -59,9 +59,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             // Default error UI
             return (
-                <div className="flex flex-col items-center justify-center p-6 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
-                    <AlertCircle className="w-8 h-8 text-red-400 mb-3" />
-                    <h3 className="text-sm font-medium text-red-400 mb-1">
+                <div className="flex flex-col items-center justify-center p-6 rounded-md bg-negative/10 border border-negative/30 text-center">
+                    <AlertCircle className="w-8 h-8 text-negative mb-3" />
+                    <h3 className="text-sm font-medium text-negative mb-1">
                         {componentName ? `${componentName} failed to load` : 'Something went wrong'}
                     </h3>
                     <p className="text-xs text-foreground-muted mb-3 max-w-xs">
@@ -70,7 +70,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                     {showRetry && (
                         <button
                             onClick={this.handleRetry}
-                            className="flex items-center gap-2 px-3 py-1.5 text-xs bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs bg-negative/10 text-negative border border-negative/30 rounded-sm hover:bg-negative/20 transition-colors"
                         >
                             <RefreshCw className="w-3 h-3" />
                             Retry
@@ -100,7 +100,7 @@ export function ChartErrorBoundary({
             componentName={chartName}
             showRetry
             fallback={
-                <div className="h-full min-h-[200px] flex items-center justify-center bg-background-tertiary/50 rounded-lg">
+                <div className="h-full min-h-[200px] flex items-center justify-center bg-background-tertiary rounded-md">
                     <div className="text-center">
                         <AlertCircle className="w-6 h-6 text-foreground-muted mx-auto mb-2" />
                         <p className="text-xs text-foreground-muted">

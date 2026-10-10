@@ -113,7 +113,7 @@ export default function Dashboard() {
     if (status === 'loading' && !sessionTimedOut) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-pulse text-foreground-muted">Loading...</div>
+                <div className="text-foreground-muted">Loading...</div>
             </div>
         );
     }
@@ -122,7 +122,7 @@ export default function Dashboard() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="text-center max-w-md px-4">
-                    <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                    <AlertCircle className="w-12 h-12 text-accent-pink mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-foreground mb-2">Unable to load session</h2>
                     <p className="text-foreground-muted mb-4">The session check is taking too long. This may be a network or database issue.</p>
                     <button onClick={() => { setSessionTimedOut(false); }} className="btn-primary py-2 px-6">
@@ -136,7 +136,7 @@ export default function Dashboard() {
     if (status === 'authenticated' && isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-pulse text-foreground-muted">Loading dashboard...</div>
+                <div className="text-foreground-muted">Loading dashboard...</div>
             </div>
         );
     }
@@ -153,7 +153,7 @@ export default function Dashboard() {
         <div className="min-h-screen bg-background">
             <UserMetricsProvider stats={statsData}>
                 <PullToRefresh onRefresh={async () => { await queryClient.invalidateQueries(); }}>
-                    <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
+                    <header className="topbar sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="flex items-center justify-between h-16">
                                 <div className="flex items-center gap-3">
@@ -163,17 +163,17 @@ export default function Dashboard() {
                                         width={40}
                                         height={40}
                                         priority
-                                        className="rounded-xl"
+                                        className="rounded-md"
                                     />
-                                    <span className="text-xl font-bold text-foreground">RunFlow</span>
+                                    <span className="text-xl brand">Run<span>Flow</span></span>
                                 </div>
 
                                 <div className="flex items-center gap-4">
-                                    <button onClick={() => router.push('/analytics')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
+                                    <button onClick={() => router.push('/analytics')} className="topbar-btn flex items-center gap-2">
                                         <BarChart3 className="w-5 h-5" />
                                         <span className="hidden sm:inline">Analytics</span>
                                     </button>
-                                    <button onClick={() => router.push('/calendar')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
+                                    <button onClick={() => router.push('/calendar')} className="topbar-btn flex items-center gap-2">
                                         <CalendarRange className="w-5 h-5" />
                                         <span className="hidden sm:inline">Calendar</span>
                                     </button>
@@ -191,8 +191,8 @@ export default function Dashboard() {
                             errMsg.toLowerCase().includes('token') ||
                             errMsg.includes('400') || errMsg.includes('401');
                         return (
-                            <div className="bg-red-500/10 border-b border-red-500/20 py-3 px-4">
-                                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center gap-2 text-red-400">
+                            <div className="bg-accent-pink/10 border-b border-accent-pink/20 py-3 px-4">
+                                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center gap-2 text-accent-pink">
                                     <div className="flex items-center gap-2 flex-1">
                                         <AlertCircle className="w-5 h-5 flex-shrink-0" />
                                         <span className="text-sm">
@@ -203,7 +203,7 @@ export default function Dashboard() {
                                         {isAuthError && (
                                             <button
                                                 onClick={() => signIn('strava', { callbackUrl: window.location.href })}
-                                                className="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg flex items-center gap-2 transition-colors font-medium"
+                                                className="px-4 py-1.5 bg-accent-orange hover:bg-accent-orange/90 text-white text-sm rounded-md flex items-center gap-2 transition-colors font-medium"
                                             >
                                                 <LinkIcon className="w-4 h-4" />
                                                 Reconnect Strava
@@ -259,7 +259,7 @@ export default function Dashboard() {
                                         }}
                                     />
                                 ) : (
-                                    <div className="h-full flex flex-col items-center justify-center bg-surface/50 border border-glass-border rounded-xl p-8 text-center">
+                                    <div className="h-full flex flex-col items-center justify-center glass-card p-8 text-center">
                                         <div className="w-16 h-16 rounded-full bg-accent-orange/10 flex items-center justify-center mb-4">
                                             <Target className="w-8 h-8 text-accent-orange" />
                                         </div>

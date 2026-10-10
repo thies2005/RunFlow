@@ -87,10 +87,10 @@ export function BodyCompositionTab() {
 
     const getMetricConfig = () => {
         switch(selectedMetric) {
-            case 'weight': return { name: 'Weight (kg)', color: '#22c55e', dataKey: 'weight' };
-            case 'bodyFat': return { name: 'Body Fat %', color: '#f97316', dataKey: 'bodyFat' };
-            case 'muscleMass': return { name: 'Muscle Mass (kg)', color: '#3b82f6', dataKey: 'muscleMass' };
-            case 'waist': return { name: 'Waist Size (cm)', color: '#a855f7', dataKey: 'waist' };
+            case 'weight': return { name: 'Weight (kg)', color: 'var(--positive)', dataKey: 'weight' };
+            case 'bodyFat': return { name: 'Body Fat %', color: 'var(--workout-tempo)', dataKey: 'bodyFat' };
+            case 'muscleMass': return { name: 'Muscle Mass (kg)', color: 'var(--accent-blue)', dataKey: 'muscleMass' };
+            case 'waist': return { name: 'Waist Size (cm)', color: 'var(--workout-long-run)', dataKey: 'waist' };
         }
     };
 
@@ -101,20 +101,20 @@ export function BodyCompositionTab() {
             {isLogging ? (
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-4">
-                        <button onClick={() => setIsLogging(false)} className="p-1.5 hover:bg-foreground/10 rounded-lg text-foreground-muted">
+                        <button onClick={() => setIsLogging(false)} className="p-1.5 hover:bg-background-tertiary rounded-md text-foreground-muted">
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <h3 className="text-foreground font-semibold">Log Measurements</h3>
                     </div>
 
-                    <div className="space-y-3 bg-foreground/5 rounded-xl p-4 border border-foreground/10">
+                    <div className="space-y-3 bg-background-tertiary rounded-md p-4 border border-line">
                         <div>
                             <label className="text-xs font-semibold text-foreground-muted mb-1 block">Date</label>
                             <input 
                                 type="date" 
                                 value={dateStr}
                                 onChange={(e) => setDateStr(e.target.value)}
-                                className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
+                                className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-accent-blue"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -123,7 +123,7 @@ export function BodyCompositionTab() {
                                 <input 
                                     type="number" step="0.1" value={weight} onChange={e => setWeight(e.target.value)}
                                     placeholder="e.g. 72.4"
-                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-accent-blue"
                                 />
                             </div>
                             <div>
@@ -131,7 +131,7 @@ export function BodyCompositionTab() {
                                 <input 
                                     type="number" step="0.1" value={bodyFat} onChange={e => setBodyFat(e.target.value)}
                                     placeholder="e.g. 15.5"
-                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-accent-blue"
                                 />
                             </div>
                             <div>
@@ -139,7 +139,7 @@ export function BodyCompositionTab() {
                                 <input 
                                     type="number" step="0.1" value={muscleMass} onChange={e => setMuscleMass(e.target.value)}
                                     placeholder="e.g. 35.2"
-                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-accent-blue"
                                 />
                             </div>
                             <div>
@@ -147,7 +147,7 @@ export function BodyCompositionTab() {
                                 <input 
                                     type="number" step="0.5" value={waist} onChange={e => setWaist(e.target.value)}
                                     placeholder="e.g. 80"
-                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-accent-blue"
                                 />
                             </div>
                              <div>
@@ -155,7 +155,7 @@ export function BodyCompositionTab() {
                                 <input 
                                     type="number" step="0.5" value={chest} onChange={e => setChest(e.target.value)}
                                     placeholder="e.g. 100"
-                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-accent-blue"
                                 />
                             </div>
                             <div>
@@ -163,14 +163,14 @@ export function BodyCompositionTab() {
                                 <input 
                                     type="number" step="0.5" value={hips} onChange={e => setHips(e.target.value)}
                                     placeholder="e.g. 95"
-                                    className="w-full bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-blue-500"
+                                    className="w-full bg-background-tertiary border border-line rounded-md px-3 py-2 text-sm text-foreground focus:outline-hidden focus:border-accent-blue"
                                 />
                             </div>
                         </div>
-                        <button 
+                        <button
                             onClick={() => saveMutation.mutate()}
                             disabled={saveMutation.isPending}
-                            className="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
+                            className="w-full mt-4 bg-accent-orange hover:bg-accent-orange/90 text-white font-semibold py-2.5 rounded-md transition-colors flex items-center justify-center gap-2"
                         >
                             <Save className="w-4 h-4" /> {saveMutation.isPending ? 'Saving...' : 'Save Measurements'}
                         </button>
@@ -179,7 +179,7 @@ export function BodyCompositionTab() {
             ) : (
                 <>
                     <div className="flex items-center justify-between mb-4">
-                        <div className="flex bg-foreground/5 rounded-lg p-1 border border-foreground/10 shrink-0 overflow-x-auto w-full max-w-[300px]">
+                        <div className="flex bg-background-tertiary rounded-md p-1 border border-line shrink-0 overflow-x-auto w-full max-w-[300px]">
                             {([
                                 { id: 'weight', label: 'Weight' },
                                 { id: 'bodyFat', label: 'Body Fat %' },
@@ -189,25 +189,25 @@ export function BodyCompositionTab() {
                                 <button
                                     key={m.id}
                                     onClick={() => setSelectedMetric(m.id)}
-                                    className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${selectedMetric === m.id ? 'bg-foreground/10 text-foreground shadow-xs' : 'text-foreground-muted hover:text-foreground-muted'}`}
+                                    className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-sm transition-colors whitespace-nowrap ${selectedMetric === m.id ? 'bg-glass-bg text-foreground' : 'text-foreground-muted hover:text-foreground-muted'}`}
                                 >
                                     {m.label}
                                 </button>
                             ))}
                         </div>
-                        
+
                         <button
                             onClick={() => setIsLogging(true)}
-                            className="ml-auto p-2 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded-lg transition-colors text-xs font-semibold shrink-0"
+                            className="ml-auto p-2 bg-accent-orange/10 text-accent-orange hover:bg-accent-orange/20 rounded-md transition-colors text-xs font-semibold shrink-0"
                         >
                             + Log
                         </button>
                     </div>
 
-                    <div className="flex-1 w-full relative min-h-[250px] bg-foreground/5 border border-foreground/10 rounded-xl p-4">
+                    <div className="flex-1 w-full relative min-h-[250px] bg-background-tertiary border border-line rounded-md p-4">
                         {isLoading ? (
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="animate-pulse text-foreground-muted">Loading chart data...</div>
+                                <div className="text-foreground-muted">Loading chart data...</div>
                             </div>
                         ) : measurements.length === 0 ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
@@ -226,9 +226,9 @@ export function BodyCompositionTab() {
                                         tickLine={false}
                                         tickFormatter={(val) => formatUtcDayKey(val, { month: 'short', day: 'numeric' })}
                                     />
-                                    <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} domain={['dataMin - 1', 'auto']} />
+                                    <YAxis stroke="var(--foreground-muted)" fontSize={10} tickLine={false} domain={['dataMin - 1', 'auto']} />
                                     <Tooltip
-                                        contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                        contentStyle={{ background: 'var(--panel-bg)', border: '1px solid var(--line)', borderRadius: '6px' }}
                                         labelStyle={{ color: 'var(--foreground)' }}
                                         itemStyle={{ color: 'var(--foreground)' }}
                                         labelFormatter={(val) => formatUtcDayKey(val, { weekday: 'long', month: 'short', day: 'numeric' })}

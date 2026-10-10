@@ -89,7 +89,7 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
   if (loading && errors.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-orange"></div>
       </div>
     );
   }
@@ -114,7 +114,7 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
         </div>
       </div>
 
-      <div className="bg-background-secondary p-4 rounded-lg">
+      <div className="bg-background-secondary p-4 rounded-md">
         <div className="flex gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-muted w-4 h-4" />
@@ -123,13 +123,13 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
               placeholder="Search by route..."
               value={filters.route}
               onChange={(e) => setFilters({ ...filters, route: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-foreground/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
             />
           </div>
           <select
             value={filters.resolved}
             onChange={(e) => setFilters({ ...filters, resolved: e.target.value as '' | 'true' | 'false' })}
-            className="px-4 py-2 border border-foreground/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
           >
             <option value="">All Errors</option>
             <option value="false">Unresolved</option>
@@ -138,14 +138,14 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
         </div>
       </div>
 
-      <div className="bg-background-secondary rounded-xl shadow-xs border border-glass-border overflow-hidden">
-        <div className="p-4 border-b border-glass-border">
+      <div className="bg-background-secondary rounded-md  border border-line overflow-hidden">
+        <div className="p-4 border-b border-line">
           <h4 className="font-medium text-foreground">Error Groups</h4>
         </div>
         <div className="max-h-96 overflow-y-auto">
           {errorGroups.length === 0 ? (
             <div className="p-8 text-center">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+              <CheckCircle className="w-12 h-12 text-positive mx-auto mb-3" />
               <p className="text-foreground-secondary font-medium">No errors found</p>
               <p className="text-foreground-muted text-sm mt-1">
                 Errors from API routes (status 400+) will automatically appear here when they occur.
@@ -193,7 +193,7 @@ interface ErrorGroupItemProps {
 function ErrorGroupItem({ group, onClick, onResolve }: ErrorGroupItemProps) {
   return (
     <div
-      className="p-4 border-b border-glass-border hover:bg-background-secondary cursor-pointer transition-colors"
+      className="p-4 border-b border-line hover:bg-background-secondary cursor-pointer transition-colors"
       onClick={onClick}
     >
       <div className="flex items-start justify-between">
@@ -238,9 +238,9 @@ interface ErrorDetailModalProps {
 
 function ErrorDetailModal({ error, onClose, onResolve }: ErrorDetailModalProps) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background-secondary rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-glass-border flex justify-between items-center">
+    <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity,0.55)] flex items-center justify-center z-50 p-4">
+      <div className="bg-background-secondary rounded-md shadow-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+        <div className="p-6 border-b border-line flex justify-between items-center">
           <h3 className="text-lg font-semibold text-foreground">Error Details</h3>
           <button
             onClick={onClose}

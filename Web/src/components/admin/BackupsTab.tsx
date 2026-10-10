@@ -89,7 +89,7 @@ export default function BackupsTab({
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center bg-background-secondary p-4 rounded-lg border border-glass-border">
+            <div className="flex justify-between items-center bg-background-secondary p-4 rounded-md border border-line">
                 <div>
                     <h3 className="font-semibold text-foreground">Manage Backups</h3>
                     <p className="text-sm text-foreground-muted">Create new snapshots or upload existing backup files.</p>
@@ -111,7 +111,7 @@ export default function BackupsTab({
                     <button
                         onClick={() => document.getElementById('backup-upload')?.click()}
                         disabled={processing}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center disabled:opacity-50"
+                        className="bg-accent-orange hover:bg-accent-orange/90 text-white px-4 py-2 rounded-md text-sm font-medium transition flex items-center disabled:opacity-50"
                     >
                         <Upload className="w-4 h-4 mr-2" />
                         Upload
@@ -119,7 +119,7 @@ export default function BackupsTab({
                     <button
                         onClick={() => handleBackupAction('create')}
                         disabled={processing}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center disabled:opacity-50"
+                        className="bg-positive hover:bg-positive/90 text-white px-4 py-2 rounded-md text-sm font-medium transition flex items-center disabled:opacity-50"
                     >
                         <Plus className="w-4 h-4 mr-2" />
                         Create
@@ -131,9 +131,9 @@ export default function BackupsTab({
                 <h3 className="font-semibold text-foreground">Available Backups</h3>
                 <div className="space-y-2">
                     {backups.map((backup: AdminBackup) => (
-                        <div key={backup.name} className="flex items-center justify-between p-4 bg-background-secondary border border-glass-border rounded-lg hover:border-glass-border transition">
+                        <div key={backup.name} className="flex items-center justify-between p-4 bg-background-secondary border border-line rounded-md hover:border-line transition">
                             <div className="flex items-center space-x-3">
-                                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                <div className="p-2 bg-background-tertiary text-accent-blue rounded-md">
                                     <Database className="w-5 h-5" />
                                 </div>
                                 <div>
@@ -146,7 +146,7 @@ export default function BackupsTab({
                             <div className="flex items-center space-x-2">
                                 <a
                                     href={`/api/admin/backups/${backup.name}`}
-                                    className="px-3 py-1.5 text-xs font-medium text-foreground-secondary hover:bg-background-secondary border border-glass-border rounded-lg transition flex items-center"
+                                    className="px-3 py-1.5 text-xs font-medium text-foreground-secondary hover:bg-background-secondary border border-line rounded-md transition flex items-center"
                                     title="Download Backup"
                                 >
                                     <Download className="w-3 h-3 mr-1" />
@@ -155,7 +155,7 @@ export default function BackupsTab({
                                 <button
                                     onClick={() => handleBackupAction('restore', backup.name)}
                                     disabled={processing}
-                                    className="px-3 py-1.5 text-xs font-medium text-orange-600 hover:bg-orange-50 border border-orange-200 rounded-lg transition disabled:opacity-50"
+                                    className="px-3 py-1.5 text-xs font-medium text-workout-tempo hover:bg-workout-tempo/10 border border-workout-tempo/30 rounded-md transition disabled:opacity-50"
                                 >
                                     Restore
                                 </button>
@@ -163,7 +163,7 @@ export default function BackupsTab({
                         </div>
                     ))}
                     {backups.length === 0 && (
-                        <div className="text-center py-8 text-foreground-muted bg-background-secondary rounded-lg">
+                        <div className="text-center py-8 text-foreground-muted bg-background-secondary rounded-md">
                             No backups available. Create one to get started.
                         </div>
                     )}

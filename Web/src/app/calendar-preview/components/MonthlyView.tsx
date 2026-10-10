@@ -30,11 +30,11 @@ export function MonthlyView({ month, days }: MonthlyViewProps) {
     return (
         <div className="flex flex-col h-full">
             {/* weekday header */}
-            <div className="grid grid-cols-7 border-b border-glass-border sticky top-0 bg-background z-10">
+            <div className="grid grid-cols-7 border-b border-line sticky top-0 bg-background z-10">
                 {DAY_LABELS.map((d) => (
                     <div
                         key={d}
-                        className="text-center text-[11px] font-medium text-foreground-muted uppercase tracking-wide py-1.5"
+                        className="text-center text-[11px] font-medium text-foreground-muted py-1.5"
                     >
                         {d}
                     </div>
@@ -71,21 +71,21 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
     return (
         <div
             className={`
-                relative flex flex-col p-1 border-b border-r border-glass-border min-h-[78px]
-                ${inMonth ? fill : 'bg-background/60'}
-                ${today ? 'ring-1 ring-inset ring-orange-400/60' : ''}
+                relative flex flex-col p-1 border-b border-r border-line min-h-[78px]
+                ${inMonth ? fill : 'bg-background'}
+                ${today ? 'ring-1 ring-inset ring-accent-orange' : ''}
                 hover:brightness-110 transition-[filter]
             `}
             title={entry ? `${format(day, 'EEE d')}: TRIMP ${trimp.toFixed(0)} · ${completedActivities.length} done / ${plannedWorkouts.length} planned` : format(day, 'EEE d')}
         >
             <div className="flex items-center justify-between">
                 <span
-                    className={`text-[11px] leading-none ${today ? 'text-orange-400 font-bold' : inMonth ? 'text-foreground-secondary' : 'text-foreground-muted'}`}
+                    className={`text-[11px] leading-none ${today ? 'text-accent-orange font-bold' : inMonth ? 'text-foreground-secondary' : 'text-foreground-muted'}`}
                 >
                     {format(day, 'd')}
                 </span>
                 {trimp > 0 && inMonth && (
-                    <span className="text-[9px] text-foreground-muted font-medium">{trimp.toFixed(0)}</span>
+                    <span className="text-[9px] text-foreground-muted font-medium font-mono">{trimp.toFixed(0)}</span>
                 )}
             </div>
 
@@ -132,7 +132,7 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
 
             {/* unfulfilled-plan indicator */}
             {inMonth && hasUnfinishedPlan && entry && completedActivities.length === 0 && (
-                <span className="absolute bottom-0.5 right-1 text-[8px] text-amber-500/70" title="Planned, not yet completed">●</span>
+                <span className="absolute bottom-0.5 right-1 text-[8px] text-workout-tempo" title="Planned, not yet completed">●</span>
             )}
         </div>
     );
@@ -140,11 +140,11 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
 
 /** daily-load background ramp (Runalyze red-intensity style, adapted for dark) */
 function trimpFillBg(trimp: number): string {
-    if (trimp <= 0) return 'bg-background-secondary/50';
-    if (trimp < 20) return 'bg-emerald-500/10';
-    if (trimp < 40) return 'bg-emerald-500/15';
-    if (trimp < 70) return 'bg-yellow-500/15';
-    if (trimp < 100) return 'bg-orange-500/20';
-    if (trimp < 140) return 'bg-red-500/25';
-    return 'bg-red-600/35';
+    if (trimp <= 0) return 'bg-background-secondary';
+    if (trimp < 20) return 'bg-zone-1/10';
+    if (trimp < 40) return 'bg-zone-1/20';
+    if (trimp < 70) return 'bg-zone-3/20';
+    if (trimp < 100) return 'bg-zone-4/25';
+    if (trimp < 140) return 'bg-zone-5/30';
+    return 'bg-zone-5/45';
 }

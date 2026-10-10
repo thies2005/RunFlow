@@ -184,11 +184,11 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
         : null;
 
     return (
-        <div className="bg-foreground/5 border border-foreground/10 rounded-xl overflow-hidden">
+        <div className="bg-background-secondary border border-line rounded-md overflow-hidden">
             <button
                 type="button"
                 onClick={onToggle}
-                className="w-full p-3 text-left hover:bg-foreground/5 transition-colors"
+                className="w-full p-3 text-left hover:bg-surface-hover transition-colors"
             >
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -206,10 +206,10 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                         {hasResult ? (
                             <>
                                 <div className="flex items-center gap-3 text-xs">
-                                    <span className="text-foreground-muted">Goal: <span className="text-foreground">{formatTime(goal.targetTime)}</span></span>
-                                    <span className="text-foreground-muted">Actual: <span className={beatGoal ? 'text-green-400' : 'text-accent-orange'}>{formatTime(rr?.actualTime)}</span></span>
+                                    <span className="text-foreground-muted">Goal: <span className="text-foreground font-mono tabular-nums">{formatTime(goal.targetTime)}</span></span>
+                                    <span className="text-foreground-muted">Actual: <span className={`${beatGoal ? 'text-positive' : 'text-accent-orange'} font-mono tabular-nums`}>{formatTime(rr?.actualTime)}</span></span>
                                     {goal.targetTime && rr?.actualTime && (
-                                        <span className={beatGoal ? 'text-green-400 font-medium' : 'text-accent-orange'}>
+                                        <span className={`${beatGoal ? 'text-positive font-medium' : 'text-accent-orange'} font-mono tabular-nums`}>
                                             {formatTimeDelta(goal.targetTime, rr.actualTime).text}
                                         </span>
                                     )}
@@ -218,7 +218,7 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                         ) : (
                             <span className="text-xs text-foreground-muted">No race result linked</span>
                         )}
-                        <span className={`text-xs ml-auto ${goal.workoutStats.completionRate >= 80 ? 'text-green-400' : 'text-foreground-muted'}`}>
+                        <span className={`text-xs ml-auto tabular-nums ${goal.workoutStats.completionRate >= 80 ? 'text-positive' : 'text-foreground-muted'}`}>
                             {goal.workoutStats.completed}/{goal.workoutStats.total} workouts
                         </span>
                     </div>
@@ -226,12 +226,12 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
             </button>
 
             {isExpanded && (
-                <div className="border-t border-foreground/5 p-3 space-y-4">
+                <div className="border-t border-line p-3 space-y-4">
                     {/* Race Result */}
                     {hasResult ? (
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <h4 className="text-xs text-accent-orange uppercase font-semibold flex items-center gap-1">
+                                <h4 className="text-xs text-accent-orange font-semibold flex items-center gap-1">
                                     <Trophy className="w-3 h-3" /> Race Result
                                 </h4>
                                 <button
@@ -243,24 +243,24 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                             </div>
 
                             <div className="grid grid-cols-3 gap-2">
-                                <div className="bg-foreground/5 rounded-lg p-2 text-center">
-                                    <p className="text-[10px] text-foreground-muted uppercase">Goal</p>
-                                    <p className="text-sm font-bold text-foreground">{formatTime(goal.targetTime)}</p>
+                                <div className="bg-background-tertiary rounded-md p-2 text-center">
+                                    <p className="text-[10px] text-foreground-muted">Goal</p>
+                                    <p className="text-sm font-semibold text-foreground font-mono tabular-nums">{formatTime(goal.targetTime)}</p>
                                 </div>
-                                <div className="bg-foreground/5 rounded-lg p-2 text-center">
-                                    <p className="text-[10px] text-foreground-muted uppercase">Actual</p>
-                                    <p className={`text-sm font-bold ${beatGoal ? 'text-green-400' : 'text-accent-orange'}`}>
+                                <div className="bg-background-tertiary rounded-md p-2 text-center">
+                                    <p className="text-[10px] text-foreground-muted">Actual</p>
+                                    <p className={`text-sm font-semibold font-mono tabular-nums ${beatGoal ? 'text-positive' : 'text-accent-orange'}`}>
                                         {formatTime(rr?.actualTime)}
                                     </p>
                                 </div>
-                                <div className="bg-foreground/5 rounded-lg p-2 text-center">
-                                    <p className="text-[10px] text-foreground-muted uppercase">Chip</p>
-                                    <p className="text-sm font-bold text-foreground">{formatTime(rr?.chipTime)}</p>
+                                <div className="bg-background-tertiary rounded-md p-2 text-center">
+                                    <p className="text-[10px] text-foreground-muted">Chip</p>
+                                    <p className="text-sm font-semibold text-foreground font-mono tabular-nums">{formatTime(rr?.chipTime)}</p>
                                 </div>
                             </div>
 
                             {goal.targetTime && rr?.actualTime && (
-                                <div className={`text-center py-2 rounded-lg ${beatGoal ? 'bg-green-500/10 text-green-400' : 'bg-accent-orange/10 text-accent-orange'}`}>
+                                <div className={`text-center py-2 rounded-md ${beatGoal ? 'bg-positive/10 text-positive' : 'bg-accent-orange/10 text-accent-orange'}`}>
                                     <p className="text-sm font-medium">
                                         {beatGoal ? 'Beat your goal!' : `Missed by ${formatTimeDelta(goal.targetTime, rr.actualTime).text}`}
                                     </p>
@@ -271,37 +271,37 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                             {(rr?.placementOverall || rr?.placementGender || rr?.ageGroup || rr?.totalFinishers || rr?.weatherConditions || rr?.feltLike || rr?.notes) && (
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                     {rr.placementOverall && (
-                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                        <div className="bg-background-tertiary rounded-md p-2">
                                             <span className="text-foreground-muted">Placement: </span>
                                             <span className="text-foreground">{rr.placementOverall}{rr.totalFinishers ? `/${rr.totalFinishers}` : ''}</span>
                                         </div>
                                     )}
                                     {rr.placementGender && (
-                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                        <div className="bg-background-tertiary rounded-md p-2">
                                             <span className="text-foreground-muted">Gender: </span>
                                             <span className="text-foreground">{rr.placementGender}</span>
                                         </div>
                                     )}
                                     {rr.ageGroup && (
-                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                        <div className="bg-background-tertiary rounded-md p-2">
                                             <span className="text-foreground-muted">Age Group: </span>
                                             <span className="text-foreground">{rr.ageGroup}</span>
                                         </div>
                                     )}
                                     {rr.placementAgeGroup && (
-                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                        <div className="bg-background-tertiary rounded-md p-2">
                                             <span className="text-foreground-muted">AG Place: </span>
                                             <span className="text-foreground">{rr.placementAgeGroup}</span>
                                         </div>
                                     )}
                                     {rr.weatherConditions && (
-                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                        <div className="bg-background-tertiary rounded-md p-2">
                                             <span className="text-foreground-muted">Weather: </span>
                                             <span className="text-foreground">{rr.weatherConditions}</span>
                                         </div>
                                     )}
                                     {rr.feltLike && (
-                                        <div className="bg-foreground/5 rounded-lg p-2">
+                                        <div className="bg-background-tertiary rounded-md p-2">
                                             <span className="text-foreground-muted">RPE: </span>
                                             <span className="text-foreground">{rr.feltLike}/10</span>
                                         </div>
@@ -310,7 +310,7 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                             )}
 
                             {rr?.raceActivity && (
-                                <div className="bg-foreground/5 rounded-lg p-2 text-xs">
+                                <div className="bg-background-tertiary rounded-md p-2 text-xs">
                                     <div className="flex items-center gap-1 text-foreground-muted mb-1">
                                         <Activity className="w-3 h-3" />
                                         <span>Linked Activity</span>
@@ -325,7 +325,7 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                             )}
 
                             {rr?.notes && (
-                                <div className="bg-foreground/5 rounded-lg p-2 text-xs">
+                                <div className="bg-background-tertiary rounded-md p-2 text-xs">
                                     <span className="text-foreground-muted">Notes: </span>
                                     <span className="text-foreground-muted">{rr.notes}</span>
                                 </div>
@@ -339,18 +339,18 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
 
                     {/* Training Summary */}
                     <div>
-                        <h4 className="text-xs text-foreground-muted uppercase font-semibold mb-2 flex items-center gap-1">
+                        <h4 className="text-xs text-foreground-muted font-semibold mb-2 flex items-center gap-1">
                             <Calendar className="w-3 h-3" /> Training Plan
                         </h4>
                         <div className="flex items-center justify-between mb-1">
                             <span className="text-xs text-foreground-muted">{goal.planWeeks} weeks, {goal.runsPerWeek}x/week</span>
-                            <span className={`text-xs font-medium ${goal.workoutStats.completionRate >= 80 ? 'text-green-400' : goal.workoutStats.completionRate >= 60 ? 'text-yellow-400' : 'text-red-400'}`}>
+                            <span className={`text-xs font-medium tabular-nums ${goal.workoutStats.completionRate >= 80 ? 'text-positive' : goal.workoutStats.completionRate >= 60 ? 'text-workout-tempo' : 'text-negative'}`}>
                                 {Math.round(goal.workoutStats.completionRate * 100)}%
                             </span>
                         </div>
-                        <div className="h-1.5 bg-foreground/5 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden">
                             <div
-                                className={`h-full rounded-full ${goal.workoutStats.completionRate >= 0.8 ? 'bg-green-500' : goal.workoutStats.completionRate >= 0.6 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                className={`h-full rounded-full ${goal.workoutStats.completionRate >= 0.8 ? 'bg-positive' : goal.workoutStats.completionRate >= 0.6 ? 'bg-workout-tempo' : 'bg-negative'}`}
                                 style={{ width: `${Math.min(100, goal.workoutStats.completionRate * 100)}%` }}
                             />
                         </div>
@@ -409,12 +409,12 @@ function EditRaceResult({ goal, onClose }: { goal: CompletedGoalSummary; onClose
         onError: () => setMessage('Error saving'),
     });
 
-    const inputClass = "bg-foreground/5 border border-foreground/10 rounded-lg p-2 text-foreground text-sm w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
+    const inputClass = "bg-background-secondary border border-line rounded-md p-2 text-foreground text-sm w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-colors";
 
     return (
-        <div className="bg-foreground/5 border border-accent-orange/30 rounded-xl p-3 space-y-3">
+        <div className="bg-background-secondary border border-accent-orange/30 rounded-md p-3 space-y-3">
             <div className="flex items-center justify-between">
-                <h4 className="text-xs text-accent-orange uppercase font-semibold">Edit Race Details</h4>
+                <h4 className="text-xs text-accent-orange font-semibold">Edit Race Details</h4>
                 <button onClick={onClose} className="text-foreground-muted hover:text-foreground transition-colors">
                     <X className="w-4 h-4" />
                 </button>
@@ -468,11 +468,11 @@ function EditRaceResult({ goal, onClose }: { goal: CompletedGoalSummary; onClose
                 <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className={inputClass + ' resize-none'} placeholder="How did the race go?" />
             </div>
 
-            {message && <p className={`text-xs text-center ${message.includes('Error') ? 'text-red-400' : 'text-green-400'}`}>{message}</p>}
+            {message && <p className={`text-xs text-center ${message.includes('Error') ? 'text-negative' : 'text-positive'}`}>{message}</p>}
 
             <div className="flex gap-2">
-                <button onClick={onClose} className="flex-1 py-2 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 text-xs">Cancel</button>
-                <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="flex-1 py-2 bg-accent-orange text-white rounded-lg hover:bg-accent-orange/90 text-xs flex items-center justify-center gap-1 disabled:opacity-50">
+                <button onClick={onClose} className="flex-1 py-2 border border-line text-foreground-muted rounded-md hover:bg-surface-hover text-xs">Cancel</button>
+                <button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="flex-1 py-2 bg-accent-orange text-white rounded-md hover:bg-accent-orange/90 text-xs flex items-center justify-center gap-1 disabled:opacity-50">
                     {saveMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                     Save
                 </button>

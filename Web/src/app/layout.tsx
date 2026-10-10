@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import DeepLinkHandler from '@/components/DeepLinkHandler';
@@ -8,11 +8,21 @@ import CookieBanner from '@/components/CookieBanner';
 import { PendingConsentHandler } from '@/components/PendingConsentHandler';
 import ReconsentBanner from '@/components/layout/ReconsentBanner';
 
-const inter = Inter({
+const archivo = Archivo({
     subsets: ['latin'],
     display: 'swap',
     preload: true,
+    variable: '--font-archivo',
     fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+});
+
+const plexMono = IBM_Plex_Mono({
+    subsets: ['latin'],
+    weight: ['400', '500', '600'],
+    display: 'swap',
+    preload: true,
+    variable: '--font-plex-mono',
+    fallback: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
 });
 
 export const metadata: Metadata = {
@@ -32,8 +42,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
     themeColor: [
-        { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
-        { media: '(prefers-color-scheme: dark)', color: '#0a0a0f' },
+        { media: '(prefers-color-scheme: light)', color: '#f6f7f5' },
+        { media: '(prefers-color-scheme: dark)', color: '#121417' },
     ],
     interactiveWidget: 'resizes-content',
     width: 'device-width',
@@ -47,14 +57,14 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" suppressHydrationWarning>
+        <html lang="en" suppressHydrationWarning className={`${archivo.variable} ${plexMono.variable}`}>
             <head>
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link rel="dns-prefetch" href="https://www.strava.com" />
                 <link rel="dns-prefetch" href="https://dgalywyr863hv.cloudfront.net" />
             </head>
-            <body className={inter.className}>
+            <body>
                 <Providers>
                     <a
                         href="#main-content"

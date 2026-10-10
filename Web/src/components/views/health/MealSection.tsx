@@ -19,11 +19,11 @@ export function MealSection({ foodLogs, copyYesterdayMutation, onOpenHistory, on
                 const isPopulated = logsForMeal.length > 0;
 
                 return (
-                    <div key={mealName} className="glass-card border border-glass-border rounded-2xl overflow-hidden transition-all">
-                        <div className="w-full px-4 py-3 flex items-center justify-between bg-foreground/5 hover:bg-foreground/10 text-left">
+                    <div key={mealName} className="glass-card overflow-hidden">
+                        <div className="w-full px-4 py-3 flex items-center justify-between bg-background-tertiary hover:bg-glass-bg-hover text-left">
                             <button type="button" className="flex items-center gap-2 text-left flex-1" onClick={onOpenHistory}>
-                                <h4 className="text-sm font-bold text-foreground capitalize">{mealName.toLowerCase()}</h4>
-                                {totalCals > 0 && <span className="text-xs font-semibold text-pink-400">{Math.round(totalCals)} kcal</span>}
+                                <h4 className="text-sm font-semibold text-foreground capitalize">{mealName.toLowerCase()}</h4>
+                                {totalCals > 0 && <span className="text-xs font-semibold font-mono tabular-nums text-foreground">{Math.round(totalCals)} kcal</span>}
                             </button>
                             <div className="flex items-center gap-2">
                                 {!isPopulated && (
@@ -34,7 +34,7 @@ export function MealSection({ foodLogs, copyYesterdayMutation, onOpenHistory, on
                                             copyYesterdayMutation.mutate({ mealType: mealName });
                                         }}
                                         disabled={copyYesterdayMutation.isPending}
-                                        className="h-8 px-3 rounded-full bg-foreground/5 flex items-center justify-center hover:bg-foreground/10 transition-colors text-xs font-medium text-foreground-muted hover:text-foreground disabled:opacity-50"
+                                        className="h-8 px-3 rounded-full bg-background-tertiary flex items-center justify-center hover:bg-glass-bg-hover transition-colors text-xs font-medium text-foreground-muted hover:text-foreground disabled:opacity-50"
                                     >
                                         {copyYesterdayMutation.isPending && copyYesterdayMutation.variables?.mealType === mealName ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
                                         Yesterday
@@ -47,7 +47,7 @@ export function MealSection({ foodLogs, copyYesterdayMutation, onOpenHistory, on
                                         e.stopPropagation();
                                         onQuickAddMeal(mealName);
                                     }}
-                                    className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20 transition-colors shrink-0"
+                                    className="w-8 h-8 rounded-full bg-background-tertiary flex items-center justify-center hover:bg-glass-bg-hover transition-colors shrink-0"
                                 >
                                     <Plus className="w-4 h-4 text-foreground" />
                                 </button>
@@ -67,8 +67,8 @@ export function MealSection({ foodLogs, copyYesterdayMutation, onOpenHistory, on
                                             <p className="text-xs text-foreground-muted">{log.quantity}x {log.foodItem?.servingSize ? ` (${log.foodItem.servingSize})` : ''}</p>
                                         </div>
                                         <div className="text-right shrink-0">
-                                            <p className="text-sm font-bold text-pink-400/90">{Math.round(log.calories)}</p>
-                                            <p className="text-[10px] text-foreground-muted">{Math.round(log.protein)}P · {Math.round(log.carbs)}C · {Math.round(log.fats)}F</p>
+                                            <p className="text-sm font-semibold font-mono tabular-nums text-foreground">{Math.round(log.calories)}</p>
+                                            <p className="text-[10px] font-mono text-foreground-muted">{Math.round(log.protein)}P · {Math.round(log.carbs)}C · {Math.round(log.fats)}F</p>
                                         </div>
                                     </button>
                                 ))}

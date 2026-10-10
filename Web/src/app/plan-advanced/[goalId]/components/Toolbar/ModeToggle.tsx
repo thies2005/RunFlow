@@ -24,8 +24,8 @@ const MODES: Array<{
 export function ModeToggle({ mode, onModeChange, isPremium = false }: ModeToggleProps) {
     return (
         <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-foreground-muted uppercase tracking-wide font-medium hidden lg:inline">Mode</span>
-            <div className="flex items-center bg-background-secondary rounded-lg border border-glass-border p-0.5">
+            <span className="text-[10px] text-foreground-muted font-medium hidden lg:inline">Mode</span>
+            <div className="flex items-center bg-background-secondary rounded-md border border-glass-border p-0.5">
                 {MODES.map(({ key, label, shortLabel, icon: Icon, premiumOnly }) => {
                     const locked = premiumOnly && !isPremium;
                     return (
@@ -38,8 +38,8 @@ export function ModeToggle({ mode, onModeChange, isPremium = false }: ModeToggle
                                 locked
                                     ? 'text-foreground-muted cursor-not-allowed'
                                     : mode === key
-                                        ? 'bg-foreground/15 text-foreground shadow-sm'
-                                        : 'text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary/50'
+                                        ? 'bg-foreground/15 text-foreground'
+                                        : 'text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary'
                             }`}
                         >
                             {locked ? <Lock className="w-3 h-3" /> : <Icon className="w-3.5 h-3.5" />}

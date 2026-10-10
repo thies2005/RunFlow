@@ -78,12 +78,12 @@ export function AddStackModal({ isOpen, onClose, stackToEdit }: AddStackModalPro
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-background-secondary w-full max-w-md rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 sm:items-center sm:justify-center">
+            <div className="bg-background-secondary border border-line w-full max-w-md rounded-t-md sm:rounded-md flex flex-col max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-foreground/10 shrink-0">
-                    <h2 className="text-lg font-bold text-foreground">{stackToEdit ? 'Edit Stack' : 'Create Stack'}</h2>
+                <div className="flex items-center justify-between p-4 border-b border-line shrink-0">
+                    <h2 className="text-lg font-semibold text-foreground">{stackToEdit ? 'Edit Stack' : 'Create Stack'}</h2>
                     <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors" type="button">
                         <X className="w-5 h-5" />
                     </button>
@@ -99,22 +99,22 @@ export function AddStackModal({ isOpen, onClose, stackToEdit }: AddStackModalPro
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g. Brain Stack, Pre-workout"
-                            className="!bg-foreground/5 border-foreground/10"
+                            className="!bg-background-tertiary border-line"
                         />
                     </div>
 
                     {/* Time of Day */}
                     <div>
-                        <label className="flex items-center gap-1.5 text-xs text-foreground-muted uppercase tracking-widest mb-2 font-medium">
+                        <label className="flex items-center gap-1.5 text-xs text-foreground-muted mb-2 font-medium">
                             <Clock className="w-3.5 h-3.5" /> Time Drop
                         </label>
-                        <div className="flex bg-foreground/5 p-1 rounded-lg border border-foreground/10 overflow-x-auto no-scrollbar">
+                        <div className="flex bg-background-tertiary p-1 rounded-md border border-line overflow-x-auto no-scrollbar">
                             {TIME_OPTIONS.map(opt => (
                                 <button
                                     key={opt.value}
                                     type="button"
                                     onClick={() => setTimeOfDay(opt.value)}
-                                    className={`flex-none px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeOfDay === opt.value ? 'bg-foreground/10 text-foreground shadow-xs' : 'text-foreground-muted hover:text-foreground-muted'}`}
+                                    className={`flex-none px-4 py-1.5 text-sm font-medium rounded-sm transition-colors ${timeOfDay === opt.value ? 'bg-glass-bg text-foreground' : 'text-foreground-muted hover:text-foreground-muted'}`}
                                 >
                                     {opt.label}
                                 </button>
@@ -124,7 +124,7 @@ export function AddStackModal({ isOpen, onClose, stackToEdit }: AddStackModalPro
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-foreground/10 bg-background-secondary shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
+                <div className="p-4 border-t border-line bg-background-secondary shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
                     {stackToEdit && (
                         <button
                             onClick={async () => {
@@ -139,7 +139,7 @@ export function AddStackModal({ isOpen, onClose, stackToEdit }: AddStackModalPro
                                 }
                             }}
                             disabled={deleteMutation.isPending}
-                            className="px-4 py-3 bg-red-500/10 text-red-500 font-semibold rounded-xl flex items-center justify-center hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+                            className="px-4 py-3 bg-negative/10 text-negative font-semibold rounded-md flex items-center justify-center hover:bg-negative/20 disabled:opacity-50 transition-colors"
                         >
                             Delete
                         </button>
@@ -147,7 +147,7 @@ export function AddStackModal({ isOpen, onClose, stackToEdit }: AddStackModalPro
                     <button
                         onClick={() => submitMutation.mutate()}
                         disabled={!name.trim() || submitMutation.isPending}
-                        className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-foreground/15 disabled:opacity-50 transition-colors"
+                        className="flex-1 py-3 bg-accent-orange text-white font-semibold rounded-md flex items-center justify-center gap-2 hover:bg-accent-orange/90 disabled:opacity-50 transition-colors"
                     >
                         {submitMutation.isPending ? 'Saving...' : <><Save className="w-4 h-4" /> Save Stack</>}
                     </button>

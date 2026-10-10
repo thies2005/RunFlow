@@ -74,7 +74,7 @@ export function AiProgressionSuggest({
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-foreground-secondary flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-purple-400" />
+                        <Sparkles className="w-3 h-3 text-workout-long-run" />
                         AI Suggestions
                     </span>
                     <button
@@ -89,7 +89,7 @@ export function AiProgressionSuggest({
                     {suggestions.map((suggestion) => (
                         <div
                             key={suggestion.id}
-                            className="bg-background-tertiary/50 border border-foreground/20 rounded-lg p-3"
+                            className="bg-background-tertiary border border-foreground/20 rounded-md p-3"
                         >
                             <div className="flex items-start justify-between mb-1.5">
                                 <div>
@@ -102,7 +102,7 @@ export function AiProgressionSuggest({
                                         onApply(suggestion.weeks);
                                         setSuggestions([]);
                                     }}
-                                    className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-purple-600 text-white hover:bg-purple-500 transition-colors"
+                                    className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-foreground text-background hover:bg-foreground/85 transition-colors"
                                 >
                                     <Check className="w-3 h-3" />
                                     Apply
@@ -115,7 +115,7 @@ export function AiProgressionSuggest({
                                         ? `${(suggestion.totalVolume / 1000).toFixed(0)}km`
                                         : `${suggestion.totalVolume}m`}
                                 </span>
-                                <span>Peak: Week {suggestion.peakWeek}</span>
+                                <span>Peak: Week <span className="font-mono tabular-nums">{suggestion.peakWeek}</span></span>
                             </div>
                         </div>
                     ))}
@@ -129,7 +129,7 @@ export function AiProgressionSuggest({
             type="button"
             onClick={() => generateMutation.mutate()}
             disabled={isGenerating}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs hover:bg-purple-500/20 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-workout-long-run/10 border border-workout-long-run/30 text-workout-long-run text-xs hover:bg-workout-long-run/15 disabled:opacity-50 transition-colors"
         >
             {isGenerating ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

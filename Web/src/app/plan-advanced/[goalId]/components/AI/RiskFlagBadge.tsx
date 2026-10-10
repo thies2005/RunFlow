@@ -12,18 +12,18 @@ interface RiskFlagBadgeProps {
 
 const SEVERITY_STYLES = {
     low: {
-        bg: 'bg-yellow-500/10 border-yellow-500/20',
-        text: 'text-yellow-400',
+        bg: 'bg-workout-tempo/10 border-workout-tempo/30',
+        text: 'text-workout-tempo',
         icon: Info,
     },
     medium: {
-        bg: 'bg-orange-500/10 border-orange-500/20',
-        text: 'text-orange-400',
+        bg: 'bg-workout-tempo/10 border-workout-tempo/30',
+        text: 'text-workout-tempo',
         icon: AlertTriangle,
     },
     high: {
-        bg: 'bg-red-500/10 border-red-500/20',
-        text: 'text-red-400',
+        bg: 'bg-negative/10 border-negative/30',
+        text: 'text-negative',
         icon: AlertCircle,
     },
 };
@@ -47,7 +47,7 @@ export function RiskFlagBadge({ type, severity, message, weekIndex }: RiskFlagBa
                 )}
             </div>
             {showTooltip && (
-                <div className="absolute left-0 top-full mt-1 z-50 w-56 px-3 py-2 rounded-lg bg-background-secondary border border-foreground/20 shadow-xl text-[11px] text-foreground-secondary leading-relaxed">
+                <div className="absolute left-0 top-full mt-1 z-50 w-56 px-3 py-2 rounded-md bg-background-secondary border border-foreground/20 text-[11px] text-foreground-secondary leading-relaxed">
                     {message}
                 </div>
             )}

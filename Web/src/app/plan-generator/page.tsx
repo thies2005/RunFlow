@@ -82,28 +82,28 @@ type PlanData = {
 };
 
 const PHASE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-    BASE: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30' },
-    BUILD: { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/30' },
-    PEAK: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30' },
-    TAPER: { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30' },
-    RACE_WEEK: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30' },
-    RECOVERY: { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30' },
-    ENDURANCE: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', border: 'border-cyan-500/30' },
-    MAINTAIN: { bg: 'bg-foreground/20', text: 'text-foreground-muted', border: 'border-foreground/30' },
+    BASE: { bg: 'bg-accent-blue/10', text: 'text-accent-blue', border: 'border-accent-blue/30' },
+    BUILD: { bg: 'bg-workout-tempo/10', text: 'text-workout-tempo', border: 'border-workout-tempo/30' },
+    PEAK: { bg: 'bg-workout-interval/10', text: 'text-workout-interval', border: 'border-workout-interval/30' },
+    TAPER: { bg: 'bg-workout-recovery/10', text: 'text-workout-recovery', border: 'border-workout-recovery/30' },
+    RACE_WEEK: { bg: 'bg-workout-race/10', text: 'text-workout-race', border: 'border-workout-race/30' },
+    RECOVERY: { bg: 'bg-workout-long-run/10', text: 'text-workout-long-run', border: 'border-workout-long-run/30' },
+    ENDURANCE: { bg: 'bg-accent-blue/10', text: 'text-accent-blue', border: 'border-accent-blue/30' },
+    MAINTAIN: { bg: 'bg-foreground/10', text: 'text-foreground-muted', border: 'border-foreground/30' },
 };
 
 const TYPE_COLORS: Record<string, string> = {
-    EASY: 'bg-foreground/20 text-foreground-muted',
-    LONG_RUN: 'bg-purple-500/20 text-purple-300',
-    TEMPO: 'bg-orange-500/20 text-orange-300',
-    INTERVALS: 'bg-red-500/20 text-red-300',
-    FARTLEK: 'bg-pink-500/20 text-pink-300',
-    REPETITIONS: 'bg-red-500/20 text-red-300',
-    RECOVERY: 'bg-green-500/20 text-green-300',
-    RACE: 'bg-yellow-500/20 text-yellow-300',
-    RIDE: 'bg-blue-500/20 text-blue-300',
-    SWIM: 'bg-cyan-500/20 text-cyan-300',
-    STRENGTH: 'bg-indigo-500/20 text-indigo-300',
+    EASY: 'bg-workout-easy/10 text-workout-easy',
+    LONG_RUN: 'bg-workout-long-run/10 text-workout-long-run',
+    TEMPO: 'bg-workout-tempo/10 text-workout-tempo',
+    INTERVALS: 'bg-workout-interval/10 text-workout-interval',
+    FARTLEK: 'bg-workout-interval/10 text-workout-interval',
+    REPETITIONS: 'bg-workout-interval/10 text-workout-interval',
+    RECOVERY: 'bg-workout-recovery/10 text-workout-recovery',
+    RACE: 'bg-workout-race/10 text-workout-race',
+    RIDE: 'bg-accent-blue/10 text-accent-blue',
+    SWIM: 'bg-accent-blue/10 text-accent-blue',
+    STRENGTH: 'bg-workout-strength/10 text-workout-strength',
 };
 
 type Step = 'race' | 'config' | 'plan';
@@ -205,16 +205,16 @@ export default function PlanGeneratorPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <header className="border-b border-glass-border bg-surface/80 backdrop-blur-sm sticky top-0 z-10 print:hidden">
+            <header className="topbar sticky top-0 z-50 print:hidden">
                 <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2 no-underline">
                         <Activity className="w-6 h-6 text-accent-orange" />
-                        <span className="font-bold text-lg text-foreground">RunFlow</span>
+                        <span className="brand font-bold text-lg">Run<span>Flow</span></span>
                     </Link>
                     {step !== 'race' && (
                         <button
                             onClick={handleReset}
-                            className="text-sm text-foreground-muted hover:text-foreground transition-colors"
+                            className="topbar-btn text-sm"
                         >
                             Start Over
                         </button>
@@ -235,7 +235,7 @@ export default function PlanGeneratorPage() {
                         </div>
 
                         <div className="mb-6">
-                            <h2 className="text-sm font-semibold text-foreground-muted uppercase tracking-wider mb-3">
+                            <h2 className="text-sm font-semibold text-foreground-muted mb-3">
                                 What are you training for?
                             </h2>
                             <div className="grid grid-cols-3 gap-2">
@@ -243,7 +243,7 @@ export default function PlanGeneratorPage() {
                                     <button
                                         key={race.value}
                                         onClick={() => setRaceType(race.value)}
-                                        className={`p-3 sm:p-4 rounded-xl border text-center transition-all ${
+                                        className={`p-3 sm:p-4 rounded-md border text-center transition-all ${
                                             raceType === race.value
                                                 ? 'border-accent-orange bg-accent-orange/10 text-foreground'
                                                 : 'border-glass-border bg-surface hover:bg-surface-hover text-foreground-secondary'
@@ -261,7 +261,7 @@ export default function PlanGeneratorPage() {
                             <button
                                 onClick={() => canProceedFromRace && setStep('config')}
                                 disabled={!canProceedFromRace}
-                                className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-accent-orange text-white font-medium text-sm hover:bg-accent-orange/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                className="flex items-center gap-2 px-6 py-2.5 rounded-md bg-accent-orange text-white font-medium text-sm hover:bg-accent-orange/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
                                 Next
                                 <ChevronRight className="w-4 h-4" />
@@ -287,7 +287,7 @@ export default function PlanGeneratorPage() {
 
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-sm font-semibold text-foreground-muted uppercase tracking-wider mb-2">
+                                <label className="block text-sm font-semibold text-foreground-muted mb-2">
                                     <Calendar className="w-4 h-4 inline mr-1" />
                                     Race Date
                                 </label>
@@ -296,12 +296,12 @@ export default function PlanGeneratorPage() {
                                     value={raceDate}
                                     min={getMinDate()}
                                     onChange={e => setRaceDate(e.target.value)}
-                                    className="w-full bg-surface border border-glass-border rounded-lg px-4 py-3 text-foreground text-base focus:outline-none focus:ring-2 focus:ring-accent-orange/50 focus:border-accent-orange"
+                                    className="w-full bg-surface border border-glass-border rounded-md px-4 py-3 text-foreground text-base font-mono tabular-nums focus:outline-none focus:ring-2 focus:ring-accent-orange/50 focus:border-accent-orange"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-foreground-muted uppercase tracking-wider mb-3">
+                                <label className="block text-sm font-semibold text-foreground-muted mb-3">
                                     <Award className="w-4 h-4 inline mr-1" />
                                     Fitness Level
                                 </label>
@@ -310,7 +310,7 @@ export default function PlanGeneratorPage() {
                                         <button
                                             key={level.value}
                                             onClick={() => setFitnessLevel(level.value)}
-                                            className={`p-3 rounded-xl border text-center transition-all ${
+                                            className={`p-3 rounded-md border text-center transition-all ${
                                                 fitnessLevel === level.value
                                                     ? 'border-accent-orange bg-accent-orange/10'
                                                     : 'border-glass-border bg-surface hover:bg-surface-hover'
@@ -325,7 +325,7 @@ export default function PlanGeneratorPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-foreground-muted uppercase tracking-wider mb-3">
+                                <label className="block text-sm font-semibold text-foreground-muted mb-3">
                                     <Timer className="w-4 h-4 inline mr-1" />
                                     Runs per Week <span className="text-foreground-muted font-normal normal-case">(optional)</span>
                                 </label>
@@ -334,10 +334,10 @@ export default function PlanGeneratorPage() {
                                         <button
                                             key={n}
                                             onClick={() => setRunsPerWeek(n)}
-                                            className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                                            className={`flex-1 py-2.5 rounded-md border text-sm font-medium transition-all ${
                                                 runsPerWeek === n
-                                                    ? 'border-accent-orange bg-accent-orange/10 text-accent-orange'
-                                                    : 'border-glass-border bg-surface text-foreground-secondary hover:bg-surface-hover'
+                                                    ? 'border-accent-orange bg-accent-orange/10 text-accent-orange font-mono'
+                                                    : 'border-glass-border bg-surface text-foreground-secondary hover:bg-surface-hover font-mono'
                                             }`}
                                         >
                                             {n === 0 ? 'Auto' : n}
@@ -348,7 +348,7 @@ export default function PlanGeneratorPage() {
                         </div>
 
                         {error && (
-                            <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                            <div className="mt-4 p-3 rounded-md bg-negative/10 border border-negative/30 text-negative text-sm">
                                 {error}
                             </div>
                         )}
@@ -357,7 +357,7 @@ export default function PlanGeneratorPage() {
                             <button
                                 onClick={handleGenerate}
                                 disabled={!canProceedFromConfig || loading}
-                                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-accent-orange text-white font-semibold text-base hover:bg-accent-orange/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-md bg-accent-orange text-white font-semibold text-base hover:bg-accent-orange/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
                                 {loading ? (
                                     <>
@@ -392,7 +392,7 @@ export default function PlanGeneratorPage() {
                                         {plan.raceType} Plan
                                     </h2>
                                     <p className="text-sm text-foreground-muted">
-                                        {plan.totalWeeks} weeks | {plan.totalDistanceKm} km total | Race: {plan.raceDate}
+                                        <span className="font-mono tabular-nums">{plan.totalWeeks}</span> weeks | <span className="font-mono tabular-nums">{plan.totalDistanceKm}</span> km total | Race: <span className="font-mono tabular-nums">{plan.raceDate}</span>
                                     </p>
                                 </div>
                             </div>
@@ -401,7 +401,7 @@ export default function PlanGeneratorPage() {
                                 <button
                                     onClick={() => handleExport('csv')}
                                     disabled={exporting !== null}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-glass-border text-sm text-foreground-secondary hover:bg-surface-hover transition-all disabled:opacity-50"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-surface border border-glass-border text-sm text-foreground-secondary hover:bg-surface-hover transition-all disabled:opacity-50"
                                 >
                                     {exporting === 'csv' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSpreadsheet className="w-3.5 h-3.5" />}
                                     CSV
@@ -409,14 +409,14 @@ export default function PlanGeneratorPage() {
                                 <button
                                     onClick={() => handleExport('html')}
                                     disabled={exporting !== null}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-glass-border text-sm text-foreground-secondary hover:bg-surface-hover transition-all disabled:opacity-50"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-surface border border-glass-border text-sm text-foreground-secondary hover:bg-surface-hover transition-all disabled:opacity-50"
                                 >
                                     {exporting === 'html' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
                                     HTML
                                 </button>
                                 <button
                                     onClick={handlePrint}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface border border-glass-border text-sm text-foreground-secondary hover:bg-surface-hover transition-all"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-surface border border-glass-border text-sm text-foreground-secondary hover:bg-surface-hover transition-all"
                                 >
                                     <Download className="w-3.5 h-3.5" />
                                     Print / PDF
@@ -430,20 +430,20 @@ export default function PlanGeneratorPage() {
                                 const isExpanded = expandedWeek === week.weekNumber;
 
                                 return (
-                                    <div key={week.weekNumber} className="border border-glass-border rounded-xl overflow-hidden bg-surface">
+                                    <div key={week.weekNumber} className="border border-glass-border rounded-md overflow-hidden bg-surface">
                                         <button
                                             onClick={() => setExpandedWeek(isExpanded ? null : week.weekNumber)}
                                             className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-surface-hover transition-colors print:pointer-events-none"
                                         >
                                             <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                <span className={`px-2 py-0.5 rounded text-xs font-bold border ${colors.bg} ${colors.text} ${colors.border}`}>
+                                                <span className={`px-2 py-0.5 rounded text-xs font-bold border font-mono tabular-nums ${colors.bg} ${colors.text} ${colors.border}`}>
                                                     W{week.weekNumber}
                                                 </span>
                                                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors.bg} ${colors.text}`}>
                                                     {week.phase.replace(/_/g, ' ')}
                                                 </span>
                                             </div>
-                                            <span className="text-sm text-foreground-muted font-medium">
+                                            <span className="text-sm text-foreground-muted font-medium font-mono tabular-nums">
                                                 {week.totalDistanceKm} km
                                             </span>
                                             <ChevronRight className={`w-4 h-4 text-foreground-muted transition-transform print:hidden ${isExpanded ? 'rotate-90' : ''}`} />
@@ -464,7 +464,7 @@ export default function PlanGeneratorPage() {
                                                                 <div className="text-foreground text-sm leading-tight">
                                                                     {w.displayDescription}
                                                                 </div>
-                                                                <div className="flex gap-3 text-xs text-foreground-muted mt-0.5">
+                                                                <div className="flex gap-3 text-xs text-foreground-muted mt-0.5 font-mono tabular-nums">
                                                                     <span>{w.distanceKm} km</span>
                                                                     {w.durationMin !== '-' && <span>{w.durationMin}</span>}
                                                                     {w.pace !== '-' && <span>{w.pace}</span>}
@@ -482,7 +482,7 @@ export default function PlanGeneratorPage() {
 
                         {!showSignUp && (
                             <div className="mt-8 print:hidden">
-                                <div className="border border-accent-orange/30 rounded-xl bg-accent-orange/5 p-5 text-center">
+                                <div className="border border-accent-orange/30 rounded-md bg-accent-orange/5 p-5 text-center">
                                     <h3 className="text-lg font-bold text-foreground mb-1">
                                         Want to save & track this plan?
                                     </h3>
@@ -492,14 +492,14 @@ export default function PlanGeneratorPage() {
                                     <div className="flex gap-3 justify-center">
                                         <a
                                             href="/register"
-                                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-accent-orange text-white font-semibold text-sm hover:bg-accent-orange/90 transition-all"
+                                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-accent-orange text-white font-semibold text-sm hover:bg-accent-orange/90 transition-all"
                                         >
                                             Sign Up Free
                                             <ArrowRight className="w-4 h-4" />
                                         </a>
                                         <button
                                             onClick={() => setShowSignUp(true)}
-                                            className="px-5 py-2.5 rounded-lg border border-glass-border text-foreground-secondary text-sm hover:bg-surface-hover transition-all"
+                                            className="px-5 py-2.5 rounded-md border border-glass-border text-foreground-secondary text-sm hover:bg-surface-hover transition-all"
                                         >
                                             Maybe Later
                                         </button>

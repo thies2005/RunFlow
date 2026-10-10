@@ -57,11 +57,11 @@ export function MinimalistPillsMenu({ trigger }: MinimalistPillsMenuProps) {
         <>
             <div onClick={() => setIsOpen(true)} className="cursor-pointer">
                 {trigger || (
-                    <button className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-hover transition-colors border border-transparent hover:border-glass-border">
+                    <button className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-hover transition-colors border border-transparent hover:border-line">
                         <UserAvatar
                             image={session.user.image}
                             name={session.user.name}
-                            className="w-8 h-8 border border-glass-border"
+                            className="w-8 h-8 border border-line"
                         />
                     </button>
                 )}
@@ -157,7 +157,7 @@ function MobilePanel({
             <div className="h-full flex flex-col">
                 {subPage ? (
                     <>
-                        <div className="flex items-center gap-2 px-4 pt-safe pb-2 border-b border-glass-border">
+                        <div className="flex items-center gap-2 px-4 pt-safe pb-2 border-b border-line">
                             <button onClick={handleBack} className="text-foreground-muted hover:text-foreground p-1 -ml-1">
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
@@ -174,7 +174,7 @@ function MobilePanel({
                     <>
                         <div className="flex items-center justify-between px-4 pt-safe pb-2">
                             <div className="w-8" />
-                            <h2 className="text-sm font-semibold text-foreground-muted uppercase tracking-wider">Settings</h2>
+                            <h2 className="text-sm font-semibold text-foreground-muted">Settings</h2>
                             <button onClick={onClose} className="text-foreground-muted hover:text-foreground p-1">
                                 <ChevronRight className="w-5 h-5 rotate-180" />
                             </button>
@@ -184,13 +184,13 @@ function MobilePanel({
                             <UserAvatar
                                 image={session.user.image}
                                 name={session.user.name}
-                                className="w-16 h-16 mx-auto mb-2 border-2 border-glass-border"
+                                className="w-16 h-16 mx-auto mb-2 border-2 border-line"
                             />
                             <div className="text-base font-semibold text-foreground">{session.user.name}</div>
                             <div className="text-xs text-foreground-muted">{session.user.email}</div>
                         </div>
 
-                        <div className="h-px bg-glass-border mx-5" />
+                        <div className="h-px bg-line mx-5" />
 
                         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5">
                             {menuItems.map((item) => (
@@ -200,7 +200,7 @@ function MobilePanel({
                                         if (item.action) item.action();
                                         else if (item.subPage) setSubPage(item.subPage);
                                     }}
-                                    className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-xl transition-colors active:bg-surface-hover"
+                                    className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-md transition-colors active:bg-surface-hover"
                                 >
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${item.iconBg}`}>
                                         <item.icon className={`w-4 h-4 ${item.iconColor}`} />
@@ -221,7 +221,7 @@ function MobilePanel({
                             ))}
                         </div>
 
-                        <div className="px-5 pt-2 pb-4 border-t border-glass-border bg-background">
+                        <div className="px-5 pt-2 pb-4 border-t border-line bg-background">
                             <div className="flex items-center justify-center gap-2 mb-3">
                                 {[
                                     { id: 'light', icon: Sun },
@@ -231,9 +231,9 @@ function MobilePanel({
                                     <button
                                         key={t.id}
                                         onClick={() => setTheme(t.id)}
-                                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
                                             theme === t.id
-                                                ? 'bg-accent-orange text-white shadow-lg shadow-accent-orange/25'
+                                                ? 'bg-accent-orange text-white'
                                                 : 'bg-surface text-foreground-muted'
                                         }`}
                                     >
@@ -248,7 +248,7 @@ function MobilePanel({
                                 // cached API responses can never be replayed.
                                 void evictAuthBoundCaches().then(() => signOut({ callbackUrl: '/login' }));
                             }}
-                                className="w-full py-3 text-red-400 text-sm font-medium rounded-xl hover:bg-red-500/10 transition-colors"
+                                className="w-full py-3 text-negative text-sm font-medium rounded-md hover:bg-negative/10 transition-colors"
                             >
                                 Log Out
                             </button>
@@ -306,9 +306,9 @@ function DesktopPopover({
         return (
             <div
                 ref={popoverRef}
-                className="fixed top-16 right-4 z-[200] w-80 bg-background/95 backdrop-blur-xl border border-glass-border shadow-2xl rounded-2xl overflow-hidden animate-slide-in-from-top-2"
+                className="fixed top-16 right-4 z-[200] w-80 bg-background-secondary border border-line shadow-lg rounded-md overflow-hidden animate-slide-in"
             >
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-glass-border">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-line">
                     <button onClick={() => setSubPage(null)} className="text-foreground-muted hover:text-foreground">
                         <ChevronLeft className="w-4 h-4" />
                     </button>
@@ -326,9 +326,9 @@ function DesktopPopover({
     return (
         <div
             ref={popoverRef}
-            className="fixed top-16 right-4 z-[200] w-72 bg-background/95 backdrop-blur-xl border border-glass-border shadow-2xl rounded-2xl overflow-hidden animate-slide-in-from-top-2"
+            className="fixed top-16 right-4 z-[200] w-72 bg-background-secondary border border-line shadow-lg rounded-md overflow-hidden animate-slide-in"
         >
-            <div className="p-3 border-b border-glass-border">
+            <div className="p-3 border-b border-line">
                 <p className="text-sm font-semibold text-foreground truncate">{session.user.name}</p>
                 <p className="text-xs text-foreground-muted truncate">{session.user.email}</p>
             </div>
@@ -354,8 +354,8 @@ function DesktopPopover({
                 ))}
             </div>
 
-            <div className="p-2 border-t border-glass-border">
-                <div className="flex bg-background-tertiary rounded-lg p-1 border border-glass-border mb-2">
+            <div className="p-2 border-t border-line">
+                <div className="flex bg-background-tertiary rounded-md p-1 border border-line mb-2">
                     {[
                         { id: 'light', icon: Sun, label: 'Light' },
                         { id: 'dark', icon: Moon, label: 'Dark' },
@@ -364,9 +364,9 @@ function DesktopPopover({
                         <button
                             key={t.id}
                             onClick={() => setTheme(t.id)}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs transition-all ${
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs transition-colors ${
                                 theme === t.id
-                                    ? 'bg-background shadow-xs text-foreground'
+                                    ? 'bg-background-secondary text-foreground'
                                     : 'text-foreground-muted hover:text-foreground hover:bg-surface-hover'
                             }`}
                         >
@@ -382,7 +382,7 @@ function DesktopPopover({
                         // cached API responses can never be replayed.
                         void evictAuthBoundCaches().then(() => signOut({ callbackUrl: '/login' }));
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-negative hover:bg-negative/10 rounded-md transition-colors"
                 >
                     <LogOut className="w-4 h-4" />
                     <span>Log Out</span>
@@ -429,8 +429,8 @@ function getMenuItems(
             label: 'Past Races',
             subtitle: 'Completed goals & results',
             icon: Trophy,
-            iconColor: 'text-yellow-400',
-            iconBg: 'bg-yellow-400/15',
+            iconColor: 'text-workout-tempo',
+            iconBg: 'bg-workout-tempo/15',
             badge: undefined,
             rightIcon: ChevronRight,
             subPage: 'past-races',
@@ -440,8 +440,8 @@ function getMenuItems(
             label: 'Heart Rate Zones',
             subtitle: 'LTHR & 7 training zones',
             icon: Heart,
-            iconColor: 'text-red-400',
-            iconBg: 'bg-red-400/15',
+            iconColor: 'text-accent-pink',
+            iconBg: 'bg-accent-pink/15',
             rightIcon: ChevronRight,
             subPage: 'hr-zones',
         },
@@ -450,8 +450,8 @@ function getMenuItems(
             label: 'Biometrics',
             subtitle: 'Weight, height, marathon shape',
             icon: Activity,
-            iconColor: 'text-blue-400',
-            iconBg: 'bg-blue-400/15',
+            iconColor: 'text-accent-blue',
+            iconBg: 'bg-accent-blue/15',
             rightIcon: ChevronRight,
             subPage: 'biometrics',
         },
@@ -470,8 +470,8 @@ function getMenuItems(
             label: 'Connections',
             subtitle: 'Strava, Health Connect',
             icon: Link2,
-            iconColor: 'text-green-400',
-            iconBg: 'bg-green-400/15',
+            iconColor: 'text-positive',
+            iconBg: 'bg-positive/15',
             rightIcon: ChevronRight,
             subPage: 'connections',
         },
@@ -480,8 +480,8 @@ function getMenuItems(
             label: 'Reminders',
             subtitle: 'Supplements, weigh-in, workouts',
             icon: Bell,
-            iconColor: 'text-cyan-400',
-            iconBg: 'bg-cyan-400/15',
+            iconColor: 'text-accent-cyan',
+            iconBg: 'bg-accent-cyan/15',
             rightIcon: ChevronRight,
             subPage: 'reminders',
         },
@@ -624,12 +624,12 @@ function HrZonesSubPage({ onBack: _onBack }: { onBack: () => void }) {
     });
 
     const zones = [
-        { label: 'Zone 1 (Recovery)', desc: '<75% LTHR', value: hrZone1Max, setter: setHrZone1Max, color: 'text-blue-400' },
-        { label: 'Zone 2 (Aerobic)', desc: '76-87% LTHR', value: hrZone2Max, setter: setHrZone2Max, color: 'text-green-400' },
-        { label: 'Zone 3 (Tempo)', desc: '88-94% LTHR', value: hrZone3Max, setter: setHrZone3Max, color: 'text-yellow-400' },
-        { label: 'Zone 4 (Threshold)', desc: '95-100% LTHR', value: hrZone4Max, setter: setHrZone4Max, color: 'text-orange-400' },
-        { label: 'Zone 5 (VO2max)', desc: '101-105% LTHR', value: hrZone5Max, setter: setHrZone5Max, color: 'text-red-400' },
-        { label: 'Zone 6 (Anaerobic)', desc: '106-110% LTHR', value: hrZone6Max, setter: setHrZone6Max, color: 'text-pink-400' },
+        { label: 'Zone 1 (Recovery)', desc: '<75% LTHR', value: hrZone1Max, setter: setHrZone1Max, color: 'text-zone-1' },
+        { label: 'Zone 2 (Aerobic)', desc: '76-87% LTHR', value: hrZone2Max, setter: setHrZone2Max, color: 'text-zone-2' },
+        { label: 'Zone 3 (Tempo)', desc: '88-94% LTHR', value: hrZone3Max, setter: setHrZone3Max, color: 'text-zone-3' },
+        { label: 'Zone 4 (Threshold)', desc: '95-100% LTHR', value: hrZone4Max, setter: setHrZone4Max, color: 'text-zone-4' },
+        { label: 'Zone 5 (VO2max)', desc: '101-105% LTHR', value: hrZone5Max, setter: setHrZone5Max, color: 'text-zone-5' },
+        { label: 'Zone 6 (Anaerobic)', desc: '106-110% LTHR', value: hrZone6Max, setter: setHrZone6Max, color: 'text-accent-pink' },
     ];
 
     return (
@@ -655,7 +655,7 @@ function HrZonesSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 type="number"
                                 value={zone.value}
                                 onChange={e => zone.setter(parseInt(e.target.value) || 0)}
-                                className="flex-1 bg-surface border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent-orange/50"
+                                className="flex-1 bg-surface border border-line rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent-orange/50"
                             />
                             <span className="text-[10px] text-foreground-muted w-20 text-right">{zone.desc}</span>
                         </div>
@@ -664,7 +664,7 @@ function HrZonesSubPage({ onBack: _onBack }: { onBack: () => void }) {
             </div>
 
             {message && (
-                <div className={`p-3 rounded-lg text-sm ${message.includes('Error') ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
+                <div className={`p-3 rounded-lg text-sm ${message.includes('Error') ? 'bg-negative/10 text-negative' : 'bg-positive/10 text-positive'}`}>
                     {message}
                 </div>
             )}
@@ -777,9 +777,9 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                 />
             </div>
 
-            <div className="space-y-3 pt-2 border-t border-glass-border">
-                <h4 className="text-xs text-accent-orange uppercase font-semibold tracking-wider">Marathon Shape</h4>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-glass-border">
+            <div className="space-y-3 pt-2 border-t border-line">
+                <h4 className="text-xs text-accent-orange font-semibold">Marathon Shape</h4>
+                <div className="flex items-center justify-between p-3 rounded-md bg-surface border border-line">
                     <div>
                         <p className="text-sm text-foreground">Include Cross-Training</p>
                         <p className="text-[10px] text-foreground-muted">Count cycling, swimming towards shape</p>
@@ -787,16 +787,16 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                     <button
                         type="button"
                         onClick={() => setIncludeCrossTraining(!includeCrossTraining)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeCrossTraining ? 'bg-accent-orange' : 'bg-foreground/20'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeCrossTraining ? 'bg-accent-orange' : 'bg-line-strong'}`}
                     >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeCrossTraining ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                 </div>
             </div>
 
-            <div className="space-y-3 pt-2 border-t border-glass-border">
-                <h4 className="text-xs text-accent-orange uppercase font-semibold tracking-wider">Display</h4>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-glass-border">
+            <div className="space-y-3 pt-2 border-t border-line">
+                <h4 className="text-xs text-accent-orange font-semibold">Display</h4>
+                <div className="flex items-center justify-between p-3 rounded-md bg-surface border border-line">
                     <div>
                         <p className="text-sm text-foreground">Use Miles</p>
                         <p className="text-[10px] text-foreground-muted">Distance and pace in miles</p>
@@ -804,16 +804,16 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                     <button
                         type="button"
                         onClick={() => setUseImperial(!useImperial)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${useImperial ? 'bg-accent-orange' : 'bg-foreground/20'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${useImperial ? 'bg-accent-orange' : 'bg-line-strong'}`}
                     >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useImperial ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                 </div>
             </div>
 
-            <div className="space-y-3 pt-2 border-t border-glass-border">
-                <h4 className="text-xs text-green-400 uppercase font-semibold tracking-wider">Health Tracking</h4>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-surface border border-glass-border">
+            <div className="space-y-3 pt-2 border-t border-line">
+                <h4 className="text-xs text-positive font-semibold">Health Tracking</h4>
+                <div className="flex items-center justify-between p-3 rounded-md bg-surface border border-line">
                     <div>
                         <p className="text-sm text-foreground">Enable Health Features</p>
                         <p className="text-[10px] text-foreground-muted">Track weight, steps, supplements</p>
@@ -822,7 +822,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                         type="button"
                         onClick={() => healthToggleMutation.mutate(!healthTrackingEnabled)}
                         disabled={healthToggleMutation.isPending}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${healthTrackingEnabled ? 'bg-green-500' : 'bg-foreground/20'} ${healthToggleMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${healthTrackingEnabled ? 'bg-positive' : 'bg-line-strong'} ${healthToggleMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${healthTrackingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
@@ -830,7 +830,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             </div>
 
             {message && (
-                <div className={`p-3 rounded-lg text-sm ${message.includes('Error') ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
+                <div className={`p-3 rounded-lg text-sm ${message.includes('Error') ? 'bg-negative/10 text-negative' : 'bg-positive/10 text-positive'}`}>
                     {message}
                 </div>
             )}
@@ -956,18 +956,18 @@ function ConnectionsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             <h3 className="text-lg font-bold text-foreground">Connections</h3>
 
             <div className="space-y-3">
-                <h4 className="text-xs text-accent-orange uppercase font-semibold tracking-wider">Strava</h4>
+                <h4 className="text-xs text-accent-orange font-semibold">Strava</h4>
                 <button
                     onClick={() => resyncMutation.mutate()}
                     disabled={resyncMutation.isPending}
-                    className="w-full py-3 border border-glass-border text-foreground rounded-xl hover:bg-surface-hover transition-colors text-sm flex items-center justify-center gap-2"
+                    className="w-full py-3 border border-line text-foreground rounded-md hover:bg-surface-hover transition-colors text-sm flex items-center justify-center gap-2"
                 >
                     <RefreshCw className={`w-4 h-4 ${resyncMutation.isPending ? 'animate-spin' : ''}`} />
                     {resyncMutation.isPending ? 'Syncing...' : 'Sync from Strava'}
                 </button>
                 <button
                     onClick={() => signIn('strava', { callbackUrl: window.location.href })}
-                    className="w-full py-3 border border-accent-orange/30 text-accent-orange rounded-xl hover:bg-accent-orange/10 transition-colors text-sm flex items-center justify-center gap-2"
+                    className="w-full py-3 border border-accent-orange/30 text-accent-orange rounded-md hover:bg-accent-orange/10 transition-colors text-sm flex items-center justify-center gap-2"
                 >
                     <Link2 className="w-4 h-4" />
                     Reconnect Strava
@@ -975,12 +975,12 @@ function ConnectionsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                 <p className="text-[10px] text-foreground-muted">Re-authenticate if sync is failing</p>
             </div>
 
-            <div className="space-y-3 pt-2 border-t border-glass-border">
-                <h4 className="text-xs text-green-400 uppercase font-semibold tracking-wider">Health Connect</h4>
+            <div className="space-y-3 pt-2 border-t border-line">
+                <h4 className="text-xs text-positive font-semibold">Health Connect</h4>
                 <button
                     onClick={() => healthConnectSyncMutation.mutate()}
                     disabled={healthConnectSyncMutation.isPending}
-                    className="w-full py-3 border border-green-500/30 text-green-400 rounded-xl hover:bg-green-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+                    className="w-full py-3 border border-positive/30 text-positive rounded-md hover:bg-positive/10 transition-colors text-sm flex items-center justify-center gap-2"
                 >
                     <RefreshCw className={`w-4 h-4 ${healthConnectSyncMutation.isPending ? 'animate-spin' : ''}`} />
                     {healthConnectSyncMutation.isPending ? 'Syncing...' : 'Sync from Health Connect'}
@@ -988,7 +988,7 @@ function ConnectionsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             </div>
 
             {message && (
-                <div className={`p-3 rounded-lg text-sm flex flex-col gap-2 ${message.includes('Error') || message.includes('failed') || message.includes('lost') ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
+                <div className={`p-3 rounded-lg text-sm flex flex-col gap-2 ${message.includes('Error') || message.includes('failed') || message.includes('lost') ? 'bg-negative/10 text-negative' : 'bg-positive/10 text-positive'}`}>
                     <div className="flex items-center gap-2">
                         <AlertCircle className="w-4 h-4" />
                         {message}
@@ -996,7 +996,7 @@ function ConnectionsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                     {showReauthPrompt && (
                         <button
                             onClick={() => signIn('strava', { callbackUrl: window.location.href })}
-                            className="mt-1 w-full py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded text-xs flex items-center justify-center gap-2 transition-colors uppercase font-semibold tracking-wide"
+                            className="mt-1 w-full py-2 bg-negative/15 hover:bg-negative/25 text-negative rounded-md text-xs flex items-center justify-center gap-2 transition-colors font-semibold"
                         >
                             <Link2 className="w-3 h-3" />
                             Reconnect Now
@@ -1058,10 +1058,10 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             <div className="space-y-1.5">
                 <button
                     onClick={() => setSection('api')}
-                    className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-xl transition-colors hover:bg-surface-hover"
+                    className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-md transition-colors hover:bg-surface-hover"
                 >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-400/15">
-                        <Key className="w-4 h-4 text-blue-400" />
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent-blue/15">
+                        <Key className="w-4 h-4 text-accent-blue" />
                     </div>
                     <div className="flex-1 text-left">
                         <div className="text-sm font-medium text-foreground">API Access</div>
@@ -1071,10 +1071,10 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                 </button>
                 <button
                     onClick={() => setSection('privacy')}
-                    className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-xl transition-colors hover:bg-surface-hover"
+                    className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-md transition-colors hover:bg-surface-hover"
                 >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-400/15">
-                        <ShieldCheck className="w-4 h-4 text-purple-400" />
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-workout-long-run/15">
+                        <ShieldCheck className="w-4 h-4 text-workout-long-run" />
                     </div>
                     <div className="flex-1 text-left">
                         <div className="text-sm font-medium text-foreground">Privacy & Consent</div>
@@ -1085,7 +1085,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                 <ExportDataButton />
             </div>
 
-            <div className="border-t border-glass-border pt-4">
+            <div className="border-t border-line pt-4">
                 <DangerShortcut />
             </div>
         </div>
@@ -1158,10 +1158,10 @@ function ExportDataButton() {
             <button
                 onClick={handleExportData}
                 disabled={isExporting}
-                className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-xl transition-colors hover:bg-surface-hover"
+                className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-md transition-colors hover:bg-surface-hover"
             >
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-400/15">
-                    <Download className={`w-4 h-4 text-cyan-400 ${isExporting ? 'animate-spin' : ''}`} />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-accent-cyan/15">
+                    <Download className={`w-4 h-4 text-accent-cyan ${isExporting ? 'animate-spin' : ''}`} />
                 </div>
                 <div className="flex-1 text-left">
                     <div className="text-sm font-medium text-foreground">Export Data</div>
@@ -1169,7 +1169,7 @@ function ExportDataButton() {
                 </div>
             </button>
             {message && (
-                <p className={`text-xs px-3.5 ${message.includes('failed') ? 'text-red-400' : 'text-green-400'}`}>{message}</p>
+                <p className={`text-xs px-3.5 ${message.includes('failed') ? 'text-negative' : 'text-positive'}`}>{message}</p>
             )}
         </>
     );
@@ -1200,26 +1200,26 @@ function DangerShortcut() {
 
     return (
         <div>
-            <h4 className="text-xs text-red-400 font-medium uppercase tracking-wider mb-3">Danger Zone</h4>
+            <h4 className="text-xs text-negative font-medium mb-3">Danger Zone</h4>
             {!showDeleteConfirm ? (
                 <button
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="w-full py-2.5 border border-red-500/30 text-red-400 rounded-xl hover:bg-red-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+                    className="w-full py-2.5 border border-negative/30 text-negative rounded-md hover:bg-negative/10 transition-colors text-sm flex items-center justify-center gap-2"
                 >
                     <Trash2 className="w-4 h-4" />
                     Delete Account
                 </button>
             ) : (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                    <p className="text-red-200 text-xs mb-4 leading-relaxed">
+                <div className="bg-negative/10 border border-negative/20 rounded-md p-4">
+                    <p className="text-negative text-xs mb-4 leading-relaxed">
                         Are you sure? This will permanently delete your account, activities, and goals.
                     </p>
                     <div className="flex gap-3">
-                        <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2 bg-foreground/5 text-foreground text-xs rounded-lg hover:bg-foreground/10">Cancel</button>
+                        <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2 bg-background-tertiary text-foreground text-xs rounded-md hover:bg-surface-hover">Cancel</button>
                         <button
                             onClick={() => { setIsDeleting(true); deleteMutation.mutate(); }}
                             disabled={isDeleting}
-                            className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg flex items-center justify-center gap-2 font-medium"
+                            className="flex-1 py-2 bg-negative hover:bg-negative/90 text-white text-xs rounded-lg flex items-center justify-center gap-2 font-medium"
                         >
                             {isDeleting ? <AlertCircle className="animate-spin w-3 h-3" /> : <Trash2 className="w-3 h-3" />}
                             {isDeleting ? 'Deleting...' : 'Confirm'}
@@ -1227,7 +1227,7 @@ function DangerShortcut() {
                     </div>
                 </div>
             )}
-            {message && <p className="text-xs text-red-400 mt-2">{message}</p>}
+            {message && <p className="text-xs text-negative mt-2">{message}</p>}
         </div>
     );
 }
@@ -1284,25 +1284,25 @@ function ApiSection({ onBack }: { onBack: () => void }) {
             <p className="text-xs text-foreground-muted">Enable read-only API access for external AI assistants.</p>
 
             <div className="flex justify-end">
-                <Link href="/api-docs" target="_blank" className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                <Link href="/api-docs" target="_blank" className="text-xs text-accent-blue hover:opacity-80 flex items-center gap-1">
                     API Docs <ExternalLink className="w-3 h-3" />
                 </Link>
             </div>
 
             {generatedApiKey ? (
-                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-                    <p className="text-green-300 text-xs mb-2 font-medium flex items-center gap-1">
+                <div className="bg-positive/10 border border-positive/20 rounded-md p-4">
+                    <p className="text-positive text-xs mb-2 font-medium flex items-center gap-1">
                         <Key className="w-3 h-3" /> Your API Key (copy now):
                     </p>
                     <div className="flex items-center gap-2">
-                        <code className="flex-1 bg-foreground/10 px-3 py-2 rounded-lg text-xs text-green-600 font-mono break-all">{generatedApiKey}</code>
-                        <button onClick={() => { navigator.clipboard.writeText(generatedApiKey); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="p-2 bg-green-500/20 rounded-lg hover:bg-green-500/30">
-                            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-green-400" />}
+                        <code className="flex-1 bg-background-tertiary px-3 py-2 rounded-md text-xs text-positive font-mono break-all">{generatedApiKey}</code>
+                        <button onClick={() => { navigator.clipboard.writeText(generatedApiKey); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="p-2 bg-positive/15 rounded-md hover:bg-positive/25">
+                            {copied ? <Check className="w-4 h-4 text-positive" /> : <Copy className="w-4 h-4 text-positive" />}
                         </button>
                     </div>
                 </div>
             ) : apiKeyData?.hasKey ? (
-                <div className="bg-surface border border-glass-border rounded-xl p-3">
+                <div className="bg-surface border border-line rounded-md p-3">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-foreground text-sm">Active API Key</p>
@@ -1315,25 +1315,25 @@ function ApiSection({ onBack }: { onBack: () => void }) {
 
             <div className="space-y-2">
                 {!apiKeyData?.hasKey ? (
-                    <button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending} className="w-full py-3 border border-blue-500/30 text-blue-400 rounded-xl hover:bg-blue-500/10 text-sm flex items-center justify-center gap-2">
-                        <Key className={`w-4 h-4 ${generateMutation.isPending ? 'animate-pulse' : ''}`} />
+                    <button onClick={() => generateMutation.mutate()} disabled={generateMutation.isPending} className="w-full py-3 border border-accent-blue/30 text-accent-blue rounded-md hover:bg-accent-blue/10 text-sm flex items-center justify-center gap-2">
+                        <Key className="w-4 h-4" />
                         {generateMutation.isPending ? 'Generating...' : 'Generate API Key'}
                     </button>
                 ) : !showRevokeConfirm ? (
-                    <button onClick={() => setShowRevokeConfirm(true)} className="w-full py-3 border border-accent-orange/30 text-accent-orange rounded-xl hover:bg-accent-orange/10 text-sm flex items-center justify-center gap-2">
+                    <button onClick={() => setShowRevokeConfirm(true)} className="w-full py-3 border border-accent-orange/30 text-accent-orange rounded-md hover:bg-accent-orange/10 text-sm flex items-center justify-center gap-2">
                         <Trash2 className="w-4 h-4" /> Revoke API Key
                     </button>
                 ) : (
                     <div className="flex gap-2">
-                        <button onClick={() => setShowRevokeConfirm(false)} className="flex-1 py-2 bg-foreground/5 text-foreground text-xs rounded-lg hover:bg-foreground/10">Cancel</button>
-                        <button onClick={() => revokeMutation.mutate()} disabled={revokeMutation.isPending} className="flex-1 py-2 bg-accent-orange hover:bg-orange-600 text-white text-xs rounded-lg flex items-center justify-center gap-1">
+                        <button onClick={() => setShowRevokeConfirm(false)} className="flex-1 py-2 bg-background-tertiary text-foreground text-xs rounded-md hover:bg-surface-hover">Cancel</button>
+                        <button onClick={() => revokeMutation.mutate()} disabled={revokeMutation.isPending} className="flex-1 py-2 bg-accent-orange hover:bg-accent-orange/90 text-white text-xs rounded-lg flex items-center justify-center gap-1">
                             {revokeMutation.isPending ? 'Revoking...' : 'Confirm'}
                         </button>
                     </div>
                 )}
             </div>
 
-            {message && <p className={`text-sm ${message.includes('Failed') ? 'text-red-400' : 'text-green-400'}`}>{message}</p>}
+            {message && <p className={`text-sm ${message.includes('Failed') ? 'text-negative' : 'text-positive'}`}>{message}</p>}
         </div>
     );
 }
@@ -1354,27 +1354,27 @@ function PrivacySection({ healthTrackingEnabled: initialHealth, onBack }: { heal
                 <h3 className="text-lg font-bold text-foreground">Privacy & Consent</h3>
             </div>
 
-            <div className="bg-surface border border-glass-border rounded-xl p-4 space-y-3">
+            <div className="bg-surface border border-line rounded-md p-4 space-y-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                        <ShieldCheck className="w-3.5 h-3.5 text-positive" />
                         <span className="text-sm text-foreground">Terms of Service</span>
                     </div>
-                    <span className="text-[10px] text-green-400">Accepted</span>
+                    <span className="text-[10px] text-positive">Accepted</span>
                 </div>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                        <ShieldCheck className="w-3.5 h-3.5 text-positive" />
                         <span className="text-sm text-foreground">Privacy Policy</span>
                     </div>
-                    <span className="text-[10px] text-green-400">Accepted</span>
+                    <span className="text-[10px] text-positive">Accepted</span>
                 </div>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        {healthTrackingEnabled ? <ShieldCheck className="w-3.5 h-3.5 text-green-400" /> : <ShieldOff className="w-3.5 h-3.5 text-foreground-muted" />}
+                        {healthTrackingEnabled ? <ShieldCheck className="w-3.5 h-3.5 text-positive" /> : <ShieldOff className="w-3.5 h-3.5 text-foreground-muted" />}
                         <span className="text-sm text-foreground">Health Data Processing</span>
                     </div>
-                    <span className={`text-[10px] ${healthTrackingEnabled ? 'text-green-400' : 'text-foreground-muted'}`}>
+                    <span className={`text-[10px] ${healthTrackingEnabled ? 'text-positive' : 'text-foreground-muted'}`}>
                         {healthTrackingEnabled ? 'Granted' : 'Withdrawn'}
                     </span>
                 </div>
@@ -1382,16 +1382,16 @@ function PrivacySection({ healthTrackingEnabled: initialHealth, onBack }: { heal
 
             {healthTrackingEnabled && (
                 !showWithdrawConfirm ? (
-                    <button onClick={() => setShowWithdrawConfirm(true)} className="w-full py-2.5 border border-accent-orange/30 text-accent-orange rounded-xl hover:bg-accent-orange/10 text-xs flex items-center justify-center gap-2">
+                    <button onClick={() => setShowWithdrawConfirm(true)} className="w-full py-2.5 border border-accent-orange/30 text-accent-orange rounded-md hover:bg-accent-orange/10 text-xs flex items-center justify-center gap-2">
                         <ShieldOff className="w-3.5 h-3.5" /> Withdraw Health Data Consent
                     </button>
                 ) : (
-                    <div className="bg-accent-orange/10 border border-accent-orange/20 rounded-xl p-4">
-                        <p className="text-orange-200 text-xs mb-3 leading-relaxed">
+                    <div className="bg-accent-orange/10 border border-accent-orange/20 rounded-md p-4">
+                        <p className="text-foreground-secondary text-xs mb-3 leading-relaxed">
                             <strong>Warning:</strong> Withdrawing health data consent will permanently delete all your activities, fitness metrics, health logs, supplements, and nutrition data.
                         </p>
                         <div className="flex gap-2">
-                            <button onClick={() => setShowWithdrawConfirm(false)} className="flex-1 py-2 bg-foreground/5 text-foreground text-xs rounded-lg hover:bg-foreground/10">Cancel</button>
+                            <button onClick={() => setShowWithdrawConfirm(false)} className="flex-1 py-2 bg-background-tertiary text-foreground text-xs rounded-md hover:bg-surface-hover">Cancel</button>
                             <button
                                 onClick={async () => {
                                     setIsWithdrawing(true);
@@ -1410,7 +1410,7 @@ function PrivacySection({ healthTrackingEnabled: initialHealth, onBack }: { heal
                                     finally { setIsWithdrawing(false); }
                                 }}
                                 disabled={isWithdrawing}
-                                className="flex-1 py-2 bg-accent-orange hover:bg-orange-600 text-white text-xs rounded-lg flex items-center justify-center gap-1 font-medium"
+                                className="flex-1 py-2 bg-accent-orange hover:bg-accent-orange/90 text-white text-xs rounded-lg flex items-center justify-center gap-1 font-medium"
                             >
                                 {isWithdrawing ? 'Processing...' : 'Confirm'}
                             </button>
@@ -1419,7 +1419,7 @@ function PrivacySection({ healthTrackingEnabled: initialHealth, onBack }: { heal
                 )
             )}
 
-            {message && <p className={`text-sm ${message.includes('Failed') ? 'text-red-400' : 'text-green-400'}`}>{message}</p>}
+            {message && <p className={`text-sm ${message.includes('Failed') ? 'text-negative' : 'text-positive'}`}>{message}</p>}
         </div>
     );
 }
@@ -1431,7 +1431,7 @@ function DangerSection({ onBack }: { onBack: () => void }) {
         <div className="p-5 space-y-5">
             <div className="flex items-center gap-2">
                 <button onClick={onBack} className="text-foreground-muted hover:text-foreground"><ChevronLeft className="w-4 h-4" /></button>
-                <h3 className="text-lg font-bold text-red-400">Danger Zone</h3>
+                <h3 className="text-lg font-bold text-negative">Danger Zone</h3>
             </div>
             <DangerShortcut />
         </div>

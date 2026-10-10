@@ -124,15 +124,15 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
         <Modal isOpen={isOpen} onClose={onClose} title="Notification Reminders" maxWidth="md">
             <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-1">
                 {/* Push Notification Status */}
-                <div className="glass-card p-4 rounded-xl border border-glass-border">
+                <div className="glass-card p-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             {push.isSubscribed ? (
-                                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                                    <Bell className="w-5 h-5 text-green-400" />
+                                <div className="w-10 h-10 rounded-full bg-positive/10 flex items-center justify-center">
+                                    <Bell className="w-5 h-5 text-positive" />
                                 </div>
                             ) : (
-                                <div className="w-10 h-10 rounded-full bg-foreground/20 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center">
                                     <BellOff className="w-5 h-5 text-foreground-muted" />
                                 </div>
                             )}
@@ -154,9 +154,9 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                         <button
                             onClick={handlePushToggle}
                             disabled={!push.isSupported || push.permission === 'denied' || push.isLoading}
-                            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${push.isSubscribed
-                                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30'
-                                : 'bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20'
+                            className={`px-4 py-2 rounded-md text-xs font-semibold transition-colors ${push.isSubscribed
+                                ? 'bg-negative/10 text-negative hover:bg-negative/20 border border-negative/30'
+                                : 'bg-accent-orange text-white hover:bg-accent-orange/90'
                                 } disabled:opacity-40 disabled:cursor-not-allowed`}
                         >
                             {push.isLoading ? (
@@ -166,9 +166,9 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                     </div>
 
                     {push.permission === 'denied' && (
-                        <div className="mt-3 flex items-start gap-2 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                            <p className="text-xs text-red-300">
+                        <div className="mt-3 flex items-start gap-2 bg-negative/10 border border-negative/20 rounded-md p-3">
+                            <AlertCircle className="w-4 h-4 text-negative shrink-0 mt-0.5" />
+                            <p className="text-xs text-negative">
                                 Notifications are blocked. Open your {isNative ? 'device' : 'browser'} settings and allow notifications to receive reminders.
                             </p>
                         </div>
@@ -184,14 +184,14 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                                 <Clock className="w-4 h-4 text-foreground-muted" />
                                 <span className="text-xs text-foreground-muted">Timezone</span>
                             </div>
-                            <span className="text-xs font-medium text-foreground bg-foreground/10 px-3 py-1 rounded-full">
+                            <span className="text-xs font-medium text-foreground bg-background-tertiary px-3 py-1 rounded-full">
                                 {localSettings.timezone || 'UTC'}
                             </span>
                         </div>
 
                         {/* Supplement Reminders */}
                         <ReminderSection
-                            icon={<Pill className="w-4 h-4 text-purple-400" />}
+                            icon={<Pill className="w-4 h-4 text-workout-long-run" />}
                             title="Supplement Reminders"
                             color="purple"
                         >
@@ -220,7 +220,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
 
                         {/* Weight Reminder */}
                         <ReminderSection
-                            icon={<Scale className="w-4 h-4 text-blue-400" />}
+                            icon={<Scale className="w-4 h-4 text-accent-blue" />}
                             title="Weight Reminder"
                             color="blue"
                         >
@@ -235,7 +235,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
 
                         {/* Food Tracking Reminders */}
                         <ReminderSection
-                            icon={<UtensilsCrossed className="w-4 h-4 text-pink-400" />}
+                            icon={<UtensilsCrossed className="w-4 h-4 text-accent-pink" />}
                             title="Food Tracking Reminders"
                             color="pink"
                         >
@@ -264,7 +264,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
 
                         {/* Workout Reminders */}
                         <ReminderSection
-                            icon={<Dumbbell className="w-4 h-4 text-green-400" />}
+                            icon={<Dumbbell className="w-4 h-4 text-positive" />}
                             title="Workout Reminders"
                             color="green"
                         >
@@ -279,12 +279,12 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                                 />
                             </div>
                             {localSettings.workoutReminderEnabled && (
-                                <div className="flex items-center justify-between mt-3 pl-4 border-l-2 border-green-500/20">
+                                <div className="flex items-center justify-between mt-3 pl-4 border-l-2 border-positive/20">
                                     <span className="text-xs text-foreground-muted">Notify before</span>
                                     <select
                                         value={localSettings.workoutReminderMinutes || 60}
                                         onChange={(e) => update('workoutReminderMinutes', parseInt(e.target.value))}
-                                        className="bg-foreground/10 border border-foreground/10 rounded-lg px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-green-500/50"
+                                        className="bg-background-tertiary border border-line rounded-md px-3 py-1.5 text-xs text-foreground focus:outline-hidden"
                                     >
                                         <option value={15}>15 minutes</option>
                                         <option value={30}>30 minutes</option>
@@ -297,11 +297,11 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
 
                         {/* Save Button */}
                         {isDirty && (
-                            <div className="sticky bottom-0 bg-background/90 backdrop-blur-md pt-3 pb-1">
+                            <div className="sticky bottom-0 bg-background pt-3 pb-1">
                                 <button
                                     onClick={handleSave}
                                     disabled={saveMutation.isPending}
-                                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
+                                    className="w-full bg-accent-orange hover:bg-accent-orange/90 text-white font-semibold py-3 rounded-md transition-colors flex items-center justify-center gap-2"
                                 >
                                     {saveMutation.isPending ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -314,7 +314,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                         )}
 
                         {saveMutation.isSuccess && !isDirty && (
-                            <p className="text-center text-xs text-green-400 flex items-center justify-center gap-1">
+                            <p className="text-center text-xs text-positive flex items-center justify-center gap-1">
                                 <CheckCircle className="w-3 h-3" /> Settings saved
                             </p>
                         )}
@@ -345,7 +345,7 @@ function ReminderSection({ icon, title, color: _color, children }: {
     children: React.ReactNode;
 }) {
     return (
-        <div className="glass-card p-4 rounded-xl border border-glass-border">
+        <div className="glass-card p-4">
             <div className="flex items-center gap-2 mb-3">
                 {icon}
                 <h4 className="text-sm font-semibold text-foreground">{title}</h4>
@@ -372,7 +372,7 @@ function ReminderRow({ label, enabled, time, onToggle, onTimeChange }: {
                     type="time"
                     value={time}
                     onChange={(e) => onTimeChange(e.target.value)}
-                    className="bg-foreground/10 border border-foreground/10 rounded-lg px-2 py-1 text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-blue-500/50"
+                    className="bg-background-tertiary border border-line rounded-md px-2 py-1 text-xs font-mono text-foreground focus:outline-hidden"
                 />
             )}
             <ToggleSwitch enabled={enabled} onToggle={onToggle} />
@@ -387,7 +387,7 @@ function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: (_v: 
             role="switch"
             aria-checked={enabled}
             onClick={() => onToggle(!enabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${enabled ? 'bg-blue-500' : 'bg-foreground/20'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${enabled ? 'bg-accent-orange' : 'bg-line-strong'
                 }`}
         >
             <span

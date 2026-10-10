@@ -19,8 +19,8 @@ export default function Error({
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
             <div className="glass-card max-w-md w-full p-8 text-center animate-slide-in">
                 <div className="flex justify-center mb-6">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center">
-                        <AlertTriangle className="w-10 h-10 text-red-500" />
+                    <div className="w-20 h-20 rounded-full bg-background-tertiary border border-line flex items-center justify-center">
+                        <AlertTriangle className="w-10 h-10 text-negative" />
                     </div>
                 </div>
 

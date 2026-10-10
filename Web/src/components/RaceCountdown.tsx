@@ -151,7 +151,7 @@ export function RaceCountdown({
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => router.push(isMobile ? '/plan' : '/calendar')}
-                        className="text-xs text-accent-orange hover:text-accent-pink transition-colors"
+                        className="text-xs text-accent-orange hover:opacity-80 transition-opacity"
                     >
                         {isMobile ? 'View Full Plan →' : 'View Calendar →'}
                     </button>
@@ -169,11 +169,11 @@ export function RaceCountdown({
 
             <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="glass-card p-4 text-center">
-                    <p className="stat-value-accent text-4xl font-bold">{daysToRace}</p>
+                    <p className="stat-value-accent">{daysToRace}</p>
                     <p className="text-sm text-foreground-muted mt-1">days to go</p>
                 </div>
                 <div className="glass-card p-4 text-center">
-                    <p className="stat-value text-4xl font-bold">{weeksToRace}</p>
+                    <p className="stat-value">{weeksToRace}</p>
                     <p className="text-sm text-foreground-muted mt-1">weeks</p>
                 </div>
             </div>
@@ -181,11 +181,11 @@ export function RaceCountdown({
             <div className="mb-6">
                 <div className="flex items-center justify-between text-sm mb-2">
                     <span className="text-foreground-muted">Training Progress</span>
-                    <span className="text-foreground font-medium">Week {weeksCompleted} of {totalWeeks}</span>
+                    <span className="text-foreground font-medium tabular-nums">Week {weeksCompleted} of {totalWeeks}</span>
                 </div>
                 <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-gradient-to-r from-accent-orange to-accent-pink rounded-full transition-all duration-500"
+                        className="h-full bg-accent-orange rounded-full transition-all duration-500"
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
@@ -194,28 +194,28 @@ export function RaceCountdown({
             <div className="grid grid-cols-2 gap-4 mb-6">
                 {goal.targetTime && (
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
-                            <Target className="w-5 h-5 text-foreground" />
+                        <div className="w-10 h-10 rounded-md bg-workout-long-run/15 flex items-center justify-center shrink-0">
+                            <Target className="w-5 h-5 text-workout-long-run" />
                         </div>
                         <div>
-                            <p className="text-xs text-foreground-muted uppercase tracking-wide">Goal</p>
-                            <p className="text-xl font-bold text-foreground">{formatTime(goal.targetTime)}</p>
+                            <p className="text-xs text-foreground-muted">Goal</p>
+                            <p className="text-xl font-mono tabular-nums font-semibold text-foreground">{formatTime(goal.targetTime)}</p>
                         </div>
                     </div>
                 )}
 
                 {dynamicPredictedTime > 0 && (
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
-                            <Timer className="w-5 h-5 text-foreground" />
+                        <div className="w-10 h-10 rounded-md bg-accent-orange/15 flex items-center justify-center shrink-0">
+                            <Timer className="w-5 h-5 text-accent-orange" />
                         </div>
                         <div>
-                            <p className="text-xs text-foreground-muted uppercase tracking-wide flex items-center gap-1">
+                            <p className="text-xs text-foreground-muted flex items-center gap-1">
                                 Projected Finish
                                 <span className="cursor-help" title="Estimated finish time on race day based on your training plan and expected fitness improvement">&#8505;</span>
                                 {correctionFactor !== 1.0 && <span className="ml-1 text-[10px] text-accent-cyan" title="Using calibrated VO2max">&#9679;</span>}
                             </p>
-                            <p className="text-xl font-bold text-foreground">{formatTime(dynamicPredictedTime)}</p>
+                            <p className="text-xl font-mono tabular-nums font-semibold text-foreground">{formatTime(dynamicPredictedTime)}</p>
                             <p className="text-[10px] text-foreground-muted">Target VO2max {projection.projectedVdot.toFixed(1)}</p>
                         </div>
                     </div>
@@ -237,13 +237,13 @@ export function RaceCountdown({
                     <div className="glass-card p-4">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-foreground-muted">This Week&apos;s Mileage</span>
-                            <span className="text-sm text-foreground">
+                            <span className="text-sm text-foreground font-mono tabular-nums">
                                 {currentWeekMileage.toFixed(1)} / {plannedWeekMileage.toFixed(1)} km
                             </span>
                         </div>
                         <div className="h-2 bg-background rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-gradient-to-r from-accent-cyan to-green-500 rounded-full transition-all duration-500"
+                                className="h-full bg-positive rounded-full transition-all duration-500"
                                 style={{ width: `${Math.min(100, (currentWeekMileage / plannedWeekMileage) * 100)}%` }}
                             />
                         </div>
@@ -325,10 +325,10 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
                 </div>
             </div>
 
-            <div className="bg-accent-pink/10 border border-accent-pink/30 rounded-xl p-4 mb-4">
+            <div className="bg-accent-orange/10 border border-accent-orange/30 rounded-md p-4 mb-4">
                 <div className="flex items-center gap-2 mb-1">
-                    <Trophy className="w-5 h-5 text-accent-pink" />
-                    <p className="font-semibold text-accent-pink">
+                    <Trophy className="w-5 h-5 text-accent-orange" />
+                    <p className="font-semibold text-accent-orange">
                         {isIncompleteArchived ? 'Unfinished Race' : 'Race Week!'}
                     </p>
                 </div>
@@ -340,18 +340,18 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
             </div>
 
             {/* Training completion summary */}
-            <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-3 mb-4">
+            <div className="bg-background-tertiary border border-line rounded-md p-3 mb-4">
                 <div className="flex items-center justify-between mb-1">
                     <span className="text-xs text-foreground-muted">Training Completion</span>
-                    <span className="text-sm font-medium text-foreground">{completionRate}%</span>
+                    <span className="text-sm font-medium text-foreground tabular-nums">{completionRate}%</span>
                 </div>
-                <div className="h-1.5 bg-foreground/5 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-background-secondary rounded-full overflow-hidden">
                     <div
-                        className={`h-full rounded-full ${completionRate >= 80 ? 'bg-green-500' : completionRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                        className={`h-full rounded-full ${completionRate >= 80 ? 'bg-positive' : completionRate >= 60 ? 'bg-workout-tempo' : 'bg-negative'}`}
                         style={{ width: `${completionRate}%` }}
                     />
                 </div>
-                <p className="text-[10px] text-foreground-muted mt-1">{workoutStats.completed}/{workoutStats.total} workouts completed</p>
+                <p className="text-[10px] text-foreground-muted mt-1 tabular-nums">{workoutStats.completed}/{workoutStats.total} workouts completed</p>
             </div>
 
             {/* Auto-detect section */}
@@ -364,19 +364,19 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
                 <div className="space-y-3">
                     <p className="text-sm text-foreground-muted">We found a run near your race date:</p>
 
-                    <div className="bg-foreground/5 border border-foreground/10 rounded-lg p-3">
+                    <div className="bg-background-tertiary border border-line rounded-md p-3">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-accent-orange/20 flex items-center justify-center">
                                 <Trophy className="w-4 h-4 text-accent-orange" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-foreground truncate">{topSuggestion.name}</p>
-                                <div className="flex items-center gap-2 text-xs text-foreground-muted">
+                                <div className="flex items-center gap-2 text-xs text-foreground-muted tabular-nums">
                                     <span>{format(new Date(topSuggestion.startDate), 'MMM d')}</span>
                                     <span>{formatDistanceWithUnit(topSuggestion.distance, useImperial, 1)}</span>
-                                    <span>{formatTime(topSuggestion.movingTime)}</span>
+                                    <span className="font-mono">{formatTime(topSuggestion.movingTime)}</span>
                                     {topSuggestion.averageSpeed && (
-                                        <span>{formatPaceWithUnits(1000 / topSuggestion.averageSpeed, useImperial)}</span>
+                                        <span className="font-mono">{formatPaceWithUnits(1000 / topSuggestion.averageSpeed, useImperial)}</span>
                                     )}
                                 </div>
                             </div>
@@ -393,7 +393,7 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
 
                     <button
                         onClick={() => onSelectRace?.(goal, null, 'pick')}
-                        className="w-full py-2.5 border border-foreground/10 text-foreground-muted rounded-lg hover:bg-foreground/5 transition-colors text-sm"
+                        className="w-full py-2.5 border border-line text-foreground-muted rounded-md hover:bg-surface-hover transition-colors text-sm"
                     >
                         Pick a different run
                     </button>
@@ -414,7 +414,7 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
                 <button
                     onClick={() => deleteMutation.mutate()}
                     disabled={deleteMutation.isPending}
-                    className="w-full flex items-center justify-center gap-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors py-2 rounded-lg disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 text-xs text-negative hover:bg-negative/10 transition-colors py-2 rounded-md disabled:opacity-50"
                 >
                     {deleteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                     Delete Plan

@@ -65,7 +65,7 @@ export default function HeartRateZonesSection({
     zone6Max,
     setZone6Max
 }: HeartRateZonesSectionProps) {
-    const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
+    const inputClass = "bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
         <div className="border-t border-glass-border pt-4">
@@ -74,7 +74,7 @@ export default function HeartRateZonesSection({
                 onClick={() => setShowHeartRate(!showHeartRate)}
                 className="flex items-center justify-between w-full text-left py-2"
             >
-                <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide">Heart Rate & Zone Settings</h3>
+                <h3 className="text-sm font-semibold text-foreground-muted">Heart Rate & Zone Settings</h3>
                 {showHeartRate ? (
                     <ChevronUp className="w-4 h-4 text-foreground-muted" />
                 ) : (
@@ -87,7 +87,7 @@ export default function HeartRateZonesSection({
                     {/* Basic HR Settings */}
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Max HR</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Max HR</label>
                             <input
                                 type="number"
                                 value={maxHeartRate}
@@ -98,7 +98,7 @@ export default function HeartRateZonesSection({
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Resting HR</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Resting HR</label>
                             <input
                                 type="number"
                                 value={restingHeartRate}
@@ -109,7 +109,7 @@ export default function HeartRateZonesSection({
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Weight (kg)</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Weight (kg)</label>
                             <input
                                 type="number"
                                 value={weight}
@@ -122,11 +122,11 @@ export default function HeartRateZonesSection({
                     </div>
 
                     {/* Threshold Values */}
-                    <div className="bg-surface/50 rounded-lg p-4 border border-glass-border">
-                        <h4 className="text-xs font-semibold text-accent-orange mb-3 uppercase tracking-wide">Threshold Values</h4>
+                    <div className="bg-surface rounded-md p-4 border border-glass-border">
+                        <h4 className="text-xs font-semibold text-accent-orange mb-3">Threshold Values</h4>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs text-foreground-muted mb-1 uppercase">Lactate Threshold HR (LTHR)</label>
+                                <label className="block text-xs text-foreground-muted mb-1">Lactate Threshold HR (LTHR)</label>
                                 <div className="relative">
                                     <input
                                         type="number"
@@ -142,7 +142,7 @@ export default function HeartRateZonesSection({
                                 <p className="text-xs text-foreground-muted mt-1">Zone 4 ends at LTHR</p>
                             </div>
                             <div>
-                                <label className="block text-xs text-foreground-muted mb-1 uppercase">Threshold Pace</label>
+                                <label className="block text-xs text-foreground-muted mb-1">Threshold Pace</label>
                                 <div className="flex gap-1 items-center">
                                     <input
                                         type="number"
@@ -172,15 +172,15 @@ export default function HeartRateZonesSection({
 
                     {/* Calculated 7 Zones Display */}
                     {calculatedZones.length > 0 && (
-                        <div className="bg-foreground/5 rounded-lg p-4 border border-foreground/5">
-                            <h4 className="text-xs font-semibold text-foreground-muted mb-3 uppercase tracking-wide">Calculated HR Zones (7-Zone Model)</h4>
+                        <div className="bg-background-tertiary rounded-md p-4 border border-line">
+                            <h4 className="text-xs font-semibold text-foreground-muted mb-3">Calculated HR Zones (7-Zone Model)</h4>
                             <div className="space-y-1">
                                 {calculatedZones.map((zone, i) => {
-                                    const colors = ['text-green-400', 'text-lime-400', 'text-yellow-400', 'text-orange-400', 'text-red-400', 'text-indigo-400', 'text-purple-400'];
+                                    const colors = ['text-zone-1', 'text-zone-2', 'text-zone-3', 'text-zone-4', 'text-zone-5', 'text-workout-strength', 'text-workout-long-run'];
                                     return (
-                                        <div key={i} className="flex justify-between items-center text-sm p-2 hover:bg-foreground/5 rounded">
+                                        <div key={i} className="flex justify-between items-center text-sm p-2 hover:bg-surface-hover rounded">
                                             <span className={`${colors[i]} font-medium`}>{zone.label}</span>
-                                            <span className="text-foreground font-mono">
+                                            <span className="text-foreground font-mono tabular-nums">
                                                 {zone.min} - {zone.max === 999 ? '∞' : zone.max} <span className="text-foreground-muted text-xs">bpm</span>
                                             </span>
                                         </div>
@@ -195,7 +195,7 @@ export default function HeartRateZonesSection({
                         <p className="text-xs text-foreground-muted mb-3">Zone thresholds (BPM) - Manual override</p>
                         <div className="grid grid-cols-6 gap-2">
                             <div>
-                                <label className="block text-xs text-green-400 mb-1 text-center">Z1</label>
+                                <label className="block text-xs text-zone-1 mb-1 text-center">Z1</label>
                                 <input
                                     type="number"
                                     value={zone1Max}
@@ -205,7 +205,7 @@ export default function HeartRateZonesSection({
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-lime-400 mb-1 text-center">Z2</label>
+                                <label className="block text-xs text-zone-2 mb-1 text-center">Z2</label>
                                 <input
                                     type="number"
                                     value={zone2Max}
@@ -215,7 +215,7 @@ export default function HeartRateZonesSection({
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-yellow-400 mb-1 text-center">Z3</label>
+                                <label className="block text-xs text-zone-3 mb-1 text-center">Z3</label>
                                 <input
                                     type="number"
                                     value={zone3Max}
@@ -225,7 +225,7 @@ export default function HeartRateZonesSection({
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-orange-400 mb-1 text-center">Z4</label>
+                                <label className="block text-xs text-zone-4 mb-1 text-center">Z4</label>
                                 <input
                                     type="number"
                                     value={zone4Max}
@@ -235,7 +235,7 @@ export default function HeartRateZonesSection({
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-red-400 mb-1 text-center">Z5</label>
+                                <label className="block text-xs text-zone-5 mb-1 text-center">Z5</label>
                                 <input
                                     type="number"
                                     value={zone5Max}
@@ -245,7 +245,7 @@ export default function HeartRateZonesSection({
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-indigo-400 mb-1 text-center">Z6</label>
+                                <label className="block text-xs text-workout-strength mb-1 text-center">Z6</label>
                                 <input
                                     type="number"
                                     value={zone6Max}

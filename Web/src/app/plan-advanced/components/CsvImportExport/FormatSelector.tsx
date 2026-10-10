@@ -44,7 +44,7 @@ export function FormatSelector({ value, onChange, autoDetected }: FormatSelector
             <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-foreground-secondary">CSV Format</label>
                 {autoDetected && (
-                    <span className="text-[10px] text-green-400 flex items-center gap-1">
+                    <span className="text-[10px] text-positive flex items-center gap-1">
                         <Activity className="w-3 h-3" />
                         Auto-detected
                     </span>
@@ -56,13 +56,13 @@ export function FormatSelector({ value, onChange, autoDetected }: FormatSelector
                         key={fmt}
                         type="button"
                         onClick={() => onChange(fmt)}
-                        className={`p-3 rounded-lg border text-left transition-colors ${
+                        className={`p-3 rounded-md border text-left transition-colors ${
                             value === fmt
                                 ? 'border-foreground/30 bg-background-tertiary'
                                 : 'border-glass-border bg-background-secondary hover:border-foreground/20'
                         }`}
                     >
-                        <Icon className={`w-4 h-4 mb-1.5 ${value === fmt ? 'text-orange-400' : 'text-foreground-muted'}`} />
+                        <Icon className={`w-4 h-4 mb-1.5 ${value === fmt ? 'text-accent-orange' : 'text-foreground-muted'}`} />
                         <span className="text-xs font-medium text-foreground block">{label}</span>
                         <div className="mt-1.5 space-y-0.5">
                             {columns.slice(0, 3).map((c) => (

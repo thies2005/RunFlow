@@ -215,13 +215,13 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-background-secondary w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
+            <div className="bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-safe border-b border-foreground/10 shrink-0">
-                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                        <Target className="w-5 h-5 text-pink-500" />
+                <div className="flex items-center justify-between p-4 pt-safe border-b border-line shrink-0">
+                    <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                        <Target className="w-5 h-5 text-accent-pink" />
                         Nutrition Targets
                     </h2>
                     <button onClick={onClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
@@ -232,24 +232,24 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
                     {isLoading ? (
                         <div className="flex justify-center p-8">
-                            <Loader2 className="w-8 h-8 flex animate-spin text-pink-500" />
+                            <Loader2 className="w-8 h-8 flex animate-spin text-accent-pink" />
                         </div>
                     ) : (
                         <>
                             {/* Insight box */}
-                            <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-4">
+                            <div className="bg-background-tertiary border border-line rounded-md p-4">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-foreground-muted flex items-center gap-1.5"><Flame className="w-4 h-4 text-orange-400" /> Est. BMR</span>
-                                    <span className="text-foreground font-bold">{Math.round(bmr)} kcal</span>
+                                    <span className="text-sm font-medium text-foreground-muted flex items-center gap-1.5"><Flame className="w-4 h-4 text-accent-orange" /> Est. BMR</span>
+                                    <span className="text-foreground font-semibold font-mono tabular-nums">{Math.round(bmr)} kcal</span>
                                 </div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-sm font-medium text-foreground-muted flex items-center gap-1.5"><Activity className="w-4 h-4 text-blue-400" /> Avg Daily Activity</span>
-                                    <span className="text-foreground font-bold">{Math.round(targetData?.avgActiveCalories || 0)} kcal</span>
+                                    <span className="text-sm font-medium text-foreground-muted flex items-center gap-1.5"><Activity className="w-4 h-4 text-accent-blue" /> Avg Daily Activity</span>
+                                    <span className="text-foreground font-semibold font-mono tabular-nums">{Math.round(targetData?.avgActiveCalories || 0)} kcal</span>
                                 </div>
-                                <div className="h-px bg-foreground/10 my-2"></div>
+                                <div className="h-px bg-line my-2"></div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm font-medium text-foreground-muted">Est. TDEE (Maintenance)</span>
-                                    <span className="text-pink-400 font-bold">{Math.round(tdee)} kcal</span>
+                                    <span className="text-accent-pink font-semibold font-mono tabular-nums">{Math.round(tdee)} kcal</span>
                                 </div>
                                 <p className="text-xs text-foreground-muted mt-3 flex gap-1">
                                     <Info className="w-3.5 h-3.5 shrink-0" />
@@ -261,7 +261,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                             <div>
                                 <div className="flex justify-between items-end mb-2">
                                     <label className="text-sm font-semibold text-foreground">Daily Calorie Target</label>
-                                    <span className="text-2xl font-bold text-pink-500">{Math.round(targetCalories)} <span className="text-xs font-normal text-foreground-muted">kcal</span></span>
+                                    <span className="text-2xl font-semibold font-mono tabular-nums text-accent-pink">{Math.round(targetCalories)} <span className="text-xs font-normal text-foreground-muted">kcal</span></span>
                                 </div>
 
                                 <input
@@ -271,11 +271,11 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                     step="50"
                                     value={targetCalories}
                                     onChange={(e) => handleCalorieChange(parseFloat(e.target.value))}
-                                    className="w-full accent-pink-500 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer"
+                                    className="w-full accent-accent-pink h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer"
                                 />
                                 <div className="flex justify-between text-xs text-foreground-muted mt-1">
                                     <span>Extreme Diet (800)</span>
-                                    <span className="text-pink-400/80 cursor-pointer" onClick={() => handleCalorieChange(tdee)}>Set Maintenance</span>
+                                    <span className="text-accent-pink/80 cursor-pointer" onClick={() => handleCalorieChange(tdee)}>Set Maintenance</span>
                                     <span>Extreme Bulk (5000)</span>
                                 </div>
                             </div>
@@ -284,7 +284,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                             <div>
                                 <div className="flex justify-between items-end mb-2">
                                     <label className="text-sm font-semibold text-foreground">Protein Target</label>
-                                    <span className="text-lg font-bold text-blue-400">{proteinMultiplier.toFixed(1)} <span className="text-xs font-normal text-foreground-muted">g/kg</span></span>
+                                    <span className="text-lg font-semibold font-mono tabular-nums text-accent-blue">{proteinMultiplier.toFixed(1)} <span className="text-xs font-normal text-foreground-muted">g/kg</span></span>
                                 </div>
 
                                 <input
@@ -294,7 +294,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                     step="0.1"
                                     value={proteinMultiplier}
                                     onChange={(e) => handleProteinChange(parseFloat(e.target.value))}
-                                    className="w-full accent-blue-500 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer"
+                                    className="w-full accent-accent-blue h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer"
                                 />
                                 <div className="flex justify-between text-xs text-foreground-muted mt-1">
                                     <span>Min (0.8g)</span>
@@ -306,26 +306,26 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                             <div>
                                 <h3 className="text-sm font-semibold text-foreground mb-3">Macro Distribution</h3>
 
-                                <div className="flex h-3 rounded-full overflow-hidden mb-4 bg-foreground/10">
-                                    <div style={{ width: `${proteinPercent}%` }} className="bg-blue-500" />
-                                    <div style={{ width: `${carbPercent}%` }} className="bg-green-500" />
-                                    <div style={{ width: `${fatPercent}%` }} className="bg-orange-500" />
+                                <div className="flex h-3 rounded-full overflow-hidden mb-4 bg-background-tertiary">
+                                    <div style={{ width: `${proteinPercent}%` }} className="bg-accent-blue" />
+                                    <div style={{ width: `${carbPercent}%` }} className="bg-positive" />
+                                    <div style={{ width: `${fatPercent}%` }} className="bg-workout-tempo" />
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                                    <div className="bg-foreground/5 rounded-lg p-2 border border-blue-500/20">
-                                        <div className="text-blue-400 font-bold mb-0.5">{proteinPercent.toFixed(0)}%</div>
-                                        <div className="text-foreground">{Math.round(pGrams)}g</div>
+                                    <div className="bg-background-tertiary rounded-md p-2 border border-accent-blue/20">
+                                        <div className="text-accent-blue font-semibold font-mono tabular-nums mb-0.5">{proteinPercent.toFixed(0)}%</div>
+                                        <div className="text-foreground font-mono tabular-nums">{Math.round(pGrams)}g</div>
                                         <div className="text-xs text-foreground-muted">Protein</div>
                                     </div>
-                                    <div className="bg-foreground/5 rounded-lg p-2 border border-green-500/20">
-                                        <div className="text-green-400 font-bold mb-0.5">{carbPercent.toFixed(0)}%</div>
-                                        <div className="text-foreground">{Math.round(cGrams)}g</div>
+                                    <div className="bg-background-tertiary rounded-md p-2 border border-positive/20">
+                                        <div className="text-positive font-semibold font-mono tabular-nums mb-0.5">{carbPercent.toFixed(0)}%</div>
+                                        <div className="text-foreground font-mono tabular-nums">{Math.round(cGrams)}g</div>
                                         <div className="text-xs text-foreground-muted">Carbs</div>
                                     </div>
-                                    <div className="bg-foreground/5 rounded-lg p-2 border border-orange-500/20">
-                                        <div className="text-orange-400 font-bold mb-0.5">{fatPercent.toFixed(0)}%</div>
-                                        <div className="text-foreground">{Math.round(fGrams)}g</div>
+                                    <div className="bg-background-tertiary rounded-md p-2 border border-workout-tempo/20">
+                                        <div className="text-workout-tempo font-semibold font-mono tabular-nums mb-0.5">{fatPercent.toFixed(0)}%</div>
+                                        <div className="text-foreground font-mono tabular-nums">{Math.round(fGrams)}g</div>
                                         <div className="text-xs text-foreground-muted">Fats</div>
                                     </div>
                                 </div>
@@ -342,12 +342,12 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                         step="1"
                                         value={fatPercent}
                                         onChange={(e) => handleFatChange(parseFloat(e.target.value))}
-                                        className="w-full accent-orange-500 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer"
+                                        className="w-full accent-accent-orange h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer"
                                     />
                                 </div>
 
                                 {isFatWarning && (
-                                    <div className="mt-3 bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-xs text-red-400 flex gap-2">
+                                    <div className="mt-3 bg-negative/10 border border-negative/20 rounded-md p-3 text-xs text-negative flex gap-2">
                                         <AlertTriangle className="w-4 h-4 shrink-0" />
                                         <span>
                                             Warning: Dietary fat below 50g per day is generally not recommended for hormone health and essential vitamin absorption. Consider increasing fats.
@@ -357,9 +357,9 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                             </div>
 
                             {/* Additional Settings */}
-                            <div className="border-t border-foreground/10 pt-6">
+                            <div className="border-t border-line pt-6">
                                 <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                                    <Activity className="w-4 h-4 text-blue-400" />
+                                    <Activity className="w-4 h-4 text-accent-blue" />
                                     Tracking Preferences
                                 </h3>
 
@@ -369,22 +369,22 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                     <p className="text-xs text-foreground-muted mb-3">
                                         Choose where your active calories are imported from.
                                     </p>
-                                    <div className="flex bg-foreground/5 rounded-lg p-1 border border-foreground/10">
+                                    <div className="flex bg-background-tertiary rounded-md p-1 border border-line">
                                         <button
                                             onClick={() => setExerciseCalorieSource('strava')}
-                                            className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors ${exerciseCalorieSource === 'strava' ? 'bg-[#fc4c02] text-white shadow-lg' : 'text-foreground-muted hover:text-foreground hover:bg-foreground/5'}`}
+                                            className={`flex-1 py-2 text-xs font-semibold rounded-sm transition-colors ${exerciseCalorieSource === 'strava' ? 'bg-accent-orange text-white' : 'text-foreground-muted hover:text-foreground hover:bg-glass-bg-hover'}`}
                                         >
                                             Strava
                                         </button>
                                         <button
                                             onClick={() => setExerciseCalorieSource('health_connect')}
-                                            className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors ${exerciseCalorieSource === 'health_connect' ? 'bg-blue-500 text-white shadow-lg' : 'text-foreground-muted hover:text-foreground hover:bg-foreground/5'}`}
+                                            className={`flex-1 py-2 text-xs font-semibold rounded-sm transition-colors ${exerciseCalorieSource === 'health_connect' ? 'bg-accent-blue text-white' : 'text-foreground-muted hover:text-foreground hover:bg-glass-bg-hover'}`}
                                         >
                                             Health Connect
                                         </button>
                                     </div>
                                     {exerciseCalorieSource === 'health_connect' && (
-                                        <div className="mt-2 text-[10px] text-blue-400/80 bg-blue-500/10 px-2 py-1.5 rounded flex gap-1.5 items-start">
+                                        <div className="mt-2 text-[10px] text-accent-blue bg-accent-blue/10 px-2 py-1.5 rounded flex gap-1.5 items-start">
                                             <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                                             <p>Requires the mobile app with Health Connect permissions configured.</p>
                                         </div>
@@ -395,7 +395,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                 <div className="mb-6">
                                     <div className="flex justify-between items-end mb-2">
                                         <label className="text-sm font-semibold text-foreground">Exercise Calorie Factor</label>
-                                        <span className="text-lg font-bold text-pink-400">{exerciseCalorieFactor.toFixed(2)}x</span>
+                                        <span className="text-lg font-semibold font-mono tabular-nums text-accent-pink">{exerciseCalorieFactor.toFixed(2)}x</span>
                                     </div>
                                     <p className="text-xs text-foreground-muted mb-3">
                                         How heavily should tracked exercise calories impact your remaining budget? (0 = ignore exercise, 1 = full credit).
@@ -407,7 +407,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                         step="0.05"
                                         value={exerciseCalorieFactor}
                                         onChange={(e) => setExerciseCalorieFactor(parseFloat(e.target.value))}
-                                        className="w-full accent-pink-500 h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer"
+                                        className="w-full accent-accent-pink h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer"
                                     />
                                     <div className="flex justify-between text-xs text-foreground-muted mt-1">
                                         <span>Ignore (0x)</span>
@@ -425,32 +425,32 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                         </div>
                                         <button
                                             onClick={() => setWaterTrackingEnabled(!waterTrackingEnabled)}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${waterTrackingEnabled ? 'bg-blue-500' : 'bg-foreground/20'}`}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${waterTrackingEnabled ? 'bg-accent-orange' : 'bg-line-strong'}`}
                                         >
                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${waterTrackingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
 
                                     {waterTrackingEnabled && (
-                                        <div className="bg-foreground/5 rounded-xl p-3 border border-foreground/10">
+                                        <div className="bg-background-tertiary rounded-md p-3 border border-line">
                                             <label className="text-xs font-semibold text-foreground-muted mb-1 block">Daily Water Goal (ml)</label>
                                             <div className="flex items-center gap-2">
                                                 <input
                                                     type="number"
                                                     value={waterGoalMl}
                                                     onChange={(e) => setWaterGoalMl(parseInt(e.target.value) || 0)}
-                                                    className="bg-background-tertiary border border-glass-border rounded-lg px-3 py-2 text-sm text-foreground w-full focus:outline-hidden focus:border-blue-500"
+                                                    className="bg-background-secondary border border-line rounded-md px-3 py-2 text-sm text-foreground w-full focus:outline-hidden"
                                                     min="500"
                                                     step="100"
                                                 />
-                                                <span className="text-xs font-semibold text-foreground-muted bg-foreground/5 py-2 px-3 rounded-lg">ml</span>
+                                                <span className="text-xs font-semibold text-foreground-muted bg-background-tertiary py-2 px-3 rounded-md">ml</span>
                                             </div>
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Intermittent Fasting */}
-                                <div className="space-y-4 pt-4 border-t border-foreground/5">
+                                <div className="space-y-4 pt-4 border-t border-line">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <label className="text-sm font-semibold text-foreground">Intermittent Fasting Timer</label>
@@ -458,21 +458,21 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                         </div>
                                         <button
                                             onClick={() => setFastingEnabled(!fastingEnabled)}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${fastingEnabled ? 'bg-blue-500' : 'bg-foreground/20'}`}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${fastingEnabled ? 'bg-accent-orange' : 'bg-line-strong'}`}
                                         >
                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${fastingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                         </button>
                                     </div>
 
                                     {fastingEnabled && (
-                                        <div className="bg-foreground/5 rounded-xl p-3 border border-foreground/10">
+                                        <div className="bg-background-tertiary rounded-md p-3 border border-line">
                                             <label className="text-xs font-semibold text-foreground-muted mb-1 block">Daily Fasting Goal (Hours)</label>
                                             <div className="flex gap-2">
                                                 {[12, 16, 18, 20].map(h => (
                                                     <button
                                                         key={h}
                                                         onClick={() => setFastingGoalHours(h)}
-                                                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${fastingGoalHours === h ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-background-tertiary text-foreground-muted border-glass-border hover:border-foreground/20'}`}
+                                                        className={`flex-1 py-1.5 text-xs font-semibold rounded-md border transition-colors ${fastingGoalHours === h ? 'bg-accent-blue/10 text-accent-blue border-accent-blue/50' : 'bg-background-secondary text-foreground-muted border-line hover:border-line-strong'}`}
                                                     >
                                                         {h}h
                                                     </button>
@@ -487,11 +487,11 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 pb-8 sm:pb-4 pb-safe border-t border-foreground/10 shrink-0">
+                <div className="p-4 pb-8 sm:pb-4 pb-safe border-t border-line shrink-0">
                     <button
                         onClick={() => saveMutation.mutate()}
                         disabled={saveMutation.isPending || isLoading}
-                        className="w-full py-3 bg-pink-600 hover:bg-pink-700 disabled:opacity-50 text-white font-semibold flex items-center justify-center gap-2 rounded-xl transition-colors"
+                        className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {saveMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                         Save Targets

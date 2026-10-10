@@ -118,8 +118,8 @@ export function PlanToolbar({
                     onClick={onToggleChat}
                     className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
                         chatOpen
-                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                            : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border-purple-500/20'
+                            ? 'bg-workout-long-run/15 text-workout-long-run border-workout-long-run/30'
+                            : 'bg-workout-long-run/10 text-workout-long-run hover:bg-workout-long-run/15 border-workout-long-run/30'
                     }`}
                 >
                     <MessageSquare className="w-3.5 h-3.5" />

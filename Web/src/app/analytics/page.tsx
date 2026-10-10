@@ -330,14 +330,14 @@ export default function AnalyticsPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
+            <header className="topbar sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-4">
-                            <button onClick={() => router.push('/')} className="p-2 text-foreground-muted hover:text-foreground transition-colors">
+                            <button onClick={() => router.push('/')} className="p-2 transition-colors">
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
-                            <h1 className="text-xl font-bold text-foreground">Performance Analytics</h1>
+                            <h1 className="text-xl font-bold">Performance Analytics</h1>
                         </div>
                         <button
                             onClick={() => recalculateMutation.mutate()}
@@ -354,7 +354,7 @@ export default function AnalyticsPage() {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 {showLoading ? (
                     <div className="flex items-center justify-center py-20">
-                        <div className="animate-pulse text-foreground-muted">Loading analytics...</div>
+                        <div className="text-foreground-muted">Loading analytics...</div>
                     </div>
                 ) : (
                     <>
@@ -414,20 +414,20 @@ export default function AnalyticsPage() {
                         <div className="glass-card p-4">
                             <div className="grid grid-cols-4 gap-4 text-center text-sm">
                                 <div>
-                                    <p className="text-foreground-muted">Avg Weekly</p>
-                                    <p className="text-foreground font-semibold">{runalyzeMetrics.details.avgWeeklyKm} km</p>
+                                    <p className="text-foreground-muted">Avg weekly</p>
+                                    <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.avgWeeklyKm} km</p>
                                 </div>
                                 <div>
-                                    <p className="text-foreground-muted">Target Weekly</p>
-                                    <p className="text-foreground font-semibold">{runalyzeMetrics.details.targetWeeklyKm} km</p>
+                                    <p className="text-foreground-muted">Target weekly</p>
+                                    <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.targetWeeklyKm} km</p>
                                 </div>
                                 <div>
-                                    <p className="text-foreground-muted">Long Run Points</p>
-                                    <p className="text-foreground font-semibold">{runalyzeMetrics.details.longRunPoints} / 10</p>
+                                    <p className="text-foreground-muted">Long run points</p>
+                                    <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.longRunPoints} / 10</p>
                                 </div>
                                 <div>
                                     <p className="text-foreground-muted">Calibration</p>
-                                    <p className="text-foreground font-semibold">{runalyzeMetrics.calibrationFactor.toFixed(2)}x</p>
+                                    <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.calibrationFactor.toFixed(2)}x</p>
                                 </div>
                             </div>
                         </div>

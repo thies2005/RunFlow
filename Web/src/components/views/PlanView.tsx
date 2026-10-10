@@ -114,13 +114,13 @@ function PlanViewComponent({
                                     <h1 className="text-2xl font-bold text-foreground">{goal.name} Plan</h1>
                                     <p className="text-foreground-muted text-sm flex items-center gap-2">
                                         <Calendar className="w-4 h-4" />
-                                        Race: {format(raceDate, 'MMMM d, yyyy')}
+                                        Race: <span className="font-mono tabular-nums">{format(raceDate, 'MMMM d, yyyy')}</span>
                                     </p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setShowUnlinked(!showUnlinked)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${showUnlinked
+                                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${showUnlinked
                                     ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30'
                                     : 'bg-surface text-foreground-muted hover:text-foreground border border-glass-border'
                                     }`}
@@ -135,14 +135,14 @@ function PlanViewComponent({
                         <div className="flex items-center justify-between pt-4">
                             <div>
                                 <h1 className="text-xl font-bold text-foreground">{goal.name} Plan</h1>
-                                <p className="text-foreground-muted text-xs flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" />
-                                    Race: {format(raceDate, 'MMM d, yyyy')}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => setShowUnlinked(!showUnlinked)}
-                                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${showUnlinked
+                                    <p className="text-foreground-muted text-xs flex items-center gap-1">
+                                        <Calendar className="w-3 h-3" />
+                                        Race: <span className="font-mono tabular-nums">{format(raceDate, 'MMM d, yyyy')}</span>
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setShowUnlinked(!showUnlinked)}
+                                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${showUnlinked
                                     ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30'
                                     : 'bg-surface text-foreground-muted hover:text-foreground border border-glass-border'
                                     }`}

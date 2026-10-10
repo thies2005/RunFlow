@@ -76,9 +76,9 @@ export default function MigrationTab() {
     return (
         <div className="space-y-6">
             {/* Info panel */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
-                <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-800 space-y-1">
+            <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-md p-4 flex gap-3">
+                <Info className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
+                <div className="text-sm text-foreground-secondary space-y-1">
                     <p className="font-semibold">What this does</p>
                     <p>
                         The config bundle captures <strong>AI provider credentials</strong> and{' '}
@@ -96,7 +96,7 @@ export default function MigrationTab() {
                         </li>
                         <li>On the new instance: import the config bundle here.</li>
                     </ol>
-                    <p className="mt-2 text-blue-700">
+                    <p className="mt-2 text-accent-blue">
                         User accounts, activities, and all other data are in the database backup —
                         not in this bundle.
                     </p>
@@ -106,7 +106,7 @@ export default function MigrationTab() {
             {/* Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Export */}
-                <div className="bg-background-secondary border border-glass-border rounded-lg p-5 space-y-3">
+                <div className="bg-background-secondary border border-line rounded-md p-5 space-y-3">
                     <h3 className="font-semibold text-foreground">Export Config Bundle</h3>
                     <p className="text-sm text-foreground-muted">
                         Downloads a JSON file containing all AI providers (with decrypted API keys)
@@ -115,7 +115,7 @@ export default function MigrationTab() {
                     <button
                         onClick={handleExport}
                         disabled={exporting || importing}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center justify-center disabled:opacity-50"
+                        className="w-full bg-accent-orange hover:bg-accent-orange/90 text-white px-4 py-2 rounded-md text-sm font-medium transition flex items-center justify-center disabled:opacity-50"
                     >
                         {exporting ? (
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -127,7 +127,7 @@ export default function MigrationTab() {
                 </div>
 
                 {/* Import */}
-                <div className="bg-background-secondary border border-glass-border rounded-lg p-5 space-y-3">
+                <div className="bg-background-secondary border border-line rounded-md p-5 space-y-3">
                     <h3 className="font-semibold text-foreground">Import Config Bundle</h3>
                     <p className="text-sm text-foreground-muted">
                         Upload a previously exported bundle. Providers will be created or updated;
@@ -146,7 +146,7 @@ export default function MigrationTab() {
                     <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={importing || exporting}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center justify-center disabled:opacity-50"
+                        className="w-full bg-accent-blue hover:bg-accent-blue/90 text-white px-4 py-2 rounded-md text-sm font-medium transition flex items-center justify-center disabled:opacity-50"
                     >
                         {importing ? (
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -161,27 +161,27 @@ export default function MigrationTab() {
             {/* Result */}
             {result && (
                 <div
-                    className={`rounded-lg border p-4 space-y-3 ${result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}
+                    className={`rounded-md border p-4 space-y-3 ${result.success ? 'bg-positive/10 border-positive/30' : 'bg-negative/10 border-negative/30'}`}
                 >
                     <div className="flex items-center gap-2">
                         {result.success ? (
-                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <CheckCircle className="w-5 h-5 text-positive" />
                         ) : (
-                            <AlertTriangle className="w-5 h-5 text-red-500" />
+                            <AlertTriangle className="w-5 h-5 text-negative" />
                         )}
                         <span
-                            className={`font-semibold text-sm ${result.success ? 'text-green-800' : 'text-red-700'}`}
+                            className={`font-semibold text-sm ${result.success ? 'text-positive' : 'text-negative'}`}
                         >
                             {result.success ? 'Import successful' : 'Import failed'}
                         </span>
                     </div>
 
                     {result.error && (
-                        <p className="text-sm text-red-700">{result.error}</p>
+                        <p className="text-sm text-negative">{result.error}</p>
                     )}
 
                     {result.results && (
-                        <ul className="text-sm text-green-800 space-y-1 pl-1">
+                        <ul className="text-sm text-positive space-y-1 pl-1">
                             <li>
                                 Global AI settings:{' '}
                                 <span className="font-medium">{result.results.globalAiSettings}</span>
@@ -206,8 +206,8 @@ export default function MigrationTab() {
                     {result.results?.warnings && result.results.warnings.length > 0 && (
                         <div className="mt-2 space-y-1">
                             {result.results.warnings.map((w, i) => (
-                                <div key={i} className="flex gap-2 text-sm text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded p-2">
-                                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
+                                <div key={i} className="flex gap-2 text-sm text-workout-tempo bg-workout-tempo/10 border border-workout-tempo/30 rounded-sm p-2">
+                                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-workout-tempo" />
                                     {w}
                                 </div>
                             ))}

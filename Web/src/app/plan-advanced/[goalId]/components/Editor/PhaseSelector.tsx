@@ -8,12 +8,12 @@ export type PlanPhase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK' | 'REC
 const PHASES: PlanPhase[] = ['BASE', 'BUILD', 'PEAK', 'TAPER', 'RACE_WEEK', 'RECOVERY', 'OFF'];
 
 const PHASE_COLORS: Record<PlanPhase, string> = {
-    BASE: 'bg-blue-500/20 text-blue-400',
-    BUILD: 'bg-orange-500/20 text-orange-400',
-    PEAK: 'bg-purple-500/20 text-purple-400',
-    TAPER: 'bg-cyan-500/20 text-cyan-400',
-    RACE_WEEK: 'bg-green-500/20 text-green-400',
-    RECOVERY: 'bg-teal-500/20 text-teal-400',
+    BASE: 'bg-accent-blue/15 text-accent-blue',
+    BUILD: 'bg-workout-tempo/10 text-workout-tempo',
+    PEAK: 'bg-workout-long-run/15 text-workout-long-run',
+    TAPER: 'bg-workout-recovery/10 text-workout-recovery',
+    RACE_WEEK: 'bg-positive/15 text-positive',
+    RECOVERY: 'bg-workout-recovery/15 text-workout-recovery',
     OFF: 'bg-foreground/20 text-foreground-secondary',
 };
 
@@ -56,7 +56,7 @@ export function PhaseSelector({ currentPhase, goalId, weekIndex, onPhaseChange }
                 <ChevronDown className="w-3 h-3 opacity-60" />
             </button>
             {isOpen && (
-                <div className="absolute left-0 top-full mt-1 z-50 bg-background-secondary border border-foreground/20 rounded-lg shadow-xl py-1 min-w-[120px]">
+                <div className="absolute left-0 top-full mt-1 z-50 bg-background-secondary border border-foreground/20 rounded-md py-1 min-w-[120px]">
                     {PHASES.map((p) => (
                         <button
                             key={p}
@@ -65,7 +65,7 @@ export function PhaseSelector({ currentPhase, goalId, weekIndex, onPhaseChange }
                             className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
                                 p === currentPhase
                                     ? 'text-foreground bg-background-tertiary'
-                                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-tertiary/60'
+                                    : 'text-foreground-secondary hover:text-foreground hover:bg-background-tertiary'
                             }`}
                         >
                             {p}

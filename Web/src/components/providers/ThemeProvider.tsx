@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { ThemeProvider as NextThemesProvider, useTheme } from 'next-themes';
 
-const THEME_COLOR_LIGHT = '#f8fafc';
-const THEME_COLOR_DARK = '#0a0a0f';
+const THEME_COLOR_LIGHT = '#f6f7f5';
+const THEME_COLOR_DARK = '#121417';
 
 /**
  * Keeps the browser chrome (<meta name="theme-color">) in sync with the

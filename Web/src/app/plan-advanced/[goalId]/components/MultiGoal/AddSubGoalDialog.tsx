@@ -75,7 +75,7 @@ export function AddSubGoalDialog({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl p-5 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-md p-5 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-semibold text-foreground">Add Event</h3>
                     <button
@@ -95,7 +95,7 @@ export function AddSubGoalDialog({
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g. Local Half Marathon"
-                            className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                            className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                         />
                     </div>
 
@@ -105,7 +105,7 @@ export function AddSubGoalDialog({
                             <select
                                 value={raceType}
                                 onChange={(e) => setRaceType(e.target.value)}
-                                className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             >
                                 <option value="">Select...</option>
                                 <optgroup label="Running">
@@ -141,7 +141,7 @@ export function AddSubGoalDialog({
                                 type="date"
                                 value={raceDate}
                                 onChange={(e) => setRaceDate(e.target.value)}
-                                className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                                className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                             />
                         </div>
                     </div>
@@ -153,7 +153,7 @@ export function AddSubGoalDialog({
                             value={targetTime}
                             onChange={(e) => setTargetTime(e.target.value)}
                             placeholder="e.g. 1:45:00"
-                            className="w-full bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-foreground-muted"
+                            className="w-full bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-foreground-muted"
                         />
                     </div>
 
@@ -169,7 +169,7 @@ export function AddSubGoalDialog({
                             id="generateWorkouts"
                             checked={generateWorkouts}
                             onChange={(e) => setGenerateWorkouts(e.target.checked)}
-                            className="w-4 h-4 rounded border-foreground/25 bg-background-tertiary text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                            className="w-4 h-4 rounded border-foreground/25 bg-background-tertiary text-accent-blue focus:ring-accent-blue focus:ring-offset-0"
                         />
                         <label htmlFor="generateWorkouts" className="text-xs text-foreground-secondary">
                             Auto-generate workouts for this event
@@ -181,7 +181,7 @@ export function AddSubGoalDialog({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 rounded-lg bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 transition-colors"
+                        className="px-4 py-2 rounded-md bg-background-tertiary text-foreground-secondary text-xs hover:bg-foreground/15 transition-colors"
                     >
                         Cancel
                     </button>
@@ -189,7 +189,7 @@ export function AddSubGoalDialog({
                         type="button"
                         onClick={() => mutation.mutate()}
                         disabled={mutation.isPending || !name}
-                        className="flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-xs hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1 px-4 py-2 rounded-md bg-foreground text-background hover:bg-foreground/85 disabled:opacity-50 transition-colors"
                     >
                         {mutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                         Add

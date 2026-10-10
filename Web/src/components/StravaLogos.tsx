@@ -19,10 +19,10 @@ export const ConnectWithStravaButton = ({ onClick, disabled }: { onClick: () => 
     <button
         onClick={onClick}
         disabled={disabled}
-        className={`group relative flex items-center gap-3 bg-[#FC4C02] text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all
+        className={`group relative flex items-center gap-3 bg-[#FC4C02] text-white font-semibold py-3 px-6 rounded-md transition-colors
             ${disabled
                 ? 'opacity-50 cursor-not-allowed grayscale-[30%]'
-                : 'hover:bg-[#E34402] hover:-translate-y-0.5 active:translate-y-0'
+                : 'hover:bg-[#E34402]'
             }`}
     >
         {/* Strava Logo SVG */}

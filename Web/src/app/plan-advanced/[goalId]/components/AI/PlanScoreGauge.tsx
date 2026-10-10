@@ -5,10 +5,10 @@ interface PlanScoreGaugeProps {
 }
 
 function getScoreColor(score: number): string {
-    if (score < 40) return '#ef4444';
-    if (score < 60) return '#f97316';
-    if (score < 75) return '#eab308';
-    return '#22c55e';
+    if (score < 40) return 'var(--negative)';
+    if (score < 60) return 'var(--workout-tempo)';
+    if (score < 75) return 'var(--zone-3)';
+    return 'var(--positive)';
 }
 
 function getScoreLabel(score: number): string {
@@ -55,7 +55,7 @@ export function PlanScoreGauge({ score }: PlanScoreGaugeProps) {
                     />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold text-foreground">{Math.round(clampedScore)}</span>
+                    <span className="text-2xl font-bold text-foreground font-mono tabular-nums">{Math.round(clampedScore)}</span>
                     <span className="text-[10px] text-foreground-muted">/ 100</span>
                 </div>
             </div>

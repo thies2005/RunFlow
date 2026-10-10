@@ -130,7 +130,7 @@ export function PaceProfileEditor({ goalId, baseVdot, profile }: PaceProfileEdit
                         type="button"
                         onClick={() => saveMutation.mutate()}
                         disabled={saveMutation.isPending}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-blue-600 text-white text-xs hover:bg-blue-500 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-foreground text-background hover:bg-foreground/85 disabled:opacity-50 transition-colors"
                     >
                         {saveMutation.isPending ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
@@ -149,7 +149,7 @@ export function PaceProfileEditor({ goalId, baseVdot, profile }: PaceProfileEdit
                     const isExpanded = expandedPhase === phase.phaseName;
 
                     return (
-                        <div key={phase.phaseName} className="bg-background-secondary border border-glass-border rounded-lg overflow-hidden">
+                        <div key={phase.phaseName} className="bg-background-secondary border border-glass-border rounded-md overflow-hidden">
                             <button
                                 type="button"
                                 onClick={() => setExpandedPhase(isExpanded ? null : phase.phaseName)}
@@ -163,7 +163,7 @@ export function PaceProfileEditor({ goalId, baseVdot, profile }: PaceProfileEdit
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className={`text-[10px] font-mono ${
-                                        phase.vdotAdjustment > 0 ? 'text-green-400' : phase.vdotAdjustment < 0 ? 'text-red-400' : 'text-foreground-muted'
+                                        phase.vdotAdjustment > 0 ? 'text-positive' : phase.vdotAdjustment < 0 ? 'text-negative' : 'text-foreground-muted'
                                     }`}>
                                         VDOT {phase.vdotAdjustment > 0 ? '+' : ''}{phase.vdotAdjustment.toFixed(1)}
                                     </span>
@@ -211,11 +211,11 @@ export function PaceProfileEditor({ goalId, baseVdot, profile }: PaceProfileEdit
                                         </div>
                                     </div>
 
-                                    <PaceRow label="Easy" color="text-blue-400" pace={phase.easyPace} phaseIndex={index} field="easyPace" updatePhase={updatePhase} />
-                                    <PaceRow label="Tempo" color="text-orange-400" pace={phase.tempoPace} phaseIndex={index} field="tempoPace" updatePhase={updatePhase} />
-                                    <PaceRow label="Interval" color="text-red-400" pace={phase.intervalPace} phaseIndex={index} field="intervalPace" updatePhase={updatePhase} />
-                                    <PaceRow label="Repetition" color="text-yellow-400" pace={phase.repetitionPace} phaseIndex={index} field="repetitionPace" updatePhase={updatePhase} />
-                                    <PaceRow label="Long Run" color="text-green-400" pace={phase.longRunPace} phaseIndex={index} field="longRunPace" updatePhase={updatePhase} />
+                                    <PaceRow label="Easy" color="text-accent-blue" pace={phase.easyPace} phaseIndex={index} field="easyPace" updatePhase={updatePhase} />
+                                    <PaceRow label="Tempo" color="text-workout-tempo" pace={phase.tempoPace} phaseIndex={index} field="tempoPace" updatePhase={updatePhase} />
+                                    <PaceRow label="Interval" color="text-negative" pace={phase.intervalPace} phaseIndex={index} field="intervalPace" updatePhase={updatePhase} />
+                                    <PaceRow label="Repetition" color="text-workout-tempo" pace={phase.repetitionPace} phaseIndex={index} field="repetitionPace" updatePhase={updatePhase} />
+                                    <PaceRow label="Long Run" color="text-positive" pace={phase.longRunPace} phaseIndex={index} field="longRunPace" updatePhase={updatePhase} />
 
                                     <div className="border-t border-glass-border pt-2">
                                         <HrZoneEditor

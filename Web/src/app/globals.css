@@ -2,55 +2,71 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+    RunFlow — "Race Timing" design system (Direction A)
+
+    Principles:
+    - Flat surfaces, 1px borders, no gradients, no glow, no glass.
+    - One signal orange (#E8501A) for: today's session, primary actions,
+      the critical series. Green/red carry delta direction only.
+    - Words set in Archivo, numerals in IBM Plex Mono (tabular).
+    - Sentence-case labels — no uppercase, no letter-spacing tricks.
+    - Radius: 6px panels, 3px tags, 9999px only for pills/avatars.
+    - Motion only on state change; nothing animates on its own.
+*/
+
 @theme {
     --color-background: var(--background);
     --color-background-secondary: var(--background-secondary);
     --color-background-tertiary: var(--background-tertiary);
+
     --color-foreground: var(--foreground);
     --color-foreground-muted: var(--foreground-muted);
     --color-foreground-secondary: var(--foreground-secondary);
 
     --color-accent-orange: var(--accent-orange);
-    --color-accent-pink: var(--accent-pink);
-    --color-accent-purple: var(--accent-purple);
-    --color-accent-blue: #3a0ca3;
-    --color-accent-cyan: var(--accent-cyan);
+    --color-accent-pink: var(--accent-red);
+    --color-accent-purple: var(--accent-ink);
+    --color-accent-blue: var(--accent-blue);
+    --color-accent-cyan: var(--accent-green);
 
-    --color-workout-long-run: rgb(168 85 247);
-    --color-workout-tempo: rgb(249 115 22);
-    --color-workout-interval: rgb(239 68 68);
-    --color-workout-race: rgb(234 179 8);
-    --color-workout-recovery: rgb(34 197 94);
-    --color-workout-strength: rgb(59 130 246);
-    --color-workout-easy: rgb(107 114 128);
+    --color-workout-long-run: var(--workout-long-run);
+    --color-workout-tempo: var(--workout-tempo);
+    --color-workout-interval: var(--workout-interval);
+    --color-workout-race: var(--workout-race);
+    --color-workout-recovery: var(--workout-recovery);
+    --color-workout-strength: var(--workout-strength);
+    --color-workout-easy: var(--workout-easy);
 
-    --color-zone-1: #4ade80;
-    --color-zone-2: #a3e635;
-    --color-zone-3: #facc15;
-    --color-zone-4: #fb923c;
-    --color-zone-5: #ef4444;
+    --color-zone-1: var(--zone-1);
+    --color-zone-2: var(--zone-2);
+    --color-zone-3: var(--zone-3);
+    --color-zone-4: var(--zone-4);
+    --color-zone-5: var(--zone-5);
 
-    --color-surface: var(--glass-bg);
-    --color-surface-hover: var(--glass-bg-hover);
-    --color-surface-active: var(--glass-border);
+    --color-surface: var(--panel-bg);
+    --color-surface-hover: var(--panel-bg-hover);
+    --color-surface-active: var(--line);
 
-    --color-glass-bg: var(--glass-bg);
-    --color-glass-bg-hover: var(--glass-bg-hover);
-    --color-glass-border: var(--glass-border);
-    --color-glass-border-hover: var(--glass-border-hover);
+    --color-glass-bg: var(--panel-bg);
+    --color-glass-bg-hover: var(--panel-bg-hover);
+    --color-glass-border: var(--line);
+    --color-glass-border-hover: var(--line-strong);
 
-    --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    --animate-glow: glow 2s ease-in-out infinite alternate;
+    --color-line: var(--line);
+    --color-line-strong: var(--line-strong);
+    --color-positive: var(--positive);
+    --color-negative: var(--negative);
+
+    --font-sans: var(--font-archivo), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: var(--font-plex-mono), ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
     --animate-slide-up: slideUp 0.3s ease-out;
     --animate-fade-in: fadeIn 0.4s ease-out;
 
     --backdrop-blur-xs: 2px;
 }
 
-@keyframes glow {
-    0% { opacity: 0.7; transform: scale(1); }
-    100% { opacity: 1; transform: scale(1.02); }
-}
 @keyframes slideUp {
     0% { transform: translateY(10px); opacity: 0; }
     100% { transform: translateY(0); opacity: 1; }
@@ -74,7 +90,7 @@
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--line);
     }
 
     a {
@@ -91,60 +107,123 @@
         outline: 2px solid currentColor;
         outline-offset: 2px;
     }
+
+    /* Numerals read as data everywhere: tabular, monospaced. */
+    .tabular-nums,
+    .font-mono {
+        font-variant-numeric: tabular-nums;
+    }
 }
 
 :root {
   color-scheme: light;
-  --background: #f8fafc;
+  --background: #f6f7f5;
   --background-secondary: #ffffff;
-  --background-tertiary: #f1f5f9;
+  --background-tertiary: #edefea;
 
-  --foreground: #0f172a;
-  --foreground-muted: #475569;
-  --foreground-secondary: #334155;
+  --foreground: #16181a;
+  --foreground-muted: #6e747b;
+  --foreground-secondary: #3a4147;
 
-  --accent-orange: #e65a2b;
-  --accent-pink: #d91a72;
-  --accent-purple: #6308a0;
-  --accent-cyan: #009ab8;
+  --accent-orange: #e8501a;
+  --accent-red: #c0392f;
+  --accent-ink: #16181a;
+  --accent-green: #2e7d5b;
+  --accent-blue: #1f4fa8;
 
-  --modal-backdrop-opacity: 0.6;
+  --positive: #2e7d5b;
+  --negative: #c0392f;
 
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-bg-hover: rgba(255, 255, 255, 0.85);
-  --glass-border-hover: rgba(0, 0, 0, 0.15);
+  --workout-long-run: #7a52be;
+  --workout-tempo: #b45309;
+  --workout-interval: #c0392f;
+  --workout-race: #9a6b00;
+  --workout-recovery: #2e7d5b;
+  --workout-strength: #1f4fa8;
+  --workout-easy: #6e747b;
 
-  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --scrollbar-track: #f1f5f9;
-  --scrollbar-thumb: #cbd5e1;
-  --scrollbar-thumb-hover: #94a3b8;
+  --zone-1: #2e7d5b;
+  --zone-2: #65a30d;
+  --zone-3: #b45309;
+  --zone-4: #c2410c;
+  --zone-5: #c0392f;
+
+  /* Header/ink-bar chrome (the dark rail of Direction A, as a top bar). */
+  --topbar-bg: #16181a;
+  --topbar-fg: #f6f7f5;
+  --topbar-muted: #a6aba5;
+  --topbar-line: #2a2d31;
+
+  --panel-bg: #ffffff;
+  --panel-bg-hover: #fbfbfa;
+  --line: #d9ddd7;
+  --line-strong: #b9beb7;
+
+  /* Legacy glass tokens — now flat, opaque panels. */
+  --glass-bg: #ffffff;
+  --glass-border: #d9ddd7;
+  --glass-bg-hover: #fbfbfa;
+  --glass-border-hover: #b9beb7;
+
+  --card-shadow: none;
+  --modal-backdrop-opacity: 0.55;
+  --scrollbar-track: #edefea;
+  --scrollbar-thumb: #c9cec7;
+  --scrollbar-thumb-hover: #a8ada6;
 }
 
 .dark {
   color-scheme: dark;
-  --background: #0a0a0f;
-  --background-secondary: #12121a;
-  --background-tertiary: #1a1a25;
+  --background: #121417;
+  --background-secondary: #1a1d21;
+  --background-tertiary: #22262b;
 
-  --foreground: #ffffff;
-  --foreground-muted: #c4c4cc;
-  --foreground-secondary: #e2e2ea;
+  --foreground: #f6f7f5;
+  --foreground-muted: #a6aba5;
+  --foreground-secondary: #d9ddd7;
 
-  --accent-orange: #ff6b35;
-  --accent-pink: #f72585;
-  --accent-purple: #7209b7;
-  --accent-cyan: #4cc9f0;
+  --accent-orange: #ff6a3c;
+  --accent-red: #e06552;
+  --accent-ink: #f6f7f5;
+  --accent-green: #4caf82;
+  --accent-blue: #7fa8e8;
 
-  --glass-bg: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-bg-hover: rgba(255, 255, 255, 0.1);
-  --glass-border-hover: rgba(255, 255, 255, 0.15);
+  --positive: #4caf82;
+  --negative: #e06552;
+
+  --workout-long-run: #a78bdb;
+  --workout-tempo: #e3a24b;
+  --workout-interval: #e06552;
+  --workout-race: #e3c46b;
+  --workout-recovery: #4caf82;
+  --workout-strength: #7fa8e8;
+  --workout-easy: #9aa09b;
+
+  --zone-1: #4caf82;
+  --zone-2: #a3c24d;
+  --zone-3: #e3c46b;
+  --zone-4: #f08a4b;
+  --zone-5: #e06552;
+
+  --topbar-bg: #0e1013;
+  --topbar-fg: #f6f7f5;
+  --topbar-muted: #a6aba5;
+  --topbar-line: #26292e;
+
+  --panel-bg: #1a1d21;
+  --panel-bg-hover: #22262b;
+  --line: #2a2d31;
+  --line-strong: #3a3e44;
+
+  --glass-bg: #1a1d21;
+  --glass-border: #2a2d31;
+  --glass-bg-hover: #22262b;
+  --glass-border-hover: #3a3e44;
 
   --card-shadow: none;
-  --scrollbar-track: #12121a;
-  --scrollbar-thumb: rgba(255, 255, 255, 0.2);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+  --scrollbar-track: #1a1d21;
+  --scrollbar-thumb: #3a3e44;
+  --scrollbar-thumb-hover: #4a4f56;
 }
 
 * {
@@ -159,28 +238,81 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: var(--font-sans);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ---------------------------------------------------------------------------
+   Surfaces — flat panels divided by rules, never by shadow or blur.
+   --------------------------------------------------------------------------- */
+
 .glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  box-shadow: var(--card-shadow);
+  background: var(--panel-bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: none;
 }
 
 .glass-card-hover:hover {
-  background: var(--glass-bg-hover);
-  border-color: var(--glass-border-hover);
+  background: var(--panel-bg-hover);
+  border-color: var(--line-strong);
 }
 
+/* Ink-bar header: the Direction A rail translated to a top bar. */
+.topbar {
+  background: var(--topbar-bg);
+  color: var(--topbar-fg);
+  border-bottom: 1px solid var(--topbar-line);
+}
+
+.topbar a,
+.topbar button {
+  color: var(--topbar-muted);
+}
+
+.topbar a:hover,
+.topbar button:hover {
+  color: var(--topbar-fg);
+}
+
+.topbar a.on,
+.topbar button.on {
+  color: var(--accent-orange);
+}
+
+.topbar .brand {
+  color: var(--topbar-fg);
+  font-weight: 700;
+}
+
+.topbar .brand span {
+  color: var(--accent-orange);
+}
+
+.topbar-btn {
+  background: transparent;
+  color: var(--topbar-muted);
+  font-weight: 500;
+  padding: 0.5rem 0.875rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.topbar-btn:hover {
+  color: var(--topbar-fg);
+}
+
+.topbar-btn.on {
+  color: var(--accent-orange);
+}
+
+/* Timeline (setup flows): flat dots and rules. */
 .timeline-node {
   position: relative;
   padding-left: 1.5rem;
-  border-left: 2px solid var(--glass-border);
+  border-left: 2px solid var(--line);
 }
 
 .timeline-dot {
@@ -190,23 +322,23 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid var(--glass-border);
+  border: 2px solid var(--line-strong);
   background: var(--background);
 }
 
 .timeline-dot-blue {
-  border-color: rgba(59, 130, 246, 0.5);
-  background: rgba(59, 130, 246, 0.2);
+  border-color: var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-blue) 20%, transparent);
 }
 
 .timeline-dot-pink {
-  border-color: rgba(247, 37, 133, 0.5);
-  background: rgba(247, 37, 133, 0.2);
+  border-color: var(--accent-orange);
+  background: color-mix(in srgb, var(--accent-orange) 20%, transparent);
 }
 
 .timeline-dot-gray {
-  border-color: rgba(107, 114, 128, 0.5);
-  background: rgba(107, 114, 128, 0.2);
+  border-color: var(--line-strong);
+  background: var(--background-tertiary);
 }
 
 .pt-safe {
@@ -216,41 +348,34 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 1rem);
 }
 
+/* Key-workout marker: a signal-orange left rule, the "today" language. */
 .intensity-border {
   position: relative;
+  border-left: 3px solid var(--accent-orange);
 }
 
 .intensity-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 16px;
-  padding: 2px;
-  background: linear-gradient(135deg, #ff6b35, #f72585, #7209b7);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  content: none;
+}
+
+.recovery-border {
+  border-left: 3px solid var(--workout-recovery);
 }
 
 .recovery-border::before {
-  background: linear-gradient(135deg, #4cc9f0, #4ade80);
+  content: none;
 }
 
-.glow-orange {
-  box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
-}
-
-.glow-pink {
-  box-shadow: 0 0 30px rgba(247, 37, 133, 0.3);
-}
-
+/* Glow classes are retired; kept as no-ops so old references do nothing. */
+.glow-orange,
+.glow-pink,
 .glow-cyan {
-  box-shadow: 0 0 30px rgba(76, 201, 240, 0.3);
+  box-shadow: none;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -259,197 +384,162 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
 }
 
+/* ---------------------------------------------------------------------------
+   Buttons — flat, 6px radius, weight from color not shadow.
+   --------------------------------------------------------------------------- */
+
 .btn-primary {
-  background: linear-gradient(135deg, #ff6b35 0%, #f72585 100%);
-  color: white;
+  background: var(--accent-orange);
+  color: #ffffff;
   font-weight: 600;
   padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  transition: all 0.2s ease;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
   border: none;
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px) translateZ(0);
-  box-shadow: 0 8px 25px rgba(247, 37, 133, 0.4);
+  background: color-mix(in srgb, var(--accent-orange) 85%, #000000);
+}
+
+.dark .btn-primary:hover {
+  background: color-mix(in srgb, var(--accent-orange) 85%, #000000);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-secondary {
-  background: var(--background-tertiary);
+  background: var(--panel-bg);
   color: var(--foreground);
   font-weight: 500;
   padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  transition: all 0.2s ease;
-  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  border: 1px solid var(--line);
   cursor: pointer;
 }
 
 .dark .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--panel-bg);
+  color: var(--foreground);
+  border: 1px solid var(--line);
 }
 
 .btn-secondary:hover {
-  background: var(--background-secondary);
-  border-color: var(--glass-border-hover);
+  background: var(--panel-bg-hover);
+  border-color: var(--line-strong);
 }
 
 .dark .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--panel-bg-hover);
+  border-color: var(--line-strong);
 }
 
+.btn-strava {
+  background: #fc4c02;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.875rem 1.75rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.15s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-strava:hover {
+  background: #e34402;
+}
+
+/* ---------------------------------------------------------------------------
+   Badges / tags — sentence case, flat tint, 3px radius.
+   --------------------------------------------------------------------------- */
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  padding: 0.15rem 0.55rem;
+  border-radius: 3px;
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  line-height: 1.4;
 }
 
 .badge-run {
-  background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(247, 37, 133, 0.2));
-  color: #ff6b35;
-  border: 1px solid rgba(255, 107, 53, 0.3);
+  background: color-mix(in srgb, var(--accent-orange) 12%, transparent);
+  color: var(--accent-orange);
+  border: 1px solid color-mix(in srgb, var(--accent-orange) 35%, transparent);
 }
 
 .badge-recovery {
-  background: linear-gradient(135deg, rgba(76, 201, 240, 0.2), rgba(74, 222, 128, 0.2));
-  color: #4cc9f0;
-  border: 1px solid rgba(76, 201, 240, 0.3);
+  background: color-mix(in srgb, var(--accent-green) 12%, transparent);
+  color: var(--accent-green);
+  border: 1px solid color-mix(in srgb, var(--accent-green) 35%, transparent);
 }
-
-:root:not(.dark) .badge-recovery {
-    color: #0ea5e9;
-    background: rgba(14, 165, 233, 0.1);
-    border-color: rgba(14, 165, 233, 0.2);
-  }
-
 
 .badge-easy {
-  background: rgba(74, 222, 128, 0.15);
-  color: #4ade80;
-  border: 1px solid rgba(74, 222, 128, 0.3);
+  background: color-mix(in srgb, var(--workout-easy) 12%, transparent);
+  color: var(--workout-easy);
+  border: 1px solid color-mix(in srgb, var(--workout-easy) 35%, transparent);
 }
-
-:root:not(.dark) .badge-easy {
-    color: #16a34a;
-    background: rgba(22, 163, 74, 0.1);
-    border-color: rgba(22, 163, 74, 0.2);
-  }
 
 .badge-tempo {
-  background: rgba(250, 204, 21, 0.15);
-  color: #facc15;
-  border: 1px solid rgba(250, 204, 21, 0.3);
+  background: color-mix(in srgb, var(--workout-tempo) 12%, transparent);
+  color: var(--workout-tempo);
+  border: 1px solid color-mix(in srgb, var(--workout-tempo) 35%, transparent);
 }
-
-:root:not(.dark) .badge-tempo {
-    color: #ca8a04;
-    background: rgba(202, 138, 4, 0.1);
-    border-color: rgba(202, 138, 4, 0.2);
-  }
 
 .badge-interval {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: color-mix(in srgb, var(--workout-interval) 12%, transparent);
+  color: var(--workout-interval);
+  border: 1px solid color-mix(in srgb, var(--workout-interval) 35%, transparent);
 }
 
-.zone-1 {
-  color: #4ade80;
-}
+/* ---------------------------------------------------------------------------
+   Zones & stats
+   --------------------------------------------------------------------------- */
 
-:root:not(.dark) .zone-1 {
-    color: #16a34a;
-  }
+.zone-1 { color: var(--zone-1); }
+.zone-2 { color: var(--zone-2); }
+.zone-3 { color: var(--zone-3); }
+.zone-4 { color: var(--zone-4); }
+.zone-5 { color: var(--zone-5); }
 
-.zone-2 {
-  color: #a3e635;
-}
-
-:root:not(.dark) .zone-2 {
-    color: #65a30d;
-  }
-
-.zone-3 {
-  color: #facc15;
-}
-
-:root:not(.dark) .zone-3 {
-    color: #d97706;
-  }
-
-.zone-4 {
-  color: #fb923c;
-}
-
-:root:not(.dark) .zone-4 {
-    color: #ea580c;
-  }
-
-.zone-5 {
-  color: #ef4444;
-}
-
-
+/* Stat values: solid ink (or solid orange), mono digits — no gradient text. */
 .stat-value {
+  font-family: var(--font-mono);
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1;
-  background: linear-gradient(135deg, var(--foreground) 0%, var(--foreground-muted) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-value-accent {
-  background: linear-gradient(135deg, #ff6b35 0%, #f72585 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-orange);
 }
 
-@keyframes pulse-glow {
-
-  0%,
-  100% {
-    opacity: 0.7;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scale(1.01);
-  }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 3s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
+/* Entrance helpers kept for modal/drawer transitions; nothing loops. */
 @keyframes slide-in {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -457,28 +547,13 @@ body {
 }
 
 .animate-slide-in {
-  animation: slide-in 0.4s ease-out forwards;
-  will-change: transform, opacity;
+  animation: slide-in 0.25s ease-out forwards;
 }
 
-.btn-strava {
-  background: #fc4c02;
-  color: white;
-  font-weight: 600;
-  padding: 0.875rem 1.75rem;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
-}
-
-.btn-strava:hover {
-  background: #e34402;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(252, 76, 2, 0.4);
+/* Retired decorative animations — classes resolve to nothing. */
+.animate-pulse-glow,
+.animate-pulse-slow {
+  animation: none;
 }
 
 select,
@@ -486,12 +561,21 @@ input,
 textarea {
   background-color: var(--background-secondary);
   color: var(--foreground);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-orange);
+  outline-offset: 0;
+  border-color: var(--accent-orange);
 }
 
 .dark select option {
-  background-color: #12121a;
-  color: white;
+  background-color: #1a1d21;
+  color: #f6f7f5;
 }
 
 body.barcode-scanner-active {

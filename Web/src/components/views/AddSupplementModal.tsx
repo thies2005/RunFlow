@@ -122,13 +122,13 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
 
     return (
         <>
-            <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-xs sm:items-center sm:justify-center">
+            <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 sm:items-center sm:justify-center">
                 <div
-                    className="bg-background-secondary w-full max-w-md rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom"
+                    className="bg-background-secondary border border-line w-full max-w-md rounded-t-md sm:rounded-md flex flex-col max-h-[90vh] overflow-hidden animate-in slide-in-from-bottom"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-foreground/10 shrink-0">
-                        <h2 className="text-lg font-bold text-foreground">{supplementToEdit ? 'Edit Supplement' : 'Add Supplement'}</h2>
+                    <div className="flex items-center justify-between p-4 border-b border-line shrink-0">
+                        <h2 className="text-lg font-semibold text-foreground">{supplementToEdit ? 'Edit Supplement' : 'Add Supplement'}</h2>
                         <button
                             onClick={onClose}
                             className="p-2 -mr-2 text-foreground-muted hover:text-foreground transition-colors"
@@ -148,7 +148,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="e.g. Vitamin D3, Omega-3"
-                                className="!bg-foreground/5 border-foreground/10"
+                                className="!bg-background-tertiary border-line"
                             />
                         </div>
 
@@ -158,7 +158,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
                                 label="Stack (Optional)"
                                 value={stackId}
                                 onChange={(e) => setStackId(e.target.value)}
-                                className="!bg-foreground/5 border-foreground/10"
+                                className="!bg-background-tertiary border-line"
                             >
                                 <option value="">None (Standalone)</option>
                                 {stacks?.map((stack: any) => (
@@ -176,7 +176,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
                                     step="any"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    className="!bg-foreground/5 border-foreground/10"
+                                    className="!bg-background-tertiary border-line"
                                 />
                             </div>
                             <div>
@@ -184,7 +184,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
                                     label="Unit"
                                     value={unit}
                                     onChange={(e) => setUnit(e.target.value)}
-                                    className="!bg-foreground/5 border-foreground/10"
+                                    className="!bg-background-tertiary border-line"
                                 >
                                     <option value="pill(s)">pill(s)</option>
                                     <option value="mg">mg</option>
@@ -198,16 +198,16 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
 
                         {/* Time of Day */}
                         <div>
-                            <label className="flex items-center gap-1.5 text-xs text-foreground-muted uppercase tracking-widest mb-2 font-medium">
+                            <label className="flex items-center gap-1.5 text-xs text-foreground-muted mb-2 font-medium">
                                 <Clock className="w-3.5 h-3.5" /> Time of Day
                             </label>
-                            <div className="flex bg-foreground/5 p-1 rounded-lg border border-foreground/10">
+                            <div className="flex bg-background-tertiary p-1 rounded-md border border-line">
                                 {TIME_OPTIONS.map(opt => (
                                     <button
                                         key={opt.value}
                                         type="button"
                                         onClick={() => setTimeOfDay(opt.value)}
-                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${timeOfDay === opt.value ? 'bg-foreground/10 text-foreground shadow-xs' : 'text-foreground-muted hover:text-foreground-muted'}`}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-sm transition-colors ${timeOfDay === opt.value ? 'bg-glass-bg text-foreground' : 'text-foreground-muted hover:text-foreground-muted'}`}
                                     >
                                         {opt.label}
                                     </button>
@@ -217,7 +217,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
 
                         {/* Days of Week */}
                         <div>
-                            <label className="flex items-center gap-1.5 text-xs text-foreground-muted uppercase tracking-widest mb-2 font-medium">
+                            <label className="flex items-center gap-1.5 text-xs text-foreground-muted mb-2 font-medium">
                                 <CalendarDays className="w-3.5 h-3.5" /> Days (Selected: {daysOfWeek.length})
                             </label>
                             <div className="flex justify-between gap-1">
@@ -228,7 +228,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
                                             key={day.value}
                                             type="button"
                                             onClick={() => toggleDay(day.value)}
-                                            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${isSelected ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-foreground/5 text-foreground-muted border border-transparent'}`}
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${isSelected ? 'bg-accent-blue/10 text-accent-blue border border-accent-blue/30' : 'bg-background-tertiary text-foreground-muted border border-transparent'}`}
                                         >
                                             {day.label}
                                         </button>
@@ -239,7 +239,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
                     </div>
 
                     {/* Footer */}
-                    <div className="p-4 border-t border-foreground/10 bg-background-secondary shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
+                    <div className="p-4 border-t border-line bg-background-secondary shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
                         {supplementToEdit && (
                             <button
                                 onClick={async () => {
@@ -254,7 +254,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
                                     }
                                 }}
                                 disabled={deleteMutation.isPending}
-                                className="px-4 py-3 bg-red-500/10 text-red-500 font-semibold rounded-xl flex items-center justify-center hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+                                className="px-4 py-3 bg-negative/10 text-negative font-semibold rounded-md flex items-center justify-center hover:bg-negative/20 disabled:opacity-50 transition-colors"
                             >
                                 Delete
                             </button>
@@ -262,7 +262,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
                         <button
                             onClick={() => submitMutation.mutate()}
                             disabled={!name.trim() || submitMutation.isPending}
-                            className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-foreground/15 disabled:opacity-50 transition-colors"
+                            className="flex-1 py-3 bg-accent-orange text-white font-semibold rounded-md flex items-center justify-center gap-2 hover:bg-accent-orange/90 disabled:opacity-50 transition-colors"
                         >
                             {submitMutation.isPending ? (
                                 'Saving...'

@@ -392,15 +392,15 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
 
     if (compact) {
         return (
-            <div className="bg-background-tertiary/50 rounded-xl p-4">
+            <div className="bg-background-secondary border border-line rounded-md p-4">
                 <div className="flex items-center gap-2 mb-3">
-                    <Bot className="w-5 h-5 text-purple-400" />
+                    <Bot className="w-5 h-5 text-foreground-muted" />
                     <h3 className="text-sm font-medium text-foreground">Chat about this activity</h3>
                 </div>
 
                 {!aiEnabled ? (
                     <div className="text-sm text-foreground-muted">
-                        <button onClick={onOpenSettings} className="text-purple-400 hover:text-purple-300">
+                        <button onClick={onOpenSettings} className="text-accent-blue hover:underline">
                             Enable AI features
                         </button>{' '}to chat about this activity.
                     </div>
@@ -427,10 +427,10 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask about this activity..."
                                 disabled={isStreaming}
-                                className="flex-1 bg-foreground/15 border border-foreground/25 rounded-lg px-3 py-2 text-sm text-foreground placeholder-foreground-muted focus:border-purple-500 focus:outline-hidden disabled:opacity-50"
+                                className="flex-1 bg-background-secondary border border-line rounded-md px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:border-accent-orange focus:outline-hidden disabled:opacity-50"
                             />
-                            <button onClick={handleSend} disabled={!input.trim() || isStreaming} className="p-2 bg-purple-600 hover:bg-purple-500 rounded-lg disabled:opacity-50">
-                                {isStreaming ? <Loader2 className="w-4 h-4 text-foreground animate-spin" /> : <Send className="w-4 h-4 text-foreground" />}
+                            <button onClick={handleSend} disabled={!input.trim() || isStreaming} className="p-2 bg-accent-orange hover:bg-accent-orange/90 rounded-md disabled:opacity-50">
+                                {isStreaming ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Send className="w-4 h-4 text-white" />}
                             </button>
                         </div>
                     </>
@@ -443,7 +443,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     if (settingsLoading || (historyLoading && aiEnabled && messages.length === 0)) {
         return (
             <div className="flex-1 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-accent-orange animate-spin" />
             </div>
         );
     }
@@ -456,7 +456,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                 </div>
                 <h2 className="text-xl font-semibold text-foreground mb-2">AI Coach</h2>
                 <p className="text-foreground-muted mb-6 max-w-sm">Get personalized training advice, analyze your workouts, and ask questions about your fitness data.</p>
-                <button onClick={onOpenSettings} className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl flex items-center gap-2 transition-colors">
+                <button onClick={onOpenSettings} className="px-6 py-3 bg-accent-orange hover:bg-accent-orange/90 text-white rounded-md flex items-center gap-2 transition-colors">
                     <Settings2 className="w-5 h-5" />
                     Enable AI Features
                 </button>
@@ -484,7 +484,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                     if (h < 18) return 'Good Afternoon';
                                     return 'Good Evening';
                                 })()},</p>
-                                <h2 className="text-3xl font-extrabold text-foreground leading-tight">How can I assist?</h2>
+                                <h2 className="text-3xl font-semibold text-foreground leading-tight">How can I assist?</h2>
                             </div>
 
                             {/* Contextual Suggestions Timeline */}
@@ -492,14 +492,14 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 <div className="mb-8 max-w-2xl">
                                     {accessActivityLogs && recentActivity && (
                                         <TimelineNode dotColor="timeline-dot-blue" lineColor="var(--glass-border)">
-                                            <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">You Just Finished</p>
+                                            <p className="text-xs font-bold text-accent-blue mb-3">You Just Finished</p>
                                             <ProactiveRunWidget activity={recentActivity} onAutoFillChat={(text) => handleSend(null, text)} />
                                         </TimelineNode>
                                     )}
 
                                     {accessNutritionLogs && nutritionTargetData && (
                                         <TimelineNode dotColor="timeline-dot-gray" lineColor="var(--glass-border)">
-                                            <p className="text-xs font-bold text-foreground-muted uppercase tracking-widest mb-3">Post-Run Fuel</p>
+                                            <p className="text-xs font-bold text-foreground-muted mb-3">Post-Run Fuel</p>
                                             <ProactiveCalorieSnapWidget targetData={nutritionTargetData} onOpenScanner={() => setShowFoodScanner(true)} />
                                         </TimelineNode>
                                     )}
@@ -513,7 +513,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 const isThinking = isStreaming && i === messages.length - 1 && msg.role === 'assistant' && msg.content && !cleanedContent;
                                 return (
                                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] rounded-2xl px-5 py-3 shadow-xs ${msg.role === 'user' ? 'bg-purple-600 text-white' : 'bg-background-tertiary text-foreground border border-foreground/20'}`}>
+                                        <div className={`max-w-[85%] rounded-md px-5 py-3 ${msg.role === 'user' ? 'bg-accent-orange text-white' : 'bg-glass-bg text-foreground border border-line'}`}>
                                             <div className="text-sm sm:text-base leading-relaxed markdown-content">
                                                 {isThinking ? (
                                                     <div className="flex items-center gap-2 text-foreground-muted italic">
@@ -531,7 +531,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                                                     remarkPlugins={[remarkGfm]}
                                                                     rehypePlugins={[rehypeSanitize]}
                                                                     components={{
-                                                                        h1: ({ node: _node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-foreground/20 pb-1" {...props} />,
+                                                                        h1: ({ node: _node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-line pb-1" {...props} />,
                                                                         h2: ({ node: _node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
                                                                         h3: ({ node: _node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
                                                                         p: ({ node: _node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
@@ -541,23 +541,23 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                                                         code: ({ node: _node, inline, className, children, ...props }: React.HTMLAttributes<HTMLElement> & { node?: unknown; inline?: boolean }) => {
                                                                             const _match = /language-(\w+)/.exec(className || '');
                                                                             return !inline ? (
-                                                                                <pre className="bg-foreground/10 p-3 rounded-lg my-3 overflow-x-auto border border-foreground/5">
+                                                                                <pre className="bg-background-tertiary p-3 rounded-md my-3 overflow-x-auto border border-line font-mono">
                                                                                     <code className={className} {...props}>
                                                                                         {children}
                                                                                     </code>
                                                                                 </pre>
                                                                             ) : (
-                                                                                <code className="bg-foreground/10 rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
+                                                                                <code className="bg-background-tertiary rounded-sm px-1.5 py-0.5 font-mono text-xs" {...props}>
                                                                                     {children}
                                                                                 </code>
                                                                             );
                                                                         },
-                                                                        table: ({ node: _node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-glass-border border border-foreground/20 rounded-lg" {...props} /></div>,
-                                                                        thead: ({ node: _node, ...props }) => <thead className="bg-background-tertiary/50" {...props} />,
-                                                                        th: ({ node: _node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-foreground-muted uppercase tracking-wider" {...props} />,
-                                                                        td: ({ node: _node, ...props }) => <td className="px-3 py-2 text-sm text-foreground-muted border-t border-foreground/20" {...props} />,
-                                                                        blockquote: ({ node: _node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
-                                                                        a: ({ node: _node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                                        table: ({ node: _node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-line border border-line rounded-md" {...props} /></div>,
+                                                                        thead: ({ node: _node, ...props }) => <thead className="bg-background-tertiary" {...props} />,
+                                                                        th: ({ node: _node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-foreground-muted" {...props} />,
+                                                                        td: ({ node: _node, ...props }) => <td className="px-3 py-2 text-sm text-foreground-muted border-t border-line" {...props} />,
+                                                                        blockquote: ({ node: _node, ...props }) => <blockquote className="border-l-4 border-workout-long-run pl-4 py-1 my-3 bg-background-tertiary italic" {...props} />,
+                                                                        a: ({ node: _node, ...props }) => <a className="text-accent-blue hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
                                                                     }}
                                                                 >
                                                                     {DOMPurify.sanitize(displayContent)}
@@ -573,7 +573,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                                 <Loader2 className="w-4 h-4 animate-spin text-foreground-muted" />
                                             )}
                                             {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && cleanedContent && (
-                                                <span className="inline-block w-1 h-4 bg-purple-400 animate-pulse ml-1" />
+                                                <span className="inline-block w-1 h-4 bg-accent-orange ml-1" />
                                             )}
                                         </div>
                                     </div>
@@ -586,14 +586,14 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
             </div>
 
             {error && (
-                <div className="mx-auto mb-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm max-w-5xl w-full">
+                <div className="mx-auto mb-2 p-3 bg-negative/10 border border-negative/30 rounded-md flex items-center gap-2 text-negative text-sm max-w-5xl w-full">
                     <AlertCircle className="w-4 h-4" />
                     {error}
                 </div>
             )}
 
             <div className="z-20 pb-2 sm:pb-6 px-4 sm:px-0 mt-auto">
-                <div className="glass-card rounded-full p-1.5 flex items-center shadow-2xl max-w-5xl mx-auto backdrop-blur-md border border-foreground/10 shadow-purple-900/10">
+                <div className="glass-card rounded-full p-1.5 flex items-center max-w-5xl mx-auto border border-line">
                     {!hideInputActions && (
                         <div className="relative">
                             <button
@@ -605,36 +605,36 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                             {showPlusMenu && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setShowPlusMenu(false)} />
-                                    <div className="absolute bottom-14 left-0 w-48 bg-background-secondary border border-foreground/25 shadow-xl rounded-xl p-2 z-20 flex flex-col gap-1">
+                                    <div className="absolute bottom-14 left-0 w-48 bg-background-secondary border border-line rounded-md p-2 z-20 flex flex-col gap-1 animate-fade-in">
                                         {onNewChat && (
                                             <button
                                                 onClick={() => { onNewChat(); setShowPlusMenu(false); }}
-                                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
+                                                className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
                                             >
-                                                <SquarePen className="w-4 h-4 text-purple-400" />
+                                                <SquarePen className="w-4 h-4 text-foreground-muted" />
                                                 New Chat
                                             </button>
                                         )}
                                         <button
                                             onClick={() => { setShowFoodScanner(true); setShowPlusMenu(false); }}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
                                         >
-                                            <Camera className="w-4 h-4 text-purple-400" />
+                                            <Camera className="w-4 h-4 text-foreground-muted" />
                                             Calorie Snap
                                         </button>
                                         <button
                                             onClick={() => { openLibrary(); setShowPlusMenu(false); }}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
                                         >
-                                            <Book className="w-4 h-4 text-purple-400" />
+                                            <Book className="w-4 h-4 text-foreground-muted" />
                                             Prompt Library
                                         </button>
                                         {onOpenHistory && (
                                             <button
                                                 onClick={() => { onOpenHistory(); setShowPlusMenu(false); }}
-                                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
+                                                className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-background-tertiary text-sm text-foreground-muted transition-colors text-left"
                                             >
-                                                <Menu className="w-4 h-4 text-purple-400" />
+                                                <Menu className="w-4 h-4 text-foreground-muted" />
                                                 Chat History
                                             </button>
                                         )}
@@ -657,9 +657,9 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                         <button
                             onClick={(e) => handleSend(e)}
                             disabled={!input.trim() || isStreaming}
-                            className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center disabled:opacity-50 transition-colors flex-shrink-0 disabled:cursor-not-allowed hover:bg-purple-500"
+                            className="w-10 h-10 rounded-full bg-accent-orange flex items-center justify-center disabled:opacity-50 transition-colors flex-shrink-0 disabled:cursor-not-allowed hover:bg-accent-orange/90"
                         >
-                            {isStreaming ? <Loader2 className="w-5 h-5 animate-spin text-foreground" /> : <Send className="w-5 h-5 text-foreground" />}
+                            {isStreaming ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : <Send className="w-5 h-5 text-white" />}
                         </button>
                     )}
                 </div>

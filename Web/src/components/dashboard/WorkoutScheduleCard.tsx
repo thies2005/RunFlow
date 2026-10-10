@@ -30,29 +30,29 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
                         const isNextPending = !workout.isCompleted && isNextWorkout;
 
                         return (
-                            <div key={workout.id || index} className={`p-3 rounded-lg border transition-all ${workout.isCompleted
-                                ? 'bg-green-500/5 border-green-500/20'
+                            <div key={workout.id || index} className={`p-3 rounded-md border transition-colors ${workout.isCompleted
+                                ? 'bg-positive/5 border-positive/20'
                                 : isTodayPending
-                                    ? 'bg-accent-orange/10 border-accent-orange/50 shadow-[0_0_15px_rgba(249,115,22,0.3)]'
+                                    ? 'bg-accent-orange/10 border-accent-orange/50 intensity-border'
                                     : isNextPending
                                         ? 'bg-accent-orange/10 border-accent-orange/30'
-                                        : 'bg-surface border-glass-border hover:bg-surface-hover'
+                                        : 'bg-surface border-line hover:bg-surface-hover'
                                 }`}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workout.isCompleted ? 'bg-green-500/20' : (isTodayPending || isNextPending) ? 'bg-accent-orange/20' : 'bg-surface'}`}>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workout.isCompleted ? 'bg-positive/20' : (isTodayPending || isNextPending) ? 'bg-accent-orange/20' : 'bg-surface'}`}>
                                             {workout.workoutType === 'EASY' ? <Activity className="w-4 h-4" /> : workout.workoutType === 'LONG_RUN' ? <Rocket className="w-4 h-4" /> : workout.workoutType === 'TEMPO' ? <Zap className="w-4 h-4" /> : workout.workoutType === 'INTERVALS' ? <Flame className="w-4 h-4" /> : workout.workoutType === 'FARTLEK' ? <Zap className="w-4 h-4" /> : workout.workoutType === 'STRENGTH' ? <Dumbbell className="w-4 h-4" /> : workout.workoutType === 'REST' ? <Moon className="w-4 h-4" /> : workout.workoutType === 'RIDE' ? <Bike className="w-4 h-4" /> : workout.workoutType === 'SWIM' ? <Waves className="w-4 h-4" /> : <Target className="w-4 h-4" />}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <p className={`font-medium ${workout.isCompleted ? 'text-green-400' : (isTodayPending || isNextPending) ? 'text-accent-orange' : 'text-foreground'}`}>
+                                                <p className={`font-medium ${workout.isCompleted ? 'text-positive' : (isTodayPending || isNextPending) ? 'text-accent-orange' : 'text-foreground'}`}>
                                                     {workout.description || workout.workoutType?.replace('_', ' ')}
                                                 </p>
                                                 {isWorkoutToday && (
-                                                    <span className="text-[10px] bg-accent-orange/20 text-accent-orange px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Today</span>
+                                                    <span className="text-[10px] bg-accent-orange/20 text-accent-orange px-1.5 py-0.5 rounded-full font-semibold">Today</span>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-foreground-muted">
+                                            <p className="text-xs text-foreground-muted font-mono tabular-nums">
                                                 {workout.targetDistance ? `${(workout.targetDistance / 1000).toFixed(1)} km` : workout.targetDuration ? `${Math.round(workout.targetDuration / 60)} min` : ''}
                                             </p>
                                         </div>
@@ -62,7 +62,7 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
                                             <>
                                                 <button
                                                     onClick={() => onEditWorkout(workout)}
-                                                    className="p-1.5 text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded transition-colors"
+                                                    className="p-1.5 text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded-md transition-colors"
                                                     title="Edit workout"
                                                 >
                                                     <Edit2 className="w-4 h-4" />
@@ -77,7 +77,7 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
                                             </>
                                         )}
                                         {workout.isCompleted && (
-                                            <span className="text-green-400 text-xs flex items-center gap-1">
+                                            <span className="text-positive text-xs flex items-center gap-1">
                                                 <Check className="w-3 h-3" /> Done
                                             </span>
                                         )}

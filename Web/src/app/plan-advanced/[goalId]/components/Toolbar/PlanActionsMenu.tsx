@@ -82,7 +82,7 @@ export function PlanActionsMenu({ goalId, onImportCsv, onExportCsv }: PlanAction
                 <MoreHorizontal className="w-4 h-4" />
             </button>
             {isOpen && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-background-secondary border border-foreground/20 rounded-lg shadow-xl z-50 py-1">
+                <div className="absolute right-0 top-full mt-1 w-44 bg-background-secondary border border-foreground/20 rounded-md z-50 py-1">
                     {actions.map((action, i) => {
                         if ('separator' in action) {
                             return <div key={i} className="border-t border-glass-border my-1" />;
@@ -95,7 +95,7 @@ export function PlanActionsMenu({ goalId, onImportCsv, onExportCsv }: PlanAction
                                 onClick={action.onClick}
                                 className={`w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
                                     'danger' in action && action.danger
-                                        ? 'text-red-400 hover:bg-red-500/10'
+                                        ? 'text-negative hover:bg-negative/10'
                                         : 'text-foreground-secondary hover:bg-background-tertiary'
                                 }`}
                             >

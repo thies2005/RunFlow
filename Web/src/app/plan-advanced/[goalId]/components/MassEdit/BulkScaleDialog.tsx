@@ -79,7 +79,7 @@ export function BulkScaleDialog({ goalId, workoutIds, onClose, onComplete }: Bul
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-md p-6 w-full max-w-sm mx-4">
                 <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                     <Scissors className="w-4 h-4 text-foreground-secondary" />
                     Scale Workouts
@@ -127,7 +127,7 @@ export function BulkScaleDialog({ goalId, workoutIds, onClose, onComplete }: Bul
                     </div>
                 </div>
 
-                <div className="mb-4 p-2 rounded-md bg-background-tertiary/50 border border-glass-border space-y-1">
+                <div className="mb-4 p-2 rounded-md bg-background-tertiary border border-glass-border space-y-1">
                     <div className="flex justify-between text-xs">
                         <span className="text-foreground-muted">Current distance</span>
                         <span className="text-foreground-secondary">
@@ -138,7 +138,7 @@ export function BulkScaleDialog({ goalId, workoutIds, onClose, onComplete }: Bul
                     </div>
                     <div className="flex justify-between text-xs">
                         <span className="text-foreground-muted">New distance</span>
-                        <span className={`font-medium ${isDefault ? 'text-foreground-muted' : 'text-emerald-400'}`}>
+                        <span className={`font-medium ${isDefault ? 'text-foreground-muted' : 'text-positive'}`}>
                             {previewDistance >= 1000
                                 ? `${(previewDistance / 1000).toFixed(1)} km`
                                 : `${previewDistance} m`}

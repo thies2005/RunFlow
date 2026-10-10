@@ -93,26 +93,26 @@ export default function GoalTimeRenderer({
         }
 
         return (
-            <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
+            <div className="mt-6 p-5 bg-accent-orange/5 rounded-md border border-glass-border">
                 <div className="flex items-center gap-2 text-accent-orange mb-3">
                     <Target className="w-5 h-5" />
-                    <h3 className="text-sm font-semibold uppercase tracking-wide">Backyard Ultra Setup</h3>
+                    <h3 className="text-sm font-semibold">Backyard Ultra Setup</h3>
                 </div>
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Loop Distance (meters)</label>
+                        <label className="block text-xs text-foreground-muted mb-1">Loop Distance (meters)</label>
                         <input
                             type="number"
                             value={backyardLoopDistM || ''}
                             onChange={(e) => setBackyardLoopDistM?.(parseFloat(e.target.value) || 0)}
                             placeholder="e.g. 6706"
                             min={100}
-                            className="bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
+                            className="bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
                         />
                         <p className="text-xs text-foreground-muted mt-1">Standard backyard ultra: 6706m (4.167 miles)</p>
                     </div>
                     <div>
-                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Target Laps: {targetLaps}</label>
+                        <label className="block text-xs text-foreground-muted mb-1">Target Laps: {targetLaps}</label>
                         <input
                             type="range"
                             min={1}
@@ -120,7 +120,7 @@ export default function GoalTimeRenderer({
                             step={1}
                             value={targetLaps}
                             onChange={(e) => setTargetLaps?.(parseInt(e.target.value))}
-                            className="w-full h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                            className="w-full h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer accent-accent-orange"
                         />
                         <div className="flex justify-between text-xs text-foreground-muted mt-1">
                             <span>1</span>
@@ -129,26 +129,26 @@ export default function GoalTimeRenderer({
                     </div>
                     {backyardLoopDistM > 0 && (
                         <div className="text-xs text-foreground-muted">
-                            Total distance: <span className="text-foreground font-medium">{totalDistKm.toFixed(1)} km</span>
+                            Total distance: <span className="text-foreground font-medium font-mono tabular-nums">{totalDistKm.toFixed(1)} km</span>
                         </div>
                     )}
                     {projection && (
-                        <div className="text-xs bg-surface border border-glass-border rounded-lg p-3 space-y-1">
+                        <div className="text-xs bg-surface border border-glass-border rounded-md p-3 space-y-1">
                             <div className="text-foreground-muted">Estimated finish time:</div>
-                            <div className="text-green-400 font-medium">Optimal: {formatTime(projection.optimal.totalSeconds)}</div>
-                            <div className="text-accent-orange font-medium">Projected: {formatTime(projection.projected.totalSeconds)}</div>
-                            <div className="text-red-400 font-medium">Conservative: {formatTime(projection.conservative.totalSeconds)}</div>
+                            <div className="text-positive font-medium font-mono tabular-nums">Optimal: {formatTime(projection.optimal.totalSeconds)}</div>
+                            <div className="text-accent-orange font-medium font-mono tabular-nums">Projected: {formatTime(projection.projected.totalSeconds)}</div>
+                            <div className="text-negative font-medium font-mono tabular-nums">Conservative: {formatTime(projection.conservative.totalSeconds)}</div>
                         </div>
                     )}
                     {calibratedVO2max > 0 && (
-                        <div className="grid grid-cols-2 gap-3 text-xs bg-foreground/5 rounded-lg p-3">
+                        <div className="grid grid-cols-2 gap-3 text-xs bg-background-tertiary border border-line rounded-md p-3">
                             <div>
                                 <span className="text-foreground-muted block mb-1">VO2max</span>
-                                <span className="text-foreground font-semibold">{calibratedVO2max.toFixed(1)}</span>
+                                <span className="text-foreground font-semibold font-mono tabular-nums">{calibratedVO2max.toFixed(1)}</span>
                             </div>
                             <div>
                                 <span className="text-foreground-muted block mb-1">Marathon Shape</span>
-                                <span className="text-foreground font-semibold">{shapePercent}%</span>
+                                <span className="text-foreground font-semibold font-mono tabular-nums">{shapePercent}%</span>
                             </div>
                         </div>
                     )}
@@ -176,10 +176,10 @@ export default function GoalTimeRenderer({
         }
 
         return (
-            <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
+            <div className="mt-6 p-5 bg-accent-orange/5 rounded-md border border-glass-border">
                 <div className="flex items-center gap-2 text-accent-orange mb-3">
                     <Target className="w-5 h-5" />
-                    <h3 className="text-sm font-semibold uppercase tracking-wide">Timed Event ({durationLabel})</h3>
+                    <h3 className="text-sm font-semibold">Timed Event ({durationLabel})</h3>
                 </div>
                 <div className="text-center mb-4">
                     <div className="text-3xl font-bold text-foreground mb-1">
@@ -189,27 +189,27 @@ export default function GoalTimeRenderer({
                 </div>
                 {estimatedDistance && (
                     <div className="space-y-3">
-                        <div className="flex justify-between items-center text-xs bg-surface border border-glass-border rounded-lg p-3">
+                        <div className="flex justify-between items-center text-xs bg-surface border border-glass-border rounded-md p-3">
                             <span className="text-foreground-muted">Estimated distance</span>
-                            <span className="text-foreground font-semibold">{estimatedDistance}</span>
+                            <span className="text-foreground font-semibold font-mono tabular-nums">{estimatedDistance}</span>
                         </div>
                         {projectedPace && (
-                            <div className="flex justify-between items-center text-xs bg-surface border border-glass-border rounded-lg p-3">
+                            <div className="flex justify-between items-center text-xs bg-surface border border-glass-border rounded-md p-3">
                                 <span className="text-foreground-muted">Projected pace</span>
-                                <span className="text-accent-orange font-semibold">{projectedPace}</span>
+                                <span className="text-accent-orange font-semibold font-mono tabular-nums">{projectedPace}</span>
                             </div>
                         )}
                     </div>
                 )}
                 {calibratedVO2max > 0 && (
-                    <div className="grid grid-cols-2 gap-3 text-xs bg-foreground/5 rounded-lg p-3 mt-3">
+                    <div className="grid grid-cols-2 gap-3 text-xs bg-background-tertiary border border-line rounded-md p-3 mt-3">
                         <div>
                             <span className="text-foreground-muted block mb-1">VO2max</span>
-                            <span className="text-foreground font-semibold">{calibratedVO2max.toFixed(1)}</span>
+                            <span className="text-foreground font-semibold font-mono tabular-nums">{calibratedVO2max.toFixed(1)}</span>
                         </div>
                         <div>
                             <span className="text-foreground-muted block mb-1">Marathon Shape</span>
-                            <span className="text-foreground font-semibold">{shapePercent}%</span>
+                            <span className="text-foreground font-semibold font-mono tabular-nums">{shapePercent}%</span>
                         </div>
                     </div>
                 )}
@@ -219,10 +219,10 @@ export default function GoalTimeRenderer({
 
     if (effectiveVO2max <= 0) {
         return (
-            <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
+            <div className="mt-6 p-5 bg-accent-orange/5 rounded-md border border-glass-border">
                 <div className="flex items-center gap-2 text-accent-orange mb-3">
                     <Target className="w-5 h-5" />
-                    <h3 className="text-sm font-semibold uppercase tracking-wide">Goal Time (Optional)</h3>
+                    <h3 className="text-sm font-semibold">Goal Time (Optional)</h3>
                 </div>
                 <p className="text-xs text-foreground-muted mb-4">
                     No fitness data available for predictions. You can enter a goal time manually or skip this.
@@ -230,7 +230,7 @@ export default function GoalTimeRenderer({
                 <div className="flex gap-2 items-center justify-center">
                     <input
                         type="number"
-                        className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                        className="w-16 bg-surface border border-glass-border rounded-md p-3 text-foreground text-center"
                         placeholder="HH"
                         value={goalTimeHours}
                         onChange={e => {
@@ -247,7 +247,7 @@ export default function GoalTimeRenderer({
                     <span className="text-foreground-muted">:</span>
                     <input
                         type="number"
-                        className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                        className="w-16 bg-surface border border-glass-border rounded-md p-3 text-foreground text-center"
                         placeholder="MM"
                         value={goalTimeMinutes}
                         onChange={e => {
@@ -265,7 +265,7 @@ export default function GoalTimeRenderer({
                     <span className="text-foreground-muted">:</span>
                     <input
                         type="number"
-                        className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                        className="w-16 bg-surface border border-glass-border rounded-md p-3 text-foreground text-center"
                         placeholder="SS"
                         value={goalTimeSecs}
                         onChange={e => {
@@ -377,11 +377,11 @@ export default function GoalTimeRenderer({
     };
 
     return (
-        <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
+        <div className="mt-6 p-5 bg-accent-orange/5 rounded-md border border-glass-border">
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2 text-accent-orange">
                     <Target className="w-5 h-5" />
-                    <h3 className="text-sm font-semibold uppercase tracking-wide">Goal {distanceName} Time</h3>
+                    <h3 className="text-sm font-semibold">Goal {distanceName} Time</h3>
                 </div>
                 {goalTimeSeconds !== null && (
                     <button
@@ -395,7 +395,7 @@ export default function GoalTimeRenderer({
 
             {calibrationFactor !== 1.0 && (
                 <div className="mb-3 text-xs text-accent-cyan bg-accent-cyan/10 px-2 py-1 rounded inline-block">
-                    ✓ Using calibrated VO2max ({(effectiveVO2max * calibrationFactor).toFixed(1)})
+                    Using calibrated VO2max ({(effectiveVO2max * calibrationFactor).toFixed(1)})
                 </div>
             )}
 
@@ -404,7 +404,7 @@ export default function GoalTimeRenderer({
                     <div className="flex items-center justify-center gap-1 mb-2">
                         <input
                             type="number"
-                            className="w-12 bg-background-tertiary border border-glass-border rounded p-2 text-center text-2xl font-bold"
+                            className="w-12 bg-background-tertiary border border-glass-border rounded p-2 text-center text-2xl font-bold font-mono tabular-nums"
                             placeholder="H"
                             value={goalTimeHours}
                             onChange={e => setGoalTimeHours(e.target.value)}
@@ -414,7 +414,7 @@ export default function GoalTimeRenderer({
                         <span className="text-2xl text-foreground">:</span>
                         <input
                             type="number"
-                            className="w-12 bg-background-tertiary border border-glass-border rounded p-2 text-center text-2xl font-bold"
+                            className="w-12 bg-background-tertiary border border-glass-border rounded p-2 text-center text-2xl font-bold font-mono tabular-nums"
                             placeholder="MM"
                             value={goalTimeMinutes}
                             onChange={e => setGoalTimeMinutes(e.target.value)}
@@ -424,7 +424,7 @@ export default function GoalTimeRenderer({
                         <span className="text-2xl text-foreground">:</span>
                         <input
                             type="number"
-                            className="w-12 bg-background-tertiary border border-glass-border rounded p-2 text-center text-2xl font-bold"
+                            className="w-12 bg-background-tertiary border border-glass-border rounded p-2 text-center text-2xl font-bold font-mono tabular-nums"
                             placeholder="SS"
                             value={goalTimeSecs}
                             onChange={e => setGoalTimeSecs(e.target.value)}
@@ -433,7 +433,7 @@ export default function GoalTimeRenderer({
                         />
                         <button
                             onClick={confirmManualEntry}
-                            className="ml-2 p-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
+                            className="ml-2 p-2 bg-positive/15 text-positive rounded-md hover:bg-positive/25 transition-colors"
                         >
                             <Check className="w-5 h-5" />
                         </button>
@@ -441,9 +441,9 @@ export default function GoalTimeRenderer({
                 ) : (
                     <button
                         onClick={startEditing}
-                        className="group hover:bg-surface-hover p-2 rounded-lg transition-colors"
+                        className="group hover:bg-surface-hover p-2 rounded-md transition-colors"
                     >
-                        <div className="text-3xl font-bold text-foreground mb-1 group-hover:text-accent-orange transition-colors">
+                        <div className="text-3xl font-bold text-foreground mb-1 group-hover:text-accent-orange transition-colors font-mono tabular-nums">
                             {formatTime(displayGoalTime)}
                         </div>
                         <span className="text-xs text-foreground-muted group-hover:text-foreground">
@@ -467,32 +467,32 @@ export default function GoalTimeRenderer({
                     max={sliderMax}
                     step="30"
                     value={displayGoalTime}
-                    className="w-full h-2 bg-foreground/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                    className="w-full h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer accent-accent-orange"
                     onChange={(e) => handleSliderChange(parseInt(e.target.value))}
                 />
                 <div className="flex justify-between text-xs text-foreground-muted mt-1">
-                    <span className="text-green-400">{formatTime(projection.optimalTime)} (Optimal)</span>
-                    <span className="text-accent-orange">{formatTime(projection.conservativeTime)} (Conservative)</span>
+                    <span className="text-positive font-mono tabular-nums">{formatTime(projection.optimalTime)} (Optimal)</span>
+                    <span className="text-accent-orange font-mono tabular-nums">{formatTime(projection.conservativeTime)} (Conservative)</span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs bg-foreground/5 rounded-lg p-3">
+            <div className="grid grid-cols-2 gap-3 text-xs bg-background-tertiary border border-line rounded-md p-3">
                 <div>
                     <span className="text-foreground-muted block mb-1">VO2max</span>
-                    <span className="text-foreground font-semibold">{calibratedVO2max.toFixed(1)}</span>
+                    <span className="text-foreground font-semibold font-mono tabular-nums">{calibratedVO2max.toFixed(1)}</span>
                     <span className="text-foreground-muted"> → </span>
-                    <span className="text-accent-cyan font-semibold">{projection.projectedVdot}</span>
+                    <span className="text-accent-cyan font-semibold font-mono tabular-nums">{projection.projectedVdot}</span>
                     {projection.improvementPercent > 0 && (
-                        <span className="text-green-400 ml-1">(+{projection.improvementPercent}%)</span>
+                        <span className="text-positive ml-1 font-mono tabular-nums">(+{projection.improvementPercent}%)</span>
                     )}
                 </div>
                 <div>
                     <span className="text-foreground-muted block mb-1">Marathon Shape</span>
-                    <span className="text-foreground font-semibold">{shapePercent}%</span>
+                    <span className="text-foreground font-semibold font-mono tabular-nums">{shapePercent}%</span>
                     <span className="text-foreground-muted"> → </span>
-                    <span className="text-accent-cyan font-semibold">{projection.projectedShape}%</span>
+                    <span className="text-accent-cyan font-semibold font-mono tabular-nums">{projection.projectedShape}%</span>
                     {projection.shapeImprovementPercent > 0 && (
-                        <span className="text-green-400 ml-1">(+{projection.shapeImprovementPercent.toFixed(1)}%)</span>
+                        <span className="text-positive ml-1 font-mono tabular-nums">(+{projection.shapeImprovementPercent.toFixed(1)}%)</span>
                     )}
                 </div>
             </div>

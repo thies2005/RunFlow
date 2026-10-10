@@ -53,7 +53,7 @@ export function CsvPreview({ rows, format, errors, maxRows = 10 }: CsvPreviewPro
                 <span className="text-xs text-foreground-secondary">
                     {rows.length} workout{rows.length !== 1 ? 's' : ''} found
                     {errors.length > 0 && (
-                        <span className="text-red-400 ml-1">
+                        <span className="text-negative ml-1">
                             ({errors.length} error{errors.length !== 1 ? 's' : ''})
                         </span>
                     )}
@@ -65,7 +65,7 @@ export function CsvPreview({ rows, format, errors, maxRows = 10 }: CsvPreviewPro
                 )}
             </div>
 
-            <div className="overflow-x-auto rounded-lg border border-glass-border">
+            <div className="overflow-x-auto rounded-md border border-glass-border">
                 <table className="w-full text-xs">
                     <thead>
                         <tr className="bg-background-secondary">
@@ -84,14 +84,14 @@ export function CsvPreview({ rows, format, errors, maxRows = 10 }: CsvPreviewPro
                                 <tr
                                     key={i}
                                     className={`border-t border-glass-border ${
-                                        isError ? 'bg-red-500/5' : i % 2 === 0 ? 'bg-background' : 'bg-background-secondary/50'
+                                        isError ? 'bg-negative/5' : i % 2 === 0 ? 'bg-background' : 'bg-background-secondary'
                                     }`}
                                 >
                                     <td className="px-2 py-1.5 text-foreground-muted">
                                         {isError ? (
-                                            <AlertCircle className="w-3 h-3 text-red-400" />
+                                            <AlertCircle className="w-3 h-3 text-negative" />
                                         ) : (
-                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500/50 inline-block" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-positive/40 inline-block" />
                                         )}
                                     </td>
                                     {columns.map((col) => {
@@ -99,7 +99,7 @@ export function CsvPreview({ rows, format, errors, maxRows = 10 }: CsvPreviewPro
                                         const display = COLUMN_DISPLAY[col] ? COLUMN_DISPLAY[col](val) : val;
                                         return (
                                             <td key={col} className={`px-2 py-1.5 whitespace-nowrap max-w-[180px] truncate ${
-                                                isError ? 'text-red-300' : 'text-foreground-secondary'
+                                                isError ? 'text-negative' : 'text-foreground-secondary'
                                             }`}>
                                                 {display || '-'}
                                             </td>
@@ -115,7 +115,7 @@ export function CsvPreview({ rows, format, errors, maxRows = 10 }: CsvPreviewPro
             {errors.length > 0 && (
                 <div className="space-y-1">
                     {errors.slice(0, 5).map((err, i) => (
-                        <div key={i} className="flex items-start gap-1.5 text-[10px] text-red-400">
+                        <div key={i} className="flex items-start gap-1.5 text-[10px] text-negative">
                             <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
                             <span>Row {err.row}: {err.message}</span>
                         </div>

@@ -44,27 +44,27 @@ const STATE_LABELS: Record<string, string> = {
 };
 
 function getScoreColor(score: number): string {
-    if (score >= 85) return 'text-green-400';
-    if (score >= 70) return 'text-blue-400';
-    if (score >= 50) return 'text-yellow-400';
-    if (score >= 30) return 'text-orange-400';
-    return 'text-red-400';
+    if (score >= 85) return 'text-positive';
+    if (score >= 70) return 'text-positive';
+    if (score >= 50) return 'text-workout-tempo';
+    if (score >= 30) return 'text-workout-tempo';
+    return 'text-negative';
 }
 
 function getScoreRing(score: number): string {
-    if (score >= 85) return 'border-green-500/40 bg-green-500/5';
-    if (score >= 70) return 'border-blue-500/40 bg-blue-500/5';
-    if (score >= 50) return 'border-yellow-500/40 bg-yellow-500/5';
-    if (score >= 30) return 'border-orange-500/40 bg-orange-500/5';
-    return 'border-red-500/40 bg-red-500/5';
+    if (score >= 85) return 'border-positive/40 bg-positive/5';
+    if (score >= 70) return 'border-positive/40 bg-positive/5';
+    if (score >= 50) return 'border-workout-tempo/40 bg-workout-tempo/5';
+    if (score >= 30) return 'border-workout-tempo/40 bg-workout-tempo/5';
+    return 'border-negative/40 bg-negative/5';
 }
 
 function getChartStroke(score: number): string {
-    if (score >= 85) return '#4ade80';
-    if (score >= 70) return '#60a5fa';
-    if (score >= 50) return '#facc15';
-    if (score >= 30) return '#fb923c';
-    return '#f87171';
+    if (score >= 85) return 'var(--positive)';
+    if (score >= 70) return 'var(--positive)';
+    if (score >= 50) return 'var(--workout-tempo)';
+    if (score >= 30) return 'var(--workout-tempo)';
+    return 'var(--negative)';
 }
 
 export default function ReadinessCard() {
@@ -108,44 +108,44 @@ export default function ReadinessCard() {
 
     if (isLoading) {
         return (
-            <div className="glass-card border border-glass-border rounded-2xl p-5 animate-pulse">
+            <div className="glass-card p-5">
                 <div className="flex items-center gap-2 mb-4">
-                    <div className="w-4 h-4 rounded bg-foreground/20" />
-                    <div className="w-24 h-3 rounded bg-foreground/20" />
+                    <div className="w-4 h-4 rounded bg-line" />
+                    <div className="w-24 h-3 rounded bg-line" />
                 </div>
                 <div className="flex items-center gap-5">
-                    <div className="w-20 h-20 rounded-full bg-foreground/10" />
+                    <div className="w-20 h-20 rounded-full bg-background-tertiary" />
                     <div className="flex-1 space-y-2">
-                        <div className="w-20 h-4 rounded bg-foreground/20" />
-                        <div className="w-32 h-3 rounded bg-foreground/10" />
+                        <div className="w-20 h-4 rounded bg-line" />
+                        <div className="w-32 h-3 rounded bg-background-tertiary" />
                     </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 mt-4">
                     {Array.from({ length: 4 }).map((_, i) => (
                         <div key={i} className="flex flex-col items-center gap-1">
-                            <div className="w-3.5 h-3.5 rounded bg-foreground/15" />
-                            <div className="w-8 h-2 rounded bg-foreground/10" />
-                            <div className="w-6 h-3 rounded bg-foreground/20" />
+                            <div className="w-3.5 h-3.5 rounded bg-line" />
+                            <div className="w-8 h-2 rounded bg-background-tertiary" />
+                            <div className="w-6 h-3 rounded bg-line" />
                         </div>
                     ))}
                 </div>
-                <div className="h-16 mt-4 rounded bg-foreground/5" />
+                <div className="h-16 mt-4 rounded bg-background-tertiary" />
             </div>
         );
     }
 
     if (isError) {
         return (
-            <div className="glass-card border border-red-500/20 bg-red-500/5 rounded-2xl p-4">
+            <div className="glass-card border-negative/20 bg-negative/5 p-4">
                 <div className="flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                    <AlertTriangle className="w-5 h-5 text-negative shrink-0 mt-0.5" />
                     <div className="flex-1">
-                        <p className="text-sm font-semibold text-red-300">Readiness unavailable</p>
-                        <p className="text-xs text-red-200/80 mt-1">{(error as Error)?.message || 'Failed to load readiness data.'}</p>
+                        <p className="text-sm font-semibold text-negative">Readiness unavailable</p>
+                        <p className="text-xs text-foreground-muted mt-1">{(error as Error)?.message || 'Failed to load readiness data.'}</p>
                         <button
                             type="button"
                             onClick={() => refetch()}
-                            className="mt-3 text-xs font-semibold text-red-200 bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-lg hover:bg-red-500/20 transition-colors"
+                            className="mt-3 text-xs font-semibold text-negative bg-negative/10 border border-negative/20 px-3 py-1.5 rounded-md hover:bg-negative/20 transition-colors"
                         >
                             Retry
                         </button>
@@ -157,10 +157,10 @@ export default function ReadinessCard() {
 
     if (!daily) {
         return (
-            <div className="glass-card border border-glass-border rounded-2xl p-5">
+            <div className="glass-card p-5">
                 <div className="flex items-center gap-2 mb-3">
-                    <Heart className="w-4 h-4 text-pink-400" />
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-foreground-muted">Readiness</h4>
+                    <Heart className="w-4 h-4 text-accent-pink" />
+                    <h4 className="text-xs font-semibold text-foreground-muted">Readiness</h4>
                 </div>
                 <p className="text-sm text-foreground-muted text-center py-6">No readiness data yet</p>
                 <p className="text-xs text-foreground-secondary text-center">Complete a workout or sync health data to see your readiness score.</p>
@@ -184,18 +184,18 @@ export default function ReadinessCard() {
     const chartColor = getChartStroke(score);
 
     return (
-        <div className="glass-card border border-glass-border rounded-2xl p-5">
+        <div className="glass-card p-5">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <Heart className="w-4 h-4 text-pink-400" />
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-foreground-muted">Readiness</h4>
+                    <Heart className="w-4 h-4 text-accent-pink" />
+                    <h4 className="text-xs font-semibold text-foreground-muted">Readiness</h4>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-foreground/10 text-foreground-muted font-medium capitalize">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-background-tertiary text-foreground-muted font-medium capitalize">
                         {daily.confidence}
                     </span>
                     {daily.syncedAt && (
-                        <span className="text-[10px] text-foreground-secondary">
+                        <span className="text-[10px] font-mono text-foreground-secondary">
                             Synced {new Date(daily.syncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                     )}
@@ -204,7 +204,7 @@ export default function ReadinessCard() {
 
             <div className="flex items-center gap-5 mb-4">
                 <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center ${getScoreRing(score)}`}>
-                    <span className={`text-2xl font-bold ${getScoreColor(score)}`}>{Math.round(score)}</span>
+                    <span className={`text-2xl font-semibold font-mono tabular-nums ${getScoreColor(score)}`}>{Math.round(score)}</span>
                 </div>
                 <div>
                     <p className={`text-lg font-semibold ${getScoreColor(score)}`}>
@@ -217,15 +217,15 @@ export default function ReadinessCard() {
             </div>
 
             <div className={`grid ${todayHrv !== null ? 'grid-cols-5' : 'grid-cols-4'} gap-2 mb-4`}>
-                <ComponentIndicator icon={<Activity className="w-3.5 h-3.5" />} label="HRR" value={hrrScore} color="text-green-400" />
-                <ComponentIndicator icon={<Moon className="w-3.5 h-3.5" />} label="Sleep" value={sleepScore} color="text-indigo-400" />
-                <ComponentIndicator icon={<Zap className="w-3.5 h-3.5" />} label="Load" value={loadScore} color="text-amber-400" />
-                <ComponentIndicator icon={<Heart className="w-3.5 h-3.5" />} label="Feel" value={feelScore} color="text-pink-400" />
+                <ComponentIndicator icon={<Activity className="w-3.5 h-3.5" />} label="HRR" value={hrrScore} color="text-positive" />
+                <ComponentIndicator icon={<Moon className="w-3.5 h-3.5" />} label="Sleep" value={sleepScore} color="text-workout-long-run" />
+                <ComponentIndicator icon={<Zap className="w-3.5 h-3.5" />} label="Load" value={loadScore} color="text-workout-tempo" />
+                <ComponentIndicator icon={<Heart className="w-3.5 h-3.5" />} label="Feel" value={feelScore} color="text-accent-pink" />
                 {todayHrv !== null && (
                     <div className="flex flex-col items-center gap-1">
                         <div className="text-foreground-secondary"><HeartPulse className="w-3.5 h-3.5" /></div>
-                        <span className="text-[10px] text-foreground-muted uppercase tracking-wider">HRV</span>
-                        <span className="text-sm font-semibold text-foreground">{Math.round(todayHrv)} ms</span>
+                        <span className="text-[10px] text-foreground-muted">HRV</span>
+                        <span className="text-sm font-semibold font-mono tabular-nums text-foreground">{Math.round(todayHrv)} ms</span>
                     </div>
                 )}
             </div>
@@ -234,18 +234,13 @@ export default function ReadinessCard() {
                 <div className="h-16 mb-3">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={chartData}>
-                            <defs>
-                                <linearGradient id="readinessGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor={chartColor} stopOpacity={0.3} />
-                                    <stop offset="100%" stopColor={chartColor} stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
                             <Area
                                 type="monotone"
                                 dataKey="score"
                                 stroke={chartColor}
                                 strokeWidth={2}
-                                fill="url(#readinessGrad)"
+                                fill={chartColor}
+                                fillOpacity={0.12}
                                 dot={false}
                             />
                         </AreaChart>
@@ -254,10 +249,10 @@ export default function ReadinessCard() {
             )}
 
             {adaptation && (
-                <div className="border border-glass-border rounded-xl p-3 bg-foreground/5 mb-3">
+                <div className="border border-line rounded-md p-3 bg-background-tertiary mb-3">
                     <div className="flex items-center gap-2 mb-2">
-                        <RefreshCw className="w-3.5 h-3.5 text-blue-400" />
-                        <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">Adaptation</span>
+                        <RefreshCw className="w-3.5 h-3.5 text-accent-blue" />
+                        <span className="text-xs font-semibold text-accent-blue">Adaptation</span>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-foreground-muted">
                         <span className="capitalize">{adaptation.originalType.replace(/_/g, ' ')}</span>
@@ -282,8 +277,8 @@ function ComponentIndicator({ icon, label, value, color }: { icon: React.ReactNo
     return (
         <div className="flex flex-col items-center gap-1">
             <div className={color}>{icon}</div>
-            <span className="text-[10px] text-foreground-muted uppercase tracking-wider">{label}</span>
-            <span className="text-sm font-semibold text-foreground">{value !== null ? Math.round(value) : '\u2014'}</span>
+            <span className="text-[10px] text-foreground-muted">{label}</span>
+            <span className="text-sm font-semibold font-mono tabular-nums text-foreground">{value !== null ? Math.round(value) : '\u2014'}</span>
         </div>
     );
 }

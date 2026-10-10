@@ -48,7 +48,7 @@ export function BulkMoveDialog({ goalId, workoutIds, onClose, onComplete }: Bulk
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-md p-6 w-full max-w-sm mx-4">
                 <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                     <CalendarDays className="w-4 h-4 text-foreground-secondary" />
                     Move Workouts
@@ -88,7 +88,7 @@ export function BulkMoveDialog({ goalId, workoutIds, onClose, onComplete }: Bulk
                 </div>
 
                 {days !== 0 && (
-                    <div className="mb-4 p-2 rounded-md bg-background-tertiary/50 border border-glass-border">
+                    <div className="mb-4 p-2 rounded-md bg-background-tertiary border border-glass-border">
                         <span className="text-xs text-foreground-muted">
                             Example: today &rarr;{' '}
                             <span className="text-foreground-secondary">{format(previewDate, 'MMM d, yyyy')}</span>

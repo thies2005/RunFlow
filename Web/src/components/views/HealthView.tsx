@@ -338,28 +338,28 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
             ) : (
                 <>
                     {showHeader && (
-                        <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
+                        <header className="topbar sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
                             <div className="flex items-center justify-between px-4 py-3">
-                                <span className="text-lg font-bold text-foreground flex items-center gap-2">
-                                    <HeartPulse className="w-5 h-5 text-red-500" /> Health
+                                <span className="brand text-lg flex items-center gap-2">
+                                    <HeartPulse className="w-5 h-5 text-accent-orange" /> Health
                                 </span>
                                 <div className="flex items-center gap-2">
                                     {isMobileDevice && (
                                         <button
                                             onClick={handleSyncHistoricalData}
                                             disabled={isSyncingHistory}
-                                            className="p-2 -mr-2 rounded-full hover:bg-foreground/10 transition-colors"
+                                            className="topbar-btn p-2 -mr-2 rounded-full"
                                             aria-label="Sync Health Data"
                                         >
-                                            <RefreshCw className={`w-5 h-5 text-foreground-muted ${isSyncingHistory ? 'animate-spin' : ''}`} />
+                                            <RefreshCw className={`w-5 h-5 ${isSyncingHistory ? 'animate-spin' : ''}`} />
                                         </button>
                                     )}
                                     <button
                                         onClick={() => setIsRemindersOpen(true)}
-                                        className="p-2 -mr-2 rounded-full hover:bg-foreground/10 transition-colors"
+                                        className="topbar-btn p-2 -mr-2 rounded-full"
                                         aria-label="Notification Reminders"
                                     >
-                                        <Bell className="w-5 h-5 text-foreground-muted" />
+                                        <Bell className="w-5 h-5" />
                                     </button>
                                 </div>
                             </div>
@@ -368,18 +368,18 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
                     <div className={`mx-auto w-full max-w-md flex flex-col gap-4 pb-24 p-4 ${!showHeader ? 'pt-8' : ''}`}>
                         {!isMobileDevice && !bannerDismissed && (
-                            <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex items-start gap-3">
-                                <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                            <div className="bg-accent-blue/10 border border-accent-blue/20 p-4 rounded-md flex items-start gap-3">
+                                <Info className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
                                 <div className="text-sm flex-1">
-                                    <p className="font-semibold text-blue-400 mb-1">Mobile App Recommended</p>
-                                    <p className="text-blue-200/80">Step and weight tracking use Health Connect, which is only available on the mobile app. You can manually enter weight here or track supplements.</p>
+                                    <p className="font-semibold text-accent-blue mb-1">Mobile App Recommended</p>
+                                    <p className="text-foreground-muted">Step and weight tracking use Health Connect, which is only available on the mobile app. You can manually enter weight here or track supplements.</p>
                                 </div>
                                 <button
                                     onClick={() => {
                                         localStorage.setItem('health-banner-dismissed', Date.now().toString());
                                         setBannerDismissed(true);
                                     }}
-                                    className="text-blue-400/60 hover:text-blue-400 transition-colors text-xs font-medium shrink-0"
+                                    className="text-accent-blue/70 hover:text-accent-blue transition-colors text-xs font-medium shrink-0"
                                 >
                                     Dismiss
                                 </button>

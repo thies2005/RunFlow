@@ -243,10 +243,10 @@ export default function PlanPage() {
                                     }
                                 }}
                                 disabled={migrating}
-                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 disabled:opacity-50"
+                                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-accent-orange/10 text-accent-orange hover:bg-accent-orange/20 border border-accent-orange/30 disabled:opacity-50"
                             >
                                 {migrating ? (
-                                    <div className="w-4 h-4 border-2 border-orange-400/30 border-t-orange-400 rounded-full animate-spin" />
+                                    <div className="w-4 h-4 border-2 border-accent-orange/30 border-t-accent-orange rounded-full animate-spin" />
                                 ) : (
                                     <ExternalLink className="w-4 h-4" />
                                 )}
@@ -272,7 +272,7 @@ export default function PlanPage() {
                                     window.print();
                                     document.getElementById('runflow-print-styles')?.remove();
                                 }}
-                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-surface text-foreground-muted hover:text-foreground border border-glass-border"
+                                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-surface text-foreground-muted hover:text-foreground border border-glass-border"
                             >
                                 <Download className="w-4 h-4" />
                                 Export PDF
@@ -280,7 +280,7 @@ export default function PlanPage() {
                             {/* Show Unlinked Toggle */}
                             <button
                                 onClick={() => setShowUnlinked(!showUnlinked)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${showUnlinked
+                                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${showUnlinked
                                     ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30'
                                     : 'bg-surface text-foreground-muted hover:text-foreground border border-glass-border'
                                     }`}
@@ -340,11 +340,11 @@ export default function PlanPage() {
                                 return (
                                     <div key={weekStartIso} className="glass-card overflow-hidden">
                                         {/* Week Header */}
-                                        <div className="p-4 border-b border-glass-border flex flex-col md:flex-row md:items-center justify-between bg-surface sticky top-[env(safe-area-inset-top)] z-10 backdrop-blur-md gap-2">
+                                        <div className="p-4 border-b border-glass-border flex flex-col md:flex-row md:items-center justify-between bg-surface sticky top-[env(safe-area-inset-top)] z-10 gap-2">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex flex-col">
-                                                    <span className="text-foreground font-semibold">Week {index + 1}</span>
-                                                    <span className="text-xs text-foreground-muted">
+                                                    <span className="text-foreground font-semibold">Week <span className="font-mono tabular-nums">{index + 1}</span></span>
+                                                    <span className="text-xs text-foreground-muted font-mono tabular-nums">
                                                         {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
                                                     </span>
                                                 </div>
@@ -353,24 +353,24 @@ export default function PlanPage() {
                                                 {isPastOrCurrent ? (
                                                     <div className="flex flex-col space-y-1 ml-2">
                                                         <div className="flex items-center gap-2 text-xs">
-                                                            <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded border border-green-500/20">
+                                                            <span className="px-2 py-0.5 bg-positive/10 text-positive rounded border border-positive/30 font-mono tabular-nums">
                                                                 Run: {(actualRunMileage / 1000).toFixed(1)}k
                                                             </span>
-                                                            <span className="text-foreground-muted text-[10px]">
+                                                            <span className="text-foreground-muted text-[10px] font-mono tabular-nums">
                                                                 / {(plannedMileage / 1000).toFixed(1)}k planned
                                                             </span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-xs text-foreground-muted">
-                                                            <span>Time: {formatDuration(totalMovingTime)}</span>
+                                                            <span className="font-mono tabular-nums">Time: {formatDuration(totalMovingTime)}</span>
                                                             {totalMovingTime > 0 && (
-                                                                <span className="text-foreground-muted text-[10px]">
+                                                                <span className="text-foreground-muted text-[10px] font-mono tabular-nums">
                                                                     ({runTimePct}% Run / {crossTimePct}% Cross)
                                                                 </span>
                                                             )}
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="px-2 py-1 bg-surface rounded text-xs text-foreground-muted border border-glass-border">
+                                                    <div className="px-2 py-1 bg-surface rounded text-xs text-foreground-muted border border-glass-border font-mono tabular-nums">
                                                         {(plannedMileage / 1000).toFixed(1)} km planned
                                                     </div>
                                                 )}
@@ -418,7 +418,7 @@ export default function PlanPage() {
                                                                     setSelectedActivity(activity);
                                                                     setIsActivityModalOpen(true);
                                                                 }}
-                                                                className="group p-3 rounded-lg flex items-center gap-3 transition-colors border border-dashed border-accent-cyan/40 bg-accent-cyan/5 cursor-pointer hover:bg-accent-cyan/10"
+                                                                className="group p-3 rounded-md flex items-center gap-3 transition-colors border border-dashed border-accent-cyan/40 bg-accent-cyan/5 cursor-pointer hover:bg-accent-cyan/10"
                                                             >
                                                                 <div className="w-8 h-8 rounded-full flex items-center justify-center bg-accent-cyan/20 text-accent-cyan">
                                                                     <span className="text-xs font-bold">+</span>
@@ -427,7 +427,7 @@ export default function PlanPage() {
                                                                     <h4 className="text-sm font-medium text-accent-cyan truncate">
                                                                         {activity.name}
                                                                     </h4>
-                                                                    <p className="text-xs text-foreground-muted">
+                                                                    <p className="text-xs text-foreground-muted font-mono tabular-nums">
                                                                         {(activity.distance / 1000).toFixed(1)}km •
                                                                         {Math.floor(activity.movingTime / 60)}min •
                                                                         <span className="text-accent-cyan">Unlinked</span>

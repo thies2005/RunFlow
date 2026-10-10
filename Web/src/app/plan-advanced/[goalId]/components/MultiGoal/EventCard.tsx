@@ -46,7 +46,7 @@ export function EventCard({ goal, isExpanded, onToggle }: EventCardProps) {
         >
             <div className="flex items-center gap-2">
                 {goal.priority === 'PRIMARY' && (
-                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 shrink-0" />
+                    <Star className="w-3 h-3 text-workout-tempo fill-workout-tempo shrink-0" />
                 )}
                 <span className="text-xs text-foreground font-medium truncate">{goal.name}</span>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border shrink-0 ${priorityConfig.color}`}>

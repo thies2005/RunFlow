@@ -201,7 +201,7 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
         >
             <div className="space-y-5">
                 {error && (
-                    <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                    <div className="flex items-center gap-2 rounded-md border border-negative/20 bg-negative/10 px-3 py-2 text-sm text-negative">
                         <AlertCircle className="h-4 w-4 shrink-0" />
                         <span>{error}</span>
                     </div>
@@ -209,12 +209,12 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <label className="space-y-1.5">
-                        <span className="text-xs font-medium uppercase text-foreground-muted">Workout Type</span>
+                        <span className="text-xs font-medium text-foreground-muted">Workout Type</span>
                         <select
                             id="workout-type"
                             value={type}
                             onChange={(e) => setType(e.target.value)}
-                            className="w-full rounded-lg border border-glass-border bg-surface px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange"
+                            className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange"
                         >
                             {WORKOUT_TYPES.map(t => (
                                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -223,7 +223,7 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                     </label>
 
                     <label className="space-y-1.5">
-                        <span className="flex items-center gap-1.5 text-xs font-medium uppercase text-foreground-muted">
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-foreground-muted">
                             <CalendarDays className="h-3.5 w-3.5" />
                             Date
                         </span>
@@ -232,25 +232,25 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                             type="date"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
-                            className="w-full rounded-lg border border-glass-border bg-surface px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange"
+                            className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange"
                         />
                     </label>
                 </div>
 
                 <label className="space-y-1.5">
-                    <span className="text-xs font-medium uppercase text-foreground-muted">Description</span>
+                    <span className="text-xs font-medium text-foreground-muted">Description</span>
                     <input
                         id="workout-description"
                         type="text"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        className="w-full rounded-lg border border-glass-border bg-surface px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-accent-orange"
+                        className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-accent-orange"
                     />
                 </label>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <label className="space-y-1.5">
-                        <span className="flex items-center gap-1.5 text-xs font-medium uppercase text-foreground-muted">
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-foreground-muted">
                             <Route className="h-3.5 w-3.5" />
                             {isSwim ? 'Distance (m)' : 'Distance (km)'}
                         </span>
@@ -261,12 +261,12 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                             step={isSwim ? '50' : '0.1'}
                             value={isSwim ? distanceM : distanceKm}
                             onChange={(e) => isSwim ? setDistanceM(e.target.value) : setDistanceKm(e.target.value)}
-                            className="w-full rounded-lg border border-glass-border bg-surface px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange"
+                            className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange"
                         />
                     </label>
 
                     <label className="space-y-1.5">
-                        <span className="flex items-center gap-1.5 text-xs font-medium uppercase text-foreground-muted">
+                        <span className="flex items-center gap-1.5 text-xs font-medium text-foreground-muted">
                             <Clock className="h-3.5 w-3.5" />
                             Duration (min)
                         </span>
@@ -277,27 +277,27 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                             step={isTimeFirst ? '5' : '1'}
                             value={durationMin}
                             onChange={(e) => setDurationMin(e.target.value)}
-                            className="w-full rounded-lg border border-glass-border bg-surface px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange"
+                            className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange"
                         />
                     </label>
                 </div>
 
                 {workout && (
-                    <div className="rounded-lg border border-glass-border bg-surface p-3">
+                    <div className="rounded-md border border-line bg-surface p-3">
                         <label className="flex items-center gap-2 text-sm text-foreground">
                             <input
                                 id="workout-completed"
                                 type="checkbox"
                                 checked={isCompleted}
                                 onChange={(e) => setIsCompleted(e.target.checked)}
-                                className="h-4 w-4 rounded border-glass-border bg-background accent-accent-orange"
+                                className="h-4 w-4 rounded border-line bg-background accent-accent-orange"
                             />
                             Mark as completed
                         </label>
 
                         {isCompleted && !wasCompleted && (
-                            <div className="mt-3 max-h-64 overflow-y-auto border-t border-glass-border pt-3">
-                                <div className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase text-foreground-muted">
+                            <div className="mt-3 max-h-64 overflow-y-auto border-t border-line pt-3">
+                                <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-foreground-muted">
                                     <Link2 className="h-3.5 w-3.5" />
                                     Link Activity
                                 </div>
@@ -315,12 +315,12 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                         <button
                             onClick={() => deleteMutation.mutate()}
                             disabled={deleteMutation.isPending || saveMutation.isPending}
-                            className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+                            className="rounded-md border border-negative/20 bg-negative/10 px-4 py-3 text-negative transition-colors hover:bg-negative/20 disabled:opacity-50"
                             aria-label="Delete workout"
                             title="Delete workout"
                         >
                             {deleteMutation.isPending ? (
-                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-red-300 border-t-transparent" />
+                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-negative border-t-transparent" />
                             ) : (
                                 <Trash2 className="h-5 w-5" />
                             )}

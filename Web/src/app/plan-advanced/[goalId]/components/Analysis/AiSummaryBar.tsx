@@ -70,13 +70,13 @@ export function AiSummaryBar({ goalId, isNoRace }: AiSummaryBarProps) {
     const riskFlags = analysis?.riskFlags || [];
 
     const severityColors: Record<string, string> = {
-        low: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-        medium: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-        high: 'bg-red-500/20 text-red-400 border-red-500/30',
+        low: 'bg-accent-blue/15 text-accent-blue border-accent-blue/30',
+        medium: 'bg-workout-tempo/15 text-workout-tempo border-workout-tempo/30',
+        high: 'bg-negative/15 text-negative border-negative/30',
     };
 
     return (
-        <div className="border border-glass-border bg-background-secondary rounded-xl p-4">
+        <div className="border border-glass-border bg-background-secondary rounded-md p-4">
             <div className="flex items-center gap-6">
                 {analysis?.overallScore != null ? (
                     <div className="shrink-0">
@@ -109,7 +109,7 @@ export function AiSummaryBar({ goalId, isNoRace }: AiSummaryBarProps) {
                     )}
                     {!isNoRace && analysis?.raceReadiness?.overallScore != null && (
                         <div className="mt-2 flex items-center gap-2">
-                            <span className="text-[10px] text-foreground-muted uppercase tracking-wide">Race Readiness</span>
+                            <span className="text-[10px] text-foreground-muted">Race Readiness</span>
                             <div className="h-1.5 w-24 bg-background-tertiary rounded-full overflow-hidden">
                                 <div
                                     className="h-full rounded-full transition-all duration-500"
@@ -117,10 +117,10 @@ export function AiSummaryBar({ goalId, isNoRace }: AiSummaryBarProps) {
                                         width: `${Math.min(100, analysis.raceReadiness.overallScore)}%`,
                                         backgroundColor:
                                             analysis.raceReadiness.overallScore >= 70
-                                                ? '#22c55e'
+                                                ? 'var(--positive)'
                                                 : analysis.raceReadiness.overallScore >= 40
-                                                ? '#eab308'
-                                                : '#ef4444',
+                                                ? 'var(--zone-3)'
+                                                : 'var(--negative)',
                                     }}
                                 />
                             </div>
@@ -136,7 +136,7 @@ export function AiSummaryBar({ goalId, isNoRace }: AiSummaryBarProps) {
                         type="button"
                         onClick={() => analyzeMutation.mutate()}
                         disabled={analyzeMutation.isPending}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-foreground text-background hover:bg-foreground/85 disabled:opacity-50 transition-colors"
                     >
                         {analyzeMutation.isPending ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />

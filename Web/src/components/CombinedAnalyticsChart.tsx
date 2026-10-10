@@ -26,12 +26,12 @@ interface CombinedAnalyticsChartProps {
 }
 
 const SERIES_CONFIG = {
-    vo2max: { name: 'VO2max', color: '#f59e0b', yAxisId: 'left' },
-    ctl: { name: 'Fitness (CTL)', color: '#10b981', yAxisId: 'right' },
-    atl: { name: 'Fatigue (ATL)', color: '#ef4444', yAxisId: 'right' },
-    tsb: { name: 'Form (TSB)', color: '#3b82f6', yAxisId: 'right' },
-    volume: { name: 'Weekly Volume (km)', color: '#8b5cf6', yAxisId: 'volume' },
-    trainingTime: { name: 'Training Time (h)', color: '#ec4899', yAxisId: 'volume' },
+    vo2max: { name: 'VO2max', color: 'var(--positive)', yAxisId: 'left' },
+    ctl: { name: 'Fitness (CTL)', color: 'var(--accent-blue)', yAxisId: 'right' },
+    atl: { name: 'Fatigue (ATL)', color: 'var(--workout-tempo)', yAxisId: 'right' },
+    tsb: { name: 'Form (TSB)', color: 'var(--accent-orange)', yAxisId: 'right' },
+    volume: { name: 'Weekly Volume (km)', color: 'var(--foreground-muted)', yAxisId: 'volume' },
+    trainingTime: { name: 'Training Time (h)', color: 'var(--workout-long-run)', yAxisId: 'volume' },
 };
 
 type SeriesKey = keyof typeof SERIES_CONFIG;
@@ -50,13 +50,10 @@ const SeriesToggleButtons = memo(({
                 <button
                     key={key}
                     onClick={() => onToggle(key)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-2 border ${visibleSeries[key]
-                        ? 'bg-surface-hover text-foreground border-accent-purple/50'
-                        : 'bg-transparent text-foreground-muted border-glass-border hover:border-foreground-muted'
+                    className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors flex items-center gap-2 border ${visibleSeries[key]
+                        ? 'bg-background-tertiary text-foreground border-line-strong'
+                        : 'bg-transparent text-foreground-muted border-line hover:text-foreground'
                         }`}
-                    style={{
-                        backgroundColor: visibleSeries[key] ? 'var(--surface-hover)' : 'transparent',
-                    }}
                 >
                     <span
                         className="w-2 h-2 rounded-full"
@@ -84,16 +81,15 @@ const TimeRangeButtons = memo(({
     const ranges: TimeRange[] = ['1M', '3M', '6M', '1Y', 'ALL'];
 
     return (
-        <div className="flex bg-background-secondary rounded-lg p-1 border border-glass-border">
+        <div className="flex bg-background-secondary rounded-md p-1 border border-line">
             {ranges.map(range => (
                 <button
                     key={range}
                     onClick={() => onTimeRangeChange(range)}
-                    className={`px-3 py-1 text-xs font-medium rounded transition-all ${timeRange === range
-                        ? 'bg-foreground/15 text-foreground shadow-xs'
+                    className={`px-3 py-1 text-xs font-medium rounded transition-colors ${timeRange === range
+                        ? 'bg-background-tertiary text-foreground'
                         : 'text-foreground-muted hover:text-foreground'
                         }`}
-                    style={timeRange === range ? { backgroundColor: 'var(--accent-purple)' } : {}}
                 >
                     {range}
                 </button>
@@ -225,13 +221,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                 <div className="min-w-[600px] md:min-w-0 w-full h-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={chartData}>
-                            <defs>
-                                <linearGradient id="colorTrainingTime" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor={SERIES_CONFIG.trainingTime.color} stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor={SERIES_CONFIG.trainingTime.color} stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" opacity={0.4} vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                             <XAxis
                                 dataKey="date"
                                 stroke="var(--foreground-muted)"
@@ -245,7 +235,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                             <YAxis
                                 yAxisId="left"
                                 orientation="left"
-                                stroke="#f59e0b"
+                                stroke="var(--positive)"
                                 fontSize={11}
                                 domain={domains.vo2 as [number, number]}
                                 tickLine={false}
@@ -257,7 +247,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                             <YAxis
                                 yAxisId="right"
                                 orientation="right"
-                                stroke="#10b981"
+                                stroke="var(--accent-blue)"
                                 fontSize={11}
                                 domain={domains.fitness as [number, number]}
                                 tickLine={false}
@@ -270,7 +260,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                             <YAxis
                                 yAxisId="volume"
                                 orientation="right"
-                                stroke="#8b5cf6"
+                                stroke="var(--line)"
                                 fontSize={11}
                                 domain={domains.volume as [number, number]}
                                 tickLine={false}
@@ -366,8 +356,8 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                     type="monotone"
                                     dataKey="trainingTimeHours"
                                     stroke="none"
-                                    fill="url(#colorTrainingTime)"
-                                    fillOpacity={0.6}
+                                    fill={SERIES_CONFIG.trainingTime.color}
+                                    fillOpacity={0.08}
                                     connectNulls
                                     name="Daily Time (h)"
                                 />
@@ -393,10 +383,10 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
 
             {/* Legend */}
             <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-foreground-muted">
-                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div><span>VO2max = Aerobic power</span></div>
-                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-green-500"></div><span>CTL = Long-term fitness</span></div>
-                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500"></div><span>ATL = Short-term fatigue</span></div>
-                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div><span>TSB = Form (CTL - ATL)</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-positive"></div><span>VO2max = Aerobic power</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-accent-blue"></div><span>CTL = Long-term fitness</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-workout-tempo"></div><span>ATL = Short-term fatigue</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-accent-orange"></div><span>TSB = Form (CTL - ATL)</span></div>
             </div>
         </div >
     );

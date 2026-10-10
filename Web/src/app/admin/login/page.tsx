@@ -45,19 +45,19 @@ export default function AdminLoginPage() {
 
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-background-secondary rounded-2xl shadow-xl overflow-hidden">
-                <div className="bg-emerald-600 p-8 text-center">
-                    <div className="w-16 h-16 bg-foreground/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-xs">
-                        <Shield className="w-8 h-8 text-foreground" />
+            <div className="max-w-md w-full bg-background-secondary rounded-md border border-line overflow-hidden">
+                <div className="topbar p-8 text-center">
+                    <div className="w-16 h-16 bg-[color:var(--topbar-line)] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Shield className="w-8 h-8 text-[color:var(--topbar-fg)]" />
                     </div>
-                    <h1 className="text-2xl font-bold text-foreground">Admin Portal</h1>
-                    <p className="text-emerald-100 mt-2">Restricted Access Only</p>
+                    <h1 className="text-2xl font-bold text-[color:var(--topbar-fg)]">Admin Portal</h1>
+                    <p className="text-[color:var(--topbar-muted)] mt-2">Restricted Access Only</p>
                 </div>
 
                 <div className="p-8">
                     <form onSubmit={handleLogin} className="space-y-6">
                         {error && (
-                            <div className="bg-red-500/10 text-red-500 p-3 rounded-lg text-sm border border-red-500/30">
+                            <div className="bg-negative/10 text-negative p-3 rounded-md text-sm border border-negative/30">
                                 {error}
                             </div>
                         )}
@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-4 py-2 border border-foreground/20 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-hidden transition"
+                                className="w-full px-4 py-2 bg-background-secondary border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange outline-hidden transition-colors"
                                 placeholder="Enter admin username"
                                 required
                             />
@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 border border-foreground/20 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-hidden transition"
+                                    className="w-full pl-10 pr-4 py-2 bg-background-secondary border border-line rounded-md focus:ring-2 focus:ring-accent-orange focus:border-accent-orange outline-hidden transition-colors"
                                     placeholder="••••••••••••"
                                     required
                                 />
@@ -92,7 +92,7 @@ export default function AdminLoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            className={`w-full bg-accent-orange hover:bg-accent-orange/90 text-white py-3 rounded-md font-semibold transition flex items-center justify-center ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                             {loading ? (
                                 <span className="w-5 h-5 border-2 border-foreground/30 border-t-white rounded-full animate-spin mr-2" />

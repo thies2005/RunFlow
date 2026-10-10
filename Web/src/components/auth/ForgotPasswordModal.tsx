@@ -112,7 +112,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 bg-background border border-glass-border rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden transition-all"
+                            className="w-full px-3 py-2 bg-background-secondary border border-line rounded-md focus:ring-2 focus:ring-accent-orange outline-hidden transition-colors"
                             placeholder="you@example.com"
                             required
                         />
@@ -121,14 +121,14 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-2 px-4 text-sm font-medium text-foreground bg-background-tertiary hover:bg-foreground/15 rounded-lg transition-colors"
+                            className="flex-1 py-2 px-4 text-sm font-medium text-foreground bg-background-tertiary hover:bg-surface-hover rounded-md transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isLoading || !email}
-                            className="flex-1 py-2 px-4 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center justify-center gap-2"
+                            className="flex-1 py-2 px-4 text-sm font-medium text-white bg-accent-orange hover:bg-accent-orange/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors flex items-center justify-center gap-2"
                         >
                             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                             Send Code
@@ -143,7 +143,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                             type="text"
                             value={code}
                             onChange={(e) => setCode(e.target.value.toUpperCase())}
-                            className="w-full text-center font-mono tracking-widest px-3 py-2 bg-background border border-glass-border rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden uppercase"
+                            className="w-full text-center font-mono tracking-widest px-3 py-2 bg-background-secondary border border-line rounded-md focus:ring-2 focus:ring-accent-orange outline-hidden uppercase"
                             placeholder="XCV123"
                             maxLength={6}
                             required
@@ -155,7 +155,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                             type="password"
                             value={newPassword}
                             onChange={handlePasswordChange}
-                            className="w-full px-3 py-2 bg-background border border-glass-border rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden transition-all"
+                            className="w-full px-3 py-2 bg-background-secondary border border-line rounded-md focus:ring-2 focus:ring-accent-orange outline-hidden transition-colors"
                             placeholder="••••••••"
                             required
                         />
@@ -166,10 +166,10 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                                         <div
                                             key={level}
                                             className={`h-1.5 flex-1 rounded-full ${passwordStrength >= level
-                                                ? (passwordStrength < 2 ? 'bg-red-500'
-                                                    : passwordStrength < 3 ? 'bg-yellow-500'
-                                                        : passwordStrength < 4 ? 'bg-blue-500'
-                                                            : 'bg-green-500')
+                                                ? (passwordStrength < 2 ? 'bg-negative'
+                                                    : passwordStrength < 3 ? 'bg-workout-tempo'
+                                                        : passwordStrength < 4 ? 'bg-accent-blue'
+                                                            : 'bg-positive')
                                                 : 'bg-background-tertiary'
                                                 }`}
                                         />
@@ -185,14 +185,14 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-2 px-4 text-sm font-medium text-foreground bg-background-tertiary hover:bg-foreground/15 rounded-lg transition-colors"
+                            className="flex-1 py-2 px-4 text-sm font-medium text-foreground bg-background-tertiary hover:bg-surface-hover rounded-md transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isLoading || code.length !== 6 || !newPassword}
-                            className="flex-1 py-2 px-4 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center justify-center gap-2"
+                            className="flex-1 py-2 px-4 text-sm font-medium text-white bg-accent-orange hover:bg-accent-orange/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors flex items-center justify-center gap-2"
                         >
                             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                             Reset Password

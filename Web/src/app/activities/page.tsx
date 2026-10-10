@@ -61,7 +61,7 @@ export default function ActivitiesPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="animate-pulse text-foreground-muted">Loading...</div>
+                <div className="text-foreground-muted">Loading...</div>
             </div>
         );
     }
@@ -89,22 +89,22 @@ export default function ActivitiesPage() {
 
                             <div className="flex items-center gap-4">
                                 {/* Type Filter */}
-                                <div className="flex bg-surface p-1 rounded-lg border border-glass-border">
+                                <div className="flex bg-surface p-1 rounded-md border border-line">
                                     <button
                                         onClick={() => setFilter('RUN')}
-                                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'RUN' ? 'bg-accent-orange text-white shadow-lg' : 'text-foreground-muted hover:text-foreground'}`}
+                                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'RUN' ? 'bg-accent-orange text-white' : 'text-foreground-muted hover:text-foreground'}`}
                                     >
                                         Runs
                                     </button>
                                     <button
                                         onClick={() => setFilter('RIDE')}
-                                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'RIDE' ? 'bg-accent-orange text-white shadow-lg' : 'text-foreground-muted hover:text-foreground'}`}
+                                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'RIDE' ? 'bg-accent-orange text-white' : 'text-foreground-muted hover:text-foreground'}`}
                                     >
                                         Rides
                                     </button>
                                     <button
                                         onClick={() => setFilter('ALL')}
-                                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'ALL' ? 'bg-accent-orange text-white shadow-lg' : 'text-foreground-muted hover:text-foreground'}`}
+                                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-accent-orange text-white' : 'text-foreground-muted hover:text-foreground'}`}
                                     >
                                         All
                                     </button>
@@ -112,7 +112,7 @@ export default function ActivitiesPage() {
 
                                 <button
                                     onClick={() => setIsManualModalOpen(true)}
-                                    className="btn-primary flex items-center gap-2 py-2 px-4 shadow-lg shadow-blue-500/20"
+                                    className="btn-primary flex items-center gap-2 py-2 px-4"
                                 >
                                     <Plus className="w-4 h-4" />
                                     <span className="hidden sm:inline">Manual Entry</span>
@@ -120,7 +120,7 @@ export default function ActivitiesPage() {
 
                                 <button
                                     onClick={() => refetch()}
-                                    className="p-2 bg-surface hover:bg-surface-hover text-foreground transition-colors border border-glass-border rounded-lg"
+                                    className="p-2 bg-surface hover:bg-surface-hover text-foreground transition-colors border border-line rounded-md"
                                     disabled={isRefetching}
                                 >
                                     <RefreshCw className={`w-5 h-5 ${isRefetching ? 'animate-spin' : ''}`} />
@@ -144,7 +144,7 @@ export default function ActivitiesPage() {
                                     <button
                                         onClick={() => fetchNextPage()}
                                         disabled={isFetchingNextPage}
-                                        className="px-6 py-2 bg-surface hover:bg-surface-hover text-foreground rounded-lg transition-colors flex items-center gap-2 border border-glass-border"
+                                        className="px-6 py-2 bg-surface hover:bg-surface-hover text-foreground rounded-md transition-colors flex items-center gap-2 border border-line"
                                     >
                                         {isFetchingNextPage ? (
                                             <>

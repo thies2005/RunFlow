@@ -9,10 +9,10 @@ export default function PrivacyPolicy() {
     return (
         <div className="min-h-screen bg-background text-foreground py-16 px-4">
             <div className="container mx-auto max-w-3xl prose dark:prose-invert prose-orange">
-                <Link href="/" className="text-orange-500 hover:text-orange-400 no-underline mb-8 inline-block transition-colors">
+                <Link href="/" className="text-accent-orange no-underline mb-8 inline-block transition-colors">
                     &larr; Back to Home
                 </Link>
-                <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-500">Privacy Policy</h1>
+                <h1 className="text-4xl font-bold mb-4 text-foreground">Privacy Policy</h1>
                 <p className="text-foreground-muted text-sm mb-8">Last updated: {new Date().toLocaleDateString('en-GB')}</p>
 
                 <p>
@@ -28,7 +28,7 @@ export default function PrivacyPolicy() {
                     Str. Viilor 40<br />
                     400347 Cluj-Napoca<br />
                     Romania<br />
-                    Email: <a href="mailto:privacy@schuelken.uk" className="text-orange-500 hover:underline">privacy@schuelken.uk</a>
+                    Email: <a href="mailto:privacy@schuelken.uk" className="text-accent-orange hover:underline">privacy@schuelken.uk</a>
                 </p>
                 <p>
                     Due to the scale and nature of our data processing, we are not legally required to appoint a formal Data Protection Officer (DPO) under Art. 37 GDPR. Privacy inquiries can be directed to the controller at the email above.
@@ -75,37 +75,37 @@ export default function PrivacyPolicy() {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-b border-glass-border">
+                            <tr className="border-b border-line">
                                 <td className="p-3"><strong>Strava</strong></td>
                                 <td className="p-3">Activity Synchronization</td>
                                 <td className="p-3">OAuth Tokens (Read/Write Activities)</td>
                                 <td className="p-3">USA</td>
                             </tr>
-                            <tr className="border-b border-glass-border">
+                            <tr className="border-b border-line">
                                 <td className="p-3"><strong>OpenAI / Anthropic / Google</strong></td>
                                 <td className="p-3">AI Coaching Features</td>
                                 <td className="p-3">Chat messages and necessary fitness metrics for context</td>
                                 <td className="p-3">USA</td>
                             </tr>
-                            <tr className="border-b border-glass-border">
+                            <tr className="border-b border-line">
                                 <td className="p-3"><strong>Sentry</strong></td>
                                 <td className="p-3">Error Tracking & Stability</td>
                                 <td className="p-3">IP Addresses, OS, crash reports</td>
                                 <td className="p-3">USA/EU</td>
                             </tr>
-                            <tr className="border-b border-glass-border">
+                            <tr className="border-b border-line">
                                 <td className="p-3"><strong>Open Food Facts</strong></td>
                                 <td className="p-3">Barcode Scanning API</td>
                                 <td className="p-3">Barcode queries (anonymous)</td>
                                 <td className="p-3">EU</td>
                             </tr>
-                            <tr className="border-b border-glass-border">
+                            <tr className="border-b border-line">
                                 <td className="p-3"><strong>SMTP Providers</strong></td>
                                 <td className="p-3">Transactional Emails</td>
                                 <td className="p-3">Email address, names</td>
                                 <td className="p-3">Varies</td>
                             </tr>
-                            <tr className="border-b border-glass-border">
+                            <tr className="border-b border-line">
                                 <td className="p-3"><strong>Self-Hosted Virtual Private Server</strong></td>
                                 <td className="p-3">Database & Application Hosting</td>
                                 <td className="p-3">All application data</td>
@@ -170,7 +170,7 @@ export default function PrivacyPolicy() {
 
                 <h2>11. Contact for Privacy Matters</h2>
                 <p>
-                    For data export requests, deletion assistance, or privacy-related questions, please email us directly at: <a href="mailto:privacy@schuelken.uk" className="text-orange-500 hover:underline">privacy@schuelken.uk</a>.
+                    For data export requests, deletion assistance, or privacy-related questions, please email us directly at: <a href="mailto:privacy@schuelken.uk" className="text-accent-orange hover:underline">privacy@schuelken.uk</a>.
                 </p>
             </div>
         </div>

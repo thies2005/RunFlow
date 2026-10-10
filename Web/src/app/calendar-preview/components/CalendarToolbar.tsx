@@ -27,15 +27,15 @@ export function CalendarToolbar({
     actions,
 }: CalendarToolbarProps) {
     return (
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-glass-border bg-background-secondary/80 backdrop-blur shrink-0">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-line bg-background-secondary shrink-0">
             <div className="flex items-center gap-2">
-                <div className="inline-flex rounded-md border border-glass-border overflow-hidden">
+                <div className="inline-flex rounded-md border border-line overflow-hidden">
                     <button
                         type="button"
                         onClick={() => onModeChange('month')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
                             mode === 'month'
-                                ? 'bg-foreground/15 text-foreground'
+                                ? 'bg-background-tertiary text-foreground'
                                 : 'bg-transparent text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary'
                         }`}
                         title="Monthly grid"
@@ -48,7 +48,7 @@ export function CalendarToolbar({
                         onClick={() => onModeChange('week')}
                         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${
                             mode === 'week'
-                                ? 'bg-foreground/15 text-foreground'
+                                ? 'bg-background-tertiary text-foreground'
                                 : 'bg-transparent text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary'
                         }`}
                         title="Weekly list"
@@ -83,7 +83,7 @@ export function CalendarToolbar({
                 <button
                     type="button"
                     onClick={onToday}
-                    className="px-2.5 py-1 rounded-md text-xs text-foreground-secondary hover:text-foreground hover:bg-background-tertiary border border-glass-border transition-colors"
+                    className="px-2.5 py-1 rounded-md text-xs text-foreground-secondary hover:text-foreground hover:bg-background-tertiary border border-line transition-colors"
                 >
                     Today
                 </button>
@@ -97,11 +97,11 @@ export function CalendarToolbar({
 /** Runalyze-style daily-load colour ramp legend. */
 function TrimpLegend() {
     const tiers: { label: string; cls: string }[] = [
-        { label: 'Rest', cls: 'bg-foreground/15' },
-        { label: 'Easy', cls: 'bg-emerald-500/30' },
-        { label: 'Mod', cls: 'bg-yellow-500/30' },
-        { label: 'Hard', cls: 'bg-orange-500/35' },
-        { label: 'Max', cls: 'bg-red-600/45' },
+        { label: 'Rest', cls: 'bg-background-tertiary' },
+        { label: 'Easy', cls: 'bg-zone-1/40' },
+        { label: 'Mod', cls: 'bg-zone-3/40' },
+        { label: 'Hard', cls: 'bg-zone-4/50' },
+        { label: 'Max', cls: 'bg-zone-5/60' },
     ];
     return (
         <div className="hidden md:flex items-center gap-1.5 text-[10px] text-foreground-muted">

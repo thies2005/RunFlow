@@ -28,12 +28,12 @@ export function DroppableDay({ date, children, isTodayItem, onAdd, id }: Droppab
         <div
             id={id}
             ref={setNodeRef}
-            className={`flex gap-2 p-2 rounded-lg min-h-[80px] transition-colors border ${isOver ? 'bg-surface-hover border-accent-orange/50' : 'border-transparent hover:bg-surface-hover'} ${isTodayItem ? 'bg-accent-orange/5' : ''}`}
+            className={`flex gap-2 p-2 rounded-md min-h-[80px] transition-colors border ${isOver ? 'bg-surface-hover border-accent-orange/50' : 'border-transparent hover:bg-surface-hover'} ${isTodayItem ? 'bg-accent-orange/5' : ''}`}
         >
             {/* Date Column */}
             <div className="flex flex-col items-center w-12 pt-2 shrink-0">
-                <span className="text-[10px] text-foreground-muted uppercase">{format(date, 'EEE')}</span>
-                <span className={`text-lg font-bold ${isTodayItem ? 'text-accent-orange' : 'text-foreground-muted'}`}>
+                <span className="text-[10px] text-foreground-muted">{format(date, 'EEE')}</span>
+                <span className={`text-lg font-bold font-mono tabular-nums ${isTodayItem ? 'text-accent-orange' : 'text-foreground-muted'}`}>
                     {format(date, 'd')}
                 </span>
                 <button
@@ -49,7 +49,7 @@ export function DroppableDay({ date, children, isTodayItem, onAdd, id }: Droppab
                 {children}
                 {/* Empty State Placeholder (only if no children) */}
                 {!hasChildren && (
-                    <div className="h-full flex items-center justify-center border border-dashed border-glass-border rounded-lg text-xs text-foreground-muted">
+                    <div className="h-full flex items-center justify-center border border-dashed border-glass-border rounded-md text-xs text-foreground-muted">
                         Rest Day
                     </div>
                 )}

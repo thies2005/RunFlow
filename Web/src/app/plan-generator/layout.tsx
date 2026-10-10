@@ -1,7 +1,4 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
     title: 'Free Training Plan Generator — RunFlow',
@@ -16,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function PlanGeneratorLayout({ children }: { children: React.ReactNode }) {
     return (
-        <div className={`min-h-screen bg-background text-foreground ${inter.className}`}>
+        <div className="min-h-screen bg-background text-foreground font-sans">
             {children}
         </div>
     );

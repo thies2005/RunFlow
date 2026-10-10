@@ -54,9 +54,9 @@ const ZoneTrendChart = memo(({ data }: { data: HistoryResponse['zoneTrend'] }) =
         <div className="h-64" role="img" aria-label="Training Zone Trend Chart">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
-                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => v >= 60 ? `${Math.round(v / 60)}h` : `${v}m`} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                    <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="var(--foreground-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => v >= 60 ? `${Math.round(v / 60)}h` : `${v}m`} />
                     <Tooltip content={<ChartTooltip formatter={(value: string | number) => {
                         const numVal = typeof value === 'number' ? value : parseFloat(String(value));
                         if (numVal >= 60) {
@@ -66,13 +66,13 @@ const ZoneTrendChart = memo(({ data }: { data: HistoryResponse['zoneTrend'] }) =
                         }
                         return `${Math.round(numVal)}m`;
                     }} />} />
-                    <Area type="monotone" dataKey="Z1" stackId="1" stroke="#10b981" fill="#10b981" name="Z1 Recovery" />
-                    <Area type="monotone" dataKey="Z2" stackId="1" stroke="#84cc16" fill="#84cc16" name="Z2 Aerobic" />
-                    <Area type="monotone" dataKey="Z3" stackId="1" stroke="#eab308" fill="#eab308" name="Z3 Tempo" />
-                    <Area type="monotone" dataKey="Z4" stackId="1" stroke="#f97316" fill="#f97316" name="Z4 Threshold" />
-                    <Area type="monotone" dataKey="Z5" stackId="1" stroke="#ef4444" fill="#ef4444" name="Z5 VO2max" />
-                    <Area type="monotone" dataKey="Z6" stackId="1" stroke="#6366f1" fill="#6366f1" name="Z6 Anaerobic" />
-                    <Area type="monotone" dataKey="Z7" stackId="1" stroke="#9333ea" fill="#9333ea" name="Z7 Neuromuscular" />
+                    <Area type="monotone" dataKey="Z1" stackId="1" stroke="var(--zone-1)" fill="var(--zone-1)" name="Z1 Recovery" />
+                    <Area type="monotone" dataKey="Z2" stackId="1" stroke="var(--zone-2)" fill="var(--zone-2)" name="Z2 Aerobic" />
+                    <Area type="monotone" dataKey="Z3" stackId="1" stroke="var(--zone-3)" fill="var(--zone-3)" name="Z3 Tempo" />
+                    <Area type="monotone" dataKey="Z4" stackId="1" stroke="var(--zone-4)" fill="var(--zone-4)" name="Z4 Threshold" />
+                    <Area type="monotone" dataKey="Z5" stackId="1" stroke="var(--zone-5)" fill="var(--zone-5)" name="Z5 VO2max" />
+                    <Area type="monotone" dataKey="Z6" stackId="1" stroke="var(--workout-strength)" fill="var(--workout-strength)" name="Z6 Anaerobic" />
+                    <Area type="monotone" dataKey="Z7" stackId="1" stroke="var(--workout-long-run)" fill="var(--workout-long-run)" name="Z7 Neuromuscular" />
                 </AreaChart>
             </ResponsiveContainer>
         </div>
@@ -87,11 +87,11 @@ const WeeklyVolumeChart = memo(({ data }: { data: HistoryResponse['weeklyVolume'
         <div className="h-64" role="img" aria-label="Weekly Volume Chart">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
-                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} unit="km" />
-                    <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} content={<ChartTooltip />} />
-                    <Bar dataKey="km" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                    <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="var(--foreground-muted)" fontSize={12} tickLine={false} axisLine={false} unit="km" />
+                    <Tooltip cursor={{ fill: 'var(--background-tertiary)' }} content={<ChartTooltip />} />
+                    <Bar dataKey="km" fill="var(--foreground-muted)" radius={[4, 4, 0, 0]} />
                 </BarChart>
             </ResponsiveContainer>
         </div>
@@ -115,13 +115,13 @@ const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTren
         const total = zoneTotals.Z1 + zoneTotals.Z2 + zoneTotals.Z3 + zoneTotals.Z4 + zoneTotals.Z5 + zoneTotals.Z6 + zoneTotals.Z7;
 
         const pieData = [
-            { name: 'Z1 Recovery', value: zoneTotals.Z1, color: '#10b981' },
-            { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: '#84cc16' },
-            { name: 'Z3 Tempo', value: zoneTotals.Z3, color: '#eab308' },
-            { name: 'Z4 Threshold', value: zoneTotals.Z4, color: '#f97316' },
-            { name: 'Z5 VO2max', value: zoneTotals.Z5, color: '#ef4444' },
-            { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: '#6366f1' },
-            { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: '#9333ea' },
+            { name: 'Z1 Recovery', value: zoneTotals.Z1, color: 'var(--zone-1)' },
+            { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: 'var(--zone-2)' },
+            { name: 'Z3 Tempo', value: zoneTotals.Z3, color: 'var(--zone-3)' },
+            { name: 'Z4 Threshold', value: zoneTotals.Z4, color: 'var(--zone-4)' },
+            { name: 'Z5 VO2max', value: zoneTotals.Z5, color: 'var(--zone-5)' },
+            { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: 'var(--workout-strength)' },
+            { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: 'var(--workout-long-run)' },
         ].filter(d => d.value > 0);
 
         return { pieData, total };
@@ -176,7 +176,7 @@ const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTren
                             </div>
                         );
                     })}
-                    <div className="border-t border-foreground/20 pt-2 mt-2 flex justify-between">
+                    <div className="border-t border-line pt-2 mt-2 flex justify-between">
                         <span className="text-foreground-muted text-sm">Total</span>
                         <span className="text-foreground font-mono text-sm">{formatZoneTime(total)}</span>
                     </div>
@@ -194,11 +194,11 @@ const VDOTTrendChart = memo(({ data }: { data: HistoryResponse['vdotTrend'] }) =
         <div className="h-64" role="img" aria-label="VDOT Trend Line Chart">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
-                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 1', 'dataMax + 1']} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                    <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="var(--foreground-muted)" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 1', 'dataMax + 1']} />
                     <Tooltip content={<ChartTooltip formatter={(value: string | number) => (typeof value === 'number' ? value : parseFloat(String(value))).toFixed(1)} />} />
-                    <Line type="monotone" dataKey="vdot" stroke="#f59e0b" strokeWidth={2} dot={{ fill: '#f59e0b' }} />
+                    <Line type="monotone" dataKey="vdot" stroke="var(--positive)" strokeWidth={2} dot={{ fill: 'var(--positive)' }} />
                 </LineChart>
             </ResponsiveContainer>
         </div>
@@ -213,13 +213,13 @@ const FitnessTrendChart = memo(({ data }: { data: HistoryResponse['fitnessTrend'
         <div className="h-64" role="img" aria-label="Fitness Tracking Chart showing CTL, ATL, and TSB">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
-                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => Math.round(val).toString()} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                    <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="var(--foreground-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => Math.round(val).toString()} />
                     <Tooltip content={<ChartTooltip formatter={(value: string | number) => (typeof value === 'number' ? value : parseFloat(String(value))).toFixed(1)} />} />
-                    <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} name="Fitness (CTL)" dot={false} />
-                    <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} name="Fatigue (ATL)" dot={false} />
-                    <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} name="Form (TSB)" dot={false} />
+                    <Line type="monotone" dataKey="ctl" stroke="var(--accent-blue)" strokeWidth={2} name="Fitness (CTL)" dot={false} />
+                    <Line type="monotone" dataKey="atl" stroke="var(--workout-tempo)" strokeWidth={2} name="Fatigue (ATL)" dot={false} />
+                    <Line type="monotone" dataKey="tsb" stroke="var(--accent-orange)" strokeWidth={2} name="Form (TSB)" dot={false} />
                 </LineChart>
             </ResponsiveContainer>
         </div>
@@ -232,21 +232,21 @@ const StatsGrid = memo(({ currentVdot, totals }: { currentVdot: number | null; t
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass-card p-4 text-center">
             <p className="text-foreground-muted text-sm mb-1">Current VDOT</p>
-            <p className="text-xl sm:text-3xl font-bold text-foreground">{currentVdot?.toFixed(1) || '-'}</p>
+            <p className="text-xl sm:text-3xl font-semibold text-foreground font-mono tabular-nums">{currentVdot?.toFixed(1) || '-'}</p>
         </div>
         <div className="glass-card p-4 text-center">
             <p className="text-foreground-muted text-sm mb-1">Total Distance</p>
-            <p className="text-xl sm:text-3xl font-bold text-foreground">
+            <p className="text-xl sm:text-3xl font-semibold text-foreground font-mono tabular-nums">
                 {totals?.distance || 0}<span className="text-sm text-foreground-muted font-normal ml-1">km</span>
             </p>
         </div>
         <div className="glass-card p-4 text-center">
             <p className="text-foreground-muted text-sm mb-1">Total Activities</p>
-            <p className="text-xl sm:text-3xl font-bold text-foreground">{totals?.activities || 0}</p>
+            <p className="text-xl sm:text-3xl font-semibold text-foreground font-mono tabular-nums">{totals?.activities || 0}</p>
         </div>
         <div className="glass-card p-4 text-center">
             <p className="text-foreground-muted text-sm mb-1">Avg Pace</p>
-            <p className="text-xl sm:text-3xl font-bold text-foreground">
+            <p className="text-xl sm:text-3xl font-semibold text-foreground font-mono tabular-nums">
                 {totals?.averagePace ? formatPace(totals.averagePace).replace('/km', '') : '-'}
             </p>
         </div>
@@ -291,7 +291,7 @@ const RacePredictions = memo(({ currentVdot, effectiveVO2max, shapePercent }: {
                 {racePredictions.map(p => (
                     <div key={p.race} className="text-center">
                         <p className="text-foreground-muted text-sm">{p.race}</p>
-                        <p className="text-2xl font-bold text-foreground">{p.time}</p>
+                        <p className="text-2xl font-semibold text-foreground font-mono tabular-nums">{p.time}</p>
                     </div>
                 ))}
             </div>
@@ -320,7 +320,7 @@ function AnalyticsDashboardInner({ currentVdot, effectiveVO2max, shapePercent }:
     });
 
     if (isLoading) {
-        return <div className="animate-pulse h-96 bg-background-tertiary/50 rounded-xl"></div>;
+        return <div className="h-96 bg-background-tertiary rounded-md"></div>;
     }
 
     if (!data) return null;
@@ -333,7 +333,7 @@ function AnalyticsDashboardInner({ currentVdot, effectiveVO2max, shapePercent }:
                 <select
                     value={timeRange}
                     onChange={(e) => setTimeRange(e.target.value)}
-                    className="bg-background-tertiary border border-foreground/20 rounded-lg p-2 text-sm text-foreground focus:ring-2 focus:ring-blue-500 outline-hidden"
+                    className="p-2 text-sm text-foreground"
                 >
                     {RANGES.map(r => (
                         <option key={r.value} value={r.value}>{r.label}</option>

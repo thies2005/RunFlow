@@ -18,13 +18,13 @@ export default function PromptLibrary({ isOpen, onClose, onSelectPrompt }: Promp
     const activeCategory = PROMPT_LIBRARY.find((c) => c.category === selectedCategory);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-xs">
-            <div className="bg-background-secondary border border-foreground/10 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)]">
+            <div className="bg-background-secondary border border-line rounded-md w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden animate-fade-in">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-foreground/5 flex items-center justify-between bg-foreground/5">
+                <div className="px-6 py-4 border-b border-line flex items-center justify-between bg-background-secondary">
                     <div className="flex items-center gap-3">
-                        <div className="bg-purple-500/20 p-2 rounded-lg">
-                            <Book className="w-5 h-5 text-purple-400" />
+                        <div className="bg-background-tertiary p-2 rounded-md">
+                            <Book className="w-5 h-5 text-foreground-muted" />
                         </div>
                         <div>
                             <h2 className="text-lg font-semibold text-foreground">Prompt Library</h2>
@@ -42,15 +42,15 @@ export default function PromptLibrary({ isOpen, onClose, onSelectPrompt }: Promp
                 {/* Content */}
                 <div className="flex-1 flex overflow-hidden">
                     {/* Sidebar / Categories */}
-                    <div className="w-1/3 border-r border-foreground/5 overflow-y-auto bg-foreground/5">
+                    <div className="w-1/3 border-r border-line overflow-y-auto bg-background-tertiary">
                         <div className="p-3 space-y-1">
                             {PROMPT_LIBRARY.map((category) => (
                                 <button
                                     key={category.category}
                                     onClick={() => setSelectedCategory(category.category)}
-                                    className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center justify-between group ${selectedCategory === category.category
-                                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20'
-                                            : 'text-foreground-muted hover:bg-foreground/5 hover:text-foreground'
+                                    className={`w-full text-left px-4 py-3 rounded-md text-sm transition-colors flex items-center justify-between group ${selectedCategory === category.category
+                                            ? 'bg-accent-orange text-white'
+                                            : 'text-foreground-muted hover:bg-surface-hover hover:text-foreground'
                                         }`}
                                 >
                                     <span>{category.category}</span>
@@ -72,14 +72,14 @@ export default function PromptLibrary({ isOpen, onClose, onSelectPrompt }: Promp
                                         onSelectPrompt(prompt.text);
                                         onClose();
                                     }}
-                                    className="w-full text-left bg-foreground/5 hover:bg-foreground/10 border border-foreground/5 hover:border-purple-500/30 rounded-xl p-4 transition-all group group-hover:shadow-lg"
+                                    className="w-full text-left bg-background-secondary hover:bg-surface-hover border border-line hover:border-line-strong rounded-md p-4 transition-colors group"
                                 >
                                     <div className="flex items-start gap-3">
-                                        <div className="mt-1 bg-background-tertiary group-hover:bg-purple-500/20 p-1.5 rounded-lg transition-colors">
-                                            <MessageSquare className="w-4 h-4 text-foreground-muted group-hover:text-purple-400" />
+                                        <div className="mt-1 bg-background-tertiary group-hover:bg-accent-orange/10 p-1.5 rounded-sm transition-colors">
+                                            <MessageSquare className="w-4 h-4 text-foreground-muted group-hover:text-accent-orange" />
                                         </div>
                                         <div>
-                                            <h3 className="font-medium text-foreground mb-1 group-hover:text-purple-300 transition-colors">
+                                            <h3 className="font-medium text-foreground mb-1 group-hover:text-foreground transition-colors">
                                                 {prompt.title}
                                             </h3>
                                             <p className="text-sm text-foreground-muted line-clamp-2 leading-relaxed">

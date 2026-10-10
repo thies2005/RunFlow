@@ -86,7 +86,7 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
                 animate={controls}
                 transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             >
-                <div className="bg-surface border border-glass-border shadow-lg rounded-full px-4 py-2 flex items-center gap-2">
+                <div className="bg-background-secondary border border-line rounded-full px-4 py-2 flex items-center gap-2">
                     <motion.div
                         animate={{ rotate: isRefreshing ? 360 : rotation }}
                         transition={

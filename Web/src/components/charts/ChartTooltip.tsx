@@ -13,7 +13,7 @@ export interface ChartTooltipProps {
 export function ChartTooltip({ active, payload, label, labelFormatter, formatter }: ChartTooltipProps) {
     if (active && payload && payload.length) {
         return (
-            <div className="glass-card p-4 border border-glass-border">
+            <div className="glass-card p-4 border border-line">
                 {label !== undefined && (
                     <p className="text-foreground-muted text-sm mb-2">
                         {labelFormatter ? labelFormatter(label) : label}
@@ -41,7 +41,7 @@ export function ChartTooltip({ active, payload, label, labelFormatter, formatter
                                     style={{ backgroundColor: entry.color || entry.fill || entry.stroke }}
                                 />
                                 <span className="text-foreground-muted">{name}:</span>
-                                <span className="text-foreground font-medium">
+                                <span className="text-foreground font-medium font-mono tabular-nums">
                                     {val}{entry.unit || ''}
                                 </span>
                             </div>

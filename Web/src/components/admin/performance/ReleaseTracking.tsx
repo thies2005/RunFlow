@@ -105,22 +105,22 @@ export default function ReleaseTrackingDashboard() {
         </Button>
       </div>
 
-      <div className="bg-background-secondary rounded-xl shadow-xs border border-glass-border overflow-hidden">
-        <div className="p-4 border-b border-glass-border">
+      <div className="bg-background-secondary rounded-md  border border-line overflow-hidden">
+        <div className="p-4 border-b border-line">
           <h4 className="font-medium text-foreground">Deployment History</h4>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-background-secondary">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted uppercase">Version</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted uppercase">Deployed At</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted uppercase">Deployed By</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted uppercase">Commit</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted uppercase">Compare</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted">Version</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted">Deployed At</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted">Deployed By</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted">Commit</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-foreground-muted">Compare</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-glass-border">
+            <tbody className="divide-y divide-line">
               {releases.map((release, index) => (
                 <tr key={release.id} className="hover:bg-background-secondary">
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -137,7 +137,7 @@ export default function ReleaseTrackingDashboard() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
-                      className="text-sm border border-foreground/20 rounded px-2 py-1"
+                      className="text-sm border border-line rounded px-2 py-1"
                       value={selectedVersions?.[index % 2] || ''}
                       onChange={(e) => {
                         if (e.target.value) {
@@ -164,7 +164,7 @@ export default function ReleaseTrackingDashboard() {
       </div>
 
       {comparison && (
-        <div className="bg-background-secondary rounded-xl shadow-xs border border-glass-border p-6">
+        <div className="bg-background-secondary rounded-md  border border-line p-6">
           <h4 className="font-medium text-foreground mb-4 flex items-center gap-2">
             <GitBranch className="w-5 h-5" />
             Performance Comparison
@@ -226,7 +226,7 @@ function ComparisonMetric({ label, before, after, change, unit, inverse }: Compa
   const isPositive = (change > 0 && !inverse) || (change < 0 && inverse);
   
   return (
-    <div className="p-4 bg-background-secondary rounded-lg">
+    <div className="p-4 bg-background-secondary rounded-md">
       <p className="text-sm text-foreground-secondary mb-2">{label}</p>
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm text-foreground-muted">Before</span>
@@ -238,11 +238,11 @@ function ComparisonMetric({ label, before, after, change, unit, inverse }: Compa
       </div>
       <div className="flex items-center gap-2">
         {isPositive ? (
-          <TrendingUp className="w-4 h-4 text-green-500" />
+          <TrendingUp className="w-4 h-4 text-positive" />
         ) : (
-          <TrendingDown className="w-4 h-4 text-red-500" />
+          <TrendingDown className="w-4 h-4 text-negative" />
         )}
-        <span className={`font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+        <span className={`font-medium ${isPositive ? 'text-positive' : 'text-negative'}`}>
           {change > 0 ? '+' : ''}{change.toFixed(1)}%
         </span>
       </div>

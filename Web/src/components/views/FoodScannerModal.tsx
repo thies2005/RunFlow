@@ -162,13 +162,13 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
-            <div className="bg-background-secondary w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 sm:items-center sm:justify-center">
+            <div className="bg-background-secondary border border-line w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-md flex flex-col overflow-hidden animate-in slide-in-from-bottom">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-foreground/10 shrink-0">
+                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-line shrink-0">
                     <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-amber-400" />
-                        <h2 className="text-lg font-bold text-foreground">AI Food Scanner</h2>
+                        <Sparkles className="w-5 h-5 text-workout-tempo" />
+                        <h2 className="text-lg font-semibold text-foreground">AI Food Scanner</h2>
                     </div>
                     <button onClick={handleClose} className="p-2 -mr-2 text-foreground-muted hover:text-foreground">
                         <X className="w-5 h-5" />
@@ -181,10 +181,10 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                         <div className="flex-1 flex flex-col items-center justify-center">
                             <button
                                 onClick={handleCameraClick}
-                                className="w-full aspect-[4/3] border-2 border-dashed border-foreground/20 rounded-2xl flex flex-col items-center justify-center gap-4 hover:border-amber-400/50 hover:bg-amber-400/5 transition-all group"
+                                className="w-full aspect-[4/3] border-2 border-dashed border-line-strong rounded-md flex flex-col items-center justify-center gap-4 hover:border-workout-tempo/50 hover:bg-workout-tempo/5 transition-colors group"
                             >
-                                <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <Camera className="w-8 h-8 text-amber-400" />
+                                <div className="w-16 h-16 rounded-full bg-workout-tempo/10 flex items-center justify-center">
+                                    <Camera className="w-8 h-8 text-workout-tempo" />
                                 </div>
                                 <div className="text-center">
                                     <p className="text-foreground font-medium mb-1">Take a Photo</p>
@@ -212,14 +212,14 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                             <div className="flex gap-3 mt-4 w-full">
                                 <button
                                     onClick={() => galleryInputRef.current?.click()}
-                                    className="flex-1 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 transition-colors rounded-xl p-3 flex items-center justify-center gap-2"
+                                    className="flex-1 bg-background-tertiary hover:bg-glass-bg-hover border border-line transition-colors rounded-md p-3 flex items-center justify-center gap-2"
                                 >
                                     <Upload className="w-4 h-4 text-foreground-muted" />
                                     <span className="text-sm text-foreground-muted">Gallery</span>
                                 </button>
                                 <button
                                     onClick={() => setIsTextOnly(true)}
-                                    className="flex-1 bg-foreground/5 hover:bg-foreground/10 border border-foreground/10 transition-colors rounded-xl p-3 flex items-center justify-center gap-2"
+                                    className="flex-1 bg-background-tertiary hover:bg-glass-bg-hover border border-line transition-colors rounded-md p-3 flex items-center justify-center gap-2"
                                 >
                                     <MessageSquare className="w-4 h-4 text-foreground-muted" />
                                     <span className="text-sm text-foreground-muted">Describe food</span>
@@ -230,7 +230,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                         <div className="flex-1 flex flex-col gap-4">
                             {/* Image Preview */}
                             {imagePreview && (
-                                <div className="relative rounded-2xl overflow-hidden bg-black/50">
+                                <div className="relative rounded-md overflow-hidden bg-black/50">
                                     <Image
                                         src={imageBase64 || imagePreview}
                                         alt="Food to analyze"
@@ -247,7 +247,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                                             if (cameraInputRef.current) cameraInputRef.current.value = '';
                                             if (galleryInputRef.current) galleryInputRef.current.value = '';
                                         }}
-                                        className="absolute top-2 right-2 bg-black/60 backdrop-blur-xs p-1.5 rounded-full text-foreground hover:bg-black/80 transition-colors"
+                                        className="absolute top-2 right-2 bg-black/60 p-1.5 rounded-full text-white hover:bg-black/80 transition-colors"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -256,10 +256,10 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
 
                             {/* Text Only Mode Header */}
                             {isTextOnly && (
-                                <div className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                                <div className="flex items-center justify-between p-3 bg-workout-tempo/10 border border-workout-tempo/20 rounded-md">
                                     <div className="flex items-center gap-2">
-                                        <MessageSquare className="w-4 h-4 text-amber-500" />
-                                        <span className="text-sm text-amber-500 font-medium">Text Description Mode</span>
+                                        <MessageSquare className="w-4 h-4 text-workout-tempo" />
+                                        <span className="text-sm text-workout-tempo font-medium">Text Description Mode</span>
                                     </div>
                                     <button onClick={() => setIsTextOnly(false)} className="text-foreground-muted hover:text-foreground">
                                         <X className="w-4 h-4" />
@@ -269,7 +269,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
 
                             {/* Caption Input */}
                             <div>
-                                <label className="flex items-center gap-1.5 text-xs text-foreground-muted uppercase tracking-widest mb-1.5 font-medium">
+                                <label className="flex items-center gap-1.5 text-xs text-foreground-muted mb-1.5 font-medium">
                                     <MessageSquare className="w-3.5 h-3.5" />
                                     {isTextOnly ? 'Describe Your Meal' : 'Add Details (Optional)'}
                                 </label>
@@ -277,7 +277,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                                     value={caption}
                                     onChange={e => setCaption(e.target.value)}
                                     placeholder={isTextOnly ? 'e.g. "A large bowl of oatmeal with a sliced banana, 2 tablespoons of peanut butter, and a drizzle of honey"' : 'e.g. "salad with 2 spoons of olive oil"'}
-                                    className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-4 py-3 text-foreground placeholder-foreground-muted focus:outline-hidden focus:border-amber-500/50 transition-colors min-h-[100px] resize-none"
+                                    className="w-full bg-background-tertiary border border-line rounded-md px-4 py-3 text-foreground placeholder-foreground-muted focus:outline-hidden transition-colors min-h-[100px] resize-none"
                                     disabled={isAnalyzing}
                                 />
                                 <p className="text-[11px] text-foreground-muted mt-1.5 ml-1">
@@ -287,7 +287,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
 
                             {/* Error */}
                             {error && (
-                                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-sm text-red-400">
+                                <div className="bg-negative/10 border border-negative/20 rounded-md p-3 text-sm text-negative">
                                     {error}
                                 </div>
                             )}
@@ -297,7 +297,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                                 <button
                                     onClick={handleAnalyze}
                                     disabled={isAnalyzing || (!imageBase64 && !caption.trim())}
-                                    className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl flex items-center justify-center gap-2 hover:from-amber-600 hover:to-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-lg shadow-amber-500/20"
+                                    className="w-full py-3.5 bg-accent-orange text-white font-semibold rounded-md flex items-center justify-center gap-2 hover:bg-accent-orange/90 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                                 >
                                     {isAnalyzing ? (
                                         <>

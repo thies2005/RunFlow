@@ -92,7 +92,7 @@ export function EventsPanel({ goals, onAddSubGoal, onEditSubGoal, onRemoveSubGoa
                             <button
                                 type="button"
                                 onClick={() => onRemoveSubGoal(goal.id)}
-                                className="p-1 text-foreground-muted hover:text-red-400 transition-colors"
+                                className="p-1 text-foreground-muted hover:text-negative transition-colors"
                             >
                                 <Trash2 className="w-3 h-3" />
                             </button>

@@ -81,7 +81,7 @@ interface TrainingPaces {
 const AnalyticsTooltip = ({ active, payload, label }: AnalyticsTooltipProps) => {
     if (active && payload && payload.length) {
         return (
-            <div className="glass-card p-4 border border-glass-border">
+            <div className="glass-card p-4 border border-line">
                 {label && (
                     <p className="text-foreground-muted text-sm mb-2">
                         {label}
@@ -95,7 +95,7 @@ const AnalyticsTooltip = ({ active, payload, label }: AnalyticsTooltipProps) => 
                                 style={{ backgroundColor: entry.color || entry.stroke }}
                             />
                             <span className="text-foreground-muted">{entry.name}:</span>
-                            <span className="text-foreground font-medium">
+                            <span className="text-foreground font-medium font-mono tabular-nums">
                                 {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
                             </span>
                         </div>
@@ -161,14 +161,14 @@ export function AnalyticsView({
     return (
         <div className="min-h-screen bg-background">
             {showHeader && (
-                <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
+                <header className="topbar sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-4">
-                                <button onClick={() => router.push('/')} className="p-2 text-foreground-muted hover:text-foreground transition-colors">
+                                <button onClick={() => router.push('/')} className="p-2 transition-colors">
                                     <ArrowLeft className="w-5 h-5" />
                                 </button>
-                                <h1 className="text-xl font-bold text-foreground">Performance Analytics</h1>
+                                <h1 className="text-xl font-bold">Performance Analytics</h1>
                             </div>
                             <button
                                 onClick={onRecalculate}
@@ -195,7 +195,7 @@ export function AnalyticsView({
                     {/* Effective VO2max */}
                     <div className="glass-card p-6 text-center">
                         <p className="text-foreground-muted text-sm mb-2">Effective VO2max</p>
-                        <p className="text-4xl font-bold text-foreground">
+                        <p className="text-4xl font-bold text-foreground font-mono tabular-nums">
                             {runalyzeMetrics.effectiveVO2max > 0 ? runalyzeMetrics.effectiveVO2max.toFixed(1) : '-'}
                         </p>
                         <p className="text-xs text-foreground-muted mt-1">Pace + Heart Rate based</p>
@@ -204,12 +204,12 @@ export function AnalyticsView({
                     {/* Marathon Shape */}
                     <div className="glass-card p-6 text-center">
                         <p className="text-foreground-muted text-sm mb-2">Marathon Shape</p>
-                        <p className={`text-4xl font-bold ${runalyzeMetrics.shape >= 100 ? 'text-green-400' :
-                            runalyzeMetrics.shape >= 70 ? 'text-yellow-400' : 'text-red-400'
+                        <p className={`text-4xl font-bold font-mono tabular-nums ${runalyzeMetrics.shape >= 100 ? 'text-positive' :
+                            runalyzeMetrics.shape >= 70 ? 'text-workout-tempo' : 'text-negative'
                             }`}>
                             {runalyzeMetrics.shape}%
                         </p>
-                        <div className="flex justify-center gap-4 mt-2 text-xs text-foreground-muted">
+                        <div className="flex justify-center gap-4 mt-2 text-xs text-foreground-muted font-mono tabular-nums">
                             <span>Mileage: {runalyzeMetrics.mileageScore}%</span>
                             <span>Long Runs: {runalyzeMetrics.longRunScore}%</span>
                         </div>
@@ -219,7 +219,7 @@ export function AnalyticsView({
                     <div className="glass-card p-6 text-center relative">
                         <button
                             onClick={onOpenCalibration}
-                            className="absolute top-2 right-2 p-2 text-foreground-muted hover:text-accent-pink transition"
+                            className="absolute top-2 right-2 p-2 text-foreground-muted hover:text-foreground transition"
                             title="Calibrate"
                         >
                             <Settings className="w-5 h-5 text-foreground-muted" />
@@ -228,14 +228,14 @@ export function AnalyticsView({
                         <div className="flex justify-center items-baseline gap-3">
                             <div>
                                 <p className="text-xs text-foreground-muted">Optimal</p>
-                                <p className="text-lg font-semibold text-green-400">
+                                <p className="text-lg font-semibold text-positive font-mono tabular-nums">
                                     {runalyzeMetrics.optimalTime > 0 ? formatTime(runalyzeMetrics.optimalTime) : '-'}
                                 </p>
                             </div>
                             <span className="text-foreground-secondary">→</span>
                             <div>
                                 <p className="text-xs text-foreground-muted">Predicted</p>
-                                <p className="text-2xl font-bold text-foreground">
+                                <p className="text-2xl font-bold text-foreground font-mono tabular-nums">
                                     {runalyzeMetrics.predictedTime > 0 ? formatTime(runalyzeMetrics.predictedTime) : '-'}
                                 </p>
                             </div>
@@ -274,33 +274,33 @@ export function AnalyticsView({
                 <div className="glass-card p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-4">Training Paces</h3>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                            <p className="text-green-400 text-xs font-semibold mb-1 uppercase">Easy</p>
-                            <p className="text-foreground font-bold text-lg">
+                        <div className="p-4 rounded-md bg-zone-1/10 border border-zone-1/20 text-center">
+                            <p className="text-zone-1 text-xs font-semibold mb-1">Easy</p>
+                            <p className="text-foreground font-semibold text-lg font-mono tabular-nums">
                                 {trainingPaces?.easy ? `${formatPace(trainingPaces.easy.min)} - ${formatPace(trainingPaces.easy.max)}` : '-'}
                             </p>
                         </div>
-                        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
-                            <p className="text-blue-400 text-xs font-semibold mb-1 uppercase">Marathon</p>
-                            <p className="text-foreground font-bold text-lg">
+                        <div className="p-4 rounded-md bg-accent-blue/10 border border-accent-blue/20 text-center">
+                            <p className="text-accent-blue text-xs font-semibold mb-1">Marathon</p>
+                            <p className="text-foreground font-semibold text-lg font-mono tabular-nums">
                                 {trainingPaces?.marathon ? formatPace(trainingPaces.marathon) : '-'}
                             </p>
                         </div>
-                        <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
-                            <p className="text-yellow-400 text-xs font-semibold mb-1 uppercase">Threshold</p>
-                            <p className="text-foreground font-bold text-lg">
+                        <div className="p-4 rounded-md bg-zone-3/10 border border-zone-3/20 text-center">
+                            <p className="text-zone-3 text-xs font-semibold mb-1">Threshold</p>
+                            <p className="text-foreground font-semibold text-lg font-mono tabular-nums">
                                 {trainingPaces?.threshold ? formatPace(trainingPaces.threshold) : '-'}
                             </p>
                         </div>
-                        <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
-                            <p className="text-orange-400 text-xs font-semibold mb-1 uppercase">Interval</p>
-                            <p className="text-foreground font-bold text-lg">
+                        <div className="p-4 rounded-md bg-zone-4/10 border border-zone-4/20 text-center">
+                            <p className="text-zone-4 text-xs font-semibold mb-1">Interval</p>
+                            <p className="text-foreground font-semibold text-lg font-mono tabular-nums">
                                 {trainingPaces?.interval ? formatPace(trainingPaces.interval) : '-'}
                             </p>
                         </div>
-                        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
-                            <p className="text-red-400 text-xs font-semibold mb-1 uppercase">Repetition</p>
-                            <p className="text-foreground font-bold text-lg">
+                        <div className="p-4 rounded-md bg-zone-5/10 border border-zone-5/20 text-center">
+                            <p className="text-zone-5 text-xs font-semibold mb-1">Repetition</p>
+                            <p className="text-foreground font-semibold text-lg font-mono tabular-nums">
                                 {trainingPaces?.repetition ? formatPace(trainingPaces.repetition) : '-'}
                             </p>
                         </div>
@@ -316,11 +316,11 @@ export function AnalyticsView({
                             <div className="h-64">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={vo2TrendData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                                         <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                         <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
                                         <Tooltip content={<AnalyticsTooltip />} />
-                                        <Line type="monotone" dataKey="vo2Rolling" stroke="#f59e0b" strokeWidth={2} dot={false} name="VO2max" />
+                                        <Line type="monotone" dataKey="vo2Rolling" stroke="var(--positive)" strokeWidth={2} dot={false} name="VO2max" />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
@@ -334,11 +334,11 @@ export function AnalyticsView({
                             <div className="h-64">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={shapeTrendData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
+                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                                         <XAxis dataKey="week" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                         <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={[0, 120]} />
                                         <Tooltip content={<AnalyticsTooltip />} />
-                                        <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Shape %" />
+                                        <Area type="monotone" dataKey="shape" stroke="var(--accent-blue)" fill="var(--accent-blue)" fillOpacity={0.08} name="Shape %" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
@@ -353,14 +353,14 @@ export function AnalyticsView({
                         <div className="h-72">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={fitnessData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                                     <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                     <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                     <Tooltip content={<AnalyticsTooltip />} />
                                     <Legend />
-                                    <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} name="Fitness (CTL)" />
-                                    <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} dot={false} name="Fatigue (ATL)" />
-                                    <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} dot={false} name="Form (TSB)" />
+                                    <Line type="monotone" dataKey="ctl" stroke="var(--accent-blue)" strokeWidth={2} dot={false} name="Fitness (CTL)" />
+                                    <Line type="monotone" dataKey="atl" stroke="var(--workout-tempo)" strokeWidth={2} dot={false} name="Fatigue (ATL)" />
+                                    <Line type="monotone" dataKey="tsb" stroke="var(--accent-orange)" strokeWidth={2} dot={false} name="Form (TSB)" />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>

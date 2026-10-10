@@ -42,7 +42,7 @@ function FitnessChart({ data, isLoading }: FitnessChartProps) {
     if (isLoading) {
         return (
             <div className="glass-card p-6 h-80 flex items-center justify-center">
-                <div className="animate-pulse text-foreground-muted">Loading fitness data...</div>
+                <div className="text-foreground-muted">Loading fitness data...</div>
             </div>
         );
     }
@@ -71,27 +71,16 @@ function FitnessChart({ data, isLoading }: FitnessChartProps) {
                 </span>
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={chartData}>
-                        <defs>
-                            <linearGradient id="ctlGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id="atlGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-
                         <XAxis
                             dataKey="dateFormatted"
                             stroke="var(--foreground-muted)"
                             tick={{ fill: 'var(--foreground-muted)', fontSize: 12 }}
-                            axisLine={{ stroke: 'var(--glass-border)' }}
+                            axisLine={{ stroke: 'var(--line)' }}
                         />
                         <YAxis
                             stroke="var(--foreground-muted)"
                             tick={{ fill: 'var(--foreground-muted)', fontSize: 12 }}
-                            axisLine={{ stroke: 'var(--glass-border)' }}
+                            axisLine={{ stroke: 'var(--line)' }}
                         />
                         <Tooltip content={<ChartTooltip
                             labelFormatter={(label: any) => format(new Date(label), 'MMM d, yyyy')}
@@ -132,25 +121,27 @@ function FitnessChart({ data, isLoading }: FitnessChartProps) {
                         <Area
                             type="monotone"
                             dataKey="ctl"
-                            stroke="#3b82f6"
+                            stroke="var(--accent-blue)"
                             strokeWidth={2}
-                            fill="url(#ctlGradient)"
+                            fill="var(--accent-blue)"
+                            fillOpacity={0.08}
                         />
 
                         {/* ATL - Acute Training Load (Fatigue) */}
                         <Area
                             type="monotone"
                             dataKey="atl"
-                            stroke="#ef4444"
+                            stroke="var(--workout-tempo)"
                             strokeWidth={2}
-                            fill="url(#atlGradient)"
+                            fill="var(--workout-tempo)"
+                            fillOpacity={0.08}
                         />
 
                         {/* TSB - Training Stress Balance (Form) */}
                         <Line
                             type="monotone"
                             dataKey="tsb"
-                            stroke="#10b981"
+                            stroke="var(--accent-orange)"
                             strokeWidth={2}
                             dot={false}
                         />
@@ -161,17 +152,17 @@ function FitnessChart({ data, isLoading }: FitnessChartProps) {
             {/* Legend explanation */}
             <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
                 <div className="text-center">
-                    <div className="w-3 h-3 rounded-full bg-blue-500 mx-auto mb-1" />
+                    <div className="w-3 h-3 rounded-full bg-[var(--accent-blue)] mx-auto mb-1" />
                     <p className="text-foreground-muted">Fitness</p>
                     <p className="xs text-foreground-muted opacity-70">42-day average</p>
                 </div>
                 <div className="text-center">
-                    <div className="w-3 h-3 rounded-full bg-red-500 mx-auto mb-1" />
+                    <div className="w-3 h-3 rounded-full bg-[var(--workout-tempo)] mx-auto mb-1" />
                     <p className="text-foreground-muted">Fatigue</p>
                     <p className="xs text-foreground-muted opacity-70">7-day average</p>
                 </div>
                 <div className="text-center">
-                    <div className="w-3 h-3 rounded-full bg-emerald-500 mx-auto mb-1" />
+                    <div className="w-3 h-3 rounded-full bg-[var(--accent-orange)] mx-auto mb-1" />
                     <p className="text-foreground-muted">Form</p>
                     <p className="xs text-foreground-muted opacity-70">Fitness - Fatigue</p>
                 </div>

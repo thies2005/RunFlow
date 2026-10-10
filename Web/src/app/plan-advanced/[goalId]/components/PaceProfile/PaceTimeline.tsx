@@ -9,11 +9,11 @@ interface PaceTimelineProps {
 }
 
 const PACE_COLORS: Record<string, string> = {
-    easy: 'bg-blue-400',
-    tempo: 'bg-orange-400',
-    interval: 'bg-red-400',
-    repetition: 'bg-yellow-400',
-    longRun: 'bg-green-400',
+    easy: 'bg-accent-blue',
+    tempo: 'bg-workout-tempo',
+    interval: 'bg-negative',
+    repetition: 'bg-workout-tempo',
+    longRun: 'bg-positive',
 };
 
 const PACE_KEYS: Array<{ key: keyof PaceProfilePhase; label: string; paceKey: string }> = [

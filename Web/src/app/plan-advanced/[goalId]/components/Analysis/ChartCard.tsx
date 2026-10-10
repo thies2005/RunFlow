@@ -15,7 +15,7 @@ export function ChartCard({ title, tooltip, children, emptyMessage, isEmpty }: C
     const [showTooltip, setShowTooltip] = useState(false);
 
     return (
-        <div className="border border-glass-border bg-background-secondary rounded-xl p-4">
+        <div className="border border-glass-border bg-background-secondary rounded-md p-4">
             <div className="flex items-center gap-2 mb-3">
                 <h3 className="text-sm font-semibold text-foreground-secondary">{title}</h3>
                 {tooltip && (
@@ -29,7 +29,7 @@ export function ChartCard({ title, tooltip, children, emptyMessage, isEmpty }: C
                             <Info className="w-3.5 h-3.5" />
                         </button>
                         {showTooltip && (
-                            <div className="absolute left-0 top-full mt-1 z-50 w-56 px-3 py-2 rounded-lg bg-background-tertiary border border-foreground/20 text-xs text-foreground-secondary shadow-xl">
+                            <div className="absolute left-0 top-full mt-1 z-50 w-56 px-3 py-2 rounded-md bg-background-tertiary border border-foreground/20 text-xs text-foreground-secondary">
                                 {tooltip}
                             </div>
                         )}

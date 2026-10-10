@@ -115,7 +115,7 @@ export function StructuredWorkoutEditor({ value, onChange, targetPace, paceZoneL
                 </div>
                 <div className="space-y-1.5">
                     {steps.main.map((step, i) => (
-                        <div key={i} className="bg-background-tertiary/50 rounded-md px-2 py-1.5">
+                        <div key={i} className="bg-background-tertiary rounded-md px-2 py-1.5">
                             <div className="flex items-center gap-1.5">
                                 <input
                                     type="number"
@@ -148,7 +148,7 @@ export function StructuredWorkoutEditor({ value, onChange, targetPace, paceZoneL
                                     type="button"
                                     onClick={() => removeMainSetStep(i)}
                                     disabled={steps.main.length <= 1}
-                                    className="ml-auto p-0.5 text-foreground-muted hover:text-red-400 disabled:opacity-30 transition-colors"
+                                    className="ml-auto p-0.5 text-foreground-muted hover:text-negative disabled:opacity-30 transition-colors"
                                 >
                                     <Minus className="w-3 h-3" />
                                 </button>
@@ -192,7 +192,7 @@ function SectionInput({
 }) {
     return (
         <div className="space-y-1">
-            <span className="text-[10px] text-foreground-muted uppercase tracking-wide">{label}</span>
+            <span className="text-[10px] text-foreground-muted">{label}</span>
             <div className="flex items-center gap-1">
                 <input
                     type="number"

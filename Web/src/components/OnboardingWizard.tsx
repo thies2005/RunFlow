@@ -172,7 +172,7 @@ export default function OnboardingWizard() {
                     ) : (
                         <div />
                     )}
-                    <span className="text-sm text-foreground-muted">
+                    <span className="text-sm text-foreground-muted font-mono tabular-nums">
                         Step {step + 1} of 5
                     </span>
                 </div>
@@ -180,7 +180,7 @@ export default function OnboardingWizard() {
                 {/* Step 0: Sync Platform Selection (for email users) */}
                 {step === 0 && (
                     <div className="max-w-2xl mx-auto animate-fade-in">
-                        <div className="w-16 h-16 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center mx-auto mb-6">
+                        <div className="w-16 h-16 rounded-md bg-workout-long-run/10 text-workout-long-run flex items-center justify-center mx-auto mb-6">
                             <Link2 className="w-8 h-8" />
                         </div>
                         <SyncPlatformSelector
@@ -201,7 +201,7 @@ export default function OnboardingWizard() {
                 {/* Step 1: Sync */}
                 {step === 1 && (
                     <div className="max-w-md mx-auto text-center space-y-6 animate-fade-in">
-                        <div className="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-6">
+                        <div className="w-16 h-16 rounded-md bg-accent-blue/10 text-accent-blue flex items-center justify-center mx-auto mb-6">
                             <RefreshCw className={`w-8 h-8 ${syncStatus?.syncInProgress ? 'animate-spin' : ''}`} />
                         </div>
 
@@ -213,10 +213,10 @@ export default function OnboardingWizard() {
                         <div className="glass-card p-6">
                             <div className="flex justify-between items-center mb-2">
                                 <span className="text-foreground-muted">Activities found</span>
-                                <span className="text-2xl font-bold">{syncStatus?.totalActivities || 0}</span>
+                                <span className="text-2xl font-bold font-mono tabular-nums">{syncStatus?.totalActivities || 0}</span>
                             </div>
                             {syncStatus?.syncInProgress && (
-                                <p className="text-sm text-blue-400 animate-pulse">
+                                <p className="text-sm text-accent-blue">
                                     Syncing active... this might take a minute.
                                 </p>
                             )}
@@ -229,7 +229,7 @@ export default function OnboardingWizard() {
                                     <select
                                         value={importRange}
                                         onChange={(e) => setImportRange(e.target.value)}
-                                        className="w-full bg-foreground/5 border border-foreground/10 rounded-lg p-3 text-foreground focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                        className="w-full bg-background-secondary border border-line rounded-md p-3 text-foreground focus:ring-2 focus:ring-accent-orange outline-hidden"
                                     >
                                         <option value="1_MONTH">Last Month</option>
                                         <option value="3_MONTHS">Last 3 Months</option>
@@ -303,7 +303,7 @@ export default function OnboardingWizard() {
                 {/* Step 3: Experience Level */}
                 {step === 3 && (
                     <div className="max-w-md mx-auto text-center space-y-6 animate-fade-in">
-                        <div className="w-16 h-16 rounded-2xl bg-green-500/20 text-green-400 flex items-center justify-center mx-auto mb-6">
+                        <div className="w-16 h-16 rounded-md bg-workout-recovery/10 text-workout-recovery flex items-center justify-center mx-auto mb-6">
                             <Zap className="w-8 h-8" />
                         </div>
 
@@ -321,10 +321,10 @@ export default function OnboardingWizard() {
                                 <button
                                     key={value}
                                     onClick={() => setExperienceLevel(value)}
-                                    className={`w-full p-4 rounded-xl border text-left transition-all ${
+                                    className={`w-full p-4 rounded-md border text-left transition-all ${
                                         experienceLevel === value
-                                            ? 'border-accent-orange bg-accent-orange/10 text-white'
-                                            : 'border-foreground/10 bg-foreground/5 text-foreground-muted hover:border-foreground/20'
+                                            ? 'border-accent-orange bg-accent-orange/10 text-foreground'
+                                            : 'border-line bg-background-secondary text-foreground-muted hover:border-line-strong'
                                     }`}
                                 >
                                     <div className="font-semibold">{label}</div>

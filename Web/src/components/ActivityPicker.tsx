@@ -70,7 +70,7 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
 
     return (
         <div className="space-y-2">
-            <label className="block text-xs text-foreground-muted mb-2 uppercase">
+            <label className="block text-xs text-foreground-muted mb-2">
                 Link to Activity (optional)
             </label>
 
@@ -78,13 +78,13 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
             <button
                 type="button"
                 onClick={() => onSelect(null)}
-                className={`w-full p-3 rounded-lg border text-left transition-all ${selectedId === null
+                className={`w-full p-3 rounded-md border text-left transition-colors ${selectedId === null
                     ? 'border-accent-orange bg-accent-orange/10'
-                    : 'border-foreground/10 bg-foreground/5 hover:bg-foreground/10'
+                    : 'border-line bg-background-secondary hover:bg-surface-hover'
                     }`}
             >
                 <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedId === null ? 'bg-accent-orange/20 text-accent-orange' : 'bg-foreground/10 text-foreground-muted'
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedId === null ? 'bg-accent-orange/20 text-accent-orange' : 'bg-background-tertiary text-foreground-muted'
                         }`}>
                         <Check className="w-4 h-4" />
                     </div>
@@ -102,13 +102,13 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
                     key={activity.id}
                     type="button"
                     onClick={() => onSelect(activity.id)}
-                    className={`w-full p-3 rounded-lg border text-left transition-all ${selectedId === activity.id
+                    className={`w-full p-3 rounded-md border text-left transition-colors ${selectedId === activity.id
                         ? 'border-accent-orange bg-accent-orange/10'
-                        : 'border-foreground/10 bg-foreground/5 hover:bg-foreground/10'
+                        : 'border-line bg-background-secondary hover:bg-surface-hover'
                         }`}
                 >
                     <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedId === activity.id ? 'bg-accent-orange/20 text-accent-orange' : 'bg-foreground/10 text-foreground-muted'
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedId === activity.id ? 'bg-accent-orange/20 text-accent-orange' : 'bg-background-tertiary text-foreground-muted'
                             }`}>
                             <Activity className="w-4 h-4" />
                         </div>
@@ -116,7 +116,7 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
                             <p className={`text-sm font-medium truncate ${selectedId === activity.id ? 'text-accent-orange' : 'text-foreground'}`}>
                                 {activity.name}
                             </p>
-                            <div className="flex items-center gap-3 text-xs text-foreground-muted">
+                            <div className="flex items-center gap-3 text-xs text-foreground-muted tabular-nums">
                                 <span>{format(new Date(activity.startDate), 'MMM d')}</span>
                                 <span>{(activity.distance / 1000).toFixed(1)} km</span>
                                 <span>{formatDuration(activity.movingTime)}</span>

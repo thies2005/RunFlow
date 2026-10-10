@@ -59,7 +59,7 @@ export function TemplateApplyDialog({ goalId, onClose, onComplete }: TemplateApp
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-background-secondary border border-foreground/20 rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
+            <div className="relative bg-background-secondary border border-foreground/20 rounded-md p-6 w-full max-w-sm mx-4">
                 <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                     <FileDown className="w-4 h-4 text-foreground-secondary" />
                     Apply Template
@@ -114,7 +114,7 @@ export function TemplateApplyDialog({ goalId, onClose, onComplete }: TemplateApp
                     </div>
 
                     {selectedTemplateId && weekCount > 0 && (
-                        <div className="p-2 rounded-md bg-background-tertiary/50 border border-glass-border">
+                        <div className="p-2 rounded-md bg-background-tertiary border border-glass-border">
                             <span className="text-xs text-foreground-muted">
                                 Template will be applied to {weekCount} week{weekCount !== 1 ? 's' : ''}
                                 {' '}(Week {startWeek}{startWeek !== endWeek ? ` - ${endWeek}` : ''})

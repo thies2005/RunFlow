@@ -939,40 +939,40 @@ export default function PlanSetupForm({
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 text-accent-orange mb-2">
                         <Target className="w-5 h-5" />
-                        <h3 className="text-sm font-semibold uppercase tracking-wide">Custom Triathlon Distances</h3>
+                        <h3 className="text-sm font-semibold">Custom Triathlon Distances</h3>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                         <div>
-                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Swim (m)</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Swim (m)</label>
                             <input
                                 type="number"
                                 value={customSwimDistM || ''}
                                 onChange={(e) => setCustomSwimDistM(parseFloat(e.target.value) || 0)}
                                 placeholder="1500"
                                 min={100}
-                                className="bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
+                                className="bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Bike (m)</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Bike (m)</label>
                             <input
                                 type="number"
                                 value={customBikeDistM || ''}
                                 onChange={(e) => setCustomBikeDistM(parseFloat(e.target.value) || 0)}
                                 placeholder="40000"
                                 min={1000}
-                                className="bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
+                                className="bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Run (m)</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Run (m)</label>
                             <input
                                 type="number"
                                 value={customRunDistM || ''}
                                 onChange={(e) => setCustomRunDistM(parseFloat(e.target.value) || 0)}
                                 placeholder="10000"
                                 min={1000}
-                                className="bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
+                                className="bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
                             />
                         </div>
                     </div>
@@ -1083,8 +1083,8 @@ export default function PlanSetupForm({
             {/* Start Weekly Mileage */}
             <div className="border-t border-glass-border pt-6">
                 <div className="flex justify-between mb-2">
-                    <label className="text-xs text-foreground-muted uppercase">Start Weekly Mileage</label>
-                    <span className="text-green-400 font-bold">{startWeeklyMileage} km</span>
+                    <label className="text-xs text-foreground-muted">Start Weekly Mileage</label>
+                    <span className="text-positive font-bold">{startWeeklyMileage} km</span>
                 </div>
                 <input
                     type="range"
@@ -1093,7 +1093,7 @@ export default function PlanSetupForm({
                     step="5"
                     value={startWeeklyMileage}
                     onChange={(e) => setStartWeeklyMileage(parseInt(e.target.value))}
-                    className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-green-500"
+                    className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-positive"
                 />
                 <div className="flex justify-between text-xs text-foreground-muted mt-1">
                     <span>0km</span>
@@ -1111,7 +1111,7 @@ export default function PlanSetupForm({
             {mode === 'advanced' && (
                 <div className="border-t border-glass-border pt-6">
                     <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs font-medium text-foreground-muted uppercase">Sub-Goals</label>
+                        <label className="text-xs font-medium text-foreground-muted">Sub-Goals</label>
                         {!showSubGoalForm && (
                             <button
                                 type="button"
@@ -1126,12 +1126,12 @@ export default function PlanSetupForm({
                     {subGoals.length > 0 && (
                         <div className="space-y-1.5 mb-2">
                             {subGoals.map((sg, i) => (
-                                <div key={i} className="flex items-center justify-between bg-surface border border-glass-border rounded-lg px-3 py-2">
+                                <div key={i} className="flex items-center justify-between bg-surface border border-glass-border rounded-md px-3 py-2">
                                     <div>
                                         <span className="text-xs text-foreground">{sg.name}</span>
                                         {sg.raceDate && <span className="text-[10px] text-foreground-muted ml-2">{sg.raceDate}</span>}
                                     </div>
-                                    <button type="button" onClick={() => setSubGoals(subGoals.filter((_, idx) => idx !== i))} className="text-foreground-muted hover:text-red-400 transition-colors">
+                                    <button type="button" onClick={() => setSubGoals(subGoals.filter((_, idx) => idx !== i))} className="text-foreground-muted hover:text-negative transition-colors">
                                         <X className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
@@ -1139,7 +1139,7 @@ export default function PlanSetupForm({
                         </div>
                     )}
                     {showSubGoalForm && (
-                        <div className="bg-surface border border-glass-border rounded-lg p-3 space-y-2">
+                        <div className="bg-surface border border-glass-border rounded-md p-3 space-y-2">
                             <input
                                 type="text"
                                 value={newSubGoal.name}
@@ -1206,7 +1206,7 @@ export default function PlanSetupForm({
                                 window.location.href = `/plan/${data.plan?.id ?? data.goal?.id}`;
                             }
                         }}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-glass-border text-foreground-muted hover:text-foreground hover:border-foreground-muted text-sm transition-colors"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-glass-border text-foreground-muted hover:text-foreground hover:border-foreground-muted text-sm transition-colors"
                     >
                         <Upload className="w-4 h-4" />
                         Import CSV
@@ -1217,9 +1217,9 @@ export default function PlanSetupForm({
             {/* Message */}
             {
                 message && (
-                    <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${message.includes('Error') || message.includes('Failed')
-                        ? 'bg-red-500/10 text-red-400'
-                        : 'bg-green-500/10 text-green-400'
+                    <div className={`p-3 rounded-md text-sm flex items-center gap-2 ${message.includes('Error') || message.includes('Failed')
+                        ? 'bg-negative/10 text-negative'
+                        : 'bg-positive/10 text-positive'
                         }`}>
                         <AlertCircle className="w-4 h-4" />
                         {message}
@@ -1273,7 +1273,7 @@ export default function PlanSetupForm({
                 mode === 'settings' && !showDeleteConfirm && (
                     <button
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-colors"
+                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-negative border border-negative/30 rounded-md hover:bg-negative/10 transition-colors"
                     >
                         <Trash2 className="w-4 h-4" />
                         Delete Plan
@@ -1283,20 +1283,20 @@ export default function PlanSetupForm({
 
             {
                 mode === 'settings' && showDeleteConfirm && (
-                    <div className="border border-red-500/30 rounded-xl p-4 space-y-3 bg-red-500/5">
-                        <p className="text-sm text-red-400 font-medium">Delete this plan and all future workouts?</p>
+                    <div className="border border-negative/30 rounded-md p-4 space-y-3 bg-negative/5">
+                        <p className="text-sm text-negative font-medium">Delete this plan and all future workouts?</p>
                         <p className="text-xs text-foreground-muted">Completed workouts are preserved. You can create a new plan from the onboarding flow.</p>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setShowDeleteConfirm(false)}
-                                className="flex-1 py-2 text-sm rounded-lg border border-glass-border text-foreground hover:bg-surface-hover transition-colors"
+                                className="flex-1 py-2 text-sm rounded-md border border-glass-border text-foreground hover:bg-surface-hover transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => deletePlanMutation.mutate()}
                                 disabled={deletePlanMutation.isPending}
-                                className="flex-1 py-2 text-sm rounded-lg bg-red-500 text-white font-medium flex items-center justify-center gap-2 hover:bg-red-600 transition-colors disabled:opacity-50"
+                                className="flex-1 py-2 text-sm rounded-md bg-negative text-white font-medium flex items-center justify-center gap-2 hover:bg-negative/85 transition-colors disabled:opacity-50"
                             >
                                 {deletePlanMutation.isPending ? (
                                     <>

@@ -96,7 +96,7 @@ export function UndoRedoButtons({ goalId }: UndoRedoButtonsProps) {
                         <ChevronDown className="w-3 h-3" />
                     </button>
                     {isOpen && (
-                        <div className="absolute left-0 top-full mt-1 w-64 bg-background-secondary border border-foreground/20 rounded-lg shadow-xl z-50 py-1 max-h-48 overflow-y-auto">
+                        <div className="absolute left-0 top-full mt-1 w-64 bg-background-secondary border border-foreground/20 rounded-md z-50 py-1 max-h-48 overflow-y-auto">
                             {snapshots.map((s: { id: string; description: string; createdAt: string }) => (
                                 <div
                                     key={s.id}

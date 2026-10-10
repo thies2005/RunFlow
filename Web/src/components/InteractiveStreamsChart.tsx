@@ -146,7 +146,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
     // Early return AFTER hooks
     if (!streams?.time || data.length === 0) {
         return (
-            <div className="flex items-center justify-center h-64 bg-foreground/5 rounded-xl border border-foreground/10">
+            <div className="flex items-center justify-center h-64 bg-background-secondary rounded-md border border-line">
                 <p className="text-foreground-muted">No stream data available</p>
             </div>
         );
@@ -172,7 +172,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                     <button
                         onClick={() => setEnabledMetrics(p => ({ ...p, heartrate: !p.heartrate }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.heartrate
-                            ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                            ? 'bg-negative/10 text-negative border-negative/20'
                             : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
@@ -183,7 +183,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                     <button
                         onClick={() => setEnabledMetrics(p => ({ ...p, pace: !p.pace }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.pace
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                            ? 'bg-accent-blue/10 text-accent-blue border-accent-blue/20'
                             : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
@@ -194,7 +194,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                     <button
                         onClick={() => setEnabledMetrics(p => ({ ...p, gap: !p.gap }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.gap
-                            ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                            ? 'bg-workout-tempo/10 text-workout-tempo border-workout-tempo/20'
                             : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
@@ -205,7 +205,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                     <button
                         onClick={() => setEnabledMetrics(p => ({ ...p, elevation: !p.elevation }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.elevation
-                            ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                            ? 'bg-positive/10 text-positive border-positive/20'
                             : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
@@ -216,7 +216,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                     <button
                         onClick={() => setEnabledMetrics(p => ({ ...p, cadence: !p.cadence }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.cadence
-                            ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                            ? 'bg-foreground-muted/10 text-foreground-secondary border-foreground-muted/20'
                             : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
@@ -225,14 +225,14 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                 )}
             </div>
 
-            <div className="h-[300px] md:h-[400px] w-full bg-foreground/5 rounded-xl border border-foreground/10 p-4">
+            <div className="h-[300px] md:h-[400px] w-full bg-background-secondary rounded-md border border-line p-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" opacity={0.4} vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                         <XAxis
                             dataKey="time"
                             tickFormatter={formatXAxis}
-                            stroke="#9CA3AF"
+                            stroke="var(--foreground-muted)"
                             fontSize={12}
                             tickLine={false}
                             axisLine={false}
@@ -284,7 +284,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                                 type="monotone"
                                 dataKey="heartrate"
                                 name="Heart Rate"
-                                stroke="#F87171"
+                                stroke="var(--negative)"
                                 strokeWidth={2}
                                 dot={false}
                                 activeDot={{ r: 4 }}
@@ -298,7 +298,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                                 type="monotone"
                                 dataKey="pace"
                                 name="Pace"
-                                stroke="#60A5FA"
+                                stroke="var(--accent-blue)"
                                 strokeWidth={2}
                                 dot={false}
                                 activeDot={{ r: 4 }}
@@ -312,7 +312,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                                 type="monotone"
                                 dataKey="gap"
                                 name="GAP"
-                                stroke="#22D3EE"
+                                stroke="var(--workout-tempo)"
                                 strokeWidth={2}
                                 strokeDasharray="5 3"
                                 dot={false}
@@ -327,7 +327,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                                 type="monotone"
                                 dataKey="elevation"
                                 name="Elevation"
-                                stroke="#4ADE80"
+                                stroke="var(--positive)"
                                 strokeWidth={2}
                                 dot={false}
                                 isAnimationActive={false}
@@ -340,7 +340,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                                 type="monotone"
                                 dataKey="cadence"
                                 name="Cadence"
-                                stroke="#FB923C"
+                                stroke="var(--foreground-muted)"
                                 strokeWidth={1}
                                 strokeDasharray="5 5"
                                 dot={false}

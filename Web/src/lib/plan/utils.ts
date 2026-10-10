@@ -1,27 +1,27 @@
 import { Activity, Clock, Zap, Bike, Mountain, Flag, Dumbbell, Waves, LucideIcon } from 'lucide-react';
 
 export const workoutStyles: Record<string, { color: string, icon: LucideIcon, label: string }> = {
-    EASY: { color: 'text-green-400', icon: Activity, label: 'Easy Run' },
-    LONG_RUN: { color: 'text-blue-400', icon: Mountain, label: 'Long Run' },
-    TEMPO: { color: 'text-yellow-400', icon: Zap, label: 'Tempo' },
-    INTERVALS: { color: 'text-red-400', icon: Zap, label: 'Intervals' },
-    FARTLEK: { color: 'text-amber-400', icon: Zap, label: 'Fartlek' },
-    REPETITIONS: { color: 'text-rose-400', icon: Zap, label: 'Repetitions' },
-    RECOVERY: { color: 'text-teal-400', icon: Activity, label: 'Recovery' },
-    REST: { color: 'text-gray-500', icon: Clock, label: 'Rest Day' },
-    RIDE: { color: 'text-orange-400', icon: Bike, label: 'Bike Ride' },
-    LONG_RIDE: { color: 'text-orange-300', icon: Bike, label: 'Long Ride' },
-    RIDE_INTERVALS: { color: 'text-red-400', icon: Bike, label: 'Bike Intervals' },
-    BRICK: { color: 'text-fuchsia-400', icon: Bike, label: 'Brick' },
-    SWIM: { color: 'text-cyan-400', icon: Waves, label: 'Swim' },
-    SWIM_DRILL: { color: 'text-sky-300', icon: Waves, label: 'Swim Drill' },
-    OPEN_WATER_SWIM: { color: 'text-cyan-300', icon: Waves, label: 'Open Water' },
-    TRANSITION_PRACTICE: { color: 'text-violet-400', icon: Clock, label: 'Transition' },
-    STRENGTH: { color: 'text-pink-400', icon: Dumbbell, label: 'Strength' },
-    CROSS_TRAIN: { color: 'text-lime-400', icon: Activity, label: 'Cross Training' },
-    DOUBLE_DAY: { color: 'text-indigo-400', icon: Activity, label: 'Double Day' },
-    OTHER: { color: 'text-gray-400', icon: Activity, label: 'Other' },
-    RACE: { color: 'text-purple-400', icon: Flag, label: 'Race' },
+    EASY: { color: 'text-workout-easy', icon: Activity, label: 'Easy Run' },
+    LONG_RUN: { color: 'text-workout-long-run', icon: Mountain, label: 'Long Run' },
+    TEMPO: { color: 'text-workout-tempo', icon: Zap, label: 'Tempo' },
+    INTERVALS: { color: 'text-workout-interval', icon: Zap, label: 'Intervals' },
+    FARTLEK: { color: 'text-accent-orange', icon: Zap, label: 'Fartlek' },
+    REPETITIONS: { color: 'text-workout-interval', icon: Zap, label: 'Repetitions' },
+    RECOVERY: { color: 'text-workout-recovery', icon: Activity, label: 'Recovery' },
+    REST: { color: 'text-foreground-muted', icon: Clock, label: 'Rest Day' },
+    RIDE: { color: 'text-accent-blue', icon: Bike, label: 'Bike Ride' },
+    LONG_RIDE: { color: 'text-accent-blue', icon: Bike, label: 'Long Ride' },
+    RIDE_INTERVALS: { color: 'text-workout-interval', icon: Bike, label: 'Bike Intervals' },
+    BRICK: { color: 'text-workout-long-run', icon: Bike, label: 'Brick' },
+    SWIM: { color: 'text-accent-blue', icon: Waves, label: 'Swim' },
+    SWIM_DRILL: { color: 'text-accent-blue', icon: Waves, label: 'Swim Drill' },
+    OPEN_WATER_SWIM: { color: 'text-accent-blue', icon: Waves, label: 'Open Water' },
+    TRANSITION_PRACTICE: { color: 'text-foreground-muted', icon: Clock, label: 'Transition' },
+    STRENGTH: { color: 'text-workout-strength', icon: Dumbbell, label: 'Strength' },
+    CROSS_TRAIN: { color: 'text-workout-easy', icon: Activity, label: 'Cross Training' },
+    DOUBLE_DAY: { color: 'text-foreground-secondary', icon: Activity, label: 'Double Day' },
+    OTHER: { color: 'text-foreground-muted', icon: Activity, label: 'Other' },
+    RACE: { color: 'text-workout-race', icon: Flag, label: 'Race' },
 };
 
 export const RUN_TYPES = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'RECOVERY', 'RACE', 'REPETITIONS'];
@@ -32,11 +32,11 @@ export function getPhase(weeksUntilRace: number, options?: { taperWeeks?: number
     const peakWeeks = options?.peakWeeks ?? 0;
     const buildWeeks = options?.buildWeeks ?? 0;
 
-    if (weeksUntilRace === 1) return { name: 'RACE WEEK', color: 'text-red-400 border-red-500/30 bg-red-500/10' };
-    if (taperWeeks > 0 && weeksUntilRace <= taperWeeks) return { name: 'TAPER', color: 'text-teal-400 border-teal-500/30 bg-teal-500/10' };
-    if (peakWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks) return { name: 'PEAK', color: 'text-purple-400 border-purple-500/30 bg-purple-500/10' };
-    if (buildWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks + buildWeeks) return { name: 'BUILD', color: 'text-orange-400 border-orange-500/30 bg-orange-500/10' };
-    return { name: 'BASE', color: 'text-blue-400 border-blue-500/30 bg-blue-500/10' };
+    if (weeksUntilRace === 1) return { name: 'RACE WEEK', color: 'text-workout-interval border-workout-interval/40 bg-workout-interval/10' };
+    if (taperWeeks > 0 && weeksUntilRace <= taperWeeks) return { name: 'TAPER', color: 'text-workout-recovery border-workout-recovery/40 bg-workout-recovery/10' };
+    if (peakWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks) return { name: 'PEAK', color: 'text-workout-long-run border-workout-long-run/40 bg-workout-long-run/10' };
+    if (buildWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks + buildWeeks) return { name: 'BUILD', color: 'text-accent-orange border-accent-orange/40 bg-accent-orange/10' };
+    return { name: 'BASE', color: 'text-accent-blue border-accent-blue/40 bg-accent-blue/10' };
 }
 
 // Helper function to format running pace (min/km)

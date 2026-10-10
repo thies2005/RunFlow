@@ -75,7 +75,7 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
     };
 
     return (
-        <div className={`flex flex-col h-full bg-background-secondary border-r border-foreground/5 ${className}`}>
+        <div className={`flex flex-col h-full bg-background-secondary border-r border-line ${className}`}>
             <div className="p-4">
                 <button
                     onClick={() => {
@@ -86,7 +86,7 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
                         }
                         if (onCloseMobile) onCloseMobile();
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-purple-900/20"
+                    className="w-full flex items-center gap-3 px-4 py-3 bg-accent-orange hover:bg-accent-orange/90 text-white rounded-md transition-colors"
                 >
                     <Plus className="w-5 h-5" />
                     <span className="font-medium">New Chat</span>
@@ -108,20 +108,20 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
                             key={session.id}
                             href={`/chat?sessionId=${session.id}`}
                             onClick={onCloseMobile}
-                            className={`group flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${sessionId === session.id
-                                ? 'bg-foreground/10 text-foreground'
-                                : 'text-foreground-muted hover:bg-foreground/5 hover:text-foreground-secondary'
+                            className={`group flex items-center justify-between px-3 py-3 rounded-md text-sm transition-colors ${sessionId === session.id
+                                ? 'bg-background-tertiary text-foreground'
+                                : 'text-foreground-muted hover:bg-background-tertiary hover:text-foreground-secondary'
                                 }`}
                         >
                             <div className="flex items-center gap-3 overflow-hidden">
-                                <MessageSquare className={`w-4 h-4 flex-shrink-0 ${sessionId === session.id ? 'text-purple-400' : 'text-foreground-muted'
+                                <MessageSquare className={`w-4 h-4 flex-shrink-0 ${sessionId === session.id ? 'text-accent-orange' : 'text-foreground-muted'
                                     }`} />
                                 <span className="truncate">{session.title}</span>
                             </div>
 
                             <button
                                 onClick={(e) => handleDelete(e, session.id)}
-                                className={`opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded-md transition-all ${deletingId === session.id ? 'opacity-100 text-red-400' : ''
+                                className={`opacity-0 group-hover:opacity-100 p-1.5 hover:bg-negative/10 hover:text-negative rounded-sm transition-colors ${deletingId === session.id ? 'opacity-100 text-negative' : ''
                                     }`}
                             >
                                 {deletingId === session.id ? (
@@ -135,10 +135,10 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
                 )}
             </div>
 
-            <div className="p-4 border-t border-foreground/5">
+            <div className="p-4 border-t border-line">
                 <button
                     onClick={handleDeleteAll}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs text-negative hover:bg-negative/10 rounded-md transition-colors"
                 >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Delete All History</span>

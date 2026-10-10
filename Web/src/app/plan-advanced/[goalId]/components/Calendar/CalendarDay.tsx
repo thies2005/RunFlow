@@ -24,17 +24,17 @@ export function CalendarDay({ date, workouts, raceDate, selectedDate, onClick }:
             onClick={() => onClick?.(date)}
             className={`
                 flex flex-col items-center justify-center p-0.5 rounded-md transition-colors
-                ${today ? 'ring-1 ring-orange-400/50 bg-orange-500/10' : ''}
-                ${isSelected ? 'bg-foreground/15' : 'hover:bg-background-tertiary/60'}
+                ${today ? 'ring-1 ring-accent-orange/50 bg-accent-orange/10' : ''}
+                ${isSelected ? 'bg-foreground/15' : 'hover:bg-background-tertiary'}
                 ${isWeekend ? 'text-foreground-muted' : 'text-foreground-secondary'}
                 w-full h-7 text-xs
             `}
         >
-            <span className={`text-[10px] leading-none ${today ? 'text-orange-400 font-bold' : ''}`}>
+            <span className={`text-[10px] leading-none font-mono tabular-nums ${today ? 'text-accent-orange font-bold' : ''}`}>
                 {dayNumber}
             </span>
             {isRaceDay ? (
-                <span className="text-[8px] text-purple-400 leading-none mt-0.5">&#9670;</span>
+                <span className="text-[8px] text-workout-long-run leading-none mt-0.5">&#9670;</span>
             ) : workouts.length > 0 ? (
                 <div className="flex gap-0.5 mt-0.5 flex-wrap justify-center">
                     {workouts.slice(0, 3).map((w, i) => (

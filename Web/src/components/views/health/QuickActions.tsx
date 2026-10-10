@@ -13,21 +13,21 @@ export function QuickActions({ onOpenAiScan, onOpenBarcode, onOpenSearch, onOpen
         <>
             <FastingWidget />
             <div className="grid grid-cols-4 gap-3">
-                <button type="button" onClick={onOpenAiScan} className="glass-card border border-glass-border py-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all hover:bg-foreground/10 active:scale-[0.98]">
-                    <Sparkles className="w-5 h-5 text-amber-400" />
-                    <span className="text-[10px] font-bold uppercase text-foreground">AI Scan</span>
+                <button type="button" onClick={onOpenAiScan} className="glass-card glass-card-hover py-3 flex flex-col items-center gap-1.5">
+                    <Sparkles className="w-5 h-5 text-workout-tempo" />
+                    <span className="text-[10px] font-semibold text-foreground">AI Scan</span>
                 </button>
-                <button type="button" onClick={onOpenBarcode} className="glass-card border border-glass-border py-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all hover:bg-foreground/10 active:scale-[0.98]">
-                    <Camera className="w-5 h-5 text-blue-400" />
-                    <span className="text-[10px] font-bold uppercase text-foreground">Barcode</span>
+                <button type="button" onClick={onOpenBarcode} className="glass-card glass-card-hover py-3 flex flex-col items-center gap-1.5">
+                    <Camera className="w-5 h-5 text-accent-blue" />
+                    <span className="text-[10px] font-semibold text-foreground">Barcode</span>
                 </button>
-                <button type="button" onClick={onOpenSearch} className="glass-card border border-glass-border py-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all hover:bg-foreground/10 active:scale-[0.98]">
-                    <Search className="w-5 h-5 text-green-400" />
-                    <span className="text-[10px] font-bold uppercase text-foreground">Search</span>
+                <button type="button" onClick={onOpenSearch} className="glass-card glass-card-hover py-3 flex flex-col items-center gap-1.5">
+                    <Search className="w-5 h-5 text-positive" />
+                    <span className="text-[10px] font-semibold text-foreground">Search</span>
                 </button>
-                <button type="button" onClick={onOpenLibrary} className="glass-card border border-glass-border py-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all hover:bg-foreground/10 active:scale-[0.98]">
-                    <BookOpen className="w-5 h-5 text-purple-400" />
-                    <span className="text-[10px] font-bold uppercase text-foreground">Library</span>
+                <button type="button" onClick={onOpenLibrary} className="glass-card glass-card-hover py-3 flex flex-col items-center gap-1.5">
+                    <BookOpen className="w-5 h-5 text-workout-long-run" />
+                    <span className="text-[10px] font-semibold text-foreground">Library</span>
                 </button>
             </div>
         </>

@@ -10,10 +10,10 @@ interface WeeklyLoadChartProps {
 }
 
 const MODALITY_COLORS = {
-    run: '#14b8a6',
-    bike: '#f97316',
-    swim: '#3b82f6',
-    strength: '#a855f7',
+    run: '#2e7d5b',
+    bike: '#b45309',
+    swim: '#1f4fa8',
+    strength: '#7a52be',
 };
 
 const MODALITY_LABELS: Record<string, string> = {
@@ -26,7 +26,7 @@ const MODALITY_LABELS: Record<string, string> = {
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey: string; value: number; color: string }>; label?: string }) => {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-background-tertiary border border-foreground/20 rounded-lg px-3 py-2 shadow-xl">
+        <div className="bg-background-tertiary border border-foreground/20 rounded-md px-3 py-2">
             <p className="text-xs text-foreground-secondary mb-1">{label}</p>
             {payload.map((entry, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs">
@@ -48,15 +48,15 @@ export function WeeklyLoadChart({ data }: WeeklyLoadChartProps) {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,128,140,0.3)" />
                 <XAxis
                     dataKey="label"
-                    tick={{ fontSize: 11, fill: "#71717a" }}
+                    tick={{ fontSize: 11, fill: "#6e747b" }}
                     axisLine={{ stroke: 'rgba(128,128,140,0.45)' }}
                     tickLine={false}
                 />
                 <YAxis
-                    tick={{ fontSize: 11, fill: "#71717a" }}
+                    tick={{ fontSize: 11, fill: "#6e747b" }}
                     axisLine={false}
                     tickLine={false}
-                    label={{ value: 'Hours', angle: -90, position: 'insideLeft', style: { fontSize: 11, fill: "#71717a" } }}
+                    label={{ value: 'Hours', angle: -90, position: 'insideLeft', style: { fontSize: 11, fill: "#6e747b" } }}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend

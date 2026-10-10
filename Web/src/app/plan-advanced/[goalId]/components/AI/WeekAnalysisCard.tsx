@@ -13,9 +13,9 @@ interface WeekAnalysisCardProps {
 }
 
 const SEVERITY_CONFIG = {
-    ok: { border: 'border-l-green-500', bg: 'bg-green-500/5' },
-    warning: { border: 'border-l-amber-500', bg: 'bg-amber-500/5' },
-    error: { border: 'border-l-red-500', bg: 'bg-red-500/5' },
+    ok: { border: 'border-l-green-500', bg: 'bg-positive/5' },
+    warning: { border: 'border-l-amber-500', bg: 'bg-workout-tempo/5' },
+    error: { border: 'border-l-red-500', bg: 'bg-negative/5' },
 };
 
 export function WeekAnalysisCard({ weekIndex, phase, commentary, severity = 'ok', score }: WeekAnalysisCardProps) {
@@ -24,7 +24,7 @@ export function WeekAnalysisCard({ weekIndex, phase, commentary, severity = 'ok'
     const truncated = commentary.length > 120;
 
     return (
-        <div className={`rounded-lg border border-glass-border border-l-2 ${config.border} ${config.bg}`}>
+        <div className={`rounded-md border border-glass-border border-l-2 ${config.border} ${config.bg}`}>
             <button
                 type="button"
                 onClick={() => truncated && setExpanded(!expanded)}
@@ -32,13 +32,13 @@ export function WeekAnalysisCard({ weekIndex, phase, commentary, severity = 'ok'
             >
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-foreground-secondary">Week {weekIndex}</span>
+                        <span className="text-xs font-medium text-foreground-secondary">Week <span className="font-mono tabular-nums">{weekIndex}</span></span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-background-tertiary text-foreground-secondary border border-foreground/20">
                             {phase}
                         </span>
                         {score != null && (
                             <span className={`text-[10px] font-medium ${
-                                score >= 75 ? 'text-green-400' : score >= 50 ? 'text-amber-400' : 'text-red-400'
+                                score >= 75 ? 'text-positive' : score >= 50 ? 'text-workout-tempo' : 'text-negative'
                             }`}>
                                 {score}pts
                             </span>

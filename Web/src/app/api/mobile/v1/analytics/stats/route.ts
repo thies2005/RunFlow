@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
+import { computeCoreMetrics } from '@/lib/metrics/coreMetrics';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse, errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { getRedisClient } from '@/lib/redis';
@@ -72,12 +73,15 @@ export async function GET(request: NextRequest) {
         const currentVdot = activeGoal?.currentVdot || null;
 
         // Try Cache
-        // Cache key includes update timestamps and count to ensure validity (even on deletion)
+        // Cache key includes update timestamps and count to ensure validity (even on deletion).
+        // v2: the response gained the two-metric fields (bestEffortVdot,
+        // aerobicVo2max, computedAt) — bumping the version keeps pre-deploy
+        // cached entries (without them) from being served.
         const userUpdate = userData?.updatedAt?.getTime() || 0;
         const goalUpdate = activeGoal?.updatedAt?.getTime() || 0;
         const activityUpdate = lastActivityUpdate?.updatedAt?.getTime() || 0;
 
-        const cacheKey = `analytics:stats:${user.id}:v1:${userUpdate}:${goalUpdate}:${activityUpdate}:${activityCount}`;
+        const cacheKey = `analytics:stats:${user.id}:v2:${userUpdate}:${goalUpdate}:${activityUpdate}:${activityCount}`;
 
         if (redis) {
             try {
@@ -133,20 +137,24 @@ export async function GET(request: NextRequest) {
         }
 
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
-        const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+        // Two-metric core — the SAME shared computation /api/analytics/stats
+        // uses, so the two endpoints can never disagree: bestEffortVdot is the
+        // planning metric (0 when no run qualifies), aerobicVo2max the
+        // HR-based fitness trend (display only, never feeds paces).
+        const { bestEffortVdot, aerobicVo2max, rawVo2max } = computeCoreMetrics(runActivities, maxHR, vdotCorrectionFactor);
         // Conditionally include cross-training based on user preference
         const marathonShape = AnalyticsService.calculateShape(
             runActivities,
             includeCrossTraining ? crossTrainingActivities : [],
-            effectiveVO2max
+            aerobicVo2max
         );
         const { ctl, atl, tsb, workloadRatio } = AnalyticsService.calculateFitnessMetrics(runActivities);
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
         const responseData = {
             currentWeekMileage,
-            effectiveVO2max,
-            rawVO2max,
+            effectiveVO2max: aerobicVo2max,
+            rawVO2max: rawVo2max,
             vdotCorrectionFactor,
             marathonShape,
             currentVdot,
@@ -155,7 +163,13 @@ export async function GET(request: NextRequest) {
             tsb,
             workloadRatio,
             easyTrimp,
-            hrMax: maxHR
+            hrMax: maxHR,
+            // Two-metric extension (web parity with /api/analytics/stats):
+            // the Android app caches these three and prefers them while fresh,
+            // falling back to its on-device engine when stale or absent.
+            bestEffortVdot,
+            aerobicVo2max,
+            computedAt: new Date().toISOString(),
         };
 
         // Update Cache

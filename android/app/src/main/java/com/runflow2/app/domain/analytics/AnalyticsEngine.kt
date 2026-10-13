@@ -43,6 +43,12 @@ data class AnalyticsBundle(
     val weeklyVolume: List<WeekVolume>,
     val vdotTrend: List<VdotPoint>,
     val totalRuns: Int,
+    // ---- server-override fields (set by RunFlowRepository after compute();
+    // the engine itself always produces the LOCAL defaults) ----
+    /** HR-based aerobic-fitness trend from a fresh server snapshot (display only). */
+    val aerobicVo2max: Double? = null,
+    /** Which source won the VDOT pair — UI must never mix the two sources. */
+    val vdotSource: MetricSource = MetricSource.LOCAL,
 )
 
 object AnalyticsEngine {

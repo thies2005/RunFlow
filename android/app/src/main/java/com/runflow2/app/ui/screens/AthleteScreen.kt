@@ -145,16 +145,19 @@ fun AthleteScreen(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
+                        // Full width so the long two-metric label never
+                        // truncates against the neighboring tiles.
+                        StatTile(
+                            label = "VDOT (Training Paces)",
+                            value = Format.oneDecimal(analytics?.effectiveVdot),
+                            icon = Icons.Outlined.MonitorHeart,
+                            accent = Vo2Accent,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
-                            StatTile(
-                                label = "VDOT",
-                                value = Format.oneDecimal(analytics?.effectiveVdot),
-                                icon = Icons.Outlined.MonitorHeart,
-                                accent = Vo2Accent,
-                            )
                             StatTile(
                                 label = "Runs",
                                 value = "${analytics?.totalRuns ?: 0}",

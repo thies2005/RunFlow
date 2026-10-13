@@ -148,11 +148,15 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            // weight(1f): the tile owns the space left of the
+                            // marathon-shape column, so the long two-metric
+                            // label wraps instead of ellipsizing.
                             StatTile(
-                                label = "VDOT",
+                                label = "VDOT (Training Paces)",
                                 value = Format.oneDecimal(a.effectiveVdot),
                                 icon = Icons.Outlined.MonitorHeart,
                                 accent = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f),
                             )
                             if (a.marathonShape != null) {
                                 Row(
@@ -190,6 +194,30 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                         )
                                     }
                                 }
+                            }
+                        }
+
+                        // Aerobic Fitness (VO2max) — the HR-based trend metric
+                        // from the server's two-metric stats (display only; it
+                        // never feeds paces — that is VDOT above). No local
+                        // computation exists, so it only shows when fresh.
+                        a.aerobicVo2max?.let { aerobic ->
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    "Aerobic Fitness (VO2max)",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    Format.oneDecimal(aerobic),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                )
                             }
                         }
 

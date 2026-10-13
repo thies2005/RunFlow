@@ -2,11 +2,13 @@ package com.runflow2.app.data.repo
 
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.runflow2.app.domain.analytics.ServerMetricSnapshot
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -79,6 +81,10 @@ class SettingsRepository(private val context: Context) {
         val READINESS_LAST_PUSH_AT = longPreferencesKey("readiness_last_push_at")
         val READINESS_SCORE_ENGINE = intPreferencesKey("readiness_score_engine")
         val BODY_AUTO_REFRESH_DAY = longPreferencesKey("body_auto_refresh_day")
+        // ---- server two-metric snapshot (VDOT + aerobic VO2max) ----
+        val SERVER_METRICS_VDOT = doublePreferencesKey("server_metrics_best_effort_vdot")
+        val SERVER_METRICS_AEROBIC_VO2MAX = doublePreferencesKey("server_metrics_aerobic_vo2max")
+        val SERVER_METRICS_COMPUTED_AT = longPreferencesKey("server_metrics_computed_at")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -216,4 +222,33 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setReadinessScoreEngine(version: Int) =
         context.dataStore.edit { it[Keys.READINESS_SCORE_ENGINE] = version }
+
+    // ---- server two-metric snapshot (VDOT + aerobic VO2max) ----
+
+    /**
+     * The server's last two-metric computation, or null when it was never
+     * fetched. Freshness is decided by [com.runflow2.app.domain.analytics.ServerMetrics]
+     * at read time, not here.
+     */
+    suspend fun serverMetricsSnapshotOnce(): ServerMetricSnapshot? {
+        val p = context.dataStore.data.first()
+        val vdot = p[Keys.SERVER_METRICS_VDOT] ?: return null
+        val computedAt = p[Keys.SERVER_METRICS_COMPUTED_AT] ?: return null
+        return ServerMetricSnapshot(
+            bestEffortVdot = vdot,
+            aerobicVo2max = p[Keys.SERVER_METRICS_AEROBIC_VO2MAX],
+            computedAtMs = computedAt,
+        )
+    }
+
+    /** Replaces the cached snapshot; a null aerobic value clears the previous one. */
+    suspend fun setServerMetrics(snapshot: ServerMetricSnapshot) = context.dataStore.edit {
+        it[Keys.SERVER_METRICS_VDOT] = snapshot.bestEffortVdot
+        it[Keys.SERVER_METRICS_COMPUTED_AT] = snapshot.computedAtMs
+        if (snapshot.aerobicVo2max != null) {
+            it[Keys.SERVER_METRICS_AEROBIC_VO2MAX] = snapshot.aerobicVo2max
+        } else {
+            it.remove(Keys.SERVER_METRICS_AEROBIC_VO2MAX)
+        }
+    }
 }

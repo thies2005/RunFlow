@@ -365,6 +365,24 @@ class ApiContractTest {
     // ---- readiness (daily health metrics + score sync) ----
 
     @Test
+    fun `analytics stats reads the two-metric fields`() = runTest {
+        server.enqueue(
+            MockResponse().setBody(
+                """{"currentWeekMileage":42.5,"effectiveVO2max":51.2,"rawVO2max":50.9,
+                   "vdotCorrectionFactor":1.0,"marathonShape":82,"currentVdot":null,
+                   "ctl":500,"atl":420,"tsb":80,"workloadRatio":0.84,"easyTrimp":300,
+                   "hrMax":190,"bestEffortVdot":53.4,"aerobicVo2max":51.2,
+                   "computedAt":"2026-10-13T09:30:00.000Z"}""".trimIndent()
+            )
+        )
+        val stats = api.analyticsStats()
+        assertEquals("/api/mobile/v1/analytics/stats", server.takeRequest().path)
+        assertEquals(53.4, stats.bestEffortVdot!!, 0.0)
+        assertEquals(51.2, stats.aerobicVo2max!!, 0.0)
+        assertEquals("2026-10-13T09:30:00.000Z", stats.computedAt)
+    }
+
+    @Test
     fun `readiness daily posts the payload and tolerates the serialized record reply`() = runTest {
         // the server upserts and answers serializeDailyRecord(record); the
         // Unit-typed call must accept a JSON body it never reads

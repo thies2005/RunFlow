@@ -623,7 +623,7 @@ private fun StepCalibration(
             Text("From your history", style = MaterialTheme.typography.titleSmall)
             Text(
                 if (analytics?.effectiveVdot != null)
-                    "VDOT (best effort): ${Format.oneDecimal(analytics.effectiveVdot)}"
+                    "VDOT (Training Paces): ${Format.oneDecimal(analytics.effectiveVdot)}"
                 else "No recent performances found — add a race result below.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

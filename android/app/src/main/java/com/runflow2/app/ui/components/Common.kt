@@ -114,7 +114,10 @@ fun StatTile(
                 label,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
+                // Two-metric labels ("VDOT (Training Paces)", "Aerobic Fitness
+                // (VO2max)") wrap like their web counterparts; short labels
+                // still render on a single line.
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             if (caption != null) {

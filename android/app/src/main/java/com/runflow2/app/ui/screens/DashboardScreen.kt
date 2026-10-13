@@ -66,6 +66,7 @@ import com.runflow2.app.core.util.LoginPrompt
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.analytics.AnalyticsBundle
+import com.runflow2.app.domain.analytics.MetricSource
 import com.runflow2.app.ui.components.DailyFormSheet
 import com.runflow2.app.ui.components.DeltaGood
 import com.runflow2.app.ui.components.InfoChip
@@ -219,11 +220,18 @@ fun DashboardScreen(
                     // frozen: reference is the newest trend/daily entry at
                     // least N days old (the first entry when the series is
                     // younger); suppressed when the change rounds to zero.
+                    // Server-sourced VDOT is never diffed against the local
+                    // trend series — the two sources are never mixed; the
+                    // caption returns on the next local computation.
                     val vdotDelta = a?.let { bundle ->
-                        bundle.effectiveVdot?.let { current ->
-                            val ref = bundle.vdotTrend.lastOrNull { it.date <= today.minusDays(30) }
-                                ?: bundle.vdotTrend.firstOrNull()
-                            ref?.let { current - it.vdot }
+                        if (bundle.vdotSource == MetricSource.SERVER) {
+                            null
+                        } else {
+                            bundle.effectiveVdot?.let { current ->
+                                val ref = bundle.vdotTrend.lastOrNull { it.date <= today.minusDays(30) }
+                                    ?: bundle.vdotTrend.firstOrNull()
+                                ref?.let { current - it.vdot }
+                            }
                         }
                     }?.takeIf { abs(it) >= 0.05 }
                     val ctlDelta = a?.let { bundle ->
@@ -274,17 +282,6 @@ fun DashboardScreen(
                                     icon = Icons.Outlined.DirectionsRun,
                                 )
                                 StatTile(
-                                    label = "VDOT",
-                                    value = Format.oneDecimal(a?.effectiveVdot),
-                                    icon = Icons.Outlined.MonitorHeart,
-                                    accent = MaterialTheme.colorScheme.tertiary,
-                                    caption = vdotDelta?.let {
-                                        if (it > 0) "Δ30d +${Format.oneDecimal(it)}"
-                                        else "Δ30d -${Format.oneDecimal(abs(it))}"
-                                    },
-                                    captionGood = vdotDelta?.let { it > 0 },
-                                )
-                                StatTile(
                                     label = "Fitness",
                                     value = Format.intOrDash(a?.ctl),
                                     icon = Icons.Outlined.Favorite,
@@ -296,6 +293,19 @@ fun DashboardScreen(
                                     captionGood = ctlDelta?.let { it > 0 },
                                 )
                             }
+                            // Full width so the long two-metric label never
+                            // truncates against the neighboring tiles.
+                            StatTile(
+                                label = "VDOT (Training Paces)",
+                                value = Format.oneDecimal(a?.effectiveVdot),
+                                icon = Icons.Outlined.MonitorHeart,
+                                accent = MaterialTheme.colorScheme.tertiary,
+                                caption = vdotDelta?.let {
+                                    if (it > 0) "Δ30d +${Format.oneDecimal(it)}"
+                                    else "Δ30d -${Format.oneDecimal(abs(it))}"
+                                },
+                                captionGood = vdotDelta?.let { it > 0 },
+                            )
                         }
                     }
                 }

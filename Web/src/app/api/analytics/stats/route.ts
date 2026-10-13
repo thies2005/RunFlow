@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
-import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
+import { computeCoreMetrics } from '@/lib/metrics/coreMetrics';
 import { getActivityContribution } from '@/lib/metrics/fitness';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
@@ -91,16 +91,16 @@ export async function GET(req: Request) {
 
         // 4. Compute Metrics via Service
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
-        // Aerobic-fitness trend (HR-based, Swain). Display/trend only — never
-        // feeds paces or planning.
-        const { rawVO2max, effectiveVO2max: calculatedAerobicVo2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+        // Two-metric core — the SAME shared computation the mobile endpoint
+        // (/api/mobile/v1/analytics/stats) uses, so the two can never disagree.
+        const { bestEffortVdot: computedVdot, aerobicVo2max: calculatedAerobicVo2max, rawVo2max: rawVO2max } =
+            computeCoreMetrics(runActivities, maxHR, vdotCorrectionFactor);
 
         // Planning VDOT: best-effort performance VDOT, computed live so it can
         // never lag behind the latest activities. The persisted
         // autoRevolvingVo2max (which stores the best-effort VDOT since the
         // two-metric change) is only a fallback for when no run qualifies
         // (>= 5 km within 90 days).
-        const computedVdot = bestEffortVdot(runActivities, vdotCorrectionFactor);
         const vdot = computedVdot > 0
             ? computedVdot
             : (autoRevolvingVo2max || 0);

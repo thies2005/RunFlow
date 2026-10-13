@@ -44,6 +44,9 @@ import com.runflow2.app.data.sync.toUpdateRequest
 import com.runflow2.app.domain.analytics.ActivityInput
 import com.runflow2.app.domain.analytics.AnalyticsBundle
 import com.runflow2.app.domain.analytics.AnalyticsEngine
+import com.runflow2.app.domain.analytics.MetricSource
+import com.runflow2.app.domain.analytics.ServerMetricSnapshot
+import com.runflow2.app.domain.analytics.ServerMetrics
 import com.runflow2.app.domain.model.ActivityType
 import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.RaceType
@@ -1067,12 +1070,66 @@ class RunFlowRepository(
     suspend fun analytics(rangeDays: Int = 365): AnalyticsBundle = withContext(Dispatchers.Default) {
         val profile = profileOnce()
         val acts = activityDao.all().map { it.toInput() }
-        AnalyticsEngine.compute(
-            activities = acts,
-            today = LocalDate.now(),
-            vdotCorrection = profile.vdotCorrection,
-            rangeDays = rangeDays,
+        applyServerMetrics(
+            AnalyticsEngine.compute(
+                activities = acts,
+                today = LocalDate.now(),
+                vdotCorrection = profile.vdotCorrection,
+                rangeDays = rangeDays,
+            ),
         )
+    }
+
+    /**
+     * Server-as-source-of-truth overlay on the on-device engine. When a fresh
+     * two-metric snapshot exists (see [ServerMetrics]), the server's values
+     * REPLACE the locally computed ones wholesale — never blended or averaged;
+     * when it is stale, absent or reports no value, the bundle stays exactly
+     * what [AnalyticsEngine] computed (the offline port — its math untouched).
+     */
+    private suspend fun applyServerMetrics(local: AnalyticsBundle): AnalyticsBundle {
+        val snapshot = settings?.serverMetricsSnapshotOnce() ?: return local
+        val now = System.currentTimeMillis()
+        val serverVdot = ServerMetrics.freshBestEffortVdot(snapshot, now)
+        val serverAerobic = ServerMetrics.freshAerobicVo2max(snapshot, now)
+        if (serverVdot == null && serverAerobic == null) return local
+        if (serverVdot == null) return local.copy(aerobicVo2max = serverAerobic)
+        // The server value already includes the correction factor; rawVdot stays
+        // the UNCORRECTED number the calibration UI divides by (race-result
+        // correction), so invert it mechanically — still one source, no mixing.
+        val raw = if (local.vdotCorrection > 0.0) serverVdot / local.vdotCorrection else serverVdot
+        return local.copy(
+            rawVdot = raw,
+            effectiveVdot = serverVdot,
+            aerobicVo2max = serverAerobic,
+            vdotSource = MetricSource.SERVER,
+        )
+    }
+
+    /**
+     * Fetches GET /api/mobile/v1/analytics/stats and caches the server's
+     * two-metric values with their computedAt timestamp (the freshness anchor).
+     * Called after a successful sync — online, the server is the source of
+     * truth for both metrics; offline, [analytics] falls back to the on-device
+     * engine. Responses without the two-metric fields (older servers) leave
+     * the previous snapshot untouched.
+     */
+    suspend fun refreshServerMetrics(): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            check(authStore.state.value.loggedIn) { "not signed in" }
+            val dto = network.api().analyticsStats()
+            val vdot = dto.bestEffortVdot
+            val computedAt = Api.parseInstant(dto.computedAt)
+            if (vdot == null || computedAt == null) return@runCatching
+            settings?.setServerMetrics(
+                ServerMetricSnapshot(
+                    bestEffortVdot = vdot,
+                    aerobicVo2max = dto.aerobicVo2max?.takeIf { it > 0.0 },
+                    computedAtMs = computedAt,
+                ),
+            )
+            AppLog.i("Analytics", "server metrics cached: vdot=$vdot aerobic=${dto.aerobicVo2max} at=$computedAt")
+        }
     }
 
     // ---------- helpers ----------

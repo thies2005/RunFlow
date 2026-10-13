@@ -137,6 +137,13 @@ class SyncManager(
         runCatching { repository.refreshBodyFromData() }
             .onFailure { AppLog.w(TAG, "body auto-refresh failed (${it.message})") }
 
+        // The server's two-metric VDOT/VO2max stats — fetched after the pull so
+        // the server's fresh computation reflects the data just synced.
+        // Best-effort: a failure keeps the previous snapshot and analytics fall
+        // back to the on-device engine (offline port) when it goes stale.
+        repository.refreshServerMetrics()
+            .onFailure { AppLog.w(TAG, "server metrics refresh failed (${it.message})") }
+
         val now = System.currentTimeMillis()
         val msg = buildString {
             append(if (result.pushed > 0) "↑${result.pushed} " else "")

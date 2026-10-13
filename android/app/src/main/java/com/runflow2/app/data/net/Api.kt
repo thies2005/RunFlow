@@ -571,6 +571,24 @@ data class BaselineDto(
     val sleepAverage28Day: Double? = null,
 )
 
+// ---------- analytics (server-side two-metric stats) ----------
+
+/**
+ * GET /api/mobile/v1/analytics/stats — the server's two-metric computation
+ * (the same shared helper behind the web's /api/analytics/stats):
+ * bestEffortVdot is THE planning metric (training paces, plan creation,
+ * projections), aerobicVo2max the HR-based fitness trend (display only).
+ * Every field is nullable so an older server without them still parses — the
+ * app then runs its on-device engine only. The full response carries many
+ * more fields; ignoreUnknownKeys drops them.
+ */
+@Serializable
+data class AnalyticsStatsDto(
+    val bestEffortVdot: Double? = null, // correction applied; 0 = no qualifying run
+    val aerobicVo2max: Double? = null,
+    val computedAt: String? = null, // ISO-8601 — the freshness anchor for the cache
+)
+
 /**
  * All paths are absolute (leading slash) so one Retrofit instance serves both
  * the /api/mobile/v1 API and the /api/ai coach endpoints.
@@ -660,6 +678,12 @@ interface RunFlowApi {
     // server-side sync (e.g. Strava import); 409 = already running
     @POST("/api/mobile/v1/sync")
     suspend fun triggerServerSync(): TriggerSyncResponse
+
+    // analytics — the server's two-metric stats (web-parity computation).
+    // Cached on-device after a sync and preferred while fresh; offline or
+    // stale, the on-device engine (AnalyticsEngine) stays authoritative.
+    @GET("/api/mobile/v1/analytics/stats")
+    suspend fun analyticsStats(): AnalyticsStatsDto
 
     // readiness — daily health metrics + computed score. The POST upserts by
     // (userId, date) and answers the serialized record; the body is ignored.

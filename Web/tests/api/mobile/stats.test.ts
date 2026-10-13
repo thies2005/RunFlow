@@ -113,7 +113,7 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
         await GET(request);
 
         // Verify cache check
-        const expectedKey = `analytics:stats:${mockUser.id}:v1:${mockDate.getTime()}:${mockDate.getTime()}:${mockDate.getTime()}:100`;
+        const expectedKey = `analytics:stats:${mockUser.id}:v2:${mockDate.getTime()}:${mockDate.getTime()}:${mockDate.getTime()}:100`;
         expect(mockRedis.get).toHaveBeenCalledWith(expectedKey);
 
         // Verify response is from cache
@@ -142,7 +142,7 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
         expect(AnalyticsService.calculateFitnessMetrics).toHaveBeenCalled();
 
         // Verify cache set
-        const expectedKey = `analytics:stats:${mockUser.id}:v1:${mockDate.getTime()}:${mockDate.getTime()}:${mockDate.getTime()}:100`;
+        const expectedKey = `analytics:stats:${mockUser.id}:v2:${mockDate.getTime()}:${mockDate.getTime()}:${mockDate.getTime()}:100`;
         expect(mockRedis.set).toHaveBeenCalledWith(
             expectedKey,
             expect.stringContaining('"ctl":10'), // Check for some content
@@ -192,7 +192,7 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
         const request = new NextRequest('http://localhost/api/mobile/v1/analytics/stats');
         await GET(request);
 
-        const expectedKey = `analytics:stats:${mockUser.id}:v1:${mockDate.getTime()}:${mockDate.getTime()}:${newDate.getTime()}:100`;
+        const expectedKey = `analytics:stats:${mockUser.id}:v2:${mockDate.getTime()}:${mockDate.getTime()}:${newDate.getTime()}:100`;
         expect(mockRedis.get).toHaveBeenCalledWith(expectedKey);
     });
 
@@ -209,7 +209,7 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
         const request = new NextRequest('http://localhost/api/mobile/v1/analytics/stats');
         await GET(request);
 
-        const expectedKey = `analytics:stats:${mockUser.id}:v1:${mockDate.getTime()}:${mockDate.getTime()}:${mockDate.getTime()}:99`;
+        const expectedKey = `analytics:stats:${mockUser.id}:v2:${mockDate.getTime()}:${mockDate.getTime()}:${mockDate.getTime()}:99`;
         expect(mockRedis.get).toHaveBeenCalledWith(expectedKey);
     });
 });

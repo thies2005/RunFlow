@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Trophy, ChevronDown, ChevronUp, Edit3, X, Save, Loader2, Activity, Calendar } from 'lucide-react';
+import { Trophy, ChevronDown, ChevronUp, Edit3, X, Save, Loader2, Activity, Calendar, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import type { CompletedGoalSummary } from '@/lib/types';
 
 const raceLabels: Record<string, string> = {
@@ -177,53 +179,87 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
     onToggle: () => void;
     onEdit: () => void;
 }) {
+    const queryClient = useQueryClient();
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const rr = goal.raceResult;
     const hasResult = rr && (rr.actualTime || rr.raceActivityId);
     const beatGoal = rr?.actualTime && goal.targetTime
         ? rr.actualTime <= goal.targetTime
         : null;
 
+    // Delete plan mutation (soft-delete via the advanced plan endpoint: snapshots + cleans sub-goals)
+    const deleteMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch(`/api/plan-advanced/${goal.id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete plan');
+            return res.json();
+        },
+        onSuccess: () => {
+            toast.success('Plan deleted');
+            setIsDeleteConfirmOpen(false);
+            queryClient.invalidateQueries({ queryKey: ['completed-goals'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+        },
+        onError: () => {
+            toast.error('Failed to delete plan');
+        },
+    });
+
     return (
         <div className="bg-background-secondary border border-line rounded-md overflow-hidden">
-            <button
-                type="button"
-                onClick={onToggle}
-                className="w-full p-3 text-left hover:bg-surface-hover transition-colors"
-            >
-                <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="badge badge-run text-[10px]">{raceLabels[goal.raceType ?? 'MARATHON']}</span>
-                        <p className="text-sm font-medium text-foreground truncate">{goal.name}</p>
+            <div className="flex items-stretch">
+                <button
+                    type="button"
+                    onClick={onToggle}
+                    className="flex-1 min-w-0 p-3 text-left hover:bg-surface-hover transition-colors"
+                >
+                    <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="badge badge-run text-[10px]">{raceLabels[goal.raceType ?? 'MARATHON']}</span>
+                            <p className="text-sm font-medium text-foreground truncate">{goal.name}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs text-foreground-muted">{goal.raceDate ? format(new Date(goal.raceDate), 'MMM d, yyyy') : ''}</span>
+                            {isExpanded ? <ChevronUp className="w-4 h-4 text-foreground-muted" /> : <ChevronDown className="w-4 h-4 text-foreground-muted" />}
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-foreground-muted">{goal.raceDate ? format(new Date(goal.raceDate), 'MMM d, yyyy') : ''}</span>
-                        {isExpanded ? <ChevronUp className="w-4 h-4 text-foreground-muted" /> : <ChevronDown className="w-4 h-4 text-foreground-muted" />}
-                    </div>
-                </div>
 
-                {!isExpanded && (
-                    <div className="flex items-center gap-4 mt-1">
-                        {hasResult ? (
-                            <>
-                                <div className="flex items-center gap-3 text-xs">
-                                    <span className="text-foreground-muted">Goal: <span className="text-foreground font-mono tabular-nums">{formatTime(goal.targetTime)}</span></span>
-                                    <span className="text-foreground-muted">Actual: <span className={`${beatGoal ? 'text-positive' : 'text-accent-orange'} font-mono tabular-nums`}>{formatTime(rr?.actualTime)}</span></span>
-                                    {goal.targetTime && rr?.actualTime && (
-                                        <span className={`${beatGoal ? 'text-positive font-medium' : 'text-accent-orange'} font-mono tabular-nums`}>
-                                            {formatTimeDelta(goal.targetTime, rr.actualTime).text}
-                                        </span>
-                                    )}
-                                </div>
-                            </>
-                        ) : (
-                            <span className="text-xs text-foreground-muted">No race result linked</span>
-                        )}
-                        <span className={`text-xs ml-auto tabular-nums ${goal.workoutStats.completionRate >= 80 ? 'text-positive' : 'text-foreground-muted'}`}>
-                            {goal.workoutStats.completed}/{goal.workoutStats.total} workouts
-                        </span>
-                    </div>
-                )}
-            </button>
+                    {!isExpanded && (
+                        <div className="flex items-center gap-4 mt-1">
+                            {hasResult ? (
+                                <>
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <span className="text-foreground-muted">Goal: <span className="text-foreground font-mono tabular-nums">{formatTime(goal.targetTime)}</span></span>
+                                        <span className="text-foreground-muted">Actual: <span className={`${beatGoal ? 'text-positive' : 'text-accent-orange'} font-mono tabular-nums`}>{formatTime(rr?.actualTime)}</span></span>
+                                        {goal.targetTime && rr?.actualTime && (
+                                            <span className={`${beatGoal ? 'text-positive font-medium' : 'text-accent-orange'} font-mono tabular-nums`}>
+                                                {formatTimeDelta(goal.targetTime, rr.actualTime).text}
+                                            </span>
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <span className="text-xs text-foreground-muted">No race result linked</span>
+                            )}
+                            <span className={`text-xs ml-auto tabular-nums ${goal.workoutStats.completionRate >= 80 ? 'text-positive' : 'text-foreground-muted'}`}>
+                                {goal.workoutStats.completed}/{goal.workoutStats.total} workouts
+                            </span>
+                        </div>
+                    )}
+                </button>
+                <div className="flex items-center pr-3">
+                    <button
+                        type="button"
+                        onClick={() => setIsDeleteConfirmOpen(true)}
+                        disabled={deleteMutation.isPending}
+                        className="p-1.5 rounded-md text-foreground-muted hover:text-negative hover:bg-negative/10 transition-colors disabled:opacity-50"
+                        title="Delete plan"
+                        aria-label="Delete plan"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+            </div>
 
             {isExpanded && (
                 <div className="border-t border-line p-3 space-y-4">
@@ -360,6 +396,14 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={isDeleteConfirmOpen}
+                onOpenChange={setIsDeleteConfirmOpen}
+                planName={goal.name}
+                onConfirm={() => deleteMutation.mutate()}
+                busy={deleteMutation.isPending}
+            />
         </div>
     );
 }

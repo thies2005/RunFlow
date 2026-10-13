@@ -39,6 +39,13 @@ const USER_ID = 'user-1';
 
 describe('adaptPlanAfterCompletion', () => {
     beforeEach(() => {
+        // Freeze the clock: fixtures use `new Date()` for "future" workouts while
+        // adaptPlanAfterCompletion defaults its `asOf` cutoff to a fresh `new Date()`.
+        // With a live clock the two reads can straddle a millisecond and the
+        // `scheduledDate >= asOf` future check (adapt.ts) fails intermittently.
+        jest.useFakeTimers();
+        jest.setSystemTime(new Date('2026-01-15T08:00:00Z'));
+
         jest.clearAllMocks();
 
         // Default $transaction just runs the callback with no arg (module uses prisma internally).
@@ -57,6 +64,10 @@ describe('adaptPlanAfterCompletion', () => {
             hrZone5Max: 178,
             hrZone6Max: 187,
         });
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
     });
 
     it('returns not-adapted when the goal is not found', async () => {

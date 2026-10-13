@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Eye, EyeOff, Download, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Calendar, Eye, EyeOff, Download, ExternalLink, MoreVertical, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, startOfWeek, addDays, isToday, isSameDay, differenceInWeeks, isBefore } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { EditWorkoutModal, ErrorBoundary, Footer } from '@/components';
 import ActivityDetailsModal from '@/components/ActivityDetailsModal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { isRunningActivity, isCrossTrainingActivity, type WorkoutWithLinkedActivity, type PlanResponse } from '@/lib/types';
 import {
     DndContext,
@@ -43,12 +44,28 @@ export default function PlanPage() {
     const [showUnlinked, setShowUnlinked] = useState(true);
     const [migrating, setMigrating] = useState(false);
 
+    // Delete Plan state
+    const [isDeleteMenuOpen, setIsDeleteMenuOpen] = useState(false);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const deleteMenuRef = useRef<HTMLDivElement>(null);
+
     // DnD Sensors
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
         useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
         useSensor(KeyboardSensor),
     );
+
+    // Close the kebab menu on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (deleteMenuRef.current && !deleteMenuRef.current.contains(e.target as Node)) {
+                setIsDeleteMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Reorder mutation
     const reorderMutation = useMutation({
@@ -78,6 +95,27 @@ export default function PlanPage() {
         },
         enabled: status === 'authenticated',
         placeholderData: keepPreviousData
+    });
+
+    // Delete plan mutation (soft-delete via the advanced plan endpoint: snapshots + cleans sub-goals)
+    const deletePlanMutation = useMutation({
+        mutationFn: async (goalId: string) => {
+            const res = await fetch(`/api/plan-advanced/${goalId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete plan');
+            return res.json();
+        },
+        onSuccess: () => {
+            toast.success('Plan deleted');
+            setIsDeleteConfirmOpen(false);
+            queryClient.invalidateQueries({ queryKey: ['plan'] });
+            queryClient.invalidateQueries({ queryKey: ['plans'] });
+            queryClient.invalidateQueries({ queryKey: ['goals'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+            queryClient.invalidateQueries({ queryKey: ['completed-goals'] });
+        },
+        onError: () => {
+            toast.error('Failed to delete plan');
+        },
     });
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -288,6 +326,31 @@ export default function PlanPage() {
                                 {showUnlinked ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                                 {showUnlinked ? 'Unlinked On' : 'Show Unlinked'}
                             </button>
+                            {/* Plan actions kebab menu */}
+                            <div className="relative" ref={deleteMenuRef}>
+                                <button
+                                    onClick={() => setIsDeleteMenuOpen(!isDeleteMenuOpen)}
+                                    className="p-2 rounded-md text-sm font-medium transition-colors bg-surface text-foreground-muted hover:text-foreground border border-glass-border"
+                                    title="Plan actions"
+                                    aria-label="Plan actions"
+                                >
+                                    <MoreVertical className="w-4 h-4" />
+                                </button>
+                                {isDeleteMenuOpen && (
+                                    <div className="absolute right-0 top-full mt-1 w-44 bg-background-secondary border border-foreground/20 rounded-md z-50 py-1">
+                                        <button
+                                            onClick={() => {
+                                                setIsDeleteMenuOpen(false);
+                                                setIsDeleteConfirmOpen(true);
+                                            }}
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-negative hover:bg-negative/10 transition-colors"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                            Delete Plan
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -463,6 +526,14 @@ export default function PlanPage() {
                     isOpen={isActivityModalOpen}
                     onClose={() => setIsActivityModalOpen(false)}
                     activity={selectedActivity}
+                />
+
+                <ConfirmDialog
+                    open={isDeleteConfirmOpen}
+                    onOpenChange={setIsDeleteConfirmOpen}
+                    planName={goal.name}
+                    onConfirm={() => deletePlanMutation.mutate(goal.id)}
+                    busy={deletePlanMutation.isPending}
                 />
                 <Footer />
             </div>

@@ -134,7 +134,7 @@ export function PlanToolbar({
                 isPremium={isPremium}
             />
 
-            <PlanActionsMenu goalId={goalId} onImportCsv={onImportCsv} onExportCsv={onExportCsv} />
+            <PlanActionsMenu goalId={goalId} planName={planName} onImportCsv={onImportCsv} onExportCsv={onExportCsv} />
         </div>
     );
 }

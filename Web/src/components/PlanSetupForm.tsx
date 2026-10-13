@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    AlertCircle, Save, Check, Trash2, Loader2, Target, Plus, Upload, X, Zap, Waves, Clock
+    AlertCircle, Save, Check, Trash2, Target, Plus, Upload, X, Zap, Waves, Clock
 } from 'lucide-react';
 import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { calculateVdot, calculateTrainingPaces, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
@@ -17,6 +17,7 @@ import GoalTimeRenderer from './setup/GoalTimeRenderer';
 import TriathlonGoalTimeRenderer from './setup/TriathlonGoalTimeRenderer';
 import PlanVolumeSection from './setup/PlanVolumeSection';
 import HeartRateZonesSection from './setup/HeartRateZonesSection';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { getRaceDefaults, adjustDefaultsForVdot, getScaledPhaseDefaults } from '@/lib/plans/defaults';
 
 
@@ -846,20 +847,25 @@ export default function PlanSetupForm({
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+    const activeGoalId: string | undefined = goalsData?.goals?.find((g: { isActive: boolean }) => g.isActive)?.id;
+
+    // Delete plan mutation (soft-delete via the advanced plan endpoint: snapshots + cleans sub-goals)
     const deletePlanMutation = useMutation({
-        mutationFn: async () => {
-            const res = await fetch('/api/goals', { method: 'DELETE' });
+        mutationFn: async (goalId: string) => {
+            const res = await fetch(`/api/plan-advanced/${goalId}`, { method: 'DELETE' });
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
                 throw new Error(data.error || 'Failed to delete plan');
             }
             return res.json();
         },
-        onSuccess: (data) => {
-            setMessage(`Plan deleted (${data.deletedWorkouts} workouts removed).`);
+        onSuccess: () => {
+            setMessage('Plan deleted.');
             setShowDeleteConfirm(false);
             queryClient.invalidateQueries({ queryKey: ['goals'] });
             queryClient.invalidateQueries({ queryKey: ['plan'] });
+            queryClient.invalidateQueries({ queryKey: ['plans'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
             setTimeout(() => {
                 setMessage('');
                 onSuccess?.();
@@ -1270,7 +1276,7 @@ export default function PlanSetupForm({
             }
 
             {
-                mode === 'settings' && !showDeleteConfirm && (
+                mode === 'settings' && activeGoalId && !showDeleteConfirm && (
                     <button
                         onClick={() => setShowDeleteConfirm(true)}
                         className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-negative border border-negative/30 rounded-md hover:bg-negative/10 transition-colors"
@@ -1281,39 +1287,15 @@ export default function PlanSetupForm({
                 )
             }
 
-            {
-                mode === 'settings' && showDeleteConfirm && (
-                    <div className="border border-negative/30 rounded-md p-4 space-y-3 bg-negative/5">
-                        <p className="text-sm text-negative font-medium">Delete this plan and all future workouts?</p>
-                        <p className="text-xs text-foreground-muted">Completed workouts are preserved. You can create a new plan from the onboarding flow.</p>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setShowDeleteConfirm(false)}
-                                className="flex-1 py-2 text-sm rounded-md border border-glass-border text-foreground hover:bg-surface-hover transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={() => deletePlanMutation.mutate()}
-                                disabled={deletePlanMutation.isPending}
-                                className="flex-1 py-2 text-sm rounded-md bg-negative text-white font-medium flex items-center justify-center gap-2 hover:bg-negative/85 transition-colors disabled:opacity-50"
-                            >
-                                {deletePlanMutation.isPending ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Deleting...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Trash2 className="w-4 h-4" />
-                                        Delete
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                )
-            }
+            {mode === 'settings' && (
+                <ConfirmDialog
+                    open={showDeleteConfirm}
+                    onOpenChange={setShowDeleteConfirm}
+                    planName={goalName}
+                    onConfirm={() => { if (activeGoalId) deletePlanMutation.mutate(activeGoalId); }}
+                    busy={deletePlanMutation.isPending}
+                />
+            )}
         </div>
     );
 }

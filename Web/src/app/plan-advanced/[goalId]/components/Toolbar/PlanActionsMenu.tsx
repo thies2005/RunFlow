@@ -4,15 +4,19 @@ import { useState, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { MoreHorizontal, Download, Upload, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface PlanActionsMenuProps {
     goalId: string;
+    /** Plan name, used for the standardized deletion copy in the confirm dialog. */
+    planName?: string;
     onImportCsv?: () => void;
     onExportCsv?: () => void;
 }
 
-export function PlanActionsMenu({ goalId, onImportCsv, onExportCsv }: PlanActionsMenuProps) {
+export function PlanActionsMenu({ goalId, planName, onImportCsv, onExportCsv }: PlanActionsMenuProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const queryClient = useQueryClient();
 
@@ -34,6 +38,7 @@ export function PlanActionsMenu({ goalId, onImportCsv, onExportCsv }: PlanAction
         },
         onSuccess: () => {
             toast.success('Plan deleted');
+            setIsDeleteConfirmOpen(false);
             queryClient.invalidateQueries({ queryKey: ['plan-advanced'] });
             window.location.href = '/plan-advanced';
         },
@@ -66,7 +71,7 @@ export function PlanActionsMenu({ goalId, onImportCsv, onExportCsv }: PlanAction
             danger: true,
             onClick: () => {
                 setIsOpen(false);
-                deleteMutation.mutate();
+                setIsDeleteConfirmOpen(true);
             },
         },
     ] as const;
@@ -106,6 +111,13 @@ export function PlanActionsMenu({ goalId, onImportCsv, onExportCsv }: PlanAction
                     })}
                 </div>
             )}
+            <ConfirmDialog
+                open={isDeleteConfirmOpen}
+                onOpenChange={setIsDeleteConfirmOpen}
+                planName={planName}
+                onConfirm={() => deleteMutation.mutate()}
+                busy={deleteMutation.isPending}
+            />
         </div>
     );
 }

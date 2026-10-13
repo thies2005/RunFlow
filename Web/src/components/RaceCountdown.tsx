@@ -1,7 +1,10 @@
 import { Calendar, Target, Timer, Trophy, CheckCircle, Loader2, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import type { Goal, SuggestedRaceActivity } from '@/lib/types';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import type { RaceDistance } from '@/lib/metrics/vdot';
@@ -64,6 +67,26 @@ export function RaceCountdown({
         currentWeekMileage
     } = useUserMetrics();
     const { isMobile } = useDeviceType();
+    const queryClient = useQueryClient();
+
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+    // Delete plan mutation (soft-delete via the advanced plan endpoint: snapshots + cleans sub-goals)
+    const deletePlanMutation = useMutation({
+        mutationFn: async (goalId: string) => {
+            const res = await fetch(`/api/plan-advanced/${goalId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete plan');
+            return res.json();
+        },
+        onSuccess: () => {
+            toast.success('Plan deleted');
+            setIsDeleteConfirmOpen(false);
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+        },
+        onError: () => {
+            toast.error('Failed to delete plan');
+        },
+    });
 
     const shapePercent = marathonShape?.shape || 0;
 
@@ -156,6 +179,15 @@ export function RaceCountdown({
                         {isMobile ? 'View Full Plan →' : 'View Calendar →'}
                     </button>
                     <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
+                    <button
+                        onClick={() => setIsDeleteConfirmOpen(true)}
+                        disabled={deletePlanMutation.isPending}
+                        className="p-1.5 rounded-md text-foreground-muted hover:text-negative hover:bg-negative/10 transition-colors disabled:opacity-50"
+                        title="Delete plan"
+                        aria-label="Delete plan"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                 </div>
             </div>
 
@@ -251,6 +283,14 @@ export function RaceCountdown({
                 );
             })()
             }
+
+            <ConfirmDialog
+                open={isDeleteConfirmOpen}
+                onOpenChange={setIsDeleteConfirmOpen}
+                planName={goal.name}
+                onConfirm={() => deletePlanMutation.mutate(goal.id)}
+                busy={deletePlanMutation.isPending}
+            />
         </div>
     );
 }
@@ -264,15 +304,22 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
 }) {
     const { useImperial } = useUnits();
     const queryClient = useQueryClient();
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
+    // Delete plan mutation (soft-delete via the advanced plan endpoint: snapshots + cleans sub-goals)
     const deleteMutation = useMutation({
         mutationFn: async () => {
-            const res = await fetch(`/api/goals?goalId=${goal.id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/plan-advanced/${goal.id}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Failed to delete plan');
             return res.json();
         },
         onSuccess: () => {
+            toast.success('Plan deleted');
+            setIsDeleteConfirmOpen(false);
             queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+        },
+        onError: () => {
+            toast.error('Failed to delete plan');
         },
     });
     const { data: suggestData, isLoading: suggestLoading } = useQuery({
@@ -412,7 +459,7 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
 
             {isIncompleteArchived ? (
                 <button
-                    onClick={() => deleteMutation.mutate()}
+                    onClick={() => setIsDeleteConfirmOpen(true)}
                     disabled={deleteMutation.isPending}
                     className="w-full flex items-center justify-center gap-2 text-xs text-negative hover:bg-negative/10 transition-colors py-2 rounded-md disabled:opacity-50"
                 >
@@ -427,6 +474,14 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
                     I didn&apos;t race / Skip for now
                 </button>
             )}
+
+            <ConfirmDialog
+                open={isDeleteConfirmOpen}
+                onOpenChange={setIsDeleteConfirmOpen}
+                planName={goal.name}
+                onConfirm={() => deleteMutation.mutate()}
+                busy={deleteMutation.isPending}
+            />
         </div>
     );
 }

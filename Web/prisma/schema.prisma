@@ -43,6 +43,11 @@ model User {
   autoRevolvingCalculatedAt DateTime?
   includeCrossTraining  Boolean              @default(true)
   useImperial           Boolean              @default(false)
+  ftpWatts                  Int?
+  autoEstimateFtp           Boolean              @default(true)
+  swimCssSecPer100m         Int?
+  mcpOAuthCodes             McpOAuthCode[]
+  mcpOAuthTokens            McpOAuthToken[]
   lastSyncAt            DateTime?
   syncInProgress        Boolean              @default(false)
   createdAt             DateTime             @default(now())
@@ -346,6 +351,21 @@ model Activity {
   averageWatts         Float?
   weightedAverageWatts Float?
   deviceWatts          Boolean @default(false)
+  maxWatts             Float?
+  kilojoules           Float?
+  npWatts              Float?
+  intensityFactor      Float?
+  variabilityIndex     Float?
+  bikeTss              Float?
+  efficiencyFactor     Float?
+  aerobicDecoupling    Float?
+  powerZone1Time       Int?
+  powerZone2Time       Int?
+  powerZone3Time       Int?
+  powerZone4Time       Int?
+  powerZone5Time       Int?
+  powerZone6Time       Int?
+  powerZone7Time       Int?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -403,6 +423,10 @@ model DailyFitness {
   ctlRunning Float    @default(0)
   trimp      Float    @default(0)
   runningTss Float    @default(0)
+  bikeTss    Float    @default(0)
+  ctlBike    Float    @default(0)
+  atlBike    Float    @default(0)
+  tsbBike    Float    @default(0)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
@@ -518,6 +542,12 @@ model Goal {
   parentGoalId          String?
   priority              GoalPriority        @default(PRIMARY)
   trainingFocus         String?
+  ftpAtCreation         Int?
+  swimCssAtCreation     Int?
+  weeklyBikeTssGoal     Float?
+  weeklySwimMetersGoal  Float?
+  targetWeeklyTss       Float?
+  phaseBlocks           Json?
   user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   workouts              Workout[]
   raceResult            RaceResult?
@@ -574,6 +604,13 @@ model Workout {
   targetPaceZoneLabel     String?
   targetPaceMinSecondsPerKm Float?
   targetPaceMaxSecondsPerKm Float?
+  targetPowerWatts          Int?
+  targetPowerMinWatts       Int?
+  targetPowerMaxWatts       Int?
+  targetPowerZone           Int?
+  targetFtpPercent          Int?
+  targetCadenceRpm          Int?
+  targetRpe                 Int?
   isCompleted             Boolean               @default(false)
   completedAt             DateTime?
   linkedActivityId        String?
@@ -1312,3 +1349,56 @@ model GuidedPlanSession {
   @@index([userId])
   @@index([goalId])
 }
+
+model McpOAuthClient {
+  id                      String          @id @default(cuid())
+  clientId                String          @unique @default(cuid())
+  clientSecretHash        String?
+  clientName              String
+  redirectUris            Json
+  grantTypes              Json            @default("[\"authorization_code\",\"refresh_token\"]")
+  responseTypes           Json            @default("[\"code\"]")
+  tokenEndpointAuthMethod String          @default("none")
+  createdAt               DateTime        @default(now())
+  codes                   McpOAuthCode[]
+  tokens                  McpOAuthToken[]
+}
+
+model McpOAuthCode {
+  id                  String         @id @default(cuid())
+  codeHash            String         @unique
+  clientId            String
+  userId              String
+  redirectUri         String
+  codeChallenge       String
+  codeChallengeMethod String         @default("S256")
+  scope               String         @default("mcp:full")
+  resource            String?
+  expiresAt           DateTime
+  usedAt              DateTime?
+  createdAt           DateTime       @default(now())
+  client              McpOAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model McpOAuthToken {
+  id               String         @id @default(cuid())
+  accessTokenHash  String         @unique
+  refreshTokenHash String?        @unique
+  clientId         String
+  userId           String
+  scope            String         @default("mcp:full")
+  expiresAt        DateTime
+  refreshExpiresAt DateTime?
+  revokedAt        DateTime?
+  lastUsedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  client           McpOAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([accessTokenHash])
+}
+

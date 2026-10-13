@@ -148,7 +148,7 @@ export default function PlanPage() {
             <div className="min-h-screen p-8 flex flex-col items-center justify-center text-center">
                 <h1 className="text-2xl text-foreground font-bold mb-4">No Active Plan</h1>
                 <p className="text-foreground-muted mb-6">You don&apos;t have an active training goal.</p>
-                <button onClick={() => router.push('/onboarding?step=3')} className="btn-primary">Create Goal</button>
+                <button onClick={() => router.push('/onboarding?step=4')} className="btn-primary">Create Goal</button>
             </div>
         );
     }

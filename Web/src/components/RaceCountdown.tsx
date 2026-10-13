@@ -75,7 +75,7 @@ export function RaceCountdown({
                     <Trophy className="w-16 h-16 mx-auto text-foreground-muted mb-4 block" />
                     <p className="text-foreground-muted">No race goal set</p>
                     <button
-                        onClick={() => router.push('/onboarding?step=3')}
+                        onClick={() => router.push('/onboarding?step=4')}
                         className="btn-secondary mt-4"
                     >
                         Set Your Goal
@@ -445,7 +445,7 @@ function PostRaceOverdue({ goal, className }: { goal: Goal; className: string })
                 </p>
                 <p className="text-foreground-muted text-sm mb-6">This training block has concluded.</p>
                 <button
-                    onClick={() => router.push('/onboarding?step=3')}
+                    onClick={() => router.push('/onboarding?step=4')}
                     className="btn-primary"
                 >
                     Create Training Plan

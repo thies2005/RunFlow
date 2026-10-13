@@ -10,6 +10,7 @@ interface PlanData {
         name: string;
         raceDate: string | null;
         raceType: string | null;
+        sport: string;
         planStartDate: string | null;
         currentVdot: number | null;
         workouts: Array<{
@@ -82,6 +83,7 @@ export default function GoalEditorPage() {
             workouts={plan.workouts || []}
             raceDate={raceDate}
             raceType={plan.raceType}
+            sport={plan.sport}
             planStartDate={planStartDate}
             currentVdot={plan.currentVdot}
         />

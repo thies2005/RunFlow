@@ -314,7 +314,7 @@ export function MobileLayout() {
         if (shouldRedirectToLogin) {
             router.push('/login');
         } else if (shouldRedirectToOnboarding) {
-            router.push('/onboarding');
+            router.push('/onboarding?step=4');
         }
     }, [router, shouldRedirectToLogin, shouldRedirectToOnboarding]);
 

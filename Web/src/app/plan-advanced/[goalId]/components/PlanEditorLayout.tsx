@@ -55,13 +55,14 @@ interface PlanEditorLayoutProps {
     workouts: Workout[];
     raceDate?: Date | null;
     raceType?: string | null;
+    sport?: string | null;
     goals?: Goal[];
     planStartDate?: Date | null;
     planEndDate?: Date | null;
     currentVdot?: number | null;
 }
 
-function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, planStartDate, planEndDate, currentVdot }: PlanEditorLayoutProps) {
+function EditorContent({ goalId, planName, workouts, raceDate, raceType, sport, goals, planStartDate, planEndDate, currentVdot }: PlanEditorLayoutProps) {
     const queryClient = useQueryClient();
     const [calendarOpen, setCalendarOpen] = useState(true);
     const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
@@ -97,6 +98,10 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
         setChatOpen(isPremium && mode === 'AI_ASSISTED');
     }, [mode, isPremium]);
     const isNoRace = raceType === null || raceType === undefined;
+
+    // Sub-goals inherit the parent's sport; 'RUNNING' is not a valid PlanSport
+    // (only 'RUN' and 'TRIATHLON' are), so derive it instead of hardcoding.
+    const parentSport = sport === 'TRIATHLON' ? 'TRIATHLON' : 'RUN';
 
     const weeks = useMemo<WeekData[]>(() => {
         const weekMap = new Map<string, Workout[]>();
@@ -420,7 +425,7 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
 
             <AddSubGoalDialog
                 parentGoalId={goalId}
-                parentSport="RUNNING"
+                parentSport={parentSport}
                 isOpen={addSubGoalOpen}
                 onClose={() => setAddSubGoalOpen(false)}
                 onCreated={handleSubGoalCreated}

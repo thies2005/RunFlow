@@ -23,7 +23,7 @@ export default function PlanAdvancedPage() {
                 router.replace(`/plan-advanced/${activePlan.id}`);
             } else {
                 // No active plan — redirect to normal plan creation flow
-                router.replace('/onboarding?step=3');
+                router.replace('/onboarding?step=4');
             }
         }
     }, [data, router]);

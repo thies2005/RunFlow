@@ -181,7 +181,7 @@ export function DashboardView({
                                         You don&apos;t have an active training plan yet. Create one when you&apos;re ready to start training!
                                     </p>
                                     <button
-                                        onClick={() => router.push('/onboarding')}
+                                        onClick={() => router.push('/onboarding?step=4')}
                                         className="btn-primary py-2 px-6"
                                     >
                                         Create Training Plan

@@ -90,7 +90,7 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
             ) : (
                 <div className="text-center py-6">
                     <p className="text-foreground-muted text-sm">No workouts scheduled</p>
-                    <button onClick={() => router.push('/onboarding?step=3')} className="text-xs text-accent-orange mt-2 hover:underline">
+                    <button onClick={() => router.push('/onboarding?step=4')} className="text-xs text-accent-orange mt-2 hover:underline">
                         Set up a training plan
                     </button>
                 </div>

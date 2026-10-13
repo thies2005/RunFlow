@@ -25,7 +25,7 @@ interface PlanData {
             notes: string;
             phase: string;
             customName: string;
-            colorOverride: string;
+            color: string;
             structuredSteps: any;
             isCompleted: boolean;
         }>;

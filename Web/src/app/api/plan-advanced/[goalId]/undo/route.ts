@@ -42,6 +42,9 @@ export async function POST(req: Request, ctx: RouteContext) {
         }
 
         const snapshot = await restoreFromSnapshot(goalId, snapshotId);
+        if (!snapshot) {
+            return NextResponse.json({ error: 'Corrupt snapshot' }, { status: 400 });
+        }
 
         await createSnapshot(goalId, `Undo to snapshot ${snapshot.id}`, 'undo');
 

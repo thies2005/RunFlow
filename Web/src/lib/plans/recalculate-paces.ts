@@ -149,7 +149,7 @@ export async function recalculateWorkoutPaces(
 
     await prisma.$executeRaw`
         UPDATE "Workout"
-        SET "targetDuration" = ROUND(("targetDistance" / 1000.0) * "targetPace")
+        SET "targetDuration" = CASE WHEN "workoutType" IN ('SWIM', 'SWIM_DRILL', 'OPEN_WATER_SWIM') THEN ROUND(("targetDistance" / 100.0) * "targetPace")::int ELSE ROUND(("targetDistance" / 1000.0) * "targetPace")::int END
         WHERE "goalId" = ${goalId}
           AND "isCompleted" = false
           AND "targetDistance" > 0

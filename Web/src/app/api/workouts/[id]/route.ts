@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/db';
-import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { NextResponse } from 'next/server';
 import { WorkoutType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { adaptPlanAfterCompletion } from '@/lib/plans/adapt';
+import { logger } from '@/lib/logging/logger';
 
 // Valid workout type enum values for validation
 const VALID_WORKOUT_TYPES: WorkoutType[] = [
@@ -47,15 +49,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             );
         }
 
-        const session = await auth();
-        if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const user = await getAuthenticatedUser(req);
+        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await req.json();
-        // Allow updating type, desc, targets, date, completed
-        const { workoutType, description, targetDistance, targetDuration, scheduledDate, isCompleted, linkedActivityId } = body;
 
         // Validate workout type if provided
-        if (workoutType !== undefined && !isValidWorkoutType(workoutType)) {
+        if (body.workoutType !== undefined && !isValidWorkoutType(body.workoutType)) {
             return NextResponse.json(
                 { error: `Invalid workout type. Must be one of: ${VALID_WORKOUT_TYPES.join(', ')}` },
                 { status: 400 }
@@ -68,31 +68,64 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             include: { goal: true }
         });
 
-        if (!workout || workout.goal.userId !== session.user.id) {
+        if (!workout || workout.goal.userId !== user.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
         // If linking an activity, verify ownership
-        if (linkedActivityId) {
-            const activity = await prisma.activity.findUnique({ where: { id: linkedActivityId } });
-            if (!activity || activity.userId !== session.user.id) {
+        if (body.linkedActivityId) {
+            const activity = await prisma.activity.findUnique({ where: { id: body.linkedActivityId } });
+            if (!activity || activity.userId !== user.id) {
                 return NextResponse.json({ error: 'Activity not found' }, { status: 404 });
+            }
+        }
+
+        const allowedFields = [
+            'scheduledDate', 'workoutType', 'description', 'displayDesc', 'phase', 'order', 'notes',
+            'targetDistance', 'targetDuration', 'targetPace', 'targetPaceMinSecondsPerKm', 'targetPaceMaxSecondsPerKm',
+            'targetPaceZoneLabel', 'targetHrZone', 'targetHrMinBpm', 'targetHrMaxBpm', 'targetHrZoneLabel',
+            'targetPowerWatts', 'targetPowerMinWatts', 'targetPowerMaxWatts', 'targetPowerZone', 'targetFtpPercent',
+            'targetCadenceRpm', 'targetRpe', 'intensityZone', 'plannedTss', 'sport', 'isCompleted', 'completedAt',
+            'linkedActivityId', 'customName', 'color', 'structuredSteps', 'groupId', 'subGoalId',
+        ];
+
+        const updateData: Record<string, unknown> = {};
+        for (const field of allowedFields) {
+            if (body[field] !== undefined) {
+                if (field === 'scheduledDate') {
+                    updateData[field] = body[field] ? new Date(body[field]) : undefined;
+                } else if (field === 'completedAt') {
+                    updateData[field] = body[field] ? new Date(body[field]) : null;
+                } else {
+                    updateData[field] = body[field];
+                }
+            }
+        }
+
+        if (body.isCompleted !== undefined) {
+            if (body.completedAt === undefined) {
+                updateData.completedAt = body.isCompleted ? (workout.completedAt ?? new Date()) : null;
+            }
+            if (!body.isCompleted) {
+                updateData.linkedActivityId = null;
             }
         }
 
         const updated = await prisma.workout.update({
             where: { id },
-            data: {
-                workoutType: workoutType as WorkoutType | undefined,
-                description,
-                targetDistance,
-                targetDuration,
-                scheduledDate: scheduledDate ? new Date(scheduledDate) : undefined,
-                isCompleted,
-                completedAt: isCompleted ? new Date() : null,
-                linkedActivityId: linkedActivityId ?? null
-            }
+            data: updateData,
         });
+
+        const justCompleted = body.isCompleted === true && !workout.isCompleted;
+        if (justCompleted) {
+            void adaptPlanAfterCompletion(workout.goalId, user.id).catch((err) => {
+                logger.error('Plan adaptivity failed after workout completion', {
+                    goalId: workout.goalId,
+                    workoutId: workout.id,
+                    error: err instanceof Error ? err.message : String(err),
+                });
+            });
+        }
 
         return NextResponse.json(updated);
     } catch (error) {
@@ -115,15 +148,15 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
             );
         }
 
-        const session = await auth();
-        if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const user = await getAuthenticatedUser(req);
+        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const workout = await prisma.workout.findUnique({
             where: { id },
             include: { goal: true }
         });
 
-        if (!workout || workout.goal.userId !== session.user.id) {
+        if (!workout || workout.goal.userId !== user.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 

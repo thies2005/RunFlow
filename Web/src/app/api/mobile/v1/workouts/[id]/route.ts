@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { checkFieldConsistency, deriveMissingField } from '@/lib/plans/validate-workout';
+import { adaptPlanAfterCompletion } from '@/lib/plans/adapt';
+import { logger } from '@/lib/logging/logger';
 
 export async function PATCH(
   request: NextRequest,
@@ -34,10 +36,12 @@ export async function PATCH(
       return errorResponses.notFound('Workout');
     }
 
+    const workoutType = body.workoutType ?? workout.workoutType;
     const merged = {
       targetDistance: body.targetDistance !== undefined ? body.targetDistance : workout.targetDistance,
       targetPace: body.targetPace !== undefined ? body.targetPace : workout.targetPace,
       targetDuration: body.targetDuration !== undefined ? body.targetDuration : workout.targetDuration,
+      workoutType,
     };
 
     const derived = deriveMissingField(merged);
@@ -50,6 +54,7 @@ export async function PATCH(
       targetDistance: derivedTargetDistance !== undefined ? derivedTargetDistance : merged.targetDistance,
       targetPace: derivedTargetPace !== undefined ? derivedTargetPace : merged.targetPace,
       targetDuration: derivedTargetDuration !== undefined ? derivedTargetDuration : merged.targetDuration,
+      workoutType,
     };
     const warnings = checkFieldConsistency(finalValues);
 
@@ -72,37 +77,71 @@ export async function PATCH(
       return errorResponses.badRequest('Invalid builder field type');
     }
 
+    if (body.linkedActivityId && prisma.activity) {
+      const activity = await prisma.activity.findFirst({
+        where: { id: body.linkedActivityId, userId: user.id },
+      });
+      if (!activity) {
+        return errorResponses.notFound('Activity');
+      }
+    }
+
+    const allowedFields = [
+      'scheduledDate', 'workoutType', 'description', 'displayDesc', 'phase', 'order', 'notes',
+      'targetDistance', 'targetDuration', 'targetPace', 'targetPaceMinSecondsPerKm', 'targetPaceMaxSecondsPerKm',
+      'targetPaceZoneLabel', 'targetHrZone', 'targetHrMinBpm', 'targetHrMaxBpm', 'targetHrZoneLabel',
+      'targetPowerWatts', 'targetPowerMinWatts', 'targetPowerMaxWatts', 'targetPowerZone', 'targetFtpPercent',
+      'targetCadenceRpm', 'targetRpe', 'intensityZone', 'plannedTss', 'sport', 'isCompleted', 'completedAt',
+      'linkedActivityId', 'customName', 'color', 'structuredSteps', 'groupId', 'subGoalId',
+    ];
+
+    const updateData: Record<string, unknown> = {};
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        if (field === 'scheduledDate') {
+          updateData[field] = body[field] ? new Date(body[field]) : undefined;
+        } else if (field === 'completedAt') {
+          updateData[field] = body[field] ? new Date(body[field]) : null;
+        } else {
+          updateData[field] = body[field];
+        }
+      }
+    }
+
+    if (body.targetDistance === undefined && derivedTargetDistance !== undefined) {
+      updateData.targetDistance = derivedTargetDistance;
+    }
+    if (body.targetPace === undefined && derivedTargetPace !== undefined) {
+      updateData.targetPace = derivedTargetPace;
+    }
+    if (body.targetDuration === undefined && derivedTargetDuration !== undefined) {
+      updateData.targetDuration = derivedTargetDuration;
+    }
+
+    if (body.isCompleted !== undefined) {
+      if (body.completedAt === undefined) {
+        updateData.completedAt = body.isCompleted ? (workout.completedAt ?? new Date()) : null;
+      }
+      if (!body.isCompleted) {
+        updateData.linkedActivityId = null;
+      }
+    }
+
     const updated = await prisma.workout.update({
       where: { id },
-      data: {
-        ...(body.workoutType && { workoutType: body.workoutType }),
-        ...(body.description && { description: body.description }),
-        ...(body.customName !== undefined && { customName: body.customName }),
-        ...(body.targetHrZone !== undefined && { targetHrZone: body.targetHrZone }),
-        ...(body.targetHrMinBpm !== undefined && { targetHrMinBpm: body.targetHrMinBpm }),
-        ...(body.targetHrMaxBpm !== undefined && { targetHrMaxBpm: body.targetHrMaxBpm }),
-        ...(body.targetPaceMinSecondsPerKm !== undefined && { targetPaceMinSecondsPerKm: body.targetPaceMinSecondsPerKm }),
-        ...(body.targetPaceMaxSecondsPerKm !== undefined && { targetPaceMaxSecondsPerKm: body.targetPaceMaxSecondsPerKm }),
-        ...(body.structuredSteps !== undefined && { structuredSteps: body.structuredSteps }),
-        ...(body.targetDistance !== undefined
-          ? { targetDistance: body.targetDistance }
-          : derivedTargetDistance !== undefined
-            ? { targetDistance: derivedTargetDistance }
-            : {}),
-        ...(body.targetPace !== undefined
-          ? { targetPace: body.targetPace }
-          : derivedTargetPace !== undefined
-            ? { targetPace: derivedTargetPace }
-            : {}),
-        ...(body.targetDuration !== undefined
-          ? { targetDuration: body.targetDuration }
-          : derivedTargetDuration !== undefined
-            ? { targetDuration: derivedTargetDuration }
-            : {}),
-        ...(body.scheduledDate && { scheduledDate: new Date(body.scheduledDate) }),
-        ...(body.isCompleted !== undefined && { isCompleted: body.isCompleted, completedAt: body.isCompleted ? new Date() : null }),
-      },
+      data: updateData,
     });
+
+    const justCompleted = body.isCompleted === true && !workout.isCompleted;
+    if (justCompleted) {
+      void adaptPlanAfterCompletion(workout.goalId, user.id).catch((err) => {
+        logger.error('Plan adaptivity failed after workout completion', {
+          goalId: workout.goalId,
+          workoutId: workout.id,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      });
+    }
 
     const serialized = {
       ...updated,

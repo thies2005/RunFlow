@@ -67,7 +67,7 @@ export interface Workout {
     notes: string;
     phase: string;
     customName: string;
-    colorOverride: string;
+    color: string;
     structuredSteps: any;
     isCompleted: boolean;
 }
@@ -354,8 +354,8 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                     <label className="block text-xs text-foreground-muted mb-1">Color Override</label>
                     <input
                         type="color"
-                        value={form.colorOverride || '#3b82f6'}
-                        onChange={(e) => updateField('colorOverride', e.target.value)}
+                        value={form.color || '#3b82f6'}
+                        onChange={(e) => updateField('color', e.target.value)}
                         className="w-full h-8 rounded-md bg-background-tertiary border border-foreground/20 cursor-pointer"
                     />
                 </div>

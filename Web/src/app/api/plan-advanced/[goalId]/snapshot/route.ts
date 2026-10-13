@@ -25,7 +25,10 @@ export async function GET(req: Request, ctx: RouteContext) {
         }
 
         const snapshots = await prisma.planSnapshot.findMany({
-            where: { goalId },
+            where: {
+                goalId,
+                OR: [{ operation: null }, { operation: { not: 'coaching_summary' } }],
+            },
             orderBy: { createdAt: 'desc' },
             take: 50,
             select: {

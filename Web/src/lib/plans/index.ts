@@ -300,6 +300,14 @@ export type GeneratedWorkout = {
     targetPaceZoneLabel?: string | null;
     targetPaceMinSecondsPerKm?: number | null;
     targetPaceMaxSecondsPerKm?: number | null;
+    targetPowerWatts?: number | null;
+    targetPowerMinWatts?: number | null;
+    targetPowerMaxWatts?: number | null;
+    targetPowerZone?: number | null;
+    targetFtpPercent?: number | null;
+    targetCadenceRpm?: number | null;
+    targetRpe?: number | null;
+    plannedTss?: number | null;
 };
 
 export type StructuredWorkoutPlan = {

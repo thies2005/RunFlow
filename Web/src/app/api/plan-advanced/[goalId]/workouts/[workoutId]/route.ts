@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/db';
-import { auth } from '@/auth';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
@@ -13,8 +12,8 @@ type RouteContext = { params: Promise<{ goalId: string; workoutId: string }> };
 
 export async function PATCH(req: Request, ctx: RouteContext) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const user = await getAuthenticatedUser(req);
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -30,7 +29,7 @@ export async function PATCH(req: Request, ctx: RouteContext) {
         const { goalId, workoutId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id },
+            where: { id: goalId, userId: user.id },
         });
 
         if (!goal) {
@@ -46,18 +45,31 @@ export async function PATCH(req: Request, ctx: RouteContext) {
         }
 
         const body = await req.json();
-        const allowedFields = ['scheduledDate', 'workoutType', 'description', 'phase', 'order', 'notes', 'targetDistance', 'targetDuration', 'targetPace', 'targetHrZone', 'customName', 'color', 'structuredSteps', 'groupId', 'subGoalId', 'isCompleted', 'linkedActivityId'];
+        const allowedFields = [
+            'scheduledDate', 'workoutType', 'description', 'displayDesc', 'phase', 'order', 'notes',
+            'targetDistance', 'targetDuration', 'targetPace', 'targetPaceMinSecondsPerKm', 'targetPaceMaxSecondsPerKm',
+            'targetPaceZoneLabel', 'targetHrZone', 'targetHrMinBpm', 'targetHrMaxBpm', 'targetHrZoneLabel',
+            'targetPowerWatts', 'targetPowerMinWatts', 'targetPowerMaxWatts', 'targetPowerZone', 'targetFtpPercent',
+            'targetCadenceRpm', 'targetRpe', 'intensityZone', 'plannedTss', 'sport', 'isCompleted', 'completedAt',
+            'linkedActivityId', 'customName', 'color', 'structuredSteps', 'groupId', 'subGoalId',
+        ];
         const updateData: Record<string, unknown> = {};
 
         for (const field of allowedFields) {
             if (body[field] !== undefined) {
-                updateData[field] = field === 'scheduledDate' ? new Date(body[field]) : body[field];
+                if (field === 'scheduledDate') {
+                    updateData[field] = body[field] ? new Date(body[field]) : undefined;
+                } else if (field === 'completedAt') {
+                    updateData[field] = body[field] ? new Date(body[field]) : null;
+                } else {
+                    updateData[field] = body[field];
+                }
             }
         }
 
         if (body.linkedActivityId) {
             const activity = await prisma.activity.findFirst({
-                where: { id: body.linkedActivityId, userId: session.user.id },
+                where: { id: body.linkedActivityId, userId: user.id },
             });
             if (!activity) {
                 return NextResponse.json({ error: 'Activity not found' }, { status: 404 });
@@ -65,7 +77,9 @@ export async function PATCH(req: Request, ctx: RouteContext) {
         }
 
         if (body.isCompleted !== undefined) {
-            updateData.completedAt = body.isCompleted ? (workout.completedAt ?? new Date()) : null;
+            if (body.completedAt === undefined) {
+                updateData.completedAt = body.isCompleted ? (workout.completedAt ?? new Date()) : null;
+            }
             if (!body.isCompleted) updateData.linkedActivityId = null;
         }
 
@@ -108,10 +122,10 @@ export async function PATCH(req: Request, ctx: RouteContext) {
         // never break the update response.
         const justCompleted = body.isCompleted === true && !workout.isCompleted;
         if (justCompleted) {
-            void adaptPlanAfterCompletion(goalId, session.user.id).catch((err) => {
+            void adaptPlanAfterCompletion(workout.goalId, user.id).catch((err) => {
                 logger.error('Plan adaptivity failed after workout completion', {
-                    goalId,
-                    workoutId,
+                    goalId: workout.goalId,
+                    workoutId: workout.id,
                     error: err instanceof Error ? err.message : String(err),
                 });
             });

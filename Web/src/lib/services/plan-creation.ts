@@ -7,6 +7,7 @@ import { WorkoutType, RaceType, PlanSport, PlanCreationMode } from '@/generated/
 import { logger } from '@/lib/logging/logger';
 import { z } from 'zod';
 import { getRaceDefaults } from '@/lib/plans/defaults';
+import { inferSport } from '@/lib/plans/descriptions';
 
 // ─── Shared Plan Creation Schema (superset for onboarding + advanced) ───
 
@@ -267,6 +268,7 @@ export function mapWorkoutsForDb(
             ...(options.subGoalId && { subGoalId: options.subGoalId }),
             scheduledDate: w.date,
             workoutType: w.type as WorkoutType,
+            sport: w.sport ?? inferSport(w.type),
             description: options.descriptionPrefix
                 ? `${options.descriptionPrefix}${w.description}`
                 : w.description,
@@ -280,11 +282,19 @@ export function mapWorkoutsForDb(
             targetPaceZoneLabel: w.targetPaceZoneLabel ?? null,
             targetPaceMinSecondsPerKm: w.targetPaceMinSecondsPerKm ?? null,
             targetPaceMaxSecondsPerKm: w.targetPaceMaxSecondsPerKm ?? null,
+            targetPowerWatts: w.targetPowerWatts ?? null,
+            targetPowerMinWatts: w.targetPowerMinWatts ?? null,
+            targetPowerMaxWatts: w.targetPowerMaxWatts ?? null,
+            targetPowerZone: w.targetPowerZone ?? null,
+            targetFtpPercent: w.targetFtpPercent ?? null,
+            targetCadenceRpm: w.targetCadenceRpm ?? null,
+            targetRpe: w.targetRpe ?? null,
+            plannedTss: w.plannedTss ?? null,
             phase: w.phase ?? 'BASE',
             isCompleted: false,
             ...(structuredSteps && { structuredSteps }),
-            ...(displayDesc && { customName: displayDesc }),
-            ...(intensityZone && { notes: `[auto] intensity:${intensityZone}` }),
+            ...(displayDesc && { customName: displayDesc, displayDesc }),
+            ...(intensityZone && { intensityZone, notes: `[auto] intensity:${intensityZone}` }),
         };
     });
 }

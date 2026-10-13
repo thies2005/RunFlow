@@ -158,14 +158,28 @@ describe('PATCH /api/mobile/v1/workouts/[id] builder fields', () => {
         const response = await PATCH(buildRequest({
             evil: 'drop me',
             goalId: 'goal-other',
-            linkedActivityId: 'act-1',
+            unknownCol: 'drop me too',
         }), { params: Promise.resolve({ id: 'wk-1' }) } as never);
 
         expect(response.status).toBe(200);
         const data = (prisma.workout.update as jest.Mock).mock.calls[0][0].data;
         expect(data).not.toHaveProperty('evil');
         expect(data).not.toHaveProperty('goalId');
-        expect(data).not.toHaveProperty('linkedActivityId');
+        expect(data).not.toHaveProperty('unknownCol');
+    });
+
+    it('persists unified whitelist fields (linkedActivityId, sport, power)', async () => {
+        const response = await PATCH(buildRequest({
+            linkedActivityId: 'act-1',
+            sport: 'RIDE',
+            targetPowerWatts: 250,
+        }), { params: Promise.resolve({ id: 'wk-1' }) } as never);
+
+        expect(response.status).toBe(200);
+        const data = (prisma.workout.update as jest.Mock).mock.calls[0][0].data;
+        expect(data.linkedActivityId).toBe('act-1');
+        expect(data.sport).toBe('RIDE');
+        expect(data.targetPowerWatts).toBe(250);
     });
 
     it('returns 404 when the workout belongs to another user', async () => {

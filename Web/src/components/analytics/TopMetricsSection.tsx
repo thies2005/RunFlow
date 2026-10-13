@@ -11,9 +11,9 @@ interface TopMetricsSectionProps {
 export default function TopMetricsSection({ runalyzeMetrics, setIsCalibrationOpen }: TopMetricsSectionProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Effective VO2max */}
+            {/* Aerobic Fitness (VO2max) — HR-based trend indicator */}
             <div className="glass-card p-6 text-center">
-                <p className="text-foreground-muted text-sm mb-2">Effective VO2max</p>
+                <p className="text-foreground-muted text-sm mb-2">Aerobic Fitness (VO2max)</p>
                 <p className="text-4xl font-bold text-foreground font-mono tabular-nums">
                     {runalyzeMetrics.effectiveVO2max > 0 ? runalyzeMetrics.effectiveVO2max.toFixed(1) : '-'}
                 </p>

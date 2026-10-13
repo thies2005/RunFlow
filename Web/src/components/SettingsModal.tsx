@@ -11,7 +11,7 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-    const { effectiveVO2max, marathonShape } = useUserMetrics();
+    const { vdot, marathonShape } = useUserMetrics();
     const shapePercent = marathonShape?.shape || 0;
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Plan Settings" maxWidth="lg">
@@ -19,7 +19,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 mode="settings"
                 onSuccess={onClose}
                 onCancel={onClose}
-                effectiveVO2max={effectiveVO2max}
+                currentVdot={vdot}
                 shapePercent={shapePercent}
             />
         </Modal>

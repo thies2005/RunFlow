@@ -9,7 +9,16 @@ interface UserMetrics {
         longRunScore?: number;
         crossTrainingScore?: number;
     };
-    effectiveVO2max: number;
+    /**
+     * Performance VDOT (best effort from recent runs). Drives plan creation,
+     * progression, workout paces and race projections.
+     */
+    vdot: number;
+    /**
+     * Aerobic Fitness (VO2max) — HR-based trend indicator. Display/trend only;
+     * NEVER feeds paces or planning.
+     */
+    aerobicVo2max: number;
     correctionFactor: number;
     ctl: number;
     atl: number;
@@ -98,7 +107,10 @@ export function UserMetricsProvider({ children, stats }: UserMetricsProviderProp
 
     const value: UserMetrics = {
         marathonShape: stats?.marathonShape || { shape: 0, mileageScore: 0, longRunScore: 0, crossTrainingScore: 0 },
-        effectiveVO2max: stats?.effectiveVO2max || 0,
+        // Two-metric contract: `vdot` is the performance VDOT (planning + paces),
+        // `aerobicVo2max` is the HR-based aerobic-fitness trend (display only).
+        vdot: stats?.vdot || 0,
+        aerobicVo2max: stats?.effectiveVO2max || 0,
         correctionFactor: stats?.vdotCorrectionFactor || 1.0,
         ctl,
         atl,

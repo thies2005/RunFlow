@@ -12,7 +12,6 @@ jest.mock('@/lib/db', () => ({
 
 import { prisma } from '@/lib/db';
 import { analyzeRace } from '../../metrics/vdot';
-import { AnalyticsService } from '../analytics';
 import { resolveTrainingVdotForGoal, resolveVdot, validateTrainingPaces } from '../plan-creation';
 
 const mockedPrisma = prisma as unknown as {
@@ -138,35 +137,57 @@ describe('resolveVdot', () => {
         expect(mockedPrisma.user.findUnique).not.toHaveBeenCalled();
     });
 
-    it('uses form HR and correction overrides for activity VDOT instead of stale stored profile values', async () => {
+    it('derives activity VDOT from the best effort (no HR input) with the form correction override', async () => {
         mockedPrisma.activity.findFirst.mockResolvedValue(null);
         mockedPrisma.user.findUnique.mockResolvedValue({
-            hrMax: 150,
             vdotCorrectionFactor: 1.4,
         });
-        mockedPrisma.activity.findMany.mockResolvedValue([{
-            startDate: new Date('2026-05-01'),
-            distance: 10000,
-            movingTime: 3000,
-            averageHr: 150,
-            hasHeartrate: true,
-        }]);
-        const spy = jest.spyOn(AnalyticsService, 'calculateVO2max')
-            .mockReturnValue({ rawVO2max: 40, effectiveVO2max: 42 });
+        mockedPrisma.activity.findMany.mockResolvedValue([
+            {
+                startDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+                distance: 10000,
+                movingTime: 3000,
+                type: 'RUN',
+            },
+            {
+                // weaker effort, more recent — best effort must win
+                startDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+                distance: 5000,
+                movingTime: 1500,
+                type: 'RUN',
+            },
+        ]);
 
         const result = await resolveVdot({
             userId: 'user-1',
             raceType: 'HALF_MARATHON',
             useActivityVdot: true,
-            maxHeartRate: 190,
             vdotCorrectionFactor: 0.9,
         });
 
-        expect(result.currentVdot).toBe(42);
+        const expectedVdot = analyzeRace({ distance: '10K', timeSeconds: 3000 }).vdot * 0.9;
+        expect(result.currentVdot).toBeCloseTo(expectedVdot, 10);
         expect(result.vdotFromActivities).toBe(true);
-        expect(spy).toHaveBeenCalledWith(expect.any(Array), 190, 0.9);
+        expect(result.vdotConfidence).toBe('medium');
+    });
 
-        spy.mockRestore();
+    it('falls back to VDOT 30 only when no run qualifies', async () => {
+        mockedPrisma.activity.findFirst.mockResolvedValue(null);
+        mockedPrisma.user.findUnique.mockResolvedValue({
+            vdotCorrectionFactor: 1.0,
+        });
+        mockedPrisma.activity.findMany.mockResolvedValue([]);
+
+        const result = await resolveVdot({
+            userId: 'user-1',
+            raceType: null,
+            targetTime: null,
+            useActivityVdot: true,
+        });
+
+        expect(result.currentVdot).toBe(30.0);
+        expect(result.vdotFromActivities).toBe(false);
+        expect(result.vdotConfidence).toBe('low');
     });
 });
 

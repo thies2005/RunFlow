@@ -63,6 +63,7 @@ import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
 import { handleError } from '@/lib/errors/handler';
+import { calculateVdot } from '@/lib/metrics/vdot';
 
 describe('GET /api/analytics/stats', () => {
     beforeEach(() => {
@@ -153,6 +154,7 @@ describe('GET /api/analytics/stats', () => {
         const data = await response.json();
 
         expect(data).toHaveProperty('currentWeekMileage');
+        expect(data).toHaveProperty('vdot');
         expect(data).toHaveProperty('effectiveVO2max');
         expect(data).toHaveProperty('rawVO2max');
         expect(data).toHaveProperty('vdotCorrectionFactor');
@@ -180,6 +182,45 @@ describe('GET /api/analytics/stats', () => {
         expect(data.ctl).toBe(50);
         expect(data.atl).toBe(40);
         expect(data.tsb).toBe(10);
+    });
+
+    it('returns BOTH metrics: live best-effort VDOT must not be overridden by the stale persisted value', async () => {
+        (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+            id: 'user-1',
+            hrMax: 185,
+            vdotCorrectionFactor: 1.0,
+            includeCrossTraining: true,
+            autoRevolvingVo2max: 55, // stale persisted VDOT from an old sync
+        });
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/analytics/stats');
+
+        const response = await GET(mockRequest);
+        const data = await response.json();
+
+        const liveVdot = calculateVdot({ distance: 5000, timeSeconds: 1800 });
+        expect(data.vdot).toBeCloseTo(liveVdot, 10);
+        expect(data.vdot).not.toBe(55);
+        // HR-based aerobic-fitness trend is computed live, never from storage
+        expect(data.effectiveVO2max).toBe(44);
+    });
+
+    it('falls back to the persisted VDOT only when no run qualifies', async () => {
+        (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+            id: 'user-1',
+            hrMax: 185,
+            vdotCorrectionFactor: 1.0,
+            includeCrossTraining: true,
+            autoRevolvingVo2max: 55,
+        });
+        (prisma.activity.findMany as jest.Mock).mockResolvedValue([]);
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/analytics/stats');
+
+        const response = await GET(mockRequest);
+        const data = await response.json();
+
+        expect(data.vdot).toBe(55);
     });
 
     it('should handle errors gracefully', async () => {

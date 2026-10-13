@@ -41,7 +41,7 @@ interface PlanSetupFormProps {
     mode: 'onboarding' | 'advanced' | 'modal' | 'settings';
     onSuccess?: () => void;
     onCancel?: () => void;
-    effectiveVO2max?: number;
+    currentVdot?: number;
     shapePercent?: number;
     planSource?: string;
     creationMode?: string;
@@ -88,7 +88,7 @@ function getDefaultMaxLongRunKm(raceType: string, weeklyMileageKm: number): numb
 export default function PlanSetupForm({
     mode,
     onSuccess,
-    effectiveVO2max: propEffectiveVO2max = 0,
+    currentVdot: propCurrentVdot = 0,
     shapePercent: propShapePercent = 0,
     planSource: propPlanSource,
     creationMode: propCreationMode,
@@ -251,7 +251,7 @@ export default function PlanSetupForm({
         },
     });
 
-    // Fetch analytics stats (for both modes to get effectiveVO2max if not passed)
+    // Fetch analytics stats (for both modes to get VDOT if not passed)
     const { data: internalStatsData } = useQuery({
         queryKey: ['analytics-stats'],
         queryFn: async () => {
@@ -261,8 +261,10 @@ export default function PlanSetupForm({
         },
     });
 
-    // Use props if provided, otherwise fall back to internally fetched stats
-    const effectiveVO2max = propEffectiveVO2max > 0 ? propEffectiveVO2max : (internalStatsData?.effectiveVO2max || 0);
+    // Use props if provided, otherwise fall back to internally fetched stats.
+    // Plan setup is a planning surface: it uses the performance VDOT metric,
+    // never the HR-based aerobic-fitness trend.
+    const currentVdot = propCurrentVdot > 0 ? propCurrentVdot : (internalStatsData?.vdot || 0);
     const shapePercent = propShapePercent > 0 ? propShapePercent : (internalStatsData?.marathonShape?.shape || 0);
 
     // Auto-initialize startWeeklyMileage from the user's last 4 weeks of running
@@ -423,8 +425,8 @@ export default function PlanSetupForm({
             }
         }
         let defaults = getRaceDefaults(raceType);
-        if (effectiveVO2max > 0) {
-            defaults = adjustDefaultsForVdot(defaults, effectiveVO2max);
+        if (currentVdot > 0) {
+            defaults = adjustDefaultsForVdot(defaults, currentVdot);
         }
         const scaled = getScaledPhaseDefaults(raceType, computedPlanWeeks);
         setRunsPerWeek(defaults.runsPerWeek);
@@ -528,9 +530,9 @@ export default function PlanSetupForm({
     useEffect(() => {
         if (mode === 'settings' && hasExistingCalibration.current) return;
 
-        if (effectiveVO2max > 0 && calibrationMode === 'manual' && !selectedActivityId) {
+        if (currentVdot > 0 && calibrationMode === 'manual' && !selectedActivityId) {
             const getPredictedTimeForDistance = (dist: string) => {
-                const predictions = calculateAllRacePredictions(effectiveVO2max, shapePercent);
+                const predictions = calculateAllRacePredictions(currentVdot, shapePercent);
                 const mapping: Record<string, string> = {
                     'MARATHON': 'Marathon',
                     'HALF': 'Half',
@@ -562,7 +564,7 @@ export default function PlanSetupForm({
                 setCalibrationFactor(1.0);
             }
         }
-    }, [mode, calibrationDistance, effectiveVO2max, shapePercent, calibrationMode, selectedActivityId, hours, minutes, seconds]);
+    }, [mode, calibrationDistance, currentVdot, shapePercent, calibrationMode, selectedActivityId, hours, minutes, seconds]);
 
     // Auto-fill time when activity is selected (Activity Mode)
     useEffect(() => {
@@ -605,12 +607,12 @@ export default function PlanSetupForm({
                 setSeconds(s.toString());
 
                 // 3. Update Calibration Factor
-                if (effectiveVO2max > 0) {
-                    setCalibrationFactor(vdot / effectiveVO2max);
+                if (currentVdot > 0) {
+                    setCalibrationFactor(vdot / currentVdot);
                 }
             }
         }
-    }, [selectedActivityId, activitiesData, calibrationDistance, effectiveVO2max]); // Re-run when dist changes
+    }, [selectedActivityId, activitiesData, calibrationDistance, currentVdot]); // Re-run when dist changes
 
     // Clamp Training Phases if they exceed available plan weeks
     useEffect(() => {
@@ -647,7 +649,7 @@ export default function PlanSetupForm({
                 computedTargetTime = triGoalTimeSeconds;
             }
 
-            if (!computedTargetTime && effectiveVO2max > 0) {
+            if (!computedTargetTime && currentVdot > 0) {
                 const raceDistanceMap: Record<string, RaceDistance> = {
                     'FIVE_K': '5K',
                     'TEN_K': '10K',
@@ -655,7 +657,7 @@ export default function PlanSetupForm({
                     'MARATHON': 'MARATHON',
                 };
                 const mappedDistance = raceDistanceMap[raceType] || 'MARATHON';
-                const calibratedVO2max = effectiveVO2max * calibrationFactor;
+                const calibratedVO2max = currentVdot * calibrationFactor;
                 const planSettings: PlanSettings = {
                     durationWeeks: computedPlanWeeks,
                     runsPerWeek: runsPerWeek,
@@ -922,13 +924,13 @@ export default function PlanSetupForm({
                 seconds={seconds}
                 setSeconds={setSeconds}
                 setCalibrationFactor={setCalibrationFactor}
-                effectiveVO2max={effectiveVO2max}
+                currentVdot={currentVdot}
                 raceActivities={raceActivities}
             />
 
             {TRIATHLON_RACE_TYPES.has(raceType) && (
                 <TriathlonGoalTimeRenderer
-                    vdot={effectiveVO2max * calibrationFactor}
+                    vdot={currentVdot * calibrationFactor}
                     raceType={raceType}
                     customSwimDistM={customSwimDistM > 0 ? customSwimDistM : undefined}
                     customBikeDistM={customBikeDistM > 0 ? customBikeDistM : undefined}
@@ -989,7 +991,7 @@ export default function PlanSetupForm({
             {!TRIATHLON_RACE_TYPES.has(raceType) && raceType !== 'BACKYARD_ULTRA' && !['TWELVE_HOUR', 'TWENTY_FOUR_HOUR'].includes(raceType) && (
                 <GoalTimeRenderer
                     mode={mode}
-                    effectiveVO2max={effectiveVO2max}
+                    currentVdot={currentVdot}
                     calibrationFactor={calibrationFactor}
                     raceType={raceType}
                     computedPlanWeeks={computedPlanWeeks}

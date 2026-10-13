@@ -50,7 +50,12 @@ export type ActivityForShape = {
  * 
  * Formula sources:
  * - Oxygen cost: Daniels/Gilbert formula
- * - %VO2max from %HRmax: Quadratic approximation (Swain et al.)
+ * - %VO2max from %HRmax: Swain equation (Swain et al., 1994)
+ *
+ * NOTE (two-metric architecture): this HR-based estimate is ONLY the
+ * 'Aerobic Fitness (VO2max)' trend indicator. It must never feed plan
+ * creation, workout paces or race projections — those are driven by the
+ * performance-based VDOT (see effectiveVdot.ts bestEffortVdot).
  * 
  * @param distanceMeters - Distance in meters
  * @param timeSeconds - Time in seconds
@@ -86,20 +91,19 @@ export function calculateEffectiveVO2max(
     // VO2 = -4.60 + 0.182258 * v + 0.000104 * v^2
     const vo2Cost = -4.60 + 0.182258 * velocity + 0.000104 * Math.pow(velocity, 2);
 
-    // === STANDARD: Linear approximation ===
-    // Reverted to linear model to avoid spikes at low-medium intensities
-    // This model assumes %VO2max is roughly linear with %HRmax above 60%
+    // === STANDARD: Swain equation (Swain et al., 1994) ===
+    // %VO2max = 1.45 * %HRmax - 45 (percent form), clamped into (0, 1].
+    // Anchored so 100% HRmax = 100% VO2max:
     //
-    // Comparison:
     //   %HRmax | %VO2max
-    //   60%    | 85.6%
-    //   70%    | 89.2%
-    //   80%    | 92.8%
-    //   90%    | 96.4%
+    //   60%    | 42.0%
+    //   70%    | 56.5%
+    //   80%    | 71.0%
+    //   90%    | 85.5%
     //   100%   | 100%
     const percentVO2max = Math.min(
         1.0,
-        0.36 * hrPercent + 0.64
+        Math.max(0, 1.45 * hrPercent - 0.45)
     );
 
     // Guard: prevent division by zero or near-zero

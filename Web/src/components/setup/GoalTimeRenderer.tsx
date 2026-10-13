@@ -5,7 +5,7 @@ import { estimateBackyardUltraTime } from '@/lib/plans/backyard-time';
 
 interface GoalTimeRendererProps {
     mode: 'onboarding' | 'advanced' | 'modal' | 'settings';
-    effectiveVO2max: number;
+    currentVdot: number;
     calibrationFactor: number;
     raceType: string;
     computedPlanWeeks: number;
@@ -51,7 +51,7 @@ function estimateDistanceForTime(vdot: number, timeSeconds: number): number {
 
 export default function GoalTimeRenderer({
     mode,
-    effectiveVO2max,
+    currentVdot,
     calibrationFactor,
     raceType,
     computedPlanWeeks,
@@ -82,13 +82,13 @@ export default function GoalTimeRenderer({
     if (raceType === 'BACKYARD_ULTRA') {
         const backyardLoopDistM = backyardLoopDistMProp ?? 6706;
         const targetLaps = targetLapsProp ?? 2;
-        const calibratedVO2max = effectiveVO2max * calibrationFactor;
+        const calibratedVdot = currentVdot * calibrationFactor;
         const totalDistKm = (backyardLoopDistM * targetLaps) / 1000;
 
         let projection: ReturnType<typeof estimateBackyardUltraTime> | null = null;
-        if (calibratedVO2max > 0 && backyardLoopDistM > 0) {
+        if (calibratedVdot > 0 && backyardLoopDistM > 0) {
             const progressionFactor = calculateProgressionCoefficient(computedPlanWeeks, runsPerWeek, weeklyMileage);
-            const projectedVdot = calibratedVO2max * progressionFactor;
+            const projectedVdot = calibratedVdot * progressionFactor;
             projection = estimateBackyardUltraTime({ vdot: projectedVdot, loopDistM: backyardLoopDistM, targetLaps });
         }
 
@@ -140,11 +140,11 @@ export default function GoalTimeRenderer({
                             <div className="text-negative font-medium font-mono tabular-nums">Conservative: {formatTime(projection.conservative.totalSeconds)}</div>
                         </div>
                     )}
-                    {calibratedVO2max > 0 && (
+                    {calibratedVdot > 0 && (
                         <div className="grid grid-cols-2 gap-3 text-xs bg-background-tertiary border border-line rounded-md p-3">
                             <div>
-                                <span className="text-foreground-muted block mb-1">VO2max</span>
-                                <span className="text-foreground font-semibold font-mono tabular-nums">{calibratedVO2max.toFixed(1)}</span>
+                                <span className="text-foreground-muted block mb-1">VDOT</span>
+                                <span className="text-foreground font-semibold font-mono tabular-nums">{calibratedVdot.toFixed(1)}</span>
                             </div>
                             <div>
                                 <span className="text-foreground-muted block mb-1">Marathon Shape</span>
@@ -160,13 +160,13 @@ export default function GoalTimeRenderer({
     if (raceType === 'TWELVE_HOUR' || raceType === 'TWENTY_FOUR_HOUR') {
         const fixedSeconds = raceType === 'TWELVE_HOUR' ? 43200 : 86400;
         const durationLabel = raceType === 'TWELVE_HOUR' ? '12 hours' : '24 hours';
-        const calibratedVO2max = effectiveVO2max * calibrationFactor;
+        const calibratedVdot = currentVdot * calibrationFactor;
 
         let estimatedDistance: string | null = null;
         let projectedPace: string | null = null;
-        if (calibratedVO2max > 0) {
+        if (calibratedVdot > 0) {
             const progressionFactor = calculateProgressionCoefficient(computedPlanWeeks, runsPerWeek, weeklyMileage);
-            const projectedVdot = calibratedVO2max * progressionFactor;
+            const projectedVdot = calibratedVdot * progressionFactor;
             const distM = estimateDistanceForTime(projectedVdot, fixedSeconds);
             estimatedDistance = `${(distM / 1000).toFixed(1)} km`;
             const paceSecPerKm = fixedSeconds / (distM / 1000);
@@ -201,11 +201,11 @@ export default function GoalTimeRenderer({
                         )}
                     </div>
                 )}
-                {calibratedVO2max > 0 && (
+                {calibratedVdot > 0 && (
                     <div className="grid grid-cols-2 gap-3 text-xs bg-background-tertiary border border-line rounded-md p-3 mt-3">
                         <div>
-                            <span className="text-foreground-muted block mb-1">VO2max</span>
-                            <span className="text-foreground font-semibold font-mono tabular-nums">{calibratedVO2max.toFixed(1)}</span>
+                            <span className="text-foreground-muted block mb-1">VDOT</span>
+                            <span className="text-foreground font-semibold font-mono tabular-nums">{calibratedVdot.toFixed(1)}</span>
                         </div>
                         <div>
                             <span className="text-foreground-muted block mb-1">Marathon Shape</span>
@@ -217,7 +217,7 @@ export default function GoalTimeRenderer({
         );
     }
 
-    if (effectiveVO2max <= 0) {
+    if (currentVdot <= 0) {
         return (
             <div className="mt-6 p-5 bg-accent-orange/5 rounded-md border border-glass-border">
                 <div className="flex items-center gap-2 text-accent-orange mb-3">
@@ -295,7 +295,7 @@ export default function GoalTimeRenderer({
         'MARATHON': 'MARATHON',
     };
     const mappedDistance = raceDistanceMap[raceType] || 'MARATHON';
-    const calibratedVO2max = effectiveVO2max * calibrationFactor;
+    const calibratedVdot = currentVdot * calibrationFactor;
 
     const planSettings: PlanSettings = {
         durationWeeks: computedPlanWeeks,
@@ -309,13 +309,13 @@ export default function GoalTimeRenderer({
 
     const projectionBase = distanceOverrideM && distanceOverrideM > 0
         ? calculateProjectedGoalTimeForDistance(
-            calibratedVO2max,
+            calibratedVdot,
             { durationWeeks: computedPlanWeeks, runsPerWeek, weeklyMileageGoal: weeklyMileage },
             distanceOverrideM,
             shapePercent,
         )
         : calculateProjectedGoalTime(
-            calibratedVO2max,
+            calibratedVdot,
             planSettings,
             shapePercent
         );
@@ -324,7 +324,7 @@ export default function GoalTimeRenderer({
         optimalTime: projectionBase.optimalTime,
         projectedTime: projectionBase.projectedTime,
         conservativeTime: projectionBase.conservativeTime,
-        projectedVdot: 'projectedVdot' in projectionBase ? (projectionBase as Record<string, unknown>).projectedVdot as number : calibratedVO2max,
+        projectedVdot: 'projectedVdot' in projectionBase ? (projectionBase as Record<string, unknown>).projectedVdot as number : calibratedVdot,
         improvementPercent: 'improvementPercent' in projectionBase ? (projectionBase as Record<string, unknown>).improvementPercent as number : 0,
         projectedShape: 'projectedShape' in projectionBase ? (projectionBase as Record<string, unknown>).projectedShape as number : shapePercent,
         shapeImprovementPercent: 'shapeImprovementPercent' in projectionBase ? (projectionBase as Record<string, unknown>).shapeImprovementPercent as number : 0,
@@ -395,7 +395,7 @@ export default function GoalTimeRenderer({
 
             {calibrationFactor !== 1.0 && (
                 <div className="mb-3 text-xs text-accent-cyan bg-accent-cyan/10 px-2 py-1 rounded inline-block">
-                    Using calibrated VO2max ({(effectiveVO2max * calibrationFactor).toFixed(1)})
+                    Using calibrated VDOT ({(currentVdot * calibrationFactor).toFixed(1)})
                 </div>
             )}
 
@@ -478,8 +478,8 @@ export default function GoalTimeRenderer({
 
             <div className="grid grid-cols-2 gap-3 text-xs bg-background-tertiary border border-line rounded-md p-3">
                 <div>
-                    <span className="text-foreground-muted block mb-1">VO2max</span>
-                    <span className="text-foreground font-semibold font-mono tabular-nums">{calibratedVO2max.toFixed(1)}</span>
+                    <span className="text-foreground-muted block mb-1">VDOT</span>
+                    <span className="text-foreground font-semibold font-mono tabular-nums">{calibratedVdot.toFixed(1)}</span>
                     <span className="text-foreground-muted"> → </span>
                     <span className="text-accent-cyan font-semibold font-mono tabular-nums">{projection.projectedVdot}</span>
                     {projection.improvementPercent > 0 && (

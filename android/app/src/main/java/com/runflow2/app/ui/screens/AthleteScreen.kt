@@ -150,7 +150,7 @@ fun AthleteScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             StatTile(
-                                label = "VO₂ max",
+                                label = "VDOT",
                                 value = Format.oneDecimal(analytics?.effectiveVdot),
                                 icon = Icons.Outlined.MonitorHeart,
                                 accent = Vo2Accent,

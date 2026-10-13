@@ -1,6 +1,6 @@
 import { adaptPlanAfterCompletion } from '../adapt';
 import { recalculateWorkoutPaces } from '@/lib/plans/recalculate-paces';
-import { calculateWeightedEffectiveVO2max } from '@/lib/metrics/runalyze';
+import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 import { prisma } from '@/lib/db';
 
 // --- Mocks --------------------------------------------------------------------
@@ -19,9 +19,8 @@ jest.mock('@/lib/plans/recalculate-paces', () => ({
     recalculateWorkoutPaces: jest.fn(),
 }));
 
-jest.mock('@/lib/metrics/runalyze', () => ({
-    calculateWeightedEffectiveVO2max: jest.fn(),
-    // re-export type only consumers don't need the runtime value
+jest.mock('@/lib/metrics/effectiveVdot', () => ({
+    bestEffortVdot: jest.fn(),
 }));
 
 const mockPrisma = prisma as unknown as {
@@ -32,7 +31,7 @@ const mockPrisma = prisma as unknown as {
     $transaction: jest.Mock;
 };
 const mockRecalculate = recalculateWorkoutPaces as jest.Mock;
-const mockWeightedVdot = calculateWeightedEffectiveVO2max as jest.Mock;
+const mockBestEffortVdot = bestEffortVdot as jest.Mock;
 
 const GOAL_ID = 'goal-1';
 const USER_ID = 'user-1';
@@ -140,7 +139,7 @@ describe('adaptPlanAfterCompletion', () => {
             { startDate: new Date(), distance: 5000, movingTime: 1500, averageHr: 160, hasHeartrate: true, type: 'RUN' },
         ]);
         // Only +1 VDOT point -> below threshold.
-        mockWeightedVdot.mockReturnValue(51);
+        mockBestEffortVdot.mockReturnValue(51);
 
         const result = await adaptPlanAfterCompletion(GOAL_ID, USER_ID);
 
@@ -167,7 +166,7 @@ describe('adaptPlanAfterCompletion', () => {
             { startDate: new Date(), distance: 5000, movingTime: 1300, averageHr: 170, hasHeartrate: true, type: 'RUN' },
         ]);
         // +5 VDOT points -> above threshold.
-        mockWeightedVdot.mockReturnValue(50);
+        mockBestEffortVdot.mockReturnValue(50);
         mockRecalculate.mockResolvedValue({ updatedCount: 2, skippedCount: 0, warnings: [] });
 
         const result = await adaptPlanAfterCompletion(GOAL_ID, USER_ID);
@@ -202,7 +201,7 @@ describe('adaptPlanAfterCompletion', () => {
         mockPrisma.activity.findMany.mockResolvedValue([
             { startDate: new Date(), distance: 5000, movingTime: 1300, averageHr: 170, hasHeartrate: true, type: 'RUN' },
         ]);
-        mockWeightedVdot.mockReturnValue(50); // +10
+        mockBestEffortVdot.mockReturnValue(50); // +10
         mockRecalculate.mockResolvedValue({ updatedCount: 1, skippedCount: 1, warnings: [] });
 
         const result = await adaptPlanAfterCompletion(GOAL_ID, USER_ID);
@@ -214,7 +213,7 @@ describe('adaptPlanAfterCompletion', () => {
         expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
     });
 
-    it('returns not-adapted when max HR is unavailable', async () => {
+    it('adapts even without any HR data (best-effort VDOT needs no max HR)', async () => {
         mockPrisma.goal.findFirst.mockResolvedValue({
             id: GOAL_ID,
             userId: USER_ID,
@@ -236,12 +235,35 @@ describe('adaptPlanAfterCompletion', () => {
             hrZone5Max: null,
             hrZone6Max: null,
         });
+        mockBestEffortVdot.mockReturnValue(50); // +5
+        mockRecalculate.mockResolvedValue({ updatedCount: 1, skippedCount: 0, warnings: [] });
+
+        const result = await adaptPlanAfterCompletion(GOAL_ID, USER_ID);
+
+        expect(result.adapted).toBe(true);
+        expect(result.newVdot).toBe(50);
+        expect(mockRecalculate).toHaveBeenCalledWith(GOAL_ID, 50, expect.any(Object));
+    });
+
+    it('returns not-adapted when no run qualifies for a best-effort VDOT', async () => {
+        mockPrisma.goal.findFirst.mockResolvedValue({
+            id: GOAL_ID,
+            userId: USER_ID,
+            currentVdot: 45,
+            createdAt: new Date(),
+        });
+        mockPrisma.workout.findMany.mockResolvedValue([
+            { id: 'w2', isCompleted: false, scheduledDate: new Date() },
+        ]);
+        mockPrisma.activity.findMany.mockResolvedValue([
+            { startDate: new Date(), distance: 3000, movingTime: 900, type: 'RUN' },
+        ]);
+        mockBestEffortVdot.mockReturnValue(0);
 
         const result = await adaptPlanAfterCompletion(GOAL_ID, USER_ID);
 
         expect(result.adapted).toBe(false);
-        expect(result.reason).toContain('max HR');
-        expect(mockWeightedVdot).not.toHaveBeenCalled();
+        expect(result.reason).toBe('Could not estimate VDOT from activities');
         expect(mockRecalculate).not.toHaveBeenCalled();
     });
 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { calculateVdot, type RaceDistance } from '@/lib/metrics/vdot';
+import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 
 // Race distances in meters for validation
 const RACE_DISTANCES: Record<string, number> = {
@@ -99,13 +100,7 @@ export async function POST(request: NextRequest) {
                 timeSeconds: raceTimeSeconds,
             });
 
-            // Get current calculated VO2max
-            const user = await prisma.user.findUnique({
-                where: { id: session.user.id },
-                select: { hrMax: true },
-            });
-
-            // Get running activities for current VO2max calculation
+            // Get running activities for the current best-effort VDOT
             const sixMonthsAgo = new Date();
             sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -119,20 +114,22 @@ export async function POST(request: NextRequest) {
                     startDate: true,
                     distance: true,
                     movingTime: true,
-                    averageHr: true,
-                    hasHeartrate: true,
+                    type: true,
                 },
             });
 
-            // Import dynamically to avoid circular dependencies
-            const { calculateWeightedEffectiveVO2max } = await import('@/lib/metrics/runalyze');
-            const maxHR = user?.hrMax || 185;
-            const calculatedVdot = calculateWeightedEffectiveVO2max(activities, maxHR);
+            // The correction factor is solved against the PERFORMANCE
+            // best-effort VDOT — the same metric it multiplies everywhere
+            // (stats, dashboard, plan creation, plan adaptivity) and the same
+            // denominator the in-form CalibrationSection uses
+            // (raceVdot / currentVdot). NEVER the HR-based aerobic-fitness
+            // trend, which must not feed planning or paces.
+            const calculatedVdot = bestEffortVdot(activities, 1.0);
 
             // Calculate correction factor
             if (calculatedVdot <= 0) {
                 return NextResponse.json({
-                    error: 'Cannot calculate correction: no running data available'
+                    error: 'Cannot calculate correction: no qualifying recent runs (>= 5 km within 90 days)'
                 }, { status: 400 });
             }
 

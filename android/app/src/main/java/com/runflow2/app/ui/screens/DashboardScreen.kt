@@ -274,7 +274,7 @@ fun DashboardScreen(
                                     icon = Icons.Outlined.DirectionsRun,
                                 )
                                 StatTile(
-                                    label = "VO₂ max",
+                                    label = "VDOT",
                                     value = Format.oneDecimal(a?.effectiveVdot),
                                     icon = Icons.Outlined.MonitorHeart,
                                     accent = MaterialTheme.colorScheme.tertiary,

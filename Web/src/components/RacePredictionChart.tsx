@@ -67,7 +67,7 @@ function RacePredictionChart({
         return (
             <div className="glass-card p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Race Predictions</h3>
-                <p className="text-foreground-muted">No VO2max data available</p>
+                <p className="text-foreground-muted">No aerobic fitness (VO2max) data available</p>
             </div>
         );
     }
@@ -90,7 +90,7 @@ function RacePredictionChart({
                     </span>
                 </h3>
                 <div className="flex items-center gap-2 text-sm text-foreground-muted">
-                    <span>VO2max:</span>
+                    <span>Aerobic Fitness (VO2max):</span>
                     <input
                         type="number"
                         value={simulatedVO2Max}
@@ -106,7 +106,7 @@ function RacePredictionChart({
                 {/* VO2 Max Slider */}
                 <div className="p-3 bg-background-tertiary rounded-md">
                     <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs text-foreground-muted">Simulated VO2 Max</label>
+                        <label className="text-xs text-foreground-muted">Simulated Aerobic Fitness (VO2max)</label>
                         <span className="text-base font-semibold text-accent-cyan font-mono tabular-nums">{simulatedVO2Max.toFixed(1)}</span>
                     </div>
                     <input

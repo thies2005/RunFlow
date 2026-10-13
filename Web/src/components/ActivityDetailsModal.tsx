@@ -403,7 +403,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 </span>
                             </div>
                             <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
-                                <span className="text-foreground-muted">Eff. VO2 Max</span>
+                                <span className="text-foreground-muted">Aerobic Fitness (VO2max)</span>
                                 <span className="text-accent-purple font-medium font-mono tabular-nums">{activity.estimatedVdot ? (activity.estimatedVdot * vdotCorrectionFactor).toFixed(1) : '-'}</span>
                             </div>
                         </div>

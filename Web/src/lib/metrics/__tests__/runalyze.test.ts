@@ -24,6 +24,21 @@ describe('Runalyze Metrics', () => {
             // 1km (1000m)
             expect(calculateEffectiveVO2max(1000, 1200, 180, 200)).toBe(0);
         });
+
+        it('should map %HRmax to %VO2max with the Swain equation (0.72 -> 0.594)', () => {
+            // 5 km in 20:00 -> velocity 250 m/min -> VO2 cost 47.4645
+            // Swain: %VO2max = 1.45 * 0.72 - 0.45 = 0.594
+            // Effective = 47.4645 / 0.594 = 79.9
+            const vo2 = calculateEffectiveVO2max(5000, 1200, 144, 200);
+            expect(vo2).toBe(79.9);
+        });
+
+        it('should clamp the Swain mapping at 100% VO2max at HRmax', () => {
+            // %VO2max = 1.45 * 1.0 - 0.45 = 1.0 (clamped so it never exceeds 1)
+            // Effective = 47.4645 / 1.0 = 47.5
+            const vo2 = calculateEffectiveVO2max(5000, 1200, 200, 200);
+            expect(vo2).toBe(47.5);
+        });
     });
 
     describe('calculateGeneralAerobicScore', () => {

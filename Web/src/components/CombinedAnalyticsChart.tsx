@@ -26,7 +26,7 @@ interface CombinedAnalyticsChartProps {
 }
 
 const SERIES_CONFIG = {
-    vo2max: { name: 'VO2max', color: 'var(--positive)', yAxisId: 'left' },
+    vo2max: { name: 'Aerobic Fitness (VO2max)', color: 'var(--positive)', yAxisId: 'left' },
     ctl: { name: 'Fitness (CTL)', color: 'var(--accent-blue)', yAxisId: 'right' },
     atl: { name: 'Fatigue (ATL)', color: 'var(--workout-tempo)', yAxisId: 'right' },
     tsb: { name: 'Form (TSB)', color: 'var(--accent-orange)', yAxisId: 'right' },
@@ -281,7 +281,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                     dot={false}
                                     isAnimationActive={false}
                                     connectNulls
-                                    name="VO2max (Avg)"
+                                    name="Aerobic Fitness (Avg)"
                                 />
                             )}
 
@@ -383,7 +383,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
 
             {/* Legend */}
             <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-foreground-muted">
-                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-positive"></div><span>VO2max = Aerobic power</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-positive"></div><span>Aerobic Fitness (VO2max) = Aerobic power</span></div>
                 <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-accent-blue"></div><span>CTL = Long-term fitness</span></div>
                 <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-workout-tempo"></div><span>ATL = Short-term fatigue</span></div>
                 <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-accent-orange"></div><span>TSB = Form (CTL - ATL)</span></div>

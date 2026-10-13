@@ -149,7 +149,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             StatTile(
-                                label = "VO₂ max",
+                                label = "VDOT",
                                 value = Format.oneDecimal(a.effectiveVdot),
                                 icon = Icons.Outlined.MonitorHeart,
                                 accent = MaterialTheme.colorScheme.primary,
@@ -343,7 +343,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             SectionTitle("Race predictions")
                             Text(
-                                "From VO₂ max ${Format.oneDecimal(a.effectiveVdot)} (correction ×${Format.oneDecimal(a.vdotCorrection)})",
+                                "From VDOT ${Format.oneDecimal(a.effectiveVdot)} (correction ×${Format.oneDecimal(a.vdotCorrection)})",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

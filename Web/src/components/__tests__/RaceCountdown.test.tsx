@@ -24,7 +24,8 @@ jest.mock('@/hooks/useDeviceType', () => ({
 jest.mock('../providers/UserMetricsProvider', () => ({
     useUserMetrics: () => ({
         marathonShape: { shape: 0.9 },
-        effectiveVO2max: 52,
+        vdot: 50,
+        aerobicVo2max: 52,
         correctionFactor: 1,
         currentWeekMileage: 40,
     }),

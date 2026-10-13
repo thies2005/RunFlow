@@ -1,4 +1,4 @@
-import { Calendar, Target, Timer, Trophy, CheckCircle, Loader2, Trash2 } from 'lucide-react';
+import { Activity, Calendar, Target, Timer, Trophy, CheckCircle, Loader2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -8,6 +8,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import type { Goal, SuggestedRaceActivity } from '@/lib/types';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import type { RaceDistance } from '@/lib/metrics/vdot';
+import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { estimateTriathlonTime } from '@/lib/plans/triathlon-time';
 import { RaceType } from '@/generated/prisma/browser';
 import { useUserMetrics } from './providers/UserMetricsProvider';
@@ -62,7 +63,8 @@ export function RaceCountdown({
     const router = useRouter();
     const {
         marathonShape,
-        effectiveVO2max,
+        vdot,
+        aerobicVo2max,
         correctionFactor,
         currentWeekMileage
     } = useUserMetrics();
@@ -139,7 +141,9 @@ export function RaceCountdown({
     const weeksCompleted = Math.max(0, totalWeeks - weeksToRace);
     const progressPercent = Math.min(100, (weeksCompleted / totalWeeks) * 100);
 
-    const currentVdot = effectiveVO2max;
+    // Planning projection runs off the VDOT metric (best-effort performance),
+    // never the HR-based aerobic-fitness trend.
+    const currentVdot = vdot;
     const targetDistance = raceDistanceMap[goal.raceType] || 'MARATHON';
     const weeksUntil = calculateWeeksUntilRace(raceDate);
 
@@ -166,6 +170,32 @@ export function RaceCountdown({
     const dynamicPredictedTime = TRI_RACE_TYPES.has(goal.raceType)
         ? (estimateTriathlonTime({ vdot: projection.projectedVdot, raceType: goal.raceType as RaceType })?.projected.totalSeconds ?? 0)
         : projection.projectedTime;
+
+    // CURRENT-fitness prediction for the goal's distance, from the HR-based
+    // Aerobic Fitness (VO2max) metric — the SAME inputs the Analytics page
+    // passes to calculateAllRacePredictions (effectiveVO2max + server shape +
+    // the goal's marathon shape calibration factor), so the card and the
+    // Analytics page can never disagree for the same distance.
+    const predictionDistanceNames: Record<RaceDistance, string> = {
+        '5K': '5K',
+        '10K': '10K',
+        'HALF': 'Half',
+        'MARATHON': 'Marathon',
+    };
+    const nowPredictedTime = (() => {
+        if (aerobicVo2max <= 0) return 0;
+        if (TRI_RACE_TYPES.has(goal.raceType)) {
+            // No run-only entry for triathlon: feed the HR-based value through
+            // the same estimator the race-day projection uses.
+            return estimateTriathlonTime({ vdot: aerobicVo2max, raceType: goal.raceType as RaceType })?.optimal.totalSeconds ?? 0;
+        }
+        const goalDistance = raceDistanceMap[goal.raceType];
+        if (!goalDistance) return 0;
+        // Same calibration factor as the Analytics page: the goal's
+        // marathonShapeFactor (falls back to 1.0 there and here).
+        const predictions = calculateAllRacePredictions(aerobicVo2max, shapePercent, goal.marathonShapeFactor || 1.0);
+        return predictions.find(p => p.distance === predictionDistanceNames[goalDistance])?.predicted ?? 0;
+    })();
 
     return (
         <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
@@ -223,7 +253,7 @@ export function RaceCountdown({
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                 {goal.targetTime && (
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-md bg-workout-long-run/15 flex items-center justify-center shrink-0">
@@ -236,19 +266,34 @@ export function RaceCountdown({
                     </div>
                 )}
 
-                {dynamicPredictedTime > 0 && (
+                {nowPredictedTime > 0 && (
                     <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-md bg-accent-cyan/15 flex items-center justify-center shrink-0">
+                            <Activity className="w-5 h-5 text-accent-cyan" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-foreground-muted flex items-center gap-1">
+                                Now &middot; Aerobic Fitness
+                                <span className="cursor-help" title="What your current HR-based aerobic fitness (VO2max) and marathon shape predict for this distance today &#8212; a fitness trend indicator, not your training target">&#8505;</span>
+                            </p>
+                            <p className="text-xl font-mono tabular-nums font-semibold text-foreground">{formatTime(nowPredictedTime)}</p>
+                        </div>
+                    </div>
+                )}
+
+                {dynamicPredictedTime > 0 && (
+                    <div className={`flex items-center gap-3 ${nowPredictedTime > 0 ? 'col-span-2 md:col-span-1' : ''}`}>
                         <div className="w-10 h-10 rounded-md bg-accent-orange/15 flex items-center justify-center shrink-0">
                             <Timer className="w-5 h-5 text-accent-orange" />
                         </div>
                         <div>
                             <p className="text-xs text-foreground-muted flex items-center gap-1">
-                                Projected Finish
-                                <span className="cursor-help" title="Estimated finish time on race day based on your training plan and expected fitness improvement">&#8505;</span>
-                                {correctionFactor !== 1.0 && <span className="ml-1 text-[10px] text-accent-cyan" title="Using calibrated VO2max">&#9679;</span>}
+                                Projected Finish &middot; VDOT
+                                <span className="cursor-help" title="Estimated finish time on race day based on your training plan and expected fitness improvement, derived from your VDOT">&#8505;</span>
+                                {correctionFactor !== 1.0 && <span className="ml-1 text-[10px] text-accent-cyan" title="Using calibrated VDOT">&#9679;</span>}
                             </p>
                             <p className="text-xl font-mono tabular-nums font-semibold text-foreground">{formatTime(dynamicPredictedTime)}</p>
-                            <p className="text-[10px] text-foreground-muted">Target VO2max {projection.projectedVdot.toFixed(1)}</p>
+                            <p className="text-[10px] text-foreground-muted">Target VDOT {projection.projectedVdot.toFixed(1)}</p>
                         </div>
                     </div>
                 )}

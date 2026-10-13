@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/db';
 import { analyzeRace, calculateTrainingPaces, calculateVdot, DISTANCES, type RaceDistance } from '@/lib/metrics/vdot';
-import { AnalyticsService } from '@/lib/services/analytics';
-import { type ActivityForShape } from '@/lib/metrics/runalyze';
+import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 import { calculateProjectedGoalTime, type PlanSettings } from '@/lib/metrics/goalProjection';
 import { buildStructuredStepsForWorkout, generateTrainingPlan, PLAN_CONSTANTS, type PlanConfig, type GeneratedWorkout, getMinStartVolume } from '@/lib/plans';
 import { WorkoutType, RaceType, PlanSport, PlanCreationMode } from '@/generated/prisma/browser';
@@ -418,7 +417,6 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
         calibrationDistance,
         targetTime,
         useActivityVdot = true,
-        maxHeartRate,
         vdotCorrectionFactor,
     } = input;
 
@@ -473,38 +471,34 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
     if (!currentVdot && useActivityVdot) {
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { hrMax: true, vdotCorrectionFactor: true },
+            select: { vdotCorrectionFactor: true },
         });
 
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
+        const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
         const runActivities = await prisma.activity.findMany({
             where: {
                 userId,
                 type: 'RUN',
-                startDate: { gte: sixMonthsAgo },
+                startDate: { gte: ninetyDaysAgo },
             },
             select: {
                 startDate: true,
                 distance: true,
                 movingTime: true,
-                averageHr: true,
-                hasHeartrate: true,
+                type: true,
             },
             orderBy: { startDate: 'desc' },
         });
 
         if (runActivities.length > 0) {
-            const maxHR = maxHeartRate || user?.hrMax || 185;
+            // Planning VDOT comes from the best recent PERFORMANCE (>= 5 km
+            // runs, best effort, Daniels-Gilbert) — never from the HR-based
+            // aerobic-fitness trend.
             const correctionFactor = vdotCorrectionFactor || user?.vdotCorrectionFactor || 1.0;
-            const { effectiveVO2max } = AnalyticsService.calculateVO2max(
-                runActivities as ActivityForShape[],
-                maxHR,
-                correctionFactor,
-            );
-            if (effectiveVO2max > 0) {
-                currentVdot = effectiveVO2max;
+            const vdot = bestEffortVdot(runActivities, correctionFactor);
+            if (vdot > 0) {
+                currentVdot = vdot;
                 vdotFromActivities = true;
                 vdotConfidence = 'medium';
             }

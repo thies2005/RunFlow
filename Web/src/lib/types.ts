@@ -298,6 +298,9 @@ export interface UserSettings {
 
 export interface AnalyticsStats {
     currentWeekMileage: number;
+    /** Performance VDOT (best effort) — drives planning, paces and projections */
+    vdot: number;
+    /** HR-based Aerobic Fitness (VO2max) — trend indicator only, never feeds paces */
     effectiveVO2max: number;
     rawVO2max: number;
     vdotCorrectionFactor: number;

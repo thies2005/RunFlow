@@ -187,18 +187,19 @@ const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTren
 });
 ZonePieChart.displayName = 'ZonePieChart';
 
-// VDOT Trend Chart
+// Aerobic Fitness (VO2max) Trend Chart — weekly best HR-based per-run
+// estimates (Activity.estimatedVdot), NOT the performance VDOT
 const VDOTTrendChart = memo(({ data }: { data: HistoryResponse['vdotTrend'] }) => (
     <div className="glass-card p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">VDOT Trend</h3>
-        <div className="h-64" role="img" aria-label="VDOT Trend Line Chart">
+        <h3 className="text-lg font-semibold text-foreground mb-4">Aerobic Fitness (VO2max) Trend</h3>
+        <div className="h-64" role="img" aria-label="Aerobic Fitness (VO2max) Trend Line Chart">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
                     <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="var(--foreground-muted)" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 1', 'dataMax + 1']} />
                     <Tooltip content={<ChartTooltip formatter={(value: string | number) => (typeof value === 'number' ? value : parseFloat(String(value))).toFixed(1)} />} />
-                    <Line type="monotone" dataKey="vdot" stroke="var(--positive)" strokeWidth={2} dot={{ fill: 'var(--positive)' }} />
+                    <Line type="monotone" dataKey="vdot" stroke="var(--positive)" strokeWidth={2} dot={{ fill: 'var(--positive)' }} name="Aerobic Fitness (VO2max)" />
                 </LineChart>
             </ResponsiveContainer>
         </div>
@@ -281,7 +282,7 @@ const RacePredictions = memo(({ currentVdot, effectiveVO2max, shapePercent }: {
     if (racePredictions.length === 0) return null;
 
     const label = effectiveVO2max && effectiveVO2max > 0
-        ? `VO2max ${effectiveVO2max.toFixed(1)} · Shape ${shapePercent ?? 0}%`
+        ? `Aerobic Fitness (VO2max) ${effectiveVO2max.toFixed(1)} · Shape ${shapePercent ?? 0}%`
         : `VDOT ${currentVdot?.toFixed(1)}`;
 
     return (

@@ -23,8 +23,7 @@ import { enrichActivityMetrics, transformActivityData, type MetricsInput } from 
 import { upsertActivity, createNewActivityNotification, updateUserProfile, updateSyncStatus, fetchExistingActivities, getLastActivityDate } from './persistence';
 import { calculateAndSaveFitnessMetrics, type ModifiedActivity } from './fitness';
 import { logger } from '@/lib/logging/logger';
-import { AnalyticsService } from '@/lib/services/analytics';
-import { type ActivityForShape } from '@/lib/metrics/runalyze';
+import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 import pLimit from 'p-limit';
 
 const HR_MAX_UPPER_BOUND = 220;
@@ -346,10 +345,8 @@ async function updateAutoRevolvingVo2max(userId: string): Promise<void> {
     try {
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { hrMax: true, vdotCorrectionFactor: true }
+            select: { vdotCorrectionFactor: true }
         });
-
-        if (!user?.hrMax) return;
 
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
@@ -364,26 +361,24 @@ async function updateAutoRevolvingVo2max(userId: string): Promise<void> {
                 startDate: true,
                 distance: true,
                 movingTime: true,
-                averageHr: true,
-                hasHeartrate: true,
+                type: true,
             },
             orderBy: { startDate: 'desc' },
         });
 
         if (runActivities.length === 0) return;
 
-        const correctionFactor = user.vdotCorrectionFactor || 1.0;
-        const { effectiveVO2max } = AnalyticsService.calculateVO2max(
-            runActivities as ActivityForShape[],
-            user.hrMax,
-            correctionFactor
-        );
+        // Persist the best-effort (performance) VDOT so the stored value is
+        // never the HR-based aerobic-fitness number. bestEffortVdot filters to
+        // runs >= 5 km within the last 90 days itself.
+        const correctionFactor = user?.vdotCorrectionFactor || 1.0;
+        const vdot = bestEffortVdot(runActivities, correctionFactor);
 
-        if (effectiveVO2max > 0) {
+        if (vdot > 0) {
             await prisma.user.update({
                 where: { id: userId },
                 data: {
-                    autoRevolvingVo2max: effectiveVO2max,
+                    autoRevolvingVo2max: vdot,
                     autoRevolvingCalculatedAt: new Date(),
                 }
             });

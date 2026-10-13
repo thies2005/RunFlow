@@ -136,6 +136,10 @@ export default function AnalyticsPage() {
 
         // Get values from server APIs
         const effectiveVO2max = statsData?.effectiveVO2max || 0;
+        // Performance VDOT — drives the training-paces section (planning/pace
+        // context). The HR-based effectiveVO2max above is the aerobic-fitness
+        // trend and only powers the fitness-based predictions.
+        const vdot = statsData?.vdot || 0;
         const activeGoal = goalsData?.goals?.find((g: Goal) => g.isActive);
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
 
@@ -149,8 +153,8 @@ export default function AnalyticsPage() {
         const allPredictions = effectiveVO2max > 0
             ? calculateAllRacePredictions(effectiveVO2max, shapeFromServer.shape, calibrationFactor)
             : [];
-        const trainingPaces = effectiveVO2max > 0
-            ? calculateTrainingPaces(effectiveVO2max)
+        const trainingPaces = vdot > 0
+            ? calculateTrainingPaces(vdot)
             : null;
 
         // Use server-provided trend data
@@ -293,6 +297,7 @@ export default function AnalyticsPage() {
         return {
             runalyzeMetrics: {
                 effectiveVO2max,
+                vdot,
                 rawVO2max: statsData?.rawVO2max || 0,
                 vdotCorrectionFactor: statsData?.vdotCorrectionFactor || 1.0,
                 shape: shapeFromServer.shape,
@@ -393,9 +398,9 @@ export default function AnalyticsPage() {
                             calibrationFactor={runalyzeMetrics.calibrationFactor}
                         />
 
-                        {/* Training Paces & Heart Rate Section */}
+                        {/* Training Paces & Heart Rate Section (VDOT-driven) */}
                         <TrainingPacesSection
-                            effectiveVO2max={runalyzeMetrics.effectiveVO2max}
+                            currentVdot={runalyzeMetrics.vdot}
                             trainingPaces={trainingPaces}
                             maxHr={userData?.user?.hrMax || userData?.hrMax}
                         />

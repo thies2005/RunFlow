@@ -23,7 +23,7 @@ interface CalibrationSectionProps {
     seconds: string;
     setSeconds: (_val: string) => void;
     setCalibrationFactor: (_val: number) => void;
-    effectiveVO2max: number;
+    currentVdot: number;
     raceActivities: RaceActivity[];
 }
 
@@ -41,7 +41,7 @@ export default function CalibrationSection({
     seconds,
     setSeconds,
     setCalibrationFactor,
-    effectiveVO2max,
+    currentVdot,
     raceActivities
 }: CalibrationSectionProps) {
     const inputClass = "bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
@@ -173,9 +173,9 @@ export default function CalibrationSection({
                                     setHours(e.target.value);
                                     // Auto-update calibration factor
                                     const secs = (parseInt(e.target.value) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
-                                    if (secs > 0 && effectiveVO2max > 0) {
+                                    if (secs > 0 && currentVdot > 0) {
                                         const raceVdot = calculateVdot({ distance: calibrationDistance as RaceDistance, timeSeconds: secs });
-                                        setCalibrationFactor(raceVdot / effectiveVO2max);
+                                        setCalibrationFactor(raceVdot / currentVdot);
                                     }
                                 }}
                                 min="0"
@@ -189,9 +189,9 @@ export default function CalibrationSection({
                                 onChange={e => {
                                     setMinutes(e.target.value);
                                     const secs = (parseInt(hours) || 0) * 3600 + (parseInt(e.target.value) || 0) * 60 + (parseInt(seconds) || 0);
-                                    if (secs > 0 && effectiveVO2max > 0) {
+                                    if (secs > 0 && currentVdot > 0) {
                                         const raceVdot = calculateVdot({ distance: calibrationDistance as RaceDistance, timeSeconds: secs });
-                                        setCalibrationFactor(raceVdot / effectiveVO2max);
+                                        setCalibrationFactor(raceVdot / currentVdot);
                                     }
                                 }}
                                 min="0"
@@ -206,9 +206,9 @@ export default function CalibrationSection({
                                 onChange={e => {
                                     setSeconds(e.target.value);
                                     const secs = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(e.target.value) || 0);
-                                    if (secs > 0 && effectiveVO2max > 0) {
+                                    if (secs > 0 && currentVdot > 0) {
                                         const raceVdot = calculateVdot({ distance: calibrationDistance as RaceDistance, timeSeconds: secs });
-                                        setCalibrationFactor(raceVdot / effectiveVO2max);
+                                        setCalibrationFactor(raceVdot / currentVdot);
                                     }
                                 }}
                                 min="0"
@@ -233,7 +233,7 @@ export default function CalibrationSection({
                     : 0;
 
                 // Calculate calibration factor: actual performance / expected performance
-                const factor = effectiveVO2max > 0 ? raceVdot / effectiveVO2max : 1.0;
+                const factor = currentVdot > 0 ? raceVdot / currentVdot : 1.0;
                 const factorPercent = ((factor - 1) * 100);
 
                 const distanceName = calibrationDistance === 'HALF' ? 'Half Marathon' :
@@ -258,13 +258,13 @@ export default function CalibrationSection({
                                 </div>
 
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-foreground-muted">Training VO2max:</span>
-                                    <span className="text-sm text-foreground font-mono tabular-nums">{effectiveVO2max.toFixed(1)}</span>
+                                    <span className="text-sm text-foreground-muted">VDOT (Training Paces):</span>
+                                    <span className="text-sm text-foreground font-mono tabular-nums">{currentVdot.toFixed(1)}</span>
                                 </div>
 
                                 <div className="border-t border-glass-border pt-3">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-sm text-foreground-muted">Calibrated VO2max:</span>
+                                        <span className="text-sm text-foreground-muted">Calibrated VDOT:</span>
                                         <span className={`text-lg font-bold font-mono tabular-nums ${factorPercent >= 0 ? 'text-positive' : 'text-negative'}`}>
                                             {raceVdot.toFixed(1)} ({factorPercent >= 0 ? '+' : ''}{factorPercent.toFixed(1)}%)
                                         </span>

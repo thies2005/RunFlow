@@ -13,6 +13,9 @@ export function useAnalyticsMetrics(
     return useMemo(() => {
         const activities: Activity[] = activitiesData?.activities || [];
         const effectiveVO2max = statsData?.effectiveVO2max || 0;
+        // Performance VDOT — drives training paces (pace context). The
+        // HR-based effectiveVO2max is the aerobic-fitness trend only.
+        const vdot = statsData?.vdot || 0;
         const activeGoalForCalibration = goalsData?.goals?.find((g: Goal) => g.isActive);
         const calibrationFactor = activeGoalForCalibration?.marathonShapeFactor || 1.0;
         const shapeFromServer = statsData?.marathonShape || { shape: 0, mileageScore: 0, longRunScore: 0, crossTrainingScore: 0, details: {} };
@@ -21,7 +24,7 @@ export function useAnalyticsMetrics(
             ? calculatePredictedTimes(effectiveVO2max, shapeFromServer.shape, calibrationFactor)
             : { optimal: 0, predicted: 0 };
 
-        const trainingPaces = effectiveVO2max > 0 ? calculateTrainingPaces(effectiveVO2max) : null;
+        const trainingPaces = vdot > 0 ? calculateTrainingPaces(vdot) : null;
 
         // Trend data from server
         const serverVo2Trend = historyData?.vo2Trend || [];
@@ -127,6 +130,7 @@ export function useAnalyticsMetrics(
         return {
             runalyzeMetrics: {
                 effectiveVO2max,
+                vdot,
                 rawVO2max: statsData?.rawVO2max || 0,
                 vdotCorrectionFactor: statsData?.vdotCorrectionFactor || 1.0,
                 shape: shapeFromServer.shape,

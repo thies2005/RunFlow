@@ -122,7 +122,7 @@ function RacePredictionTimeChart({
         return (
             <div className="glass-card p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Race Prediction Trends</h3>
-                <p className="text-foreground-muted">No VO2max data available to show prediction trends</p>
+                <p className="text-foreground-muted">No aerobic fitness (VO2max) data available to show prediction trends</p>
             </div>
         );
     }
@@ -207,7 +207,7 @@ function RacePredictionTimeChart({
             </div>
 
             <p className="text-xs text-foreground-muted text-center mt-4">
-                Predicted race times based on VO2max and marathon shape over time
+                Predicted race times based on aerobic fitness (VO2max) and marathon shape over time
             </p>
         </div>
     );

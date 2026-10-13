@@ -136,8 +136,12 @@ export default function OnboardingWizard() {
         enabled: step >= 2,
     });
 
-    // Helper to calculate VDOT from activities
-    const currentVdot = activitiesData?.activities?.[0]?.estimatedVdot || null;
+    // Two-metric contract: the performance VDOT (best effort, from the stats
+    // API) drives the 'Current VDOT' tile and the plan-setup form. Never use
+    // Activity.estimatedVdot here — that is the HR-based per-run aerobic
+    // fitness estimate, not VDOT. The HR-based effectiveVO2max only feeds the
+    // fitness-based prediction preview.
+    const statsVdot = statsData?.vdot || 0;
     const effectiveVO2max = statsData?.effectiveVO2max || 0;
     const shapePercent = statsData?.marathonShape?.shape || 0;
 
@@ -284,7 +288,7 @@ export default function OnboardingWizard() {
                         </div>
 
                         <AnalyticsDashboard
-                            currentVdot={currentVdot}
+                            currentVdot={statsVdot > 0 ? statsVdot : null}
                             effectiveVO2max={effectiveVO2max || undefined}
                             shapePercent={shapePercent || undefined}
                         />
@@ -361,7 +365,7 @@ export default function OnboardingWizard() {
                                     clearOnboardingState();
                                     router.push('/');
                                 }}
-                                effectiveVO2max={effectiveVO2max}
+                                currentVdot={statsVdot}
                                 shapePercent={shapePercent}
                                 initialExperienceLevel={experienceLevel}
                             />

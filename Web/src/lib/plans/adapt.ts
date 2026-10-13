@@ -3,13 +3,14 @@
  * ==========================
  *
  * When a workout is completed (or done differently), re-derive the runner's
- * effective VDOT from their recent activities and, if it has shifted
+ * best-effort VDOT from their recent activities and, if it has shifted
  * meaningfully, re-derive the paces of the remaining (future, not-yet-completed)
  * workouts in the plan.
  *
  * SCOPE — v1 (conservative and safe):
- *   - Recompute effective VDOT from completed activities (Runalyze-style
- *     weighted estimate over the last ~6 weeks, see runalyze.ts).
+ *   - Recompute VDOT from completed activities (performance-based best
+ *     effort over the last ~13 weeks, see effectiveVdot.ts — the same metric
+ *     that drives plan creation; NEVER the HR-based aerobic-fitness trend).
  *   - ONLY re-derive paces for future, incomplete workouts. We reuse the
  *     existing `recalculateWorkoutPaces` helper, which already skips
  *     `isCompleted === true` workouts, so completed workouts are never
@@ -28,14 +29,14 @@
 
 import { prisma } from '@/lib/db';
 import { recalculateWorkoutPaces } from '@/lib/plans/recalculate-paces';
-import { calculateWeightedEffectiveVO2max, type ActivityForShape } from '@/lib/metrics/runalyze';
+import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 import type { HrZoneInput } from '@/lib/metrics/hr-zones';
 
 /** Minimum VDOT delta (vs. the goal's current VDOT) required to trigger a pace re-derivation. */
 export const VDOT_ADAPTIVITY_THRESHOLD = 2;
 
-/** Look back window used to estimate the effective VDOT after a completion. */
-const ADAPTIVITY_LOOKBACK_DAYS = 42; // ~6 weeks
+/** Look back window used to estimate the best-effort VDOT after a completion. */
+const ADAPTIVITY_LOOKBACK_DAYS = 90;
 
 export interface AdaptResult {
     adapted: boolean;
@@ -118,27 +119,18 @@ export async function adaptPlanAfterCompletion(
         },
     });
 
-    const maxHR = user?.hrMax ?? 0;
-    const calibrationFactor = user?.vdotCorrectionFactor ?? 1.0;
-
-    // No max HR -> the Runalyze estimate cannot be computed.
-    if (maxHR <= 0) {
-        return { adapted: false, reason: 'No max HR on file for VDOT estimate', workoutsUpdated: 0 };
-    }
+    const correctionFactor = user?.vdotCorrectionFactor ?? 1.0;
 
     const recentActivities = await prisma.activity.findMany({
         where: {
             userId,
             type: 'RUN',
             startDate: { gte: lookbackStart, lte: asOf },
-            hasHeartrate: true,
         },
         select: {
             startDate: true,
             distance: true,
             movingTime: true,
-            averageHr: true,
-            hasHeartrate: true,
             type: true,
         },
         orderBy: { startDate: 'desc' },
@@ -148,11 +140,9 @@ export async function adaptPlanAfterCompletion(
         return { adapted: false, reason: 'No completed activities to estimate VDOT', workoutsUpdated: 0 };
     }
 
-    const newVdot = calculateWeightedEffectiveVO2max(
-        recentActivities as ActivityForShape[],
-        maxHR,
-        calibrationFactor,
-    );
+    // Performance-based best-effort VDOT (no heart-rate input) — the same
+    // planning metric used everywhere else.
+    const newVdot = bestEffortVdot(recentActivities, correctionFactor);
 
     if (newVdot <= 0) {
         return { adapted: false, reason: 'Could not estimate VDOT from activities', workoutsUpdated: 0 };

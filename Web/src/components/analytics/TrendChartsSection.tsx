@@ -25,7 +25,7 @@ export default function TrendChartsSection({ filteredVo2Trend, filteredShapeTren
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="glass-card p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Effective VO2max Trend</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Aerobic Fitness (VO2max) Trend</h3>
                 <div className="h-64 min-h-[256px] w-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={filteredVo2Trend}>
@@ -45,8 +45,8 @@ export default function TrendChartsSection({ filteredVo2Trend, filteredShapeTren
                                 itemStyle={{ color: 'var(--foreground)' }}
                                 labelFormatter={formatTooltipLabel}
                             />
-                            <Line type="monotone" dataKey="vo2" stroke="none" isAnimationActive={false} dot={{ r: 3, fill: 'var(--positive)', fillOpacity: 1 }} name="VO2max (Run)" />
-                            <Line type="monotone" dataKey="vo2Rolling" stroke="var(--positive)" strokeWidth={2} dot={false} isAnimationActive={false} name="VO2max (Avg)" />
+                            <Line type="monotone" dataKey="vo2" stroke="none" isAnimationActive={false} dot={{ r: 3, fill: 'var(--positive)', fillOpacity: 1 }} name="Aerobic Fitness (Run)" />
+                            <Line type="monotone" dataKey="vo2Rolling" stroke="var(--positive)" strokeWidth={2} dot={false} isAnimationActive={false} name="Aerobic Fitness (Avg)" />
                         </LineChart>
                     </ResponsiveContainer>
                 </div>

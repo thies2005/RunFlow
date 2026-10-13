@@ -110,6 +110,7 @@ const AnalyticsTooltip = ({ active, payload, label }: AnalyticsTooltipProps) => 
 interface AnalyticsViewProps {
     runalyzeMetrics: {
         effectiveVO2max: number;
+        vdot: number;
         rawVO2max: number;
         vdotCorrectionFactor: number;
         shape: number;
@@ -192,9 +193,9 @@ export function AnalyticsView({
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 {/* TOP METRICS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Effective VO2max */}
+                    {/* Aerobic Fitness (VO2max) — HR-based trend indicator */}
                     <div className="glass-card p-6 text-center">
-                        <p className="text-foreground-muted text-sm mb-2">Effective VO2max</p>
+                        <p className="text-foreground-muted text-sm mb-2">Aerobic Fitness (VO2max)</p>
                         <p className="text-4xl font-bold text-foreground font-mono tabular-nums">
                             {runalyzeMetrics.effectiveVO2max > 0 ? runalyzeMetrics.effectiveVO2max.toFixed(1) : '-'}
                         </p>
@@ -270,9 +271,17 @@ export function AnalyticsView({
                     />
                 </LazyChartWrapper>
 
-                {/* Training Paces */}
+                {/* Training Paces (VDOT-driven) */}
                 <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Training Paces</h3>
+                    <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
+                        <h3 className="text-lg font-semibold text-foreground">Training Paces</h3>
+                        <p className="text-sm text-foreground-muted">
+                            VDOT (Training Paces):{' '}
+                            <span className="font-mono tabular-nums font-semibold text-foreground">
+                                {runalyzeMetrics.vdot > 0 ? runalyzeMetrics.vdot.toFixed(1) : '-'}
+                            </span>
+                        </p>
+                    </div>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div className="p-4 rounded-md bg-zone-1/10 border border-zone-1/20 text-center">
                             <p className="text-zone-1 text-xs font-semibold mb-1">Easy</p>
@@ -312,7 +321,7 @@ export function AnalyticsView({
                     {/* VO2max Trend */}
                     <LazyChartWrapper height="20rem">
                         <div className="glass-card p-6">
-                            <h3 className="text-lg font-semibold text-foreground mb-4">VO2max Trend</h3>
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Aerobic Fitness (VO2max) Trend</h3>
                             <div className="h-64">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={vo2TrendData}>
@@ -320,7 +329,7 @@ export function AnalyticsView({
                                         <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                         <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
                                         <Tooltip content={<AnalyticsTooltip />} />
-                                        <Line type="monotone" dataKey="vo2Rolling" stroke="var(--positive)" strokeWidth={2} dot={false} name="VO2max" />
+                                        <Line type="monotone" dataKey="vo2Rolling" stroke="var(--positive)" strokeWidth={2} dot={false} name="Aerobic Fitness (VO2max)" />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>

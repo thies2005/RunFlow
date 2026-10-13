@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
+import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 import { getActivityContribution } from '@/lib/metrics/fitness';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
@@ -43,7 +44,6 @@ export async function GET(req: Request) {
         const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
         const includeCrossTraining = user?.includeCrossTraining ?? true;
         const currentVdot = activeGoal?.currentVdot || null;
-        const hasExplicitCalibration = user?.vdotReferenceRaceDate != null;
         const autoRevolvingVo2max = user?.autoRevolvingVo2max || null;
 
         // 2. Fetch Data (Optimized Selection)
@@ -91,11 +91,23 @@ export async function GET(req: Request) {
 
         // 4. Compute Metrics via Service
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
-        const { rawVO2max, effectiveVO2max: calculatedEffectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+        // Aerobic-fitness trend (HR-based, Swain). Display/trend only — never
+        // feeds paces or planning.
+        const { rawVO2max, effectiveVO2max: calculatedAerobicVo2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
 
-        const effectiveVO2max = (!hasExplicitCalibration && autoRevolvingVo2max && autoRevolvingVo2max > 0)
-            ? autoRevolvingVo2max
-            : calculatedEffectiveVO2max;
+        // Planning VDOT: best-effort performance VDOT, computed live so it can
+        // never lag behind the latest activities. The persisted
+        // autoRevolvingVo2max (which stores the best-effort VDOT since the
+        // two-metric change) is only a fallback for when no run qualifies
+        // (>= 5 km within 90 days).
+        const computedVdot = bestEffortVdot(runActivities, vdotCorrectionFactor);
+        const vdot = computedVdot > 0
+            ? computedVdot
+            : (autoRevolvingVo2max || 0);
+
+        // The HR-based trend metric is always computed live; the persisted
+        // field belongs to VDOT now.
+        const effectiveVO2max = calculatedAerobicVo2max;
 
         // Conditionally include cross-training based on user preference
         const marathonShape = AnalyticsService.calculateShape(
@@ -166,6 +178,7 @@ export async function GET(req: Request) {
 
         return cachedResponse({
             currentWeekMileage,
+            vdot,
             effectiveVO2max,
             rawVO2max,
             vdotCorrectionFactor,

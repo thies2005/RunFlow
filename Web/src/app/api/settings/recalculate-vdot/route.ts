@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
-import { calculateVdot, predictRaceTime, type RaceDistance } from '@/lib/metrics/vdot';
+import { predictRaceTime, type RaceDistance } from '@/lib/metrics/vdot';
+import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 
 /**
  * POST /api/settings/recalculate-vdot
- * Recalculates VDOT from best recent race efforts and updates active goal.
+ * Recalculates VDOT from the best recent effort (>= 5 km runs, last 90 days,
+ * Daniels-Gilbert) and updates the active goal.
  */
 export async function POST() {
     const session = await auth();
@@ -33,71 +35,30 @@ export async function POST() {
 
     const targetInfo = raceDistanceMap[goal.raceType || 'FIVE_K'] || raceDistanceMap['FIVE_K'];
 
-    // Find best recent run of similar distance (within 10%)
+    // Best-effort VDOT from raw run performances (>= 5 km within 90 days)
+    const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { vdotCorrectionFactor: true },
+    });
+
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
     const recentRuns = await prisma.activity.findMany({
         where: {
             userId: session.user.id,
             type: 'RUN',
-            distance: {
-                gte: targetInfo.meters * 0.9,
-                lte: targetInfo.meters * 1.1,
-            },
-            startDate: {
-                gte: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000), // Last 6 months
-            },
+            startDate: { gte: ninetyDaysAgo },
         },
-        orderBy: { movingTime: 'asc' }, // Fastest first
-        take: 5,
+        select: {
+            startDate: true,
+            distance: true,
+            movingTime: true,
+            type: true,
+        },
     });
 
-    let bestVdot = 0;
-    let bestPredictedTime: number | null = null;
-
-    if (recentRuns.length > 0) {
-        // Calculate VDOT from fastest effort
-        const bestRun = recentRuns[0];
-        bestVdot = calculateVdot({
-            distance: targetInfo.distance,
-            timeSeconds: bestRun.movingTime,
-        });
-
-        if (bestVdot > 0) {
-            bestPredictedTime = predictRaceTime(bestVdot, targetInfo.distance);
-        }
-    }
-
-    // If no matching runs, try to estimate from any recent run
-    if (bestVdot <= 0) {
-        const anyRecentRun = await prisma.activity.findFirst({
-            where: {
-                userId: session.user.id,
-                type: 'RUN',
-                distance: { gte: 3000 }, // At least 3km
-                startDate: {
-                    gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-                },
-            },
-            orderBy: { startDate: 'desc' },
-        });
-
-        if (anyRecentRun) {
-            // Approximate distance to standard race
-            const distKm = anyRecentRun.distance / 1000;
-            let approxDistance: RaceDistance = '5K';
-            if (distKm >= 40) approxDistance = 'MARATHON';
-            else if (distKm >= 18) approxDistance = 'HALF';
-            else if (distKm >= 8) approxDistance = '10K';
-
-            bestVdot = calculateVdot({
-                distance: approxDistance,
-                timeSeconds: anyRecentRun.movingTime,
-            });
-
-            if (bestVdot > 0) {
-                bestPredictedTime = predictRaceTime(bestVdot, targetInfo.distance);
-            }
-        }
-    }
+    const correctionFactor = user?.vdotCorrectionFactor || 1.0;
+    const bestVdot = bestEffortVdot(recentRuns, correctionFactor);
+    const bestPredictedTime = bestVdot > 0 ? predictRaceTime(bestVdot, targetInfo.distance) : null;
 
     // Update goal with new VDOT
     if (bestVdot > 0) {

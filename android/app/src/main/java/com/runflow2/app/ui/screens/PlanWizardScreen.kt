@@ -398,7 +398,7 @@ private fun StepEventType(
 
     analytics?.effectiveVdot?.let {
         Text(
-            "Your history says VO₂ max ${Format.oneDecimal(it)} — targets will adapt.",
+            "Your history says VDOT ${Format.oneDecimal(it)} (best effort) — targets will adapt.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -623,7 +623,7 @@ private fun StepCalibration(
             Text("From your history", style = MaterialTheme.typography.titleSmall)
             Text(
                 if (analytics?.effectiveVdot != null)
-                    "Effective VO₂ max: ${Format.oneDecimal(analytics.effectiveVdot)}"
+                    "VDOT (best effort): ${Format.oneDecimal(analytics.effectiveVdot)}"
                 else "No recent performances found — add a race result below.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

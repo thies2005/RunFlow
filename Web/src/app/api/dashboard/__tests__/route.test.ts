@@ -71,6 +71,7 @@ import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
 import { handleError } from '@/lib/errors/handler';
+import { calculateVdot } from '@/lib/metrics/vdot';
 
 describe('GET /api/dashboard', () => {
     beforeEach(() => {
@@ -162,6 +163,7 @@ describe('GET /api/dashboard', () => {
         const data = await response.json();
 
         expect(data.stats).toHaveProperty('currentWeekMileage');
+        expect(data.stats).toHaveProperty('vdot');
         expect(data.stats).toHaveProperty('effectiveVO2max');
         expect(data.stats).toHaveProperty('rawVO2max');
         expect(data.stats).toHaveProperty('marathonShape');
@@ -171,6 +173,45 @@ describe('GET /api/dashboard', () => {
         expect(data.stats).toHaveProperty('workloadRatio');
         expect(data.stats).toHaveProperty('easyTrimp');
         expect(data.stats).toHaveProperty('hrMax');
+    });
+
+    it('returns BOTH metrics: live best-effort VDOT must not be overridden by the stale persisted value', async () => {
+        (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+            id: 'user-1',
+            hrMax: 185,
+            vdotCorrectionFactor: 1.0,
+            includeCrossTraining: true,
+            autoRevolvingVo2max: 55, // stale persisted VDOT from an old sync
+        });
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/dashboard');
+
+        const response = await GET(mockRequest);
+        const data = await response.json();
+
+        const liveVdot = calculateVdot({ distance: 5000, timeSeconds: 1800 });
+        expect(data.stats.vdot).toBeCloseTo(liveVdot, 10);
+        expect(data.stats.vdot).not.toBe(55);
+        // HR-based aerobic-fitness trend is computed live, never from storage
+        expect(data.stats.effectiveVO2max).toBe(44);
+    });
+
+    it('falls back to the persisted VDOT only when no run qualifies', async () => {
+        (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+            id: 'user-1',
+            hrMax: 185,
+            vdotCorrectionFactor: 1.0,
+            includeCrossTraining: true,
+            autoRevolvingVo2max: 55,
+        });
+        (prisma.activity.findMany as jest.Mock).mockResolvedValue([]);
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/dashboard');
+
+        const response = await GET(mockRequest);
+        const data = await response.json();
+
+        expect(data.stats.vdot).toBe(55);
     });
 
     it('should serialize BigInt for stravaId', async () => {

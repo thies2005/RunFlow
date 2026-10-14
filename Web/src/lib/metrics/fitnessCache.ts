@@ -68,6 +68,8 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
         let currentCtl = baseline?.ctl || 0;
         let currentAtl = baseline?.atl || 0;
         let currentCtlRunning = baseline?.ctlRunning || 0;
+        let currentCtlBike = baseline?.ctlBike || 0;
+        let currentAtlBike = baseline?.atlBike || 0;
 
         // 3. Apply decay for any gap between baseline and start date
         if (baseline) {
@@ -87,6 +89,8 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
                 currentCtl = currentCtl * Math.pow(ctlDecay, gapDays);
                 currentAtl = currentAtl * Math.pow(atlDecay, gapDays);
                 currentCtlRunning = currentCtlRunning * Math.pow(ctlDecay, gapDays);
+                currentCtlBike = currentCtlBike * Math.pow(ctlDecay, gapDays);
+                currentAtlBike = currentAtlBike * Math.pow(atlDecay, gapDays);
             }
         }
 
@@ -104,6 +108,7 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
                 movingTime: true,
                 trimp: true,
                 runningTss: true,
+                bikeTss: true,
                 hrZone1Time: true,
                 hrZone2Time: true,
                 hrZone3Time: true,
@@ -129,6 +134,10 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             ctlRunning: number;
             trimp: number;
             runningTss: number;
+            bikeTss: number;
+            ctlBike: number;
+            atlBike: number;
+            tsbBike: number;
         }> = [];
 
         // Group activities by day using consistent UTC date key
@@ -148,6 +157,8 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             // Calculate Daily Load
             let dailyTrimp = 0;
             let dailyRunningTss = 0;
+            let dailyBikeTss = 0;
+            let dailyCombinedLoad = 0;
 
             for (const a of dailyActivities) {
                 // TRIMP: Prefer stored value, fallback to zone calculation, then duration estimate
@@ -173,15 +184,27 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
                     ? calculateRunningTss(a.movingTime, a.distance, 300)
                     : 0;
 
+                // Cycling Bike TSS
+                const isRide = a.type === 'RIDE' || a.type === 'VIRTUAL_RIDE';
+                const bikeTss = isRide ? (a.bikeTss ?? trimp) : 0;
+
                 dailyTrimp += trimp;
                 dailyRunningTss += runningTss;
+                dailyBikeTss += bikeTss;
+
+                // For combined fitness load: use bikeTss for rides instead of trimp when present
+                const activityCombinedLoad = (isRide && a.bikeTss && a.bikeTss > 0) ? a.bikeTss : trimp;
+                dailyCombinedLoad += activityCombinedLoad;
             }
 
             // Apply EMA formula: newValue = oldValue * decay + todayLoad * (1 - decay)
-            currentCtl = currentCtl * ctlDecay + dailyTrimp * (1 - ctlDecay);
-            currentAtl = currentAtl * atlDecay + dailyTrimp * (1 - atlDecay);
+            currentCtl = currentCtl * ctlDecay + dailyCombinedLoad * (1 - ctlDecay);
+            currentAtl = currentAtl * atlDecay + dailyCombinedLoad * (1 - atlDecay);
             currentCtlRunning = currentCtlRunning * ctlDecay + dailyRunningTss * (1 - ctlDecay);
+            currentCtlBike = currentCtlBike * ctlDecay + dailyBikeTss * (1 - ctlDecay);
+            currentAtlBike = currentAtlBike * atlDecay + dailyBikeTss * (1 - atlDecay);
             const tsb = currentCtl - currentAtl;
+            const tsbBike = currentCtlBike - currentAtlBike;
 
             updates.push({
                 userId,
@@ -191,7 +214,11 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
                 tsb: tsb,
                 ctlRunning: currentCtlRunning,
                 trimp: dailyTrimp,
-                runningTss: dailyRunningTss
+                runningTss: dailyRunningTss,
+                bikeTss: dailyBikeTss,
+                ctlBike: currentCtlBike,
+                atlBike: currentAtlBike,
+                tsbBike: tsbBike,
             });
 
             // Yield event loop every 30 days to avoid blocking
@@ -286,6 +313,9 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
         let currentAtl = latest.atl;
         let currentCtlRunning = latest.ctlRunning;
         let currentTsb = latest.tsb;
+        let currentCtlBike = latest.ctlBike || 0;
+        let currentAtlBike = latest.atlBike || 0;
+        let currentTsbBike = latest.tsbBike || 0;
 
         const inputs: Array<{
             userId: string;
@@ -296,6 +326,10 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
             ctlRunning: number;
             trimp: number;
             runningTss: number;
+            bikeTss: number;
+            ctlBike: number;
+            atlBike: number;
+            tsbBike: number;
         }> = [];
 
         // Iterate from day after latest until today (using timestamps for safety)
@@ -309,7 +343,10 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
             currentCtl = currentCtl * ctlDecay;
             currentAtl = currentAtl * atlDecay;
             currentCtlRunning = currentCtlRunning * ctlDecay;
+            currentCtlBike = currentCtlBike * ctlDecay;
+            currentAtlBike = currentAtlBike * atlDecay;
             currentTsb = currentCtl - currentAtl;
+            currentTsbBike = currentCtlBike - currentAtlBike;
 
             inputs.push({
                 userId,
@@ -319,7 +356,11 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
                 tsb: currentTsb,
                 ctlRunning: currentCtlRunning,
                 trimp: 0,
-                runningTss: 0
+                runningTss: 0,
+                bikeTss: 0,
+                ctlBike: currentCtlBike,
+                atlBike: currentAtlBike,
+                tsbBike: currentTsbBike,
             });
 
             // Yield event loop every 30 days to avoid blocking

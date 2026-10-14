@@ -41,7 +41,7 @@ describe('fetchActivityStreams', () => {
 
         expect(rateLimiter.checkAndWait).toHaveBeenCalledTimes(1);
         expect(global.fetch).toHaveBeenCalledWith(
-            expect.stringContaining(`/activities/${mockActivityId}/streams?keys=time,heartrate,velocity_smooth,altitude,cadence&key_by_type=true`),
+            expect.stringContaining(`/activities/${mockActivityId}/streams?keys=time,heartrate,velocity_smooth,altitude,cadence,watts&key_by_type=true`),
             expect.objectContaining({
                 headers: { Authorization: `Bearer ${mockAccessToken}` }
             })

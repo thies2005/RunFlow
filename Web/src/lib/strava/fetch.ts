@@ -67,6 +67,8 @@ export interface StravaActivity {
     average_watts?: number;
     weighted_average_watts?: number;
     device_watts?: boolean;
+    max_watts?: number;
+    kilojoules?: number;
 }
 
 export const rateLimiter = {
@@ -202,11 +204,11 @@ export async function fetchSingleActivity(accessToken: string, activityId: numbe
 export async function fetchActivityStreams(
     accessToken: string,
     activityId: number
-): Promise<{ time: number[]; heartrate?: number[]; velocity_smooth?: number[]; altitude?: number[]; cadence?: number[] } | null> {
+): Promise<{ time: number[]; heartrate?: number[]; velocity_smooth?: number[]; altitude?: number[]; cadence?: number[]; watts?: number[] } | null> {
     await rateLimiter.checkAndWait();
 
     const response = await fetch(
-        `${STRAVA_API_BASE}/activities/${activityId}/streams?keys=time,heartrate,velocity_smooth,altitude,cadence&key_by_type=true`,
+        `${STRAVA_API_BASE}/activities/${activityId}/streams?keys=time,heartrate,velocity_smooth,altitude,cadence,watts&key_by_type=true`,
         {
             headers: { Authorization: `Bearer ${accessToken}` },
         }
@@ -228,6 +230,7 @@ export async function fetchActivityStreams(
         velocity_smooth: streams.velocity_smooth?.data,
         altitude: streams.altitude?.data,
         cadence: streams.cadence?.data,
+        watts: streams.watts?.data,
     };
 }
 

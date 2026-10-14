@@ -1,0 +1,22 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { getCyclingAnalytics } from '@/lib/metrics/power';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const range = request.nextUrl.searchParams.get('range') || '90d';
+        const analytics = await getCyclingAnalytics(session.user.id, range);
+
+        return NextResponse.json(analytics);
+    } catch (error) {
+        console.error('Failed to get cycling analytics:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}

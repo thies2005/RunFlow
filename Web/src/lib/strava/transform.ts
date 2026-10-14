@@ -15,6 +15,15 @@ import { calculateTrimp, type Sex } from '@/lib/metrics/trimp';
 import { calculateRunningTss, getActivityContribution } from '@/lib/metrics/fitness';
 import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
+import {
+    calculateNormalizedPower,
+    calculateIntensityFactor,
+    calculateVariabilityIndex,
+    calculateBikeTss,
+    calculateEfficiencyFactor,
+    calculateAerobicDecoupling,
+    calculatePowerZoneTimes,
+} from '@/lib/metrics/power';
 import { Prisma } from '@/generated/prisma/client';
 import type { StravaActivity } from './fetch';
 
@@ -58,6 +67,21 @@ export interface ActivityData {
     averageWatts: number | null;
     weightedAverageWatts: number | null;
     deviceWatts: boolean;
+    maxWatts: number | null;
+    kilojoules: number | null;
+    npWatts: number | null;
+    intensityFactor: number | null;
+    variabilityIndex: number | null;
+    bikeTss: number | null;
+    efficiencyFactor: number | null;
+    aerobicDecoupling: number | null;
+    powerZone1Time: number | null;
+    powerZone2Time: number | null;
+    powerZone3Time: number | null;
+    powerZone4Time: number | null;
+    powerZone5Time: number | null;
+    powerZone6Time: number | null;
+    powerZone7Time: number | null;
 }
 
 export interface MetricsInput {
@@ -74,9 +98,10 @@ export interface MetricsInput {
         hrZone4Max: number | null;
         hrZone5Max: number | null;
         hrZone6Max: number | null;
+        ftpWatts?: number | null;
     };
     currentHrMax: number | null;
-    streams: { time: number[]; heartrate?: number[]; velocity_smooth?: number[]; altitude?: number[]; cadence?: number[] } | null;
+    streams: { time: number[]; heartrate?: number[]; velocity_smooth?: number[]; altitude?: number[]; cadence?: number[]; watts?: number[] } | null;
     goals?: Array<{ currentVdot: number | null; isActive: boolean }>;
 }
 
@@ -165,6 +190,13 @@ export function enrichActivityMetrics(input: MetricsInput): {
     runningTss: number | null;
     estimatedVdot: number | null;
     zoneTimes: ZoneTimes;
+    npWatts: number | null;
+    intensityFactor: number | null;
+    variabilityIndex: number | null;
+    bikeTss: number | null;
+    efficiencyFactor: number | null;
+    aerobicDecoupling: number | null;
+    powerZoneTimes: number[] | null;
 } {
     const { activity, user, currentHrMax, streams, goals } = input;
     const effectiveHrMax = currentHrMax || DEFAULT_HR_MAX;
@@ -240,12 +272,76 @@ export function enrichActivityMetrics(input: MetricsInput): {
         zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, zoneThresholds);
     }
 
+    // Cycling Power Metrics
+    let npWatts: number | null = null;
+    let intensityFactor: number | null = null;
+    let variabilityIndex: number | null = null;
+    let bikeTss: number | null = null;
+    let efficiencyFactor: number | null = null;
+    let aerobicDecoupling: number | null = null;
+    let powerZoneTimes: number[] | null = null;
+
+    const isCycling = mappedType === ActivityType.RIDE || mappedType === ActivityType.VIRTUAL_RIDE;
+    const hasWattsData = isCycling || Boolean(activity.average_watts || activity.device_watts || streams?.watts);
+
+    if (hasWattsData) {
+        const ftpWatts = user.ftpWatts ?? null;
+
+        if (streams?.watts && streams.watts.length > 0) {
+            npWatts = calculateNormalizedPower(
+                streams.watts,
+                streams.time,
+                activity.weighted_average_watts,
+                activity.average_watts
+            );
+
+            if (ftpWatts && ftpWatts > 0) {
+                powerZoneTimes = calculatePowerZoneTimes(streams.watts, streams.time, ftpWatts);
+            }
+
+            if (streams.heartrate && streams.heartrate.length > 0) {
+                aerobicDecoupling = calculateAerobicDecoupling(streams.watts, streams.heartrate, streams.time);
+            }
+        } else {
+            npWatts = calculateNormalizedPower(
+                null,
+                null,
+                activity.weighted_average_watts,
+                activity.average_watts
+            );
+        }
+
+        const avgWatts = activity.average_watts ?? null;
+
+        if (npWatts && ftpWatts && ftpWatts > 0) {
+            intensityFactor = calculateIntensityFactor(npWatts, ftpWatts);
+            if (intensityFactor && activity.moving_time > 0) {
+                bikeTss = calculateBikeTss(activity.moving_time, npWatts, intensityFactor, ftpWatts);
+            }
+        }
+
+        if (npWatts && avgWatts && avgWatts > 0) {
+            variabilityIndex = calculateVariabilityIndex(npWatts, avgWatts);
+        }
+
+        if (npWatts && activity.average_heartrate && activity.average_heartrate > 0) {
+            efficiencyFactor = calculateEfficiencyFactor(npWatts, activity.average_heartrate);
+        }
+    }
+
     return {
         trimp,
         calculatedCalories,
         runningTss,
         estimatedVdot,
         zoneTimes,
+        npWatts,
+        intensityFactor,
+        variabilityIndex,
+        bikeTss,
+        efficiencyFactor,
+        aerobicDecoupling,
+        powerZoneTimes,
     };
 }
 
@@ -290,5 +386,20 @@ export function transformActivityData(
         averageWatts: activity.average_watts ?? null,
         weightedAverageWatts: activity.weighted_average_watts ?? null,
         deviceWatts: activity.device_watts ?? false,
+        maxWatts: activity.max_watts ?? null,
+        kilojoules: activity.kilojoules ?? null,
+        npWatts: metrics.npWatts,
+        intensityFactor: metrics.intensityFactor,
+        variabilityIndex: metrics.variabilityIndex,
+        bikeTss: metrics.bikeTss,
+        efficiencyFactor: metrics.efficiencyFactor,
+        aerobicDecoupling: metrics.aerobicDecoupling,
+        powerZone1Time: metrics.powerZoneTimes ? metrics.powerZoneTimes[0] : null,
+        powerZone2Time: metrics.powerZoneTimes ? metrics.powerZoneTimes[1] : null,
+        powerZone3Time: metrics.powerZoneTimes ? metrics.powerZoneTimes[2] : null,
+        powerZone4Time: metrics.powerZoneTimes ? metrics.powerZoneTimes[3] : null,
+        powerZone5Time: metrics.powerZoneTimes ? metrics.powerZoneTimes[4] : null,
+        powerZone6Time: metrics.powerZoneTimes ? metrics.powerZoneTimes[5] : null,
+        powerZone7Time: metrics.powerZoneTimes ? metrics.powerZoneTimes[6] : null,
     };
 }

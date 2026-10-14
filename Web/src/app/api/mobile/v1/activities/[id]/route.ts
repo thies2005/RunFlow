@@ -51,7 +51,25 @@ export async function GET(
             stravaId: activity.stravaId.toString(),
             startDate: activity.startDate.toISOString(),
             createdAt: activity.createdAt.toISOString(),
-            updatedAt: activity.updatedAt.toISOString()
+            updatedAt: activity.updatedAt.toISOString(),
+            averageWatts: activity.averageWatts ?? null,
+            weightedAverageWatts: activity.weightedAverageWatts ?? null,
+            deviceWatts: activity.deviceWatts ?? false,
+            maxWatts: activity.maxWatts ?? null,
+            kilojoules: activity.kilojoules ?? null,
+            npWatts: activity.npWatts ?? null,
+            intensityFactor: activity.intensityFactor ?? null,
+            variabilityIndex: activity.variabilityIndex ?? null,
+            bikeTss: activity.bikeTss ?? null,
+            efficiencyFactor: activity.efficiencyFactor ?? null,
+            aerobicDecoupling: activity.aerobicDecoupling ?? null,
+            powerZone1Time: activity.powerZone1Time ?? null,
+            powerZone2Time: activity.powerZone2Time ?? null,
+            powerZone3Time: activity.powerZone3Time ?? null,
+            powerZone4Time: activity.powerZone4Time ?? null,
+            powerZone5Time: activity.powerZone5Time ?? null,
+            powerZone6Time: activity.powerZone6Time ?? null,
+            powerZone7Time: activity.powerZone7Time ?? null,
         };
 
         return NextResponse.json({
@@ -84,12 +102,16 @@ export async function PUT(
         }
 
         const body = await request.json();
-        const { name, type, trainingType } = body;
+        const { name, type, trainingType, averageWatts, maxWatts, npWatts, bikeTss } = body;
 
         const data: Record<string, unknown> = {};
         if (name !== undefined) data.name = name;
         if (type !== undefined) data.type = type;
         if (trainingType !== undefined) data.trainingType = trainingType;
+        if (averageWatts !== undefined) data.averageWatts = averageWatts;
+        if (maxWatts !== undefined) data.maxWatts = maxWatts;
+        if (npWatts !== undefined) data.npWatts = npWatts;
+        if (bikeTss !== undefined) data.bikeTss = bikeTss;
 
         if (Object.keys(data).length === 0) {
             return errorResponses.badRequest('No fields to update');
@@ -113,7 +135,25 @@ export async function PUT(
             stravaId: activity.stravaId.toString(),
             startDate: activity.startDate.toISOString(),
             createdAt: activity.createdAt.toISOString(),
-            updatedAt: activity.updatedAt.toISOString()
+            updatedAt: activity.updatedAt.toISOString(),
+            averageWatts: activity.averageWatts ?? null,
+            weightedAverageWatts: activity.weightedAverageWatts ?? null,
+            deviceWatts: activity.deviceWatts ?? false,
+            maxWatts: activity.maxWatts ?? null,
+            kilojoules: activity.kilojoules ?? null,
+            npWatts: activity.npWatts ?? null,
+            intensityFactor: activity.intensityFactor ?? null,
+            variabilityIndex: activity.variabilityIndex ?? null,
+            bikeTss: activity.bikeTss ?? null,
+            efficiencyFactor: activity.efficiencyFactor ?? null,
+            aerobicDecoupling: activity.aerobicDecoupling ?? null,
+            powerZone1Time: activity.powerZone1Time ?? null,
+            powerZone2Time: activity.powerZone2Time ?? null,
+            powerZone3Time: activity.powerZone3Time ?? null,
+            powerZone4Time: activity.powerZone4Time ?? null,
+            powerZone5Time: activity.powerZone5Time ?? null,
+            powerZone6Time: activity.powerZone6Time ?? null,
+            powerZone7Time: activity.powerZone7Time ?? null,
         };
 
         return NextResponse.json({

@@ -38,6 +38,24 @@ export async function GET(
         const serialized = {
             ...activity,
             stravaId: activity.stravaId.toString(),
+            averageWatts: activity.averageWatts ?? null,
+            weightedAverageWatts: activity.weightedAverageWatts ?? null,
+            deviceWatts: activity.deviceWatts ?? false,
+            maxWatts: activity.maxWatts ?? null,
+            kilojoules: activity.kilojoules ?? null,
+            npWatts: activity.npWatts ?? null,
+            intensityFactor: activity.intensityFactor ?? null,
+            variabilityIndex: activity.variabilityIndex ?? null,
+            bikeTss: activity.bikeTss ?? null,
+            efficiencyFactor: activity.efficiencyFactor ?? null,
+            aerobicDecoupling: activity.aerobicDecoupling ?? null,
+            powerZone1Time: activity.powerZone1Time ?? null,
+            powerZone2Time: activity.powerZone2Time ?? null,
+            powerZone3Time: activity.powerZone3Time ?? null,
+            powerZone4Time: activity.powerZone4Time ?? null,
+            powerZone5Time: activity.powerZone5Time ?? null,
+            powerZone6Time: activity.powerZone6Time ?? null,
+            powerZone7Time: activity.powerZone7Time ?? null,
         };
 
         return NextResponse.json(serialized);

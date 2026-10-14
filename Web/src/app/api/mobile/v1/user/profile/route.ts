@@ -52,6 +52,9 @@ export async function GET(request: NextRequest) {
                 thresholdHeartRate: true,
                 thresholdPace: true,
                 vdotCorrectionFactor: true,
+                ftpWatts: true,
+                autoEstimateFtp: true,
+                swimCssSecPer100m: true,
                 lastSyncAt: true,
                 createdAt: true,
             }
@@ -100,7 +103,8 @@ export async function PUT(request: NextRequest) {
             name, sex, birthDate, hrMax, hrRest, weight, height,
             hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
             thresholdHeartRate, thresholdPace,
-            vdotCorrectionFactor
+            vdotCorrectionFactor,
+            ftpWatts, autoEstimateFtp, swimCssSecPer100m
         } = body;
 
         // Validate HR zones if provided
@@ -130,6 +134,9 @@ export async function PUT(request: NextRequest) {
                 thresholdHeartRate: undefined !== thresholdHeartRate ? thresholdHeartRate : undefined,
                 thresholdPace: undefined !== thresholdPace ? thresholdPace : undefined,
                 vdotCorrectionFactor: undefined !== vdotCorrectionFactor ? vdotCorrectionFactor : undefined,
+                ftpWatts: undefined !== ftpWatts ? ftpWatts : undefined,
+                autoEstimateFtp: undefined !== autoEstimateFtp ? autoEstimateFtp : undefined,
+                swimCssSecPer100m: undefined !== swimCssSecPer100m ? swimCssSecPer100m : undefined,
             },
             select: {
                 id: true,
@@ -151,6 +158,9 @@ export async function PUT(request: NextRequest) {
                 thresholdHeartRate: true,
                 thresholdPace: true,
                 vdotCorrectionFactor: true,
+                ftpWatts: true,
+                autoEstimateFtp: true,
+                swimCssSecPer100m: true,
             }
         });
 

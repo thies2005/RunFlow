@@ -24,6 +24,7 @@ import { upsertActivity, createNewActivityNotification, updateUserProfile, updat
 import { calculateAndSaveFitnessMetrics, type ModifiedActivity } from './fitness';
 import { logger } from '@/lib/logging/logger';
 import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
+import { calculatePowerCurve, estimateFtpFromPowerCurve } from '@/lib/metrics/power';
 import pLimit from 'p-limit';
 
 const HR_MAX_UPPER_BOUND = 220;
@@ -70,6 +71,8 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 hrZone4Max: true,
                 hrZone5Max: true,
                 hrZone6Max: true,
+                ftpWatts: true,
+                autoEstimateFtp: true,
                 goals: {
                     where: { isActive: true },
                     select: { currentVdot: true, isActive: true },
@@ -181,6 +184,12 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     let needsUpdate = existing && existing.hasHeartrate && (existing.hrZone1Time === null || existing.hrZone6Time === null);
 
                     if (existing && !needsUpdate) {
+                        if (['RIDE', 'VIRTUAL_RIDE'].includes(existing.type)) {
+                            if ((existing.averageWatts !== null || activity.average_watts) && existing.npWatts === null) {
+                                needsUpdate = true;
+                            }
+                        }
+
                         const calorieActivityTypes = ['RUN', 'RIDE', 'VIRTUAL_RIDE'];
                         if (calorieActivityTypes.includes(existing.type) && existing.calories === null) {
                             needsUpdate = true;
@@ -243,6 +252,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                             hrZone4Max: user?.hrZone4Max ?? null,
                             hrZone5Max: user?.hrZone5Max ?? null,
                             hrZone6Max: user?.hrZone6Max ?? null,
+                            ftpWatts: user?.ftpWatts ?? null,
                         },
                         currentHrMax,
                         streams,
@@ -252,6 +262,19 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     const metrics = enrichActivityMetrics(metricsInput);
                     const activityData = transformActivityData(activity, metrics);
                     activityData.streams = streams ?? Prisma.JsonNull;
+
+                    if (streams?.watts && streams.watts.length > 0) {
+                        const powerCurve = calculatePowerCurve(streams.watts, streams.time);
+                        const eFtp = estimateFtpFromPowerCurve(powerCurve, activity.weighted_average_watts ?? activity.average_watts);
+                        if (user?.autoEstimateFtp && eFtp && eFtp > (user.ftpWatts || 0)) {
+                            await prisma.user.update({
+                                where: { id: userId },
+                                data: { ftpWatts: eFtp },
+                            });
+                            logger.info('Auto-estimated higher cycling FTP', { userId, oldFtp: user.ftpWatts, newFtp: eFtp });
+                            user.ftpWatts = eFtp;
+                        }
+                    }
 
                     if (isNew) {
                         const createdActivity = await prisma.activity.create({
@@ -449,6 +472,8 @@ export async function syncActivityById(userId: string, activityId: number): Prom
                 hrZone4Max: true,
                 hrZone5Max: true,
                 hrZone6Max: true,
+                ftpWatts: true,
+                autoEstimateFtp: true,
             },
         });
 
@@ -479,6 +504,7 @@ export async function syncActivityById(userId: string, activityId: number): Prom
                 hrZone4Max: user.hrZone4Max,
                 hrZone5Max: user.hrZone5Max,
                 hrZone6Max: user.hrZone6Max,
+                ftpWatts: user.ftpWatts ?? null,
             },
             currentHrMax: user.hrMax,
             streams,
@@ -487,6 +513,19 @@ export async function syncActivityById(userId: string, activityId: number): Prom
         const metrics = enrichActivityMetrics(metricsInput);
         const activityData = transformActivityData(activity, metrics);
         activityData.streams = streams ?? Prisma.JsonNull;
+
+        if (streams?.watts && streams.watts.length > 0) {
+            const powerCurve = calculatePowerCurve(streams.watts, streams.time);
+            const eFtp = estimateFtpFromPowerCurve(powerCurve, activity.weighted_average_watts ?? activity.average_watts);
+            if (user.autoEstimateFtp && eFtp && eFtp > (user.ftpWatts || 0)) {
+                await prisma.user.update({
+                    where: { id: userId },
+                    data: { ftpWatts: eFtp },
+                });
+                logger.info('Auto-estimated higher cycling FTP (syncActivityById)', { userId, oldFtp: user.ftpWatts, newFtp: eFtp });
+                user.ftpWatts = eFtp;
+            }
+        }
 
         const { created } = await upsertActivity(userId, activity.id, activityData);
 

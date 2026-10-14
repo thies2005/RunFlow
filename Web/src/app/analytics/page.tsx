@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Activity as ActivityIcon, Zap, Layers, Trophy, TrendingUp, Sparkles, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
 
@@ -18,6 +18,8 @@ const ZoneDistributionSection = dynamic(() => import('@/components/analytics/Zon
 const TopMetricsSection = dynamic(() => import('@/components/analytics/TopMetricsSection'), { ssr: false });
 const TrainingPacesSection = dynamic(() => import('@/components/analytics/TrainingPacesSection'), { ssr: false });
 const FitnessChart = dynamic(() => import('@/components/FitnessChart'), { ssr: false });
+const CyclingAnalyticsSection = dynamic(() => import('@/components/Analytics/CyclingAnalyticsSection'), { ssr: false });
+const SplitPmcChart = dynamic(() => import('@/components/Analytics/SplitPmcChart'), { ssr: false });
 import { Footer } from '@/components';
 import {
     calculatePredictedTimes,
@@ -33,6 +35,7 @@ export default function AnalyticsPage() {
     const { status } = useSession();
     const router = useRouter();
     const queryClient = useQueryClient();
+    const [selectedSport, setSelectedSport] = useState<'COMBINED' | 'RUNNING' | 'CYCLING'>('COMBINED');
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
     const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
 
@@ -118,6 +121,24 @@ export default function AnalyticsPage() {
         enabled: status === 'authenticated',
     });
 
+    // Fetch cycling analytics for split PMC and combined metrics
+    const { data: cyclingData } = useQuery({
+        queryKey: ['cycling-analytics', timeRange],
+        queryFn: async () => {
+            const rangeMap: Record<string, string> = {
+                'ALL': 'all',
+                '1Y': '1y',
+                '6M': '90d',
+                '3M': '90d',
+                '1M': '42d'
+            };
+            const res = await fetch(`/api/analytics/cycling?range=${rangeMap[timeRange] || '90d'}`);
+            if (!res.ok) return null;
+            return res.json();
+        },
+        enabled: status === 'authenticated',
+    });
+
     // Recalculate mutation
     const recalculateMutation = useMutation({
         mutationFn: async () => {
@@ -127,6 +148,9 @@ export default function AnalyticsPage() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['all-activities'] });
+            queryClient.invalidateQueries({ queryKey: ['analytics-history'] });
+            queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['cycling-analytics'] });
         },
     });
 
@@ -324,14 +348,47 @@ export default function AnalyticsPage() {
     const filteredShapeTrend = useMemo(() => filterByTimeRange(shapeTrendData, timeRange), [shapeTrendData, timeRange]);
     const filteredFitness = useMemo(() => filterByTimeRange(fitnessData, timeRange), [fitnessData, timeRange]);
 
+    // Combined sport stats for overview
+    const combinedSportStats = useMemo(() => {
+        const activities: Activity[] = activitiesData?.activities || [];
+        let runDistM = 0;
+        let bikeDistM = 0;
+        let totalMovingSec = 0;
+        let runCount = 0;
+        let bikeCount = 0;
+
+        activities.forEach(a => {
+            totalMovingSec += a.movingTime;
+            if (a.type === 'RUN') {
+                runDistM += a.distance;
+                runCount++;
+            } else if (a.type === 'RIDE' || (a as any).type === 'VIRTUAL_RIDE') {
+                bikeDistM += a.distance;
+                bikeCount++;
+            }
+        });
+
+        const latestPmc = cyclingData?.pmcSeries?.[cyclingData.pmcSeries.length - 1];
+
+        return {
+            runDistKm: (runDistM / 1000).toFixed(1),
+            bikeDistKm: (bikeDistM / 1000).toFixed(1),
+            totalHours: Math.round(totalMovingSec / 3600),
+            totalActivities: activities.length,
+            runCount,
+            bikeCount,
+            ctlCombined: latestPmc?.ctlCombined ?? fitnessData?.[fitnessData.length - 1]?.ctl ?? 0,
+            atlCombined: latestPmc?.atlCombined ?? fitnessData?.[fitnessData.length - 1]?.atl ?? 0,
+            tsbCombined: latestPmc?.tsbCombined ?? fitnessData?.[fitnessData.length - 1]?.tsb ?? 0,
+        };
+    }, [activitiesData, cyclingData, fitnessData]);
+
     if (status === 'unauthenticated') {
         router.push('/login');
         return null;
     }
 
     const showLoading = status === 'loading' || isLoading;
-
-
 
     return (
         <div className="min-h-screen bg-background">
@@ -363,79 +420,318 @@ export default function AnalyticsPage() {
                     </div>
                 ) : (
                     <>
-                        {/* === TOP METRICS === */}
-                        <TopMetricsSection
-                            runalyzeMetrics={runalyzeMetrics}
-                            setIsCalibrationOpen={setIsCalibrationOpen}
-                        />
+                        {/* === SPORT SELECTOR & RANGE BAR === */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-line">
+                            <div className="inline-flex rounded-lg bg-background-tertiary p-1 border border-line text-xs sm:text-sm">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedSport('COMBINED')}
+                                    className={`flex items-center gap-2 px-4 py-2 font-medium rounded-md transition-all ${
+                                        selectedSport === 'COMBINED'
+                                            ? 'bg-accent-cyan text-background font-semibold shadow-xs'
+                                            : 'text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <Layers className="w-4 h-4" />
+                                    Combined
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedSport('RUNNING')}
+                                    className={`flex items-center gap-2 px-4 py-2 font-medium rounded-md transition-all ${
+                                        selectedSport === 'RUNNING'
+                                            ? 'bg-accent-blue text-white font-semibold shadow-xs'
+                                            : 'text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <ActivityIcon className="w-4 h-4" />
+                                    Running
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedSport('CYCLING')}
+                                    className={`flex items-center gap-2 px-4 py-2 font-medium rounded-md transition-all ${
+                                        selectedSport === 'CYCLING'
+                                            ? 'bg-accent-orange text-white font-semibold shadow-xs'
+                                            : 'text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <Zap className="w-4 h-4" />
+                                    Cycling
+                                </button>
+                            </div>
 
-
-                        {/* Combined Analytics Chart */}
-                        {/* Combined Analytics Chart */}
-                        <CombinedAnalyticsChart
-                            data={combinedData}
-                            timeRange={timeRange}
-                            onTimeRangeChange={setTimeRange}
-                        />
-
-                        {/* Time in Zones Pie Chart */}
-                        <ZoneDistributionSection
-                            activities={activitiesData?.activities || []}
-                            userData={userData}
-                        />
-
-                        {/* Race Prediction Chart with Shape Slider */}
-                        <RacePredictionChart
-                            effectiveVO2max={runalyzeMetrics.effectiveVO2max}
-                            currentShape={runalyzeMetrics.shape}
-                            calibrationFactor={runalyzeMetrics.calibrationFactor}
-                        />
-
-                        {/* Race Prediction Time Trends Chart */}
-                        <RacePredictionTimeChart
-                            vo2TrendData={vo2TrendData}
-                            shapeTrendData={shapeTrendData}
-                            calibrationFactor={runalyzeMetrics.calibrationFactor}
-                        />
-
-                        {/* Training Paces & Heart Rate Section (VDOT-driven) */}
-                        <TrainingPacesSection
-                            currentVdot={runalyzeMetrics.vdot}
-                            trainingPaces={trainingPaces}
-                            maxHr={userData?.user?.hrMax || userData?.hrMax}
-                        />
-
-                        {/* === TREND CHARTS === */}
-                        <TrendChartsSection
-                            filteredVo2Trend={filteredVo2Trend}
-                            filteredShapeTrend={filteredShapeTrend}
-                            timeRange={timeRange}
-                        />
-
-                        {/* === FITNESS & FORM === */}
-                        <FitnessChart data={filteredFitness} />
-
-                        {/* Shape Details */}
-                        <div className="glass-card p-4">
-                            <div className="grid grid-cols-4 gap-4 text-center text-sm">
-                                <div>
-                                    <p className="text-foreground-muted">Avg weekly</p>
-                                    <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.avgWeeklyKm} km</p>
-                                </div>
-                                <div>
-                                    <p className="text-foreground-muted">Target weekly</p>
-                                    <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.targetWeeklyKm} km</p>
-                                </div>
-                                <div>
-                                    <p className="text-foreground-muted">Long run points</p>
-                                    <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.longRunPoints} / 10</p>
-                                </div>
-                                <div>
-                                    <p className="text-foreground-muted">Calibration</p>
-                                    <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.calibrationFactor.toFixed(2)}x</p>
-                                </div>
+                            {/* Range Selector */}
+                            <div className="inline-flex rounded-lg bg-background-tertiary p-1 border border-line text-xs self-start sm:self-auto">
+                                {(['42d', '90d', '1y', 'all'] as const).map((r) => {
+                                    const mappedRange: TimeRange = r === '42d' ? '1M' : r === '90d' ? '3M' : r === '1y' ? '1Y' : 'ALL';
+                                    const isActive = timeRange === mappedRange;
+                                    return (
+                                        <button
+                                            key={r}
+                                            type="button"
+                                            onClick={() => setTimeRange(mappedRange)}
+                                            className={`px-3 py-1.5 uppercase font-medium rounded-md transition-all ${
+                                                isActive
+                                                    ? 'bg-surface-hover text-foreground font-semibold'
+                                                    : 'text-foreground-muted hover:text-foreground'
+                                            }`}
+                                        >
+                                            {r}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
+
+                        {/* === COMBINED SPORT VIEW === */}
+                        {selectedSport === 'COMBINED' && (
+                            <div className="space-y-8 animate-fade-in">
+                                {/* Combined KPI Strip */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="glass-card p-4">
+                                        <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1.5 font-medium">
+                                            <ActivityIcon className="w-3.5 h-3.5 text-accent-cyan" /> Combined Fitness
+                                        </div>
+                                        <div className="text-2xl font-mono font-bold text-foreground">
+                                            {combinedSportStats.ctlCombined.toFixed(0)} <span className="text-xs text-foreground-muted font-normal">CTL</span>
+                                        </div>
+                                        <div className="text-xs text-foreground-muted mt-1 flex items-center gap-2">
+                                            <span>ATL: {combinedSportStats.atlCombined.toFixed(0)}</span>
+                                            <span>TSB: <span className={combinedSportStats.tsbCombined >= 0 ? 'text-positive' : 'text-accent-pink'}>
+                                                {combinedSportStats.tsbCombined >= 0 ? `+${combinedSportStats.tsbCombined.toFixed(0)}` : combinedSportStats.tsbCombined.toFixed(0)}
+                                            </span></span>
+                                        </div>
+                                    </div>
+
+                                    <div className="glass-card p-4">
+                                        <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1.5 font-medium">
+                                            <ActivityIcon className="w-3.5 h-3.5 text-accent-blue" /> Running Volume
+                                        </div>
+                                        <div className="text-2xl font-mono font-bold text-foreground">
+                                            {combinedSportStats.runDistKm} <span className="text-xs text-foreground-muted font-normal">km</span>
+                                        </div>
+                                        <div className="text-xs text-foreground-muted mt-1">
+                                            {combinedSportStats.runCount} runs recorded
+                                        </div>
+                                    </div>
+
+                                    <div className="glass-card p-4">
+                                        <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1.5 font-medium">
+                                            <Zap className="w-3.5 h-3.5 text-accent-orange" /> Cycling Distance
+                                        </div>
+                                        <div className="text-2xl font-mono font-bold text-foreground">
+                                            {combinedSportStats.bikeDistKm} <span className="text-xs text-foreground-muted font-normal">km</span>
+                                        </div>
+                                        <div className="text-xs text-foreground-muted mt-1">
+                                            {combinedSportStats.bikeCount} rides recorded
+                                        </div>
+                                    </div>
+
+                                    <div className="glass-card p-4">
+                                        <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1.5 font-medium">
+                                            <TrendingUp className="w-3.5 h-3.5 text-accent-purple" /> Total Training Time
+                                        </div>
+                                        <div className="text-2xl font-mono font-bold text-foreground">
+                                            {combinedSportStats.totalHours} <span className="text-xs text-foreground-muted font-normal">hours</span>
+                                        </div>
+                                        <div className="text-xs text-foreground-muted mt-1">
+                                            {combinedSportStats.totalActivities} total activities
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Split & Combined PMC Chart */}
+                                <SplitPmcChart
+                                    data={cyclingData?.pmcSeries || fitnessData}
+                                    initialView="combined"
+                                    title="Multi-Sport Performance Management (PMC)"
+                                    hideRangeSelector
+                                />
+
+                                {/* Combined Volume & Training Time Chart */}
+                                <CombinedAnalyticsChart
+                                    data={combinedData}
+                                    timeRange={timeRange}
+                                    onTimeRangeChange={setTimeRange}
+                                />
+
+                                {/* Highlights Section */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Running Highlights */}
+                                    <div className="glass-card p-6 flex flex-col justify-between">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <ActivityIcon className="w-5 h-5 text-accent-blue" />
+                                                    <h3 className="font-semibold text-foreground text-base">Running Highlights</h3>
+                                                </div>
+                                                <span className="text-xs font-mono bg-accent-blue/15 text-accent-blue px-2 py-0.5 rounded-full font-medium">
+                                                    VDOT {runalyzeMetrics.vdot > 0 ? runalyzeMetrics.vdot.toFixed(1) : '-'}
+                                                </span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+                                                <div className="p-3 bg-background-tertiary rounded-lg border border-line">
+                                                    <span className="text-foreground-muted block mb-1">Effective VO2max</span>
+                                                    <span className="text-lg font-mono font-bold text-foreground">
+                                                        {runalyzeMetrics.effectiveVO2max > 0 ? runalyzeMetrics.effectiveVO2max.toFixed(1) : '-'}
+                                                    </span>
+                                                </div>
+                                                <div className="p-3 bg-background-tertiary rounded-lg border border-line">
+                                                    <span className="text-foreground-muted block mb-1">Marathon Shape</span>
+                                                    <span className="text-lg font-mono font-bold text-foreground">
+                                                        {runalyzeMetrics.shape}%
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-foreground-muted">
+                                                Weekly average: <span className="font-mono text-foreground font-medium">{runalyzeMetrics.details.avgWeeklyKm} km</span> (Target: {runalyzeMetrics.details.targetWeeklyKm} km)
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedSport('RUNNING')}
+                                            className="mt-6 w-full py-2.5 px-4 rounded-lg bg-background-tertiary border border-line hover:bg-surface-hover text-foreground font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
+                                        >
+                                            Open Full Running Analytics
+                                            <ChevronRight className="w-4 h-4 text-accent-blue" />
+                                        </button>
+                                    </div>
+
+                                    {/* Cycling Highlights */}
+                                    <div className="glass-card p-6 flex flex-col justify-between">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Zap className="w-5 h-5 text-accent-orange" />
+                                                    <h3 className="font-semibold text-foreground text-base">Cycling Highlights</h3>
+                                                </div>
+                                                <span className="text-xs font-mono bg-accent-orange/15 text-accent-orange px-2 py-0.5 rounded-full font-medium">
+                                                    FTP {cyclingData?.ftp?.ftpWatts ?? cyclingData?.ftp?.eFtpWatts ?? '-'} W
+                                                </span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+                                                <div className="p-3 bg-background-tertiary rounded-lg border border-line">
+                                                    <span className="text-foreground-muted block mb-1">Period Bike TSS</span>
+                                                    <span className="text-lg font-mono font-bold text-foreground">
+                                                        {cyclingData?.summary?.totalBikeTss ? cyclingData.summary.totalBikeTss.toLocaleString() : '0'}
+                                                    </span>
+                                                </div>
+                                                <div className="p-3 bg-background-tertiary rounded-lg border border-line">
+                                                    <span className="text-foreground-muted block mb-1">Aerobic EF</span>
+                                                    <span className="text-lg font-mono font-bold text-foreground">
+                                                        {cyclingData?.summary?.avgEfficiencyFactor ? `${cyclingData.summary.avgEfficiencyFactor.toFixed(2)}` : '-'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-foreground-muted">
+                                                Mechanical energy output: <span className="font-mono text-foreground font-medium">{cyclingData?.summary?.totalKilojoules ? `${Math.round(cyclingData.summary.totalKilojoules).toLocaleString()} kJ` : '-'}</span>
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedSport('CYCLING')}
+                                            className="mt-6 w-full py-2.5 px-4 rounded-lg bg-background-tertiary border border-line hover:bg-surface-hover text-foreground font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
+                                        >
+                                            Open Full Cycling Analytics
+                                            <ChevronRight className="w-4 h-4 text-accent-orange" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* === RUNNING SPORT VIEW === */}
+                        {selectedSport === 'RUNNING' && (
+                            <div className="space-y-8 animate-fade-in">
+                                {/* Top Running Metrics */}
+                                <TopMetricsSection
+                                    runalyzeMetrics={runalyzeMetrics}
+                                    setIsCalibrationOpen={setIsCalibrationOpen}
+                                />
+
+                                {/* Running PMC */}
+                                <SplitPmcChart
+                                    data={cyclingData?.pmcSeries || fitnessData}
+                                    initialView="running"
+                                    title="Running Fitness & Fatigue (rTSS PMC)"
+                                    hideRangeSelector
+                                />
+
+                                {/* Combined Analytics Chart */}
+                                <CombinedAnalyticsChart
+                                    data={combinedData}
+                                    timeRange={timeRange}
+                                    onTimeRangeChange={setTimeRange}
+                                />
+
+                                {/* Time in Zones Pie Chart */}
+                                <ZoneDistributionSection
+                                    activities={activitiesData?.activities || []}
+                                    userData={userData}
+                                />
+
+                                {/* Race Prediction Chart with Shape Slider */}
+                                <RacePredictionChart
+                                    effectiveVO2max={runalyzeMetrics.effectiveVO2max}
+                                    currentShape={runalyzeMetrics.shape}
+                                    calibrationFactor={runalyzeMetrics.calibrationFactor}
+                                />
+
+                                {/* Race Prediction Time Trends Chart */}
+                                <RacePredictionTimeChart
+                                    vo2TrendData={vo2TrendData}
+                                    shapeTrendData={shapeTrendData}
+                                    calibrationFactor={runalyzeMetrics.calibrationFactor}
+                                />
+
+                                {/* Training Paces & Heart Rate Section (VDOT-driven) */}
+                                <TrainingPacesSection
+                                    currentVdot={runalyzeMetrics.vdot}
+                                    trainingPaces={trainingPaces}
+                                    maxHr={userData?.user?.hrMax || userData?.hrMax}
+                                />
+
+                                {/* Trend Charts */}
+                                <TrendChartsSection
+                                    filteredVo2Trend={filteredVo2Trend}
+                                    filteredShapeTrend={filteredShapeTrend}
+                                    timeRange={timeRange}
+                                />
+
+                                {/* Fitness & Form Chart */}
+                                <FitnessChart data={filteredFitness} />
+
+                                {/* Shape Details */}
+                                <div className="glass-card p-4">
+                                    <div className="grid grid-cols-4 gap-4 text-center text-sm">
+                                        <div>
+                                            <p className="text-foreground-muted">Avg weekly</p>
+                                            <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.avgWeeklyKm} km</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-foreground-muted">Target weekly</p>
+                                            <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.targetWeeklyKm} km</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-foreground-muted">Long run points</p>
+                                            <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.details.longRunPoints} / 10</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-foreground-muted">Calibration</p>
+                                            <p className="text-foreground font-semibold font-mono">{runalyzeMetrics.calibrationFactor.toFixed(2)}x</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* === CYCLING SPORT VIEW === */}
+                        {selectedSport === 'CYCLING' && (
+                            <CyclingAnalyticsSection initialRange={timeRange === '1M' ? '42d' : timeRange === '3M' ? '90d' : timeRange === '1Y' ? '1y' : 'all'} />
+                        )}
                     </>
                 )}
             </main>

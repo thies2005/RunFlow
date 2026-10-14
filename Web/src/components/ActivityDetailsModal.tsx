@@ -1,11 +1,12 @@
 'use client';
 
-import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Zap, BarChart2, Tag, Edit2, Check, Bot, Loader2, Sparkles } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Zap, BarChart2, Tag, Edit2, Check, Bot, Loader2, Sparkles, ShieldCheck, Cpu } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ReferenceLine } from 'recharts';
 import type { ActivityListItem, WorkoutType, Activity } from '@/lib/types';
 import InteractiveStreamsChart from './InteractiveStreamsChart';
 import ReactMarkdown from 'react-markdown';
@@ -27,6 +28,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     const [name, setName] = useState('');
     const [isSavingName, setIsSavingName] = useState(false);
     const [detailedActivity, setDetailedActivity] = useState<Activity | null>(null);
+    const [cyclingSettings, setCyclingSettings] = useState<{ weightKg: number | null; ftpWatts: number | null } | null>(null);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const [aiFeedback, setAiFeedback] = useState<any>(null);
     const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
@@ -61,6 +63,21 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     setIsLoadingDetails(false);
                 }
             };
+
+            const fetchCyclingSettings = async () => {
+                try {
+                    const res = await fetch('/api/settings/cycling');
+                    if (res.ok) {
+                        const data = await res.json();
+                        setCyclingSettings({
+                            weightKg: data.weightKg ?? null,
+                            ftpWatts: data.ftpWatts ?? data.eFtpWatts ?? null,
+                        });
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch cycling settings:', error);
+                }
+            };
             
             const fetchFeedback = async () => {
                 setIsLoadingFeedback(true);
@@ -81,6 +98,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             };
             
             fetchDetails();
+            fetchCyclingSettings();
             fetchFeedback();
         }
         return () => {
@@ -169,6 +187,81 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         }
     }, [activity]);
 
+    const isRide = Boolean(
+        activity &&
+        (activity.type === 'RIDE' ||
+         (activity as any).type === 'VIRTUAL_RIDE' ||
+         (activity as any).sportType?.toLowerCase().includes('ride'))
+    );
+
+    const powerMetrics = useMemo(() => {
+        if (!activity) return null;
+        const det = detailedActivity as any;
+        const act = activity as any;
+
+        const npWatts: number | null = det?.npWatts ?? act?.npWatts ?? det?.weightedAverageWatts ?? act?.weightedAverageWatts ?? null;
+        const avgWatts: number | null = det?.averageWatts ?? act?.averageWatts ?? null;
+        const maxWatts: number | null = det?.maxWatts ?? act?.maxWatts ?? null;
+        const intensityFactor: number | null = det?.intensityFactor ?? act?.intensityFactor ?? null;
+        const variabilityIndex: number | null = det?.variabilityIndex ?? act?.variabilityIndex ?? (npWatts && avgWatts && avgWatts > 0 ? Number((npWatts / avgWatts).toFixed(2)) : null);
+        const bikeTss: number | null = det?.bikeTss ?? act?.bikeTss ?? null;
+        const kilojoules: number | null = det?.kilojoules ?? act?.kilojoules ?? null;
+        const deviceWatts: boolean = Boolean(det?.deviceWatts ?? act?.deviceWatts);
+        const efficiencyFactor: number | null = det?.efficiencyFactor ?? act?.efficiencyFactor ?? (npWatts && (activity.averageHr || det?.averageHr) ? Number((npWatts / (activity.averageHr || det?.averageHr)).toFixed(2)) : null);
+        const decouplingPct: number | null = det?.aerobicDecoupling ?? act?.aerobicDecoupling ?? null;
+
+        const athleteWeight = cyclingSettings?.weightKg || null;
+        const wPerKg: number | null = (avgWatts && athleteWeight && athleteWeight > 0) ? Number((avgWatts / athleteWeight).toFixed(2)) : null;
+
+        const cogganZones = [
+            { name: 'Z1', label: 'Active Recovery', color: 'bg-emerald-500', textColor: 'text-emerald-500', time: det?.powerZone1Time ?? act?.powerZone1Time ?? 0 },
+            { name: 'Z2', label: 'Endurance', color: 'bg-blue-500', textColor: 'text-blue-500', time: det?.powerZone2Time ?? act?.powerZone2Time ?? 0 },
+            { name: 'Z3', label: 'Tempo', color: 'bg-cyan-500', textColor: 'text-cyan-500', time: det?.powerZone3Time ?? act?.powerZone3Time ?? 0 },
+            { name: 'Z4', label: 'Threshold', color: 'bg-amber-500', textColor: 'text-amber-500', time: det?.powerZone4Time ?? act?.powerZone4Time ?? 0 },
+            { name: 'Z5', label: 'VO2max', color: 'bg-orange-500', textColor: 'text-orange-500', time: det?.powerZone5Time ?? act?.powerZone5Time ?? 0 },
+            { name: 'Z6', label: 'Anaerobic', color: 'bg-purple-500', textColor: 'text-purple-500', time: det?.powerZone6Time ?? act?.powerZone6Time ?? 0 },
+            { name: 'Z7', label: 'Neuromuscular', color: 'bg-rose-500', textColor: 'text-rose-500', time: det?.powerZone7Time ?? act?.powerZone7Time ?? 0 },
+        ];
+        const totalPowerZoneSec = cogganZones.reduce((sum, z) => sum + z.time, 0);
+        const activePowerZones = cogganZones.filter(z => z.time > 0);
+
+        return {
+            npWatts,
+            avgWatts,
+            maxWatts,
+            intensityFactor,
+            variabilityIndex,
+            bikeTss,
+            kilojoules,
+            deviceWatts,
+            efficiencyFactor,
+            decouplingPct,
+            wPerKg,
+            cogganZones,
+            totalPowerZoneSec,
+            activePowerZones,
+        };
+    }, [activity, detailedActivity, cyclingSettings]);
+
+    const powerStreamData = useMemo(() => {
+        const streams = (detailedActivity as any)?.streams;
+        if (!streams?.time || !streams?.watts) return [];
+        const len = streams.time.length;
+        const step = len > 500 ? Math.ceil(len / 500) : 1;
+        const pts = [];
+        for (let i = 0; i < len; i += step) {
+            const t = streams.time[i];
+            const mins = Math.floor(t / 60);
+            const w = streams.watts[i] ?? 0;
+            pts.push({
+                timeSec: t,
+                timeFormatted: `${mins}m`,
+                watts: w,
+            });
+        }
+        return pts;
+    }, [detailedActivity]);
+
     // Early return AFTER all hooks have been called
     if (!isOpen || !activity || !mounted) return null;
 
@@ -218,9 +311,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     </button>
 
                     <div className="flex items-start gap-4 pr-10">
-                        <div className="w-12 h-12 rounded-md bg-accent-purple/15 flex items-center justify-center">
+                        <div className={`w-12 h-12 rounded-md ${isRide ? 'bg-accent-orange/15' : 'bg-accent-purple/15'} flex items-center justify-center`}>
                             {activity.type === 'RUN' ? <ActivityIcon className="w-6 h-6 text-accent-purple" /> :
-                                activity.type === 'RIDE' ? <Zap className="w-6 h-6 text-accent-purple" /> :
+                                isRide ? <Zap className="w-6 h-6 text-accent-orange" /> :
                                     <ActivityIcon className="w-6 h-6 text-accent-purple" />}
                         </div>
                         <div>
@@ -339,10 +432,14 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                         </div>
                         <div className="glass-card p-4 text-center">
                             <div className="text-foreground-muted text-xs mb-1 flex items-center justify-center gap-1">
-                                <TrendingUp className="w-3 h-3" /> Pace
+                                <TrendingUp className="w-3 h-3" /> {isRide ? 'Speed' : 'Pace'}
                             </div>
-                            <div className="text-2xl font-mono tabular-nums font-semibold text-foreground">{formatPace(activity.averageSpeed)}</div>
-                            <div className="text-xs text-foreground-muted">avg</div>
+                            <div className="text-2xl font-mono tabular-nums font-semibold text-foreground">
+                                {isRide
+                                    ? (activity.averageSpeed ? (activity.averageSpeed * 3.6).toFixed(1) : '-')
+                                    : formatPace(activity.averageSpeed)}
+                            </div>
+                            <div className="text-xs text-foreground-muted">{isRide ? 'km/h' : 'avg'}</div>
                         </div>
                         <div className="glass-card p-4 text-center">
                             <div className="text-foreground-muted text-xs mb-1 flex items-center justify-center gap-1">
@@ -356,9 +453,221 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 <Zap className="w-3 h-3" /> Cadence
                             </div>
                             <div className="text-2xl font-mono tabular-nums font-semibold text-foreground">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'}</div>
-                            <div className="text-xs text-foreground-muted">spm</div>
+                            <div className="text-xs text-foreground-muted">{isRide ? 'rpm' : 'spm'}</div>
                         </div>
                     </div>
+
+                    {/* Dedicated Cycling Power Analysis Panel */}
+                    {isRide && powerMetrics && (
+                        <div className="mb-8 p-5 bg-background-tertiary rounded-xl border border-line space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-line pb-3">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-lg bg-accent-orange/15 flex items-center justify-center">
+                                        <Zap className="w-4 h-4 text-accent-orange" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-foreground">Cycling Power Analysis</h3>
+                                        <p className="text-[11px] text-foreground-muted">Normalized power, training stress, and physiological load</p>
+                                    </div>
+                                </div>
+
+                                {/* Power Meter vs Estimated Power Badge */}
+                                <div className="flex items-center gap-2">
+                                    {powerMetrics.deviceWatts ? (
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-positive/15 text-positive border border-positive/30">
+                                            <ShieldCheck className="w-3.5 h-3.5" />
+                                            Power Meter
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-foreground/10 text-foreground-muted border border-line">
+                                            <Cpu className="w-3.5 h-3.5" />
+                                            Estimated Power
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* 10 Power Metric Tiles */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                                {/* NP */}
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                    <span className="text-[11px] text-foreground-muted block mb-0.5">Normalized Power</span>
+                                    <span className="text-xl font-mono font-bold text-accent-orange tabular-nums">
+                                        {powerMetrics.npWatts ? `${powerMetrics.npWatts} W` : '-'}
+                                    </span>
+                                </div>
+                                {/* Avg Power */}
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                    <span className="text-[11px] text-foreground-muted block mb-0.5">Avg Power</span>
+                                    <span className="text-xl font-mono font-bold text-foreground tabular-nums">
+                                        {powerMetrics.avgWatts ? `${powerMetrics.avgWatts} W` : '-'}
+                                    </span>
+                                </div>
+                                {/* Max Power */}
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                    <span className="text-[11px] text-foreground-muted block mb-0.5">Max Power</span>
+                                    <span className="text-xl font-mono font-bold text-foreground tabular-nums">
+                                        {powerMetrics.maxWatts ? `${powerMetrics.maxWatts} W` : '-'}
+                                    </span>
+                                </div>
+                                {/* Intensity Factor (IF) */}
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                    <span className="text-[11px] text-foreground-muted block mb-0.5">Intensity Factor (IF)</span>
+                                    <span className="text-xl font-mono font-bold text-accent-purple tabular-nums">
+                                        {powerMetrics.intensityFactor ? powerMetrics.intensityFactor.toFixed(2) : '-'}
+                                    </span>
+                                </div>
+                                {/* Variability Index (VI) */}
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                    <span className="text-[11px] text-foreground-muted block mb-0.5">Variability Index (VI)</span>
+                                    <span className="text-xl font-mono font-bold text-accent-cyan tabular-nums">
+                                        {powerMetrics.variabilityIndex ? powerMetrics.variabilityIndex.toFixed(2) : '-'}
+                                    </span>
+                                </div>
+                                {/* Bike TSS */}
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                    <span className="text-[11px] text-foreground-muted block mb-0.5">Bike TSS</span>
+                                    <span className="text-xl font-mono font-bold text-accent-orange tabular-nums">
+                                        {powerMetrics.bikeTss ? Math.round(powerMetrics.bikeTss) : '-'}
+                                    </span>
+                                </div>
+                                {/* Work (kJ) */}
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                    <span className="text-[11px] text-foreground-muted block mb-0.5">Work (kJ)</span>
+                                    <span className="text-xl font-mono font-bold text-foreground tabular-nums">
+                                        {powerMetrics.kilojoules ? `${Math.round(powerMetrics.kilojoules)} kJ` : '-'}
+                                    </span>
+                                </div>
+                                {/* W/kg */}
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                    <span className="text-[11px] text-foreground-muted block mb-0.5">Power-to-Weight</span>
+                                    <span className="text-xl font-mono font-bold text-foreground tabular-nums">
+                                        {powerMetrics.wPerKg ? `${powerMetrics.wPerKg} W/kg` : '-'}
+                                    </span>
+                                </div>
+                                {/* Efficiency Factor (EF) */}
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                    <span className="text-[11px] text-foreground-muted block mb-0.5">Efficiency Factor (EF)</span>
+                                    <span className="text-xl font-mono font-bold text-accent-pink tabular-nums">
+                                        {powerMetrics.efficiencyFactor ? `${powerMetrics.efficiencyFactor.toFixed(2)}` : '-'}
+                                    </span>
+                                </div>
+                                {/* Aerobic Decoupling */}
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                    <span className="text-[11px] text-foreground-muted block mb-0.5">Decoupling (Pw:HR)</span>
+                                    <span className={`text-xl font-mono font-bold tabular-nums ${powerMetrics.decouplingPct !== null && powerMetrics.decouplingPct < 5 ? 'text-positive' : 'text-accent-orange'}`}>
+                                        {powerMetrics.decouplingPct !== null ? `${powerMetrics.decouplingPct > 0 ? '+' : ''}${powerMetrics.decouplingPct.toFixed(1)}%` : '-'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* 7-Zone Coggan Power Breakdown */}
+                            {powerMetrics.totalPowerZoneSec > 0 && (
+                                <div className="pt-2">
+                                    <h4 className="text-xs font-semibold text-foreground-muted border-b border-line pb-2 mb-3">
+                                        Coggan Power Zones (Time in Zone)
+                                    </h4>
+                                    {/* Stacked Horizontal Bar */}
+                                    <div className="w-full h-8 rounded-lg overflow-hidden flex bg-background-secondary mb-3">
+                                        {powerMetrics.activePowerZones.map((z, idx) => {
+                                            const pct = (z.time / powerMetrics.totalPowerZoneSec) * 100;
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className={`${z.color} hover:brightness-110 transition-all flex items-center justify-center`}
+                                                    style={{ width: `${pct}%` }}
+                                                    title={`${z.name} ${z.label}: ${formatDuration(z.time)} (${pct.toFixed(1)}%)`}
+                                                >
+                                                    {pct >= 8 && (
+                                                        <span className="text-[10px] font-bold text-white drop-shadow-xs">
+                                                            {z.name}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Zone Breakdown List */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                        {powerMetrics.activePowerZones.map((z, idx) => {
+                                            const pct = (z.time / powerMetrics.totalPowerZoneSec) * 100;
+                                            return (
+                                                <div key={idx} className="flex items-center justify-between py-1 px-2 rounded-md bg-background-secondary/60 text-xs">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`w-2.5 h-2.5 rounded-xs ${z.color}`} />
+                                                        <span className={`font-semibold ${z.textColor}`}>{z.name}</span>
+                                                        <span className="text-foreground-muted text-[11px]">{z.label}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-mono text-foreground font-medium">{formatDuration(z.time)}</span>
+                                                        <span className="font-mono text-foreground-muted w-9 text-right">{pct.toFixed(0)}%</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Power Stream Line Chart (if watts stream exists) */}
+                            {powerStreamData.length > 0 && (
+                                <div className="pt-2">
+                                    <h4 className="text-xs font-semibold text-foreground-muted border-b border-line pb-2 mb-3">
+                                        Ride Power Stream (Watts)
+                                    </h4>
+                                    <div className="h-44 w-full" role="img" aria-label="Activity power stream chart">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={powerStreamData} margin={{ top: 5, right: 10, left: -15, bottom: 0 }}>
+                                                <XAxis
+                                                    dataKey="timeFormatted"
+                                                    stroke="var(--foreground-muted)"
+                                                    tick={{ fill: 'var(--foreground-muted)', fontSize: 10 }}
+                                                    axisLine={{ stroke: 'var(--line)' }}
+                                                    tickLine={false}
+                                                />
+                                                <YAxis
+                                                    stroke="var(--foreground-muted)"
+                                                    tick={{ fill: 'var(--foreground-muted)', fontSize: 10 }}
+                                                    axisLine={{ stroke: 'var(--line)' }}
+                                                    tickLine={false}
+                                                    unit="W"
+                                                />
+                                                <RechartsTooltip
+                                                    content={({ active, payload }) => {
+                                                        if (!active || !payload?.length) return null;
+                                                        const d = payload[0]?.payload;
+                                                        return (
+                                                            <div className="bg-background-secondary border border-line rounded-md p-2 shadow-lg text-xs">
+                                                                <div className="text-foreground-muted">{d.timeFormatted}</div>
+                                                                <div className="font-mono font-bold text-accent-orange">{d.watts} W</div>
+                                                            </div>
+                                                        );
+                                                    }}
+                                                />
+                                                {cyclingSettings?.ftpWatts && (
+                                                    <ReferenceLine
+                                                        y={cyclingSettings.ftpWatts}
+                                                        stroke="#06b6d4"
+                                                        strokeDasharray="3 3"
+                                                        label={{ value: `FTP ${cyclingSettings.ftpWatts}W`, fill: '#06b6d4', fontSize: 10, position: 'right' }}
+                                                    />
+                                                )}
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="watts"
+                                                    stroke="#f97316"
+                                                    strokeWidth={1.5}
+                                                    dot={false}
+                                                    isAnimationActive={false}
+                                                />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Secondary Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

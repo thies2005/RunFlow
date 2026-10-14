@@ -44,6 +44,7 @@ private val PaceColor = Color(0xFF60A5FA)
 private val GapColor = Color(0xFF22D3EE)
 private val ElevColor = Color(0xFF4ADE80)
 private val CadenceColor = Color(0xFFFB923C)
+private val PowerColor = Color(0xFFF97316)
 
 private class MetricToggle(
     val key: String,
@@ -54,7 +55,7 @@ private class MetricToggle(
 
 /**
  * Interactive multi-series chart over activity streams — heart rate, pace,
- * GAP (grade-adjusted pace), elevation and cadence — the Android twin of the
+ * GAP (grade-adjusted pace), elevation, cadence and power — the Android twin of the
  * web's InteractiveStreamsChart. Every series is normalized to its own domain
  * (the web hides one Y-axis per metric; here exact values surface in the
  * scrub readout instead). Tap or drag to scrub.
@@ -71,9 +72,11 @@ fun StreamsChart(
     var showGap by remember { mutableStateOf(true) }
     var showElev by remember { mutableStateOf(true) }
     var showCadence by remember { mutableStateOf(false) }
+    var showWatts by remember { mutableStateOf(true) }
     var scrubIndex by remember { mutableStateOf<Int?>(null) }
 
     val toggles = buildList {
+        if (series.hasWatts) add(MetricToggle("watts", "Power", PowerColor, showWatts))
         if (series.hasHr) add(MetricToggle("hr", "HR", HrColor, showHr))
         if (series.hasPace) add(MetricToggle("pace", "Pace", PaceColor, showPace))
         if (series.hasGap) add(MetricToggle("gap", "GAP", GapColor, showGap))
@@ -98,6 +101,7 @@ fun StreamsChart(
                     selected = t.enabled,
                     onClick = {
                         when (t.key) {
+                            "watts" -> showWatts = !showWatts
                             "hr" -> showHr = !showHr
                             "pace" -> showPace = !showPace
                             "gap" -> showGap = !showGap
@@ -127,6 +131,7 @@ fun StreamsChart(
                 Text(
                     text = buildString {
                         append(Format.duration(series.time[idx].toLong()))
+                        if (showWatts) series.watts?.getOrNull(idx)?.let { append("   Power ${it.roundToInt()} W") }
                         if (showHr) series.heartrate?.getOrNull(idx)?.let { append("   HR ${it.roundToInt()}") }
                         if (showPace) series.pace.getOrNull(idx)?.let { append("   Pace ${Format.pace(it * 60.0, unit)}") }
                         if (showGap) series.gap.getOrNull(idx)?.let { append("   GAP ${Format.pace(it * 60.0, unit)}") }
@@ -230,6 +235,7 @@ fun StreamsChart(
             val gapDom = if (showGap) domainOf(series.gap) else null
             val cadDom = if (showCadence) series.cadence?.let { domainOf(it) } else null
             val hrDom = if (showHr) series.heartrate?.let { domainOf(it) } else null
+            val wattsDom = if (showWatts) series.watts?.let { domainOf(it) } else null
 
             // z-order back to front, matching the web
             elevDom?.let { drawValues(series.altitude!!, ElevColor, it, dashed = false) }
@@ -237,6 +243,7 @@ fun StreamsChart(
             gapDom?.let { drawValues(series.gap, GapColor, it, dashed = true) }
             cadDom?.let { drawValues(series.cadence!!, CadenceColor, it, dashed = true) }
             hrDom?.let { drawValues(series.heartrate!!, HrColor, it, dashed = false) }
+            wattsDom?.let { drawValues(series.watts!!, PowerColor, it, dashed = false) }
 
             // scrubber line + per-series dots
             idx?.let { i ->
@@ -256,6 +263,7 @@ fun StreamsChart(
                 dot(series.gap.getOrNull(i), gapDom, GapColor)
                 dot(series.cadence?.getOrNull(i), cadDom, CadenceColor)
                 dot(series.heartrate?.getOrNull(i), hrDom, HrColor)
+                dot(series.watts?.getOrNull(i), wattsDom, PowerColor)
             }
         }
 

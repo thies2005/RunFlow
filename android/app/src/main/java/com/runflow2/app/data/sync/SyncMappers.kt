@@ -140,7 +140,10 @@ fun UserDto.applyTo(profile: ProfileEntity, accountEmail: String? = null): Profi
     )
 }
 
-fun ProfileEntity.toUpdateRequest(): UpdateProfileRequest {
+fun ProfileEntity.toUpdateRequest(
+    ftpWatts: Int? = null,
+    autoEstimateFtp: Boolean? = null,
+): UpdateProfileRequest {
     // Birth date is a plain date, not a wall-clock moment: anchor it to UTC so
     // the server receives 1995-01-01 regardless of device timezone.
     val birthInstant = java.time.LocalDate.of(birthYear, 1, 1)
@@ -154,5 +157,7 @@ fun ProfileEntity.toUpdateRequest(): UpdateProfileRequest {
         weight = weightKg,
         height = heightCm,
         vdotCorrectionFactor = vdotCorrection,
+        ftpWatts = ftpWatts,
+        autoEstimateFtp = autoEstimateFtp,
     )
 }

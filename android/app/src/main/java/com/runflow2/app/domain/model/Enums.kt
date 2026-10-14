@@ -4,6 +4,7 @@ package com.runflow2.app.domain.model
 enum class ActivityType(val label: String) {
     RUN("Run"),
     RIDE("Ride"),
+    VIRTUAL_RIDE("Virtual Ride"),
     WALK("Walk"),
     HIKE("Hike"),
     SWIM("Swim"),

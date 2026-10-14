@@ -110,6 +110,9 @@ data class UserDto(
     val height: Double? = null,
     val vdotCorrectionFactor: Double? = null,
     val emailVerified: Boolean? = null,
+    val ftpWatts: Int? = null,
+    val autoEstimateFtp: Boolean? = null,
+    val swimCssSecPer100m: Int? = null,
 )
 
 // ---------- activities ----------
@@ -128,6 +131,7 @@ data class ActivityStreamsDto(
     val heartrate: List<Double>? = null, // bpm
     val cadence: List<Double>? = null, // rpm (Strava); spm after doubling
     @SerialName("velocity_smooth") val velocitySmooth: List<Double>? = null, // m/s
+    val watts: List<Double>? = null, // watts
 )
 
 @Serializable
@@ -221,6 +225,9 @@ data class UpdateProfileRequest(
     val weight: Double? = null,
     val height: Double? = null,
     val vdotCorrectionFactor: Double? = null,
+    val ftpWatts: Int? = null,
+    val autoEstimateFtp: Boolean? = null,
+    val swimCssSecPer100m: Int? = null,
 )
 
 @Serializable
@@ -644,6 +651,89 @@ data class AnalyticsStatsDto(
     val computedAt: String? = null, // ISO-8601 — the freshness anchor for the cache
 )
 
+// ---------- cycling analytics ----------
+
+@Serializable
+data class CogganZoneDto(
+    val zone: Int = 1,
+    val name: String = "",
+    val minWatts: Int = 0,
+    val maxWatts: Int = 0,
+    val minWkg: Double? = null,
+    val maxWkg: Double? = null,
+)
+
+@Serializable
+data class CyclingFtpDto(
+    val ftpWatts: Int? = null,
+    val eFtpWatts: Int? = null,
+    val autoEstimateFtp: Boolean = true,
+    val weightKg: Double? = null,
+    val wPerKg: Double? = null,
+    val zones: List<CogganZoneDto> = emptyList(),
+)
+
+@Serializable
+data class CyclingSummaryDto(
+    val totalRides: Int = 0,
+    val totalDistanceM: Double = 0.0,
+    val totalMovingTimeSec: Int = 0,
+    val totalElevationM: Double = 0.0,
+    val totalKilojoules: Double = 0.0,
+    val avgWatts: Double? = null,
+    val maxWatts: Double? = null,
+    val avgNpWatts: Double? = null,
+    val avgIf: Double? = null,
+    val avgVi: Double? = null,
+    val totalBikeTss: Double = 0.0,
+    val avgEfficiencyFactor: Double? = null,
+    val avgDecouplingPct: Double? = null,
+)
+
+@Serializable
+data class CyclingRideSeriesDto(
+    val id: String = "",
+    val date: String = "",
+    val name: String = "",
+    val distanceM: Double = 0.0,
+    val movingTimeSec: Int = 0,
+    val avgWatts: Double? = null,
+    val npWatts: Double? = null,
+    val maxWatts: Double? = null,
+    @SerialName("if") val ifFactor: Double? = null,
+    val vi: Double? = null,
+    val bikeTss: Double? = null,
+    val ef: Double? = null,
+    val decouplingPct: Double? = null,
+    val deviceWatts: Boolean = false,
+)
+
+@Serializable
+data class CyclingPmcPointDto(
+    val date: String = "",
+    val ctlCombined: Double = 0.0,
+    val atlCombined: Double = 0.0,
+    val tsbCombined: Double = 0.0,
+    val ctlRunning: Double = 0.0,
+    val atlRunning: Double = 0.0,
+    val tsbRunning: Double = 0.0,
+    val ctlBike: Double = 0.0,
+    val atlBike: Double = 0.0,
+    val tsbBike: Double = 0.0,
+    val runTss: Double = 0.0,
+    val bikeTss: Double = 0.0,
+    val trimp: Double = 0.0,
+)
+
+@Serializable
+data class CyclingAnalyticsDto(
+    val ftp: CyclingFtpDto? = null,
+    val summary: CyclingSummaryDto? = null,
+    val zoneDistributionSec: List<Int> = emptyList(),
+    val ridesSeries: List<CyclingRideSeriesDto> = emptyList(),
+    val pmcSeries: List<CyclingPmcPointDto> = emptyList(),
+)
+
 /**
  * All paths are absolute (leading slash) so one Retrofit instance serves both
  * the /api/mobile/v1 API and the /api/ai coach endpoints.
@@ -739,6 +829,9 @@ interface RunFlowApi {
     // stale, the on-device engine (AnalyticsEngine) stays authoritative.
     @GET("/api/mobile/v1/analytics/stats")
     suspend fun analyticsStats(): AnalyticsStatsDto
+
+    @GET("/api/mobile/v1/analytics/cycling")
+    suspend fun cyclingAnalytics(@Query("range") range: String = "90d"): CyclingAnalyticsDto
 
     // readiness — daily health metrics + computed score. The POST upserts by
     // (userId, date) and answers the serialized record; the body is ignored.

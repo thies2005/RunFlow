@@ -22,12 +22,14 @@ object StreamMath {
         val gap: List<Double?>, // min/km, grade-adjusted
         val altitude: List<Double>?, // m
         val cadence: List<Double>?, // spm (Strava rpm doubled)
+        val watts: List<Double>? = null, // watts
     ) {
         val hasHr get() = heartrate != null
         val hasPace get() = pace.any { it != null }
         val hasGap get() = gap.any { it != null }
         val hasElevation get() = altitude != null
         val hasCadence get() = cadence != null
+        val hasWatts get() = watts != null && watts.any { !it.isNaN() && it > 0.0 }
         val isEmpty get() = time.size < 2
     }
 
@@ -65,6 +67,7 @@ object StreamMath {
         val altitude = streams.altitude
         val heartrate = streams.heartrate
         val cadence = streams.cadence
+        val watts = streams.watts
 
         val step = if (time.size > MAX_POINTS) ceil(time.size / MAX_POINTS.toDouble()).toInt() else 1
 
@@ -74,6 +77,7 @@ object StreamMath {
         val gap = ArrayList<Double?>(time.size / step + 1)
         val alt = altitude?.let { ArrayList<Double>(time.size / step + 1) }
         val cad = cadence?.let { ArrayList<Double>(time.size / step + 1) }
+        val w = watts?.let { ArrayList<Double>(time.size / step + 1) }
 
         var i = 0
         while (i < time.size) {
@@ -82,6 +86,7 @@ object StreamMath {
             // channel does); out-of-bounds guards only cover ragged arrays.
             hr?.add(heartrate!!.getOrElse(i) { Double.NaN })
             alt?.add(altitude!!.getOrElse(i) { Double.NaN })
+            w?.add(watts!!.getOrElse(i) { Double.NaN })
 
             val mPerS = velocity?.getOrNull(i)
             pace += mPerS?.let { minPerKm(it) }
@@ -112,6 +117,7 @@ object StreamMath {
             gap = gap,
             altitude = alt?.takeIf { it.size == t.size },
             cadence = cad?.takeIf { it.size == t.size },
+            watts = w?.takeIf { it.size == t.size },
         )
     }
 }

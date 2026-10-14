@@ -101,9 +101,10 @@ class RunFlowRepository(
     /** Saves locally immediately; queues an upload when logged in. */
     suspend fun saveProfile(profile: ProfileEntity) {
         if (authStore.state.value.loggedIn) {
+            val s = settings?.settingsOnce()
             val payload = Api.json.encodeToString(
                 com.runflow2.app.data.net.UpdateProfileRequest.serializer(),
-                profile.toUpdateRequest(),
+                profile.toUpdateRequest(ftpWatts = s?.ftpWatts, autoEstimateFtp = s?.autoEstimateFtp),
             )
             db.withTransaction {
                 profileDao.upsert(profile.copy(dirty = true))
@@ -1065,6 +1066,7 @@ class RunFlowRepository(
     // ---------- analytics ----------
     suspend fun analytics(rangeDays: Int = 365): AnalyticsBundle = withContext(Dispatchers.Default) {
         val profile = profileOnce()
+        val s = settings?.settingsOnce()
         val acts = activityDao.all().map { it.toInput() }
         applyServerMetrics(
             AnalyticsEngine.compute(
@@ -1072,8 +1074,50 @@ class RunFlowRepository(
                 today = LocalDate.now(),
                 vdotCorrection = profile.vdotCorrection,
                 rangeDays = rangeDays,
+                ftpWatts = s?.ftpWatts ?: 0,
+                weightKg = profile.weightKg,
             ),
         )
+    }
+
+    /** Updates local cycling settings and syncs FTP/auto-estimate to the user profile on server. */
+    suspend fun updateCyclingFtp(watts: Int, autoEstimate: Boolean) {
+        settings?.setCyclingFtpSettings(watts, autoEstimate)
+        if (authStore.state.value.loggedIn) {
+            val profile = profileOnce()
+            val payload = Api.json.encodeToString(
+                com.runflow2.app.data.net.UpdateProfileRequest.serializer(),
+                profile.toUpdateRequest(ftpWatts = watts, autoEstimateFtp = autoEstimate),
+            )
+            db.withTransaction {
+                profileDao.upsert(profile.copy(dirty = true))
+                syncQueueDao.deletePendingFor(SyncManager.TYPE_PROFILE_UPDATE, "1")
+                syncQueueDao.insert(
+                    SyncQueueEntity(
+                        entityType = SyncManager.TYPE_PROFILE_UPDATE,
+                        localId = "1",
+                        payloadJson = payload,
+                    )
+                )
+            }
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    network.api().updateProfile(
+                        com.runflow2.app.data.net.UpdateProfileRequest(
+                            ftpWatts = watts,
+                            autoEstimateFtp = autoEstimate,
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    suspend fun cyclingAnalytics(range: String = "90d"): com.runflow2.app.data.net.CyclingAnalyticsDto? = withContext(Dispatchers.IO) {
+        if (!authStore.state.value.loggedIn) return@withContext null
+        runCatching {
+            network.api().cyclingAnalytics(range)
+        }.getOrNull()
     }
 
     /**
@@ -1139,6 +1183,15 @@ class RunFlowRepository(
         trimp = trimp,
         estimatedVdot = estimatedVdot,
         zoneSeconds = zoneSeconds,
+        averageWatts = averageWatts,
+        npWatts = npWatts,
+        maxWatts = maxWatts,
+        intensityFactor = intensityFactor,
+        variabilityIndex = variabilityIndex,
+        bikeTss = bikeTss,
+        efficiencyFactor = efficiencyFactor,
+        aerobicDecoupling = aerobicDecoupling,
+        deviceWatts = deviceWatts,
     )
 
     companion object {

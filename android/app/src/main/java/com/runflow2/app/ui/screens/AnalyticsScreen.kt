@@ -25,11 +25,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.DirectionsBike
+import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.Speed
+import com.runflow2.app.domain.analytics.CyclingAnalyticsSummary
+import com.runflow2.app.domain.analytics.WeekVolume
+import com.runflow2.app.domain.analytics.ZoneBucket
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -100,6 +105,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
     var showCtl by remember { mutableStateOf(true) }
     var showAtl by remember { mutableStateOf(true) }
     var showTsb by remember { mutableStateOf(true) }
+    var selectedTab by rememberSaveable { mutableStateOf(AnalyticsSportTab.RUNNING) }
 
     val listState = rememberLazyListState()
     // Deep-link from the dashboard squares: jump to the requested section.
@@ -137,6 +143,52 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
             contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            // ---- Running | Cycling sport switcher ----
+            item(key = "tab-selector") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = selectedTab == AnalyticsSportTab.RUNNING,
+                        onClick = { selectedTab = AnalyticsSportTab.RUNNING },
+                        label = {
+                            Text(
+                                "Running",
+                                fontWeight = if (selectedTab == AnalyticsSportTab.RUNNING) FontWeight.Bold else FontWeight.Normal,
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Outlined.DirectionsRun,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                    FilterChip(
+                        selected = selectedTab == AnalyticsSportTab.CYCLING,
+                        onClick = { selectedTab = AnalyticsSportTab.CYCLING },
+                        label = {
+                            Text(
+                                "Cycling",
+                                fontWeight = if (selectedTab == AnalyticsSportTab.CYCLING) FontWeight.Bold else FontWeight.Normal,
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Outlined.DirectionsBike,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+
+            if (selectedTab == AnalyticsSportTab.RUNNING) {
             // ---- training status (web parity: % of all-time max) ----
             item(key = "sec-fitness") {
                 var showAbsoluteCtl by rememberSaveable { mutableStateOf(false) }
@@ -736,8 +788,387 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                     }
                 }
             }
+        } else {
+                val cycling = a.cycling
+                if (cycling != null && (cycling.recentRideNpSeries.isNotEmpty() || cycling.totalBikeTss30d > 0 || cycling.bikeFitnessSeries.any { it.load > 0 })) {
+                    item(key = "sec-cycling-status") {
+                        CyclingStatusCard(cycling = cycling)
+                    }
+                    item(key = "sec-cycling-pmc") {
+                        CyclingPmcCard(cycling = cycling)
+                    }
+                    item(key = "sec-cycling-volume") {
+                        CyclingVolumeCard(cycling = cycling, unit = unit)
+                    }
+                    item(key = "sec-cycling-zones") {
+                        CyclingPowerZoneDistributionCard(zones = cycling.powerZoneDistribution)
+                    }
+                    item(key = "sec-cycling-recent") {
+                        RecentRidesPowerCard(cycling = cycling)
+                    }
+                } else if (cycling != null) {
+                    item(key = "sec-cycling-status") {
+                        CyclingStatusCard(cycling = cycling)
+                    }
+                    item(key = "sec-cycling-zones") {
+                        CyclingPowerZoneDistributionCard(zones = cycling.powerZoneDistribution)
+                    }
+                    item(key = "sec-cycling-empty") {
+                        Card(Modifier.fillMaxWidth()) {
+                            Column(
+                                Modifier.padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Icon(
+                                    Icons.Outlined.DirectionsBike,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    "No cycling activities yet",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                Text(
+                                    "Record or sync your rides with Strava to view power metrics, PMC fitness chart, and weekly volume.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             item { Spacer(Modifier.height(24.dp)) }
+        }
+    }
+}
+
+private enum class AnalyticsSportTab { RUNNING, CYCLING }
+
+@Composable
+private fun CyclingStatusCard(
+    cycling: CyclingAnalyticsSummary,
+    modifier: Modifier = Modifier,
+) {
+    Card(modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val ftpDisplay = if (cycling.ftpWatts > 0) "${cycling.ftpWatts} W" else (cycling.eFtpWatts?.let { "${it} W (eFTP)" } ?: "—")
+                StatTile(
+                    label = "Cycling FTP",
+                    value = ftpDisplay,
+                    icon = Icons.Outlined.Bolt,
+                    accent = Color(0xFFF97316),
+                    modifier = Modifier.weight(1f),
+                )
+                cycling.wPerKg?.let { wkg ->
+                    Spacer(Modifier.width(12.dp))
+                    StatTile(
+                        label = "Power-to-Weight",
+                        value = "$wkg W/kg",
+                        icon = Icons.Outlined.Speed,
+                        accent = Color(0xFF06B6D4),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+
+            // Cycling CTL / ATL / TSB metric bars
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Cycling Load · CTL ${cycling.ctlBike.roundToInt()} · ATL ${cycling.atlBike.roundToInt()} · Form ${if (cycling.tsbBike >= 0) "+" else ""}${cycling.tsbBike.roundToInt()}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                val maxLoad = maxOf(cycling.ctlBike, cycling.atlBike, 1.0)
+                MetricBarRow(
+                    label = "Fitness (CTL Bike)",
+                    color = ChartCtl,
+                    value = cycling.ctlBike,
+                    max = maxLoad,
+                    showAbsolute = true,
+                    onToggle = {},
+                )
+                MetricBarRow(
+                    label = "Fatigue (ATL Bike)",
+                    color = ChartAtl,
+                    value = cycling.atlBike,
+                    max = maxLoad,
+                    showAbsolute = true,
+                    onToggle = {},
+                )
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "Form (TSB Bike)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        "${if (cycling.tsbBike >= 0) "+" else ""}${cycling.tsbBike.roundToInt()}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = ChartTsb,
+                    )
+                }
+                TsbBar(tsb = cycling.tsbBike)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CyclingPmcCard(
+    cycling: CyclingAnalyticsSummary,
+    modifier: Modifier = Modifier,
+) {
+    var rangeDays by remember { mutableStateOf(90) }
+    var showCtl by remember { mutableStateOf(true) }
+    var showAtl by remember { mutableStateOf(true) }
+    var showTsb by remember { mutableStateOf(true) }
+
+    Card(modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SectionTitle("Cycling Load (PMC)")
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                listOf(90, 180, 365).forEach { d ->
+                    FilterChip(
+                        selected = rangeDays == d,
+                        onClick = { rangeDays = d },
+                        label = { Text(if (d == 365) "1Y" else "${d}d") },
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = showCtl,
+                    onClick = { showCtl = !showCtl },
+                    label = { Text("CTL") },
+                    leadingIcon = {
+                        Box(Modifier.size(8.dp).background(ChartCtl, CircleShape))
+                    },
+                )
+                FilterChip(
+                    selected = showAtl,
+                    onClick = { showAtl = !showAtl },
+                    label = { Text("ATL") },
+                    leadingIcon = {
+                        Box(Modifier.size(8.dp).background(ChartAtl, CircleShape))
+                    },
+                )
+                FilterChip(
+                    selected = showTsb,
+                    onClick = { showTsb = !showTsb },
+                    label = { Text("TSB") },
+                    leadingIcon = {
+                        Box(Modifier.size(8.dp).background(ChartTsb, CircleShape))
+                    },
+                )
+            }
+            val dailyPoints = cycling.bikeFitnessSeries.map { it.toDailyLoad() }
+            if (dailyPoints.isNotEmpty()) {
+                FitnessChart(
+                    daily = dailyPoints.takeLast(rangeDays),
+                    showCtl = showCtl,
+                    showAtl = showAtl,
+                    showTsb = showTsb,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                Text(
+                    "No cycling load data yet",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 24.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CyclingVolumeCard(
+    cycling: CyclingAnalyticsSummary,
+    unit: DistanceUnit,
+    modifier: Modifier = Modifier,
+) {
+    var showTss by rememberSaveable { mutableStateOf(false) }
+
+    Card(modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SectionTitle("Weekly Cycling Volume")
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    FilterChip(
+                        selected = !showTss,
+                        onClick = { showTss = false },
+                        label = { Text(if (unit == DistanceUnit.IMPERIAL) "Miles" else "Km") },
+                    )
+                    FilterChip(
+                        selected = showTss,
+                        onClick = { showTss = true },
+                        label = { Text("Bike TSS") },
+                    )
+                }
+            }
+
+            val bars = if (showTss) {
+                cycling.weeklyBikeTss.map { it.toWeekVolume() }
+            } else {
+                cycling.weeklyBikeKm.map {
+                    val dist = if (unit == DistanceUnit.IMPERIAL) it.value * 0.621371 else it.value
+                    WeekVolume(it.weekStart, dist, it.count)
+                }
+            }
+            val unitLabel = if (showTss) "TSS" else (if (unit == DistanceUnit.IMPERIAL) "mi" else "km")
+            val barColor = if (showTss) Color(0xFFF97316) else MaterialTheme.colorScheme.primary
+
+            WeeklyVolumeBars(
+                weeks = bars,
+                unitLabel = unitLabel,
+                barColor = barColor,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CyclingPowerZoneDistributionCard(
+    zones: List<ZoneBucket>,
+    modifier: Modifier = Modifier,
+) {
+    val totalSec = zones.sumOf { it.seconds }.coerceAtLeast(1)
+
+    Card(modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            SectionTitle("7-Zone Coggan Power Distribution")
+
+            // Stacked horizontal bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(20.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+            ) {
+                zones.forEachIndexed { i, z ->
+                    val frac = z.seconds.toFloat() / totalSec
+                    if (frac > 0.005f) {
+                        Box(
+                            modifier = Modifier
+                                .weight(frac)
+                                .fillMaxSize()
+                                .background(com.runflow2.app.ui.theme.ZoneColors[i]),
+                        )
+                    }
+                }
+            }
+
+            // Zone details list
+            zones.forEachIndexed { i, z ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier
+                            .size(10.dp)
+                            .background(com.runflow2.app.ui.theme.ZoneColors[i], CircleShape),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Z${z.zone} ${z.name}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    val rangeText = if (z.zone == 7) ">${z.minWatts}W" else "${z.minWatts}–${z.maxWatts}W"
+                    Text(
+                        rangeText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                    Text(
+                        Format.duration(z.seconds.toLong()),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentRidesPowerCard(
+    cycling: CyclingAnalyticsSummary,
+    modifier: Modifier = Modifier,
+) {
+    Card(modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SectionTitle("Recent Rides Power Summary")
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                StatTile(
+                    label = "Avg Power",
+                    value = cycling.avgWatts?.let { "$it W" } ?: "—",
+                    icon = Icons.Outlined.Bolt,
+                )
+                StatTile(
+                    label = "Avg NP",
+                    value = cycling.avgNpWatts?.let { "$it W" } ?: "—",
+                    icon = Icons.Outlined.Bolt,
+                    accent = Color(0xFFF97316),
+                )
+                StatTile(
+                    label = "30d Bike TSS",
+                    value = "${cycling.totalBikeTss30d}",
+                    icon = Icons.Outlined.Speed,
+                    accent = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+
+            if (cycling.recentRideNpSeries.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        "Recent Rides NP (Watts)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Sparkline(
+                        values = cycling.recentRideNpSeries,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        color = Color(0xFFF97316),
+                    )
+                }
+            }
         }
     }
 }

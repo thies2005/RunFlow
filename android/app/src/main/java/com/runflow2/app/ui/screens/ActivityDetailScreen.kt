@@ -48,6 +48,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
@@ -58,12 +59,14 @@ import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.data.net.AiFeedbackDto
 import com.runflow2.app.data.repo.RunFlowRepository
 import com.runflow2.app.data.sync.streams
+import com.runflow2.app.domain.analytics.AnalyticsEngine
 import com.runflow2.app.ui.components.RouteCanvas
 import com.runflow2.app.ui.components.SectionTitle
 import com.runflow2.app.ui.components.StatTile
 import com.runflow2.app.ui.components.StreamsChart
 import com.runflow2.app.ui.components.ZoneDistribution
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /** UI state of the per-run AI overview card. */
 private sealed interface AiUiState {
@@ -102,9 +105,12 @@ fun ActivityDetailScreen(
 
     // ---- analysis streams: local cache first, server fetch once for synced rows ----
     val series = remember(a.id, a.streamsJson) { a.streams()?.let { StreamMath.build(it) } }
+    val isRide = remember(a.type, a.averageWatts, a.npWatts, series) {
+        Format.isRideType(a.type) || a.averageWatts != null || a.npWatts != null || (series?.hasWatts == true)
+    }
     var loadingStreams by remember(activityId) { mutableStateOf(false) }
     LaunchedEffect(a.id, a.serverId, a.streamsJson) {
-        if (series == null && a.serverId != null) {
+        if (series == null && a.serverId != null && (a.type == "RUN" || Format.isRideType(a.type))) {
             loadingStreams = true
             val cached = container.repository.fetchAndCacheStreams(a.id, a.serverId)
             loadingStreams = false
@@ -228,6 +234,17 @@ fun ActivityDetailScreen(
                 }
             }
 
+            // cycling power card (ride power metrics & Coggan zones)
+            if (isRide) {
+                item {
+                    CyclingPowerCard(
+                        activity = a,
+                        series = series,
+                        ftpWatts = settings.ftpWatts,
+                    )
+                }
+            }
+
             // AI overview (web's "AI Coach Feedback")
             if (a.serverId != null) {
                 item { AiOverviewCard(aiState, onGenerate = ::generateAi, onReload = {
@@ -242,9 +259,9 @@ fun ActivityDetailScreen(
                 }, onDiscuss = { onDiscuss(a.id) }, discussLabel = "Discuss this ${Format.activityNoun(a.type)}") }
             }
 
-            // analysis charts (HR / pace / GAP / elevation)
+            // analysis charts (HR / pace / GAP / elevation / power)
             if (series != null && !series.isEmpty &&
-                (series.hasHr || series.hasPace || series.hasElevation)
+                (series.hasHr || series.hasPace || series.hasElevation || series.hasWatts)
             ) {
                 item {
                     Card(Modifier.fillMaxWidth()) {
@@ -535,3 +552,154 @@ private fun parseLaps(json: String?): List<Triple<Int, Int, Double>> {
             .toList()
     }.getOrDefault(emptyList())
 }
+
+@Composable
+private fun CyclingPowerCard(
+    activity: ActivityEntity,
+    series: StreamMath.Series?,
+    ftpWatts: Int,
+) {
+    val avgW = activity.averageWatts ?: series?.watts?.takeIf { it.isNotEmpty() }?.average()
+    val npW = activity.npWatts ?: series?.watts?.let { AnalyticsEngine.calculateNormalizedPower(it) }
+    val maxW = activity.maxWatts ?: series?.watts?.maxOrNull()
+    val ifVal = activity.intensityFactor ?: (if (npW != null && ftpWatts > 0) AnalyticsEngine.calculateIntensityFactor(npW, ftpWatts) else null)
+    val viVal = activity.variabilityIndex ?: (if (npW != null && avgW != null && avgW > 0.0) AnalyticsEngine.calculateVariabilityIndex(npW, avgW) else null)
+    val tssVal = activity.bikeTss ?: (if (npW != null && ifVal != null && ftpWatts > 0) AnalyticsEngine.calculateBikeTss(activity.movingTimeSec, npW, ifVal, ftpWatts) else null)
+    val workKj = if (avgW != null) (avgW * activity.movingTimeSec / 1000.0).roundToInt() else null
+    val efVal = activity.efficiencyFactor ?: (if (npW != null && activity.averageHr != null && activity.averageHr > 0.0) AnalyticsEngine.calculateEfficiencyFactor(npW, activity.averageHr) else null)
+    val decoupling = activity.aerobicDecoupling
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        Icons.Outlined.Bolt,
+                        contentDescription = null,
+                        tint = Color(0xFFF97316),
+                    )
+                    Text(
+                        "Cycling Power",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                // Badge: Power Meter vs Estimated
+                androidx.compose.material3.Surface(
+                    color = if (activity.deviceWatts) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                ) {
+                    Text(
+                        if (activity.deviceWatts) "Power Meter" else "Estimated Power",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = if (activity.deviceWatts) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                }
+            }
+
+            // Row 1: Avg Watts, NP, Max Watts
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                StatTile(
+                    "Avg Power",
+                    avgW?.let { "${it.roundToInt()} W" } ?: "—",
+                    Icons.Outlined.Bolt,
+                    accent = Color(0xFFF97316),
+                )
+                StatTile(
+                    "Normalized (NP)",
+                    npW?.let { "${it.roundToInt()} W" } ?: "—",
+                    Icons.Outlined.Speed,
+                    accent = MaterialTheme.colorScheme.primary,
+                )
+                StatTile(
+                    "Max Power",
+                    maxW?.let { "${it.roundToInt()} W" } ?: "—",
+                    Icons.Outlined.Bolt,
+                )
+            }
+
+            // Row 2: IF, VI, Bike TSS
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                StatTile(
+                    "Intensity (IF)",
+                    ifVal?.let { "%.2f".format(it) } ?: "—",
+                    Icons.Outlined.Speed,
+                )
+                StatTile(
+                    "Variability (VI)",
+                    viVal?.let { "%.2f".format(it) } ?: "—",
+                    Icons.Outlined.Speed,
+                )
+                StatTile(
+                    "Bike TSS",
+                    tssVal?.let { "%.0f".format(it) } ?: "—",
+                    Icons.Outlined.Bolt,
+                    accent = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+
+            // Row 3: Work, EF, Aerobic Decoupling
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                StatTile(
+                    "Work",
+                    workKj?.let { "$it kJ" } ?: "—",
+                    Icons.Outlined.LocalFireDepartment,
+                )
+                StatTile(
+                    "Efficiency (EF)",
+                    efVal?.let { "%.2f".format(it) } ?: "—",
+                    Icons.Outlined.Favorite,
+                )
+                StatTile(
+                    "Decoupling",
+                    decoupling?.let { "${if (it >= 0) "+" else ""}%.1f%%".format(it) } ?: "—",
+                    Icons.Outlined.MonitorHeart,
+                )
+            }
+
+            // 7-zone Coggan power breakdown if watts stream exists
+            if (series?.hasWatts == true) {
+                val effectiveFtp = if (ftpWatts > 0) ftpWatts else (AnalyticsEngine.estimateBikeFtpFromVdot(activity.estimatedVdot ?: 45.0) ?: 200)
+                val powerZoneSecs = remember(series, effectiveFtp) {
+                    AnalyticsEngine.calculatePowerZoneTimes(series.watts ?: emptyList(), series.time, effectiveFtp)
+                }
+                if (powerZoneSecs.sum() > 0) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        if (ftpWatts > 0) "Coggan Power Zones (FTP ${ftpWatts}W)" else "Coggan Power Zones (est. ${effectiveFtp}W)",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    ZoneDistribution(zonesSeconds = powerZoneSecs)
+                }
+            }
+        }
+    }
+}
+

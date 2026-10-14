@@ -256,6 +256,8 @@ class SyncManager(
             if (profile == null || !profile.dirty) {
                 val server = client.api().profile().user
                 db.profileDao().upsert(server.applyTo(profile ?: ProfileEntity(), authStore.state.value.email))
+                if (server.ftpWatts != null) settings.setFtpWatts(server.ftpWatts)
+                if (server.autoEstimateFtp != null) settings.setAutoEstimateFtp(server.autoEstimateFtp)
                 // A Strava account may only get its email server-side later
                 // (profile:read_all scope) — persist it once it shows up.
                 authStore.updateEmailIfMissing(server.email)

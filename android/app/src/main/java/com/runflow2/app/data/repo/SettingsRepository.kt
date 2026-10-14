@@ -49,6 +49,9 @@ data class AppSettings(
     val readinessLastPushAt: Long = 0L,
     // ---- body auto-refresh (hrRest/hrMax/zones from recorded data) ----
     val bodyAutoRefreshDay: Long = 0L, // epoch day of the last refresh; 0 = never
+    // ---- cycling FTP settings ----
+    val ftpWatts: Int = 0, // 0 = auto-estimate
+    val autoEstimateFtp: Boolean = true,
 )
 
 class SettingsRepository(private val context: Context) {
@@ -81,6 +84,9 @@ class SettingsRepository(private val context: Context) {
         val READINESS_LAST_PUSH_AT = longPreferencesKey("readiness_last_push_at")
         val READINESS_SCORE_ENGINE = intPreferencesKey("readiness_score_engine")
         val BODY_AUTO_REFRESH_DAY = longPreferencesKey("body_auto_refresh_day")
+        // ---- cycling FTP settings ----
+        val FTP_WATTS = intPreferencesKey("ftp_watts")
+        val AUTO_ESTIMATE_FTP = booleanPreferencesKey("auto_estimate_ftp")
         // ---- server two-metric snapshot (VDOT + aerobic VO2max) ----
         val SERVER_METRICS_VDOT = doublePreferencesKey("server_metrics_best_effort_vdot")
         val SERVER_METRICS_AEROBIC_VO2MAX = doublePreferencesKey("server_metrics_aerobic_vo2max")
@@ -116,6 +122,8 @@ class SettingsRepository(private val context: Context) {
             offlineModeChosen = p[Keys.OFFLINE_MODE_CHOSEN] ?: false,
             readinessLastPushAt = p[Keys.READINESS_LAST_PUSH_AT] ?: 0L,
             bodyAutoRefreshDay = p[Keys.BODY_AUTO_REFRESH_DAY] ?: 0L,
+            ftpWatts = p[Keys.FTP_WATTS] ?: 0,
+            autoEstimateFtp = p[Keys.AUTO_ESTIMATE_FTP] ?: true,
         )
     }
 
@@ -250,5 +258,20 @@ class SettingsRepository(private val context: Context) {
         } else {
             it.remove(Keys.SERVER_METRICS_AEROBIC_VO2MAX)
         }
+    }
+
+    // ---- cycling FTP settings ----
+
+    suspend fun setFtpWatts(watts: Int) = context.dataStore.edit {
+        it[Keys.FTP_WATTS] = watts
+    }
+
+    suspend fun setAutoEstimateFtp(enabled: Boolean) = context.dataStore.edit {
+        it[Keys.AUTO_ESTIMATE_FTP] = enabled
+    }
+
+    suspend fun setCyclingFtpSettings(watts: Int, autoEstimate: Boolean) = context.dataStore.edit {
+        it[Keys.FTP_WATTS] = watts
+        it[Keys.AUTO_ESTIMATE_FTP] = autoEstimate
     }
 }

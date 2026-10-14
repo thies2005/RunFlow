@@ -5,6 +5,8 @@ import { Sparkles, RefreshCw, Calendar, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
+import DOMPurify from 'dompurify';
 
 export function WeeklyInsightsCard() {
     const queryClient = useQueryClient();
@@ -89,7 +91,9 @@ export function WeeklyInsightsCard() {
                     </div>
 
                     <div className="text-sm text-foreground-muted leading-relaxed whitespace-pre-wrap prose dark:prose-invert prose-p:my-2 prose-ul:my-2 max-w-none [\[&_details]:bg-background-tertiary_details]:bg-background-tertiary [&_details]:p-3 [&_details]:rounded-md [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-blue">
-                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>{insight.content}</ReactMarkdown>
+                        <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+                            {DOMPurify.sanitize(insight.content)}
+                        </ReactMarkdown>
                     </div>
                 </div>
             ) : null}

@@ -122,14 +122,13 @@ export function UserMenu({
                         <div className="h-px bg-line my-2" />
 
                         <button
-                            onClick={() => {
+                            onClick={async () => {
                                 // Evict auth-bound SW runtime caches before
                                 // the sign-out navigation so the previous
                                 // account's cached API responses can never be
                                 // replayed.
-                                void evictAuthBoundCaches().then(() =>
-                                    signOut({ callbackUrl: '/login' })
-                                );
+                                await evictAuthBoundCaches();
+                                await signOut({ callbackUrl: '/login' });
                             }}
                             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-negative hover:bg-negative/10 rounded-md transition-colors"
                         >

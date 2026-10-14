@@ -28,16 +28,16 @@ describe('evictAuthBoundCaches', () => {
         });
     });
 
-    it('deletes the auth-bound apis runtime cache', async () => {
-        const { deleted } = installCachesMock(['apis', 'pages', 'static-image-assets', 'start-url']);
+    it('deletes the auth-bound runtime caches (apis, pages, next-data)', async () => {
+        const { deleted } = installCachesMock(['apis', 'pages', 'next-data', 'static-image-assets', 'start-url']);
 
         await evictAuthBoundCaches();
 
-        expect(deleted).toEqual(['apis']);
+        expect(deleted).toEqual(['apis', 'pages', 'next-data']);
     });
 
     it('leaves account-independent caches untouched', async () => {
-        const { cachesMock } = installCachesMock(['apis', 'pages', 'google-fonts-webfonts', 'static-js-assets']);
+        const { cachesMock } = installCachesMock(['apis', 'google-fonts-webfonts', 'static-js-assets']);
 
         await evictAuthBoundCaches();
 
@@ -45,8 +45,8 @@ describe('evictAuthBoundCaches', () => {
         expect(cachesMock.delete).toHaveBeenCalledWith('apis');
     });
 
-    it('is a no-op when the apis cache does not exist', async () => {
-        const { cachesMock } = installCachesMock(['pages', 'static-data-assets']);
+    it('is a no-op when auth-bound caches do not exist', async () => {
+        const { cachesMock } = installCachesMock(['static-image-assets', 'static-data-assets']);
 
         await evictAuthBoundCaches();
 
@@ -100,9 +100,6 @@ describe('evictAuthBoundCaches', () => {
     });
 
     it('keeps the cache list in sync with the runtimeCaching config', () => {
-        // The 'apis' bucket is the only auth-bound runtime cache declared in
-        // next.config.mjs today; if a personalized cache is ever added there,
-        // its name must be added to AUTH_BOUND_RUNTIME_CACHES too.
-        expect(AUTH_BOUND_RUNTIME_CACHES).toContain('apis');
+        expect(AUTH_BOUND_RUNTIME_CACHES).toEqual(['apis', 'pages', 'next-data']);
     });
 });

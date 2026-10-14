@@ -19,7 +19,7 @@
  * next.config.mjs (only 'apis' is auth-bound today; static asset caches are
  * account-independent).
  */
-export const AUTH_BOUND_RUNTIME_CACHES = ['apis'];
+export const AUTH_BOUND_RUNTIME_CACHES = ['apis', 'pages', 'next-data'];
 
 /** Message type understood by the sw-auth-guard.js service-worker script. */
 export const EVICT_AUTH_CACHES_MESSAGE = 'RUNFLOW_EVICT_AUTH_CACHES';

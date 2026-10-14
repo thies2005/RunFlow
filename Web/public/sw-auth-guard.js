@@ -26,11 +26,20 @@
 
 /* eslint-disable no-restricted-globals */
 
-var AUTH_BOUND_CACHE_NAMES = ['apis'];
+var AUTH_BOUND_CACHE_NAMES = ['apis', 'pages', 'next-data'];
 
-// NextAuth session cookie names (this app uses the next-auth.* prefix;
-// the authjs.* prefix is accepted for robustness) for dev and production.
-var SESSION_COOKIE_RE = /(^|;\s*)(__Secure-)?(next-auth|authjs)\.session-token=/;
+// Paths that must never be cached by the service worker (network-only).
+// Per the WHATWG Fetch Standard, request.headers.get('cookie') is always null in
+// service worker fetch events (forbidden header name), so we explicitly bypass
+// runtime caching for sensitive auth, admin, settings, mobile, and MCP routes.
+var SENSITIVE_PATHS = [
+    '/api/auth/',
+    '/api/admin/',
+    '/api/ai/settings',
+    '/api/health/nutrition/target',
+    '/api/mobile/',
+    '/mcp'
+];
 
 self.addEventListener('message', function (event) {
     if (event.data && event.data.type === 'RUNFLOW_EVICT_AUTH_CACHES') {
@@ -55,12 +64,14 @@ self.addEventListener('fetch', function (event) {
         return;
     }
     if (url.origin !== self.origin) return;
-    if (!url.pathname.startsWith('/api/')) return;
 
-    var cookieHeader = request.headers.get('cookie') || '';
-    if (SESSION_COOKIE_RE.test(cookieHeader)) return; // authenticated: workbox route applies (eviction handles account switches)
+    var isSensitive = SENSITIVE_PATHS.some(function (prefix) {
+        return url.pathname.startsWith(prefix);
+    });
 
-    // Unauthenticated API request: bypass the runtime cache entirely.
+    if (!isSensitive) return;
+
+    // Sensitive / auth / admin / token endpoint: bypass runtime caching entirely (network-only).
     event.stopImmediatePropagation();
     event.respondWith(
         fetch(request).catch(function () {

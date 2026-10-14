@@ -11,6 +11,8 @@ import type { ActivityListItem, WorkoutType, Activity } from '@/lib/types';
 import InteractiveStreamsChart from './InteractiveStreamsChart';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
+import DOMPurify from 'dompurify';
 
 interface ActivityDetailsModalProps {
     isOpen: boolean;
@@ -856,7 +858,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             {aiFeedback.plannedComparison ? 'Vs Planned Workout' : 'Coach Analysis'}
                                         </h4>
                                         <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-md [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-orange">
-                                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.plannedComparison || aiFeedback.progressAnalysis || aiFeedback.goalTrajectory || 'No detailed analysis available.'}</ReactMarkdown>
+                                            <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+                                                {DOMPurify.sanitize(aiFeedback.plannedComparison || aiFeedback.progressAnalysis || aiFeedback.goalTrajectory || 'No detailed analysis available.')}
+                                            </ReactMarkdown>
                                         </div>
                                     </div>
                                 )}
@@ -868,7 +872,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             Progress & Execution
                                         </h4>
                                         <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-md [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-orange">
-                                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.progressAnalysis}</ReactMarkdown>
+                                            <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+                                                {DOMPurify.sanitize(aiFeedback.progressAnalysis)}
+                                            </ReactMarkdown>
                                         </div>
                                     </div>
                                 )}
@@ -880,7 +886,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             Goal Trajectory
                                         </h4>
                                         <div className="text-sm text-foreground-muted prose dark:prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [\[&_details]:bg-foreground/10_details]:bg-foreground/10 [&_details]:p-3 [&_details]:rounded-md [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-orange">
-                                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.goalTrajectory}</ReactMarkdown>
+                                            <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>
+                                                {DOMPurify.sanitize(aiFeedback.goalTrajectory)}
+                                            </ReactMarkdown>
                                         </div>
                                     </div>
                                 )}

@@ -257,8 +257,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             return res.json();
         },
         onSuccess: async () => {
-            // Evict auth-bound SW runtime caches before the sign-out
-            // navigation (account deletion is also an auth-state change).
+            // Evict all auth-bound SW runtime caches (apis, pages, next-data)
+            // before the sign-out navigation (account deletion is also an auth-state change).
             await evictAuthBoundCaches();
             // Force refresh to handle redirect
             await signOut({ callbackUrl: '/' });

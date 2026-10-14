@@ -5,15 +5,18 @@ import { auth } from '@/auth';
 import { getAiConfigForModel, generateCompletion } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/providers';
 import { isByokActive, ensurePeriodUsageReset } from '@/lib/ai/usage';
+import { fenceUntrusted } from '@/lib/ai/prompts';
 
 export async function POST(request: Request) {
+    let userId: string | null = null;
+    let reservationClaimed = false;
     try {
         const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
         
-        const userId = session.user.id;
+        userId = session.user.id;
         const body = await request.json();
         const { remainingCalories, remainingProtein, remainingCarbs, remainingFats } = body;
 
@@ -42,7 +45,6 @@ export async function POST(request: Request) {
             );
         }
 
-        let reservationClaimed = false;
         await ensurePeriodUsageReset(userId);
         if (!isByokActive(userSettings)) {
             const userLevelLimits = {
@@ -88,12 +90,12 @@ export async function POST(request: Request) {
                 where: { id: { in: frequentFoodIds } }
             });
             frequentFoodsText = frequentItems.map(item => 
-                `- ${item.name} (${Math.round(item.calories)} kcal, ${item.protein}P/${item.carbs}C/${item.fats}F per ${item.servingSize || 'serving'})`
+                `- ${fenceUntrusted(item.name?.slice(0, 120))} (${Math.round(item.calories)} kcal, ${item.protein}P/${item.carbs}C/${item.fats}F per ${fenceUntrusted(item.servingSize?.slice(0, 120)) || 'serving'})`
             ).join('\n');
         }
 
         const savedMealsText = savedMeals.map(meal => 
-            `- "${meal.name}" (${Math.round(meal.totalCalories)} kcal, ${meal.totalProtein}P/${meal.totalCarbs}C/${meal.totalFats}F)`
+            `- "${fenceUntrusted(meal.name?.slice(0, 120))}" (${Math.round(meal.totalCalories)} kcal, ${meal.totalProtein}P/${meal.totalCarbs}C/${meal.totalFats}F)`
         ).join('\n');
 
         // Resolve provider configuration based on the selected model
@@ -210,7 +212,7 @@ export async function POST(request: Request) {
         return NextResponse.json(parsed);
 
     } catch (error) {
-        if (reservationClaimed) {
+        if (reservationClaimed && userId) {
             await prisma.userAiSettings.updateMany({
                 where: { userId, mealSuggestsUsedToday: { gt: 0 } },
                 data: { mealSuggestsUsedToday: { decrement: 1 } },

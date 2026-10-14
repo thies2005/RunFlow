@@ -26,6 +26,31 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        if (typeof endpoint !== 'string' || endpoint.length > 2048) {
+            return NextResponse.json({ error: 'Invalid push subscription endpoint' }, { status: 400 });
+        }
+
+        try {
+            const parsedUrl = new URL(endpoint);
+            if (parsedUrl.protocol !== 'https:') {
+                return NextResponse.json({ error: 'Push subscription endpoint must use https:' }, { status: 400 });
+            }
+        } catch {
+            return NextResponse.json({ error: 'Invalid push subscription endpoint URL' }, { status: 400 });
+        }
+
+        const existing = await prisma.pushSubscription.findUnique({
+            where: { endpoint },
+            select: { id: true, userId: true },
+        });
+
+        if (existing && existing.userId !== session.user.id) {
+            return NextResponse.json(
+                { error: 'Push subscription endpoint is already bound to another account. Please re-subscribe.' },
+                { status: 409 }
+            );
+        }
+
         // Upsert to handle re-subscriptions
         const subscription = await prisma.pushSubscription.upsert({
             where: { endpoint },

@@ -32,6 +32,16 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { name, amount, unit, timeOfDay, daysOfWeek, isActive, stackId } = body;
 
+        if (stackId) {
+            const ownedStack = await prisma.supplementStack.findFirst({
+                where: { id: String(stackId), userId: session.user.id },
+                select: { id: true },
+            });
+            if (!ownedStack) {
+                return NextResponse.json({ error: 'Supplement stack not found' }, { status: 404 });
+            }
+        }
+
         const supplement = await prisma.supplement.create({
             data: {
                 userId: session.user.id,
@@ -67,6 +77,16 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Not found' }, { status: 404 });
         }
 
+        if (stackId) {
+            const ownedStack = await prisma.supplementStack.findFirst({
+                where: { id: String(stackId), userId: session.user.id },
+                select: { id: true },
+            });
+            if (!ownedStack) {
+                return NextResponse.json({ error: 'Supplement stack not found' }, { status: 404 });
+            }
+        }
+
         const supplement = await prisma.supplement.update({
             where: { id },
             data: {
@@ -77,7 +97,7 @@ export async function PUT(request: NextRequest) {
                 daysOfWeek: daysOfWeek ?? existing.daysOfWeek,
                 isActive: isActive ?? existing.isActive,
                 order: order ?? existing.order,
-                stackId: stackId !== undefined ? stackId : existing.stackId,
+                stackId: stackId !== undefined ? (stackId || null) : existing.stackId,
             }
         });
 

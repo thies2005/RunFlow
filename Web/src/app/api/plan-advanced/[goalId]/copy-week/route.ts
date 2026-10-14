@@ -46,6 +46,15 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
             );
         }
 
+        if (scaleFactor !== undefined) {
+            if (typeof scaleFactor !== 'number' || !Number.isFinite(scaleFactor) || scaleFactor < 0.5 || scaleFactor > 2.0) {
+                return NextResponse.json(
+                    { error: 'scaleFactor must be a number between 0.5 and 2.0' },
+                    { status: 400 }
+                );
+            }
+        }
+
         const srcStart = new Date(sourceWeekStart);
         const tgtStart = new Date(targetWeekStart);
 
@@ -63,7 +72,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         // Snapshot before copy
         await createSnapshot(goalId, 'Auto-snapshot before copy week', 'copy_week');
 
-        // Fetch source workouts
+        // Fetch source workouts (capped to <= 28 per operation)
         const sourceWorkouts = await prisma.workout.findMany({
             where: {
                 goalId,
@@ -72,6 +81,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
                     lte: srcEnd,
                 },
             },
+            take: 28,
             orderBy: [{ scheduledDate: 'asc' }, { order: 'asc' }],
         });
 
@@ -89,18 +99,18 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
                 where: {
                     goalId,
                     scheduledDate: {
-                        gte: tgtStart,
-                        lte: tgtEnd,
-                    },
+                    gte: tgtStart,
+                    lte: tgtEnd,
                 },
-            });
+            },
+        });
         }
 
-        const factor = typeof scaleFactor === 'number' && scaleFactor > 0 ? scaleFactor : 1;
+        const factor = typeof scaleFactor === 'number' && Number.isFinite(scaleFactor) ? scaleFactor : 1;
 
         let createdCount = 0;
 
-        for (const w of sourceWorkouts) {
+        for (const w of sourceWorkouts.slice(0, 28)) {
             const wDate = new Date(w.scheduledDate);
             // Day offset relative to start of source week (0..6)
             const diffDays = Math.round((wDate.getTime() - srcStart.getTime()) / (24 * 60 * 60 * 1000));

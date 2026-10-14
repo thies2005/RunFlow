@@ -131,13 +131,14 @@ export async function POST(req: Request, ctx: RouteContext) {
         //  2. { workoutType, startWeek, endWeek, weeks, planStartDate } — apply inline
         let workoutType: WorkoutType;
         let startWeek: number;
+        let endWeek: number;
         let name: string;
         let rawWeeks: unknown[];
         let appliedProgressionId: string | null = null;
 
         if (typeof progressionId === 'string' && progressionId.trim()) {
             const progression = await prisma.intervalProgression.findFirst({
-                where: { id: progressionId, goalId },
+                where: { id: progressionId, goalId, goal: { userId: session.user.id } },
             });
             if (!progression) {
                 return NextResponse.json({ error: 'Progression not found' }, { status: 404 });
@@ -145,6 +146,7 @@ export async function POST(req: Request, ctx: RouteContext) {
             appliedProgressionId = progression.id;
             workoutType = progression.workoutType;
             startWeek = progression.startWeek;
+            endWeek = progression.endWeek;
             name = progression.name;
             rawWeeks = Array.isArray(progression.weeks) ? (progression.weeks as unknown[]) : [];
         } else if (
@@ -154,11 +156,26 @@ export async function POST(req: Request, ctx: RouteContext) {
         ) {
             workoutType = inlineWorkoutType.trim() as WorkoutType;
             startWeek = inlineStartWeek;
+            endWeek = typeof inlineEndWeek === 'number' ? inlineEndWeek : startWeek + inlineWeeks.length - 1;
             name = typeof inlineEndWeek === 'number' ? `${workoutType} W${inlineStartWeek}-${inlineEndWeek}` : `${workoutType} W${inlineStartWeek}+`;
             rawWeeks = inlineWeeks;
         } else {
             return NextResponse.json(
                 { error: 'Either progressionId or (workoutType, startWeek, weeks) is required' },
+                { status: 400 },
+            );
+        }
+
+        if (
+            typeof startWeek !== 'number' ||
+            typeof endWeek !== 'number' ||
+            startWeek < 1 ||
+            endWeek < startWeek ||
+            endWeek > 52 ||
+            (endWeek - startWeek) > 26
+        ) {
+            return NextResponse.json(
+                { error: 'Invalid week bounds: startWeek and endWeek must satisfy 1 <= startWeek <= endWeek <= 52 and endWeek - startWeek <= 26' },
                 { status: 400 },
             );
         }

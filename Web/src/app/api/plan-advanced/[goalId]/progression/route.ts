@@ -137,7 +137,7 @@ export async function PUT(req: Request, ctx: RouteContext) {
         }
 
         const existing = await prisma.intervalProgression.findFirst({
-            where: { id, goalId },
+            where: { id, goalId, goal: { userId: session.user.id } },
         });
 
         if (!existing) {
@@ -172,7 +172,7 @@ export async function PUT(req: Request, ctx: RouteContext) {
         }
 
         const updated = await prisma.intervalProgression.update({
-            where: { id },
+            where: { id: existing.id },
             data: updateData,
         });
 
@@ -183,7 +183,7 @@ export async function PUT(req: Request, ctx: RouteContext) {
     }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: Request, ctx: RouteContext) {
     try {
         const session = await auth();
         if (!session?.user?.id) {
@@ -199,6 +199,7 @@ export async function DELETE(req: Request) {
             );
         }
 
+        const { goalId } = await ctx.params;
         const url = new URL(req.url);
         const id = url.searchParams.get('id');
 
@@ -206,13 +207,22 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ error: 'Progression id query parameter is required' }, { status: 400 });
         }
 
+        const existing = await prisma.intervalProgression.findFirst({
+            where: { id, goalId, goal: { userId: session.user.id } },
+            select: { id: true },
+        });
+
+        if (!existing) {
+            return NextResponse.json({ error: 'Progression not found' }, { status: 404 });
+        }
+
         await prisma.workout.updateMany({
-            where: { intervalProgressionId: id },
+            where: { intervalProgressionId: existing.id, goalId },
             data: { intervalProgressionId: null },
         });
 
         await prisma.intervalProgression.delete({
-            where: { id },
+            where: { id: existing.id },
         });
 
         return NextResponse.json({ success: true });

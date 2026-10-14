@@ -53,6 +53,21 @@ export type ActivityAvgAggregateOutputType = {
   hrZone7Time: number | null
   averageWatts: number | null
   weightedAverageWatts: number | null
+  maxWatts: number | null
+  kilojoules: number | null
+  npWatts: number | null
+  intensityFactor: number | null
+  variabilityIndex: number | null
+  bikeTss: number | null
+  efficiencyFactor: number | null
+  aerobicDecoupling: number | null
+  powerZone1Time: number | null
+  powerZone2Time: number | null
+  powerZone3Time: number | null
+  powerZone4Time: number | null
+  powerZone5Time: number | null
+  powerZone6Time: number | null
+  powerZone7Time: number | null
 }
 
 export type ActivitySumAggregateOutputType = {
@@ -82,6 +97,21 @@ export type ActivitySumAggregateOutputType = {
   hrZone7Time: number | null
   averageWatts: number | null
   weightedAverageWatts: number | null
+  maxWatts: number | null
+  kilojoules: number | null
+  npWatts: number | null
+  intensityFactor: number | null
+  variabilityIndex: number | null
+  bikeTss: number | null
+  efficiencyFactor: number | null
+  aerobicDecoupling: number | null
+  powerZone1Time: number | null
+  powerZone2Time: number | null
+  powerZone3Time: number | null
+  powerZone4Time: number | null
+  powerZone5Time: number | null
+  powerZone6Time: number | null
+  powerZone7Time: number | null
 }
 
 export type ActivityMinAggregateOutputType = {
@@ -122,6 +152,21 @@ export type ActivityMinAggregateOutputType = {
   averageWatts: number | null
   weightedAverageWatts: number | null
   deviceWatts: boolean | null
+  maxWatts: number | null
+  kilojoules: number | null
+  npWatts: number | null
+  intensityFactor: number | null
+  variabilityIndex: number | null
+  bikeTss: number | null
+  efficiencyFactor: number | null
+  aerobicDecoupling: number | null
+  powerZone1Time: number | null
+  powerZone2Time: number | null
+  powerZone3Time: number | null
+  powerZone4Time: number | null
+  powerZone5Time: number | null
+  powerZone6Time: number | null
+  powerZone7Time: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -164,6 +209,21 @@ export type ActivityMaxAggregateOutputType = {
   averageWatts: number | null
   weightedAverageWatts: number | null
   deviceWatts: boolean | null
+  maxWatts: number | null
+  kilojoules: number | null
+  npWatts: number | null
+  intensityFactor: number | null
+  variabilityIndex: number | null
+  bikeTss: number | null
+  efficiencyFactor: number | null
+  aerobicDecoupling: number | null
+  powerZone1Time: number | null
+  powerZone2Time: number | null
+  powerZone3Time: number | null
+  powerZone4Time: number | null
+  powerZone5Time: number | null
+  powerZone6Time: number | null
+  powerZone7Time: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -208,6 +268,21 @@ export type ActivityCountAggregateOutputType = {
   averageWatts: number
   weightedAverageWatts: number
   deviceWatts: number
+  maxWatts: number
+  kilojoules: number
+  npWatts: number
+  intensityFactor: number
+  variabilityIndex: number
+  bikeTss: number
+  efficiencyFactor: number
+  aerobicDecoupling: number
+  powerZone1Time: number
+  powerZone2Time: number
+  powerZone3Time: number
+  powerZone4Time: number
+  powerZone5Time: number
+  powerZone6Time: number
+  powerZone7Time: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -241,6 +316,21 @@ export type ActivityAvgAggregateInputType = {
   hrZone7Time?: true
   averageWatts?: true
   weightedAverageWatts?: true
+  maxWatts?: true
+  kilojoules?: true
+  npWatts?: true
+  intensityFactor?: true
+  variabilityIndex?: true
+  bikeTss?: true
+  efficiencyFactor?: true
+  aerobicDecoupling?: true
+  powerZone1Time?: true
+  powerZone2Time?: true
+  powerZone3Time?: true
+  powerZone4Time?: true
+  powerZone5Time?: true
+  powerZone6Time?: true
+  powerZone7Time?: true
 }
 
 export type ActivitySumAggregateInputType = {
@@ -270,6 +360,21 @@ export type ActivitySumAggregateInputType = {
   hrZone7Time?: true
   averageWatts?: true
   weightedAverageWatts?: true
+  maxWatts?: true
+  kilojoules?: true
+  npWatts?: true
+  intensityFactor?: true
+  variabilityIndex?: true
+  bikeTss?: true
+  efficiencyFactor?: true
+  aerobicDecoupling?: true
+  powerZone1Time?: true
+  powerZone2Time?: true
+  powerZone3Time?: true
+  powerZone4Time?: true
+  powerZone5Time?: true
+  powerZone6Time?: true
+  powerZone7Time?: true
 }
 
 export type ActivityMinAggregateInputType = {
@@ -310,6 +415,21 @@ export type ActivityMinAggregateInputType = {
   averageWatts?: true
   weightedAverageWatts?: true
   deviceWatts?: true
+  maxWatts?: true
+  kilojoules?: true
+  npWatts?: true
+  intensityFactor?: true
+  variabilityIndex?: true
+  bikeTss?: true
+  efficiencyFactor?: true
+  aerobicDecoupling?: true
+  powerZone1Time?: true
+  powerZone2Time?: true
+  powerZone3Time?: true
+  powerZone4Time?: true
+  powerZone5Time?: true
+  powerZone6Time?: true
+  powerZone7Time?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -352,6 +472,21 @@ export type ActivityMaxAggregateInputType = {
   averageWatts?: true
   weightedAverageWatts?: true
   deviceWatts?: true
+  maxWatts?: true
+  kilojoules?: true
+  npWatts?: true
+  intensityFactor?: true
+  variabilityIndex?: true
+  bikeTss?: true
+  efficiencyFactor?: true
+  aerobicDecoupling?: true
+  powerZone1Time?: true
+  powerZone2Time?: true
+  powerZone3Time?: true
+  powerZone4Time?: true
+  powerZone5Time?: true
+  powerZone6Time?: true
+  powerZone7Time?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -396,6 +531,21 @@ export type ActivityCountAggregateInputType = {
   averageWatts?: true
   weightedAverageWatts?: true
   deviceWatts?: true
+  maxWatts?: true
+  kilojoules?: true
+  npWatts?: true
+  intensityFactor?: true
+  variabilityIndex?: true
+  bikeTss?: true
+  efficiencyFactor?: true
+  aerobicDecoupling?: true
+  powerZone1Time?: true
+  powerZone2Time?: true
+  powerZone3Time?: true
+  powerZone4Time?: true
+  powerZone5Time?: true
+  powerZone6Time?: true
+  powerZone7Time?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -527,6 +677,21 @@ export type ActivityGroupByOutputType = {
   averageWatts: number | null
   weightedAverageWatts: number | null
   deviceWatts: boolean
+  maxWatts: number | null
+  kilojoules: number | null
+  npWatts: number | null
+  intensityFactor: number | null
+  variabilityIndex: number | null
+  bikeTss: number | null
+  efficiencyFactor: number | null
+  aerobicDecoupling: number | null
+  powerZone1Time: number | null
+  powerZone2Time: number | null
+  powerZone3Time: number | null
+  powerZone4Time: number | null
+  powerZone5Time: number | null
+  powerZone6Time: number | null
+  powerZone7Time: number | null
   createdAt: Date
   updatedAt: Date
   _count: ActivityCountAggregateOutputType | null
@@ -594,6 +759,21 @@ export type ActivityWhereInput = {
   averageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
   weightedAverageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
   deviceWatts?: Prisma.BoolFilter<"Activity"> | boolean
+  maxWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  kilojoules?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  npWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  intensityFactor?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  variabilityIndex?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  bikeTss?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  efficiencyFactor?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  aerobicDecoupling?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  powerZone1Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone2Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone3Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone4Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone5Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone6Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone7Time?: Prisma.IntNullableFilter<"Activity"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -646,6 +826,21 @@ export type ActivityOrderByWithRelationInput = {
   averageWatts?: Prisma.SortOrderInput | Prisma.SortOrder
   weightedAverageWatts?: Prisma.SortOrderInput | Prisma.SortOrder
   deviceWatts?: Prisma.SortOrder
+  maxWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  kilojoules?: Prisma.SortOrderInput | Prisma.SortOrder
+  npWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  intensityFactor?: Prisma.SortOrderInput | Prisma.SortOrder
+  variabilityIndex?: Prisma.SortOrderInput | Prisma.SortOrder
+  bikeTss?: Prisma.SortOrderInput | Prisma.SortOrder
+  efficiencyFactor?: Prisma.SortOrderInput | Prisma.SortOrder
+  aerobicDecoupling?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone1Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone2Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone3Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone4Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone5Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone6Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone7Time?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -701,6 +896,21 @@ export type ActivityWhereUniqueInput = Prisma.AtLeast<{
   averageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
   weightedAverageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
   deviceWatts?: Prisma.BoolFilter<"Activity"> | boolean
+  maxWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  kilojoules?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  npWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  intensityFactor?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  variabilityIndex?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  bikeTss?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  efficiencyFactor?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  aerobicDecoupling?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  powerZone1Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone2Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone3Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone4Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone5Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone6Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone7Time?: Prisma.IntNullableFilter<"Activity"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -753,6 +963,21 @@ export type ActivityOrderByWithAggregationInput = {
   averageWatts?: Prisma.SortOrderInput | Prisma.SortOrder
   weightedAverageWatts?: Prisma.SortOrderInput | Prisma.SortOrder
   deviceWatts?: Prisma.SortOrder
+  maxWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  kilojoules?: Prisma.SortOrderInput | Prisma.SortOrder
+  npWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  intensityFactor?: Prisma.SortOrderInput | Prisma.SortOrder
+  variabilityIndex?: Prisma.SortOrderInput | Prisma.SortOrder
+  bikeTss?: Prisma.SortOrderInput | Prisma.SortOrder
+  efficiencyFactor?: Prisma.SortOrderInput | Prisma.SortOrder
+  aerobicDecoupling?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone1Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone2Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone3Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone4Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone5Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone6Time?: Prisma.SortOrderInput | Prisma.SortOrder
+  powerZone7Time?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ActivityCountOrderByAggregateInput
@@ -805,6 +1030,21 @@ export type ActivityScalarWhereWithAggregatesInput = {
   averageWatts?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
   weightedAverageWatts?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
   deviceWatts?: Prisma.BoolWithAggregatesFilter<"Activity"> | boolean
+  maxWatts?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
+  kilojoules?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
+  npWatts?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
+  intensityFactor?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
+  variabilityIndex?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
+  bikeTss?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
+  efficiencyFactor?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
+  aerobicDecoupling?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
+  powerZone1Time?: Prisma.IntNullableWithAggregatesFilter<"Activity"> | number | null
+  powerZone2Time?: Prisma.IntNullableWithAggregatesFilter<"Activity"> | number | null
+  powerZone3Time?: Prisma.IntNullableWithAggregatesFilter<"Activity"> | number | null
+  powerZone4Time?: Prisma.IntNullableWithAggregatesFilter<"Activity"> | number | null
+  powerZone5Time?: Prisma.IntNullableWithAggregatesFilter<"Activity"> | number | null
+  powerZone6Time?: Prisma.IntNullableWithAggregatesFilter<"Activity"> | number | null
+  powerZone7Time?: Prisma.IntNullableWithAggregatesFilter<"Activity"> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Activity"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Activity"> | Date | string
 }
@@ -848,6 +1088,21 @@ export type ActivityCreateInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -900,6 +1155,21 @@ export type ActivityUncheckedCreateInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -950,6 +1220,21 @@ export type ActivityUpdateInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -1002,6 +1287,21 @@ export type ActivityUncheckedUpdateInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -1053,6 +1353,21 @@ export type ActivityCreateManyInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1096,6 +1411,21 @@ export type ActivityUpdateManyMutationInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1140,6 +1470,21 @@ export type ActivityUncheckedUpdateManyInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1199,6 +1544,21 @@ export type ActivityCountOrderByAggregateInput = {
   averageWatts?: Prisma.SortOrder
   weightedAverageWatts?: Prisma.SortOrder
   deviceWatts?: Prisma.SortOrder
+  maxWatts?: Prisma.SortOrder
+  kilojoules?: Prisma.SortOrder
+  npWatts?: Prisma.SortOrder
+  intensityFactor?: Prisma.SortOrder
+  variabilityIndex?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  efficiencyFactor?: Prisma.SortOrder
+  aerobicDecoupling?: Prisma.SortOrder
+  powerZone1Time?: Prisma.SortOrder
+  powerZone2Time?: Prisma.SortOrder
+  powerZone3Time?: Prisma.SortOrder
+  powerZone4Time?: Prisma.SortOrder
+  powerZone5Time?: Prisma.SortOrder
+  powerZone6Time?: Prisma.SortOrder
+  powerZone7Time?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1230,6 +1590,21 @@ export type ActivityAvgOrderByAggregateInput = {
   hrZone7Time?: Prisma.SortOrder
   averageWatts?: Prisma.SortOrder
   weightedAverageWatts?: Prisma.SortOrder
+  maxWatts?: Prisma.SortOrder
+  kilojoules?: Prisma.SortOrder
+  npWatts?: Prisma.SortOrder
+  intensityFactor?: Prisma.SortOrder
+  variabilityIndex?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  efficiencyFactor?: Prisma.SortOrder
+  aerobicDecoupling?: Prisma.SortOrder
+  powerZone1Time?: Prisma.SortOrder
+  powerZone2Time?: Prisma.SortOrder
+  powerZone3Time?: Prisma.SortOrder
+  powerZone4Time?: Prisma.SortOrder
+  powerZone5Time?: Prisma.SortOrder
+  powerZone6Time?: Prisma.SortOrder
+  powerZone7Time?: Prisma.SortOrder
 }
 
 export type ActivityMaxOrderByAggregateInput = {
@@ -1270,6 +1645,21 @@ export type ActivityMaxOrderByAggregateInput = {
   averageWatts?: Prisma.SortOrder
   weightedAverageWatts?: Prisma.SortOrder
   deviceWatts?: Prisma.SortOrder
+  maxWatts?: Prisma.SortOrder
+  kilojoules?: Prisma.SortOrder
+  npWatts?: Prisma.SortOrder
+  intensityFactor?: Prisma.SortOrder
+  variabilityIndex?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  efficiencyFactor?: Prisma.SortOrder
+  aerobicDecoupling?: Prisma.SortOrder
+  powerZone1Time?: Prisma.SortOrder
+  powerZone2Time?: Prisma.SortOrder
+  powerZone3Time?: Prisma.SortOrder
+  powerZone4Time?: Prisma.SortOrder
+  powerZone5Time?: Prisma.SortOrder
+  powerZone6Time?: Prisma.SortOrder
+  powerZone7Time?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1312,6 +1702,21 @@ export type ActivityMinOrderByAggregateInput = {
   averageWatts?: Prisma.SortOrder
   weightedAverageWatts?: Prisma.SortOrder
   deviceWatts?: Prisma.SortOrder
+  maxWatts?: Prisma.SortOrder
+  kilojoules?: Prisma.SortOrder
+  npWatts?: Prisma.SortOrder
+  intensityFactor?: Prisma.SortOrder
+  variabilityIndex?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  efficiencyFactor?: Prisma.SortOrder
+  aerobicDecoupling?: Prisma.SortOrder
+  powerZone1Time?: Prisma.SortOrder
+  powerZone2Time?: Prisma.SortOrder
+  powerZone3Time?: Prisma.SortOrder
+  powerZone4Time?: Prisma.SortOrder
+  powerZone5Time?: Prisma.SortOrder
+  powerZone6Time?: Prisma.SortOrder
+  powerZone7Time?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1343,6 +1748,21 @@ export type ActivitySumOrderByAggregateInput = {
   hrZone7Time?: Prisma.SortOrder
   averageWatts?: Prisma.SortOrder
   weightedAverageWatts?: Prisma.SortOrder
+  maxWatts?: Prisma.SortOrder
+  kilojoules?: Prisma.SortOrder
+  npWatts?: Prisma.SortOrder
+  intensityFactor?: Prisma.SortOrder
+  variabilityIndex?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  efficiencyFactor?: Prisma.SortOrder
+  aerobicDecoupling?: Prisma.SortOrder
+  powerZone1Time?: Prisma.SortOrder
+  powerZone2Time?: Prisma.SortOrder
+  powerZone3Time?: Prisma.SortOrder
+  powerZone4Time?: Prisma.SortOrder
+  powerZone5Time?: Prisma.SortOrder
+  powerZone6Time?: Prisma.SortOrder
+  powerZone7Time?: Prisma.SortOrder
 }
 
 export type ActivityNullableScalarRelationFilter = {
@@ -1551,6 +1971,21 @@ export type ActivityCreateWithoutUserInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageCreateNestedManyWithoutActivityInput
@@ -1601,6 +2036,21 @@ export type ActivityUncheckedCreateWithoutUserInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -1681,6 +2131,21 @@ export type ActivityScalarWhereInput = {
   averageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
   weightedAverageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
   deviceWatts?: Prisma.BoolFilter<"Activity"> | boolean
+  maxWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  kilojoules?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  npWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  intensityFactor?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  variabilityIndex?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  bikeTss?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  efficiencyFactor?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  aerobicDecoupling?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  powerZone1Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone2Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone3Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone4Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone5Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone6Time?: Prisma.IntNullableFilter<"Activity"> | number | null
+  powerZone7Time?: Prisma.IntNullableFilter<"Activity"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
 }
@@ -1724,6 +2189,21 @@ export type ActivityCreateWithoutAiFeedbackInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -1775,6 +2255,21 @@ export type ActivityUncheckedCreateWithoutAiFeedbackInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -1840,6 +2335,21 @@ export type ActivityUpdateWithoutAiFeedbackInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -1891,6 +2401,21 @@ export type ActivityUncheckedUpdateWithoutAiFeedbackInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -1940,6 +2465,21 @@ export type ActivityCreateWithoutFeedbackJobInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -1991,6 +2531,21 @@ export type ActivityUncheckedCreateWithoutFeedbackJobInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -2056,6 +2611,21 @@ export type ActivityUpdateWithoutFeedbackJobInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -2107,6 +2677,21 @@ export type ActivityUncheckedUpdateWithoutFeedbackJobInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -2156,6 +2741,21 @@ export type ActivityCreateWithoutLapsInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -2207,6 +2807,21 @@ export type ActivityUncheckedCreateWithoutLapsInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -2272,6 +2887,21 @@ export type ActivityUpdateWithoutLapsInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -2323,6 +2953,21 @@ export type ActivityUncheckedUpdateWithoutLapsInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -2372,6 +3017,21 @@ export type ActivityCreateWithoutSplitsInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -2423,6 +3083,21 @@ export type ActivityUncheckedCreateWithoutSplitsInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -2488,6 +3163,21 @@ export type ActivityUpdateWithoutSplitsInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -2539,6 +3229,21 @@ export type ActivityUncheckedUpdateWithoutSplitsInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -2588,6 +3293,21 @@ export type ActivityCreateWithoutRaceResultsInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -2639,6 +3359,21 @@ export type ActivityUncheckedCreateWithoutRaceResultsInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -2704,6 +3439,21 @@ export type ActivityUpdateWithoutRaceResultsInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -2755,6 +3505,21 @@ export type ActivityUncheckedUpdateWithoutRaceResultsInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -2804,6 +3569,21 @@ export type ActivityCreateWithoutLinkedWorkoutsInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -2855,6 +3635,21 @@ export type ActivityUncheckedCreateWithoutLinkedWorkoutsInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -2920,6 +3715,21 @@ export type ActivityUpdateWithoutLinkedWorkoutsInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -2971,6 +3781,21 @@ export type ActivityUncheckedUpdateWithoutLinkedWorkoutsInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -3020,6 +3845,21 @@ export type ActivityCreateWithoutChatMessageInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -3071,6 +3911,21 @@ export type ActivityUncheckedCreateWithoutChatMessageInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   laps?: Prisma.LapUncheckedCreateNestedManyWithoutActivityInput
@@ -3136,6 +3991,21 @@ export type ActivityUpdateWithoutChatMessageInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -3187,6 +4057,21 @@ export type ActivityUncheckedUpdateWithoutChatMessageInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   laps?: Prisma.LapUncheckedUpdateManyWithoutActivityNestedInput
@@ -3236,6 +4121,21 @@ export type ActivityCreateManyUserInput = {
   averageWatts?: number | null
   weightedAverageWatts?: number | null
   deviceWatts?: boolean
+  maxWatts?: number | null
+  kilojoules?: number | null
+  npWatts?: number | null
+  intensityFactor?: number | null
+  variabilityIndex?: number | null
+  bikeTss?: number | null
+  efficiencyFactor?: number | null
+  aerobicDecoupling?: number | null
+  powerZone1Time?: number | null
+  powerZone2Time?: number | null
+  powerZone3Time?: number | null
+  powerZone4Time?: number | null
+  powerZone5Time?: number | null
+  powerZone6Time?: number | null
+  powerZone7Time?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -3279,6 +4179,21 @@ export type ActivityUpdateWithoutUserInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUpdateManyWithoutActivityNestedInput
@@ -3329,6 +4244,21 @@ export type ActivityUncheckedUpdateWithoutUserInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -3379,6 +4309,21 @@ export type ActivityUncheckedUpdateManyWithoutUserInput = {
   averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  kilojoules?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  npWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  intensityFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  variabilityIndex?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  bikeTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  efficiencyFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  aerobicDecoupling?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  powerZone1Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone2Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone3Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone4Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone5Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone6Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  powerZone7Time?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -3490,6 +4435,21 @@ export type ActivitySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   averageWatts?: boolean
   weightedAverageWatts?: boolean
   deviceWatts?: boolean
+  maxWatts?: boolean
+  kilojoules?: boolean
+  npWatts?: boolean
+  intensityFactor?: boolean
+  variabilityIndex?: boolean
+  bikeTss?: boolean
+  efficiencyFactor?: boolean
+  aerobicDecoupling?: boolean
+  powerZone1Time?: boolean
+  powerZone2Time?: boolean
+  powerZone3Time?: boolean
+  powerZone4Time?: boolean
+  powerZone5Time?: boolean
+  powerZone6Time?: boolean
+  powerZone7Time?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -3543,6 +4503,21 @@ export type ActivitySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   averageWatts?: boolean
   weightedAverageWatts?: boolean
   deviceWatts?: boolean
+  maxWatts?: boolean
+  kilojoules?: boolean
+  npWatts?: boolean
+  intensityFactor?: boolean
+  variabilityIndex?: boolean
+  bikeTss?: boolean
+  efficiencyFactor?: boolean
+  aerobicDecoupling?: boolean
+  powerZone1Time?: boolean
+  powerZone2Time?: boolean
+  powerZone3Time?: boolean
+  powerZone4Time?: boolean
+  powerZone5Time?: boolean
+  powerZone6Time?: boolean
+  powerZone7Time?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -3588,6 +4563,21 @@ export type ActivitySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   averageWatts?: boolean
   weightedAverageWatts?: boolean
   deviceWatts?: boolean
+  maxWatts?: boolean
+  kilojoules?: boolean
+  npWatts?: boolean
+  intensityFactor?: boolean
+  variabilityIndex?: boolean
+  bikeTss?: boolean
+  efficiencyFactor?: boolean
+  aerobicDecoupling?: boolean
+  powerZone1Time?: boolean
+  powerZone2Time?: boolean
+  powerZone3Time?: boolean
+  powerZone4Time?: boolean
+  powerZone5Time?: boolean
+  powerZone6Time?: boolean
+  powerZone7Time?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -3633,11 +4623,26 @@ export type ActivitySelectScalar = {
   averageWatts?: boolean
   weightedAverageWatts?: boolean
   deviceWatts?: boolean
+  maxWatts?: boolean
+  kilojoules?: boolean
+  npWatts?: boolean
+  intensityFactor?: boolean
+  variabilityIndex?: boolean
+  bikeTss?: boolean
+  efficiencyFactor?: boolean
+  aerobicDecoupling?: boolean
+  powerZone1Time?: boolean
+  powerZone2Time?: boolean
+  powerZone3Time?: boolean
+  powerZone4Time?: boolean
+  powerZone5Time?: boolean
+  powerZone6Time?: boolean
+  powerZone7Time?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ActivityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "stravaId" | "type" | "sportType" | "name" | "description" | "startDate" | "timezone" | "distance" | "movingTime" | "elapsedTime" | "averageSpeed" | "maxSpeed" | "gradeAdjustedSpeed" | "averageHr" | "maxHr" | "averageCadence" | "hasHeartrate" | "totalElevation" | "elevHigh" | "elevLow" | "calories" | "trimp" | "runningTss" | "estimatedVdot" | "hrZone1Time" | "hrZone2Time" | "hrZone3Time" | "hrZone4Time" | "hrZone5Time" | "hrZone6Time" | "hrZone7Time" | "rawJson" | "streams" | "trainingType" | "averageWatts" | "weightedAverageWatts" | "deviceWatts" | "createdAt" | "updatedAt", ExtArgs["result"]["activity"]>
+export type ActivityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "stravaId" | "type" | "sportType" | "name" | "description" | "startDate" | "timezone" | "distance" | "movingTime" | "elapsedTime" | "averageSpeed" | "maxSpeed" | "gradeAdjustedSpeed" | "averageHr" | "maxHr" | "averageCadence" | "hasHeartrate" | "totalElevation" | "elevHigh" | "elevLow" | "calories" | "trimp" | "runningTss" | "estimatedVdot" | "hrZone1Time" | "hrZone2Time" | "hrZone3Time" | "hrZone4Time" | "hrZone5Time" | "hrZone6Time" | "hrZone7Time" | "rawJson" | "streams" | "trainingType" | "averageWatts" | "weightedAverageWatts" | "deviceWatts" | "maxWatts" | "kilojoules" | "npWatts" | "intensityFactor" | "variabilityIndex" | "bikeTss" | "efficiencyFactor" | "aerobicDecoupling" | "powerZone1Time" | "powerZone2Time" | "powerZone3Time" | "powerZone4Time" | "powerZone5Time" | "powerZone6Time" | "powerZone7Time" | "createdAt" | "updatedAt", ExtArgs["result"]["activity"]>
 export type ActivityInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   ChatMessage?: boolean | Prisma.Activity$ChatMessageArgs<ExtArgs>
@@ -3708,6 +4713,21 @@ export type $ActivityPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     averageWatts: number | null
     weightedAverageWatts: number | null
     deviceWatts: boolean
+    maxWatts: number | null
+    kilojoules: number | null
+    npWatts: number | null
+    intensityFactor: number | null
+    variabilityIndex: number | null
+    bikeTss: number | null
+    efficiencyFactor: number | null
+    aerobicDecoupling: number | null
+    powerZone1Time: number | null
+    powerZone2Time: number | null
+    powerZone3Time: number | null
+    powerZone4Time: number | null
+    powerZone5Time: number | null
+    powerZone6Time: number | null
+    powerZone7Time: number | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["activity"]>
@@ -4180,6 +5200,21 @@ export interface ActivityFieldRefs {
   readonly averageWatts: Prisma.FieldRef<"Activity", 'Float'>
   readonly weightedAverageWatts: Prisma.FieldRef<"Activity", 'Float'>
   readonly deviceWatts: Prisma.FieldRef<"Activity", 'Boolean'>
+  readonly maxWatts: Prisma.FieldRef<"Activity", 'Float'>
+  readonly kilojoules: Prisma.FieldRef<"Activity", 'Float'>
+  readonly npWatts: Prisma.FieldRef<"Activity", 'Float'>
+  readonly intensityFactor: Prisma.FieldRef<"Activity", 'Float'>
+  readonly variabilityIndex: Prisma.FieldRef<"Activity", 'Float'>
+  readonly bikeTss: Prisma.FieldRef<"Activity", 'Float'>
+  readonly efficiencyFactor: Prisma.FieldRef<"Activity", 'Float'>
+  readonly aerobicDecoupling: Prisma.FieldRef<"Activity", 'Float'>
+  readonly powerZone1Time: Prisma.FieldRef<"Activity", 'Int'>
+  readonly powerZone2Time: Prisma.FieldRef<"Activity", 'Int'>
+  readonly powerZone3Time: Prisma.FieldRef<"Activity", 'Int'>
+  readonly powerZone4Time: Prisma.FieldRef<"Activity", 'Int'>
+  readonly powerZone5Time: Prisma.FieldRef<"Activity", 'Int'>
+  readonly powerZone6Time: Prisma.FieldRef<"Activity", 'Int'>
+  readonly powerZone7Time: Prisma.FieldRef<"Activity", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Activity", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Activity", 'DateTime'>
 }

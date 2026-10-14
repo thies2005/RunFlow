@@ -499,7 +499,7 @@ const exportPlanUrlTool: McpTool = {
     },
 };
 
-export const publicMcpServer = new McpServer({
+const publicMcpServer = new McpServer({
     name: 'runflow-mcp-public',
     version: '2.4.0',
     instructions: 'Stateless running and endurance training plan generator and VDOT calculator by RunFlow.',

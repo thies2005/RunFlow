@@ -42,6 +42,8 @@ export type UserAvgAggregateOutputType = {
   vdotCorrectionFactor: number | null
   vdotReferenceRaceTime: number | null
   autoRevolvingVo2max: number | null
+  ftpWatts: number | null
+  swimCssSecPer100m: number | null
   tokenVersion: number | null
 }
 
@@ -61,6 +63,8 @@ export type UserSumAggregateOutputType = {
   vdotCorrectionFactor: number | null
   vdotReferenceRaceTime: number | null
   autoRevolvingVo2max: number | null
+  ftpWatts: number | null
+  swimCssSecPer100m: number | null
   tokenVersion: number | null
 }
 
@@ -99,6 +103,9 @@ export type UserMinAggregateOutputType = {
   autoRevolvingCalculatedAt: Date | null
   includeCrossTraining: boolean | null
   useImperial: boolean | null
+  ftpWatts: number | null
+  autoEstimateFtp: boolean | null
+  swimCssSecPer100m: number | null
   lastSyncAt: Date | null
   syncInProgress: boolean | null
   createdAt: Date | null
@@ -143,6 +150,9 @@ export type UserMaxAggregateOutputType = {
   autoRevolvingCalculatedAt: Date | null
   includeCrossTraining: boolean | null
   useImperial: boolean | null
+  ftpWatts: number | null
+  autoEstimateFtp: boolean | null
+  swimCssSecPer100m: number | null
   lastSyncAt: Date | null
   syncInProgress: boolean | null
   createdAt: Date | null
@@ -187,6 +197,9 @@ export type UserCountAggregateOutputType = {
   autoRevolvingCalculatedAt: number
   includeCrossTraining: number
   useImperial: number
+  ftpWatts: number
+  autoEstimateFtp: number
+  swimCssSecPer100m: number
   lastSyncAt: number
   syncInProgress: number
   createdAt: number
@@ -214,6 +227,8 @@ export type UserAvgAggregateInputType = {
   vdotCorrectionFactor?: true
   vdotReferenceRaceTime?: true
   autoRevolvingVo2max?: true
+  ftpWatts?: true
+  swimCssSecPer100m?: true
   tokenVersion?: true
 }
 
@@ -233,6 +248,8 @@ export type UserSumAggregateInputType = {
   vdotCorrectionFactor?: true
   vdotReferenceRaceTime?: true
   autoRevolvingVo2max?: true
+  ftpWatts?: true
+  swimCssSecPer100m?: true
   tokenVersion?: true
 }
 
@@ -271,6 +288,9 @@ export type UserMinAggregateInputType = {
   autoRevolvingCalculatedAt?: true
   includeCrossTraining?: true
   useImperial?: true
+  ftpWatts?: true
+  autoEstimateFtp?: true
+  swimCssSecPer100m?: true
   lastSyncAt?: true
   syncInProgress?: true
   createdAt?: true
@@ -315,6 +335,9 @@ export type UserMaxAggregateInputType = {
   autoRevolvingCalculatedAt?: true
   includeCrossTraining?: true
   useImperial?: true
+  ftpWatts?: true
+  autoEstimateFtp?: true
+  swimCssSecPer100m?: true
   lastSyncAt?: true
   syncInProgress?: true
   createdAt?: true
@@ -359,6 +382,9 @@ export type UserCountAggregateInputType = {
   autoRevolvingCalculatedAt?: true
   includeCrossTraining?: true
   useImperial?: true
+  ftpWatts?: true
+  autoEstimateFtp?: true
+  swimCssSecPer100m?: true
   lastSyncAt?: true
   syncInProgress?: true
   createdAt?: true
@@ -490,6 +516,9 @@ export type UserGroupByOutputType = {
   autoRevolvingCalculatedAt: Date | null
   includeCrossTraining: boolean
   useImperial: boolean
+  ftpWatts: number | null
+  autoEstimateFtp: boolean
+  swimCssSecPer100m: number | null
   lastSyncAt: Date | null
   syncInProgress: boolean
   createdAt: Date
@@ -557,6 +586,9 @@ export type UserWhereInput = {
   autoRevolvingCalculatedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   includeCrossTraining?: Prisma.BoolFilter<"User"> | boolean
   useImperial?: Prisma.BoolFilter<"User"> | boolean
+  ftpWatts?: Prisma.IntNullableFilter<"User"> | number | null
+  autoEstimateFtp?: Prisma.BoolFilter<"User"> | boolean
+  swimCssSecPer100m?: Prisma.IntNullableFilter<"User"> | number | null
   lastSyncAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -564,6 +596,8 @@ export type UserWhereInput = {
   healthTrackingEnabled?: Prisma.BoolFilter<"User"> | boolean
   isAdmin?: Prisma.BoolFilter<"User"> | boolean
   tokenVersion?: Prisma.IntFilter<"User"> | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeListRelationFilter
+  mcpOAuthTokens?: Prisma.McpOAuthTokenListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
   activities?: Prisma.ActivityListRelationFilter
   usageHistory?: Prisma.AiUsageHistoryListRelationFilter
@@ -633,6 +667,9 @@ export type UserOrderByWithRelationInput = {
   autoRevolvingCalculatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   includeCrossTraining?: Prisma.SortOrder
   useImperial?: Prisma.SortOrder
+  ftpWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  autoEstimateFtp?: Prisma.SortOrder
+  swimCssSecPer100m?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -640,6 +677,8 @@ export type UserOrderByWithRelationInput = {
   healthTrackingEnabled?: Prisma.SortOrder
   isAdmin?: Prisma.SortOrder
   tokenVersion?: Prisma.SortOrder
+  mcpOAuthCodes?: Prisma.McpOAuthCodeOrderByRelationAggregateInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenOrderByRelationAggregateInput
   accounts?: Prisma.AccountOrderByRelationAggregateInput
   activities?: Prisma.ActivityOrderByRelationAggregateInput
   usageHistory?: Prisma.AiUsageHistoryOrderByRelationAggregateInput
@@ -712,6 +751,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   autoRevolvingCalculatedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   includeCrossTraining?: Prisma.BoolFilter<"User"> | boolean
   useImperial?: Prisma.BoolFilter<"User"> | boolean
+  ftpWatts?: Prisma.IntNullableFilter<"User"> | number | null
+  autoEstimateFtp?: Prisma.BoolFilter<"User"> | boolean
+  swimCssSecPer100m?: Prisma.IntNullableFilter<"User"> | number | null
   lastSyncAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -719,6 +761,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   healthTrackingEnabled?: Prisma.BoolFilter<"User"> | boolean
   isAdmin?: Prisma.BoolFilter<"User"> | boolean
   tokenVersion?: Prisma.IntFilter<"User"> | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeListRelationFilter
+  mcpOAuthTokens?: Prisma.McpOAuthTokenListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
   activities?: Prisma.ActivityListRelationFilter
   usageHistory?: Prisma.AiUsageHistoryListRelationFilter
@@ -788,6 +832,9 @@ export type UserOrderByWithAggregationInput = {
   autoRevolvingCalculatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   includeCrossTraining?: Prisma.SortOrder
   useImperial?: Prisma.SortOrder
+  ftpWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  autoEstimateFtp?: Prisma.SortOrder
+  swimCssSecPer100m?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -840,6 +887,9 @@ export type UserScalarWhereWithAggregatesInput = {
   autoRevolvingCalculatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   includeCrossTraining?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   useImperial?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  ftpWatts?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
+  autoEstimateFtp?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  swimCssSecPer100m?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
   lastSyncAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -884,6 +934,9 @@ export type UserCreateInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -891,6 +944,8 @@ export type UserCreateInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -960,6 +1015,9 @@ export type UserUncheckedCreateInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -967,6 +1025,8 @@ export type UserUncheckedCreateInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -1036,6 +1096,9 @@ export type UserUpdateInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1043,6 +1106,8 @@ export type UserUpdateInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -1112,6 +1177,9 @@ export type UserUncheckedUpdateInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1119,6 +1187,8 @@ export type UserUncheckedUpdateInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -1188,6 +1258,9 @@ export type UserCreateManyInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -1232,6 +1305,9 @@ export type UserUpdateManyMutationInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1276,6 +1352,9 @@ export type UserUncheckedUpdateManyInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1320,6 +1399,9 @@ export type UserCountOrderByAggregateInput = {
   autoRevolvingCalculatedAt?: Prisma.SortOrder
   includeCrossTraining?: Prisma.SortOrder
   useImperial?: Prisma.SortOrder
+  ftpWatts?: Prisma.SortOrder
+  autoEstimateFtp?: Prisma.SortOrder
+  swimCssSecPer100m?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1345,6 +1427,8 @@ export type UserAvgOrderByAggregateInput = {
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   autoRevolvingVo2max?: Prisma.SortOrder
+  ftpWatts?: Prisma.SortOrder
+  swimCssSecPer100m?: Prisma.SortOrder
   tokenVersion?: Prisma.SortOrder
 }
 
@@ -1383,6 +1467,9 @@ export type UserMaxOrderByAggregateInput = {
   autoRevolvingCalculatedAt?: Prisma.SortOrder
   includeCrossTraining?: Prisma.SortOrder
   useImperial?: Prisma.SortOrder
+  ftpWatts?: Prisma.SortOrder
+  autoEstimateFtp?: Prisma.SortOrder
+  swimCssSecPer100m?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1427,6 +1514,9 @@ export type UserMinOrderByAggregateInput = {
   autoRevolvingCalculatedAt?: Prisma.SortOrder
   includeCrossTraining?: Prisma.SortOrder
   useImperial?: Prisma.SortOrder
+  ftpWatts?: Prisma.SortOrder
+  autoEstimateFtp?: Prisma.SortOrder
+  swimCssSecPer100m?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1452,6 +1542,8 @@ export type UserSumOrderByAggregateInput = {
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   autoRevolvingVo2max?: Prisma.SortOrder
+  ftpWatts?: Prisma.SortOrder
+  swimCssSecPer100m?: Prisma.SortOrder
   tokenVersion?: Prisma.SortOrder
 }
 
@@ -1964,6 +2056,34 @@ export type UserUpdateOneRequiredWithoutGuidedPlanSessionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutGuidedPlanSessionsInput, Prisma.UserUpdateWithoutGuidedPlanSessionsInput>, Prisma.UserUncheckedUpdateWithoutGuidedPlanSessionsInput>
 }
 
+export type UserCreateNestedOneWithoutMcpOAuthCodesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMcpOAuthCodesInput, Prisma.UserUncheckedCreateWithoutMcpOAuthCodesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMcpOAuthCodesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutMcpOAuthCodesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMcpOAuthCodesInput, Prisma.UserUncheckedCreateWithoutMcpOAuthCodesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMcpOAuthCodesInput
+  upsert?: Prisma.UserUpsertWithoutMcpOAuthCodesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMcpOAuthCodesInput, Prisma.UserUpdateWithoutMcpOAuthCodesInput>, Prisma.UserUncheckedUpdateWithoutMcpOAuthCodesInput>
+}
+
+export type UserCreateNestedOneWithoutMcpOAuthTokensInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMcpOAuthTokensInput, Prisma.UserUncheckedCreateWithoutMcpOAuthTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMcpOAuthTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutMcpOAuthTokensNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMcpOAuthTokensInput, Prisma.UserUncheckedCreateWithoutMcpOAuthTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMcpOAuthTokensInput
+  upsert?: Prisma.UserUpsertWithoutMcpOAuthTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMcpOAuthTokensInput, Prisma.UserUpdateWithoutMcpOAuthTokensInput>, Prisma.UserUncheckedUpdateWithoutMcpOAuthTokensInput>
+}
+
 export type UserCreateWithoutConsentsInput = {
   id?: string
   email?: string | null
@@ -1999,6 +2119,9 @@ export type UserCreateWithoutConsentsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2006,6 +2129,8 @@ export type UserCreateWithoutConsentsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -2074,6 +2199,9 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2081,6 +2209,8 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -2165,6 +2295,9 @@ export type UserUpdateWithoutConsentsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2172,6 +2305,8 @@ export type UserUpdateWithoutConsentsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -2240,6 +2375,9 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2247,6 +2385,8 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -2315,6 +2455,9 @@ export type UserCreateWithoutAiSettingsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2322,6 +2465,8 @@ export type UserCreateWithoutAiSettingsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -2390,6 +2535,9 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2397,6 +2545,8 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -2481,6 +2631,9 @@ export type UserUpdateWithoutAiSettingsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2488,6 +2641,8 @@ export type UserUpdateWithoutAiSettingsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -2556,6 +2711,9 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2563,6 +2721,8 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -2631,6 +2791,9 @@ export type UserCreateWithoutFeedbackJobsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2638,6 +2801,8 @@ export type UserCreateWithoutFeedbackJobsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -2706,6 +2871,9 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2713,6 +2881,8 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -2797,6 +2967,9 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2804,6 +2977,8 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -2872,6 +3047,9 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2879,6 +3057,8 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -2947,6 +3127,9 @@ export type UserCreateWithoutAccountsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2954,6 +3137,8 @@ export type UserCreateWithoutAccountsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
@@ -3022,6 +3207,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3029,6 +3217,8 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
@@ -3113,6 +3303,9 @@ export type UserUpdateWithoutAccountsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3120,6 +3313,8 @@ export type UserUpdateWithoutAccountsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
@@ -3188,6 +3383,9 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3195,6 +3393,8 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
@@ -3263,6 +3463,9 @@ export type UserCreateWithoutSessionsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3270,6 +3473,8 @@ export type UserCreateWithoutSessionsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -3338,6 +3543,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3345,6 +3553,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -3429,6 +3639,9 @@ export type UserUpdateWithoutSessionsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3436,6 +3649,8 @@ export type UserUpdateWithoutSessionsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -3504,6 +3719,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3511,6 +3729,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -3579,6 +3799,9 @@ export type UserCreateWithoutActivitiesInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3586,6 +3809,8 @@ export type UserCreateWithoutActivitiesInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
@@ -3654,6 +3879,9 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3661,6 +3889,8 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
@@ -3745,6 +3975,9 @@ export type UserUpdateWithoutActivitiesInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3752,6 +3985,8 @@ export type UserUpdateWithoutActivitiesInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
@@ -3820,6 +4055,9 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3827,6 +4065,8 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
@@ -3895,6 +4135,9 @@ export type UserCreateWithoutDailyFitnessInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3902,6 +4145,8 @@ export type UserCreateWithoutDailyFitnessInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -3970,6 +4215,9 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3977,6 +4225,8 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -4061,6 +4311,9 @@ export type UserUpdateWithoutDailyFitnessInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4068,6 +4321,8 @@ export type UserUpdateWithoutDailyFitnessInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -4136,6 +4391,9 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4143,6 +4401,8 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -4211,6 +4471,9 @@ export type UserCreateWithoutSupplementStacksInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4218,6 +4481,8 @@ export type UserCreateWithoutSupplementStacksInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -4286,6 +4551,9 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4293,6 +4561,8 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -4377,6 +4647,9 @@ export type UserUpdateWithoutSupplementStacksInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4384,6 +4657,8 @@ export type UserUpdateWithoutSupplementStacksInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -4452,6 +4727,9 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4459,6 +4737,8 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -4527,6 +4807,9 @@ export type UserCreateWithoutSupplementsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4534,6 +4817,8 @@ export type UserCreateWithoutSupplementsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -4602,6 +4887,9 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4609,6 +4897,8 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -4693,6 +4983,9 @@ export type UserUpdateWithoutSupplementsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4700,6 +4993,8 @@ export type UserUpdateWithoutSupplementsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -4768,6 +5063,9 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4775,6 +5073,8 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -4843,6 +5143,9 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4850,6 +5153,8 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -4918,6 +5223,9 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4925,6 +5233,8 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -5009,6 +5319,9 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5016,6 +5329,8 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -5084,6 +5399,9 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5091,6 +5409,8 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -5159,6 +5479,9 @@ export type UserCreateWithoutGoalsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5166,6 +5489,8 @@ export type UserCreateWithoutGoalsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -5234,6 +5559,9 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5241,6 +5569,8 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -5325,6 +5655,9 @@ export type UserUpdateWithoutGoalsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5332,6 +5665,8 @@ export type UserUpdateWithoutGoalsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -5400,6 +5735,9 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5407,6 +5745,8 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -5475,6 +5815,9 @@ export type UserCreateWithoutNotificationsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5482,6 +5825,8 @@ export type UserCreateWithoutNotificationsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -5550,6 +5895,9 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5557,6 +5905,8 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -5641,6 +5991,9 @@ export type UserUpdateWithoutNotificationsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5648,6 +6001,8 @@ export type UserUpdateWithoutNotificationsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -5716,6 +6071,9 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5723,6 +6081,8 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -5791,6 +6151,9 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5798,6 +6161,8 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -5866,6 +6231,9 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5873,6 +6241,8 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -5957,6 +6327,9 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5964,6 +6337,8 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -6032,6 +6407,9 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6039,6 +6417,8 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -6107,6 +6487,9 @@ export type UserCreateWithoutReminderSettingsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6114,6 +6497,8 @@ export type UserCreateWithoutReminderSettingsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -6182,6 +6567,9 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6189,6 +6577,8 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -6273,6 +6663,9 @@ export type UserUpdateWithoutReminderSettingsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6280,6 +6673,8 @@ export type UserUpdateWithoutReminderSettingsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -6348,6 +6743,9 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6355,6 +6753,8 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -6423,6 +6823,9 @@ export type UserCreateWithoutApiKeyInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6430,6 +6833,8 @@ export type UserCreateWithoutApiKeyInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -6498,6 +6903,9 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6505,6 +6913,8 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -6589,6 +6999,9 @@ export type UserUpdateWithoutApiKeyInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6596,6 +7009,8 @@ export type UserUpdateWithoutApiKeyInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -6664,6 +7079,9 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6671,6 +7089,8 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -6739,6 +7159,9 @@ export type UserCreateWithoutChatMessagesInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6746,6 +7169,8 @@ export type UserCreateWithoutChatMessagesInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -6814,6 +7239,9 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6821,6 +7249,8 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -6905,6 +7335,9 @@ export type UserUpdateWithoutChatMessagesInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6912,6 +7345,8 @@ export type UserUpdateWithoutChatMessagesInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -6980,6 +7415,9 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6987,6 +7425,8 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -7055,6 +7495,9 @@ export type UserCreateWithoutChatSessionsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7062,6 +7505,8 @@ export type UserCreateWithoutChatSessionsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -7130,6 +7575,9 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7137,6 +7585,8 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -7221,6 +7671,9 @@ export type UserUpdateWithoutChatSessionsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7228,6 +7681,8 @@ export type UserUpdateWithoutChatSessionsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -7296,6 +7751,9 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7303,6 +7761,8 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -7371,6 +7831,9 @@ export type UserCreateWithoutUsageHistoryInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7378,6 +7841,8 @@ export type UserCreateWithoutUsageHistoryInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
@@ -7446,6 +7911,9 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7453,6 +7921,8 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
@@ -7537,6 +8007,9 @@ export type UserUpdateWithoutUsageHistoryInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7544,6 +8017,8 @@ export type UserUpdateWithoutUsageHistoryInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
@@ -7612,6 +8087,9 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7619,6 +8097,8 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
@@ -7687,6 +8167,9 @@ export type UserCreateWithoutNutritionLogsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7694,6 +8177,8 @@ export type UserCreateWithoutNutritionLogsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -7762,6 +8247,9 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7769,6 +8257,8 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -7853,6 +8343,9 @@ export type UserUpdateWithoutNutritionLogsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7860,6 +8353,8 @@ export type UserUpdateWithoutNutritionLogsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -7928,6 +8423,9 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7935,6 +8433,8 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -8003,6 +8503,9 @@ export type UserCreateWithoutNutritionTargetInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8010,6 +8513,8 @@ export type UserCreateWithoutNutritionTargetInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -8078,6 +8583,9 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8085,6 +8593,8 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -8169,6 +8679,9 @@ export type UserUpdateWithoutNutritionTargetInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8176,6 +8689,8 @@ export type UserUpdateWithoutNutritionTargetInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -8244,6 +8759,9 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8251,6 +8769,8 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -8319,6 +8839,9 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8326,6 +8849,8 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -8394,6 +8919,9 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8401,6 +8929,8 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -8485,6 +9015,9 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8492,6 +9025,8 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -8560,6 +9095,9 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8567,6 +9105,8 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -8635,6 +9175,9 @@ export type UserCreateWithoutFastingSessionsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8642,6 +9185,8 @@ export type UserCreateWithoutFastingSessionsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -8710,6 +9255,9 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8717,6 +9265,8 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -8801,6 +9351,9 @@ export type UserUpdateWithoutFastingSessionsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8808,6 +9361,8 @@ export type UserUpdateWithoutFastingSessionsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -8876,6 +9431,9 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8883,6 +9441,8 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -8951,6 +9511,9 @@ export type UserCreateWithoutHealthInsightsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8958,6 +9521,8 @@ export type UserCreateWithoutHealthInsightsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -9026,6 +9591,9 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9033,6 +9601,8 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -9117,6 +9687,9 @@ export type UserUpdateWithoutHealthInsightsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9124,6 +9697,8 @@ export type UserUpdateWithoutHealthInsightsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -9192,6 +9767,9 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9199,6 +9777,8 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -9267,6 +9847,9 @@ export type UserCreateWithoutSavedMealsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9274,6 +9857,8 @@ export type UserCreateWithoutSavedMealsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -9342,6 +9927,9 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9349,6 +9937,8 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -9433,6 +10023,9 @@ export type UserUpdateWithoutSavedMealsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9440,6 +10033,8 @@ export type UserUpdateWithoutSavedMealsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -9508,6 +10103,9 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9515,6 +10113,8 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -9583,6 +10183,9 @@ export type UserCreateWithoutFoodFavoritesInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9590,6 +10193,8 @@ export type UserCreateWithoutFoodFavoritesInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -9658,6 +10263,9 @@ export type UserUncheckedCreateWithoutFoodFavoritesInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9665,6 +10273,8 @@ export type UserUncheckedCreateWithoutFoodFavoritesInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -9749,6 +10359,9 @@ export type UserUpdateWithoutFoodFavoritesInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9756,6 +10369,8 @@ export type UserUpdateWithoutFoodFavoritesInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -9824,6 +10439,9 @@ export type UserUncheckedUpdateWithoutFoodFavoritesInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9831,6 +10449,8 @@ export type UserUncheckedUpdateWithoutFoodFavoritesInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -9899,6 +10519,9 @@ export type UserCreateWithoutDeviceTokensInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9906,6 +10529,8 @@ export type UserCreateWithoutDeviceTokensInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -9974,6 +10599,9 @@ export type UserUncheckedCreateWithoutDeviceTokensInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9981,6 +10609,8 @@ export type UserUncheckedCreateWithoutDeviceTokensInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -10065,6 +10695,9 @@ export type UserUpdateWithoutDeviceTokensInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10072,6 +10705,8 @@ export type UserUpdateWithoutDeviceTokensInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -10140,6 +10775,9 @@ export type UserUncheckedUpdateWithoutDeviceTokensInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10147,6 +10785,8 @@ export type UserUncheckedUpdateWithoutDeviceTokensInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -10215,6 +10855,9 @@ export type UserCreateWithoutDailyReadinessRecordsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10222,6 +10865,8 @@ export type UserCreateWithoutDailyReadinessRecordsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -10290,6 +10935,9 @@ export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10297,6 +10945,8 @@ export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -10381,6 +11031,9 @@ export type UserUpdateWithoutDailyReadinessRecordsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10388,6 +11041,8 @@ export type UserUpdateWithoutDailyReadinessRecordsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -10456,6 +11111,9 @@ export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10463,6 +11121,8 @@ export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -10531,6 +11191,9 @@ export type UserCreateWithoutReadinessBaselinesInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10538,6 +11201,8 @@ export type UserCreateWithoutReadinessBaselinesInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -10606,6 +11271,9 @@ export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10613,6 +11281,8 @@ export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -10697,6 +11367,9 @@ export type UserUpdateWithoutReadinessBaselinesInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10704,6 +11377,8 @@ export type UserUpdateWithoutReadinessBaselinesInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -10772,6 +11447,9 @@ export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10779,6 +11457,8 @@ export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -10847,6 +11527,9 @@ export type UserCreateWithoutAdaptedWorkoutsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10854,6 +11537,8 @@ export type UserCreateWithoutAdaptedWorkoutsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -10922,6 +11607,9 @@ export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10929,6 +11617,8 @@ export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -11013,6 +11703,9 @@ export type UserUpdateWithoutAdaptedWorkoutsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11020,6 +11713,8 @@ export type UserUpdateWithoutAdaptedWorkoutsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -11088,6 +11783,9 @@ export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11095,6 +11793,8 @@ export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -11163,6 +11863,9 @@ export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11170,6 +11873,8 @@ export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -11238,6 +11943,9 @@ export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11245,6 +11953,8 @@ export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -11329,6 +12039,9 @@ export type UserUpdateWithoutWeeklyReconciliationRecordsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11336,6 +12049,8 @@ export type UserUpdateWithoutWeeklyReconciliationRecordsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -11404,6 +12119,9 @@ export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11411,6 +12129,8 @@ export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -11479,6 +12199,9 @@ export type UserCreateWithoutWeekTemplatesInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11486,6 +12209,8 @@ export type UserCreateWithoutWeekTemplatesInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -11554,6 +12279,9 @@ export type UserUncheckedCreateWithoutWeekTemplatesInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11561,6 +12289,8 @@ export type UserUncheckedCreateWithoutWeekTemplatesInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -11645,6 +12375,9 @@ export type UserUpdateWithoutWeekTemplatesInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11652,6 +12385,8 @@ export type UserUpdateWithoutWeekTemplatesInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -11720,6 +12455,9 @@ export type UserUncheckedUpdateWithoutWeekTemplatesInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11727,6 +12465,8 @@ export type UserUncheckedUpdateWithoutWeekTemplatesInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -11795,6 +12535,9 @@ export type UserCreateWithoutGuidedPlanSessionsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11802,6 +12545,8 @@ export type UserCreateWithoutGuidedPlanSessionsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
@@ -11870,6 +12615,9 @@ export type UserUncheckedCreateWithoutGuidedPlanSessionsInput = {
   autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11877,6 +12625,8 @@ export type UserUncheckedCreateWithoutGuidedPlanSessionsInput = {
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -11961,6 +12711,9 @@ export type UserUpdateWithoutGuidedPlanSessionsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11968,6 +12721,8 @@ export type UserUpdateWithoutGuidedPlanSessionsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
@@ -12036,6 +12791,9 @@ export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -12043,6 +12801,8 @@ export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -12076,12 +12836,686 @@ export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
 }
 
+export type UserCreateWithoutMcpOAuthCodesInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  hrZoneMethod?: string | null
+  vdotCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  tokenVersion?: number
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordCreateNestedManyWithoutUserInput
+  foodFavorites?: Prisma.FoodFavoriteCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutMcpOAuthCodesInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  hrZoneMethod?: string | null
+  vdotCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  tokenVersion?: number
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementUncheckedCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackUncheckedCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentUncheckedCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedCreateNestedManyWithoutUserInput
+  foodFavorites?: Prisma.FoodFavoriteUncheckedCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutMcpOAuthCodesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutMcpOAuthCodesInput, Prisma.UserUncheckedCreateWithoutMcpOAuthCodesInput>
+}
+
+export type UserUpsertWithoutMcpOAuthCodesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutMcpOAuthCodesInput, Prisma.UserUncheckedUpdateWithoutMcpOAuthCodesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutMcpOAuthCodesInput, Prisma.UserUncheckedCreateWithoutMcpOAuthCodesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutMcpOAuthCodesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutMcpOAuthCodesInput, Prisma.UserUncheckedUpdateWithoutMcpOAuthCodesInput>
+}
+
+export type UserUpdateWithoutMcpOAuthCodesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUpdateManyWithoutUserNestedInput
+  foodFavorites?: Prisma.FoodFavoriteUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutMcpOAuthCodesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUncheckedUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUncheckedUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUncheckedUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedUpdateManyWithoutUserNestedInput
+  foodFavorites?: Prisma.FoodFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutMcpOAuthTokensInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  hrZoneMethod?: string | null
+  vdotCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordCreateNestedManyWithoutUserInput
+  foodFavorites?: Prisma.FoodFavoriteCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutMcpOAuthTokensInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  hrZoneMethod?: string | null
+  vdotCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: number | null
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementUncheckedCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackUncheckedCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentUncheckedCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedCreateNestedManyWithoutUserInput
+  foodFavorites?: Prisma.FoodFavoriteUncheckedCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutMcpOAuthTokensInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutMcpOAuthTokensInput, Prisma.UserUncheckedCreateWithoutMcpOAuthTokensInput>
+}
+
+export type UserUpsertWithoutMcpOAuthTokensInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutMcpOAuthTokensInput, Prisma.UserUncheckedUpdateWithoutMcpOAuthTokensInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutMcpOAuthTokensInput, Prisma.UserUncheckedCreateWithoutMcpOAuthTokensInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutMcpOAuthTokensInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutMcpOAuthTokensInput, Prisma.UserUncheckedUpdateWithoutMcpOAuthTokensInput>
+}
+
+export type UserUpdateWithoutMcpOAuthTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUpdateManyWithoutUserNestedInput
+  foodFavorites?: Prisma.FoodFavoriteUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutMcpOAuthTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUncheckedUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUncheckedUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUncheckedUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedUpdateManyWithoutUserNestedInput
+  foodFavorites?: Prisma.FoodFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
+}
+
 
 /**
  * Count Type UserCountOutputType
  */
 
 export type UserCountOutputType = {
+  mcpOAuthCodes: number
+  mcpOAuthTokens: number
   accounts: number
   activities: number
   usageHistory: number
@@ -12113,6 +13547,8 @@ export type UserCountOutputType = {
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  mcpOAuthCodes?: boolean | UserCountOutputTypeCountMcpOAuthCodesArgs
+  mcpOAuthTokens?: boolean | UserCountOutputTypeCountMcpOAuthTokensArgs
   accounts?: boolean | UserCountOutputTypeCountAccountsArgs
   activities?: boolean | UserCountOutputTypeCountActivitiesArgs
   usageHistory?: boolean | UserCountOutputTypeCountUsageHistoryArgs
@@ -12151,6 +13587,20 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
    * Select specific fields to fetch from the UserCountOutputType
    */
   select?: Prisma.UserCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountMcpOAuthCodesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.McpOAuthCodeWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountMcpOAuthTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.McpOAuthTokenWhereInput
 }
 
 /**
@@ -12385,6 +13835,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   autoRevolvingCalculatedAt?: boolean
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: boolean
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
   createdAt?: boolean
@@ -12392,6 +13845,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: boolean
+  mcpOAuthCodes?: boolean | Prisma.User$mcpOAuthCodesArgs<ExtArgs>
+  mcpOAuthTokens?: boolean | Prisma.User$mcpOAuthTokensArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
   usageHistory?: boolean | Prisma.User$usageHistoryArgs<ExtArgs>
@@ -12462,6 +13917,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   autoRevolvingCalculatedAt?: boolean
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: boolean
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
   createdAt?: boolean
@@ -12506,6 +13964,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   autoRevolvingCalculatedAt?: boolean
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: boolean
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
   createdAt?: boolean
@@ -12550,6 +14011,9 @@ export type UserSelectScalar = {
   autoRevolvingCalculatedAt?: boolean
   includeCrossTraining?: boolean
   useImperial?: boolean
+  ftpWatts?: boolean
+  autoEstimateFtp?: boolean
+  swimCssSecPer100m?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
   createdAt?: boolean
@@ -12559,8 +14023,10 @@ export type UserSelectScalar = {
   tokenVersion?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin" | "tokenVersion", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "ftpWatts" | "autoEstimateFtp" | "swimCssSecPer100m" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin" | "tokenVersion", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  mcpOAuthCodes?: boolean | Prisma.User$mcpOAuthCodesArgs<ExtArgs>
+  mcpOAuthTokens?: boolean | Prisma.User$mcpOAuthTokensArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
   usageHistory?: boolean | Prisma.User$usageHistoryArgs<ExtArgs>
@@ -12601,6 +14067,8 @@ export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
   objects: {
+    mcpOAuthCodes: Prisma.$McpOAuthCodePayload<ExtArgs>[]
+    mcpOAuthTokens: Prisma.$McpOAuthTokenPayload<ExtArgs>[]
     accounts: Prisma.$AccountPayload<ExtArgs>[]
     activities: Prisma.$ActivityPayload<ExtArgs>[]
     usageHistory: Prisma.$AiUsageHistoryPayload<ExtArgs>[]
@@ -12669,6 +14137,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     autoRevolvingCalculatedAt: Date | null
     includeCrossTraining: boolean
     useImperial: boolean
+    ftpWatts: number | null
+    autoEstimateFtp: boolean
+    swimCssSecPer100m: number | null
     lastSyncAt: Date | null
     syncInProgress: boolean
     createdAt: Date
@@ -13070,6 +14541,8 @@ readonly fields: UserFieldRefs;
  */
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  mcpOAuthCodes<T extends Prisma.User$mcpOAuthCodesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mcpOAuthCodesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$McpOAuthCodePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  mcpOAuthTokens<T extends Prisma.User$mcpOAuthTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mcpOAuthTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$McpOAuthTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   accounts<T extends Prisma.User$accountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   activities<T extends Prisma.User$activitiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$activitiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ActivityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   usageHistory<T extends Prisma.User$usageHistoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$usageHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiUsageHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -13165,6 +14638,9 @@ export interface UserFieldRefs {
   readonly autoRevolvingCalculatedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly includeCrossTraining: Prisma.FieldRef<"User", 'Boolean'>
   readonly useImperial: Prisma.FieldRef<"User", 'Boolean'>
+  readonly ftpWatts: Prisma.FieldRef<"User", 'Int'>
+  readonly autoEstimateFtp: Prisma.FieldRef<"User", 'Boolean'>
+  readonly swimCssSecPer100m: Prisma.FieldRef<"User", 'Int'>
   readonly lastSyncAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly syncInProgress: Prisma.FieldRef<"User", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
@@ -13562,6 +15038,54 @@ export type UserDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Limit how many Users to delete.
    */
   limit?: number
+}
+
+/**
+ * User.mcpOAuthCodes
+ */
+export type User$mcpOAuthCodesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the McpOAuthCode
+   */
+  select?: Prisma.McpOAuthCodeSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the McpOAuthCode
+   */
+  omit?: Prisma.McpOAuthCodeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.McpOAuthCodeInclude<ExtArgs> | null
+  where?: Prisma.McpOAuthCodeWhereInput
+  orderBy?: Prisma.McpOAuthCodeOrderByWithRelationInput | Prisma.McpOAuthCodeOrderByWithRelationInput[]
+  cursor?: Prisma.McpOAuthCodeWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.McpOAuthCodeScalarFieldEnum | Prisma.McpOAuthCodeScalarFieldEnum[]
+}
+
+/**
+ * User.mcpOAuthTokens
+ */
+export type User$mcpOAuthTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the McpOAuthToken
+   */
+  select?: Prisma.McpOAuthTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the McpOAuthToken
+   */
+  omit?: Prisma.McpOAuthTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.McpOAuthTokenInclude<ExtArgs> | null
+  where?: Prisma.McpOAuthTokenWhereInput
+  orderBy?: Prisma.McpOAuthTokenOrderByWithRelationInput | Prisma.McpOAuthTokenOrderByWithRelationInput[]
+  cursor?: Prisma.McpOAuthTokenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.McpOAuthTokenScalarFieldEnum | Prisma.McpOAuthTokenScalarFieldEnum[]
 }
 
 /**

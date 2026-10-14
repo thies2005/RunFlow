@@ -50,6 +50,11 @@ export type GoalAvgAggregateOutputType = {
   backyardLoopDistM: number | null
   backyardLoopTimeS: number | null
   targetLaps: number | null
+  ftpAtCreation: number | null
+  swimCssAtCreation: number | null
+  weeklyBikeTssGoal: number | null
+  weeklySwimMetersGoal: number | null
+  targetWeeklyTss: number | null
 }
 
 export type GoalSumAggregateOutputType = {
@@ -76,6 +81,11 @@ export type GoalSumAggregateOutputType = {
   backyardLoopDistM: number | null
   backyardLoopTimeS: number | null
   targetLaps: number | null
+  ftpAtCreation: number | null
+  swimCssAtCreation: number | null
+  weeklyBikeTssGoal: number | null
+  weeklySwimMetersGoal: number | null
+  targetWeeklyTss: number | null
 }
 
 export type GoalMinAggregateOutputType = {
@@ -121,6 +131,11 @@ export type GoalMinAggregateOutputType = {
   parentGoalId: string | null
   priority: $Enums.GoalPriority | null
   trainingFocus: string | null
+  ftpAtCreation: number | null
+  swimCssAtCreation: number | null
+  weeklyBikeTssGoal: number | null
+  weeklySwimMetersGoal: number | null
+  targetWeeklyTss: number | null
 }
 
 export type GoalMaxAggregateOutputType = {
@@ -166,6 +181,11 @@ export type GoalMaxAggregateOutputType = {
   parentGoalId: string | null
   priority: $Enums.GoalPriority | null
   trainingFocus: string | null
+  ftpAtCreation: number | null
+  swimCssAtCreation: number | null
+  weeklyBikeTssGoal: number | null
+  weeklySwimMetersGoal: number | null
+  targetWeeklyTss: number | null
 }
 
 export type GoalCountAggregateOutputType = {
@@ -213,6 +233,12 @@ export type GoalCountAggregateOutputType = {
   parentGoalId: number
   priority: number
   trainingFocus: number
+  ftpAtCreation: number
+  swimCssAtCreation: number
+  weeklyBikeTssGoal: number
+  weeklySwimMetersGoal: number
+  targetWeeklyTss: number
+  phaseBlocks: number
   _all: number
 }
 
@@ -241,6 +267,11 @@ export type GoalAvgAggregateInputType = {
   backyardLoopDistM?: true
   backyardLoopTimeS?: true
   targetLaps?: true
+  ftpAtCreation?: true
+  swimCssAtCreation?: true
+  weeklyBikeTssGoal?: true
+  weeklySwimMetersGoal?: true
+  targetWeeklyTss?: true
 }
 
 export type GoalSumAggregateInputType = {
@@ -267,6 +298,11 @@ export type GoalSumAggregateInputType = {
   backyardLoopDistM?: true
   backyardLoopTimeS?: true
   targetLaps?: true
+  ftpAtCreation?: true
+  swimCssAtCreation?: true
+  weeklyBikeTssGoal?: true
+  weeklySwimMetersGoal?: true
+  targetWeeklyTss?: true
 }
 
 export type GoalMinAggregateInputType = {
@@ -312,6 +348,11 @@ export type GoalMinAggregateInputType = {
   parentGoalId?: true
   priority?: true
   trainingFocus?: true
+  ftpAtCreation?: true
+  swimCssAtCreation?: true
+  weeklyBikeTssGoal?: true
+  weeklySwimMetersGoal?: true
+  targetWeeklyTss?: true
 }
 
 export type GoalMaxAggregateInputType = {
@@ -357,6 +398,11 @@ export type GoalMaxAggregateInputType = {
   parentGoalId?: true
   priority?: true
   trainingFocus?: true
+  ftpAtCreation?: true
+  swimCssAtCreation?: true
+  weeklyBikeTssGoal?: true
+  weeklySwimMetersGoal?: true
+  targetWeeklyTss?: true
 }
 
 export type GoalCountAggregateInputType = {
@@ -404,6 +450,12 @@ export type GoalCountAggregateInputType = {
   parentGoalId?: true
   priority?: true
   trainingFocus?: true
+  ftpAtCreation?: true
+  swimCssAtCreation?: true
+  weeklyBikeTssGoal?: true
+  weeklySwimMetersGoal?: true
+  targetWeeklyTss?: true
+  phaseBlocks?: true
   _all?: true
 }
 
@@ -538,6 +590,12 @@ export type GoalGroupByOutputType = {
   parentGoalId: string | null
   priority: $Enums.GoalPriority
   trainingFocus: string | null
+  ftpAtCreation: number | null
+  swimCssAtCreation: number | null
+  weeklyBikeTssGoal: number | null
+  weeklySwimMetersGoal: number | null
+  targetWeeklyTss: number | null
+  phaseBlocks: runtime.JsonValue | null
   _count: GoalCountAggregateOutputType | null
   _avg: GoalAvgAggregateOutputType | null
   _sum: GoalSumAggregateOutputType | null
@@ -608,6 +666,12 @@ export type GoalWhereInput = {
   parentGoalId?: Prisma.StringNullableFilter<"Goal"> | string | null
   priority?: Prisma.EnumGoalPriorityFilter<"Goal"> | $Enums.GoalPriority
   trainingFocus?: Prisma.StringNullableFilter<"Goal"> | string | null
+  ftpAtCreation?: Prisma.IntNullableFilter<"Goal"> | number | null
+  swimCssAtCreation?: Prisma.IntNullableFilter<"Goal"> | number | null
+  weeklyBikeTssGoal?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  weeklySwimMetersGoal?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  targetWeeklyTss?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  phaseBlocks?: Prisma.JsonNullableFilter<"Goal">
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   workouts?: Prisma.WorkoutListRelationFilter
   raceResult?: Prisma.XOR<Prisma.RaceResultNullableScalarRelationFilter, Prisma.RaceResultWhereInput> | null
@@ -666,6 +730,12 @@ export type GoalOrderByWithRelationInput = {
   parentGoalId?: Prisma.SortOrderInput | Prisma.SortOrder
   priority?: Prisma.SortOrder
   trainingFocus?: Prisma.SortOrderInput | Prisma.SortOrder
+  ftpAtCreation?: Prisma.SortOrderInput | Prisma.SortOrder
+  swimCssAtCreation?: Prisma.SortOrderInput | Prisma.SortOrder
+  weeklyBikeTssGoal?: Prisma.SortOrderInput | Prisma.SortOrder
+  weeklySwimMetersGoal?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetWeeklyTss?: Prisma.SortOrderInput | Prisma.SortOrder
+  phaseBlocks?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   workouts?: Prisma.WorkoutOrderByRelationAggregateInput
   raceResult?: Prisma.RaceResultOrderByWithRelationInput
@@ -727,6 +797,12 @@ export type GoalWhereUniqueInput = Prisma.AtLeast<{
   parentGoalId?: Prisma.StringNullableFilter<"Goal"> | string | null
   priority?: Prisma.EnumGoalPriorityFilter<"Goal"> | $Enums.GoalPriority
   trainingFocus?: Prisma.StringNullableFilter<"Goal"> | string | null
+  ftpAtCreation?: Prisma.IntNullableFilter<"Goal"> | number | null
+  swimCssAtCreation?: Prisma.IntNullableFilter<"Goal"> | number | null
+  weeklyBikeTssGoal?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  weeklySwimMetersGoal?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  targetWeeklyTss?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  phaseBlocks?: Prisma.JsonNullableFilter<"Goal">
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   workouts?: Prisma.WorkoutListRelationFilter
   raceResult?: Prisma.XOR<Prisma.RaceResultNullableScalarRelationFilter, Prisma.RaceResultWhereInput> | null
@@ -785,6 +861,12 @@ export type GoalOrderByWithAggregationInput = {
   parentGoalId?: Prisma.SortOrderInput | Prisma.SortOrder
   priority?: Prisma.SortOrder
   trainingFocus?: Prisma.SortOrderInput | Prisma.SortOrder
+  ftpAtCreation?: Prisma.SortOrderInput | Prisma.SortOrder
+  swimCssAtCreation?: Prisma.SortOrderInput | Prisma.SortOrder
+  weeklyBikeTssGoal?: Prisma.SortOrderInput | Prisma.SortOrder
+  weeklySwimMetersGoal?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetWeeklyTss?: Prisma.SortOrderInput | Prisma.SortOrder
+  phaseBlocks?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.GoalCountOrderByAggregateInput
   _avg?: Prisma.GoalAvgOrderByAggregateInput
   _max?: Prisma.GoalMaxOrderByAggregateInput
@@ -840,6 +922,12 @@ export type GoalScalarWhereWithAggregatesInput = {
   parentGoalId?: Prisma.StringNullableWithAggregatesFilter<"Goal"> | string | null
   priority?: Prisma.EnumGoalPriorityWithAggregatesFilter<"Goal"> | $Enums.GoalPriority
   trainingFocus?: Prisma.StringNullableWithAggregatesFilter<"Goal"> | string | null
+  ftpAtCreation?: Prisma.IntNullableWithAggregatesFilter<"Goal"> | number | null
+  swimCssAtCreation?: Prisma.IntNullableWithAggregatesFilter<"Goal"> | number | null
+  weeklyBikeTssGoal?: Prisma.FloatNullableWithAggregatesFilter<"Goal"> | number | null
+  weeklySwimMetersGoal?: Prisma.FloatNullableWithAggregatesFilter<"Goal"> | number | null
+  targetWeeklyTss?: Prisma.FloatNullableWithAggregatesFilter<"Goal"> | number | null
+  phaseBlocks?: Prisma.JsonNullableWithAggregatesFilter<"Goal">
 }
 
 export type GoalCreateInput = {
@@ -885,6 +973,12 @@ export type GoalCreateInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
@@ -943,6 +1037,12 @@ export type GoalUncheckedCreateInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
@@ -997,6 +1097,12 @@ export type GoalUpdateInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
@@ -1055,6 +1161,12 @@ export type GoalUncheckedUpdateInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
@@ -1111,6 +1223,12 @@ export type GoalCreateManyInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type GoalUpdateManyMutationInput = {
@@ -1156,6 +1274,12 @@ export type GoalUpdateManyMutationInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type GoalUncheckedUpdateManyInput = {
@@ -1203,6 +1327,12 @@ export type GoalUncheckedUpdateManyInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type GoalListRelationFilter = {
@@ -1265,6 +1395,12 @@ export type GoalCountOrderByAggregateInput = {
   parentGoalId?: Prisma.SortOrder
   priority?: Prisma.SortOrder
   trainingFocus?: Prisma.SortOrder
+  ftpAtCreation?: Prisma.SortOrder
+  swimCssAtCreation?: Prisma.SortOrder
+  weeklyBikeTssGoal?: Prisma.SortOrder
+  weeklySwimMetersGoal?: Prisma.SortOrder
+  targetWeeklyTss?: Prisma.SortOrder
+  phaseBlocks?: Prisma.SortOrder
 }
 
 export type GoalAvgOrderByAggregateInput = {
@@ -1291,6 +1427,11 @@ export type GoalAvgOrderByAggregateInput = {
   backyardLoopDistM?: Prisma.SortOrder
   backyardLoopTimeS?: Prisma.SortOrder
   targetLaps?: Prisma.SortOrder
+  ftpAtCreation?: Prisma.SortOrder
+  swimCssAtCreation?: Prisma.SortOrder
+  weeklyBikeTssGoal?: Prisma.SortOrder
+  weeklySwimMetersGoal?: Prisma.SortOrder
+  targetWeeklyTss?: Prisma.SortOrder
 }
 
 export type GoalMaxOrderByAggregateInput = {
@@ -1336,6 +1477,11 @@ export type GoalMaxOrderByAggregateInput = {
   parentGoalId?: Prisma.SortOrder
   priority?: Prisma.SortOrder
   trainingFocus?: Prisma.SortOrder
+  ftpAtCreation?: Prisma.SortOrder
+  swimCssAtCreation?: Prisma.SortOrder
+  weeklyBikeTssGoal?: Prisma.SortOrder
+  weeklySwimMetersGoal?: Prisma.SortOrder
+  targetWeeklyTss?: Prisma.SortOrder
 }
 
 export type GoalMinOrderByAggregateInput = {
@@ -1381,6 +1527,11 @@ export type GoalMinOrderByAggregateInput = {
   parentGoalId?: Prisma.SortOrder
   priority?: Prisma.SortOrder
   trainingFocus?: Prisma.SortOrder
+  ftpAtCreation?: Prisma.SortOrder
+  swimCssAtCreation?: Prisma.SortOrder
+  weeklyBikeTssGoal?: Prisma.SortOrder
+  weeklySwimMetersGoal?: Prisma.SortOrder
+  targetWeeklyTss?: Prisma.SortOrder
 }
 
 export type GoalSumOrderByAggregateInput = {
@@ -1407,6 +1558,11 @@ export type GoalSumOrderByAggregateInput = {
   backyardLoopDistM?: Prisma.SortOrder
   backyardLoopTimeS?: Prisma.SortOrder
   targetLaps?: Prisma.SortOrder
+  ftpAtCreation?: Prisma.SortOrder
+  swimCssAtCreation?: Prisma.SortOrder
+  weeklyBikeTssGoal?: Prisma.SortOrder
+  weeklySwimMetersGoal?: Prisma.SortOrder
+  targetWeeklyTss?: Prisma.SortOrder
 }
 
 export type GoalScalarRelationFilter = {
@@ -1689,6 +1845,12 @@ export type GoalCreateWithoutUserInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
   parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
@@ -1745,6 +1907,12 @@ export type GoalUncheckedCreateWithoutUserInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
@@ -1830,6 +1998,12 @@ export type GoalScalarWhereInput = {
   parentGoalId?: Prisma.StringNullableFilter<"Goal"> | string | null
   priority?: Prisma.EnumGoalPriorityFilter<"Goal"> | $Enums.GoalPriority
   trainingFocus?: Prisma.StringNullableFilter<"Goal"> | string | null
+  ftpAtCreation?: Prisma.IntNullableFilter<"Goal"> | number | null
+  swimCssAtCreation?: Prisma.IntNullableFilter<"Goal"> | number | null
+  weeklyBikeTssGoal?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  weeklySwimMetersGoal?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  targetWeeklyTss?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  phaseBlocks?: Prisma.JsonNullableFilter<"Goal">
 }
 
 export type GoalCreateWithoutSubGoalsInput = {
@@ -1875,6 +2049,12 @@ export type GoalCreateWithoutSubGoalsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
@@ -1932,6 +2112,12 @@ export type GoalUncheckedCreateWithoutSubGoalsInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
@@ -1990,6 +2176,12 @@ export type GoalCreateWithoutParentGoalInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
@@ -2046,6 +2238,12 @@ export type GoalUncheckedCreateWithoutParentGoalInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
@@ -2121,6 +2319,12 @@ export type GoalUpdateWithoutSubGoalsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
@@ -2178,6 +2382,12 @@ export type GoalUncheckedUpdateWithoutSubGoalsInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
@@ -2247,6 +2457,12 @@ export type GoalCreateWithoutRaceResultInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
@@ -2304,6 +2520,12 @@ export type GoalUncheckedCreateWithoutRaceResultInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
   snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
@@ -2373,6 +2595,12 @@ export type GoalUpdateWithoutRaceResultInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
@@ -2430,6 +2658,12 @@ export type GoalUncheckedUpdateWithoutRaceResultInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
   snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
@@ -2483,6 +2717,12 @@ export type GoalCreateWithoutWorkoutsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
   parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
@@ -2540,6 +2780,12 @@ export type GoalUncheckedCreateWithoutWorkoutsInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
   snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
@@ -2598,6 +2844,12 @@ export type GoalCreateWithoutTaggedWorkoutsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
@@ -2655,6 +2907,12 @@ export type GoalUncheckedCreateWithoutTaggedWorkoutsInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
@@ -2724,6 +2982,12 @@ export type GoalUpdateWithoutWorkoutsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
   parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
@@ -2781,6 +3045,12 @@ export type GoalUncheckedUpdateWithoutWorkoutsInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
   snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
@@ -2845,6 +3115,12 @@ export type GoalUpdateWithoutTaggedWorkoutsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
@@ -2902,6 +3178,12 @@ export type GoalUncheckedUpdateWithoutTaggedWorkoutsInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
@@ -2955,6 +3237,12 @@ export type GoalCreateWithoutSnapshotsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
@@ -3012,6 +3300,12 @@ export type GoalUncheckedCreateWithoutSnapshotsInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
@@ -3081,6 +3375,12 @@ export type GoalUpdateWithoutSnapshotsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
@@ -3138,6 +3438,12 @@ export type GoalUncheckedUpdateWithoutSnapshotsInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
@@ -3191,6 +3497,12 @@ export type GoalCreateWithoutIntervalProgressionsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
@@ -3248,6 +3560,12 @@ export type GoalUncheckedCreateWithoutIntervalProgressionsInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
@@ -3317,6 +3635,12 @@ export type GoalUpdateWithoutIntervalProgressionsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
@@ -3374,6 +3698,12 @@ export type GoalUncheckedUpdateWithoutIntervalProgressionsInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
@@ -3427,6 +3757,12 @@ export type GoalCreateWithoutAiAnalysisInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
@@ -3484,6 +3820,12 @@ export type GoalUncheckedCreateWithoutAiAnalysisInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
@@ -3553,6 +3895,12 @@ export type GoalUpdateWithoutAiAnalysisInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
@@ -3610,6 +3958,12 @@ export type GoalUncheckedUpdateWithoutAiAnalysisInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
@@ -3663,6 +4017,12 @@ export type GoalCreateWithoutPaceProfileInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
@@ -3720,6 +4080,12 @@ export type GoalUncheckedCreateWithoutPaceProfileInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
@@ -3789,6 +4155,12 @@ export type GoalUpdateWithoutPaceProfileInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
@@ -3846,6 +4218,12 @@ export type GoalUncheckedUpdateWithoutPaceProfileInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
@@ -3899,6 +4277,12 @@ export type GoalCreateWithoutGuidedPlanSessionsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
@@ -3956,6 +4340,12 @@ export type GoalUncheckedCreateWithoutGuidedPlanSessionsInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
   subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
@@ -4025,6 +4415,12 @@ export type GoalUpdateWithoutGuidedPlanSessionsInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
@@ -4082,6 +4478,12 @@ export type GoalUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
@@ -4136,6 +4538,12 @@ export type GoalCreateManyUserInput = {
   parentGoalId?: string | null
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type GoalUpdateWithoutUserInput = {
@@ -4181,6 +4589,12 @@ export type GoalUpdateWithoutUserInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
   parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
@@ -4237,6 +4651,12 @@ export type GoalUncheckedUpdateWithoutUserInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
@@ -4292,6 +4712,12 @@ export type GoalUncheckedUpdateManyWithoutUserInput = {
   parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type GoalCreateManyParentGoalInput = {
@@ -4338,6 +4764,12 @@ export type GoalCreateManyParentGoalInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: $Enums.GoalPriority
   trainingFocus?: string | null
+  ftpAtCreation?: number | null
+  swimCssAtCreation?: number | null
+  weeklyBikeTssGoal?: number | null
+  weeklySwimMetersGoal?: number | null
+  targetWeeklyTss?: number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type GoalUpdateWithoutParentGoalInput = {
@@ -4383,6 +4815,12 @@ export type GoalUpdateWithoutParentGoalInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
@@ -4439,6 +4877,12 @@ export type GoalUncheckedUpdateWithoutParentGoalInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
   subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
@@ -4494,6 +4938,12 @@ export type GoalUncheckedUpdateManyWithoutParentGoalInput = {
   importIdMap?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
   trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ftpAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  swimCssAtCreation?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weeklyBikeTssGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weeklySwimMetersGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetWeeklyTss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phaseBlocks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 
@@ -4617,6 +5067,12 @@ export type GoalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   parentGoalId?: boolean
   priority?: boolean
   trainingFocus?: boolean
+  ftpAtCreation?: boolean
+  swimCssAtCreation?: boolean
+  weeklyBikeTssGoal?: boolean
+  weeklySwimMetersGoal?: boolean
+  targetWeeklyTss?: boolean
+  phaseBlocks?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   workouts?: boolean | Prisma.Goal$workoutsArgs<ExtArgs>
   raceResult?: boolean | Prisma.Goal$raceResultArgs<ExtArgs>
@@ -4676,6 +5132,12 @@ export type GoalSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   parentGoalId?: boolean
   priority?: boolean
   trainingFocus?: boolean
+  ftpAtCreation?: boolean
+  swimCssAtCreation?: boolean
+  weeklyBikeTssGoal?: boolean
+  weeklySwimMetersGoal?: boolean
+  targetWeeklyTss?: boolean
+  phaseBlocks?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   parentGoal?: boolean | Prisma.Goal$parentGoalArgs<ExtArgs>
 }, ExtArgs["result"]["goal"]>
@@ -4725,6 +5187,12 @@ export type GoalSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   parentGoalId?: boolean
   priority?: boolean
   trainingFocus?: boolean
+  ftpAtCreation?: boolean
+  swimCssAtCreation?: boolean
+  weeklyBikeTssGoal?: boolean
+  weeklySwimMetersGoal?: boolean
+  targetWeeklyTss?: boolean
+  phaseBlocks?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   parentGoal?: boolean | Prisma.Goal$parentGoalArgs<ExtArgs>
 }, ExtArgs["result"]["goal"]>
@@ -4774,9 +5242,15 @@ export type GoalSelectScalar = {
   parentGoalId?: boolean
   priority?: boolean
   trainingFocus?: boolean
+  ftpAtCreation?: boolean
+  swimCssAtCreation?: boolean
+  weeklyBikeTssGoal?: boolean
+  weeklySwimMetersGoal?: boolean
+  targetWeeklyTss?: boolean
+  phaseBlocks?: boolean
 }
 
-export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "swimDay" | "restDays" | "isActive" | "completedAt" | "deletedAt" | "createdAt" | "updatedAt" | "sport" | "creationMode" | "customDistanceM" | "customSwimDistM" | "customBikeDistM" | "customRunDistM" | "backyardLoopDistM" | "backyardLoopTimeS" | "targetLaps" | "planSource" | "guidanceLevel" | "importKey" | "importIdMap" | "parentGoalId" | "priority" | "trainingFocus", ExtArgs["result"]["goal"]>
+export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "swimDay" | "restDays" | "isActive" | "completedAt" | "deletedAt" | "createdAt" | "updatedAt" | "sport" | "creationMode" | "customDistanceM" | "customSwimDistM" | "customBikeDistM" | "customRunDistM" | "backyardLoopDistM" | "backyardLoopTimeS" | "targetLaps" | "planSource" | "guidanceLevel" | "importKey" | "importIdMap" | "parentGoalId" | "priority" | "trainingFocus" | "ftpAtCreation" | "swimCssAtCreation" | "weeklyBikeTssGoal" | "weeklySwimMetersGoal" | "targetWeeklyTss" | "phaseBlocks", ExtArgs["result"]["goal"]>
 export type GoalInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   workouts?: boolean | Prisma.Goal$workoutsArgs<ExtArgs>
@@ -4860,6 +5334,12 @@ export type $GoalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     parentGoalId: string | null
     priority: $Enums.GoalPriority
     trainingFocus: string | null
+    ftpAtCreation: number | null
+    swimCssAtCreation: number | null
+    weeklyBikeTssGoal: number | null
+    weeklySwimMetersGoal: number | null
+    targetWeeklyTss: number | null
+    phaseBlocks: runtime.JsonValue | null
   }, ExtArgs["result"]["goal"]>
   composites: {}
 }
@@ -5338,6 +5818,12 @@ export interface GoalFieldRefs {
   readonly parentGoalId: Prisma.FieldRef<"Goal", 'String'>
   readonly priority: Prisma.FieldRef<"Goal", 'GoalPriority'>
   readonly trainingFocus: Prisma.FieldRef<"Goal", 'String'>
+  readonly ftpAtCreation: Prisma.FieldRef<"Goal", 'Int'>
+  readonly swimCssAtCreation: Prisma.FieldRef<"Goal", 'Int'>
+  readonly weeklyBikeTssGoal: Prisma.FieldRef<"Goal", 'Float'>
+  readonly weeklySwimMetersGoal: Prisma.FieldRef<"Goal", 'Float'>
+  readonly targetWeeklyTss: Prisma.FieldRef<"Goal", 'Float'>
+  readonly phaseBlocks: Prisma.FieldRef<"Goal", 'Json'>
 }
     
 

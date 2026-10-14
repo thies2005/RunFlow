@@ -442,7 +442,10 @@ export const ModelName = {
   IntervalProgression: 'IntervalProgression',
   AiPlanAnalysis: 'AiPlanAnalysis',
   PlanPaceProfile: 'PlanPaceProfile',
-  GuidedPlanSession: 'GuidedPlanSession'
+  GuidedPlanSession: 'GuidedPlanSession',
+  McpOAuthClient: 'McpOAuthClient',
+  McpOAuthCode: 'McpOAuthCode',
+  McpOAuthToken: 'McpOAuthToken'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -458,7 +461,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "foodFavorite" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord" | "planSnapshot" | "weekTemplate" | "workoutTemplate" | "intervalProgression" | "aiPlanAnalysis" | "planPaceProfile" | "guidedPlanSession"
+    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "foodFavorite" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord" | "planSnapshot" | "weekTemplate" | "workoutTemplate" | "intervalProgression" | "aiPlanAnalysis" | "planPaceProfile" | "guidedPlanSession" | "mcpOAuthClient" | "mcpOAuthCode" | "mcpOAuthToken"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4828,6 +4831,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    McpOAuthClient: {
+      payload: Prisma.$McpOAuthClientPayload<ExtArgs>
+      fields: Prisma.McpOAuthClientFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.McpOAuthClientFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.McpOAuthClientFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload>
+        }
+        findFirst: {
+          args: Prisma.McpOAuthClientFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.McpOAuthClientFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload>
+        }
+        findMany: {
+          args: Prisma.McpOAuthClientFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload>[]
+        }
+        create: {
+          args: Prisma.McpOAuthClientCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload>
+        }
+        createMany: {
+          args: Prisma.McpOAuthClientCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.McpOAuthClientCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload>[]
+        }
+        delete: {
+          args: Prisma.McpOAuthClientDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload>
+        }
+        update: {
+          args: Prisma.McpOAuthClientUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload>
+        }
+        deleteMany: {
+          args: Prisma.McpOAuthClientDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.McpOAuthClientUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.McpOAuthClientUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload>[]
+        }
+        upsert: {
+          args: Prisma.McpOAuthClientUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthClientPayload>
+        }
+        aggregate: {
+          args: Prisma.McpOAuthClientAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMcpOAuthClient>
+        }
+        groupBy: {
+          args: Prisma.McpOAuthClientGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.McpOAuthClientGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.McpOAuthClientCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.McpOAuthClientCountAggregateOutputType> | number
+        }
+      }
+    }
+    McpOAuthCode: {
+      payload: Prisma.$McpOAuthCodePayload<ExtArgs>
+      fields: Prisma.McpOAuthCodeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.McpOAuthCodeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.McpOAuthCodeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload>
+        }
+        findFirst: {
+          args: Prisma.McpOAuthCodeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.McpOAuthCodeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload>
+        }
+        findMany: {
+          args: Prisma.McpOAuthCodeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload>[]
+        }
+        create: {
+          args: Prisma.McpOAuthCodeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload>
+        }
+        createMany: {
+          args: Prisma.McpOAuthCodeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.McpOAuthCodeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload>[]
+        }
+        delete: {
+          args: Prisma.McpOAuthCodeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload>
+        }
+        update: {
+          args: Prisma.McpOAuthCodeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload>
+        }
+        deleteMany: {
+          args: Prisma.McpOAuthCodeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.McpOAuthCodeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.McpOAuthCodeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload>[]
+        }
+        upsert: {
+          args: Prisma.McpOAuthCodeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthCodePayload>
+        }
+        aggregate: {
+          args: Prisma.McpOAuthCodeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMcpOAuthCode>
+        }
+        groupBy: {
+          args: Prisma.McpOAuthCodeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.McpOAuthCodeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.McpOAuthCodeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.McpOAuthCodeCountAggregateOutputType> | number
+        }
+      }
+    }
+    McpOAuthToken: {
+      payload: Prisma.$McpOAuthTokenPayload<ExtArgs>
+      fields: Prisma.McpOAuthTokenFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.McpOAuthTokenFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.McpOAuthTokenFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload>
+        }
+        findFirst: {
+          args: Prisma.McpOAuthTokenFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.McpOAuthTokenFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload>
+        }
+        findMany: {
+          args: Prisma.McpOAuthTokenFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload>[]
+        }
+        create: {
+          args: Prisma.McpOAuthTokenCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload>
+        }
+        createMany: {
+          args: Prisma.McpOAuthTokenCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.McpOAuthTokenCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload>[]
+        }
+        delete: {
+          args: Prisma.McpOAuthTokenDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload>
+        }
+        update: {
+          args: Prisma.McpOAuthTokenUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload>
+        }
+        deleteMany: {
+          args: Prisma.McpOAuthTokenDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.McpOAuthTokenUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.McpOAuthTokenUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload>[]
+        }
+        upsert: {
+          args: Prisma.McpOAuthTokenUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$McpOAuthTokenPayload>
+        }
+        aggregate: {
+          args: Prisma.McpOAuthTokenAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMcpOAuthToken>
+        }
+        groupBy: {
+          args: Prisma.McpOAuthTokenGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.McpOAuthTokenGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.McpOAuthTokenCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.McpOAuthTokenCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -4902,6 +5127,9 @@ export const UserScalarFieldEnum = {
   autoRevolvingCalculatedAt: 'autoRevolvingCalculatedAt',
   includeCrossTraining: 'includeCrossTraining',
   useImperial: 'useImperial',
+  ftpWatts: 'ftpWatts',
+  autoEstimateFtp: 'autoEstimateFtp',
+  swimCssSecPer100m: 'swimCssSecPer100m',
   lastSyncAt: 'lastSyncAt',
   syncInProgress: 'syncInProgress',
   createdAt: 'createdAt',
@@ -5164,6 +5392,21 @@ export const ActivityScalarFieldEnum = {
   averageWatts: 'averageWatts',
   weightedAverageWatts: 'weightedAverageWatts',
   deviceWatts: 'deviceWatts',
+  maxWatts: 'maxWatts',
+  kilojoules: 'kilojoules',
+  npWatts: 'npWatts',
+  intensityFactor: 'intensityFactor',
+  variabilityIndex: 'variabilityIndex',
+  bikeTss: 'bikeTss',
+  efficiencyFactor: 'efficiencyFactor',
+  aerobicDecoupling: 'aerobicDecoupling',
+  powerZone1Time: 'powerZone1Time',
+  powerZone2Time: 'powerZone2Time',
+  powerZone3Time: 'powerZone3Time',
+  powerZone4Time: 'powerZone4Time',
+  powerZone5Time: 'powerZone5Time',
+  powerZone6Time: 'powerZone6Time',
+  powerZone7Time: 'powerZone7Time',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -5208,7 +5451,11 @@ export const DailyFitnessScalarFieldEnum = {
   tsb: 'tsb',
   ctlRunning: 'ctlRunning',
   trimp: 'trimp',
-  runningTss: 'runningTss'
+  runningTss: 'runningTss',
+  bikeTss: 'bikeTss',
+  ctlBike: 'ctlBike',
+  atlBike: 'atlBike',
+  tsbBike: 'tsbBike'
 } as const
 
 export type DailyFitnessScalarFieldEnum = (typeof DailyFitnessScalarFieldEnum)[keyof typeof DailyFitnessScalarFieldEnum]
@@ -5317,7 +5564,13 @@ export const GoalScalarFieldEnum = {
   importIdMap: 'importIdMap',
   parentGoalId: 'parentGoalId',
   priority: 'priority',
-  trainingFocus: 'trainingFocus'
+  trainingFocus: 'trainingFocus',
+  ftpAtCreation: 'ftpAtCreation',
+  swimCssAtCreation: 'swimCssAtCreation',
+  weeklyBikeTssGoal: 'weeklyBikeTssGoal',
+  weeklySwimMetersGoal: 'weeklySwimMetersGoal',
+  targetWeeklyTss: 'targetWeeklyTss',
+  phaseBlocks: 'phaseBlocks'
 } as const
 
 export type GoalScalarFieldEnum = (typeof GoalScalarFieldEnum)[keyof typeof GoalScalarFieldEnum]
@@ -5363,6 +5616,13 @@ export const WorkoutScalarFieldEnum = {
   targetPaceZoneLabel: 'targetPaceZoneLabel',
   targetPaceMinSecondsPerKm: 'targetPaceMinSecondsPerKm',
   targetPaceMaxSecondsPerKm: 'targetPaceMaxSecondsPerKm',
+  targetPowerWatts: 'targetPowerWatts',
+  targetPowerMinWatts: 'targetPowerMinWatts',
+  targetPowerMaxWatts: 'targetPowerMaxWatts',
+  targetPowerZone: 'targetPowerZone',
+  targetFtpPercent: 'targetFtpPercent',
+  targetCadenceRpm: 'targetCadenceRpm',
+  targetRpe: 'targetRpe',
   isCompleted: 'isCompleted',
   completedAt: 'completedAt',
   linkedActivityId: 'linkedActivityId',
@@ -5972,6 +6232,56 @@ export const GuidedPlanSessionScalarFieldEnum = {
 export type GuidedPlanSessionScalarFieldEnum = (typeof GuidedPlanSessionScalarFieldEnum)[keyof typeof GuidedPlanSessionScalarFieldEnum]
 
 
+export const McpOAuthClientScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  clientSecretHash: 'clientSecretHash',
+  clientName: 'clientName',
+  redirectUris: 'redirectUris',
+  grantTypes: 'grantTypes',
+  responseTypes: 'responseTypes',
+  tokenEndpointAuthMethod: 'tokenEndpointAuthMethod',
+  createdAt: 'createdAt'
+} as const
+
+export type McpOAuthClientScalarFieldEnum = (typeof McpOAuthClientScalarFieldEnum)[keyof typeof McpOAuthClientScalarFieldEnum]
+
+
+export const McpOAuthCodeScalarFieldEnum = {
+  id: 'id',
+  codeHash: 'codeHash',
+  clientId: 'clientId',
+  userId: 'userId',
+  redirectUri: 'redirectUri',
+  codeChallenge: 'codeChallenge',
+  codeChallengeMethod: 'codeChallengeMethod',
+  scope: 'scope',
+  resource: 'resource',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type McpOAuthCodeScalarFieldEnum = (typeof McpOAuthCodeScalarFieldEnum)[keyof typeof McpOAuthCodeScalarFieldEnum]
+
+
+export const McpOAuthTokenScalarFieldEnum = {
+  id: 'id',
+  accessTokenHash: 'accessTokenHash',
+  refreshTokenHash: 'refreshTokenHash',
+  clientId: 'clientId',
+  userId: 'userId',
+  scope: 'scope',
+  expiresAt: 'expiresAt',
+  refreshExpiresAt: 'refreshExpiresAt',
+  revokedAt: 'revokedAt',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type McpOAuthTokenScalarFieldEnum = (typeof McpOAuthTokenScalarFieldEnum)[keyof typeof McpOAuthTokenScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -6410,6 +6720,9 @@ export type GlobalOmitConfig = {
   aiPlanAnalysis?: Prisma.AiPlanAnalysisOmit
   planPaceProfile?: Prisma.PlanPaceProfileOmit
   guidedPlanSession?: Prisma.GuidedPlanSessionOmit
+  mcpOAuthClient?: Prisma.McpOAuthClientOmit
+  mcpOAuthCode?: Prisma.McpOAuthCodeOmit
+  mcpOAuthToken?: Prisma.McpOAuthTokenOmit
 }
 
 /* Types for Logging */

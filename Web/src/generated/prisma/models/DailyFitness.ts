@@ -33,6 +33,10 @@ export type DailyFitnessAvgAggregateOutputType = {
   ctlRunning: number | null
   trimp: number | null
   runningTss: number | null
+  bikeTss: number | null
+  ctlBike: number | null
+  atlBike: number | null
+  tsbBike: number | null
 }
 
 export type DailyFitnessSumAggregateOutputType = {
@@ -42,6 +46,10 @@ export type DailyFitnessSumAggregateOutputType = {
   ctlRunning: number | null
   trimp: number | null
   runningTss: number | null
+  bikeTss: number | null
+  ctlBike: number | null
+  atlBike: number | null
+  tsbBike: number | null
 }
 
 export type DailyFitnessMinAggregateOutputType = {
@@ -54,6 +62,10 @@ export type DailyFitnessMinAggregateOutputType = {
   ctlRunning: number | null
   trimp: number | null
   runningTss: number | null
+  bikeTss: number | null
+  ctlBike: number | null
+  atlBike: number | null
+  tsbBike: number | null
 }
 
 export type DailyFitnessMaxAggregateOutputType = {
@@ -66,6 +78,10 @@ export type DailyFitnessMaxAggregateOutputType = {
   ctlRunning: number | null
   trimp: number | null
   runningTss: number | null
+  bikeTss: number | null
+  ctlBike: number | null
+  atlBike: number | null
+  tsbBike: number | null
 }
 
 export type DailyFitnessCountAggregateOutputType = {
@@ -78,6 +94,10 @@ export type DailyFitnessCountAggregateOutputType = {
   ctlRunning: number
   trimp: number
   runningTss: number
+  bikeTss: number
+  ctlBike: number
+  atlBike: number
+  tsbBike: number
   _all: number
 }
 
@@ -89,6 +109,10 @@ export type DailyFitnessAvgAggregateInputType = {
   ctlRunning?: true
   trimp?: true
   runningTss?: true
+  bikeTss?: true
+  ctlBike?: true
+  atlBike?: true
+  tsbBike?: true
 }
 
 export type DailyFitnessSumAggregateInputType = {
@@ -98,6 +122,10 @@ export type DailyFitnessSumAggregateInputType = {
   ctlRunning?: true
   trimp?: true
   runningTss?: true
+  bikeTss?: true
+  ctlBike?: true
+  atlBike?: true
+  tsbBike?: true
 }
 
 export type DailyFitnessMinAggregateInputType = {
@@ -110,6 +138,10 @@ export type DailyFitnessMinAggregateInputType = {
   ctlRunning?: true
   trimp?: true
   runningTss?: true
+  bikeTss?: true
+  ctlBike?: true
+  atlBike?: true
+  tsbBike?: true
 }
 
 export type DailyFitnessMaxAggregateInputType = {
@@ -122,6 +154,10 @@ export type DailyFitnessMaxAggregateInputType = {
   ctlRunning?: true
   trimp?: true
   runningTss?: true
+  bikeTss?: true
+  ctlBike?: true
+  atlBike?: true
+  tsbBike?: true
 }
 
 export type DailyFitnessCountAggregateInputType = {
@@ -134,6 +170,10 @@ export type DailyFitnessCountAggregateInputType = {
   ctlRunning?: true
   trimp?: true
   runningTss?: true
+  bikeTss?: true
+  ctlBike?: true
+  atlBike?: true
+  tsbBike?: true
   _all?: true
 }
 
@@ -233,6 +273,10 @@ export type DailyFitnessGroupByOutputType = {
   ctlRunning: number
   trimp: number
   runningTss: number
+  bikeTss: number
+  ctlBike: number
+  atlBike: number
+  tsbBike: number
   _count: DailyFitnessCountAggregateOutputType | null
   _avg: DailyFitnessAvgAggregateOutputType | null
   _sum: DailyFitnessSumAggregateOutputType | null
@@ -268,6 +312,10 @@ export type DailyFitnessWhereInput = {
   ctlRunning?: Prisma.FloatFilter<"DailyFitness"> | number
   trimp?: Prisma.FloatFilter<"DailyFitness"> | number
   runningTss?: Prisma.FloatFilter<"DailyFitness"> | number
+  bikeTss?: Prisma.FloatFilter<"DailyFitness"> | number
+  ctlBike?: Prisma.FloatFilter<"DailyFitness"> | number
+  atlBike?: Prisma.FloatFilter<"DailyFitness"> | number
+  tsbBike?: Prisma.FloatFilter<"DailyFitness"> | number
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
@@ -281,6 +329,10 @@ export type DailyFitnessOrderByWithRelationInput = {
   ctlRunning?: Prisma.SortOrder
   trimp?: Prisma.SortOrder
   runningTss?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  ctlBike?: Prisma.SortOrder
+  atlBike?: Prisma.SortOrder
+  tsbBike?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
 }
 
@@ -298,6 +350,10 @@ export type DailyFitnessWhereUniqueInput = Prisma.AtLeast<{
   ctlRunning?: Prisma.FloatFilter<"DailyFitness"> | number
   trimp?: Prisma.FloatFilter<"DailyFitness"> | number
   runningTss?: Prisma.FloatFilter<"DailyFitness"> | number
+  bikeTss?: Prisma.FloatFilter<"DailyFitness"> | number
+  ctlBike?: Prisma.FloatFilter<"DailyFitness"> | number
+  atlBike?: Prisma.FloatFilter<"DailyFitness"> | number
+  tsbBike?: Prisma.FloatFilter<"DailyFitness"> | number
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id" | "userId_date">
 
@@ -311,6 +367,10 @@ export type DailyFitnessOrderByWithAggregationInput = {
   ctlRunning?: Prisma.SortOrder
   trimp?: Prisma.SortOrder
   runningTss?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  ctlBike?: Prisma.SortOrder
+  atlBike?: Prisma.SortOrder
+  tsbBike?: Prisma.SortOrder
   _count?: Prisma.DailyFitnessCountOrderByAggregateInput
   _avg?: Prisma.DailyFitnessAvgOrderByAggregateInput
   _max?: Prisma.DailyFitnessMaxOrderByAggregateInput
@@ -331,6 +391,10 @@ export type DailyFitnessScalarWhereWithAggregatesInput = {
   ctlRunning?: Prisma.FloatWithAggregatesFilter<"DailyFitness"> | number
   trimp?: Prisma.FloatWithAggregatesFilter<"DailyFitness"> | number
   runningTss?: Prisma.FloatWithAggregatesFilter<"DailyFitness"> | number
+  bikeTss?: Prisma.FloatWithAggregatesFilter<"DailyFitness"> | number
+  ctlBike?: Prisma.FloatWithAggregatesFilter<"DailyFitness"> | number
+  atlBike?: Prisma.FloatWithAggregatesFilter<"DailyFitness"> | number
+  tsbBike?: Prisma.FloatWithAggregatesFilter<"DailyFitness"> | number
 }
 
 export type DailyFitnessCreateInput = {
@@ -342,6 +406,10 @@ export type DailyFitnessCreateInput = {
   ctlRunning?: number
   trimp?: number
   runningTss?: number
+  bikeTss?: number
+  ctlBike?: number
+  atlBike?: number
+  tsbBike?: number
   user: Prisma.UserCreateNestedOneWithoutDailyFitnessInput
 }
 
@@ -355,6 +423,10 @@ export type DailyFitnessUncheckedCreateInput = {
   ctlRunning?: number
   trimp?: number
   runningTss?: number
+  bikeTss?: number
+  ctlBike?: number
+  atlBike?: number
+  tsbBike?: number
 }
 
 export type DailyFitnessUpdateInput = {
@@ -366,6 +438,10 @@ export type DailyFitnessUpdateInput = {
   ctlRunning?: Prisma.FloatFieldUpdateOperationsInput | number
   trimp?: Prisma.FloatFieldUpdateOperationsInput | number
   runningTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  bikeTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  ctlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  atlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  tsbBike?: Prisma.FloatFieldUpdateOperationsInput | number
   user?: Prisma.UserUpdateOneRequiredWithoutDailyFitnessNestedInput
 }
 
@@ -379,6 +455,10 @@ export type DailyFitnessUncheckedUpdateInput = {
   ctlRunning?: Prisma.FloatFieldUpdateOperationsInput | number
   trimp?: Prisma.FloatFieldUpdateOperationsInput | number
   runningTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  bikeTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  ctlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  atlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  tsbBike?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type DailyFitnessCreateManyInput = {
@@ -391,6 +471,10 @@ export type DailyFitnessCreateManyInput = {
   ctlRunning?: number
   trimp?: number
   runningTss?: number
+  bikeTss?: number
+  ctlBike?: number
+  atlBike?: number
+  tsbBike?: number
 }
 
 export type DailyFitnessUpdateManyMutationInput = {
@@ -402,6 +486,10 @@ export type DailyFitnessUpdateManyMutationInput = {
   ctlRunning?: Prisma.FloatFieldUpdateOperationsInput | number
   trimp?: Prisma.FloatFieldUpdateOperationsInput | number
   runningTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  bikeTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  ctlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  atlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  tsbBike?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type DailyFitnessUncheckedUpdateManyInput = {
@@ -414,6 +502,10 @@ export type DailyFitnessUncheckedUpdateManyInput = {
   ctlRunning?: Prisma.FloatFieldUpdateOperationsInput | number
   trimp?: Prisma.FloatFieldUpdateOperationsInput | number
   runningTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  bikeTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  ctlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  atlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  tsbBike?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type DailyFitnessListRelationFilter = {
@@ -441,6 +533,10 @@ export type DailyFitnessCountOrderByAggregateInput = {
   ctlRunning?: Prisma.SortOrder
   trimp?: Prisma.SortOrder
   runningTss?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  ctlBike?: Prisma.SortOrder
+  atlBike?: Prisma.SortOrder
+  tsbBike?: Prisma.SortOrder
 }
 
 export type DailyFitnessAvgOrderByAggregateInput = {
@@ -450,6 +546,10 @@ export type DailyFitnessAvgOrderByAggregateInput = {
   ctlRunning?: Prisma.SortOrder
   trimp?: Prisma.SortOrder
   runningTss?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  ctlBike?: Prisma.SortOrder
+  atlBike?: Prisma.SortOrder
+  tsbBike?: Prisma.SortOrder
 }
 
 export type DailyFitnessMaxOrderByAggregateInput = {
@@ -462,6 +562,10 @@ export type DailyFitnessMaxOrderByAggregateInput = {
   ctlRunning?: Prisma.SortOrder
   trimp?: Prisma.SortOrder
   runningTss?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  ctlBike?: Prisma.SortOrder
+  atlBike?: Prisma.SortOrder
+  tsbBike?: Prisma.SortOrder
 }
 
 export type DailyFitnessMinOrderByAggregateInput = {
@@ -474,6 +578,10 @@ export type DailyFitnessMinOrderByAggregateInput = {
   ctlRunning?: Prisma.SortOrder
   trimp?: Prisma.SortOrder
   runningTss?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  ctlBike?: Prisma.SortOrder
+  atlBike?: Prisma.SortOrder
+  tsbBike?: Prisma.SortOrder
 }
 
 export type DailyFitnessSumOrderByAggregateInput = {
@@ -483,6 +591,10 @@ export type DailyFitnessSumOrderByAggregateInput = {
   ctlRunning?: Prisma.SortOrder
   trimp?: Prisma.SortOrder
   runningTss?: Prisma.SortOrder
+  bikeTss?: Prisma.SortOrder
+  ctlBike?: Prisma.SortOrder
+  atlBike?: Prisma.SortOrder
+  tsbBike?: Prisma.SortOrder
 }
 
 export type DailyFitnessCreateNestedManyWithoutUserInput = {
@@ -536,6 +648,10 @@ export type DailyFitnessCreateWithoutUserInput = {
   ctlRunning?: number
   trimp?: number
   runningTss?: number
+  bikeTss?: number
+  ctlBike?: number
+  atlBike?: number
+  tsbBike?: number
 }
 
 export type DailyFitnessUncheckedCreateWithoutUserInput = {
@@ -547,6 +663,10 @@ export type DailyFitnessUncheckedCreateWithoutUserInput = {
   ctlRunning?: number
   trimp?: number
   runningTss?: number
+  bikeTss?: number
+  ctlBike?: number
+  atlBike?: number
+  tsbBike?: number
 }
 
 export type DailyFitnessCreateOrConnectWithoutUserInput = {
@@ -588,6 +708,10 @@ export type DailyFitnessScalarWhereInput = {
   ctlRunning?: Prisma.FloatFilter<"DailyFitness"> | number
   trimp?: Prisma.FloatFilter<"DailyFitness"> | number
   runningTss?: Prisma.FloatFilter<"DailyFitness"> | number
+  bikeTss?: Prisma.FloatFilter<"DailyFitness"> | number
+  ctlBike?: Prisma.FloatFilter<"DailyFitness"> | number
+  atlBike?: Prisma.FloatFilter<"DailyFitness"> | number
+  tsbBike?: Prisma.FloatFilter<"DailyFitness"> | number
 }
 
 export type DailyFitnessCreateManyUserInput = {
@@ -599,6 +723,10 @@ export type DailyFitnessCreateManyUserInput = {
   ctlRunning?: number
   trimp?: number
   runningTss?: number
+  bikeTss?: number
+  ctlBike?: number
+  atlBike?: number
+  tsbBike?: number
 }
 
 export type DailyFitnessUpdateWithoutUserInput = {
@@ -610,6 +738,10 @@ export type DailyFitnessUpdateWithoutUserInput = {
   ctlRunning?: Prisma.FloatFieldUpdateOperationsInput | number
   trimp?: Prisma.FloatFieldUpdateOperationsInput | number
   runningTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  bikeTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  ctlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  atlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  tsbBike?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type DailyFitnessUncheckedUpdateWithoutUserInput = {
@@ -621,6 +753,10 @@ export type DailyFitnessUncheckedUpdateWithoutUserInput = {
   ctlRunning?: Prisma.FloatFieldUpdateOperationsInput | number
   trimp?: Prisma.FloatFieldUpdateOperationsInput | number
   runningTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  bikeTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  ctlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  atlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  tsbBike?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 export type DailyFitnessUncheckedUpdateManyWithoutUserInput = {
@@ -632,6 +768,10 @@ export type DailyFitnessUncheckedUpdateManyWithoutUserInput = {
   ctlRunning?: Prisma.FloatFieldUpdateOperationsInput | number
   trimp?: Prisma.FloatFieldUpdateOperationsInput | number
   runningTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  bikeTss?: Prisma.FloatFieldUpdateOperationsInput | number
+  ctlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  atlBike?: Prisma.FloatFieldUpdateOperationsInput | number
+  tsbBike?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
 
@@ -646,6 +786,10 @@ export type DailyFitnessSelect<ExtArgs extends runtime.Types.Extensions.Internal
   ctlRunning?: boolean
   trimp?: boolean
   runningTss?: boolean
+  bikeTss?: boolean
+  ctlBike?: boolean
+  atlBike?: boolean
+  tsbBike?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dailyFitness"]>
 
@@ -659,6 +803,10 @@ export type DailyFitnessSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   ctlRunning?: boolean
   trimp?: boolean
   runningTss?: boolean
+  bikeTss?: boolean
+  ctlBike?: boolean
+  atlBike?: boolean
+  tsbBike?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dailyFitness"]>
 
@@ -672,6 +820,10 @@ export type DailyFitnessSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   ctlRunning?: boolean
   trimp?: boolean
   runningTss?: boolean
+  bikeTss?: boolean
+  ctlBike?: boolean
+  atlBike?: boolean
+  tsbBike?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dailyFitness"]>
 
@@ -685,9 +837,13 @@ export type DailyFitnessSelectScalar = {
   ctlRunning?: boolean
   trimp?: boolean
   runningTss?: boolean
+  bikeTss?: boolean
+  ctlBike?: boolean
+  atlBike?: boolean
+  tsbBike?: boolean
 }
 
-export type DailyFitnessOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "date" | "ctl" | "atl" | "tsb" | "ctlRunning" | "trimp" | "runningTss", ExtArgs["result"]["dailyFitness"]>
+export type DailyFitnessOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "date" | "ctl" | "atl" | "tsb" | "ctlRunning" | "trimp" | "runningTss" | "bikeTss" | "ctlBike" | "atlBike" | "tsbBike", ExtArgs["result"]["dailyFitness"]>
 export type DailyFitnessInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -713,6 +869,10 @@ export type $DailyFitnessPayload<ExtArgs extends runtime.Types.Extensions.Intern
     ctlRunning: number
     trimp: number
     runningTss: number
+    bikeTss: number
+    ctlBike: number
+    atlBike: number
+    tsbBike: number
   }, ExtArgs["result"]["dailyFitness"]>
   composites: {}
 }
@@ -1146,6 +1306,10 @@ export interface DailyFitnessFieldRefs {
   readonly ctlRunning: Prisma.FieldRef<"DailyFitness", 'Float'>
   readonly trimp: Prisma.FieldRef<"DailyFitness", 'Float'>
   readonly runningTss: Prisma.FieldRef<"DailyFitness", 'Float'>
+  readonly bikeTss: Prisma.FieldRef<"DailyFitness", 'Float'>
+  readonly ctlBike: Prisma.FieldRef<"DailyFitness", 'Float'>
+  readonly atlBike: Prisma.FieldRef<"DailyFitness", 'Float'>
+  readonly tsbBike: Prisma.FieldRef<"DailyFitness", 'Float'>
 }
     
 

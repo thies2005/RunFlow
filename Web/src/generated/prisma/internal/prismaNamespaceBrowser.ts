@@ -109,7 +109,10 @@ export const ModelName = {
   IntervalProgression: 'IntervalProgression',
   AiPlanAnalysis: 'AiPlanAnalysis',
   PlanPaceProfile: 'PlanPaceProfile',
-  GuidedPlanSession: 'GuidedPlanSession'
+  GuidedPlanSession: 'GuidedPlanSession',
+  McpOAuthClient: 'McpOAuthClient',
+  McpOAuthCode: 'McpOAuthCode',
+  McpOAuthToken: 'McpOAuthToken'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -163,6 +166,9 @@ export const UserScalarFieldEnum = {
   autoRevolvingCalculatedAt: 'autoRevolvingCalculatedAt',
   includeCrossTraining: 'includeCrossTraining',
   useImperial: 'useImperial',
+  ftpWatts: 'ftpWatts',
+  autoEstimateFtp: 'autoEstimateFtp',
+  swimCssSecPer100m: 'swimCssSecPer100m',
   lastSyncAt: 'lastSyncAt',
   syncInProgress: 'syncInProgress',
   createdAt: 'createdAt',
@@ -425,6 +431,21 @@ export const ActivityScalarFieldEnum = {
   averageWatts: 'averageWatts',
   weightedAverageWatts: 'weightedAverageWatts',
   deviceWatts: 'deviceWatts',
+  maxWatts: 'maxWatts',
+  kilojoules: 'kilojoules',
+  npWatts: 'npWatts',
+  intensityFactor: 'intensityFactor',
+  variabilityIndex: 'variabilityIndex',
+  bikeTss: 'bikeTss',
+  efficiencyFactor: 'efficiencyFactor',
+  aerobicDecoupling: 'aerobicDecoupling',
+  powerZone1Time: 'powerZone1Time',
+  powerZone2Time: 'powerZone2Time',
+  powerZone3Time: 'powerZone3Time',
+  powerZone4Time: 'powerZone4Time',
+  powerZone5Time: 'powerZone5Time',
+  powerZone6Time: 'powerZone6Time',
+  powerZone7Time: 'powerZone7Time',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -469,7 +490,11 @@ export const DailyFitnessScalarFieldEnum = {
   tsb: 'tsb',
   ctlRunning: 'ctlRunning',
   trimp: 'trimp',
-  runningTss: 'runningTss'
+  runningTss: 'runningTss',
+  bikeTss: 'bikeTss',
+  ctlBike: 'ctlBike',
+  atlBike: 'atlBike',
+  tsbBike: 'tsbBike'
 } as const
 
 export type DailyFitnessScalarFieldEnum = (typeof DailyFitnessScalarFieldEnum)[keyof typeof DailyFitnessScalarFieldEnum]
@@ -578,7 +603,13 @@ export const GoalScalarFieldEnum = {
   importIdMap: 'importIdMap',
   parentGoalId: 'parentGoalId',
   priority: 'priority',
-  trainingFocus: 'trainingFocus'
+  trainingFocus: 'trainingFocus',
+  ftpAtCreation: 'ftpAtCreation',
+  swimCssAtCreation: 'swimCssAtCreation',
+  weeklyBikeTssGoal: 'weeklyBikeTssGoal',
+  weeklySwimMetersGoal: 'weeklySwimMetersGoal',
+  targetWeeklyTss: 'targetWeeklyTss',
+  phaseBlocks: 'phaseBlocks'
 } as const
 
 export type GoalScalarFieldEnum = (typeof GoalScalarFieldEnum)[keyof typeof GoalScalarFieldEnum]
@@ -624,6 +655,13 @@ export const WorkoutScalarFieldEnum = {
   targetPaceZoneLabel: 'targetPaceZoneLabel',
   targetPaceMinSecondsPerKm: 'targetPaceMinSecondsPerKm',
   targetPaceMaxSecondsPerKm: 'targetPaceMaxSecondsPerKm',
+  targetPowerWatts: 'targetPowerWatts',
+  targetPowerMinWatts: 'targetPowerMinWatts',
+  targetPowerMaxWatts: 'targetPowerMaxWatts',
+  targetPowerZone: 'targetPowerZone',
+  targetFtpPercent: 'targetFtpPercent',
+  targetCadenceRpm: 'targetCadenceRpm',
+  targetRpe: 'targetRpe',
   isCompleted: 'isCompleted',
   completedAt: 'completedAt',
   linkedActivityId: 'linkedActivityId',
@@ -1231,6 +1269,56 @@ export const GuidedPlanSessionScalarFieldEnum = {
 } as const
 
 export type GuidedPlanSessionScalarFieldEnum = (typeof GuidedPlanSessionScalarFieldEnum)[keyof typeof GuidedPlanSessionScalarFieldEnum]
+
+
+export const McpOAuthClientScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  clientSecretHash: 'clientSecretHash',
+  clientName: 'clientName',
+  redirectUris: 'redirectUris',
+  grantTypes: 'grantTypes',
+  responseTypes: 'responseTypes',
+  tokenEndpointAuthMethod: 'tokenEndpointAuthMethod',
+  createdAt: 'createdAt'
+} as const
+
+export type McpOAuthClientScalarFieldEnum = (typeof McpOAuthClientScalarFieldEnum)[keyof typeof McpOAuthClientScalarFieldEnum]
+
+
+export const McpOAuthCodeScalarFieldEnum = {
+  id: 'id',
+  codeHash: 'codeHash',
+  clientId: 'clientId',
+  userId: 'userId',
+  redirectUri: 'redirectUri',
+  codeChallenge: 'codeChallenge',
+  codeChallengeMethod: 'codeChallengeMethod',
+  scope: 'scope',
+  resource: 'resource',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type McpOAuthCodeScalarFieldEnum = (typeof McpOAuthCodeScalarFieldEnum)[keyof typeof McpOAuthCodeScalarFieldEnum]
+
+
+export const McpOAuthTokenScalarFieldEnum = {
+  id: 'id',
+  accessTokenHash: 'accessTokenHash',
+  refreshTokenHash: 'refreshTokenHash',
+  clientId: 'clientId',
+  userId: 'userId',
+  scope: 'scope',
+  expiresAt: 'expiresAt',
+  refreshExpiresAt: 'refreshExpiresAt',
+  revokedAt: 'revokedAt',
+  lastUsedAt: 'lastUsedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type McpOAuthTokenScalarFieldEnum = (typeof McpOAuthTokenScalarFieldEnum)[keyof typeof McpOAuthTokenScalarFieldEnum]
 
 
 export const SortOrder = {

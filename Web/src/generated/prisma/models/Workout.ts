@@ -36,6 +36,13 @@ export type WorkoutAvgAggregateOutputType = {
   targetHrMaxBpm: number | null
   targetPaceMinSecondsPerKm: number | null
   targetPaceMaxSecondsPerKm: number | null
+  targetPowerWatts: number | null
+  targetPowerMinWatts: number | null
+  targetPowerMaxWatts: number | null
+  targetPowerZone: number | null
+  targetFtpPercent: number | null
+  targetCadenceRpm: number | null
+  targetRpe: number | null
   plannedTss: number | null
 }
 
@@ -49,6 +56,13 @@ export type WorkoutSumAggregateOutputType = {
   targetHrMaxBpm: number | null
   targetPaceMinSecondsPerKm: number | null
   targetPaceMaxSecondsPerKm: number | null
+  targetPowerWatts: number | null
+  targetPowerMinWatts: number | null
+  targetPowerMaxWatts: number | null
+  targetPowerZone: number | null
+  targetFtpPercent: number | null
+  targetCadenceRpm: number | null
+  targetRpe: number | null
   plannedTss: number | null
 }
 
@@ -71,6 +85,13 @@ export type WorkoutMinAggregateOutputType = {
   targetPaceZoneLabel: string | null
   targetPaceMinSecondsPerKm: number | null
   targetPaceMaxSecondsPerKm: number | null
+  targetPowerWatts: number | null
+  targetPowerMinWatts: number | null
+  targetPowerMaxWatts: number | null
+  targetPowerZone: number | null
+  targetFtpPercent: number | null
+  targetCadenceRpm: number | null
+  targetRpe: number | null
   isCompleted: boolean | null
   completedAt: Date | null
   linkedActivityId: string | null
@@ -106,6 +127,13 @@ export type WorkoutMaxAggregateOutputType = {
   targetPaceZoneLabel: string | null
   targetPaceMinSecondsPerKm: number | null
   targetPaceMaxSecondsPerKm: number | null
+  targetPowerWatts: number | null
+  targetPowerMinWatts: number | null
+  targetPowerMaxWatts: number | null
+  targetPowerZone: number | null
+  targetFtpPercent: number | null
+  targetCadenceRpm: number | null
+  targetRpe: number | null
   isCompleted: boolean | null
   completedAt: Date | null
   linkedActivityId: string | null
@@ -141,6 +169,13 @@ export type WorkoutCountAggregateOutputType = {
   targetPaceZoneLabel: number
   targetPaceMinSecondsPerKm: number
   targetPaceMaxSecondsPerKm: number
+  targetPowerWatts: number
+  targetPowerMinWatts: number
+  targetPowerMaxWatts: number
+  targetPowerZone: number
+  targetFtpPercent: number
+  targetCadenceRpm: number
+  targetRpe: number
   isCompleted: number
   completedAt: number
   linkedActivityId: number
@@ -170,6 +205,13 @@ export type WorkoutAvgAggregateInputType = {
   targetHrMaxBpm?: true
   targetPaceMinSecondsPerKm?: true
   targetPaceMaxSecondsPerKm?: true
+  targetPowerWatts?: true
+  targetPowerMinWatts?: true
+  targetPowerMaxWatts?: true
+  targetPowerZone?: true
+  targetFtpPercent?: true
+  targetCadenceRpm?: true
+  targetRpe?: true
   plannedTss?: true
 }
 
@@ -183,6 +225,13 @@ export type WorkoutSumAggregateInputType = {
   targetHrMaxBpm?: true
   targetPaceMinSecondsPerKm?: true
   targetPaceMaxSecondsPerKm?: true
+  targetPowerWatts?: true
+  targetPowerMinWatts?: true
+  targetPowerMaxWatts?: true
+  targetPowerZone?: true
+  targetFtpPercent?: true
+  targetCadenceRpm?: true
+  targetRpe?: true
   plannedTss?: true
 }
 
@@ -205,6 +254,13 @@ export type WorkoutMinAggregateInputType = {
   targetPaceZoneLabel?: true
   targetPaceMinSecondsPerKm?: true
   targetPaceMaxSecondsPerKm?: true
+  targetPowerWatts?: true
+  targetPowerMinWatts?: true
+  targetPowerMaxWatts?: true
+  targetPowerZone?: true
+  targetFtpPercent?: true
+  targetCadenceRpm?: true
+  targetRpe?: true
   isCompleted?: true
   completedAt?: true
   linkedActivityId?: true
@@ -240,6 +296,13 @@ export type WorkoutMaxAggregateInputType = {
   targetPaceZoneLabel?: true
   targetPaceMinSecondsPerKm?: true
   targetPaceMaxSecondsPerKm?: true
+  targetPowerWatts?: true
+  targetPowerMinWatts?: true
+  targetPowerMaxWatts?: true
+  targetPowerZone?: true
+  targetFtpPercent?: true
+  targetCadenceRpm?: true
+  targetRpe?: true
   isCompleted?: true
   completedAt?: true
   linkedActivityId?: true
@@ -275,6 +338,13 @@ export type WorkoutCountAggregateInputType = {
   targetPaceZoneLabel?: true
   targetPaceMinSecondsPerKm?: true
   targetPaceMaxSecondsPerKm?: true
+  targetPowerWatts?: true
+  targetPowerMinWatts?: true
+  targetPowerMaxWatts?: true
+  targetPowerZone?: true
+  targetFtpPercent?: true
+  targetCadenceRpm?: true
+  targetRpe?: true
   isCompleted?: true
   completedAt?: true
   linkedActivityId?: true
@@ -398,6 +468,13 @@ export type WorkoutGroupByOutputType = {
   targetPaceZoneLabel: string | null
   targetPaceMinSecondsPerKm: number | null
   targetPaceMaxSecondsPerKm: number | null
+  targetPowerWatts: number | null
+  targetPowerMinWatts: number | null
+  targetPowerMaxWatts: number | null
+  targetPowerZone: number | null
+  targetFtpPercent: number | null
+  targetCadenceRpm: number | null
+  targetRpe: number | null
   isCompleted: boolean
   completedAt: Date | null
   linkedActivityId: string | null
@@ -457,6 +534,13 @@ export type WorkoutWhereInput = {
   targetPaceZoneLabel?: Prisma.StringNullableFilter<"Workout"> | string | null
   targetPaceMinSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
   targetPaceMaxSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
+  targetPowerWatts?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPowerMinWatts?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPowerMaxWatts?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPowerZone?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetFtpPercent?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetCadenceRpm?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetRpe?: Prisma.IntNullableFilter<"Workout"> | number | null
   isCompleted?: Prisma.BoolFilter<"Workout"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Workout"> | Date | string | null
   linkedActivityId?: Prisma.StringNullableFilter<"Workout"> | string | null
@@ -497,6 +581,13 @@ export type WorkoutOrderByWithRelationInput = {
   targetPaceZoneLabel?: Prisma.SortOrderInput | Prisma.SortOrder
   targetPaceMinSecondsPerKm?: Prisma.SortOrderInput | Prisma.SortOrder
   targetPaceMaxSecondsPerKm?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPowerWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPowerMinWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPowerMaxWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPowerZone?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetFtpPercent?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetCadenceRpm?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetRpe?: Prisma.SortOrderInput | Prisma.SortOrder
   isCompleted?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   linkedActivityId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -540,6 +631,13 @@ export type WorkoutWhereUniqueInput = Prisma.AtLeast<{
   targetPaceZoneLabel?: Prisma.StringNullableFilter<"Workout"> | string | null
   targetPaceMinSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
   targetPaceMaxSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
+  targetPowerWatts?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPowerMinWatts?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPowerMaxWatts?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPowerZone?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetFtpPercent?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetCadenceRpm?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetRpe?: Prisma.IntNullableFilter<"Workout"> | number | null
   isCompleted?: Prisma.BoolFilter<"Workout"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Workout"> | Date | string | null
   linkedActivityId?: Prisma.StringNullableFilter<"Workout"> | string | null
@@ -580,6 +678,13 @@ export type WorkoutOrderByWithAggregationInput = {
   targetPaceZoneLabel?: Prisma.SortOrderInput | Prisma.SortOrder
   targetPaceMinSecondsPerKm?: Prisma.SortOrderInput | Prisma.SortOrder
   targetPaceMaxSecondsPerKm?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPowerWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPowerMinWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPowerMaxWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPowerZone?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetFtpPercent?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetCadenceRpm?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetRpe?: Prisma.SortOrderInput | Prisma.SortOrder
   isCompleted?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   linkedActivityId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -624,6 +729,13 @@ export type WorkoutScalarWhereWithAggregatesInput = {
   targetPaceZoneLabel?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
   targetPaceMinSecondsPerKm?: Prisma.FloatNullableWithAggregatesFilter<"Workout"> | number | null
   targetPaceMaxSecondsPerKm?: Prisma.FloatNullableWithAggregatesFilter<"Workout"> | number | null
+  targetPowerWatts?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
+  targetPowerMinWatts?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
+  targetPowerMaxWatts?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
+  targetPowerZone?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
+  targetFtpPercent?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
+  targetCadenceRpm?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
+  targetRpe?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
   isCompleted?: Prisma.BoolWithAggregatesFilter<"Workout"> | boolean
   completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Workout"> | Date | string | null
   linkedActivityId?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
@@ -659,6 +771,13 @@ export type WorkoutCreateInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -696,6 +815,13 @@ export type WorkoutUncheckedCreateInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -731,6 +857,13 @@ export type WorkoutUpdateInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -768,6 +901,13 @@ export type WorkoutUncheckedUpdateInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -804,6 +944,13 @@ export type WorkoutCreateManyInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -839,6 +986,13 @@ export type WorkoutUpdateManyMutationInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -872,6 +1026,13 @@ export type WorkoutUncheckedUpdateManyInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -918,6 +1079,13 @@ export type WorkoutCountOrderByAggregateInput = {
   targetPaceZoneLabel?: Prisma.SortOrder
   targetPaceMinSecondsPerKm?: Prisma.SortOrder
   targetPaceMaxSecondsPerKm?: Prisma.SortOrder
+  targetPowerWatts?: Prisma.SortOrder
+  targetPowerMinWatts?: Prisma.SortOrder
+  targetPowerMaxWatts?: Prisma.SortOrder
+  targetPowerZone?: Prisma.SortOrder
+  targetFtpPercent?: Prisma.SortOrder
+  targetCadenceRpm?: Prisma.SortOrder
+  targetRpe?: Prisma.SortOrder
   isCompleted?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   linkedActivityId?: Prisma.SortOrder
@@ -945,6 +1113,13 @@ export type WorkoutAvgOrderByAggregateInput = {
   targetHrMaxBpm?: Prisma.SortOrder
   targetPaceMinSecondsPerKm?: Prisma.SortOrder
   targetPaceMaxSecondsPerKm?: Prisma.SortOrder
+  targetPowerWatts?: Prisma.SortOrder
+  targetPowerMinWatts?: Prisma.SortOrder
+  targetPowerMaxWatts?: Prisma.SortOrder
+  targetPowerZone?: Prisma.SortOrder
+  targetFtpPercent?: Prisma.SortOrder
+  targetCadenceRpm?: Prisma.SortOrder
+  targetRpe?: Prisma.SortOrder
   plannedTss?: Prisma.SortOrder
 }
 
@@ -967,6 +1142,13 @@ export type WorkoutMaxOrderByAggregateInput = {
   targetPaceZoneLabel?: Prisma.SortOrder
   targetPaceMinSecondsPerKm?: Prisma.SortOrder
   targetPaceMaxSecondsPerKm?: Prisma.SortOrder
+  targetPowerWatts?: Prisma.SortOrder
+  targetPowerMinWatts?: Prisma.SortOrder
+  targetPowerMaxWatts?: Prisma.SortOrder
+  targetPowerZone?: Prisma.SortOrder
+  targetFtpPercent?: Prisma.SortOrder
+  targetCadenceRpm?: Prisma.SortOrder
+  targetRpe?: Prisma.SortOrder
   isCompleted?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   linkedActivityId?: Prisma.SortOrder
@@ -1002,6 +1184,13 @@ export type WorkoutMinOrderByAggregateInput = {
   targetPaceZoneLabel?: Prisma.SortOrder
   targetPaceMinSecondsPerKm?: Prisma.SortOrder
   targetPaceMaxSecondsPerKm?: Prisma.SortOrder
+  targetPowerWatts?: Prisma.SortOrder
+  targetPowerMinWatts?: Prisma.SortOrder
+  targetPowerMaxWatts?: Prisma.SortOrder
+  targetPowerZone?: Prisma.SortOrder
+  targetFtpPercent?: Prisma.SortOrder
+  targetCadenceRpm?: Prisma.SortOrder
+  targetRpe?: Prisma.SortOrder
   isCompleted?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   linkedActivityId?: Prisma.SortOrder
@@ -1028,6 +1217,13 @@ export type WorkoutSumOrderByAggregateInput = {
   targetHrMaxBpm?: Prisma.SortOrder
   targetPaceMinSecondsPerKm?: Prisma.SortOrder
   targetPaceMaxSecondsPerKm?: Prisma.SortOrder
+  targetPowerWatts?: Prisma.SortOrder
+  targetPowerMinWatts?: Prisma.SortOrder
+  targetPowerMaxWatts?: Prisma.SortOrder
+  targetPowerZone?: Prisma.SortOrder
+  targetFtpPercent?: Prisma.SortOrder
+  targetCadenceRpm?: Prisma.SortOrder
+  targetRpe?: Prisma.SortOrder
   plannedTss?: Prisma.SortOrder
 }
 
@@ -1225,6 +1421,13 @@ export type WorkoutCreateWithoutLinkedActivityInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1261,6 +1464,13 @@ export type WorkoutUncheckedCreateWithoutLinkedActivityInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1325,6 +1535,13 @@ export type WorkoutScalarWhereInput = {
   targetPaceZoneLabel?: Prisma.StringNullableFilter<"Workout"> | string | null
   targetPaceMinSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
   targetPaceMaxSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
+  targetPowerWatts?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPowerMinWatts?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPowerMaxWatts?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPowerZone?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetFtpPercent?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetCadenceRpm?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetRpe?: Prisma.IntNullableFilter<"Workout"> | number | null
   isCompleted?: Prisma.BoolFilter<"Workout"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Workout"> | Date | string | null
   linkedActivityId?: Prisma.StringNullableFilter<"Workout"> | string | null
@@ -1360,6 +1577,13 @@ export type WorkoutCreateWithoutGoalInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1395,6 +1619,13 @@ export type WorkoutUncheckedCreateWithoutGoalInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1440,6 +1671,13 @@ export type WorkoutCreateWithoutSubGoalInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1476,6 +1714,13 @@ export type WorkoutUncheckedCreateWithoutSubGoalInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1552,6 +1797,13 @@ export type WorkoutCreateWithoutIntervalProgressionInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1588,6 +1840,13 @@ export type WorkoutUncheckedCreateWithoutIntervalProgressionInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1649,6 +1908,13 @@ export type WorkoutCreateManyLinkedActivityInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1683,6 +1949,13 @@ export type WorkoutUpdateWithoutLinkedActivityInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1719,6 +1992,13 @@ export type WorkoutUncheckedUpdateWithoutLinkedActivityInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1754,6 +2034,13 @@ export type WorkoutUncheckedUpdateManyWithoutLinkedActivityInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1788,6 +2075,13 @@ export type WorkoutCreateManyGoalInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1824,6 +2118,13 @@ export type WorkoutCreateManySubGoalInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1858,6 +2159,13 @@ export type WorkoutUpdateWithoutGoalInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1893,6 +2201,13 @@ export type WorkoutUncheckedUpdateWithoutGoalInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1928,6 +2243,13 @@ export type WorkoutUncheckedUpdateManyWithoutGoalInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1963,6 +2285,13 @@ export type WorkoutUpdateWithoutSubGoalInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1999,6 +2328,13 @@ export type WorkoutUncheckedUpdateWithoutSubGoalInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2034,6 +2370,13 @@ export type WorkoutUncheckedUpdateManyWithoutSubGoalInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2069,6 +2412,13 @@ export type WorkoutCreateManyIntervalProgressionInput = {
   targetPaceZoneLabel?: string | null
   targetPaceMinSecondsPerKm?: number | null
   targetPaceMaxSecondsPerKm?: number | null
+  targetPowerWatts?: number | null
+  targetPowerMinWatts?: number | null
+  targetPowerMaxWatts?: number | null
+  targetPowerZone?: number | null
+  targetFtpPercent?: number | null
+  targetCadenceRpm?: number | null
+  targetRpe?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -2103,6 +2453,13 @@ export type WorkoutUpdateWithoutIntervalProgressionInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2139,6 +2496,13 @@ export type WorkoutUncheckedUpdateWithoutIntervalProgressionInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2174,6 +2538,13 @@ export type WorkoutUncheckedUpdateManyWithoutIntervalProgressionInput = {
   targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPowerWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMinWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerMaxWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPowerZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetFtpPercent?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetCadenceRpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetRpe?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2211,6 +2582,13 @@ export type WorkoutSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   targetPaceZoneLabel?: boolean
   targetPaceMinSecondsPerKm?: boolean
   targetPaceMaxSecondsPerKm?: boolean
+  targetPowerWatts?: boolean
+  targetPowerMinWatts?: boolean
+  targetPowerMaxWatts?: boolean
+  targetPowerZone?: boolean
+  targetFtpPercent?: boolean
+  targetCadenceRpm?: boolean
+  targetRpe?: boolean
   isCompleted?: boolean
   completedAt?: boolean
   linkedActivityId?: boolean
@@ -2251,6 +2629,13 @@ export type WorkoutSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   targetPaceZoneLabel?: boolean
   targetPaceMinSecondsPerKm?: boolean
   targetPaceMaxSecondsPerKm?: boolean
+  targetPowerWatts?: boolean
+  targetPowerMinWatts?: boolean
+  targetPowerMaxWatts?: boolean
+  targetPowerZone?: boolean
+  targetFtpPercent?: boolean
+  targetCadenceRpm?: boolean
+  targetRpe?: boolean
   isCompleted?: boolean
   completedAt?: boolean
   linkedActivityId?: boolean
@@ -2291,6 +2676,13 @@ export type WorkoutSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   targetPaceZoneLabel?: boolean
   targetPaceMinSecondsPerKm?: boolean
   targetPaceMaxSecondsPerKm?: boolean
+  targetPowerWatts?: boolean
+  targetPowerMinWatts?: boolean
+  targetPowerMaxWatts?: boolean
+  targetPowerZone?: boolean
+  targetFtpPercent?: boolean
+  targetCadenceRpm?: boolean
+  targetRpe?: boolean
   isCompleted?: boolean
   completedAt?: boolean
   linkedActivityId?: boolean
@@ -2331,6 +2723,13 @@ export type WorkoutSelectScalar = {
   targetPaceZoneLabel?: boolean
   targetPaceMinSecondsPerKm?: boolean
   targetPaceMaxSecondsPerKm?: boolean
+  targetPowerWatts?: boolean
+  targetPowerMinWatts?: boolean
+  targetPowerMaxWatts?: boolean
+  targetPowerZone?: boolean
+  targetFtpPercent?: boolean
+  targetCadenceRpm?: boolean
+  targetRpe?: boolean
   isCompleted?: boolean
   completedAt?: boolean
   linkedActivityId?: boolean
@@ -2348,7 +2747,7 @@ export type WorkoutSelectScalar = {
   plannedTss?: boolean
 }
 
-export type WorkoutOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "goalId" | "scheduledDate" | "workoutType" | "description" | "phase" | "order" | "notes" | "targetDistance" | "targetDuration" | "targetPace" | "targetHrZone" | "targetHrZoneLabel" | "targetHrMinBpm" | "targetHrMaxBpm" | "targetPaceZoneLabel" | "targetPaceMinSecondsPerKm" | "targetPaceMaxSecondsPerKm" | "isCompleted" | "completedAt" | "linkedActivityId" | "createdAt" | "updatedAt" | "customName" | "color" | "intervalProgressionId" | "structuredSteps" | "groupId" | "subGoalId" | "sport" | "displayDesc" | "intensityZone" | "plannedTss", ExtArgs["result"]["workout"]>
+export type WorkoutOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "goalId" | "scheduledDate" | "workoutType" | "description" | "phase" | "order" | "notes" | "targetDistance" | "targetDuration" | "targetPace" | "targetHrZone" | "targetHrZoneLabel" | "targetHrMinBpm" | "targetHrMaxBpm" | "targetPaceZoneLabel" | "targetPaceMinSecondsPerKm" | "targetPaceMaxSecondsPerKm" | "targetPowerWatts" | "targetPowerMinWatts" | "targetPowerMaxWatts" | "targetPowerZone" | "targetFtpPercent" | "targetCadenceRpm" | "targetRpe" | "isCompleted" | "completedAt" | "linkedActivityId" | "createdAt" | "updatedAt" | "customName" | "color" | "intervalProgressionId" | "structuredSteps" | "groupId" | "subGoalId" | "sport" | "displayDesc" | "intensityZone" | "plannedTss", ExtArgs["result"]["workout"]>
 export type WorkoutInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
@@ -2395,6 +2794,13 @@ export type $WorkoutPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     targetPaceZoneLabel: string | null
     targetPaceMinSecondsPerKm: number | null
     targetPaceMaxSecondsPerKm: number | null
+    targetPowerWatts: number | null
+    targetPowerMinWatts: number | null
+    targetPowerMaxWatts: number | null
+    targetPowerZone: number | null
+    targetFtpPercent: number | null
+    targetCadenceRpm: number | null
+    targetRpe: number | null
     isCompleted: boolean
     completedAt: Date | null
     linkedActivityId: string | null
@@ -2855,6 +3261,13 @@ export interface WorkoutFieldRefs {
   readonly targetPaceZoneLabel: Prisma.FieldRef<"Workout", 'String'>
   readonly targetPaceMinSecondsPerKm: Prisma.FieldRef<"Workout", 'Float'>
   readonly targetPaceMaxSecondsPerKm: Prisma.FieldRef<"Workout", 'Float'>
+  readonly targetPowerWatts: Prisma.FieldRef<"Workout", 'Int'>
+  readonly targetPowerMinWatts: Prisma.FieldRef<"Workout", 'Int'>
+  readonly targetPowerMaxWatts: Prisma.FieldRef<"Workout", 'Int'>
+  readonly targetPowerZone: Prisma.FieldRef<"Workout", 'Int'>
+  readonly targetFtpPercent: Prisma.FieldRef<"Workout", 'Int'>
+  readonly targetCadenceRpm: Prisma.FieldRef<"Workout", 'Int'>
+  readonly targetRpe: Prisma.FieldRef<"Workout", 'Int'>
   readonly isCompleted: Prisma.FieldRef<"Workout", 'Boolean'>
   readonly completedAt: Prisma.FieldRef<"Workout", 'DateTime'>
   readonly linkedActivityId: Prisma.FieldRef<"Workout", 'String'>

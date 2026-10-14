@@ -312,3 +312,18 @@ export type PlanPaceProfile = Prisma.PlanPaceProfileModel
  * 
  */
 export type GuidedPlanSession = Prisma.GuidedPlanSessionModel
+/**
+ * Model McpOAuthClient
+ * 
+ */
+export type McpOAuthClient = Prisma.McpOAuthClientModel
+/**
+ * Model McpOAuthCode
+ * 
+ */
+export type McpOAuthCode = Prisma.McpOAuthCodeModel
+/**
+ * Model McpOAuthToken
+ * 
+ */
+export type McpOAuthToken = Prisma.McpOAuthTokenModel

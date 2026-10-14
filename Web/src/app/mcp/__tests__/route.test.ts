@@ -39,6 +39,7 @@ jest.mock('@/lib/db', () => {
             create: jest.fn(),
             findUnique: jest.fn(),
             update: jest.fn(),
+            updateMany: jest.fn(),
         },
         user: {
             findUnique: jest.fn(),
@@ -398,6 +399,63 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(res.status).toBe(400);
             const data = await res.json();
             expect(data.error).toBe('invalid_grant');
+        });
+
+        it('exchanges refresh_token for new token pair and atomically revokes old token', async () => {
+            mockDb.mcpOAuthToken.findUnique.mockResolvedValue({
+                id: 'tok-old-1',
+                clientId: 'cuid-claude-client',
+                userId: 'user-paid-1',
+                scope: 'mcp:full',
+                revokedAt: null,
+                refreshExpiresAt: new Date(Date.now() + 86400000),
+                user: { id: 'user-paid-1', isAdmin: false, aiSettings: { usageTier: 'tier3' } },
+            });
+            mockDb.mcpOAuthToken.updateMany.mockResolvedValue({ count: 1 });
+            mockDb.mcpOAuthToken.create.mockResolvedValue({ id: 'tok-new-1' });
+
+            const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/token', 'POST', {
+                grant_type: 'refresh_token',
+                client_id: 'cuid-claude-client',
+                refresh_token: 'rf_mcpr_oldtoken123456789012345678901234567890',
+            });
+
+            const res = await tokenPost(req);
+            expect(res.status).toBe(200);
+            const data = await res.json();
+            expect(data.access_token).toMatch(/^rf_mcp_/);
+            expect(data.refresh_token).toMatch(/^rf_mcpr_/);
+            expect(mockDb.mcpOAuthToken.updateMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: { id: 'tok-old-1', revokedAt: null },
+                    data: expect.objectContaining({ revokedAt: expect.any(Date) }),
+                })
+            );
+        });
+
+        it('rejects replayed refresh_token when atomic revocation returns count 0', async () => {
+            mockDb.mcpOAuthToken.findUnique.mockResolvedValue({
+                id: 'tok-old-2',
+                clientId: 'cuid-claude-client',
+                userId: 'user-paid-1',
+                scope: 'mcp:full',
+                revokedAt: null,
+                refreshExpiresAt: new Date(Date.now() + 86400000),
+                user: { id: 'user-paid-1', isAdmin: false, aiSettings: { usageTier: 'tier3' } },
+            });
+            mockDb.mcpOAuthToken.updateMany.mockResolvedValue({ count: 0 });
+
+            const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/token', 'POST', {
+                grant_type: 'refresh_token',
+                client_id: 'cuid-claude-client',
+                refresh_token: 'rf_mcpr_replayed123456789012345678901234567890',
+            });
+
+            const res = await tokenPost(req);
+            expect(res.status).toBe(400);
+            const data = await res.json();
+            expect(data.error).toBe('invalid_grant');
+            expect(data.error_description).toContain('already used or revoked');
         });
     });
 

@@ -117,6 +117,14 @@ function enforcePreAuthBodyCap(request: NextRequest): NextResponse | null {
     return null;
 }
 
+function isMcpCorsPath(pathname: string): boolean {
+    return pathname === '/mcp' ||
+        pathname === '/mcp/public' ||
+        pathname === '/mcp/oauth/token' ||
+        pathname === '/mcp/oauth/register' ||
+        pathname.startsWith('/.well-known/');
+}
+
 /**
  * Handle CORS for API routes
  */
@@ -131,12 +139,13 @@ function handleCors(request: NextRequest): NextResponse | null {
     if (request.method === 'OPTIONS') {
         const response = new NextResponse(null, { status: 204 });
 
-        if (pathname.startsWith('/mcp') || pathname.startsWith('/.well-known/')) {
+        if (isMcpCorsPath(pathname)) {
             response.headers.set('Access-Control-Allow-Origin', origin || '*');
-            response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            response.headers.set('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
             response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Mcp-Session-Id');
             response.headers.set('Access-Control-Expose-Headers', 'Mcp-Session-Id, WWW-Authenticate');
             response.headers.set('Access-Control-Max-Age', '86400');
+            response.headers.delete('Access-Control-Allow-Credentials');
             return response;
         }
 
@@ -155,7 +164,7 @@ function handleCors(request: NextRequest): NextResponse | null {
     // For actual requests from allowed origins, we'll add headers in the response
     // For disallowed origins on API routes, block the request
     if (origin && !allowedOrigins.includes(origin) && !isSameOrigin) {
-        if (pathname.startsWith('/mcp') || pathname.startsWith('/.well-known/')) {
+        if (isMcpCorsPath(pathname)) {
             return null;
         }
         if (pathname.startsWith('/api/')) {
@@ -181,7 +190,7 @@ function addCorsHeaders(response: NextResponse, request: NextRequest): NextRespo
     const requestOrigin = request.nextUrl.origin;
     const pathname = request.nextUrl.pathname;
 
-    if (pathname.startsWith('/mcp') || pathname.startsWith('/.well-known/')) {
+    if (isMcpCorsPath(pathname)) {
         response.headers.set('Access-Control-Allow-Origin', origin || '*');
         response.headers.set('Access-Control-Expose-Headers', 'Mcp-Session-Id, WWW-Authenticate');
         response.headers.delete('Access-Control-Allow-Credentials');

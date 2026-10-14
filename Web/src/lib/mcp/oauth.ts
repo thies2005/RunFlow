@@ -332,11 +332,15 @@ export async function refreshOAuthTokenPair(
         throw new Error('User does not have active Paid Premium status');
     }
 
-    // Revoke old token
-    await prisma.mcpOAuthToken.update({
-        where: { id: existingToken.id },
+    // Atomically revoke old token to prevent concurrent reuse/race conditions
+    const revoked = await prisma.mcpOAuthToken.updateMany({
+        where: { id: existingToken.id, revokedAt: null },
         data: { revokedAt: new Date() },
     });
+
+    if (revoked.count !== 1) {
+        throw new Error('Refresh token already used or revoked');
+    }
 
     // Issue new pair
     return issueOAuthTokenPair({

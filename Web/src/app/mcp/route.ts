@@ -597,6 +597,16 @@ const createTrainingPlanTool: McpTool = {
     handler: async (params: any, context?: any) => {
         const userId = context?.userId;
 
+        if (params.raceDate) {
+            const raceDate = new Date(params.raceDate);
+            if (isNaN(raceDate.getTime())) {
+                throw new Error('Invalid raceDate format');
+            }
+            if (Math.abs(raceDate.getTime() - Date.now()) > 104 * 7 * 24 * 60 * 60 * 1000) {
+                throw new Error('Race date must be within 104 weeks from today');
+            }
+        }
+
         const result = await createPlanWithWorkouts({
             userId,
             name: params.name,

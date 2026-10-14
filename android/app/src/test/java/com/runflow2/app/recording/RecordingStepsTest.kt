@@ -93,11 +93,11 @@ class RecordingStepsTest {
     @Test
     fun `step remaining clamps at zero for both duration types`() {
         val time = timeStep("90 s rest", 90.0)
-        assertEquals(80.0, RecordingController.stepRemaining(time, 0.0, 10.0), 0.001)
-        assertEquals(0.0, RecordingController.stepRemaining(time, 0.0, 95.0), 0.001)
+        assertEquals(80.0, RecordingController.stepRemaining(time, 0.0, 10.0)!!, 0.001)
+        assertEquals(0.0, RecordingController.stepRemaining(time, 0.0, 95.0)!!, 0.001)
         val dist = distStep("400 m I", 400.0)
-        assertEquals(300.0, RecordingController.stepRemaining(dist, 100.0, 0.0), 0.001)
-        assertEquals(0.0, RecordingController.stepRemaining(dist, 450.0, 0.0), 0.001)
+        assertEquals(300.0, RecordingController.stepRemaining(dist, 100.0, 0.0)!!, 0.001)
+        assertEquals(0.0, RecordingController.stepRemaining(dist, 450.0, 0.0)!!, 0.001)
     }
 
     @Test
@@ -110,5 +110,70 @@ class RecordingStepsTest {
         assertNull(RecordingController.stepCountdownCue(0.4, 1))
         assertNull(RecordingController.stepCountdownCue(5.0, 0)) // outside the window
         assertNull(RecordingController.stepCountdownCue(0.0, 0))
+    }
+
+    @Test
+    fun `onLapPressed advances lap_press step immediately`() = runTest {
+        val controller = RecordingController(gpsSmoothingEnabled = false)
+        val lapStep = StepRuntime("Drill", "steady", StepDurationType.LAP_PRESS, 0.0, 0.0, null)
+        val nextStep = distStep("Cool down", 1000.0, "cooldown")
+        controller.start(null, countdownSec = 1, resolvedSteps = listOf(lapStep, nextStep))
+        controller.beginCountdownTick()
+        assertEquals(0, controller.state.value.activeStepIndex)
+
+        controller.onLapPressed()
+        assertEquals(1, controller.state.value.activeStepIndex)
+        assertEquals(1, controller.state.value.stepSplits.size)
+        assertEquals("Drill", controller.state.value.stepSplits[0].label)
+    }
+
+    @Test
+    fun `onLapPressed on regular step records manual lap`() = runTest {
+        val controller = RecordingController(gpsSmoothingEnabled = false)
+        controller.start(null, countdownSec = 1, resolvedSteps = listOf(distStep("Run", 5000.0)))
+        controller.beginCountdownTick()
+        assertEquals(0, controller.state.value.activeStepIndex)
+        assertEquals(0, controller.state.value.laps.size)
+
+        controller.onLapPressed()
+        assertEquals(0, controller.state.value.activeStepIndex) // still active
+        assertEquals(1, controller.state.value.laps.size)
+    }
+
+    @Test
+    fun `PaceZoneEvaluator evaluate respects ranges and tolerances`() {
+        // min < max range [240..260]
+        assertEquals(
+            com.runflow2.app.domain.model.PaceZoneStatus.TOO_FAST,
+            com.runflow2.app.domain.model.PaceZoneEvaluator.evaluate(230.0, minPaceSec = 240.0, maxPaceSec = 260.0),
+        )
+        assertEquals(
+            com.runflow2.app.domain.model.PaceZoneStatus.IN_ZONE,
+            com.runflow2.app.domain.model.PaceZoneEvaluator.evaluate(250.0, minPaceSec = 240.0, maxPaceSec = 260.0),
+        )
+        assertEquals(
+            com.runflow2.app.domain.model.PaceZoneStatus.TOO_SLOW,
+            com.runflow2.app.domain.model.PaceZoneEvaluator.evaluate(270.0, minPaceSec = 240.0, maxPaceSec = 260.0),
+        )
+
+        // min == max (e.g. 250) -> ±5% tolerance (237.5 .. 262.5)
+        assertEquals(
+            com.runflow2.app.domain.model.PaceZoneStatus.IN_ZONE,
+            com.runflow2.app.domain.model.PaceZoneEvaluator.evaluate(240.0, minPaceSec = 250.0, maxPaceSec = 250.0),
+        )
+        assertEquals(
+            com.runflow2.app.domain.model.PaceZoneStatus.TOO_FAST,
+            com.runflow2.app.domain.model.PaceZoneEvaluator.evaluate(230.0, minPaceSec = 250.0, maxPaceSec = 250.0),
+        )
+
+        // targetPace only (250) -> ±10% tolerance (225 .. 275)
+        assertEquals(
+            com.runflow2.app.domain.model.PaceZoneStatus.IN_ZONE,
+            com.runflow2.app.domain.model.PaceZoneEvaluator.evaluate(235.0, targetPaceSec = 250.0),
+        )
+        assertEquals(
+            com.runflow2.app.domain.model.PaceZoneStatus.TOO_FAST,
+            com.runflow2.app.domain.model.PaceZoneEvaluator.evaluate(220.0, targetPaceSec = 250.0),
+        )
     }
 }

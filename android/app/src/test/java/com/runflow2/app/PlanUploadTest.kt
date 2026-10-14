@@ -360,4 +360,10 @@ class PlanUploadTest {
         assertEquals(8, AppDatabase.MIGRATION_8_9.startVersion)
         assertEquals(9, AppDatabase.MIGRATION_8_9.endVersion)
     }
+
+    @Test
+    fun `v12 to v13 migration adds cycling and target columns`() {
+        assertEquals(12, AppDatabase.MIGRATION_12_13.startVersion)
+        assertEquals(13, AppDatabase.MIGRATION_12_13.endVersion)
+    }
 }

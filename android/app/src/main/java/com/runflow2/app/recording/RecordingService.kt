@@ -108,6 +108,7 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
             }
             ACTION_PAUSE -> controller.pause()
             ACTION_RESUME -> controller.resume()
+            ACTION_LAP -> controller.onLapPressed()
             ACTION_STOP -> {
                 scope.launch { saveAndStop() }
             }
@@ -398,6 +399,7 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
         const val ACTION_RESUME = "com.runflow2.app.RESUME"
         const val ACTION_STOP = "com.runflow2.app.STOP"
         const val ACTION_DISCARD = "com.runflow2.app.DISCARD"
+        const val ACTION_LAP = "com.runflow2.app.action.LAP"
         const val EXTRA_WORKOUT_ID = "workout_id"
         const val EXTRA_AUTO_PAUSE = "auto_pause"
         const val EXTRA_VOICE = "voice"
@@ -416,5 +418,7 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
         fun send(context: Context, action: String) {
             context.startService(Intent(context, RecordingService::class.java).apply { this.action = action })
         }
+
+        fun lap(context: Context) = send(context, ACTION_LAP)
     }
 }

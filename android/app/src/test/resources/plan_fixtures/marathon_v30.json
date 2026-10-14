@@ -30,117 +30,62 @@
       "targetPaceMinSecondsPerKm": 347,
       "targetPaceMaxSecondsPerKm": 384,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "durationSeconds": 600,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Fartlek Hard 1",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 7,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Fartlek Hard",
+                "duration": {
+                  "type": "time",
+                  "seconds": 180
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 389,
+                  "max": 389
+                }
+              },
+              {
+                "kind": "recovery",
+                "label": "Fartlek Easy",
+                "duration": {
+                  "type": "time",
+                  "seconds": 120
+                },
+                "hrZone": 2,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 447,
+                  "max": 447
+                }
+              }
+            ],
+            "label": "Fartlek Cycles"
           },
           {
-            "type": "recovery",
-            "name": "Fartlek Easy 1",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 2",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 2",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 3",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 3",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 4",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 4",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 5",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 5",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 6",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 6",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 7",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 7",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "durationSeconds": 600,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           }
         ]
@@ -166,16 +111,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 20300,
-            "durationSeconds": 9866,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 20300
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -200,16 +152,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 4300,
-            "durationSeconds": 2090,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 4300
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -234,117 +193,62 @@
       "targetPaceMinSecondsPerKm": 347,
       "targetPaceMaxSecondsPerKm": 384,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "durationSeconds": 600,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Fartlek Hard 1",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 7,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Fartlek Hard",
+                "duration": {
+                  "type": "time",
+                  "seconds": 180
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 389,
+                  "max": 389
+                }
+              },
+              {
+                "kind": "recovery",
+                "label": "Fartlek Easy",
+                "duration": {
+                  "type": "time",
+                  "seconds": 120
+                },
+                "hrZone": 2,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 447,
+                  "max": 447
+                }
+              }
+            ],
+            "label": "Fartlek Cycles"
           },
           {
-            "type": "recovery",
-            "name": "Fartlek Easy 1",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 2",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 2",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 3",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 3",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 4",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 4",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 5",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 5",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 6",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 6",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 7",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 7",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "durationSeconds": 600,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           }
         ]
@@ -370,16 +274,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 4300,
-            "durationSeconds": 2090,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 4300
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -404,16 +315,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 22200,
-            "durationSeconds": 10789,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 22200
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -438,16 +356,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 4500,
-            "durationSeconds": 2187,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 4500
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -472,145 +397,62 @@
       "targetPaceMinSecondsPerKm": 347,
       "targetPaceMaxSecondsPerKm": 384,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "durationSeconds": 600,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Fartlek Hard 1",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 9,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Fartlek Hard",
+                "duration": {
+                  "type": "time",
+                  "seconds": 180
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 389,
+                  "max": 389
+                }
+              },
+              {
+                "kind": "recovery",
+                "label": "Fartlek Easy",
+                "duration": {
+                  "type": "time",
+                  "seconds": 120
+                },
+                "hrZone": 2,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 447,
+                  "max": 447
+                }
+              }
+            ],
+            "label": "Fartlek Cycles"
           },
           {
-            "type": "recovery",
-            "name": "Fartlek Easy 1",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 2",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 2",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 3",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 3",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 4",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 4",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 5",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 5",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 6",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 6",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 7",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 7",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 8",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 8",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 9",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 9",
-            "durationSeconds": 120,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "durationSeconds": 600,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           }
         ]
@@ -636,16 +478,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 4500,
-            "durationSeconds": 2187,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 4500
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -670,16 +519,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 19300,
-            "durationSeconds": 9380,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 19300
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -704,89 +560,62 @@
       "targetPaceMinSecondsPerKm": 347,
       "targetPaceMaxSecondsPerKm": 384,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "durationSeconds": 600,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Fartlek Hard 1",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 5,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Fartlek Hard",
+                "duration": {
+                  "type": "time",
+                  "seconds": 240
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 389,
+                  "max": 389
+                }
+              },
+              {
+                "kind": "recovery",
+                "label": "Fartlek Easy",
+                "duration": {
+                  "type": "time",
+                  "seconds": 180
+                },
+                "hrZone": 2,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 447,
+                  "max": 447
+                }
+              }
+            ],
+            "label": "Fartlek Cycles"
           },
           {
-            "type": "recovery",
-            "name": "Fartlek Easy 1",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 2",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 2",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 3",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 3",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 4",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 4",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 5",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 5",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "durationSeconds": 600,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           }
         ]
@@ -812,16 +641,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 24100,
-            "durationSeconds": 11713,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 24100
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -846,16 +682,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5100,
-            "durationSeconds": 2479,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5100
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -880,117 +723,62 @@
       "targetPaceMinSecondsPerKm": 347,
       "targetPaceMaxSecondsPerKm": 384,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "durationSeconds": 600,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Fartlek Hard 1",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 7,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Fartlek Hard",
+                "duration": {
+                  "type": "time",
+                  "seconds": 240
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 389,
+                  "max": 389
+                }
+              },
+              {
+                "kind": "recovery",
+                "label": "Fartlek Easy",
+                "duration": {
+                  "type": "time",
+                  "seconds": 180
+                },
+                "hrZone": 2,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 447,
+                  "max": 447
+                }
+              }
+            ],
+            "label": "Fartlek Cycles"
           },
           {
-            "type": "recovery",
-            "name": "Fartlek Easy 1",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 2",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 2",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 3",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 3",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 4",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 4",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 5",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 5",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 6",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 6",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 7",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 7",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "durationSeconds": 600,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           }
         ]
@@ -1016,16 +804,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5100,
-            "durationSeconds": 2479,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5100
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1050,16 +845,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 25900,
-            "durationSeconds": 12587,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 25900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1084,16 +886,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5600,
-            "durationSeconds": 2721,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5600
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1118,131 +927,62 @@
       "targetPaceMinSecondsPerKm": 347,
       "targetPaceMaxSecondsPerKm": 384,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "durationSeconds": 600,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Fartlek Hard 1",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 8,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Fartlek Hard",
+                "duration": {
+                  "type": "time",
+                  "seconds": 240
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 389,
+                  "max": 389
+                }
+              },
+              {
+                "kind": "recovery",
+                "label": "Fartlek Easy",
+                "duration": {
+                  "type": "time",
+                  "seconds": 180
+                },
+                "hrZone": 2,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 447,
+                  "max": 447
+                }
+              }
+            ],
+            "label": "Fartlek Cycles"
           },
           {
-            "type": "recovery",
-            "name": "Fartlek Easy 1",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 2",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 2",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 3",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 3",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 4",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 4",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 5",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 5",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 6",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 6",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 7",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 7",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 8",
-            "durationSeconds": 240,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 8",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "durationSeconds": 600,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           }
         ]
@@ -1268,16 +1008,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5600,
-            "durationSeconds": 2721,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5600
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1302,16 +1049,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 25900,
-            "durationSeconds": 12587,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 25900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1336,16 +1090,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 7300,
-            "durationSeconds": 3548,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 7300
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1370,131 +1131,62 @@
       "targetPaceMinSecondsPerKm": 347,
       "targetPaceMaxSecondsPerKm": 384,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "durationSeconds": 600,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Fartlek Hard 1",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 8,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Fartlek Hard",
+                "duration": {
+                  "type": "time",
+                  "seconds": 300
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 389,
+                  "max": 389
+                }
+              },
+              {
+                "kind": "recovery",
+                "label": "Fartlek Easy",
+                "duration": {
+                  "type": "time",
+                  "seconds": 180
+                },
+                "hrZone": 2,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 447,
+                  "max": 447
+                }
+              }
+            ],
+            "label": "Fartlek Cycles"
           },
           {
-            "type": "recovery",
-            "name": "Fartlek Easy 1",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 2",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 2",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 3",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 3",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 4",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 4",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 5",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 5",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 6",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 6",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 7",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 7",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 8",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 8",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "durationSeconds": 600,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           }
         ]
@@ -1520,16 +1212,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 7300,
-            "durationSeconds": 3548,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 7300
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1554,16 +1253,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 24900,
-            "durationSeconds": 12101,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 24900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1588,16 +1294,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5100,
-            "durationSeconds": 2478,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5100
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1622,103 +1335,62 @@
       "targetPaceMinSecondsPerKm": 347,
       "targetPaceMaxSecondsPerKm": 384,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "durationSeconds": 600,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Fartlek Hard 1",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 6,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Fartlek Hard",
+                "duration": {
+                  "type": "time",
+                  "seconds": 300
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 389,
+                  "max": 389
+                }
+              },
+              {
+                "kind": "recovery",
+                "label": "Fartlek Easy",
+                "duration": {
+                  "type": "time",
+                  "seconds": 180
+                },
+                "hrZone": 2,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 447,
+                  "max": 447
+                }
+              }
+            ],
+            "label": "Fartlek Cycles"
           },
           {
-            "type": "recovery",
-            "name": "Fartlek Easy 1",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 2",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 2",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 3",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 3",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 4",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 4",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 5",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 5",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "work",
-            "name": "Fartlek Hard 6",
-            "durationSeconds": 300,
-            "paceSecondsPerKm": 389,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Fartlek Easy 6",
-            "durationSeconds": 180,
-            "paceSecondsPerKm": 447,
-            "hrZone": 2
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "durationSeconds": 600,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "time",
+              "seconds": 600
+            },
             "hrZone": 1
           }
         ]
@@ -1744,16 +1416,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5100,
-            "durationSeconds": 2478,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5100
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1778,16 +1457,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 25900,
-            "durationSeconds": 12587,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 25900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1812,16 +1498,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 7300,
-            "durationSeconds": 3548,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 7300
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1846,78 +1539,51 @@
       "targetPaceMinSecondsPerKm": 340,
       "targetPaceMaxSecondsPerKm": 354,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Rep 1",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 5,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Rep",
+                "duration": {
+                  "type": "distance",
+                  "meters": 1000
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 347,
+                  "max": 347
+                }
+              }
+            ],
+            "setRest": {
+              "type": "distance",
+              "meters": 1000
+            },
+            "label": "5×1km"
           },
           {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 2",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 3",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 4",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 5",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -1943,16 +1609,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 7300,
-            "durationSeconds": 3548,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 7300
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -1977,16 +1650,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 25900,
-            "durationSeconds": 12587,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 25900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2011,16 +1691,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 7300,
-            "durationSeconds": 3548,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 7300
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2045,78 +1732,51 @@
       "targetPaceMinSecondsPerKm": 340,
       "targetPaceMaxSecondsPerKm": 354,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Rep 1",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 5,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Rep",
+                "duration": {
+                  "type": "distance",
+                  "meters": 1000
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 347,
+                  "max": 347
+                }
+              }
+            ],
+            "setRest": {
+              "type": "distance",
+              "meters": 1000
+            },
+            "label": "5×1km"
           },
           {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 2",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 3",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 4",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 5",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -2142,16 +1802,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 7300,
-            "durationSeconds": 3548,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 7300
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2176,16 +1843,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 25900,
-            "durationSeconds": 12587,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 25900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2210,16 +1884,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 7300,
-            "durationSeconds": 3548,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 7300
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2244,78 +1925,51 @@
       "targetPaceMinSecondsPerKm": 340,
       "targetPaceMaxSecondsPerKm": 354,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Rep 1",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 5,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Rep",
+                "duration": {
+                  "type": "distance",
+                  "meters": 1000
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 347,
+                  "max": 347
+                }
+              }
+            ],
+            "setRest": {
+              "type": "distance",
+              "meters": 1000
+            },
+            "label": "5×1km"
           },
           {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 2",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 3",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 4",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 1000,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 5",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -2341,16 +1995,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 7300,
-            "durationSeconds": 3548,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 7300
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2375,16 +2036,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 24900,
-            "durationSeconds": 12101,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 24900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2409,16 +2077,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5100,
-            "durationSeconds": 2478,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5100
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2443,78 +2118,51 @@
       "targetPaceMinSecondsPerKm": 340,
       "targetPaceMaxSecondsPerKm": 354,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Rep 1",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 5,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Rep",
+                "duration": {
+                  "type": "distance",
+                  "meters": 1000
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 347,
+                  "max": 347
+                }
+              }
+            ],
+            "setRest": {
+              "type": "distance",
+              "meters": 625
+            },
+            "label": "5×1km"
           },
           {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 2",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 3",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 4",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 5",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 347,
-            "hrZone": 4
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -2540,16 +2188,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5100,
-            "durationSeconds": 2478,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5100
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2574,16 +2229,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 25900,
-            "durationSeconds": 12587,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 25900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2608,16 +2270,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5800,
-            "durationSeconds": 2819,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5800
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2642,41 +2311,34 @@
       "targetPaceMinSecondsPerKm": 409,
       "targetPaceMaxSecondsPerKm": 435,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "work",
-            "name": "Rep 1",
-            "distanceMeters": 5000,
-            "paceSecondsPerKm": 422,
-            "hrZone": 3
-          },
-          {
-            "type": "recovery",
-            "name": "Tempo rest",
-            "durationSeconds": 120,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 2",
-            "distanceMeters": 5000,
-            "paceSecondsPerKm": 422,
-            "hrZone": 3
-          },
-          {
-            "type": "recovery",
-            "name": "Tempo rest",
-            "durationSeconds": 120,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 3",
-            "distanceMeters": 5000,
-            "paceSecondsPerKm": 422,
-            "hrZone": 3
+            "kind": "repeat",
+            "times": 3,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Rep",
+                "duration": {
+                  "type": "distance",
+                  "meters": 5000
+                },
+                "hrZone": 3,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 422,
+                  "max": 422
+                }
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 120
+            },
+            "label": "3×5km"
           }
         ]
       }
@@ -2701,16 +2363,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5800,
-            "durationSeconds": 2819,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5800
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2735,16 +2404,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 25900,
-            "durationSeconds": 12587,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 25900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2769,16 +2445,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5800,
-            "durationSeconds": 2819,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5800
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2803,41 +2486,34 @@
       "targetPaceMinSecondsPerKm": 409,
       "targetPaceMaxSecondsPerKm": 435,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "work",
-            "name": "Rep 1",
-            "distanceMeters": 5000,
-            "paceSecondsPerKm": 422,
-            "hrZone": 3
-          },
-          {
-            "type": "recovery",
-            "name": "Tempo rest",
-            "durationSeconds": 120,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 2",
-            "distanceMeters": 5000,
-            "paceSecondsPerKm": 422,
-            "hrZone": 3
-          },
-          {
-            "type": "recovery",
-            "name": "Tempo rest",
-            "durationSeconds": 120,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 3",
-            "distanceMeters": 5000,
-            "paceSecondsPerKm": 422,
-            "hrZone": 3
+            "kind": "repeat",
+            "times": 3,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Rep",
+                "duration": {
+                  "type": "distance",
+                  "meters": 5000
+                },
+                "hrZone": 3,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 422,
+                  "max": 422
+                }
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 120
+            },
+            "label": "3×5km"
           }
         ]
       }
@@ -2862,16 +2538,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5800,
-            "durationSeconds": 2819,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5800
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2896,16 +2579,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 22900,
-            "durationSeconds": 11129,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 22900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2930,16 +2620,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 6200,
-            "durationSeconds": 3013,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 6200
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2964,16 +2661,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 6200,
-            "durationSeconds": 3013,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 6200
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -2998,16 +2702,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 5000,
-            "durationSeconds": 2430,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 5000
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -3032,16 +2743,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 18600,
-            "durationSeconds": 9040,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 18600
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -3066,16 +2784,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 6200,
-            "durationSeconds": 3013,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 6200
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -3100,16 +2825,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 5000,
-            "durationSeconds": 2430,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 5000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -3134,16 +2866,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 3000,
-            "durationSeconds": 1458,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 3000
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -3168,16 +2907,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 3000,
-            "durationSeconds": 1458,
-            "paceSecondsPerKm": 486,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 3000
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -3202,16 +2948,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 3400,
-            "durationSeconds": 1537,
-            "paceSecondsPerKm": 452,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 3400
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 452,
+              "max": 452
+            }
           }
         ]
       }
@@ -3236,16 +2989,23 @@
       "targetPaceMinSecondsPerKm": 418,
       "targetPaceMaxSecondsPerKm": 486,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 5000,
-            "durationSeconds": 2430,
-            "paceSecondsPerKm": 486,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 5000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 486,
+              "max": 486
+            }
           }
         ]
       }
@@ -3270,25 +3030,34 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Race Day",
-            "distanceMeters": 39695,
+            "kind": "work",
+            "label": "Race Day",
+            "duration": {
+              "type": "distance",
+              "meters": 39695
+            },
             "hrZone": 5
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]

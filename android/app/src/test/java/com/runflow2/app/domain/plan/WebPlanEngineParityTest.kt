@@ -69,23 +69,6 @@ class WebPlanEngineParityTest {
     )
 
     @Serializable
-    data class FixtureStep(
-        val type: String,
-        val name: String = "",
-        val distanceMeters: Double? = null,
-        val durationSeconds: Double? = null,
-        val paceSecondsPerKm: Double? = null,
-        val hrZone: Int? = null,
-    )
-
-    @Serializable
-    data class FixturePlan(
-        val version: Int = 1,
-        val source: String = "generated-plan",
-        val steps: List<FixtureStep> = emptyList(),
-    )
-
-    @Serializable
     data class FixtureWorkout(
         val id: String,
         val date: String,
@@ -105,7 +88,7 @@ class WebPlanEngineParityTest {
         val targetPaceZoneLabel: String? = null,
         val targetPaceMinSecondsPerKm: Double? = null,
         val targetPaceMaxSecondsPerKm: Double? = null,
-        val structuredSteps: FixturePlan? = null,
+        val structuredSteps: com.runflow2.app.domain.plan.structured.StructuredWorkoutV2? = null,
     )
 
     @Serializable
@@ -200,23 +183,8 @@ class WebPlanEngineParityTest {
                     e.targetPaceMaxSecondsPerKm, a.targetPaceMaxSecondsPerKm, 0.1,
                 )
 
-                // structuredSteps: kind / distance / duration sequence
-                val expectedSteps = e.structuredSteps?.steps ?: emptyList()
-                val actualSteps = a.structuredSteps?.steps ?: emptyList()
-                assertEquals("$ctx: structuredSteps count", expectedSteps.size, actualSteps.size)
-                for (s in expectedSteps.indices) {
-                    val es = expectedSteps[s]
-                    val asStep = actualSteps[s]
-                    val sctx = "$ctx step#$s"
-                    assertEquals("$sctx kind", es.type, asStep.type)
-                    assertEquals("$sctx name", es.name, asStep.name)
-                    assertEqualsNullableDouble("$sctx distance", es.distanceMeters, asStep.distanceMeters, 0.5)
-                    assertEqualsNullableDouble("$sctx duration", es.durationSeconds, asStep.durationSeconds, 0.5)
-                    assertEqualsNullableDouble(
-                        "$sctx pace", es.paceSecondsPerKm, asStep.paceSecondsPerKm, 0.1,
-                    )
-                    assertEquals("$sctx hrZone", es.hrZone, asStep.hrZone)
-                }
+                // structuredSteps: canonical v2 equality
+                assertEquals("$ctx: structuredSteps", e.structuredSteps, a.structuredSteps)
 
                 // the hard one: exact technical description
                 if (e.description != a.description) {

@@ -58,6 +58,17 @@ data class ActivityEntity(
     // ---- Health Connect (v9): record id of the imported ExerciseSession,
     // the dedupe key so re-imports never duplicate a run. ----
     val hcRecordId: String? = null,
+    // ---- v13: cycling power metrics ----
+    val averageWatts: Double? = null,
+    val weightedAverageWatts: Double? = null,
+    val maxWatts: Double? = null,
+    @ColumnInfo(defaultValue = "0") val deviceWatts: Boolean = false,
+    val npWatts: Double? = null,
+    val intensityFactor: Double? = null,
+    val variabilityIndex: Double? = null,
+    val bikeTss: Double? = null,
+    val efficiencyFactor: Double? = null,
+    val aerobicDecoupling: Double? = null,
 ) {
     val distanceKm: Double get() = distanceMeters / 1000.0
     val paceSecPerKm: Double? get() = if (distanceMeters > 0) movingTimeSec / distanceKm else null
@@ -96,6 +107,10 @@ data class GoalEntity(
     // AI guidance it carries; null on generator/mobile-originated plans
     val creationMode: String? = null,
     val guidanceLevel: String? = null,
+    // ---- v13 ----
+    val ftpAtCreation: Int? = null,
+    val swimCssAtCreation: Int? = null,
+    val phaseBlocksJson: String? = null,
 )
 
 @Entity(tableName = "workouts")
@@ -134,6 +149,16 @@ data class WorkoutEntity(
     // null on server-pulled rows (those are already server-truth).
     val webWorkoutType: String? = null,
     val webPhase: String? = null,
+    // ---- v13 ----
+    val targetPowerWatts: Int? = null,
+    val targetPowerMinWatts: Int? = null,
+    val targetPowerMaxWatts: Int? = null,
+    val targetPowerZone: Int? = null,
+    val targetFtpPercent: Int? = null,
+    val targetCadenceRpm: Int? = null,
+    val targetRpe: Int? = null,
+    val plannedTss: Double? = null,
+    @ColumnInfo(defaultValue = "RUN") val sport: String = "RUN",
 )
 
 @Entity(tableName = "profile")
@@ -500,7 +525,7 @@ interface DailyEntryDao {
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
         DailyEntryEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -694,6 +719,39 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_11_12: Migration = object : Migration(11, 12) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE profile ADD COLUMN hrZonesAuto INTEGER NOT NULL DEFAULT 1")
+            }
+        }
+
+        /**
+         * v12 -> v13 adds structured workout/plan targets, cycling power metrics,
+         * and phase blocks. Purely additive; defaults match entity defaults.
+         */
+        val MIGRATION_12_13: Migration = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetPowerWatts INTEGER")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetPowerMinWatts INTEGER")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetPowerMaxWatts INTEGER")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetPowerZone INTEGER")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetFtpPercent INTEGER")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetCadenceRpm INTEGER")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN targetRpe INTEGER")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN plannedTss REAL")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN sport TEXT NOT NULL DEFAULT 'RUN'")
+
+                db.execSQL("ALTER TABLE goals ADD COLUMN ftpAtCreation INTEGER")
+                db.execSQL("ALTER TABLE goals ADD COLUMN swimCssAtCreation INTEGER")
+                db.execSQL("ALTER TABLE goals ADD COLUMN phaseBlocksJson TEXT")
+
+                db.execSQL("ALTER TABLE activities ADD COLUMN averageWatts REAL")
+                db.execSQL("ALTER TABLE activities ADD COLUMN weightedAverageWatts REAL")
+                db.execSQL("ALTER TABLE activities ADD COLUMN maxWatts REAL")
+                db.execSQL("ALTER TABLE activities ADD COLUMN deviceWatts INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE activities ADD COLUMN npWatts REAL")
+                db.execSQL("ALTER TABLE activities ADD COLUMN intensityFactor REAL")
+                db.execSQL("ALTER TABLE activities ADD COLUMN variabilityIndex REAL")
+                db.execSQL("ALTER TABLE activities ADD COLUMN bikeTss REAL")
+                db.execSQL("ALTER TABLE activities ADD COLUMN efficiencyFactor REAL")
+                db.execSQL("ALTER TABLE activities ADD COLUMN aerobicDecoupling REAL")
             }
         }
     }

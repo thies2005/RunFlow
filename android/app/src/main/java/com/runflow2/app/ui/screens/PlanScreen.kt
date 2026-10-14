@@ -654,10 +654,11 @@ private fun EditWorkoutFields(
                 label = { Text("Distance (km)") },
                 modifier = Modifier.weight(1f),
             )
+            val isSwim = workout.workoutType in listOf("SWIM", "SWIM_DRILL", "OPEN_WATER_SWIM") || workout.sport == "SWIM"
             OutlinedTextField(
                 value = paceText,
                 onValueChange = { paceText = it },
-                label = { Text("Pace (m:ss)") },
+                label = { Text(if (isSwim) "Pace (/100m)" else "Pace (m:ss /km)") },
                 modifier = Modifier.weight(1f),
             )
         }

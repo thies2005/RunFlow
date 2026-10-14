@@ -6,6 +6,7 @@ import com.runflow2.app.data.db.WorkoutEntity
 import com.runflow2.app.domain.model.PaceZoneEvaluator
 import com.runflow2.app.domain.model.PaceZoneStatus
 import com.runflow2.app.domain.model.WorkoutType
+import com.runflow2.app.domain.plan.structured.Target
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -23,16 +24,28 @@ data class GeoPt(val lat: Double, val lng: Double, val ele: Double, val t: Long,
 
 data class Lap(val km: Int, val durSec: Int, val paceSecPerKm: Int)
 
-enum class StepDurationType { TIME, DISTANCE }
+enum class StepDurationType { TIME, DISTANCE, LAP_PRESS }
 
 data class StepRuntime(
     val label: String,
-    val kind: String, // warmup / main / recovery / cooldown / repeat
+    val kind: String, // warmup / main / recovery / cooldown / repeat / steady / transition
     val durationType: StepDurationType,
     val durationSec: Double,
     val distanceM: Double,
     val targetPaceSecPerKm: Double?,
-)
+    val target: Target? = null,
+    val targetPaceMinSecPerKm: Double? = null,
+    val targetPaceMaxSecPerKm: Double? = null,
+    val isSwim: Boolean = false,
+    val note: String? = null,
+    val hrZone: Int? = null,
+    val targetPowerWatts: Int? = null,
+    val targetPowerMinWatts: Int? = null,
+    val targetPowerMaxWatts: Int? = null,
+) {
+    val minPaceSecPerKm: Double? get() = targetPaceMinSecPerKm
+    val maxPaceSecPerKm: Double? get() = targetPaceMaxSecPerKm
+}
 
 /** Completed structured step (in-memory split marker; not part of the km laps). */
 data class StepSplit(
@@ -72,6 +85,14 @@ data class RecordingState(
     val autoPauseEnabled: Boolean = true,
     val voiceEnabled: Boolean = true,
     val targetPaceSecPerKm: Double? = null,
+    val targetPaceMinSecPerKm: Double? = null,
+    val targetPaceMaxSecPerKm: Double? = null,
+    val targetHrZone: Int? = null,
+    val targetHrMinBpm: Int? = null,
+    val targetHrMaxBpm: Int? = null,
+    val targetPowerWatts: Int? = null,
+    val targetPowerMinWatts: Int? = null,
+    val targetPowerMaxWatts: Int? = null,
     val workoutName: String? = null,
     val workoutId: String? = null,
     val steps: List<StepRuntime> = emptyList(),
@@ -81,8 +102,29 @@ data class RecordingState(
     val currentStepRemaining: Double? = null,
     val stepSplits: List<StepSplit> = emptyList(),
 ) {
+    val activeStep: StepRuntime? get() = steps.getOrNull(activeStepIndex)
+
     val paceZone: PaceZoneStatus
-        get() = PaceZoneEvaluator.evaluate(currentPaceSecPerKm, targetPaceSecPerKm)
+        get() {
+            val step = activeStep
+            return if (step != null && (step.targetPaceMinSecPerKm != null || step.targetPaceMaxSecPerKm != null || step.targetPaceSecPerKm != null)) {
+                PaceZoneEvaluator.evaluate(
+                    currentPaceSec = currentPaceSecPerKm,
+                    minPaceSec = step.targetPaceMinSecPerKm,
+                    maxPaceSec = step.targetPaceMaxSecPerKm,
+                    targetPaceSec = step.targetPaceSecPerKm,
+                    isSwim = step.target is Target.Pace && step.target.unit == "sec_per_100m",
+                )
+            } else {
+                PaceZoneEvaluator.evaluate(
+                    currentPaceSec = currentPaceSecPerKm,
+                    minPaceSec = targetPaceMinSecPerKm,
+                    maxPaceSec = targetPaceMaxSecPerKm,
+                    targetPaceSec = targetPaceSecPerKm,
+                    isSwim = false,
+                )
+            }
+        }
 }
 
 /**
@@ -150,6 +192,14 @@ class RecordingController(
             autoPauseEnabled = _state.value.autoPauseEnabled,
             voiceEnabled = _state.value.voiceEnabled,
             targetPaceSecPerKm = workout?.targetPaceSecPerKm?.toDouble(),
+            targetPaceMinSecPerKm = workout?.targetPaceMinSecPerKm,
+            targetPaceMaxSecPerKm = workout?.targetPaceMaxSecPerKm,
+            targetHrZone = workout?.targetHrZone,
+            targetHrMinBpm = workout?.targetHrMinBpm,
+            targetHrMaxBpm = workout?.targetHrMaxBpm,
+            targetPowerWatts = workout?.targetPowerWatts,
+            targetPowerMinWatts = workout?.targetPowerMinWatts,
+            targetPowerMaxWatts = workout?.targetPowerMaxWatts,
             workoutName = workout?.let { runName(it) },
             workoutId = workout?.id,
             steps = steps,
@@ -283,7 +333,24 @@ class RecordingController(
             }
 
             // pace zone voice warning (needs 20 s continuously out of zone)
-            val zone = PaceZoneEvaluator.evaluate(pace, s.targetPaceSecPerKm)
+            val activeStep = s.steps.getOrNull(s.activeStepIndex)
+            val zone = if (activeStep != null && (activeStep.targetPaceMinSecPerKm != null || activeStep.targetPaceMaxSecPerKm != null || activeStep.targetPaceSecPerKm != null)) {
+                PaceZoneEvaluator.evaluate(
+                    currentPaceSec = pace,
+                    minPaceSec = activeStep.targetPaceMinSecPerKm,
+                    maxPaceSec = activeStep.targetPaceMaxSecPerKm,
+                    targetPaceSec = activeStep.targetPaceSecPerKm,
+                    isSwim = activeStep.target is Target.Pace && activeStep.target.unit == "sec_per_100m",
+                )
+            } else {
+                PaceZoneEvaluator.evaluate(
+                    currentPaceSec = pace,
+                    minPaceSec = s.targetPaceMinSecPerKm,
+                    maxPaceSec = s.targetPaceMaxSecPerKm,
+                    targetPaceSec = s.targetPaceSecPerKm,
+                    isSwim = false,
+                )
+            }
             if (zone == PaceZoneStatus.TOO_FAST || zone == PaceZoneStatus.TOO_SLOW) {
                 val since = paceWarnSinceMs ?: t.also { paceWarnSinceMs = it }
                 if (t - since > 20_000) {
@@ -334,6 +401,7 @@ class RecordingController(
         val done = when (step.durationType) {
             StepDurationType.DISTANCE -> distInStep >= step.distanceM && step.distanceM > 0
             StepDurationType.TIME -> movingInStep >= step.durationSec && step.durationSec > 0
+            StepDurationType.LAP_PRESS -> false
         }
         if (done) {
             _voice.tryEmit(VoiceEvent.StepDone(step.label))
@@ -368,15 +436,70 @@ class RecordingController(
         val progress = when (step.durationType) {
             StepDurationType.DISTANCE -> if (step.distanceM > 0) (distInStep / step.distanceM).toFloat() else 0f
             StepDurationType.TIME -> if (step.durationSec > 0) (movingInStep / step.durationSec).toFloat() else 0f
+            StepDurationType.LAP_PRESS -> 0f
         }
         val remaining = stepRemaining(step, distInStep, movingInStep)
-        if (step.durationType == StepDurationType.TIME) {
+        if (step.durationType == StepDurationType.TIME && remaining != null) {
             stepCountdownCue(remaining, lastStepCue)?.let { cue ->
                 lastStepCue = cue
                 _voice.tryEmit(VoiceEvent.Countdown(cue))
             }
         }
         return s.copy(stepProgress = progress.coerceIn(0f, 1f), currentStepRemaining = remaining)
+    }
+
+    /**
+     * Advances the active step on a lap-press duration step (or any structured step),
+     * otherwise records a manual lap split.
+     */
+    fun onLapPressed() {
+        val s = _state.value
+        if (s.status != RecStatus.RUNNING && s.status != RecStatus.PAUSED) return
+
+        val activeStep = s.steps.getOrNull(s.activeStepIndex)
+        if (activeStep != null && activeStep.durationType == StepDurationType.LAP_PRESS) {
+            val step = activeStep
+            val distInStep = s.distanceM - stepStartDist
+            val movingInStep = s.elapsedMovingSec - stepStartMoving
+
+            _voice.tryEmit(VoiceEvent.StepDone(step.label))
+            val split = StepSplit(
+                index = s.activeStepIndex,
+                label = step.label,
+                durSec = movingInStep.toInt(),
+                distanceM = distInStep,
+                paceSecPerKm = if (distInStep > 50) (movingInStep / (distInStep / 1000.0)).toInt() else null,
+            )
+            val next = s.activeStepIndex + 1
+            stepStartDist = s.distanceM
+            stepStartMoving = s.elapsedMovingSec
+            lastStepCue = 0
+            _state.value = if (next < s.steps.size) {
+                _voice.tryEmit(VoiceEvent.StepStart(s.steps[next].label))
+                s.copy(
+                    activeStepIndex = next,
+                    stepProgress = 0f,
+                    currentStepRemaining = stepRemaining(s.steps[next], 0.0, 0.0),
+                    stepSplits = s.stepSplits + split,
+                )
+            } else {
+                s.copy(
+                    activeStepIndex = -1,
+                    stepProgress = 1f,
+                    currentStepRemaining = null,
+                    stepSplits = s.stepSplits + split,
+                )
+            }
+        } else {
+            val lapMoving = s.elapsedMovingSec - lastLapMovingSec
+            val lapDist = s.distanceM - lastLapDistM
+            val lapPace = if (lapDist > 100) (lapMoving / (lapDist / 1000.0)).toInt() else 0
+            val lapIndex = s.laps.size + 1
+            lastLapDistM = s.distanceM
+            lastLapMovingSec = s.elapsedMovingSec
+            _state.value = s.copy(laps = s.laps + Lap(lapIndex, lapMoving.toInt(), lapPace))
+            _voice.tryEmit(VoiceEvent.KmDone(lapIndex, lapPace))
+        }
     }
 
     private fun activeLabel(): String {
@@ -413,11 +536,12 @@ class RecordingController(
             return 2 * r * atan2(sqrt(a), sqrt(1 - a))
         }
 
-        /** Seconds (TIME) or meters (DISTANCE) left in a step, clamped at 0. */
-        fun stepRemaining(step: StepRuntime, distInStep: Double, movingInStep: Double): Double =
+        /** Seconds (TIME) or meters (DISTANCE) left in a step, clamped at 0. Null for LAP_PRESS. */
+        fun stepRemaining(step: StepRuntime, distInStep: Double, movingInStep: Double): Double? =
             when (step.durationType) {
                 StepDurationType.DISTANCE -> (step.distanceM - distInStep).coerceAtLeast(0.0)
                 StepDurationType.TIME -> (step.durationSec - movingInStep).coerceAtLeast(0.0)
+                StepDurationType.LAP_PRESS -> null
             }
 
         /** 3-2-1 cue worth speaking for a TIME step's remaining seconds, or null. */

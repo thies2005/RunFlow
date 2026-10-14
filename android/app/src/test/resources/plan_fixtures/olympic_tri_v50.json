@@ -31,26 +31,67 @@
       "targetPaceMinSecondsPerKm": 100,
       "targetPaceMaxSecondsPerKm": 110,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 100,
-            "paceSecondsPerKm": 105
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 100
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 600,
-            "paceSecondsPerKm": 105
+            "kind": "repeat",
+            "times": 12,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Drill",
+                "duration": {
+                  "type": "distance",
+                  "meters": 50
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 102,
+                  "max": 108,
+                  "zoneLabel": "Swim Drill"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 12×50m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 100,
-            "paceSecondsPerKm": 105
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 100
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -75,13 +116,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 2037,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 2037
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -107,26 +159,40 @@
       "targetPaceMinSecondsPerKm": 247,
       "targetPaceMaxSecondsPerKm": 263,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Threshold",
-            "distanceMeters": 5500,
-            "paceSecondsPerKm": 255,
-            "hrZone": 4
+            "kind": "work",
+            "label": "Threshold",
+            "duration": {
+              "type": "distance",
+              "meters": 5500
+            },
+            "hrZone": 4,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 255,
+              "max": 255
+            }
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -152,26 +218,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 700,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 7,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 7×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -196,16 +303,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 1100,
-            "durationSeconds": 332,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 1100
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -230,26 +344,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 700,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 7,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 7×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -274,16 +429,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 9960,
-            "durationSeconds": 3008,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 9960
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -308,26 +470,83 @@
       "targetPaceMinSecondsPerKm": 100,
       "targetPaceMaxSecondsPerKm": 110,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 105
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 580,
-            "paceSecondsPerKm": 105
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Drill",
+                "duration": {
+                  "type": "distance",
+                  "meters": 50
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 102,
+                  "max": 108,
+                  "zoneLabel": "Swim Drill"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×50m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 105
+            "kind": "steady",
+            "label": "Steady swim",
+            "duration": {
+              "type": "distance",
+              "meters": 30
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 102,
+              "max": 108,
+              "zoneLabel": "Swim Drill"
+            },
+            "hrZone": 2
+          },
+          {
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -352,13 +571,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 2218,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 2218
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -384,26 +614,40 @@
       "targetPaceMinSecondsPerKm": 247,
       "targetPaceMaxSecondsPerKm": 263,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Threshold",
-            "distanceMeters": 5500,
-            "paceSecondsPerKm": 255,
-            "hrZone": 4
+            "kind": "work",
+            "label": "Threshold",
+            "duration": {
+              "type": "distance",
+              "meters": 5500
+            },
+            "hrZone": 4,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 255,
+              "max": 255
+            }
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -429,26 +673,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 800,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 8,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 8×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -473,16 +758,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 1900,
-            "durationSeconds": 574,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 1900
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -507,26 +799,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 800,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 8,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 8×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -551,16 +884,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 10845,
-            "durationSeconds": 3275,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 10845
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -585,26 +925,67 @@
       "targetPaceMinSecondsPerKm": 100,
       "targetPaceMaxSecondsPerKm": 110,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 105
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 660,
-            "paceSecondsPerKm": 105
+            "kind": "repeat",
+            "times": 13,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Drill",
+                "duration": {
+                  "type": "distance",
+                  "meters": 50
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 102,
+                  "max": 108,
+                  "zoneLabel": "Swim Drill"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 13×50m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 105
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -629,13 +1010,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 2416,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 2416
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -661,26 +1053,40 @@
       "targetPaceMinSecondsPerKm": 247,
       "targetPaceMaxSecondsPerKm": 263,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Threshold",
-            "distanceMeters": 5500,
-            "paceSecondsPerKm": 255,
-            "hrZone": 4
+            "kind": "work",
+            "label": "Threshold",
+            "duration": {
+              "type": "distance",
+              "meters": 5500
+            },
+            "hrZone": 4,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 255,
+              "max": 255
+            }
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -706,26 +1112,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 800,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 8,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 8×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -750,16 +1197,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 2800,
-            "durationSeconds": 846,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 2800
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -784,26 +1238,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 800,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 8,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 8×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -828,16 +1323,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 9447,
-            "durationSeconds": 2853,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 9447
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -862,13 +1364,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy Ride",
-            "durationSeconds": 4251,
+            "kind": "steady",
+            "label": "Easy Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 4251
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -894,16 +1407,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 9400,
-            "durationSeconds": 2839,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 9400
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -928,26 +1448,67 @@
       "targetPaceMinSecondsPerKm": 100,
       "targetPaceMaxSecondsPerKm": 110,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 100,
-            "paceSecondsPerKm": 105
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 100
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 600,
-            "paceSecondsPerKm": 105
+            "kind": "repeat",
+            "times": 12,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Drill",
+                "duration": {
+                  "type": "distance",
+                  "meters": 50
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 102,
+                  "max": 108,
+                  "zoneLabel": "Swim Drill"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 12×50m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 100,
-            "paceSecondsPerKm": 105
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 100
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -972,26 +1533,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 700,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 7,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 7×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1016,16 +1618,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 11808,
-            "durationSeconds": 3566,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 11808
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -1050,13 +1659,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy Ride",
-            "durationSeconds": 2834,
+            "kind": "steady",
+            "label": "Easy Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 2834
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -1082,26 +1702,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 700,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 7,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 7×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1126,26 +1787,83 @@
       "targetPaceMinSecondsPerKm": 100,
       "targetPaceMaxSecondsPerKm": 110,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 105
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 740,
-            "paceSecondsPerKm": 105
+            "kind": "repeat",
+            "times": 14,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Drill",
+                "duration": {
+                  "type": "distance",
+                  "meters": 50
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 102,
+                  "max": 108,
+                  "zoneLabel": "Swim Drill"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 14×50m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 105
+            "kind": "steady",
+            "label": "Steady swim",
+            "duration": {
+              "type": "distance",
+              "meters": 40
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 102,
+              "max": 108,
+              "zoneLabel": "Swim Drill"
+            },
+            "hrZone": 2
+          },
+          {
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1170,13 +1888,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 2630,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 2630
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -1202,26 +1931,40 @@
       "targetPaceMinSecondsPerKm": 247,
       "targetPaceMaxSecondsPerKm": 263,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Threshold",
-            "distanceMeters": 5500,
-            "paceSecondsPerKm": 255,
-            "hrZone": 4
+            "kind": "work",
+            "label": "Threshold",
+            "duration": {
+              "type": "distance",
+              "meters": 5500
+            },
+            "hrZone": 4,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 255,
+              "max": 255
+            }
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -1247,26 +1990,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 900,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 9,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 9×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1291,16 +2075,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 3800,
-            "durationSeconds": 1148,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 3800
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -1325,26 +2116,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 900,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 9,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 9×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1369,16 +2201,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 12858,
-            "durationSeconds": 3883,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 12858
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -1403,26 +2242,67 @@
       "targetPaceMinSecondsPerKm": 100,
       "targetPaceMaxSecondsPerKm": 110,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 105
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 820,
-            "paceSecondsPerKm": 105
+            "kind": "repeat",
+            "times": 16,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Drill",
+                "duration": {
+                  "type": "distance",
+                  "meters": 50
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 102,
+                  "max": 108,
+                  "zoneLabel": "Swim Drill"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 16×50m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 105
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1447,13 +2327,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 2864,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 2864
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -1479,26 +2370,40 @@
       "targetPaceMinSecondsPerKm": 247,
       "targetPaceMaxSecondsPerKm": 263,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Threshold",
-            "distanceMeters": 5500,
-            "paceSecondsPerKm": 255,
-            "hrZone": 4
+            "kind": "work",
+            "label": "Threshold",
+            "duration": {
+              "type": "distance",
+              "meters": 5500
+            },
+            "hrZone": 4,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 255,
+              "max": 255
+            }
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -1524,26 +2429,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 10,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 10×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1568,16 +2514,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 4800,
-            "durationSeconds": 1450,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 4800
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -1602,26 +2555,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 10,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 10×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1646,16 +2640,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 14000,
-            "durationSeconds": 4228,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 14000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -1680,26 +2681,67 @@
       "targetPaceMinSecondsPerKm": 100,
       "targetPaceMaxSecondsPerKm": 110,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 105
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 800,
-            "paceSecondsPerKm": 105
+            "kind": "repeat",
+            "times": 16,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Drill",
+                "duration": {
+                  "type": "distance",
+                  "meters": 50
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 102,
+                  "max": 108,
+                  "zoneLabel": "Swim Drill"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 16×50m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 105
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1724,13 +2766,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 3119,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 3119
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -1756,26 +2809,40 @@
       "targetPaceMinSecondsPerKm": 247,
       "targetPaceMaxSecondsPerKm": 263,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Threshold",
-            "distanceMeters": 5500,
-            "paceSecondsPerKm": 255,
-            "hrZone": 4
+            "kind": "work",
+            "label": "Threshold",
+            "duration": {
+              "type": "distance",
+              "meters": 5500
+            },
+            "hrZone": 4,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 255,
+              "max": 255
+            }
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -1801,26 +2868,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1845,16 +2953,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 6000,
-            "durationSeconds": 1812,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 6000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -1879,26 +2994,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -1923,16 +3079,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 12196,
-            "durationSeconds": 3683,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 12196
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -1957,13 +3120,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy Ride",
-            "durationSeconds": 5488,
+            "kind": "steady",
+            "label": "Easy Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 5488
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -1989,16 +3163,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 12000,
-            "durationSeconds": 3624,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 12000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -2023,26 +3204,83 @@
       "targetPaceMinSecondsPerKm": 100,
       "targetPaceMaxSecondsPerKm": 110,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 105
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 740,
-            "paceSecondsPerKm": 105
+            "kind": "repeat",
+            "times": 14,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Drill",
+                "duration": {
+                  "type": "distance",
+                  "meters": 50
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 102,
+                  "max": 108,
+                  "zoneLabel": "Swim Drill"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 14×50m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 105
+            "kind": "steady",
+            "label": "Steady swim",
+            "duration": {
+              "type": "distance",
+              "meters": 40
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 102,
+              "max": 108,
+              "zoneLabel": "Swim Drill"
+            },
+            "hrZone": 2
+          },
+          {
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2067,26 +3305,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 900,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 9,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 9×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2111,16 +3390,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 14000,
-            "durationSeconds": 4228,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 14000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -2145,13 +3431,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy Ride",
-            "durationSeconds": 3659,
+            "kind": "steady",
+            "label": "Easy Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 3659
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -2177,26 +3474,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 900,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 9,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 9×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2221,26 +3559,67 @@
       "targetPaceMinSecondsPerKm": 100,
       "targetPaceMaxSecondsPerKm": 110,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 105
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 800,
-            "paceSecondsPerKm": 105
+            "kind": "repeat",
+            "times": 16,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Drill",
+                "duration": {
+                  "type": "distance",
+                  "meters": 50
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 102,
+                  "max": 108,
+                  "zoneLabel": "Swim Drill"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 16×50m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 105
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 107,
+              "max": 113,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2265,13 +3644,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 3119,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 3119
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -2297,26 +3687,40 @@
       "targetPaceMinSecondsPerKm": 247,
       "targetPaceMaxSecondsPerKm": 263,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Threshold",
-            "distanceMeters": 5500,
-            "paceSecondsPerKm": 255,
-            "hrZone": 4
+            "kind": "work",
+            "label": "Threshold",
+            "duration": {
+              "type": "distance",
+              "meters": 5500
+            },
+            "hrZone": 4,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 255,
+              "max": 255
+            }
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -2342,26 +3746,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2386,16 +3831,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 6000,
-            "durationSeconds": 1812,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 6000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -2420,26 +3872,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2464,16 +3957,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 14000,
-            "durationSeconds": 4228,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 14000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -2498,26 +3998,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2542,13 +4083,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 4536,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 4536
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -2574,26 +4126,40 @@
       "targetPaceMinSecondsPerKm": 247,
       "targetPaceMaxSecondsPerKm": 263,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Threshold",
-            "distanceMeters": 5500,
-            "paceSecondsPerKm": 255,
-            "hrZone": 4
+            "kind": "work",
+            "label": "Threshold",
+            "duration": {
+              "type": "distance",
+              "meters": 5500
+            },
+            "hrZone": 4,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 255,
+              "max": 255
+            }
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -2619,26 +4185,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2663,16 +4270,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 6000,
-            "durationSeconds": 1812,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 6000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -2697,26 +4311,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2741,16 +4396,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 14000,
-            "durationSeconds": 4228,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 14000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -2775,26 +4437,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2819,13 +4522,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 4536,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 4536
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -2851,26 +4565,40 @@
       "targetPaceMinSecondsPerKm": 247,
       "targetPaceMaxSecondsPerKm": 263,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Threshold",
-            "distanceMeters": 5500,
-            "paceSecondsPerKm": 255,
-            "hrZone": 4
+            "kind": "work",
+            "label": "Threshold",
+            "duration": {
+              "type": "distance",
+              "meters": 5500
+            },
+            "hrZone": 4,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 255,
+              "max": 255
+            }
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -2896,26 +4624,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -2940,16 +4709,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 6000,
-            "durationSeconds": 1812,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 6000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -2974,26 +4750,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3018,16 +4835,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 12196,
-            "durationSeconds": 3683,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 12196
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -3052,13 +4876,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy Ride",
-            "durationSeconds": 5488,
+            "kind": "steady",
+            "label": "Easy Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 5488
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -3084,16 +4919,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 12000,
-            "durationSeconds": 3624,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 12000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -3118,26 +4960,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 900,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 9,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 9×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3162,13 +5045,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy Ride",
-            "durationSeconds": 3659,
+            "kind": "steady",
+            "label": "Easy Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 3659
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -3194,26 +5088,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 900,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 9,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 9×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3238,13 +5173,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 4536,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 4536
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -3270,16 +5216,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 14000,
-            "durationSeconds": 4228,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 14000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -3304,26 +5257,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3348,16 +5342,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 6000,
-            "durationSeconds": 1812,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 6000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -3382,26 +5383,40 @@
       "targetPaceMinSecondsPerKm": 247,
       "targetPaceMaxSecondsPerKm": 263,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Threshold",
-            "distanceMeters": 5500,
-            "paceSecondsPerKm": 255,
-            "hrZone": 4
+            "kind": "work",
+            "label": "Threshold",
+            "duration": {
+              "type": "distance",
+              "meters": 5500
+            },
+            "hrZone": 4,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 255,
+              "max": 255
+            }
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -3427,26 +5442,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3471,16 +5527,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 14000,
-            "durationSeconds": 4228,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 14000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -3505,26 +5568,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3549,13 +5653,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 5670,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 5670
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -3581,26 +5696,67 @@
       "targetPaceMinSecondsPerKm": 109,
       "targetPaceMaxSecondsPerKm": 121,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 115
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 117,
+              "max": 124,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 115
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 112,
+                  "max": 118,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 115
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 117,
+              "max": 124,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3625,26 +5781,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 900,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 9,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 9×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3669,78 +5866,51 @@
       "targetPaceMinSecondsPerKm": 225,
       "targetPaceMaxSecondsPerKm": 235,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Rep 1",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 230,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 5,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Rep",
+                "duration": {
+                  "type": "distance",
+                  "meters": 1000
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 230,
+                  "max": 230
+                }
+              }
+            ],
+            "setRest": {
+              "type": "distance",
+              "meters": 625
+            },
+            "label": "5×1km"
           },
           {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 2",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 230,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 3",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 230,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 4",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 230,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 5",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 230,
-            "hrZone": 4
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -3766,26 +5936,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3810,16 +6021,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 4000,
-            "durationSeconds": 1208,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 4000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -3844,26 +6062,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3888,16 +6147,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 14000,
-            "durationSeconds": 4228,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 14000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -3922,26 +6188,67 @@
       "targetPaceMinSecondsPerKm": 109,
       "targetPaceMaxSecondsPerKm": 121,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 115
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 117,
+              "max": 124,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 115
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 112,
+                  "max": 118,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 115
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 117,
+              "max": 124,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -3966,13 +6273,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 5670,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 5670
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -3998,78 +6316,51 @@
       "targetPaceMinSecondsPerKm": 225,
       "targetPaceMaxSecondsPerKm": 235,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Rep 1",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 230,
-            "hrZone": 4
+            "kind": "repeat",
+            "times": 5,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Rep",
+                "duration": {
+                  "type": "distance",
+                  "meters": 1000
+                },
+                "hrZone": 4,
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_km",
+                  "min": 230,
+                  "max": 230
+                }
+              }
+            ],
+            "setRest": {
+              "type": "distance",
+              "meters": 625
+            },
+            "label": "5×1km"
           },
           {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 2",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 230,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 3",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 230,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 4",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 230,
-            "hrZone": 4
-          },
-          {
-            "type": "recovery",
-            "name": "Recovery jog",
-            "distanceMeters": 625,
-            "hrZone": 1
-          },
-          {
-            "type": "work",
-            "name": "Rep 5",
-            "distanceMeters": 1000,
-            "paceSecondsPerKm": 230,
-            "hrZone": 4
-          },
-          {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]
@@ -4095,26 +6386,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -4139,16 +6471,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 4000,
-            "durationSeconds": 1208,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 4000
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -4173,26 +6512,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 1100,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 11,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 11×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -4217,16 +6597,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long run",
-            "distanceMeters": 5600,
-            "durationSeconds": 1691,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Long run",
+            "duration": {
+              "type": "distance",
+              "meters": 5600
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -4251,13 +6638,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy Ride",
-            "durationSeconds": 4133,
+            "kind": "steady",
+            "label": "Easy Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 4133
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -4283,16 +6681,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy run",
-            "distanceMeters": 11200,
-            "durationSeconds": 3382,
-            "paceSecondsPerKm": 302,
-            "hrZone": 2
+            "kind": "steady",
+            "label": "Easy run",
+            "duration": {
+              "type": "distance",
+              "meters": 11200
+            },
+            "hrZone": 2,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 302,
+              "max": 302
+            }
           }
         ]
       }
@@ -4317,26 +6722,67 @@
       "targetPaceMinSecondsPerKm": 109,
       "targetPaceMaxSecondsPerKm": 121,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 115
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 117,
+              "max": 124,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 800,
-            "paceSecondsPerKm": 115
+            "kind": "repeat",
+            "times": 8,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 112,
+                  "max": 118,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 8×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 115
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 117,
+              "max": 124,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -4361,26 +6807,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 800,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 8,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 8×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -4405,16 +6892,23 @@
       "targetPaceMinSecondsPerKm": 278,
       "targetPaceMaxSecondsPerKm": 326,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Recovery run",
-            "distanceMeters": 3000,
-            "durationSeconds": 978,
-            "paceSecondsPerKm": 326,
-            "hrZone": 1
+            "kind": "steady",
+            "label": "Recovery run",
+            "duration": {
+              "type": "distance",
+              "meters": 3000
+            },
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 326,
+              "max": 326
+            }
           }
         ]
       }
@@ -4439,13 +6933,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Long Ride",
-            "durationSeconds": 1814,
+            "kind": "steady",
+            "label": "Long Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 1814
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -4471,26 +6976,67 @@
       "targetPaceMinSecondsPerKm": 107,
       "targetPaceMaxSecondsPerKm": 119,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 800,
-            "paceSecondsPerKm": 113
+            "kind": "repeat",
+            "times": 8,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 110,
+                  "max": 116,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 8×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 200,
-            "paceSecondsPerKm": 113
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 200
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 115,
+              "max": 122,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -4515,13 +7061,24 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "steady",
-            "name": "Easy Ride",
-            "durationSeconds": 1800,
+            "kind": "steady",
+            "label": "Easy Ride",
+            "duration": {
+              "type": "time",
+              "seconds": 1800
+            },
+            "target": {
+              "type": "power",
+              "minWatts": 185,
+              "maxWatts": 248,
+              "ftpPercent": 66,
+              "zoneLabel": "Z2 Endurance"
+            },
+            "cadenceRpm": 90,
             "hrZone": 2
           }
         ]
@@ -4547,26 +7104,67 @@
       "targetPaceMinSecondsPerKm": 109,
       "targetPaceMaxSecondsPerKm": 121,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 115
+            "kind": "warmup",
+            "label": "Warm up swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 117,
+              "max": 124,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Main Set",
-            "distanceMeters": 700,
-            "paceSecondsPerKm": 115
+            "kind": "repeat",
+            "times": 7,
+            "steps": [
+              {
+                "kind": "work",
+                "label": "Swim",
+                "duration": {
+                  "type": "distance",
+                  "meters": 100
+                },
+                "target": {
+                  "type": "pace",
+                  "unit": "sec_per_100m",
+                  "min": 112,
+                  "max": 118,
+                  "zoneLabel": "Swim Endurance"
+                },
+                "hrZone": 2
+              }
+            ],
+            "setRest": {
+              "type": "time",
+              "seconds": 20
+            },
+            "label": "Main Set 7×100m"
           },
           {
-            "type": "cooldown",
-            "name": "Cool down swim",
-            "distanceMeters": 150,
-            "paceSecondsPerKm": 115
+            "kind": "cooldown",
+            "label": "Cool down swim",
+            "duration": {
+              "type": "distance",
+              "meters": 150
+            },
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_100m",
+              "min": 117,
+              "max": 124,
+              "zoneLabel": "Swim Easy"
+            },
+            "hrZone": 1
           }
         ]
       }
@@ -4591,25 +7189,34 @@
       "targetPaceMinSecondsPerKm": null,
       "targetPaceMaxSecondsPerKm": null,
       "structuredSteps": {
-        "version": 1,
-        "source": "generated-plan",
+        "version": 2,
+        "source": "engine",
         "steps": [
           {
-            "type": "warmup",
-            "name": "Warm up",
-            "distanceMeters": 1500,
+            "kind": "warmup",
+            "label": "Warm up",
+            "duration": {
+              "type": "distance",
+              "meters": 1500
+            },
             "hrZone": 1
           },
           {
-            "type": "work",
-            "name": "Race Day",
-            "distanceMeters": 7500,
+            "kind": "work",
+            "label": "Race Day",
+            "duration": {
+              "type": "distance",
+              "meters": 7500
+            },
             "hrZone": 5
           },
           {
-            "type": "cooldown",
-            "name": "Cool down",
-            "distanceMeters": 1000,
+            "kind": "cooldown",
+            "label": "Cool down",
+            "duration": {
+              "type": "distance",
+              "meters": 1000
+            },
             "hrZone": 1
           }
         ]

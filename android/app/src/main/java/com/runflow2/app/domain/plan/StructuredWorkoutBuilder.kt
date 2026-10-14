@@ -3,6 +3,12 @@ package com.runflow2.app.domain.plan
 import com.runflow2.app.domain.person.Personalization
 import com.runflow2.app.domain.person.Personalization.PaceLetter
 import com.runflow2.app.domain.person.Personalization.StructuredEditorDefaults
+import com.runflow2.app.domain.plan.structured.Duration
+import com.runflow2.app.domain.plan.structured.RepeatGroup
+import com.runflow2.app.domain.plan.structured.StepNode
+import com.runflow2.app.domain.plan.structured.StructuredStep
+import com.runflow2.app.domain.plan.structured.StructuredWorkoutV2
+import com.runflow2.app.domain.plan.structured.Target
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -96,8 +102,79 @@ object StructuredWorkoutBuilder {
         val root = runCatching { json.parseToJsonElement(raw) }.getOrNull() as? JsonObject
             ?: return null
         if (root.containsKey("main")) return decodeNested(root)
+        val v2 = runCatching { json.decodeFromJsonElement(StructuredWorkoutV2.serializer(), root) }.getOrNull()
+        if (v2 != null && v2.steps.isNotEmpty()) {
+            return v2ToDraft(v2, paceTableSecPerKm)
+        }
         (root["steps"] as? JsonArray)?.let { return flatToNested(it, paceTableSecPerKm) }
         return null
+    }
+
+    private fun v2ToDraft(
+        v2: StructuredWorkoutV2,
+        table: Map<PaceLetter, Int>,
+    ): StructuredWorkoutDraft? {
+        var warmupM = 0
+        var warmupPace: PaceLetter? = null
+        var cooldownM = 0
+        var cooldownPace: PaceLetter? = null
+        val main = mutableListOf<BuilderMainStep>()
+
+        fun targetToLetter(target: Target?): PaceLetter {
+            return when (target) {
+                is Target.Pace -> {
+                    target.zoneLabel.toPaceLetter()
+                        ?: target.min?.nearestLetter(table)
+                        ?: PaceLetter.I
+                }
+                else -> PaceLetter.I
+            }
+        }
+
+        for (node in v2.steps) {
+            when (node) {
+                is RepeatGroup -> {
+                    val workStep = node.steps.firstOrNull { it is StructuredStep && (it.kind == "work" || it.kind == "steady") } as? StructuredStep
+                        ?: return null
+                    val dist = (workStep.duration as? Duration.Distance)?.meters?.roundToInt() ?: return null
+                    val pace = targetToLetter(workStep.target)
+                    val restSec = (node.setRest as? Duration.Time)?.seconds ?: 0
+                    main.add(BuilderMainStep(reps = node.times, distanceM = dist, pace = pace, restSeconds = restSec))
+                }
+                is StructuredStep -> {
+                    when (node.kind) {
+                        "warmup" -> {
+                            val dist = (node.duration as? Duration.Distance)?.meters?.roundToInt() ?: return null
+                            warmupM += dist
+                            warmupPace = targetToLetter(node.target)
+                        }
+                        "cooldown" -> {
+                            val dist = (node.duration as? Duration.Distance)?.meters?.roundToInt() ?: return null
+                            cooldownM += dist
+                            cooldownPace = targetToLetter(node.target)
+                        }
+                        "work", "steady" -> {
+                            val dist = (node.duration as? Duration.Distance)?.meters?.roundToInt() ?: return null
+                            val pace = targetToLetter(node.target)
+                            main.add(BuilderMainStep(reps = 1, distanceM = dist, pace = pace, restSeconds = 0))
+                        }
+                        "recovery" -> {
+                            val dur = (node.duration as? Duration.Time)?.seconds ?: 0
+                            if (main.isNotEmpty()) {
+                                val last = main.last()
+                                main[main.lastIndex] = last.copy(restSeconds = dur)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (main.isEmpty()) return null
+        return StructuredWorkoutDraft(
+            warmup = BuilderSection(warmupM, warmupPace ?: PaceLetter.E),
+            main = main,
+            cooldown = BuilderSection(cooldownM, cooldownPace ?: PaceLetter.E),
+        )
     }
 
     private fun decodeNested(root: JsonObject): StructuredWorkoutDraft? {
@@ -260,6 +337,67 @@ object StructuredWorkoutBuilder {
     }
 
     fun encodeToString(draft: StructuredWorkoutDraft): String = encode(draft).toString()
+
+    fun encodeV2(draft: StructuredWorkoutDraft): StructuredWorkoutV2 {
+        val steps = mutableListOf<StepNode>()
+        if (draft.warmup.distanceM > 0) {
+            steps.add(
+                StructuredStep(
+                    kind = "warmup",
+                    label = "Warm up",
+                    duration = Duration.Distance(draft.warmup.distanceM.toDouble()),
+                    target = Target.Pace(unit = "sec_per_km", zoneLabel = draft.warmup.pace.name),
+                    hrZone = 1,
+                ),
+            )
+        }
+        for (m in draft.main) {
+            val workStep = StructuredStep(
+                kind = "work",
+                label = "Rep",
+                duration = Duration.Distance(m.distanceM.toDouble()),
+                target = Target.Pace(unit = "sec_per_km", zoneLabel = m.pace.name),
+            )
+            val restDuration: Duration? = if (m.restSeconds > 0) Duration.Time(m.restSeconds) else null
+            if (m.reps > 1) {
+                steps.add(
+                    RepeatGroup(
+                        times = m.reps,
+                        setRest = restDuration,
+                        steps = listOf(workStep),
+                        label = "${m.reps}×${m.distanceM}m",
+                    ),
+                )
+            } else {
+                steps.add(workStep)
+                if (restDuration != null) {
+                    steps.add(
+                        StructuredStep(
+                            kind = "recovery",
+                            label = "Rest",
+                            duration = restDuration,
+                            target = Target.Free,
+                        ),
+                    )
+                }
+            }
+        }
+        if (draft.cooldown.distanceM > 0) {
+            steps.add(
+                StructuredStep(
+                    kind = "cooldown",
+                    label = "Cool down",
+                    duration = Duration.Distance(draft.cooldown.distanceM.toDouble()),
+                    target = Target.Pace(unit = "sec_per_km", zoneLabel = draft.cooldown.pace.name),
+                    hrZone = 1,
+                ),
+            )
+        }
+        return StructuredWorkoutV2(version = 2, source = "builder", steps = steps)
+    }
+
+    fun encodeV2String(draft: StructuredWorkoutDraft): String =
+        json.encodeToString(StructuredWorkoutV2.serializer(), encodeV2(draft))
 
     // ---- json accessors (mirrors StructuredStepsParser's private set) ----
 

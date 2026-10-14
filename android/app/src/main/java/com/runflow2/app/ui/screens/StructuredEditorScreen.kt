@@ -258,7 +258,7 @@ fun StructuredEditorScreen(
                 Button(
                     onClick = {
                         saving = true
-                        val json = StructuredWorkoutBuilder.encodeToString(currentDraft())
+                        val json = StructuredWorkoutBuilder.encodeV2String(currentDraft())
                         scope.launch {
                             try {
                                 container.repository.saveStructuredSteps(workoutId, json)

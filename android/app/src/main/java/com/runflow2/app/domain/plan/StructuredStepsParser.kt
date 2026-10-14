@@ -3,6 +3,11 @@ package com.runflow2.app.domain.plan
 import com.runflow2.app.core.math.VdotMath
 import com.runflow2.app.domain.model.PaceZone
 import com.runflow2.app.domain.person.Personalization
+import com.runflow2.app.domain.plan.structured.Duration
+import com.runflow2.app.domain.plan.structured.FlattenedPlayerStep
+import com.runflow2.app.domain.plan.structured.StructuredWorkoutV2
+import com.runflow2.app.domain.plan.structured.Target
+import com.runflow2.app.domain.plan.structured.flattenStructuredWorkout
 import com.runflow2.app.recording.StepDurationType
 import com.runflow2.app.recording.StepRuntime
 import kotlinx.serialization.json.Json
@@ -16,14 +21,10 @@ import java.util.Locale
 
 /**
  * Parses the server's structuredSteps JSON into the flat [StepRuntime] list
- * the recording engine consumes. Two server shapes are supported:
- *
- *  - Generator flat shape: `{"version":1,"source":"generated-plan","steps":[
- *      {"type":"warmup"|"work"|"recovery"|"cooldown"|"steady","name":"…",
- *       "distanceMeters":2000,"durationSeconds":600,"paceSecondsPerKm":300}]}`
- *  - Builder nested shape: `{"warmup":{"distance":1000,"pace":"E"},
- *      "main":[{"reps":4,"distance":400,"pace":"I","restSeconds":90}],
- *      "cooldown":{"distance":1000,"pace":"E"}}`
+ * the recording engine consumes. Supports canonical v2 as well as legacy shapes:
+ *  - Canonical v2: `{"version":2,"source":"engine","steps":[...]}`
+ *  - Generator flat shape: `{"version":1,"source":"generated-plan","steps":[...]}`
+ *  - Builder nested shape: `{"warmup":{...},"main":[...],"cooldown":{...}}`
  *
  * Pace letters (E/M/T/I/R) are resolved through an injected table so this
  * parser stays pure; callers build the table from the athlete's VDOT via
@@ -41,13 +42,113 @@ object StructuredStepsParser {
     }
 
     fun parse(element: JsonElement?, paceTable: Map<String, Double>): List<StepRuntime> {
+        if (element == null) return emptyList()
+        // If it's a raw array, treat as steps list
+        if (element is JsonArray) {
+            val v2 = runCatching {
+                json.decodeFromJsonElement(
+                    StructuredWorkoutV2.serializer(),
+                    JsonObject(mapOf("version" to JsonPrimitive(2), "steps" to element)),
+                )
+            }.getOrNull()
+            if (v2 != null && v2.steps.isNotEmpty()) {
+                return flattenStructuredWorkout(v2).map { playerStepToRuntime(it, paceTable) }
+            }
+            return element.mapNotNull { it.asObjectOrNull()?.let { o -> parseFlatStep(o) } }
+        }
+
         val root = element.asObjectOrNull() ?: return emptyList()
+
+        // 1. Check for canonical v2
+        val version = root.int("version")
+        if (version == 2) {
+            val v2 = runCatching { json.decodeFromJsonElement(StructuredWorkoutV2.serializer(), root) }.getOrNull()
+            if (v2 != null && v2.steps.isNotEmpty()) {
+                return flattenStructuredWorkout(v2).map { playerStepToRuntime(it, paceTable) }
+            }
+        }
+
+        // 2. Check for steps array (could be v2 or v1)
         root["steps"]?.let { stepsEl ->
             val arr = stepsEl as? JsonArray ?: return emptyList()
+            // Try v2 decoding first if elements have "kind"
+            val firstObj = arr.firstOrNull()?.asObjectOrNull()
+            if (firstObj != null && (firstObj.containsKey("kind") || firstObj.containsKey("duration"))) {
+                val v2 = runCatching { json.decodeFromJsonElement(StructuredWorkoutV2.serializer(), root) }.getOrNull()
+                if (v2 != null && v2.steps.isNotEmpty()) {
+                    return flattenStructuredWorkout(v2).map { playerStepToRuntime(it, paceTable) }
+                }
+            }
             return arr.mapNotNull { it.asObjectOrNull()?.let { o -> parseFlatStep(o) } }
         }
+
+        // 3. Builder nested shape
         if (root.containsKey("main")) return parseNested(root, paceTable)
         return emptyList()
+    }
+
+    private fun playerStepToRuntime(step: FlattenedPlayerStep, paceTable: Map<String, Double>): StepRuntime {
+        val durationType = when (step.duration) {
+            is Duration.Time -> StepDurationType.TIME
+            is Duration.Distance -> StepDurationType.DISTANCE
+            is Duration.LapPress -> StepDurationType.LAP_PRESS
+        }
+        val durSec = when (step.duration) {
+            is Duration.Time -> step.duration.seconds.toDouble()
+            else -> 0.0
+        }
+        val distM = when (step.duration) {
+            is Duration.Distance -> step.duration.meters
+            else -> 0.0
+        }
+        var targetPace: Double? = null
+        var targetMinPace: Double? = null
+        var targetMaxPace: Double? = null
+        var targetPower: Int? = null
+        var targetMinPower: Int? = null
+        var targetMaxPower: Int? = null
+
+        when (val t = step.target) {
+            is Target.Pace -> {
+                targetMinPace = t.min
+                targetMaxPace = t.max
+                targetPace = t.min ?: t.max
+                if (targetPace == null && t.zoneLabel != null) {
+                    targetPace = paceTable[t.zoneLabel]
+                }
+            }
+            is Target.Power -> {
+                targetMinPower = t.minWatts
+                targetMaxPower = t.maxWatts
+                targetPower = t.minWatts ?: t.maxWatts
+            }
+            else -> {}
+        }
+
+        val baseLabel = step.label ?: step.kind.replaceFirstChar { it.uppercase(Locale.ENGLISH) }
+        val label = if (step.totalIterations != null && step.totalIterations > 1 && step.repeatIteration != null && !step.isSetRest) {
+            "$baseLabel (${step.repeatIteration}/${step.totalIterations})"
+        } else {
+            baseLabel
+        }
+
+        return StepRuntime(
+            label = label,
+            kind = step.kind,
+            durationType = durationType,
+            durationSec = durSec,
+            distanceM = distM,
+            targetPaceSecPerKm = targetPace,
+            target = step.target,
+            targetPaceMinSecPerKm = targetMinPace,
+            targetPaceMaxSecPerKm = targetMaxPace,
+            isSwim = (step.target as? Target.Pace)?.unit == "sec_per_100m",
+            note = step.note,
+            hrZone = step.hrZone ?: (step.target as? Target.Hr)?.zone,
+            targetPowerWatts = targetPower,
+            targetPowerMinWatts = targetMinPower,
+            targetPowerMaxWatts = targetMaxPower,
+        )
     }
 
     // ---- generator flat shape ----

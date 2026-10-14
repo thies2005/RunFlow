@@ -182,6 +182,17 @@ data class ActivityDto(
     @SerialName("hrZone6Time") val hrZone6Time: Int = 0,
     @SerialName("hrZone7Time") val hrZone7Time: Int = 0,
     val calories: Double? = null,
+    // ---- v13 cycling power metrics ----
+    val averageWatts: Double? = null,
+    val weightedAverageWatts: Double? = null,
+    val maxWatts: Double? = null,
+    val deviceWatts: Boolean = false,
+    val npWatts: Double? = null,
+    val intensityFactor: Double? = null,
+    val variabilityIndex: Double? = null,
+    val bikeTss: Double? = null,
+    val efficiencyFactor: Double? = null,
+    val aerobicDecoupling: Double? = null,
     // Only present in the single-activity detail response (GET /activities/{id}).
     val streams: ActivityStreamsDto? = null,
 )
@@ -252,6 +263,16 @@ data class PlanWorkoutDto(
     val linkedActivityId: String? = null,
     val customName: String? = null,
     val displayDesc: String? = null,
+    // ---- v13 targets ----
+    val targetPowerWatts: Int? = null,
+    val targetPowerMinWatts: Int? = null,
+    val targetPowerMaxWatts: Int? = null,
+    val targetPowerZone: Int? = null,
+    val targetFtpPercent: Int? = null,
+    val targetCadenceRpm: Int? = null,
+    val targetRpe: Int? = null,
+    val plannedTss: Double? = null,
+    val sport: String? = null,
 )
 
 @Serializable
@@ -280,6 +301,10 @@ data class PlanGoalDto(
     // builder plan metadata
     val creationMode: String? = null,
     val guidanceLevel: String? = null,
+    // ---- v13 ----
+    val ftpAtCreation: Int? = null,
+    val swimCssAtCreation: Int? = null,
+    val phaseBlocks: JsonElement? = null,
     val workouts: List<PlanWorkoutDto> = emptyList(),
 )
 
@@ -341,6 +366,16 @@ data class ImportWorkoutRequest(
     val targetPaceMaxSecondsPerKm: Double? = null,
     val structuredSteps: JsonElement? = null, // generator flat shape, raw
     val order: Int, // explicit, always sent (server default is the array index)
+    // ---- v13 targets ----
+    val targetPowerWatts: Int? = null,
+    val targetPowerMinWatts: Int? = null,
+    val targetPowerMaxWatts: Int? = null,
+    val targetPowerZone: Int? = null,
+    val targetFtpPercent: Int? = null,
+    val targetCadenceRpm: Int? = null,
+    val targetRpe: Int? = null,
+    val plannedTss: Double? = null,
+    val sport: String? = null,
 )
 
 /** Response of POST /api/plans/import: new goal id + localId → server workout id. */
@@ -408,6 +443,16 @@ data class PatchWorkoutRequest(
     // builder structuredSteps (nested builder JSON, raw); the server PATCH
     // route whitelists and persists it
     val structuredSteps: JsonElement? = null,
+    // ---- v13 targets ----
+    val targetPowerWatts: Int? = null,
+    val targetPowerMinWatts: Int? = null,
+    val targetPowerMaxWatts: Int? = null,
+    val targetPowerZone: Int? = null,
+    val targetFtpPercent: Int? = null,
+    val targetCadenceRpm: Int? = null,
+    val targetRpe: Int? = null,
+    val plannedTss: Double? = null,
+    val sport: String? = null,
 )
 
 @Serializable
@@ -433,6 +478,16 @@ data class CreateWorkoutRequest(
     val targetPace: Double? = null, // seconds per km
     val targetDuration: Int? = null, // seconds
     val structuredSteps: JsonElement? = null, // builder nested shape, raw
+    // ---- v13 targets ----
+    val targetPowerWatts: Int? = null,
+    val targetPowerMinWatts: Int? = null,
+    val targetPowerMaxWatts: Int? = null,
+    val targetPowerZone: Int? = null,
+    val targetFtpPercent: Int? = null,
+    val targetCadenceRpm: Int? = null,
+    val targetRpe: Int? = null,
+    val plannedTss: Double? = null,
+    val sport: String? = null,
 )
 
 /** Outbox payload for workout_create: the create body plus the owning goal. */

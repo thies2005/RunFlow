@@ -151,6 +151,9 @@ fun RecordScreen(
                 RecordingService.send(context, if (rec.status == RecStatus.RUNNING) RecordingService.ACTION_PAUSE else RecordingService.ACTION_RESUME)
             },
             onStop = { showStopDialog = true },
+            onLap = {
+                RecordingService.lap(context)
+            },
         )
     }
 
@@ -372,6 +375,7 @@ private fun RecordRunning(
     unit: DistanceUnit,
     onPauseResume: () -> Unit,
     onStop: () -> Unit,
+    onLap: () -> Unit,
 ) {
     Column(
         Modifier
@@ -471,12 +475,46 @@ private fun RecordRunning(
                             progress = { rec.stepProgress },
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        active.targetPaceSecPerKm?.let {
+                        active.note?.takeIf { it.isNotBlank() }?.let {
                             Text(
-                                "Target ${Format.pace(it, unit)} /${Format.distanceUnitLabel(unit)}",
+                                it,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.primary,
                             )
+                        }
+                        val minP = active.minPaceSecPerKm
+                        val maxP = active.maxPaceSecPerKm
+                        val targetP = active.targetPaceSecPerKm
+                        val paceUnitLabel = if (active.isSwim) "100m" else Format.distanceUnitLabel(unit)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (minP != null && maxP != null && minP < maxP) {
+                                InfoChip(
+                                    "${Format.pace(minP, unit)}–${Format.pace(maxP, unit)} /${paceUnitLabel}",
+                                    container = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                )
+                            } else if (targetP != null) {
+                                InfoChip(
+                                    "Target ${Format.pace(targetP, unit)} /${paceUnitLabel}",
+                                    container = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                )
+                            }
+                            if (active.targetPowerMinWatts != null && active.targetPowerMaxWatts != null) {
+                                InfoChip(
+                                    "${active.targetPowerMinWatts}–${active.targetPowerMaxWatts} W",
+                                    container = MaterialTheme.colorScheme.tertiaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                )
+                            }
+                            if (active.hrZone != null) {
+                                InfoChip(
+                                    "Z${active.hrZone}",
+                                    container = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                )
+                            }
                         }
                         val upcoming = rec.steps.drop(rec.activeStepIndex + 1)
                         if (upcoming.isNotEmpty()) {
@@ -529,7 +567,7 @@ private fun RecordRunning(
         // control buttons
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             androidx.compose.material3.OutlinedButton(
                 onClick = onStop,
@@ -538,8 +576,18 @@ private fun RecordRunning(
                     .height(56.dp),
             ) {
                 Icon(Icons.Outlined.Stop, null)
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(4.dp))
                 Text("Finish")
+            }
+            androidx.compose.material3.OutlinedButton(
+                onClick = onLap,
+                modifier = Modifier
+                    .weight(1.2f)
+                    .height(56.dp),
+            ) {
+                Icon(Icons.Outlined.Flag, null)
+                Spacer(Modifier.width(4.dp))
+                Text(if (rec.steps.isNotEmpty() && rec.activeStepIndex < rec.steps.size) "Lap / Next" else "Lap")
             }
             Button(
                 onClick = onPauseResume,
@@ -551,7 +599,7 @@ private fun RecordRunning(
                     if (rec.status == RecStatus.RUNNING) Icons.Outlined.Pause else Icons.Outlined.PlayArrow,
                     null,
                 )
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(4.dp))
                 Text(if (rec.status == RecStatus.RUNNING) "Pause" else "Resume")
             }
         }

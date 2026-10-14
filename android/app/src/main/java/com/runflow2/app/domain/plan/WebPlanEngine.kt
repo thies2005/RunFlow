@@ -4,6 +4,7 @@ import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.RaceType
 import com.runflow2.app.domain.model.WorkoutType
 import com.runflow2.app.domain.person.Personalization
+import com.runflow2.app.domain.plan.structured.StructuredWorkoutV2
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.DayOfWeek
@@ -1879,13 +1880,21 @@ data class WebGeneratedWorkout(
     val displayDescription: String? = null,
     val sport: String? = null,
     val intensityZone: String? = null,
-    val structuredSteps: WebStructuredPlan? = null,
+    val structuredSteps: StructuredWorkoutV2? = null,
     val targetHrZoneLabel: String? = null,
     val targetHrMinBpm: Double? = null,
     val targetHrMaxBpm: Double? = null,
     val targetPaceZoneLabel: String? = null,
     val targetPaceMinSecondsPerKm: Double? = null,
     val targetPaceMaxSecondsPerKm: Double? = null,
+    val targetPowerWatts: Int? = null,
+    val targetPowerMinWatts: Int? = null,
+    val targetPowerMaxWatts: Int? = null,
+    val targetPowerZone: Int? = null,
+    val targetFtpPercent: Int? = null,
+    val targetCadenceRpm: Int? = null,
+    val targetRpe: Int? = null,
+    val plannedTss: Double? = null,
 )
 
 /** index.ts L342: `Omit<GeneratedWorkout, 'date'> & { dayOffset }`. */

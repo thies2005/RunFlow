@@ -54,7 +54,7 @@ import com.runflow2.app.domain.model.WorkoutType
 import com.runflow2.app.domain.plan.PlanMath
 import com.runflow2.app.domain.plan.PlanSpec
 import com.runflow2.app.domain.plan.WebPlanEngine
-import com.runflow2.app.domain.plan.WebStructuredPlan
+import com.runflow2.app.domain.plan.structured.StructuredWorkoutV2
 import com.runflow2.app.domain.person.BodyAuto
 import com.runflow2.app.domain.person.Personalization
 import com.runflow2.app.domain.readiness.ReadinessComposer
@@ -64,6 +64,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -756,29 +757,24 @@ class RunFlowRepository(
                 targetHrMaxBpm = w.targetHrMaxBpm?.roundToInt(),
                 targetPaceMinSecPerKm = w.targetPaceMinSecondsPerKm,
                 targetPaceMaxSecPerKm = w.targetPaceMaxSecondsPerKm,
+                sport = w.sport ?: "RUN",
+                targetPowerWatts = w.targetPowerWatts,
+                targetPowerMinWatts = w.targetPowerMinWatts,
+                targetPowerMaxWatts = w.targetPowerMaxWatts,
+                targetPowerZone = w.targetPowerZone,
+                targetFtpPercent = w.targetFtpPercent,
+                targetCadenceRpm = w.targetCadenceRpm,
+                targetRpe = w.targetRpe,
+                plannedTss = w.plannedTss,
             )
         }
         workoutDao.upsertAll(workouts)
         goalId
     }
 
-    /** Serializes the ported generator's steps in the server's flat JSON shape. */
-    private fun structuredStepsJson(plan: WebStructuredPlan): String {
-        val steps = JsonArray(plan.steps.map { s ->
-            buildJsonObject {
-                put("type", s.type)
-                put("name", s.name)
-                s.distanceMeters?.let { put("distanceMeters", it) }
-                s.durationSeconds?.let { put("durationSeconds", it) }
-                s.paceSecondsPerKm?.let { put("paceSecondsPerKm", it) }
-                s.hrZone?.let { put("hrZone", it) }
-            }
-        })
-        return buildJsonObject {
-            put("version", 1)
-            put("source", "generated-plan")
-            put("steps", steps)
-        }.toString()
+    /** Serializes the ported generator's steps in the canonical v2 JSON shape. */
+    private fun structuredStepsJson(plan: StructuredWorkoutV2): String {
+        return Json.encodeToString(StructuredWorkoutV2.serializer(), plan)
     }
 
     /**

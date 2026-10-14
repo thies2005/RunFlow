@@ -100,6 +100,16 @@ fun ActivityDto.mergeInto(existing: ActivityEntity?, now: Long): ActivityEntity 
         hrZone5Sec = this.hrZone5Time,
         hrZone6Sec = this.hrZone6Time,
         hrZone7Sec = this.hrZone7Time,
+        averageWatts = this.averageWatts,
+        weightedAverageWatts = this.weightedAverageWatts,
+        maxWatts = this.maxWatts,
+        deviceWatts = this.deviceWatts,
+        npWatts = this.npWatts,
+        intensityFactor = this.intensityFactor,
+        variabilityIndex = this.variabilityIndex,
+        bikeTss = this.bikeTss,
+        efficiencyFactor = this.efficiencyFactor,
+        aerobicDecoupling = this.aerobicDecoupling,
     )
 }
 

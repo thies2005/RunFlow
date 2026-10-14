@@ -130,6 +130,15 @@ fun PlanWorkoutDto.toWorkoutEntity(goalId: String, dirty: Boolean = false): Work
         sortIndex = order ?: 0,
         isDemo = false,
         dirty = dirty,
+        targetPowerWatts = targetPowerWatts,
+        targetPowerMinWatts = targetPowerMinWatts,
+        targetPowerMaxWatts = targetPowerMaxWatts,
+        targetPowerZone = targetPowerZone,
+        targetFtpPercent = targetFtpPercent,
+        targetCadenceRpm = targetCadenceRpm,
+        targetRpe = targetRpe,
+        plannedTss = plannedTss,
+        sport = sport ?: "RUN",
     )
 }
 
@@ -176,6 +185,9 @@ fun PlanGoalDto.toEntities(): Pair<GoalEntity, List<WorkoutEntity>>? {
         dirty = false,
         creationMode = creationMode,
         guidanceLevel = guidanceLevel,
+        ftpAtCreation = ftpAtCreation,
+        swimCssAtCreation = swimCssAtCreation,
+        phaseBlocksJson = phaseBlocks?.toString(),
     )
     return goal to workoutEntities
 }
@@ -278,6 +290,15 @@ fun WorkoutEntity.toPatchRequest(): PatchWorkoutRequest = PatchWorkoutRequest(
     structuredSteps = structuredStepsJson?.let {
         runCatching { Api.json.parseToJsonElement(it) }.getOrNull()
     },
+    targetPowerWatts = targetPowerWatts,
+    targetPowerMinWatts = targetPowerMinWatts,
+    targetPowerMaxWatts = targetPowerMaxWatts,
+    targetPowerZone = targetPowerZone,
+    targetFtpPercent = targetFtpPercent,
+    targetCadenceRpm = targetCadenceRpm,
+    targetRpe = targetRpe,
+    plannedTss = plannedTss,
+    sport = sport,
 )
 
 /**
@@ -299,6 +320,15 @@ fun WorkoutEntity.toCreateWorkoutPayload(goalId: String): WorkoutCreatePayload =
         structuredSteps = structuredStepsJson?.let {
             runCatching { Api.json.parseToJsonElement(it) }.getOrNull()
         },
+        targetPowerWatts = targetPowerWatts,
+        targetPowerMinWatts = targetPowerMinWatts,
+        targetPowerMaxWatts = targetPowerMaxWatts,
+        targetPowerZone = targetPowerZone,
+        targetFtpPercent = targetFtpPercent,
+        targetCadenceRpm = targetCadenceRpm,
+        targetRpe = targetRpe,
+        plannedTss = plannedTss,
+        sport = sport,
     ),
 )
 
@@ -345,6 +375,15 @@ fun WorkoutEntity.toImportWorkoutRequest(order: Int): ImportWorkoutRequest = Imp
         runCatching { Api.json.parseToJsonElement(it) }.getOrNull()
     },
     order = order,
+    targetPowerWatts = targetPowerWatts,
+    targetPowerMinWatts = targetPowerMinWatts,
+    targetPowerMaxWatts = targetPowerMaxWatts,
+    targetPowerZone = targetPowerZone,
+    targetFtpPercent = targetFtpPercent,
+    targetCadenceRpm = targetCadenceRpm,
+    targetRpe = targetRpe,
+    plannedTss = plannedTss,
+    sport = sport,
 )
 
 /**

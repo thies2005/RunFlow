@@ -169,6 +169,79 @@ class StructuredStepsParserTest {
         assertTrue(StructuredStepsParser.parse("""{"version":1,"source":"generated-plan"}""", paceTable).isEmpty())
     }
 
+    // ---- canonical v2 shape ----
+
+    @Test
+    fun `v2 canonical shape parses single steps and repeat groups with setRest`() {
+        val json = """
+        {
+          "version": 2,
+          "source": "engine",
+          "steps": [
+            {
+              "kind": "warmup",
+              "label": "Warm up",
+              "duration": { "type": "distance", "meters": 1500 },
+              "hrZone": 1
+            },
+            {
+              "kind": "repeat",
+              "times": 3,
+              "setRest": { "type": "time", "seconds": 60 },
+              "steps": [
+                {
+                  "kind": "work",
+                  "label": "Interval Rep",
+                  "duration": { "type": "distance", "meters": 400 },
+                  "target": { "type": "pace", "unit": "sec_per_km", "min": 240, "max": 250, "zoneLabel": "T" }
+                }
+              ]
+            },
+            {
+              "kind": "steady",
+              "label": "Drill",
+              "duration": { "type": "lap_press" },
+              "target": { "type": "power", "minWatts": 200, "maxWatts": 250 }
+            },
+            {
+              "kind": "cooldown",
+              "label": "Cool down",
+              "duration": { "type": "time", "seconds": 300 }
+            }
+          ]
+        }
+        """.trimIndent()
+
+        val steps = StructuredStepsParser.parse(json, paceTable)
+        assertEquals(8, steps.size)
+        assertEquals("Warm up", steps[0].label)
+        assertEquals(StepDurationType.DISTANCE, steps[0].durationType)
+        assertEquals(1500.0, steps[0].distanceM, 0.01)
+
+        assertEquals("Interval Rep (1/3)", steps[1].label)
+        assertEquals(StepDurationType.DISTANCE, steps[1].durationType)
+        assertEquals(400.0, steps[1].distanceM, 0.01)
+        assertEquals(240.0, steps[1].minPaceSecPerKm!!, 0.01)
+        assertEquals(250.0, steps[1].maxPaceSecPerKm!!, 0.01)
+
+        assertEquals("Set Rest", steps[2].label)
+        assertEquals(StepDurationType.TIME, steps[2].durationType)
+        assertEquals(60.0, steps[2].durationSec, 0.01)
+
+        assertEquals("Interval Rep (2/3)", steps[3].label)
+        assertEquals("Set Rest", steps[4].label)
+        assertEquals("Interval Rep (3/3)", steps[5].label)
+
+        assertEquals("Drill", steps[6].label)
+        assertEquals(StepDurationType.LAP_PRESS, steps[6].durationType)
+        assertEquals(200, steps[6].targetPowerMinWatts)
+        assertEquals(250, steps[6].targetPowerMaxWatts)
+
+        assertEquals("Cool down", steps[7].label)
+        assertEquals(StepDurationType.TIME, steps[7].durationType)
+        assertEquals(300.0, steps[7].durationSec, 0.01)
+    }
+
     // ---- pace table helpers ----
 
     @Test

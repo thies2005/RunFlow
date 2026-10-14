@@ -101,12 +101,51 @@ enum class PaceZone(val label: String, val short: String, val vo2FractionRange: 
 object PaceZoneEvaluator {
     private const val TOLERANCE = 0.10
 
-    fun evaluate(currentPaceSecPerKm: Double?, targetPaceSecPerKm: Double?): PaceZoneStatus {
-        if (targetPaceSecPerKm == null || targetPaceSecPerKm <= 0.0 || currentPaceSecPerKm == null) {
+    fun evaluate(
+        currentPaceSec: Double?,
+        minPaceSec: Double? = null,
+        maxPaceSec: Double? = null,
+        targetPaceSec: Double? = null,
+        isSwim: Boolean = false,
+    ): PaceZoneStatus {
+        if (currentPaceSec == null || currentPaceSec <= 0.0) {
             return PaceZoneStatus.NO_TARGET
         }
-        return if (currentPaceSecPerKm < targetPaceSecPerKm * (1 - TOLERANCE)) PaceZoneStatus.TOO_FAST
-        else if (currentPaceSecPerKm > targetPaceSecPerKm * (1 + TOLERANCE)) PaceZoneStatus.TOO_SLOW
-        else PaceZoneStatus.IN_ZONE
+
+        // When both min and max pace bounds are provided
+        if (minPaceSec != null && maxPaceSec != null && minPaceSec > 0.0 && maxPaceSec > 0.0) {
+            val lower = minOf(minPaceSec, maxPaceSec)
+            val upper = maxOf(minPaceSec, maxPaceSec)
+            if (lower < upper) {
+                return when {
+                    currentPaceSec < lower -> PaceZoneStatus.TOO_FAST
+                    currentPaceSec > upper -> PaceZoneStatus.TOO_SLOW
+                    else -> PaceZoneStatus.IN_ZONE
+                }
+            } else {
+                // lower == upper: apply ±5%
+                val tol = 0.05
+                val minBound = lower * (1.0 - tol)
+                val maxBound = lower * (1.0 + tol)
+                return when {
+                    currentPaceSec < minBound -> PaceZoneStatus.TOO_FAST
+                    currentPaceSec > maxBound -> PaceZoneStatus.TOO_SLOW
+                    else -> PaceZoneStatus.IN_ZONE
+                }
+            }
+        }
+
+        val target = targetPaceSec ?: minPaceSec ?: maxPaceSec
+        if (target == null || target <= 0.0) {
+            return PaceZoneStatus.NO_TARGET
+        }
+        return when {
+            currentPaceSec < target * (1.0 - TOLERANCE) -> PaceZoneStatus.TOO_FAST
+            currentPaceSec > target * (1.0 + TOLERANCE) -> PaceZoneStatus.TOO_SLOW
+            else -> PaceZoneStatus.IN_ZONE
+        }
     }
+
+    fun evaluate(currentPaceSecPerKm: Double?, targetPaceSecPerKm: Double?): PaceZoneStatus =
+        evaluate(currentPaceSec = currentPaceSecPerKm, targetPaceSec = targetPaceSecPerKm)
 }

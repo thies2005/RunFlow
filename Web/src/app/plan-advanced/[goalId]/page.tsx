@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
-import { PlanEditorLayout } from './components/PlanEditorLayout';
+import { PlanEditorLayout } from '@/components/PlanEditor/PlanEditorLayout';
 
 interface PlanData {
     plan: {
@@ -13,6 +13,7 @@ interface PlanData {
         sport: string;
         planStartDate: string | null;
         currentVdot: number | null;
+        phaseBlocks?: any;
         workouts: Array<{
             id: string;
             scheduledDate: string;
@@ -28,6 +29,11 @@ interface PlanData {
             color: string;
             structuredSteps: any;
             isCompleted: boolean;
+            sport?: string | null;
+            targetPowerWatts?: number | null;
+            targetPowerMinWatts?: number | null;
+            targetPowerMaxWatts?: number | null;
+            plannedTss?: number | null;
         }>;
     };
 }
@@ -86,6 +92,7 @@ export default function GoalEditorPage() {
             sport={plan.sport}
             planStartDate={planStartDate}
             currentVdot={plan.currentVdot}
+            phaseBlocks={plan.phaseBlocks || []}
         />
     );
 }

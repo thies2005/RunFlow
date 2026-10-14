@@ -11,6 +11,9 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { verifyPassword } from '@/lib/auth/auth-email';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+
+export const csrfErrorResponse = csrfValidationErrorResponse;
 
 // JWT configuration - uses lazy initialization to avoid build-time errors
 let _jwtSecret: Uint8Array | null = null;
@@ -82,7 +85,7 @@ export async function verifyAdminCredentials(username: string, password: string)
     }
 
     if (adminPasswordHash && !adminUsername) {
-        if (await bcrypt.compare(password, adminPasswordHash)) {
+        if (safeCompare(username, 'admin') && (await bcrypt.compare(password, adminPasswordHash))) {
             return true;
         }
     }
@@ -162,7 +165,9 @@ function extractAdminToken(request: NextRequest): string | null {
  * Returns the admin payload if authenticated, or an error response
  */
 export async function requireAdmin(request: NextRequest): Promise<{ admin: AdminJWTPayload } | { error: NextResponse }> {
-    const token = extractAdminToken(request);
+    const authHeader = request.headers.get('authorization');
+    const isBearer = Boolean(authHeader?.startsWith('Bearer '));
+    const token = isBearer ? authHeader!.slice(7) : request.cookies.get(ADMIN_COOKIE_NAME)?.value;
 
     if (!token) {
         return {
@@ -182,6 +187,12 @@ export async function requireAdmin(request: NextRequest): Promise<{ admin: Admin
                 { status: 401 }
             )
         };
+    }
+
+    if (!isBearer && !['GET', 'HEAD', 'OPTIONS'].includes(request.method.toUpperCase())) {
+        if (!validateCsrfToken(request)) {
+            return { error: csrfErrorResponse() };
+        }
     }
 
     return { admin };

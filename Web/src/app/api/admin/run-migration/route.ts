@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+import { adminRateLimit } from '@/lib/rateLimitAdmin';
 import fs from 'fs';
 import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const isBearer = request.headers.get('authorization')?.startsWith('Bearer ');
+  if (!isBearer && !validateCsrfToken(request)) {
+    return csrfValidationErrorResponse();
+  }
+
+  const rateLimit = await adminRateLimit(request, 'sensitive');
+  if (!rateLimit.success) {
+    return rateLimit.error!;
+  }
+
   const authResult = await requireAdmin(request);
 
   if ('error' in authResult) {

@@ -17,11 +17,18 @@ import { prisma } from '@/lib/db';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logAdminAction } from '@/lib/admin/auditLog';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import pLimit from 'p-limit';
 
 export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
+    const isBearer = request.headers.get('authorization')?.startsWith('Bearer ');
+    const isCookieAuth = Boolean(request.cookies.get('runflow_admin_token')?.value);
+    if ((isCookieAuth || request.headers.get('x-csrf-token')) && !validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
+    }
+
     const rateLimit = await adminRateLimit(request, 'sensitive');
     if (!rateLimit.success) {
         return rateLimit.error;

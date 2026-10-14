@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { getReleaseComparison, trackRelease, detectPerformanceRegression } from '@/lib/monitoring/release-tracker';
 
 export const dynamic = 'force-dynamic';
@@ -74,6 +75,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const isBearer = request.headers.get('authorization')?.startsWith('Bearer ');
+  if (!isBearer && !validateCsrfToken(request)) {
+    return csrfValidationErrorResponse();
+  }
+
   const authResult = await requireAdmin(request);
 
   if ('error' in authResult) {
@@ -90,6 +96,48 @@ export async function POST(request: NextRequest) {
     console.error('Failed to track release:', error);
     return NextResponse.json(
       { error: 'Failed to track release' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const isBearer = request.headers.get('authorization')?.startsWith('Bearer ');
+  if (!isBearer && !validateCsrfToken(request)) {
+    return csrfValidationErrorResponse();
+  }
+
+  const authResult = await requireAdmin(request);
+
+  if ('error' in authResult) {
+    return authResult.error;
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get('id');
+    if (!id) {
+      try {
+        const body = await request.json();
+        id = body?.id;
+      } catch {
+        // no body
+      }
+    }
+
+    if (!id) {
+      return NextResponse.json({ error: 'Release ID is required' }, { status: 400 });
+    }
+
+    await prisma.release.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to delete release:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete release' },
       { status: 500 }
     );
   }

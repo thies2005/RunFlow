@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logger } from '@/lib/logging/logger';
 import { logAdminAction } from '@/lib/admin/auditLog';
@@ -17,6 +18,12 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const isBearer = request.headers.get('authorization')?.startsWith('Bearer ');
+    const isCookieAuth = Boolean(request.cookies.get('runflow_admin_token')?.value);
+    if ((isCookieAuth || request.headers.get('x-csrf-token')) && !validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
+    }
+
     const rateLimit = await adminRateLimit(request, 'sensitive');
     if (!rateLimit.success) {
         return rateLimit.error;

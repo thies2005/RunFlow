@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,11 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const isBearer = request.headers.get('authorization')?.startsWith('Bearer ');
+  if (!isBearer && !validateCsrfToken(request)) {
+    return csrfValidationErrorResponse();
+  }
+
   const { id } = await params;
   const authResult = await requireAdmin(request);
 
@@ -82,6 +88,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const isBearer = request.headers.get('authorization')?.startsWith('Bearer ');
+  if (!isBearer && !validateCsrfToken(request)) {
+    return csrfValidationErrorResponse();
+  }
+
   const { id } = await params;
   const authResult = await requireAdmin(request);
 

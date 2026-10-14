@@ -150,13 +150,13 @@ function isIPBlocked(ip: string): boolean {
 async function isIPBlockedRedis(client: RedisClient, ip: string): Promise<boolean> {
     try {
         const key = getViolationKey(ip);
-        const count = await client.incr(key);
-        if (count === 1) {
-            await client.expire(key, Math.ceil(BLOCK_DURATION / 1000));
+        const raw = await client.get(key);
+        const count = raw ? parseInt(raw, 10) : 0;
+        if (!Number.isFinite(count) || count < VIOLATION_THRESHOLD) {
+            return false;
         }
         const ttl = await client.ttl(key);
-        if (ttl <= 0) return false;
-        return count >= VIOLATION_THRESHOLD;
+        return ttl > 0;
     } catch {
         return false;
     }
@@ -198,18 +198,25 @@ export async function adminRateLimit(
     request: Request,
     operation: AdminOperation
 ): Promise<{ success: boolean; result?: AdminRateLimitResult; error?: NextResponse }> {
-    const ip = getClientIP(request);
+    const rawIp = getClientIP(request);
+    const hasAdminCookieOrBearer =
+        Boolean(request.headers.get('authorization')?.startsWith('Bearer ')) ||
+        Boolean(request.headers.get('cookie')?.includes('runflow_admin_token='));
+    const effectiveBucketId =
+        rawIp === 'unknown'
+            ? `${hasAdminCookieOrBearer ? 'auth-admin' : 'anon-login'}:${operation}`
+            : rawIp;
     const client = await getAdminRedisClient();
 
     if (client) {
-        return adminRateLimitRedis(client, ip, operation);
+        return adminRateLimitRedis(client, effectiveBucketId, operation);
     }
 
     if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
         logger.warn('Admin rate limiter: Redis not available in production. Falling back to in-memory.');
     }
 
-    return adminRateLimitInMemory(ip, operation);
+    return adminRateLimitInMemory(effectiveBucketId, operation);
 }
 
 async function adminRateLimitRedis(

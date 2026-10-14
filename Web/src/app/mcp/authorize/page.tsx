@@ -2,7 +2,15 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
-import { isUserPaidPremium, generateMcpAuthCode, hashToken, AUTH_CODE_TTL_SECONDS } from '@/lib/mcp/oauth';
+import {
+    isUserPaidPremium,
+    generateMcpAuthCode,
+    hashToken,
+    AUTH_CODE_TTL_SECONDS,
+    createConsentCsrfToken,
+    verifyConsentCsrfToken,
+    isAllowedMcpRedirectUri,
+} from '@/lib/mcp/oauth';
 import { Shield, ShieldAlert, Sparkles, Check, ArrowRight, X } from 'lucide-react';
 
 interface AuthorizePageProps {
@@ -57,6 +65,28 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
         );
     }
 
+    if (!isAllowedMcpRedirectUri(redirect_uri)) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
+                <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 border border-red-200 dark:border-red-900">
+                    <div className="flex items-center gap-3 text-red-600 mb-4">
+                        <ShieldAlert className="w-8 h-8" />
+                        <h1 className="text-xl font-bold">Invalid Redirect URI</h1>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        The requested redirect URI is not permitted. Only authorized external AI hosts (Claude, Google) or local loopback are allowed.
+                    </p>
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                        Return to RunFlow
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     const client = await prisma.mcpOAuthClient.findUnique({
         where: { clientId: client_id },
     });
@@ -71,6 +101,29 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                         Client ID was not found or has been revoked.
+                    </p>
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                        Return to RunFlow
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    const registeredUris = (client.redirectUris as string[]) || [];
+    if (!registeredUris.includes(redirect_uri)) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
+                <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 border border-red-200 dark:border-red-900">
+                    <div className="flex items-center gap-3 text-red-600 mb-4">
+                        <ShieldAlert className="w-8 h-8" />
+                        <h1 className="text-xl font-bold">Unregistered Redirect URI</h1>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        The requested redirect URI does not match any URI registered for this client.
                     </p>
                     <Link
                         href="/"
@@ -165,9 +218,32 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
         );
     }
 
-    // Server action to approve consent
-    async function handleAuthorize() {
+    // Cryptographic CSRF token bound to session user and OAuth client parameters
+    const consentCsrfToken = createConsentCsrfToken({
+        userId: user.id,
+        clientId: client.clientId,
+        redirectUri: redirect_uri,
+        codeChallenge: code_challenge,
+        state,
+    });
+
+    const safeRedirectUri = redirect_uri;
+    const safeCodeChallenge = code_challenge;
+
+    // Server action to approve consent with CSRF verification
+    async function handleAuthorize(formData: FormData) {
         'use server';
+        const submittedToken = formData.get('consentCsrfToken')?.toString();
+        if (!submittedToken || !verifyConsentCsrfToken(submittedToken, {
+            userId: user!.id,
+            clientId: client!.clientId,
+            redirectUri: safeRedirectUri,
+            codeChallenge: safeCodeChallenge,
+            state,
+        })) {
+            redirect(`${safeRedirectUri}${safeRedirectUri.includes('?') ? '&' : '?'}error=access_denied&error_description=CSRF+validation+failed${state ? `&state=${encodeURIComponent(state)}` : ''}`);
+        }
+
         const code = generateMcpAuthCode();
         const codeHash = hashToken(code);
         const expiresAt = new Date(Date.now() + AUTH_CODE_TTL_SECONDS * 1000);
@@ -177,15 +253,15 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
                 codeHash,
                 clientId: client!.clientId,
                 userId: user!.id,
-                redirectUri: redirect_uri!,
-                codeChallenge: code_challenge!,
+                redirectUri: safeRedirectUri,
+                codeChallenge: safeCodeChallenge,
                 codeChallengeMethod: code_challenge_method,
                 scope,
                 expiresAt,
             },
         });
 
-        const targetUrl = new URL(redirect_uri!);
+        const targetUrl = new URL(safeRedirectUri);
         targetUrl.searchParams.set('code', code);
         if (state) {
             targetUrl.searchParams.set('state', state);
@@ -236,6 +312,7 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
                 </div>
 
                 <form action={handleAuthorize} className="space-y-3">
+                    <input type="hidden" name="consentCsrfToken" value={consentCsrfToken} />
                     <button
                         type="submit"
                         className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition-all cursor-pointer"

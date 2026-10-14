@@ -70,7 +70,38 @@ export async function POST(request: NextRequest) {
                 );
             }
 
+            if (typeof codeVerifier !== 'string' || !/^[A-Za-z0-9._~-]{43,128}$/.test(codeVerifier)) {
+                return NextResponse.json(
+                    { error: 'invalid_grant', error_description: 'Invalid code_verifier format' },
+                    { status: 400, headers: CORS_HEADERS }
+                );
+            }
+
             const codeHash = hashToken(code);
+            const now = new Date();
+
+            // Atomically claim the authorization code to prevent replay attacks / TOCTOU races
+            const claimed = await prisma.mcpOAuthCode.updateMany({
+                where: {
+                    codeHash,
+                    clientId,
+                    redirectUri,
+                    usedAt: null,
+                    expiresAt: { gt: now },
+                },
+                data: { usedAt: now },
+            });
+
+            if (claimed.count !== 1) {
+                return NextResponse.json(
+                    {
+                        error: 'invalid_grant',
+                        error_description: 'Authorization code is invalid, expired, or already used',
+                    },
+                    { status: 400, headers: CORS_HEADERS }
+                );
+            }
+
             const codeRecord = await prisma.mcpOAuthCode.findUnique({
                 where: { codeHash },
                 include: {
@@ -90,40 +121,19 @@ export async function POST(request: NextRequest) {
 
             if (!codeRecord) {
                 return NextResponse.json(
-                    { error: 'invalid_grant', error_description: 'Authorization code is invalid' },
+                    { error: 'invalid_grant', error_description: 'Authorization code record not found' },
                     { status: 400, headers: CORS_HEADERS }
                 );
             }
 
-            if (codeRecord.usedAt) {
+            if (codeRecord.codeChallengeMethod && codeRecord.codeChallengeMethod !== 'S256') {
                 return NextResponse.json(
-                    { error: 'invalid_grant', error_description: 'Authorization code has already been used' },
+                    { error: 'invalid_grant', error_description: 'Only S256 code_challenge_method is supported' },
                     { status: 400, headers: CORS_HEADERS }
                 );
             }
 
-            if (codeRecord.expiresAt < new Date()) {
-                return NextResponse.json(
-                    { error: 'invalid_grant', error_description: 'Authorization code has expired' },
-                    { status: 400, headers: CORS_HEADERS }
-                );
-            }
-
-            if (codeRecord.clientId !== clientId) {
-                return NextResponse.json(
-                    { error: 'invalid_grant', error_description: 'client_id does not match code issuance' },
-                    { status: 400, headers: CORS_HEADERS }
-                );
-            }
-
-            if (codeRecord.redirectUri !== redirectUri) {
-                return NextResponse.json(
-                    { error: 'invalid_grant', error_description: 'redirect_uri does not match code issuance' },
-                    { status: 400, headers: CORS_HEADERS }
-                );
-            }
-
-            // Verify PKCE S256
+            // Verify PKCE S256 using timing-safe comparison
             const isPkceValid = verifyPkce(codeVerifier, codeRecord.codeChallenge);
             if (!isPkceValid) {
                 return NextResponse.json(
@@ -142,12 +152,6 @@ export async function POST(request: NextRequest) {
                     { status: 403, headers: CORS_HEADERS }
                 );
             }
-
-            // Mark code as used
-            await prisma.mcpOAuthCode.update({
-                where: { id: codeRecord.id },
-                data: { usedAt: new Date() },
-            });
 
             // Issue token pair
             const tokens = await issueOAuthTokenPair({

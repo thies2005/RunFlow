@@ -184,6 +184,7 @@ function addCorsHeaders(response: NextResponse, request: NextRequest): NextRespo
     if (pathname.startsWith('/mcp') || pathname.startsWith('/.well-known/')) {
         response.headers.set('Access-Control-Allow-Origin', origin || '*');
         response.headers.set('Access-Control-Expose-Headers', 'Mcp-Session-Id, WWW-Authenticate');
+        response.headers.delete('Access-Control-Allow-Credentials');
         return response;
     }
 

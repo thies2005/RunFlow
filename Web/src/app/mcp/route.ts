@@ -935,7 +935,19 @@ const swapWorkoutsTool: McpTool = {
             throw new Error('Workouts not found or access denied');
         }
 
+        if (params.workoutIdA === params.workoutIdB) {
+            return {
+                success: true,
+                workoutA,
+                workoutB: workoutA,
+                safetyAdvisory: [],
+            };
+        }
+
         await createSnapshot(workoutA.goalId, `Swap workouts ${workoutA.id} and ${workoutB.id}`, 'ai_mcp_mutation');
+        if (workoutA.goalId !== workoutB.goalId) {
+            await createSnapshot(workoutB.goalId, `Swap workouts ${workoutA.id} and ${workoutB.id}`, 'ai_mcp_mutation');
+        }
 
         const [updatedA, updatedB] = await prisma.$transaction([
             prisma.workout.update({
@@ -1026,6 +1038,16 @@ const markWorkoutStatusTool: McpTool = {
 
         if (!workout || workout.goal.userId !== userId) {
             throw new Error('Workout not found or access denied');
+        }
+
+        if (params.linkedActivityId) {
+            const ownedActivity = await prisma.activity.findFirst({
+                where: { id: params.linkedActivityId, userId },
+                select: { id: true },
+            });
+            if (!ownedActivity) {
+                throw new Error('Linked activity not found or access denied');
+            }
         }
 
         await createSnapshot(workout.goalId, `Mark workout ${workout.id} as ${params.isCompleted ? 'completed' : 'uncompleted'}`, 'ai_mcp_mutation');

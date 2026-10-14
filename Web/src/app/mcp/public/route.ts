@@ -150,6 +150,11 @@ const generateRunningPlanTool: McpTool = {
             throw new Error('raceDate must be in the future.');
         }
 
+        const horizonDays = (raceDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+        if (horizonDays > 104 * 7) {
+            throw new Error('raceDate is too far in the future. Plans are limited to 104 weeks.');
+        }
+
         let vdot = typeof args.vdot === 'number' && args.vdot > 0 ? args.vdot : 0;
         if (!vdot) {
             if (args.raceDistance && args.raceTimeSeconds && args.raceTimeSeconds > 0) {

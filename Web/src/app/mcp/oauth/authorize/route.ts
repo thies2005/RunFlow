@@ -1,10 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
-import { generateMcpAuthCode, hashToken, isUserPaidPremium, AUTH_CODE_TTL_SECONDS } from '@/lib/mcp/oauth';
+import {
+    generateMcpAuthCode,
+    hashToken,
+    isUserPaidPremium,
+    isAllowedMcpRedirectUri,
+    verifyConsentCsrfToken,
+    AUTH_CODE_TTL_SECONDS,
+} from '@/lib/mcp/oauth';
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
+    const clientId = searchParams.get('client_id');
+    const redirectUri = searchParams.get('redirect_uri');
+
+    if (redirectUri && !isAllowedMcpRedirectUri(redirectUri)) {
+        return NextResponse.json(
+            { error: 'invalid_redirect_uri', error_description: 'Redirect URI is not allowed' },
+            { status: 400 }
+        );
+    }
+
+    if (clientId && redirectUri) {
+        const client = await prisma.mcpOAuthClient.findUnique({
+            where: { clientId },
+            select: { redirectUris: true },
+        });
+        if (client) {
+            const registeredUris = (client.redirectUris as string[]) || [];
+            if (!registeredUris.includes(redirectUri)) {
+                return NextResponse.json(
+                    { error: 'invalid_redirect_uri', error_description: 'Redirect URI does not match client registration' },
+                    { status: 400 }
+                );
+            }
+        }
+    }
+
     const authorizePageUrl = new URL('/mcp/authorize', request.nextUrl.origin);
     searchParams.forEach((value, key) => {
         authorizePageUrl.searchParams.set(key, value);
@@ -15,6 +48,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
+        const originHeader = request.headers.get('origin');
+        if (originHeader) {
+            const expectedOrigin = request.nextUrl.origin;
+            if (originHeader !== expectedOrigin) {
+                return NextResponse.json(
+                    { error: 'invalid_request', error_description: 'Cross-origin authorization approval is forbidden' },
+                    { status: 403 }
+                );
+            }
+        }
+
         const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json(
@@ -67,10 +111,18 @@ export async function POST(request: NextRequest) {
         const codeChallengeMethod = body.code_challenge_method || request.nextUrl.searchParams.get('code_challenge_method') || 'S256';
         const state = body.state || request.nextUrl.searchParams.get('state') || '';
         const scope = body.scope || request.nextUrl.searchParams.get('scope') || 'mcp:full';
+        const consentCsrfToken = body.consentCsrfToken || body.consent_csrf_token || request.headers.get('x-consent-csrf-token');
 
         if (!clientId || !redirectUri || !codeChallenge) {
             return NextResponse.json(
                 { error: 'invalid_request', error_description: 'client_id, redirect_uri, and code_challenge are required' },
+                { status: 400 }
+            );
+        }
+
+        if (!isAllowedMcpRedirectUri(redirectUri)) {
+            return NextResponse.json(
+                { error: 'invalid_redirect_uri', error_description: 'The requested redirect URI is not allowed' },
                 { status: 400 }
             );
         }
@@ -91,6 +143,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 { error: 'invalid_redirect_uri', error_description: 'The requested redirect URI does not match client registration' },
                 { status: 400 }
+            );
+        }
+
+        // Verify cryptographic consent CSRF token
+        if (!consentCsrfToken || !verifyConsentCsrfToken(consentCsrfToken, {
+            userId: user.id,
+            clientId: client.clientId,
+            redirectUri,
+            codeChallenge,
+            state,
+        })) {
+            return NextResponse.json(
+                { error: 'invalid_request', error_description: 'Invalid or expired consent CSRF token' },
+                { status: 403 }
             );
         }
 

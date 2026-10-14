@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { isValidRedirectUri } from '@/lib/mcp/oauth';
+import { isAllowedMcpRedirectUri } from '@/lib/mcp/oauth';
+import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -17,6 +18,20 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
     try {
+        const clientIdentifier = getClientIdentifier(request);
+        const rateLimit = await checkRateLimitAsync(clientIdentifier, {
+            limit: 10,
+            windowSeconds: 3600,
+            prefix: 'mcp-dcr',
+        });
+
+        if (!rateLimit.allowed) {
+            return NextResponse.json(
+                { error: 'slow_down', error_description: 'Rate limit exceeded for client registration' },
+                { status: 429, headers: CORS_HEADERS }
+            );
+        }
+
         let body: any;
         try {
             body = await request.json();
@@ -35,23 +50,23 @@ export async function POST(request: NextRequest) {
             token_endpoint_auth_method = 'none',
         } = body || {};
 
-        if (!client_name || typeof client_name !== 'string' || !client_name.trim()) {
+        if (!client_name || typeof client_name !== 'string' || !client_name.trim() || client_name.trim().length > 100) {
             return NextResponse.json(
-                { error: 'invalid_client_metadata', error_description: 'client_name is required' },
+                { error: 'invalid_client_metadata', error_description: 'client_name is required (1-100 characters)' },
                 { status: 400, headers: CORS_HEADERS }
             );
         }
 
-        if (!Array.isArray(redirect_uris) || redirect_uris.length === 0) {
+        if (!Array.isArray(redirect_uris) || redirect_uris.length === 0 || redirect_uris.length > 5) {
             return NextResponse.json(
-                { error: 'invalid_redirect_uri', error_description: 'redirect_uris must be a non-empty array' },
+                { error: 'invalid_redirect_uri', error_description: 'redirect_uris must be an array of 1 to 5 URIs' },
                 { status: 400, headers: CORS_HEADERS }
             );
         }
 
         // Validate each redirect URI against allowed hosts
         for (const uri of redirect_uris) {
-            if (typeof uri !== 'string' || !isValidRedirectUri(uri)) {
+            if (typeof uri !== 'string' || !isAllowedMcpRedirectUri(uri)) {
                 return NextResponse.json(
                     {
                         error: 'invalid_redirect_uri',

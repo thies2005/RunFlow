@@ -10,6 +10,7 @@ import { POST as authorizePost } from '@/app/mcp/oauth/authorize/route';
 import { POST as tokenPost } from '@/app/mcp/oauth/token/route';
 import { GET as mcpGet, POST as mcpPost } from '@/app/mcp/route';
 import { evaluatePlanSafety } from '@/lib/mcp/safety';
+import { createConsentCsrfToken } from '@/lib/mcp/oauth';
 
 // Mock dependencies
 jest.mock('@/lib/redis', () => ({
@@ -32,6 +33,7 @@ jest.mock('@/lib/db', () => {
             create: jest.fn(),
             findUnique: jest.fn(),
             update: jest.fn(),
+            updateMany: jest.fn(),
         },
         mcpOAuthToken: {
             create: jest.fn(),
@@ -192,16 +194,26 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(data.redirect_uris).toEqual(['https://claude.ai/api/mcp/callback']);
         });
 
-        it('rejects client registration with unauthorized redirect URI', async () => {
-            const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/register', 'POST', {
-                client_name: 'Untrusted App',
-                redirect_uris: ['https://attacker.evil.com/callback'],
-            });
+        it('rejects client registration with unauthorized or evil redirect URIs', async () => {
+            const evilUris = [
+                'https://attacker.evil.com/callback',
+                'https://claude.ai.evil.com/cb',
+                'javascript:alert(1)',
+                'http://example.com/cb',
+                'https://claude.ai/../evil',
+            ];
 
-            const res = await registerClient(req);
-            expect(res.status).toBe(400);
-            const data = await res.json();
-            expect(data.error).toBe('invalid_redirect_uri');
+            for (const evilUri of evilUris) {
+                const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/register', 'POST', {
+                    client_name: 'Evil App',
+                    redirect_uris: [evilUri],
+                });
+
+                const res = await registerClient(req);
+                expect(res.status).toBe(400);
+                const data = await res.json();
+                expect(data.error).toBe('invalid_redirect_uri');
+            }
         });
 
         it('rejects authorization for Free Tier user (none / tier1)', async () => {
@@ -224,7 +236,43 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(data.error_description).toContain('Paid Premium');
         });
 
-        it('issues authorization code for Paid Premium user (tier2/3/admin)', async () => {
+        it('rejects authorization POST when consentCsrfToken is missing or invalid (HTTP 403)', async () => {
+            mockDb.user.findUnique.mockResolvedValue({
+                id: 'user-paid-1',
+                isAdmin: false,
+                aiSettings: { usageTier: 'tier2' },
+            });
+
+            mockDb.mcpOAuthClient.findUnique.mockResolvedValue({
+                clientId: 'cuid-claude-client',
+                redirectUris: ['https://claude.ai/api/mcp/callback'],
+            });
+
+            // Missing token
+            const reqMissing = makeRequest('https://runflow.schuelken.uk/mcp/oauth/authorize', 'POST', {
+                client_id: 'cuid-claude-client',
+                redirect_uri: 'https://claude.ai/api/mcp/callback',
+                code_challenge: 'abc-challenge-123',
+                state: 'random-state-1',
+            });
+            const resMissing = await authorizePost(reqMissing);
+            expect(resMissing.status).toBe(403);
+            const dataMissing = await resMissing.json();
+            expect(dataMissing.error_description).toContain('consent CSRF token');
+
+            // Forged/invalid token
+            const reqForged = makeRequest('https://runflow.schuelken.uk/mcp/oauth/authorize', 'POST', {
+                client_id: 'cuid-claude-client',
+                redirect_uri: 'https://claude.ai/api/mcp/callback',
+                code_challenge: 'abc-challenge-123',
+                state: 'random-state-1',
+                consentCsrfToken: `${Date.now() + 60000}.bad-signature-deadbeef`,
+            });
+            const resForged = await authorizePost(reqForged);
+            expect(resForged.status).toBe(403);
+        });
+
+        it('issues authorization code for Paid Premium user with valid consentCsrfToken', async () => {
             mockDb.user.findUnique.mockResolvedValue({
                 id: 'user-paid-1',
                 isAdmin: false,
@@ -238,11 +286,20 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
 
             mockDb.mcpOAuthCode.create.mockResolvedValue({ id: 'code-1' });
 
+            const consentCsrfToken = createConsentCsrfToken({
+                userId: 'user-paid-1',
+                clientId: 'cuid-claude-client',
+                redirectUri: 'https://claude.ai/api/mcp/callback',
+                codeChallenge: 'abc-challenge-123',
+                state: 'random-state-1',
+            });
+
             const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/authorize', 'POST', {
                 client_id: 'cuid-claude-client',
                 redirect_uri: 'https://claude.ai/api/mcp/callback',
                 code_challenge: 'abc-challenge-123',
                 state: 'random-state-1',
+                consentCsrfToken,
             });
 
             const res = await authorizePost(req);
@@ -253,10 +310,11 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(mockDb.mcpOAuthCode.create).toHaveBeenCalledTimes(1);
         });
 
-        it('exchanges code for tokens using PKCE S256 verification', async () => {
+        it('exchanges code for tokens using PKCE S256 verification and atomic single-use claim', async () => {
             const codeVerifier = 'high-entropy-pkce-verifier-string-1234567890';
             const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
 
+            mockDb.mcpOAuthCode.updateMany.mockResolvedValue({ count: 1 });
             mockDb.mcpOAuthCode.findUnique.mockResolvedValue({
                 id: 'code-row-1',
                 clientId: 'cuid-claude-client',
@@ -274,7 +332,6 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
                 },
             });
 
-            mockDb.mcpOAuthCode.update.mockResolvedValue({});
             mockDb.mcpOAuthToken.create.mockResolvedValue({ id: 'token-row-1' });
 
             const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/token', 'POST', {
@@ -292,12 +349,32 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(data.refresh_token).toMatch(/^rf_mcpr_/);
             expect(data.token_type).toBe('Bearer');
             expect(data.expires_in).toBe(30 * 86400);
-            expect(mockDb.mcpOAuthCode.update).toHaveBeenCalledWith(
+            expect(mockDb.mcpOAuthCode.updateMany).toHaveBeenCalledWith(
                 expect.objectContaining({ data: expect.objectContaining({ usedAt: expect.any(Date) }) })
             );
         });
 
+        it('rejects replayed authorization_code on token POST when updateMany returns count 0', async () => {
+            mockDb.mcpOAuthCode.updateMany.mockResolvedValue({ count: 0 });
+
+            const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/token', 'POST', {
+                grant_type: 'authorization_code',
+                client_id: 'cuid-claude-client',
+                code: 'rf_code_replayed',
+                redirect_uri: 'https://claude.ai/api/mcp/callback',
+                code_verifier: 'high-entropy-pkce-verifier-string-1234567890',
+            });
+
+            const res = await tokenPost(req);
+            expect(res.status).toBe(400);
+            const data = await res.json();
+            expect(data.error).toBe('invalid_grant');
+            expect(data.error_description).toContain('already used');
+            expect(mockDb.mcpOAuthToken.create).not.toHaveBeenCalled();
+        });
+
         it('rejects token exchange when PKCE verifier is invalid', async () => {
+            mockDb.mcpOAuthCode.updateMany.mockResolvedValue({ count: 1 });
             mockDb.mcpOAuthCode.findUnique.mockResolvedValue({
                 id: 'code-row-2',
                 clientId: 'cuid-claude-client',
@@ -314,7 +391,7 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
                 client_id: 'cuid-claude-client',
                 code: 'rf_code_abc',
                 redirect_uri: 'https://claude.ai/api/mcp/callback',
-                code_verifier: 'wrong-verifier',
+                code_verifier: 'wrong-verifier-1234567890123456789012345678901234567890',
             });
 
             const res = await tokenPost(req);
@@ -717,6 +794,161 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
                     }),
                 })
             );
+        });
+    });
+
+    describe('6. Security & Tenant Isolation on Mutation Tools', () => {
+        beforeEach(() => {
+            mockDb.mcpOAuthToken.findUnique.mockResolvedValue({
+                id: 'tok-attacker-1',
+                userId: 'user-attacker',
+                expiresAt: new Date(Date.now() + 86400000),
+                revokedAt: null,
+                user: {
+                    id: 'user-attacker',
+                    isAdmin: false,
+                    aiSettings: { usageTier: 'tier3' },
+                },
+            });
+        });
+
+        it('rejects modify_workout when workout belongs to another user (victim)', async () => {
+            mockDb.workout.findUnique.mockResolvedValue({
+                id: 'w-victim-1',
+                goalId: 'goal-victim',
+                goal: { userId: 'victim-user-id', ftpAtCreation: 250 },
+            });
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp',
+                'POST',
+                {
+                    jsonrpc: '2.0',
+                    id: 101,
+                    method: 'tools/call',
+                    params: {
+                        name: 'modify_workout',
+                        arguments: {
+                            workoutId: 'w-victim-1',
+                            description: 'Malicious modification',
+                        },
+                    },
+                },
+                { Authorization: 'Bearer rf_mcp_attacker' }
+            );
+
+            const res = await mcpPost(req);
+            expect(res.status).toBe(200);
+            const data = await res.json();
+            expect(data.result.isError).toBe(true);
+            expect(data.result.content[0].text).toContain('Workout not found or access denied');
+            expect(mockDb.workout.update).not.toHaveBeenCalled();
+        });
+
+        it('rejects swap_workouts when either workout belongs to another user', async () => {
+            mockDb.workout.findUnique
+                .mockResolvedValueOnce({
+                    id: 'w-attacker-1',
+                    goalId: 'goal-attacker',
+                    goal: { userId: 'user-attacker' },
+                })
+                .mockResolvedValueOnce({
+                    id: 'w-victim-2',
+                    goalId: 'goal-victim',
+                    goal: { userId: 'victim-user-id' },
+                });
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp',
+                'POST',
+                {
+                    jsonrpc: '2.0',
+                    id: 102,
+                    method: 'tools/call',
+                    params: {
+                        name: 'swap_workouts',
+                        arguments: {
+                            workoutIdA: 'w-attacker-1',
+                            workoutIdB: 'w-victim-2',
+                        },
+                    },
+                },
+                { Authorization: 'Bearer rf_mcp_attacker' }
+            );
+
+            const res = await mcpPost(req);
+            expect(res.status).toBe(200);
+            const data = await res.json();
+            expect(data.result.isError).toBe(true);
+            expect(data.result.content[0].text).toContain('Workouts not found or access denied');
+            expect(mockDb.$transaction).not.toHaveBeenCalled();
+        });
+
+        it('rejects delete_workout when workout belongs to another user', async () => {
+            mockDb.workout.findUnique.mockResolvedValue({
+                id: 'w-victim-1',
+                goalId: 'goal-victim',
+                goal: { userId: 'victim-user-id' },
+            });
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp',
+                'POST',
+                {
+                    jsonrpc: '2.0',
+                    id: 103,
+                    method: 'tools/call',
+                    params: {
+                        name: 'delete_workout',
+                        arguments: {
+                            workoutId: 'w-victim-1',
+                        },
+                    },
+                },
+                { Authorization: 'Bearer rf_mcp_attacker' }
+            );
+
+            const res = await mcpPost(req);
+            expect(res.status).toBe(200);
+            const data = await res.json();
+            expect(data.result.isError).toBe(true);
+            expect(data.result.content[0].text).toContain('Workout not found or access denied');
+            expect(mockDb.workout.delete).not.toHaveBeenCalled();
+        });
+
+        it('rejects mark_workout_status when linkedActivityId belongs to another user', async () => {
+            mockDb.workout.findUnique.mockResolvedValue({
+                id: 'w-attacker-1',
+                goalId: 'goal-attacker',
+                goal: { userId: 'user-attacker' },
+            });
+            mockDb.activity.findFirst.mockResolvedValue(null); // Activity not found for user-attacker
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp',
+                'POST',
+                {
+                    jsonrpc: '2.0',
+                    id: 104,
+                    method: 'tools/call',
+                    params: {
+                        name: 'mark_workout_status',
+                        arguments: {
+                            workoutId: 'w-attacker-1',
+                            isCompleted: true,
+                            linkedActivityId: 'act-victim-secret',
+                        },
+                    },
+                },
+                { Authorization: 'Bearer rf_mcp_attacker' }
+            );
+
+            const res = await mcpPost(req);
+            expect(res.status).toBe(200);
+            const data = await res.json();
+            expect(data.result.isError).toBe(true);
+            expect(data.result.content[0].text).toContain('Linked activity not found or access denied');
+            expect(mockDb.workout.update).not.toHaveBeenCalled();
         });
     });
 });

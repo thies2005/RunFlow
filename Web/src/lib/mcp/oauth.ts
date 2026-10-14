@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { prisma } from '@/lib/db';
 
 export const ACCESS_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
@@ -13,41 +13,61 @@ export function hashToken(token: string): string {
 }
 
 /**
- * Verify PKCE S256 code_verifier against code_challenge (RFC 7636)
+ * Verify PKCE S256 code_verifier against code_challenge using timing-safe comparison (RFC 7636)
  */
 export function verifyPkce(codeVerifier: string, codeChallenge: string): boolean {
     if (!codeVerifier || !codeChallenge) return false;
-    const computedChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
-    return computedChallenge === codeChallenge;
+    if (typeof codeVerifier !== 'string' || !/^[A-Za-z0-9._~-]{43,128}$/.test(codeVerifier)) {
+        return false;
+    }
+    const computedChallenge = createHash('sha256').update(codeVerifier, 'ascii').digest('base64url');
+    const compBuf = Buffer.from(computedChallenge);
+    const recBuf = Buffer.from(codeChallenge);
+    if (compBuf.length !== recBuf.length) return false;
+    return timingSafeEqual(compBuf, recBuf);
 }
 
 /**
- * Validate redirect URI against allowed hosts:
- * - https://claude.ai/* and subdomains
- * - https://*.anthropic.com/*
- * - https://*.google.com/*
- * - http://localhost:* / http://127.0.0.1:*
+ * Strict Redirect URI Validator for MCP OAuth 2.1 (RFC 6749 / RFC 7591 / RFC 8252).
+ * Parses with `new URL(uri)`:
+ * - Rejects any URI with username, password, or URL fragment (#)
+ * - Rejects path traversal (.. or %2e%2e)
+ * - If http:: ONLY allows loopback (localhost or 127.0.0.1)
+ * - If https:: ONLY allows claude.ai / *.claude.ai, *.anthropic.com, aistudio.google.com, gemini.google.com
+ * - Rejects any other scheme or host
  */
-export function isValidRedirectUri(uri: string): boolean {
+export function isAllowedMcpRedirectUri(uri: string): boolean {
+    if (!uri || typeof uri !== 'string') return false;
+    // Reject path traversal attempts in raw URI
+    if (uri.includes('..') || uri.toLowerCase().includes('%2e%2e')) {
+        return false;
+    }
     try {
         const parsed = new URL(uri);
+        // Reject userinfo or fragments
+        if (parsed.username || parsed.password || parsed.hash) {
+            return false;
+        }
+        // Reject path traversal attacks
+        if (parsed.pathname.includes('..') || decodeURIComponent(parsed.pathname).includes('..')) {
+            return false;
+        }
+
         const host = parsed.hostname.toLowerCase();
         const protocol = parsed.protocol;
 
-        if (protocol === 'http:' || protocol === 'https:') {
-            if (host === 'localhost' || host === '127.0.0.1') {
-                return true;
-            }
+        if (protocol === 'http:') {
+            return host === '127.0.0.1' || host === 'localhost';
         }
 
         if (protocol === 'https:') {
             if (host === 'claude.ai' || host.endsWith('.claude.ai')) {
                 return true;
             }
-            if (host === 'anthropic.com' || host.endsWith('.anthropic.com')) {
+            if (host.endsWith('.anthropic.com')) {
                 return true;
             }
-            if (host === 'google.com' || host.endsWith('.google.com')) {
+            if (host === 'aistudio.google.com' || host === 'gemini.google.com') {
                 return true;
             }
         }
@@ -56,6 +76,56 @@ export function isValidRedirectUri(uri: string): boolean {
     } catch {
         return false;
     }
+}
+
+export const isValidRedirectUri = isAllowedMcpRedirectUri;
+
+/**
+ * Generates an HMAC-SHA256 bound consent CSRF token for the OAuth 2.1 authorization step.
+ */
+export function createConsentCsrfToken(params: {
+    userId: string;
+    clientId: string;
+    redirectUri: string;
+    codeChallenge: string;
+    state: string;
+    expiresAtMs?: number;
+}): string {
+    const secret = process.env.NEXTAUTH_SECRET || 'runflow-mcp-consent-dev-secret';
+    const expiresAtMs = params.expiresAtMs ?? (Date.now() + 10 * 60 * 1000); // 10 minutes default
+    const payload = `${params.userId}:${params.clientId}:${params.redirectUri}:${params.codeChallenge}:${params.state}:${expiresAtMs}`;
+    const hmac = createHmac('sha256', secret).update(payload).digest('hex');
+    return `${expiresAtMs}.${hmac}`;
+}
+
+/**
+ * Verifies the HMAC-SHA256 bound consent CSRF token using timingSafeEqual.
+ */
+export function verifyConsentCsrfToken(
+    token: string | null | undefined,
+    params: {
+        userId: string;
+        clientId: string;
+        redirectUri: string;
+        codeChallenge: string;
+        state: string;
+    }
+): boolean {
+    if (!token || typeof token !== 'string') return false;
+    const parts = token.split('.');
+    if (parts.length !== 2) return false;
+    const [expiresAtMsStr, hmacHex] = parts;
+    const expiresAtMs = parseInt(expiresAtMsStr, 10);
+    if (isNaN(expiresAtMs) || Date.now() > expiresAtMs) return false;
+
+    const secret = process.env.NEXTAUTH_SECRET || 'runflow-mcp-consent-dev-secret';
+    const payload = `${params.userId}:${params.clientId}:${params.redirectUri}:${params.codeChallenge}:${params.state}:${expiresAtMs}`;
+    const expectedHmac = createHmac('sha256', secret).update(payload).digest('hex');
+
+    const hmacBuf = Buffer.from(hmacHex, 'hex');
+    const expBuf = Buffer.from(expectedHmac, 'hex');
+    if (hmacBuf.length !== expBuf.length || hmacBuf.length === 0) return false;
+    return timingSafeEqual(hmacBuf, expBuf);
 }
 
 /**

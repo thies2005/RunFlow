@@ -81,7 +81,7 @@ function preAuthBodyCapFor(pathname: string): number | null {
             return PREAUTH_JSON_BODY_CAP_BYTES;
         }
     }
-    if (pathname.startsWith('/api/public/')) {
+    if (pathname.startsWith('/api/public/') || pathname.startsWith('/mcp')) {
         return PUBLIC_API_BODY_CAP_BYTES;
     }
     return null;
@@ -92,7 +92,7 @@ function enforcePreAuthBodyCap(request: NextRequest): NextResponse | null {
         return null;
     }
     const pathname = request.nextUrl.pathname;
-    if (!pathname.startsWith('/api/')) {
+    if (!pathname.startsWith('/api/') && !pathname.startsWith('/mcp')) {
         return null;
     }
     const cap = preAuthBodyCapFor(pathname);
@@ -125,16 +125,27 @@ function handleCors(request: NextRequest): NextResponse | null {
     const allowedOrigins = ALLOWED_ORIGINS;
     const requestOrigin = request.nextUrl.origin;
     const isSameOrigin = origin === requestOrigin;
+    const pathname = request.nextUrl.pathname;
 
     // Handle preflight OPTIONS requests
     if (request.method === 'OPTIONS') {
         const response = new NextResponse(null, { status: 204 });
 
+        if (pathname.startsWith('/mcp') || pathname.startsWith('/.well-known/')) {
+            response.headers.set('Access-Control-Allow-Origin', origin || '*');
+            response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Mcp-Session-Id');
+            response.headers.set('Access-Control-Expose-Headers', 'Mcp-Session-Id, WWW-Authenticate');
+            response.headers.set('Access-Control-Max-Age', '86400');
+            return response;
+        }
+
         if (origin && (allowedOrigins.includes(origin) || isSameOrigin)) {
             response.headers.set('Access-Control-Allow-Origin', origin);
             response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
-            response.headers.set('Access-Control-Allow-Credentials', 'true');
+            response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token, Mcp-Session-Id');
+            response.headers.set('Access-Control-Expose-Headers', 'Mcp-Session-Id, WWW-Authenticate');
+            response.headers.set('Access-Control-Credentials', 'true');
             response.headers.set('Access-Control-Max-Age', '86400');
         }
 
@@ -143,13 +154,18 @@ function handleCors(request: NextRequest): NextResponse | null {
 
     // For actual requests from allowed origins, we'll add headers in the response
     // For disallowed origins on API routes, block the request
-    if (origin && !allowedOrigins.includes(origin) && !isSameOrigin && request.nextUrl.pathname.startsWith('/api/')) {
-        // Allow webhooks and auth endpoints without origin check (they validate differently)
-        if (!request.nextUrl.pathname.startsWith('/api/webhooks') &&
-            !request.nextUrl.pathname.startsWith('/api/auth') &&
-            !request.nextUrl.pathname.startsWith('/api/public')) {
-            console.warn(`[CORS] Blocked request from origin: ${origin}`);
-            return new NextResponse('Forbidden', { status: 403 });
+    if (origin && !allowedOrigins.includes(origin) && !isSameOrigin) {
+        if (pathname.startsWith('/mcp') || pathname.startsWith('/.well-known/')) {
+            return null;
+        }
+        if (pathname.startsWith('/api/')) {
+            // Allow webhooks and auth endpoints without origin check (they validate differently)
+            if (!request.nextUrl.pathname.startsWith('/api/webhooks') &&
+                !request.nextUrl.pathname.startsWith('/api/auth') &&
+                !request.nextUrl.pathname.startsWith('/api/public')) {
+                console.warn(`[CORS] Blocked request from origin: ${origin}`);
+                return new NextResponse('Forbidden', { status: 403 });
+            }
         }
     }
 
@@ -163,6 +179,13 @@ function addCorsHeaders(response: NextResponse, request: NextRequest): NextRespo
     const origin = request.headers.get('origin');
     const allowedOrigins = ALLOWED_ORIGINS;
     const requestOrigin = request.nextUrl.origin;
+    const pathname = request.nextUrl.pathname;
+
+    if (pathname.startsWith('/mcp') || pathname.startsWith('/.well-known/')) {
+        response.headers.set('Access-Control-Allow-Origin', origin || '*');
+        response.headers.set('Access-Control-Expose-Headers', 'Mcp-Session-Id, WWW-Authenticate');
+        return response;
+    }
 
     if (origin && (allowedOrigins.includes(origin) || origin === requestOrigin)) {
         response.headers.set('Access-Control-Allow-Origin', origin);
@@ -312,6 +335,6 @@ export const config = {
          * only new middleware behavior for them is the 413 gate, CSP headers
          * and request logging).
          */
-        '/((?!api/health|api/monitoring|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker|workbox|.well-known).*)',
+        '/((?!api/health|api/monitoring|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker|workbox).*)',
     ],
 }

@@ -3,6 +3,10 @@ import { z } from 'zod';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders, type RateLimitConfig } from '@/lib/rateLimit';
 import { csvCell } from '@/lib/export/csv-cell';
 import { readBodyWithLimit } from '@/lib/api/bodyLimit';
+import { generateTrainingPlan, type PlanConfig, type GeneratedWorkout } from '@/lib/plans';
+import { calculateVdot } from '@/lib/metrics/vdot';
+import { RaceType } from '@/generated/prisma/browser';
+import { applyPlanDefaults } from '@/lib/mcp/server';
 
 const EXPORT_RATE_LIMIT: RateLimitConfig = {
     limit: 20,
@@ -35,15 +39,81 @@ const exportRequestSchema = z.object({
     }),
 });
 
+function formatPaceStr(secPerKm: number | undefined): string {
+    if (!secPerKm || secPerKm <= 0) return '-';
+    const mins = Math.floor(secPerKm / 60);
+    const secs = Math.round(secPerKm % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}/km`;
+}
+
+function formatDurationStr(seconds: number | undefined): string {
+    if (!seconds || seconds <= 0) return '-';
+    return `${Math.round(seconds / 60)}min`;
+}
+
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function groupWorkoutsByWeek(workouts: GeneratedWorkout[]): z.infer<typeof exportRequestSchema>['plan']['weeks'] {
+    const weeks: z.infer<typeof exportRequestSchema>['plan']['weeks'] = [];
+    let currentWeek: z.infer<typeof exportRequestSchema>['plan']['weeks'][0]['workouts'] = [];
+    let currentWeekStart: Date | null = null;
+    let weekNum = 0;
+
+    const sorted = [...workouts].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    for (const w of sorted) {
+        const d = new Date(w.date);
+        const weekStart = new Date(d);
+        weekStart.setDate(d.getDate() - d.getDay());
+
+        if (!currentWeekStart || weekStart.getTime() !== currentWeekStart.getTime()) {
+            if (currentWeek.length > 0) {
+                const totalDist = currentWeek.reduce((s, item) => s + parseFloat(item.distanceKm) || 0, 0);
+                weeks.push({
+                    weekNumber: weekNum,
+                    phase: currentWeek[0]?.phase || 'BASE',
+                    workouts: currentWeek,
+                    totalDistanceKm: totalDist.toFixed(1),
+                });
+            }
+            currentWeekStart = weekStart;
+            weekNum++;
+            currentWeek = [];
+        }
+
+        currentWeek.push({
+            date: d.toISOString().split('T')[0],
+            dayOfWeek: DAY_NAMES[d.getDay()],
+            type: w.type,
+            description: w.description,
+            displayDescription: w.displayDescription || w.description,
+            distanceKm: (w.totalDistance / 1000).toFixed(1),
+            durationMin: formatDurationStr(w.targetDuration),
+            pace: formatPaceStr(w.targetPace),
+            phase: w.phase || 'BASE',
+            intensityZone: w.intensityZone || null,
+        });
+    }
+
+    if (currentWeek.length > 0) {
+        const totalDist = currentWeek.reduce((s, item) => s + parseFloat(item.distanceKm) || 0, 0);
+        weeks.push({
+            weekNumber: weekNum,
+            phase: currentWeek[0]?.phase || 'BASE',
+            workouts: currentWeek,
+            totalDistanceKm: totalDist.toFixed(1),
+        });
+    }
+
+    return weeks;
+}
+
 function generateCsv(plan: z.infer<typeof exportRequestSchema>['plan']): string {
     const headers = ['Date', 'Day', 'Type', 'Description', 'Distance (km)', 'Duration', 'Pace', 'Phase', 'Intensity Zone'];
     const lines = [headers.join(',')];
 
     for (const week of plan.weeks) {
         for (const w of week.workouts) {
-            // csvCell quotes every field (RFC-4180) and neutralizes
-            // formula-leading text — same shared escaping as the
-            // authenticated export paths.
             const row = [
                 csvCell(w.date),
                 csvCell(w.dayOfWeek),
@@ -97,13 +167,6 @@ function generateHtml(plan: z.infer<typeof exportRequestSchema>['plan']): string
         const phaseColor = phaseColors[week.phase] || '#6b7280';
         const workoutsHtml = week.workouts.map(w => {
             const typeColor = typeColors[w.type] || '#6b7280';
-            // p3 generateHtml-unescaped-workout-fields: EVERY caller-supplied
-            // plan value interpolated into this anonymous text/html response
-            // must go through escapeHtml. date/distanceKm/durationMin/pace
-            // and week.totalDistanceKm are z.string() fields (not
-            // generator-emitted numbers), so without escaping an anonymous
-            // caller gets arbitrary script/iframe markup into a
-            // RunFlow-branded document from the trusted origin.
             return `<tr>
                 <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;">${escapeHtml(w.date)}</td>
                 <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;">${escapeHtml(w.dayOfWeek)}</td>
@@ -165,6 +228,162 @@ function generateHtml(plan: z.infer<typeof exportRequestSchema>['plan']): string
     <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:32px;">Generated by <strong>RunFlow</strong> — <a href="https://runflow.app/register" style="color:#e65a2b;">Sign up free</a> for personalized plans with AI coaching, Strava sync, and more.</p>
 </body>
 </html>`;
+}
+
+export async function GET(request: NextRequest) {
+    const clientId = getClientIdentifier(request);
+    const rateLimitResult = await checkRateLimitAsync(clientId, EXPORT_RATE_LIMIT);
+    const headers = rateLimitHeaders(rateLimitResult);
+
+    if (!rateLimitResult.allowed) {
+        return NextResponse.json(
+            { error: 'Rate limit exceeded' },
+            { status: 429, headers }
+        );
+    }
+
+    try {
+        const { searchParams } = request.nextUrl;
+        const format = searchParams.get('format') || 'html';
+        if (format !== 'csv' && format !== 'html') {
+            return NextResponse.json(
+                { error: 'Invalid format. Supported formats are "csv" and "html".' },
+                { status: 400, headers }
+            );
+        }
+
+        const raceType = searchParams.get('raceType') || 'MARATHON';
+        const raceDate = searchParams.get('raceDate');
+        if (!raceDate) {
+            return NextResponse.json(
+                { error: 'Missing raceDate parameter' },
+                { status: 400, headers }
+            );
+        }
+
+        const raceDateObj = new Date(raceDate);
+        if (isNaN(raceDateObj.getTime())) {
+            return NextResponse.json(
+                { error: 'Invalid race date' },
+                { status: 400, headers }
+            );
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (raceDateObj <= today) {
+            return NextResponse.json(
+                { error: 'Race date must be in the future' },
+                { status: 400, headers }
+            );
+        }
+
+        let vdot = searchParams.get('vdot') ? parseFloat(searchParams.get('vdot')!) : 0;
+        if (!vdot || isNaN(vdot) || vdot <= 0) {
+            const raceDist = searchParams.get('raceDistance');
+            const raceTimeSec = searchParams.get('raceTimeSeconds') ? parseFloat(searchParams.get('raceTimeSeconds')!) : 0;
+            if (raceDist && raceTimeSec > 0) {
+                const distM = !isNaN(Number(raceDist)) ? Number(raceDist) : raceDist;
+                vdot = calculateVdot({ distance: distM as any, timeSeconds: raceTimeSec });
+            }
+        }
+        if (!vdot || isNaN(vdot) || vdot <= 0) {
+            vdot = 40;
+        }
+
+        const parseOptionalInt = (key: string): number | undefined => {
+            const val = searchParams.get(key);
+            if (!val) return undefined;
+            const parsed = parseInt(val, 10);
+            return isNaN(parsed) ? undefined : parsed;
+        };
+
+        const parseOptionalFloat = (key: string): number | undefined => {
+            const val = searchParams.get(key);
+            if (!val) return undefined;
+            const parsed = parseFloat(val);
+            return isNaN(parsed) ? undefined : parsed;
+        };
+
+        const resolvedDefaults = applyPlanDefaults({
+            raceType,
+            vdot,
+            runsPerWeek: parseOptionalInt('runsPerWeek'),
+            ridesPerWeek: parseOptionalInt('ridesPerWeek'),
+            swimsPerWeek: parseOptionalInt('swimsPerWeek'),
+            strengthPerWeek: parseOptionalInt('strengthPerWeek'),
+            weeklyVolumeKm: parseOptionalFloat('weeklyVolumeKm'),
+            taperWeeks: parseOptionalInt('taperWeeks'),
+            peakWeeks: parseOptionalInt('peakWeeks'),
+            buildWeeks: parseOptionalInt('buildWeeks'),
+            longRunDay: parseOptionalInt('longRunDay'),
+            workoutDay: parseOptionalInt('workoutDay'),
+            swimDay: parseOptionalInt('swimDay'),
+        });
+
+        const config: PlanConfig = {
+            vdot,
+            raceType: raceType as RaceType,
+            raceDate: raceDateObj,
+            runsPerWeek: resolvedDefaults.runsPerWeek,
+            ridesPerWeek: resolvedDefaults.ridesPerWeek,
+            swimsPerWeek: resolvedDefaults.swimsPerWeek,
+            strengthPerWeek: resolvedDefaults.strengthPerWeek,
+            weeklyMileageGoal: resolvedDefaults.weeklyVolumeKm * 1000,
+            taperWeeks: resolvedDefaults.taperWeeks,
+            peakWeeks: resolvedDefaults.peakWeeks,
+            buildWeeks: resolvedDefaults.buildWeeks,
+            longRunDay: resolvedDefaults.longRunDay,
+            workoutDay: resolvedDefaults.workoutDay,
+            swimDay: resolvedDefaults.swimDay,
+            customDistanceM: parseOptionalFloat('customDistanceM'),
+        };
+
+        const rawWorkouts = generateTrainingPlan(config);
+        const weeks = groupWorkoutsByWeek(rawWorkouts);
+        const plan = {
+            raceType,
+            raceDate: raceDateObj.toISOString().split('T')[0],
+            weeks,
+        };
+
+        const raceTypeSlug = raceType.replace(/\s+/g, '-').toLowerCase();
+
+        if (format === 'csv') {
+            const csv = generateCsv(plan);
+            return new NextResponse(csv, {
+                status: 200,
+                headers: {
+                    'Content-Type': 'text/csv; charset=utf-8',
+                    'Content-Disposition': `attachment; filename="runflow-${raceTypeSlug}-plan.csv"`,
+                    'X-Content-Type-Options': 'nosniff',
+                    ...headers,
+                },
+            });
+        }
+
+        if (format === 'html') {
+            const html = generateHtml(plan);
+            return new NextResponse(html, {
+                status: 200,
+                headers: {
+                    'Content-Type': 'text/html; charset=utf-8',
+                    'Content-Disposition': `inline; filename="runflow-${raceTypeSlug}-plan.html"`,
+                    'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
+                    'X-Content-Type-Options': 'nosniff',
+                    ...headers,
+                },
+            });
+        }
+
+        return NextResponse.json({ error: 'Unsupported format' }, { status: 400, headers });
+    } catch (err) {
+        console.error('Export GET error:', err);
+        return NextResponse.json(
+            { error: 'Export failed' },
+            { status: 500, headers }
+        );
+    }
 }
 
 export async function POST(request: NextRequest) {

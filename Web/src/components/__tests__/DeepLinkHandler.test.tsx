@@ -75,6 +75,9 @@ describe('resolveDeepLink (runflow: scheme hostname bypass)', () => {
     });
 
     it('keeps the https exact-hostname branch working', () => {
+        expect(resolveDeepLink('https://runflow.schuelken.uk/calendar?tab=1')).toBe(
+            '/calendar?tab=1',
+        );
         expect(resolveDeepLink('https://runflow.schuelken.uk/plan?tab=1')).toBe(
             '/plan?tab=1',
         );

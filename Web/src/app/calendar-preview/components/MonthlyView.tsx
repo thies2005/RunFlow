@@ -2,18 +2,22 @@
 
 import { useMemo } from 'react';
 import { addDays, format, isSameMonth, isToday, startOfMonth, endOfMonth, startOfWeek } from 'date-fns';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
 import type { DayEntry } from './metrics';
 import { fmtKm } from './metrics';
 import { colorsFor } from './workoutColors';
+import type { MockActivity, MockWorkout } from './mockData';
 
 interface MonthlyViewProps {
     month: Date;
     days: Map<string, DayEntry>;
+    onWorkoutClick?: (workout: MockWorkout) => void;
+    onActivityClick?: (activity: MockActivity) => void;
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-export function MonthlyView({ month, days }: MonthlyViewProps) {
+export function MonthlyView({ month, days, onWorkoutClick, onActivityClick }: MonthlyViewProps) {
     const weeks = useMemo(() => {
         const monthStart = startOfMonth(month);
         const monthEnd = endOfMonth(month);
@@ -46,7 +50,14 @@ export function MonthlyView({ month, days }: MonthlyViewProps) {
                 {weeks.map((week, wi) => (
                     <div key={wi} className="grid grid-cols-7 min-h-0">
                         {week.map((day) => (
-                            <DayCell key={day.toISOString()} day={day} month={month} days={days} />
+                            <DayCell
+                                key={day.toISOString()}
+                                day={day}
+                                month={month}
+                                days={days}
+                                onWorkoutClick={onWorkoutClick}
+                                onActivityClick={onActivityClick}
+                            />
                         ))}
                     </div>
                 ))}
@@ -55,8 +66,25 @@ export function MonthlyView({ month, days }: MonthlyViewProps) {
     );
 }
 
-function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<string, DayEntry> }) {
+function DayCell({
+    day,
+    month,
+    days,
+    onWorkoutClick,
+    onActivityClick,
+}: {
+    day: Date;
+    month: Date;
+    days: Map<string, DayEntry>;
+    onWorkoutClick?: (workout: MockWorkout) => void;
+    onActivityClick?: (activity: MockActivity) => void;
+}) {
     const key = day.toISOString().split('T')[0];
+    const { isOver, setNodeRef } = useDroppable({
+        id: `day-${key}`,
+        data: { date: key },
+    });
+
     const entry = days.get(key);
     const inMonth = isSameMonth(day, month);
     const today = isToday(day);
@@ -70,10 +98,12 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
 
     return (
         <div
+            ref={setNodeRef}
             className={`
                 relative flex flex-col p-1 border-b border-r border-line min-h-[78px]
                 ${inMonth ? fill : 'bg-background'}
                 ${today ? 'ring-1 ring-inset ring-accent-orange' : ''}
+                ${isOver ? 'ring-2 ring-inset ring-accent-orange bg-accent-orange/10' : ''}
                 hover:brightness-110 transition-[filter]
             `}
             title={entry ? `${format(day, 'EEE d')}: TRIMP ${trimp.toFixed(0)} · ${completedActivities.length} done / ${plannedWorkouts.length} planned` : format(day, 'EEE d')}
@@ -98,28 +128,24 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
                         return (
                             <div
                                 key={a.id}
-                                className={`flex items-center gap-1 px-1 py-0.5 rounded text-[9px] leading-none ${c.bg} ${c.text} truncate`}
+                                onClick={() => onActivityClick?.(a)}
+                                className={`flex items-center gap-1 px-1 py-0.5 rounded text-[9px] leading-none cursor-pointer hover:brightness-110 ${c.bg} ${c.text} truncate`}
+                                title="Completed activity — click for details"
                             >
                                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
                                 <span className="truncate">{a.name}</span>
-                                {a.distance > 0 && <span className="opacity-70 shrink-0">{fmtKm(a.distance)}</span>}
+                                {a.distance > 0 && <span className="opacity-70 shrink-0 font-mono">{fmtKm(a.distance)}</span>}
                             </div>
                         );
                     })}
-                    {/* planned-only workouts (lighter, dashed feel) */}
-                    {plannedWorkouts.filter((w) => !w.completed).slice(0, 2).map((w) => {
-                        const c = colorsFor(w.type);
-                        return (
-                            <div
-                                key={w.id}
-                                className={`flex items-center gap-1 px-1 py-0.5 rounded text-[9px] leading-none border border-dashed border-foreground/20 ${c.bg} ${c.text} opacity-70 truncate`}
-                            >
-                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
-                                <span className="truncate">{w.name}</span>
-                                {w.targetDistance ? <span className="opacity-70 shrink-0">{fmtKm(w.targetDistance)}</span> : null}
-                            </div>
-                        );
-                    })}
+                    {/* planned-only workouts (draggable) */}
+                    {plannedWorkouts.filter((w) => !w.completed).slice(0, 2).map((w) => (
+                        <MonthlyDraggableWorkoutPill
+                            key={w.id}
+                            workout={w}
+                            onClick={() => onWorkoutClick?.(w)}
+                        />
+                    ))}
                 </div>
             )}
 
@@ -134,6 +160,46 @@ function DayCell({ day, month, days }: { day: Date; month: Date; days: Map<strin
             {inMonth && hasUnfinishedPlan && entry && completedActivities.length === 0 && (
                 <span className="absolute bottom-0.5 right-1 text-[8px] text-workout-tempo" title="Planned, not yet completed">●</span>
             )}
+        </div>
+    );
+}
+
+function MonthlyDraggableWorkoutPill({
+    workout,
+    onClick,
+}: {
+    workout: MockWorkout;
+    onClick?: () => void;
+}) {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: workout.id,
+        data: { workout },
+    });
+
+    const style = transform
+        ? {
+              transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+              zIndex: 40,
+          }
+        : undefined;
+
+    const c = colorsFor(workout.type);
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            onClick={onClick}
+            className={`flex items-center gap-1 px-1 py-0.5 rounded text-[9px] leading-none border border-dashed border-foreground/20 cursor-pointer select-none transition-all ${
+                isDragging ? 'opacity-50 ring-1 ring-accent-orange' : 'opacity-80 hover:opacity-100 hover:brightness-110'
+            } ${c.bg} ${c.text} truncate`}
+            title="Planned workout — click for details, drag to reschedule"
+        >
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
+            <span className="truncate">{workout.name}</span>
+            {workout.targetDistance ? <span className="opacity-70 shrink-0 font-mono">{fmtKm(workout.targetDistance)}</span> : null}
         </div>
     );
 }

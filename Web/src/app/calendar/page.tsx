@@ -1,32 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CalendarRange } from 'lucide-react';
 import { CalendarView } from '@/components/views/CalendarView';
 import { Footer } from '@/components/Footer';
-import { useDeviceType } from '@/hooks/useDeviceType';
 
 /**
- * Standalone /calendar route (desktop / non-swipeable access).
- * Mobile users are redirected to /plan: the simple plan list is easier to
- * read on a phone, and the calendar gets more screen space on desktop.
+ * Standalone /calendar route.
+ * Renders on both mobile and desktop.
  */
 export default function CalendarPage() {
     const router = useRouter();
-    const { isMobile, isLoading } = useDeviceType();
-
-    useEffect(() => {
-        if (!isLoading && isMobile) {
-            router.replace('/plan');
-        }
-    }, [isLoading, isMobile, router]);
-
-    // While detecting the device (or mid-redirect on mobile) render nothing
-    // to avoid flashing the desktop calendar on a phone.
-    if (isLoading || isMobile) {
-        return <div className="min-h-screen bg-background" />;
-    }
 
     return (
         <div className="min-h-screen bg-background flex flex-col">

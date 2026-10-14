@@ -203,7 +203,7 @@ export function RaceCountdown({
                 <h2 className="text-lg font-semibold text-foreground-muted">Race Goal</h2>
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => router.push(isMobile ? '/plan' : '/calendar')}
+                        onClick={() => router.push('/calendar')}
                         className="text-xs text-accent-orange hover:opacity-80 transition-opacity"
                     >
                         {isMobile ? 'View Full Plan →' : 'View Calendar →'}

@@ -28,7 +28,7 @@ const DashboardView = dynamic(() => import('@/components/views/DashboardView'), 
     ssr: false,
     loading: () => <div className="h-full w-full bg-background" />,
 });
-const PlanView = dynamic(() => import('@/components/views/PlanView'), {
+const CalendarView = dynamic(() => import('@/components/views/CalendarView').then(m => ({ default: m.CalendarView })), {
     ssr: false,
     loading: () => <div className="h-full w-full bg-background" />,
 });
@@ -66,7 +66,7 @@ export function MobileLayout() {
     const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
     const [zonesTimeRange, setZonesTimeRange] = useState<'1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'>('1Y');
 
-    const isPlanPath = activePath === '/plan';
+    const isCalendarPath = activePath === '/calendar' || activePath === '/plan';
     const isAnalyticsPath = activePath === '/analytics';
 
     // DnD Sensors for Plan
@@ -101,7 +101,7 @@ export function MobileLayout() {
             if (!res.ok) throw new Error('Failed to fetch plan');
             return res.json();
         },
-        enabled: status === 'authenticated' && (isPlanPath || !!editingWorkout || !!createDate),
+        enabled: status === 'authenticated' && (isCalendarPath || !!editingWorkout || !!createDate),
         placeholderData: keepPreviousData
     });
 
@@ -350,21 +350,9 @@ export function MobileLayout() {
                     />
                 ) : <div className="h-full w-full" />}
 
-                {/* Plan View - always index 1 */}
-                {isPlanPath ? (
-                    <PlanView
-                        data={planData}
-                        isLoading={isPlanLoading}
-                        showUnlinked={showUnlinked}
-                        setShowUnlinked={setShowUnlinked}
-                        sensors={sensors}
-                        handleDragEnd={handleDragEnd}
-                        handleEdit={(w) => handleEditWorkout(w, false)}
-                        handleComplete={(w, e) => { e.stopPropagation(); handleEditWorkout(w, true); }}
-                        handleCreate={handleCreateWorkout}
-                        handleActivityClick={handleActivityClick}
-                        showHeader={false}
-                    />
+                {/* Calendar View - always index 1 */}
+                {isCalendarPath ? (
+                    <CalendarView showHeader={false} />
                 ) : <div className="h-full w-full" />}
 
                 {/* Analytics View - always index 2 */}

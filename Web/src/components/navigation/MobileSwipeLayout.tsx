@@ -16,7 +16,7 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange }: Mobi
 
     const tabs = useMemo(() => [
         { icon: Home, label: 'Home', path: '/' },
-        { icon: CalendarDays, label: 'Plan', path: '/plan' },
+        { icon: CalendarDays, label: 'Calendar', path: '/calendar' },
         { icon: BarChart3, label: 'Analytics', path: '/analytics' },
     ], []);
 
@@ -58,11 +58,11 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange }: Mobi
             window.history.replaceState(null, '', paths[index]);
             onPageChange?.(index);
 
-            // If navigating to Plan page, scroll to today
-            if (paths[index] === '/plan') {
+            // If navigating to Calendar page, scroll to today
+            if (paths[index] === '/calendar' || paths[index] === '/plan') {
                 // Short timeout to allow React to render the new view
                 setTimeout(() => {
-                    const todayAnchor = document.getElementById('plan-today-anchor');
+                    const todayAnchor = document.getElementById('calendar-today-anchor') || document.getElementById('plan-today-anchor');
                     if (todayAnchor) {
                         todayAnchor.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }

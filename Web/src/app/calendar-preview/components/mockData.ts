@@ -17,6 +17,7 @@ export interface MockActivity {
     id: string;
     name: string;
     type: WorkoutType;
+    sport?: string | null;
     startDate: string; // ISO
     distance: number; // metres
     duration: number; // seconds
@@ -25,17 +26,31 @@ export interface MockActivity {
     tss: number | null;
     vdot: number | null;
     totalElevation: number | null;
+    averageWatts?: number | null;
+    npWatts?: number | null;
+    bikeTss?: number | null;
 }
 
 export interface MockWorkout {
     id: string;
     name: string;
     type: WorkoutType;
+    sport?: string | null;
     phase: PlanPhase;
     scheduledDate: string; // ISO
     targetDistance: number | null; // metres
     targetDuration: number | null; // seconds
     plannedTss: number | null;
+    targetPaceMinSecondsPerKm?: number | null;
+    targetPaceMaxSecondsPerKm?: number | null;
+    targetPowerWatts?: number | null;
+    targetPowerMinWatts?: number | null;
+    targetPowerMaxWatts?: number | null;
+    targetFtpPercent?: number | null;
+    targetHrZone?: number | null;
+    targetHrMinBpm?: number | null;
+    targetHrMaxBpm?: number | null;
+    structuredSteps?: unknown;
     /** id of the activity that fulfilled this planned workout, if any */
     linkedActivityId: string | null;
     completed: boolean;

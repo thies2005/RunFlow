@@ -122,7 +122,7 @@ export function buildDays(
         const e = ensure(d);
         e.activities.push(a);
         e.trimp += a.trimp ?? 0;
-        e.tss += a.tss ?? 0;
+        e.tss += a.bikeTss ?? a.tss ?? 0;
         e.distance += a.distance;
         e.duration += a.duration;
         if (a.vdot != null) e.vdots.push(a.vdot);
@@ -273,8 +273,9 @@ export function fmtDuration(sec: number): string {
     return `${m}m`;
 }
 
-export function fmtPace(secPerKm: number): string {
-    const m = Math.floor(secPerKm / 60);
-    const s = Math.round(secPerKm % 60);
-    return `${m}:${s.toString().padStart(2, '0')}/km`;
+export function fmtPace(sec: number, unit: string = 'km'): string {
+    if (!sec || isNaN(sec) || !isFinite(sec)) return '—';
+    const m = Math.floor(sec / 60);
+    const s = Math.round(sec % 60);
+    return unit ? `${m}:${s.toString().padStart(2, '0')}/${unit}` : `${m}:${s.toString().padStart(2, '0')}`;
 }

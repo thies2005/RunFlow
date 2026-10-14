@@ -524,12 +524,15 @@ export async function getCyclingAnalytics(
         case '42d':
             cutoff = new Date(now.getTime() - 42 * 24 * 60 * 60 * 1000);
             break;
+        case '180d':
+            cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+            break;
         case '365d':
         case '1_year':
             cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
             break;
         case 'all':
-            cutoff = new Date(0);
+            cutoff = new Date(now.getTime() - 1095 * 24 * 60 * 60 * 1000);
             break;
         case '90d':
         default:
@@ -549,12 +552,14 @@ export async function getCyclingAnalytics(
 
     const weightKg = user?.weight && user.weight > 0 ? user.weight : null;
 
-    // 2. Fetch all rides for all-time curves and eFTP
+    // 2. Fetch all rides for all-time curves and eFTP (capped at 3 years / 1000 rides for memory safety)
     const allRides = await prisma.activity.findMany({
         where: {
             userId,
             type: { in: ['RIDE', 'VIRTUAL_RIDE'] },
+            startDate: { gte: new Date(now.getTime() - 1095 * 24 * 60 * 60 * 1000) },
         },
+        take: 1000,
         select: {
             id: true,
             startDate: true,

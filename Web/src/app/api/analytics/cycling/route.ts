@@ -11,7 +11,9 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const range = request.nextUrl.searchParams.get('range') || '90d';
+        const rawRange = request.nextUrl.searchParams.get('range') || '90d';
+        const allowedRanges = ['42d', '90d', '180d', '365d', 'all'];
+        const range = allowedRanges.includes(rawRange.toLowerCase()) ? rawRange.toLowerCase() : '90d';
         const analytics = await getCyclingAnalytics(session.user.id, range);
 
         return NextResponse.json(analytics);

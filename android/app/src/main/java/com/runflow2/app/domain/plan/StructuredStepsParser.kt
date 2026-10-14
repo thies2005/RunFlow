@@ -33,6 +33,8 @@ import java.util.Locale
  */
 object StructuredStepsParser {
 
+    const val MAX_FLATTENED_STEPS = 500
+
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
     fun parse(raw: String?, paceTable: Map<String, Double>): List<StepRuntime> {

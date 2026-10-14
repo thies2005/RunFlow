@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { parseBoundedDateRange } from '@/lib/validation/dateRange';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,16 +30,13 @@ export async function GET(request: NextRequest) {
         const startDateParam = searchParams.get('startDate');
         const endDateParam = searchParams.get('endDate');
 
-        if (!startDateParam || !endDateParam) {
-            return errorResponses.badRequest('startDate and endDate are required');
+        const bounded = parseBoundedDateRange(startDateParam, endDateParam, 730);
+        if (!bounded.ok) {
+            return errorResponses.badRequest(bounded.error || 'Invalid date range');
         }
 
-        const startDate = new Date(startDateParam);
-        const endDate = new Date(endDateParam);
-
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-            return errorResponses.badRequest('Invalid date format');
-        }
+        const startDate = bounded.start!;
+        const endDate = bounded.end!;
 
         // Fetch data with 90 days buffer for accurate ATL/CTL calculation
         const bufferDays = 90;

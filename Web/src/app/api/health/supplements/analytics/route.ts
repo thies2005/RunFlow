@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
+import { parseBoundedDateRange } from '@/lib/validation/dateRange';
 
 function getMidnightUTCDate(dateStr: string) {
     const d = new Date(dateStr);
@@ -20,13 +21,12 @@ export async function GET(request: NextRequest) {
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
 
-        if (!startDate || !endDate) {
-            return NextResponse.json({ error: 'startDate and endDate are required' }, { status: 400 });
+        const bounded = parseBoundedDateRange(startDate, endDate, 366);
+        if (!bounded.ok) {
+            return NextResponse.json({ error: bounded.error }, { status: 400 });
         }
-
-        const start = getMidnightUTCDate(startDate);
-        const end = getMidnightUTCDate(endDate);
-        end.setUTCHours(23, 59, 59, 999);
+        const start = bounded.start!;
+        const end = bounded.end!;
 
         // Fetch all user supplements (including inactive for historical context)
         const allSupplements = await prisma.supplement.findMany({
@@ -48,8 +48,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Build daily data
-        const diffTime = end.getTime() - start.getTime();
-        const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const totalDays = bounded.totalDays!;
 
         const dailyData: { date: string; scheduled: number; taken: number }[] = [];
         let totalScheduled = 0;

@@ -14,6 +14,8 @@ const EXPORT_RATE_LIMIT: RateLimitConfig = {
     prefix: 'public-plan-export',
 };
 
+const MAX_PLAN_HORIZON_DAYS = 104 * 7;
+
 const exportRequestSchema = z.object({
     format: z.enum(['csv', 'html']),
     plan: z.object({
@@ -278,6 +280,14 @@ export async function GET(request: NextRequest) {
             );
         }
 
+        const horizonDays = (raceDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+        if (horizonDays > MAX_PLAN_HORIZON_DAYS) {
+            return NextResponse.json(
+                { error: `Race date is too far in the future. Plans are limited to ${MAX_PLAN_HORIZON_DAYS / 7} weeks.` },
+                { status: 400, headers }
+            );
+        }
+
         let vdot = searchParams.get('vdot') ? parseFloat(searchParams.get('vdot')!) : 0;
         if (!vdot || isNaN(vdot) || vdot <= 0) {
             const raceDist = searchParams.get('raceDistance');
@@ -416,6 +426,30 @@ export async function POST(request: NextRequest) {
         }
 
         const { format, plan } = parsed.data;
+
+        const raceDateObj = new Date(plan.raceDate);
+        if (isNaN(raceDateObj.getTime())) {
+            return NextResponse.json(
+                { error: 'Invalid race date' },
+                { status: 400, headers }
+            );
+        }
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (raceDateObj <= today) {
+            return NextResponse.json(
+                { error: 'Race date must be in the future' },
+                { status: 400, headers }
+            );
+        }
+        const horizonDays = (raceDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+        if (horizonDays > MAX_PLAN_HORIZON_DAYS) {
+            return NextResponse.json(
+                { error: `Race date is too far in the future. Plans are limited to ${MAX_PLAN_HORIZON_DAYS / 7} weeks.` },
+                { status: 400, headers }
+            );
+        }
+
         const raceTypeSlug = plan.raceType.replace(/\s+/g, '-').toLowerCase();
 
         if (format === 'csv') {

@@ -169,6 +169,22 @@ export const stepNodeSchema: z.ZodType<StepNode> = z.lazy(() =>
     z.union([structuredStepSchema, repeatGroupSchema])
 );
 
+export const MAX_FLATTENED_STEPS = 500;
+
+export function countExpandedSteps(steps: StepNode[]): number {
+    let count = 0;
+    for (const node of steps) {
+        if (node.kind === 'repeat') {
+            const childSteps = countExpandedSteps(node.steps || []);
+            const restSteps = node.setRest ? 1 : 0;
+            count += (childSteps * node.times) + (restSteps * Math.max(0, node.times - 1));
+        } else {
+            count += 1;
+        }
+    }
+    return count;
+}
+
 export const structuredWorkoutV2Schema: z.ZodType<StructuredWorkoutV2> = z
     .object({
         version: z.literal(2),
@@ -177,6 +193,9 @@ export const structuredWorkoutV2Schema: z.ZodType<StructuredWorkoutV2> = z
     })
     .refine((val) => calculateMaxNestingDepth(val.steps) <= 3, {
         message: 'Repeat groups nesting depth must not exceed 3',
+    })
+    .refine((val) => countExpandedSteps(val.steps) <= MAX_FLATTENED_STEPS, {
+        message: `Expanded step count must not exceed ${MAX_FLATTENED_STEPS}`,
     });
 
 // ==========================================
@@ -541,13 +560,16 @@ export function flattenStructuredWorkout(workout: StructuredWorkoutV2): Flattene
 
     function processNodes(nodes: StepNode[], repeatIteration?: number, totalIterations?: number) {
         for (const node of nodes) {
+            if (result.length >= MAX_FLATTENED_STEPS) return;
             if (node.kind === 'repeat') {
                 const times = node.times;
                 for (let i = 0; i < times; i++) {
+                    if (result.length >= MAX_FLATTENED_STEPS) return;
                     processNodes(node.steps, i + 1, times);
 
                     // Inject setRest between iterations (not after the final iteration)
                     if (i < times - 1 && node.setRest) {
+                        if (result.length >= MAX_FLATTENED_STEPS) return;
                         result.push({
                             kind: 'recovery',
                             label: node.label ? `${node.label} Rest` : 'Set Rest',

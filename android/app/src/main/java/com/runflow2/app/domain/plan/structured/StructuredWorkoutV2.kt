@@ -122,6 +122,8 @@ data class FlattenedPlayerStep(
     val isSetRest: Boolean = false,
 )
 
+const val MAX_FLATTENED_STEPS = 500
+
 /**
  * Recursively flattens a [StructuredWorkoutV2] step tree into a sequential list
  * of [FlattenedPlayerStep] items, unwrapping [RepeatGroup] blocks up to depth 3
@@ -131,14 +133,17 @@ fun flattenStructuredWorkout(workout: StructuredWorkoutV2): List<FlattenedPlayer
     val result = mutableListOf<FlattenedPlayerStep>()
 
     fun processNodes(nodes: List<StepNode>, repeatIteration: Int? = null, totalIterations: Int? = null, depth: Int = 0) {
-        if (depth > 3) return
+        if (depth > 3 || result.size >= MAX_FLATTENED_STEPS) return
         for (node in nodes) {
+            if (result.size >= MAX_FLATTENED_STEPS) return
             when (node) {
                 is RepeatGroup -> {
                     val times = node.times.coerceIn(1, 100)
                     for (i in 0 until times) {
+                        if (result.size >= MAX_FLATTENED_STEPS) return
                         processNodes(node.steps, repeatIteration = i + 1, totalIterations = times, depth = depth + 1)
                         if (i < times - 1 && node.setRest != null) {
+                            if (result.size >= MAX_FLATTENED_STEPS) return
                             result.add(
                                 FlattenedPlayerStep(
                                     kind = "recovery",

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getAiConfigForModel, generateCompletion } from '@/lib/ai';
+import { getAiConfigForModel, generateCompletion, reserveUsageSlot, releaseUsageReservation, incrementUsage, checkProviderLimit, countTokens } from '@/lib/ai';
 import { logger } from '@/lib/logging/logger';
 import { auth } from '@/auth';
 import { subDays, format } from 'date-fns';
@@ -115,11 +115,48 @@ Write directly to me (e.g., "You did a great job..."). Use markdown formatting. 
             );
         }
 
-        const insightContent = await generateCompletion(providerConfig, [{ role: 'user', content: prompt }]);
+        const reservation = await reserveUsageSlot(userId);
+        if (!reservation.allowed) {
+            return NextResponse.json({ error: reservation.reason || 'AI usage limit reached' }, { status: 429 });
+        }
+
+        if (providerConfig.providerId) {
+            const provLimit = await checkProviderLimit(providerConfig.providerId);
+            if (!provLimit.canUse) {
+                if (reservation.claimed) {
+                    await releaseUsageReservation(userId).catch(() => undefined);
+                }
+                return NextResponse.json({ error: provLimit.reason || 'Provider monthly token limit exceeded' }, { status: 429 });
+            }
+        }
+
+        let insightContent: string | null = null;
+        try {
+            insightContent = await generateCompletion(providerConfig, [{ role: 'user', content: prompt }]);
+        } catch (genError) {
+            if (reservation.claimed) {
+                await releaseUsageReservation(userId).catch(() => undefined);
+            }
+            throw genError;
+        }
 
         if (!insightContent) {
+            if (reservation.claimed) {
+                await releaseUsageReservation(userId).catch(() => undefined);
+            }
             return NextResponse.json({ error: 'AI failed to return an insight.' }, { status: 500 });
         }
+
+        const inputTokensEstimate = countTokens(prompt, providerConfig.model);
+        const outputTokensEstimate = countTokens(insightContent, providerConfig.model);
+
+        await incrementUsage(
+            userId,
+            inputTokensEstimate,
+            outputTokensEstimate,
+            providerConfig.providerId,
+            { skipMessageIncrement: reservation.claimed }
+        );
 
         // Save Insight
         const newInsight = await prisma.healthInsight.create({

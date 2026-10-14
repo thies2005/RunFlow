@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { validateBaseUrl, generateCompletion, tryDecryptAiKey, type ChatMessage, type AiConfig } from '@/lib/ai/providers';
+import { reserveUsageSlot, releaseUsageReservation, incrementUsage, checkProviderLimit, countTokens } from '@/lib/ai';
 
 async function checkPremium(userId: string) {
     const user = await prisma.user.findUnique({
@@ -221,7 +222,45 @@ export async function POST(req: Request, ctx: RouteContext) {
             { role: 'user', content: userPrompt },
         ];
 
-        const result = await generateCompletion(builderConfig.config, messages);
+        // Reserve usage quota slot before provider work
+        const reservation = await reserveUsageSlot(session.user.id);
+        if (!reservation.allowed) {
+            return NextResponse.json({ error: reservation.reason || 'AI usage limit reached' }, { status: 429 });
+        }
+
+        if (builderConfig.config.providerId) {
+            const provLimit = await checkProviderLimit(builderConfig.config.providerId);
+            if (!provLimit.canUse) {
+                if (reservation.claimed) {
+                    await releaseUsageReservation(session.user.id).catch(() => undefined);
+                }
+                return NextResponse.json({ error: provLimit.reason || 'Provider monthly token limit exceeded' }, { status: 429 });
+            }
+        }
+
+        let result: string;
+        try {
+            result = await generateCompletion(builderConfig.config, messages);
+        } catch (genError) {
+            if (reservation.claimed) {
+                await releaseUsageReservation(session.user.id).catch(() => undefined);
+            }
+            throw genError;
+        }
+
+        const inputTokensEstimate = messages.reduce(
+            (acc, m) => acc + countTokens(m.content, builderConfig.config.model),
+            0
+        );
+        const outputTokensEstimate = countTokens(result, builderConfig.config.model);
+
+        await incrementUsage(
+            session.user.id,
+            inputTokensEstimate,
+            outputTokensEstimate,
+            builderConfig.config.providerId,
+            { skipMessageIncrement: reservation.claimed }
+        );
 
         let analysisData: Record<string, any>;
         try {
@@ -261,8 +300,8 @@ export async function POST(req: Request, ctx: RouteContext) {
                 raceReadiness: analysisData.raceReadiness || {},
                 suggestions: analysisData.suggestions || [],
                 modelUsed: builderConfig.config.model,
-                inputTokens: 0,
-                outputTokens: 0,
+                inputTokens: inputTokensEstimate,
+                outputTokens: outputTokensEstimate,
             },
             update: {
                 overallScore: typeof analysisData.overallScore === 'number' ? analysisData.overallScore : null,
@@ -272,8 +311,8 @@ export async function POST(req: Request, ctx: RouteContext) {
                 raceReadiness: analysisData.raceReadiness || {},
                 suggestions: analysisData.suggestions || [],
                 modelUsed: builderConfig.config.model,
-                inputTokens: 0,
-                outputTokens: 0,
+                inputTokens: inputTokensEstimate,
+                outputTokens: outputTokensEstimate,
             },
         });
 

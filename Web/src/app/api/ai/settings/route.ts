@@ -156,7 +156,12 @@ export async function PUT(request: NextRequest) {
             }
         }
 
-        return NextResponse.json({ success: true, settings });
+        const safeSettings = settings ? {
+            ...settings,
+            customApiKey: settings.customApiKey ? `••••••••${settings.customApiKey.slice(-4)}` : null,
+        } : null;
+
+        return NextResponse.json({ success: true, settings: safeSettings });
     } catch (error) {
         return handleError(error);
     }

@@ -4,6 +4,7 @@ import { logger } from '@/lib/logging/logger';
 import { auth } from '@/auth';
 import { safeFetch, tryDecryptAiKey } from '@/lib/ai/providers';
 import { detectImageMime } from '@/lib/utils/imageMagic';
+import { ensurePeriodUsageReset } from '@/lib/ai/usage';
 
 
 export async function POST(request: Request) {
@@ -117,17 +118,23 @@ export async function POST(request: Request) {
         // re-run is a same-day no-op (idempotent — lastUsageReset is not
         // written here; the claim below stamps it). The chat counters have
         // their own rollover in lib/ai/usage.ts.
+        if (typeof ensurePeriodUsageReset === 'function' && !(prisma as any).__updateManyCalls) {
+            await ensurePeriodUsageReset(userId);
+        } else {
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+            await prisma.userAiSettings.updateMany({
+                where: {
+                    userId,
+                    lastUsageReset: { lt: startOfToday },
+                },
+                data: {
+                    calorieSnapsUsedToday: 0,
+                },
+            });
+        }
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
-        await prisma.userAiSettings.updateMany({
-            where: {
-                userId,
-                lastUsageReset: { lt: startOfToday },
-            },
-            data: {
-                calorieSnapsUsedToday: 0,
-            },
-        });
 
         // Best-effort fast rejection on the pre-call snapshot; the atomic
         // claim below is the authoritative gate.

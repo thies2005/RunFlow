@@ -75,8 +75,10 @@ export async function GET(request: Request) {
             fastingGoalHours: 16
         };
 
+        const { aiInsightApiKey: _redactedKey, ...safeTarget } = returnTarget;
         return NextResponse.json({
-            ...returnTarget,
+            ...safeTarget,
+            hasAiInsightApiKey: Boolean(returnTarget.aiInsightApiKey),
             userProfile: user,
             avgActiveCalories,
             isDefault: !target
@@ -153,7 +155,11 @@ export async function POST(request: Request) {
             }
         });
 
-        return NextResponse.json(target);
+        const { aiInsightApiKey: _redactedKey, ...safeTarget } = target;
+        return NextResponse.json({
+            ...safeTarget,
+            hasAiInsightApiKey: Boolean(target.aiInsightApiKey),
+        });
     } catch (error) {
         console.error("Error updating nutrition target:", error);
         return NextResponse.json({ error: 'Failed to update nutrition target' }, { status: 500 });

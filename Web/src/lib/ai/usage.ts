@@ -67,26 +67,71 @@ function getTierLimits(tier: string, globalSettings: any): {
     }
 }
 
+export function isByokActive(
+    userSettings?: { customApiKey?: string | null; usageTier?: string | null } | null
+): boolean {
+    return Boolean(userSettings?.customApiKey && (userSettings.usageTier || 'none') === 'none');
+}
+
+export async function ensurePeriodUsageReset(userId: string): Promise<void> {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // 1. If lastUsageReset is from a previous month, reset BOTH monthly and daily counters atomically
+    await prisma.userAiSettings.updateMany({
+        where: { userId, lastUsageReset: { lt: startOfMonth } },
+        data: {
+            messagesUsedToday: 0,
+            messagesUsedThisMonth: 0,
+            inputTokensUsedToday: 0,
+            outputTokensUsedToday: 0,
+            inputTokensUsedThisMonth: 0,
+            outputTokensUsedThisMonth: 0,
+            calorieSnapsUsedToday: 0,
+            mealSuggestsUsedToday: 0,
+            activityFeedbackUsedToday: 0,
+            lastUsageReset: now,
+        },
+    });
+
+    // 2. If lastUsageReset is from earlier this month (before startOfToday), reset ALL daily counters atomically
+    await prisma.userAiSettings.updateMany({
+        where: { userId, lastUsageReset: { gte: startOfMonth, lt: startOfToday } },
+        data: {
+            messagesUsedToday: 0,
+            inputTokensUsedToday: 0,
+            outputTokensUsedToday: 0,
+            calorieSnapsUsedToday: 0,
+            mealSuggestsUsedToday: 0,
+            activityFeedbackUsedToday: 0,
+            lastUsageReset: now,
+        },
+    });
+}
+
 /**
  * Check if a user can use AI (within limits)
  */
 export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
+    await ensurePeriodUsageReset(userId);
+
     const [userSettings, globalSettings] = await Promise.all([
         prisma.userAiSettings.findUnique({ where: { userId } }),
         prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
     ]);
 
-    // If user has their own API key, no limits apply
-    if (userSettings?.customApiKey) {
+    // If user has their own API key and usageTier is none (active BYOK), no limits apply
+    if (isByokActive(userSettings)) {
         return {
             canUse: true,
-            messagesUsedToday: userSettings.messagesUsedToday,
-            messagesUsedThisMonth: userSettings.messagesUsedThisMonth,
+            messagesUsedToday: userSettings?.messagesUsedToday ?? 0,
+            messagesUsedThisMonth: userSettings?.messagesUsedThisMonth ?? 0,
             dailyLimit: Infinity,
             monthlyLimit: Infinity,
 
-            tokensUsedToday: (userSettings.inputTokensUsedToday || 0) + (userSettings.outputTokensUsedToday || 0),
-            tokensUsedThisMonth: (userSettings.inputTokensUsedThisMonth || 0) + (userSettings.outputTokensUsedThisMonth || 0),
+            tokensUsedToday: (userSettings?.inputTokensUsedToday || 0) + (userSettings?.outputTokensUsedToday || 0),
+            tokensUsedThisMonth: (userSettings?.inputTokensUsedThisMonth || 0) + (userSettings?.outputTokensUsedThisMonth || 0),
             dailyTokenLimit: Infinity,
             monthlyTokenLimit: Infinity,
 
@@ -326,8 +371,8 @@ export async function reserveUsageSlot(userId: string): Promise<UsageReservation
         return { allowed: false, claimed: false, reason: 'AI not configured' };
     }
 
-    // Users with their own API key are not billed against platform tiers.
-    if (userSettings.customApiKey) {
+    // Users with active BYOK (customApiKey and usageTier === 'none') are not billed against platform tiers.
+    if (isByokActive(userSettings)) {
         return { allowed: true, claimed: false };
     }
 
@@ -336,32 +381,9 @@ export async function reserveUsageSlot(userId: string): Promise<UsageReservation
         return { allowed: false, claimed: false, reason: 'Add your own API key to use AI features' };
     }
 
+    await ensurePeriodUsageReset(userId);
+
     const limits = getTierLimits(tier, globalSettings);
-
-    // Lazy day/month rollover so stale counters from a previous period cannot
-    // block (or admit) today's traffic. Expressed in WHERE clauses;
-    // lastUsageReset is not written here so the rollover stays idempotent —
-    // the claim below stamps it.
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const startOfMonth = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1);
-
-    await prisma.userAiSettings.updateMany({
-        where: { userId, lastUsageReset: { lt: startOfToday } },
-        data: {
-            messagesUsedToday: 0,
-            inputTokensUsedToday: 0,
-            outputTokensUsedToday: 0,
-        },
-    });
-    await prisma.userAiSettings.updateMany({
-        where: { userId, lastUsageReset: { lt: startOfMonth } },
-        data: {
-            messagesUsedThisMonth: 0,
-            inputTokensUsedThisMonth: 0,
-            outputTokensUsedThisMonth: 0,
-        },
-    });
 
     // Atomic conditional increment: the UPDATE only matches while EVERY
     // counter is still below its cap, so concurrent in-flight requests can no
@@ -418,6 +440,7 @@ export interface IncrementUsageOptions {
      * the token deltas so the message counters advance exactly once per chat.
      */
     messagesAlreadyCounted?: boolean;
+    skipMessageIncrement?: boolean;
 }
 
 /**
@@ -434,19 +457,40 @@ export interface IncrementUsageOptions {
  * fully atomic.
  *
  * Chat routes that reserved a slot via reserveUsageSlot() pass
- * `{ messagesAlreadyCounted: true }` so the message counters (already advanced
- * by the reservation) are left untouched and only the token deltas settle here.
+ * `{ messagesAlreadyCounted: true }` or `{ skipMessageIncrement: true }` so the
+ * message counters (already advanced by the reservation) are left untouched and
+ * only the token deltas settle here.
  */
 export async function incrementUsage(
     userId: string,
-    tokenStats?: { inputTokens: number; outputTokens: number },
-    providerId?: string,
-    options?: IncrementUsageOptions
+    tokenStatsOrInput?: { inputTokens: number; outputTokens: number } | number,
+    providerIdOrOutput?: string | number,
+    optionsOrProviderId?: IncrementUsageOptions | string,
+    maybeOptions?: IncrementUsageOptions
 ): Promise<void> {
+    await ensurePeriodUsageReset(userId);
+
+    let tokenStats: { inputTokens: number; outputTokens: number } | undefined;
+    let providerId: string | undefined;
+    let options: IncrementUsageOptions | undefined;
+
+    if (typeof tokenStatsOrInput === 'number') {
+        tokenStats = {
+            inputTokens: tokenStatsOrInput,
+            outputTokens: typeof providerIdOrOutput === 'number' ? providerIdOrOutput : 0,
+        };
+        providerId = typeof optionsOrProviderId === 'string' ? optionsOrProviderId : undefined;
+        options = maybeOptions || (typeof optionsOrProviderId === 'object' ? optionsOrProviderId : undefined);
+    } else {
+        tokenStats = tokenStatsOrInput;
+        providerId = typeof providerIdOrOutput === 'string' ? providerIdOrOutput : undefined;
+        options = typeof optionsOrProviderId === 'object' ? optionsOrProviderId : undefined;
+    }
+
     const now = new Date();
     const inputDelta = tokenStats?.inputTokens || 0;
     const outputDelta = tokenStats?.outputTokens || 0;
-    const messagesAlreadyCounted = options?.messagesAlreadyCounted === true;
+    const messagesAlreadyCounted = options?.messagesAlreadyCounted === true || options?.skipMessageIncrement === true;
 
     // Fetch settings to decide whether a reset is due (read is fine for the *decision*;
     // the write below is atomic so concurrent increments don't lose updates).
@@ -484,8 +528,8 @@ export async function incrementUsage(
         data: { ...dayFields, ...monthFields, lastUsageReset: now },
     });
 
-    // 2. Update Provider Usage (if providerId is supplied) — same atomic pattern
-    if (providerId) {
+    // 2. Update Provider Usage (if providerId is supplied) — only if not active BYOK
+    if (providerId && !isByokActive(settings)) {
         const provider = await prisma.aiProvider.findUnique({ where: { id: providerId } });
         if (provider) {
             const pLastReset = new Date(provider.lastUsageReset);

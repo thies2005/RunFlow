@@ -11,7 +11,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { validateBaseUrl, tryDecryptAiKey, type ChatMessage, type AiConfig } from '@/lib/ai/providers';
-import { streamChat } from '@/lib/ai';
+import { streamChat, reserveUsageSlot, releaseUsageReservation, incrementUsage, checkProviderLimit, countTokens, type UsageReservation } from '@/lib/ai';
 import { fenceUntrusted } from '@/lib/ai/prompts';
 
 export const dynamic = 'force-dynamic';
@@ -156,6 +156,13 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
             });
         }
 
+        if (message.length > 4000) {
+            return new Response(JSON.stringify({ error: 'Message exceeds maximum length of 4000 characters' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
         const goal = await prisma.goal.findFirst({
             where: { id: goalId, userId: session.user.id },
         });
@@ -175,6 +182,28 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
             });
         }
 
+        // Reserve usage quota slot before provider work
+        const reservation = await reserveUsageSlot(session.user.id);
+        if (!reservation.allowed) {
+            return new Response(JSON.stringify({ error: reservation.reason || 'AI usage limit reached' }), {
+                status: 429,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        if (builderConfig.config.providerId) {
+            const provLimit = await checkProviderLimit(builderConfig.config.providerId);
+            if (!provLimit.canUse) {
+                if (reservation.claimed) {
+                    await releaseUsageReservation(session.user.id).catch(() => undefined);
+                }
+                return new Response(JSON.stringify({ error: provLimit.reason || 'Provider monthly token limit exceeded' }), {
+                    status: 429,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+        }
+
         const workouts = await prisma.workout.findMany({
             where: { goalId },
             orderBy: [{ scheduledDate: 'asc' }, { order: 'asc' }],
@@ -187,12 +216,12 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
             { role: 'system', content: `${systemPrompt}\n\n${planContext}` },
         ];
 
-        // Include conversation history (last 10 messages max)
+        // Include conversation history (last 10 messages max, content <= 4000 chars)
         if (history && Array.isArray(history)) {
             const recentHistory = history.slice(-10);
             for (const msg of recentHistory) {
-                if (msg.role === 'user' || msg.role === 'assistant') {
-                    messages.push({ role: msg.role, content: msg.content });
+                if ((msg.role === 'user' || msg.role === 'assistant') && typeof msg.content === 'string') {
+                    messages.push({ role: msg.role, content: msg.content.slice(0, 4000) });
                 }
             }
         }
@@ -202,6 +231,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         // Stream the response
         const encoder = new TextEncoder();
         let heartbeat: NodeJS.Timeout | undefined;
+        let reservationClaimed = reservation.claimed;
+        let fullResponse = '';
 
         const readableStream = new ReadableStream({
             async start(controller) {
@@ -217,12 +248,31 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
                     const stream = await streamChat(builderConfig.config, messages, { signal: req.signal });
 
                     for await (const token of stream) {
+                        fullResponse += token;
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
                     }
 
                     controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
                     controller.close();
+
+                    const inputTokens = messages.reduce(
+                        (acc, m) => acc + countTokens(m.content, builderConfig.config.model),
+                        0
+                    );
+                    const outputTokens = countTokens(fullResponse, builderConfig.config.model);
+
+                    await incrementUsage(
+                        session.user.id,
+                        inputTokens,
+                        outputTokens,
+                        builderConfig.config.providerId,
+                        { skipMessageIncrement: reservationClaimed }
+                    );
                 } catch (error) {
+                    if (reservationClaimed && !fullResponse) {
+                        reservationClaimed = false;
+                        await releaseUsageReservation(session.user.id).catch(() => undefined);
+                    }
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
                     controller.close();
                 } finally {

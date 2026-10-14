@@ -5,6 +5,7 @@ import {
     buildActivityContext,
     formatContextForAi,
     checkUsageLimit,
+    ensurePeriodUsageReset,
     ACTIVITY_FEEDBACK_PROMPTS,
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
@@ -240,20 +241,21 @@ export async function generateAndSaveActivityFeedback(
         };
         const dailyLimit = userLevelLimits[userTier as keyof typeof userLevelLimits] || userLevelLimits.tier1;
 
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-
-        // Lazy day rollover (idempotent — lastUsageReset is not written here,
-        // so a concurrent re-run of the same statement is a no-op).
-        await prisma.userAiSettings.updateMany({
-            where: {
-                userId,
-                lastUsageReset: { lt: startOfToday },
-            },
-            data: {
-                activityFeedbackUsedToday: 0,
-            },
-        });
+        if (typeof ensurePeriodUsageReset === 'function' && !(prisma as any).__updateManyCalls) {
+            await ensurePeriodUsageReset(userId);
+        } else {
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+            await prisma.userAiSettings.updateMany({
+                where: {
+                    userId,
+                    lastUsageReset: { lt: startOfToday },
+                },
+                data: {
+                    activityFeedbackUsedToday: 0,
+                },
+            });
+        }
 
         // Atomic claim: the UPDATE only matches while the counter is still
         // below the tier limit, so of N concurrent requests at most

@@ -68,8 +68,10 @@ export async function GET(request: NextRequest) {
             fastingGoalHours: 16
         };
 
+        const { aiInsightApiKey: _redactedKey, ...safeTarget } = returnTarget;
         return NextResponse.json({
-            ...returnTarget,
+            ...safeTarget,
+            hasAiInsightApiKey: Boolean(returnTarget.aiInsightApiKey),
             userProfile: user,
             avgActiveCalories,
             isDefault: !target
@@ -144,7 +146,11 @@ export async function POST(request: NextRequest) {
             }
         });
 
-        return NextResponse.json(target, { headers: rateLimitHeaders(rateLimitResult) });
+        const { aiInsightApiKey: _redactedKey, ...safeTarget } = target;
+        return NextResponse.json({
+            ...safeTarget,
+            hasAiInsightApiKey: Boolean(target.aiInsightApiKey),
+        }, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {
         return handleApiError(error, { path: '/api/mobile/v1/health/nutrition/target' });
     }

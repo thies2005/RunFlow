@@ -4,6 +4,7 @@ import { logger } from '@/lib/logging/logger';
 import { auth } from '@/auth';
 import { getAiConfigForModel, generateCompletion } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/providers';
+import { isByokActive, ensurePeriodUsageReset } from '@/lib/ai/usage';
 
 export async function POST(request: Request) {
     try {
@@ -34,37 +35,34 @@ export async function POST(request: Request) {
         const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
         const userTier = userSettings.usageTier || 'none';
 
-        if (userTier === 'none' && !userSettings.customApiKey) {
+        if (userTier === 'none' && !isByokActive(userSettings)) {
             return NextResponse.json(
                 { error: 'Please set up an API key or upgrade your tier to use this feature.' },
                 { status: 403 }
             );
         }
 
-        // Daily limit check
-        if (userTier !== 'none') {
+        let reservationClaimed = false;
+        await ensurePeriodUsageReset(userId);
+        if (!isByokActive(userSettings)) {
             const userLevelLimits = {
                 tier1: globalSettings?.tier1MealSuggestLimit ?? 1,
                 tier2: globalSettings?.tier2MealSuggestLimit ?? 3,
                 tier3: globalSettings?.tier3MealSuggestLimit ?? 6,
             };
             const dailyLimit = userLevelLimits[userTier as keyof typeof userLevelLimits] || userLevelLimits.tier1;
-            
-            // Check if counter needs reset for today
-            const now = new Date();
-            const lastReset = new Date(userSettings.lastUsageReset);
-            let usedToday = userSettings.mealSuggestsUsedToday;
-            
-            if (now.toDateString() !== lastReset.toDateString()) {
-                usedToday = 0;
-            }
 
-            if (usedToday >= dailyLimit) {
+            const claimed = await prisma.userAiSettings.updateMany({
+                where: { userId, mealSuggestsUsedToday: { lt: dailyLimit } },
+                data: { mealSuggestsUsedToday: { increment: 1 } },
+            });
+            if (claimed.count === 0) {
                 return NextResponse.json(
                     { error: `Daily limit of ${dailyLimit} meal suggestions reached for your tier.` },
                     { status: 429 }
                 );
             }
+            reservationClaimed = true;
         }
 
         // Fetch User's Saved Meals (Recipes)
@@ -99,12 +97,18 @@ export async function POST(request: Request) {
         ).join('\n');
 
         // Resolve provider configuration based on the selected model
-        const model = (userSettings.customApiKey && userSettings.usageTier === 'none')
+        const model = isByokActive(userSettings)
             ? (userSettings.customModel || 'gpt-4o-mini')
             : (globalSettings?.mealSuggestModel || 'gemini-1.5-flash');
         const providerConfig = await getAiConfigForModel(userId, model);
 
         if (!providerConfig) {
+            if (reservationClaimed) {
+                await prisma.userAiSettings.updateMany({
+                    where: { userId, mealSuggestsUsedToday: { gt: 0 } },
+                    data: { mealSuggestsUsedToday: { decrement: 1 } },
+                }).catch(() => undefined);
+            }
             return NextResponse.json(
                 { error: 'No AI provider configured that supports the selected model.' },
                 { status: 503 }
@@ -129,6 +133,13 @@ export async function POST(request: Request) {
         try {
             textContent = await generateCompletion(providerConfig, messages);
         } catch (error) {
+            if (reservationClaimed) {
+                reservationClaimed = false;
+                await prisma.userAiSettings.updateMany({
+                    where: { userId, mealSuggestsUsedToday: { gt: 0 } },
+                    data: { mealSuggestsUsedToday: { decrement: 1 } },
+                }).catch(() => undefined);
+            }
             logger.error('[AI Meal Suggester] Provider API request failed', {
                 error: error instanceof Error ? error.message : String(error),
                 model,
@@ -138,6 +149,13 @@ export async function POST(request: Request) {
         }
 
         if (!textContent) {
+            if (reservationClaimed) {
+                reservationClaimed = false;
+                await prisma.userAiSettings.updateMany({
+                    where: { userId, mealSuggestsUsedToday: { gt: 0 } },
+                    data: { mealSuggestsUsedToday: { decrement: 1 } },
+                }).catch(() => undefined);
+            }
             return NextResponse.json({ error: 'No valid response from AI.' }, { status: 422 });
         }
 
@@ -168,6 +186,13 @@ export async function POST(request: Request) {
                     const strictText = await generateCompletion(providerConfig, strictMessages);
                     parsed = extractJsonObject(normalizeAiOutput(strictText));
                 } catch (strictError) {
+                    if (reservationClaimed) {
+                        reservationClaimed = false;
+                        await prisma.userAiSettings.updateMany({
+                            where: { userId, mealSuggestsUsedToday: { gt: 0 } },
+                            data: { mealSuggestsUsedToday: { decrement: 1 } },
+                        }).catch(() => undefined);
+                    }
                     logger.error('[AI Meal Suggester] Invalid JSON response', {
                         error: strictError instanceof Error ? strictError.message : String(strictError),
                         model,
@@ -182,28 +207,15 @@ export async function POST(request: Request) {
             }
         }
 
-        // Increment Counter
-        if (userTier !== 'none') {
-            const now = new Date();
-            const lastReset = new Date(userSettings.lastUsageReset);
-            let usedToday = userSettings.mealSuggestsUsedToday;
-            
-            if (now.toDateString() !== lastReset.toDateString()) {
-                usedToday = 0;
-            }
-            
-            await prisma.userAiSettings.update({
-                where: { userId },
-                data: {
-                    mealSuggestsUsedToday: usedToday + 1,
-                    lastUsageReset: now
-                }
-            });
-        }
-
         return NextResponse.json(parsed);
 
     } catch (error) {
+        if (reservationClaimed) {
+            await prisma.userAiSettings.updateMany({
+                where: { userId, mealSuggestsUsedToday: { gt: 0 } },
+                data: { mealSuggestsUsedToday: { decrement: 1 } },
+            }).catch(() => undefined);
+        }
         logger.error('[AI Meal Suggester] Unexpected error', {
             error: error instanceof Error ? error.message : String(error),
         });

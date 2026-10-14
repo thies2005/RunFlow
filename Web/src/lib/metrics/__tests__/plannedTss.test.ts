@@ -88,6 +88,131 @@ describe('calculateWorkoutPlannedTss', () => {
     });
 });
 
+describe('calculateWorkoutPlannedTss — canonical v2 structuredSteps', () => {
+    it('sums RepeatGroup durations recursively: times * work + (times - 1) * setRest', () => {
+        // 5 × (1000m @ 300s/km = 300s) + 4 × 120s recovery = 1980s
+        // INTERVALS IF 0.95 -> 1980/3600 * 0.9025 * 100 = 49.6
+        const w = {
+            workoutType: WorkoutType.INTERVALS,
+            targetDuration: 3600, // ignored — the v2 tree wins
+            structuredSteps: {
+                version: 2,
+                source: 'engine',
+                steps: [{
+                    kind: 'repeat',
+                    times: 5,
+                    setRest: { type: 'time', seconds: 120 },
+                    steps: [{
+                        kind: 'work',
+                        duration: { type: 'distance', meters: 1000 },
+                        target: { type: 'pace', unit: 'sec_per_km', min: 300, max: 300 },
+                    }],
+                }],
+            },
+        };
+        const expected = Math.round((1980 / 3600 * Math.pow(0.95, 2) * 100) * 10) / 10;
+        expect(calculateWorkoutPlannedTss(w)).toBe(expected);
+    });
+
+    it('converts distance steps via workout.targetPace and slows warmup/recovery by 1.15x', () => {
+        // warmup 2000m @ 300*1.15 = 690s; steady 3000m @ 300 = 900s -> 1590s
+        // EASY IF 0.75 -> 1590/3600 * 0.5625 * 100 = 24.8
+        const w = {
+            workoutType: WorkoutType.EASY,
+            targetPace: 300,
+            targetDuration: 99999, // ignored — the v2 tree wins
+            structuredSteps: {
+                version: 2,
+                source: 'engine',
+                steps: [
+                    { kind: 'warmup', duration: { type: 'distance', meters: 2000 } },
+                    { kind: 'steady', duration: { type: 'distance', meters: 3000 } },
+                ],
+            },
+        };
+        const expected = Math.round((1590 / 3600 * Math.pow(0.75, 2) * 100) * 10) / 10;
+        expect(calculateWorkoutPlannedTss(w)).toBe(expected);
+    });
+
+    it('respects sec_per_100m units for swim distance steps', () => {
+        // 1000m @ 100s/100m = 1000s; SWIM IF 0.8 -> 1000/3600 * 0.64 * 100 = 17.8
+        const w = {
+            workoutType: WorkoutType.SWIM,
+            structuredSteps: {
+                version: 2,
+                source: 'engine',
+                steps: [{
+                    kind: 'work',
+                    duration: { type: 'distance', meters: 1000 },
+                    target: { type: 'pace', unit: 'sec_per_100m', min: 100, max: 100 },
+                }],
+            },
+        };
+        const expected = Math.round((1000 / 3600 * Math.pow(0.8, 2) * 100) * 10) / 10;
+        expect(calculateWorkoutPlannedTss(w)).toBe(expected);
+    });
+
+    it('falls back to targetDuration when the tree contains a lap_press step', () => {
+        const w = {
+            workoutType: WorkoutType.EASY,
+            targetDuration: 3600,
+            structuredSteps: {
+                version: 2,
+                source: 'engine',
+                steps: [
+                    { kind: 'warmup', duration: { type: 'time', seconds: 300 } },
+                    { kind: 'work', duration: { type: 'lap_press' }, target: { type: 'free' } },
+                ],
+            },
+        };
+        // 1h * 0.75^2 * 100 = 56.3 (targetDuration fallback)
+        expect(calculateWorkoutPlannedTss(w)).toBeCloseTo(56.3, 1);
+    });
+
+    it('computes true power-based TSS for power-targeted steps when ftpWatts is known', () => {
+        // 3600s @ 90% of 200W FTP -> watts 180
+        // (3600 * 180 * (180/200)) / (200 * 3600) * 100 = 81.0
+        const w = {
+            workoutType: WorkoutType.RIDE,
+            ftpWatts: 200,
+            targetDuration: 3600,
+            structuredSteps: {
+                version: 2,
+                source: 'engine',
+                steps: [{
+                    kind: 'work',
+                    duration: { type: 'time', seconds: 3600 },
+                    target: { type: 'power', ftpPercent: 90 },
+                }],
+            },
+        };
+        expect(calculateWorkoutPlannedTss(w)).toBe(81.0);
+    });
+
+    it('uses the power formula over the whole duration for bike workouts with targetPowerWatts', () => {
+        // (3600 * 200 * (200/200)) / (200 * 3600) * 100 = 100
+        const w = {
+            workoutType: WorkoutType.RIDE,
+            targetDuration: 3600,
+            targetPowerWatts: 200,
+            ftpWatts: 200,
+        };
+        expect(calculateWorkoutPlannedTss(w)).toBe(100);
+    });
+
+    it('derives watts from targetFtpPercent for bike workouts without absolute watts', () => {
+        // watts = 90% of 200 = 180 -> (3600*180*0.9)/(200*3600)*100 = 81
+        // (distinct from the RIDE type-IF fallback, 56.3)
+        const w = {
+            workoutType: WorkoutType.RIDE,
+            targetDuration: 3600,
+            targetFtpPercent: 90,
+            ftpWatts: 200,
+        };
+        expect(calculateWorkoutPlannedTss(w)).toBe(81);
+    });
+});
+
 describe('calculateProjectedFitness', () => {
     it('returns empty for empty input', () => {
         expect(calculateProjectedFitness([])).toEqual([]);

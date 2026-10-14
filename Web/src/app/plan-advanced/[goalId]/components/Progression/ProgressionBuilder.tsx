@@ -26,6 +26,9 @@ interface ProgressionBuilderProps {
     goalId: string;
     vdot: number;
     raceType: string;
+    /** Plan start (ISO date) — forwarded to the apply endpoint so generated
+     * workouts land on the right weeks. */
+    planStartDate?: string | null;
     isOpen: boolean;
     onClose: () => void;
     existingProgression?: IntervalProgression | null;
@@ -35,6 +38,7 @@ export function ProgressionBuilder({
     goalId,
     vdot,
     raceType,
+    planStartDate,
     isOpen,
     onClose,
     existingProgression,
@@ -54,24 +58,13 @@ export function ProgressionBuilder({
 
     const saveMutation = useMutation({
         mutationFn: async () => {
-            const body = {
-                name,
-                workoutType,
-                startWeek,
-                endWeek,
-                weeks,
-            };
-            if (existingProgression?.id) {
-                const res = await fetch(`/api/plan-advanced/${goalId}/progression/${existingProgression.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                });
-                if (!res.ok) throw new Error('Save failed');
-                return res.json();
-            }
+            // PUT /progression takes the progression `id` in the JSON body
+            // (there is no per-progression sub-route).
+            const body = existingProgression?.id
+                ? { id: existingProgression.id, name, workoutType, startWeek, endWeek, weeks }
+                : { name, workoutType, startWeek, endWeek, weeks };
             const res = await fetch(`/api/plan-advanced/${goalId}/progression`, {
-                method: 'POST',
+                method: existingProgression?.id ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });
@@ -89,16 +82,12 @@ export function ProgressionBuilder({
 
     const applyMutation = useMutation({
         mutationFn: async () => {
-            const body = { name, workoutType, startWeek, endWeek, weeks };
-            if (existingProgression?.id) {
-                const res = await fetch(`/api/plan-advanced/${goalId}/progression/${existingProgression.id}/apply`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                });
-                if (!res.ok) throw new Error('Apply failed');
-                return res.json();
-            }
+            // Apply always goes through POST /progression/apply — with the
+            // saved progression's id, or the inline definition for unsaved
+            // progressions.
+            const body = existingProgression?.id
+                ? { progressionId: existingProgression.id, planStartDate }
+                : { workoutType, startWeek, endWeek, weeks, planStartDate };
             const res = await fetch(`/api/plan-advanced/${goalId}/progression/apply`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

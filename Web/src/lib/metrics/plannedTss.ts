@@ -12,6 +12,12 @@
 
 import { WorkoutType } from '@/generated/prisma/client';
 import { calculateDecayFactor } from './fitness';
+import {
+    parseStructuredWorkout,
+    resolveWorkoutSport,
+    type StepNode,
+    type StructuredStep,
+} from '@/lib/plans/structured';
 
 /**
  * Structural type describing the fields read from a Workout when estimating
@@ -27,6 +33,12 @@ export interface WorkoutForPlannedTss {
     targetPace?: number | null;
     targetPaceMinSecondsPerKm?: number | null;
     targetPaceMaxSecondsPerKm?: number | null;
+    /** Bike target power (whole-workout) in watts. */
+    targetPowerWatts?: number | null;
+    /** Bike target power as % of FTP. */
+    targetFtpPercent?: number | null;
+    /** Athlete bike FTP in watts — grounds power-based planned TSS. */
+    ftpWatts?: number | null;
     structuredSteps?: unknown;
     isCompleted?: boolean;
     scheduledDate?: Date;
@@ -103,11 +115,10 @@ interface StructuredStepWithDuration {
 }
 
 /**
- * Sum the durations (seconds) of a structured workout, if present and parseable.
- * Returns null when steps are missing or unparseable.
- *
- * NOTE: v1 uses `targetDuration` directly and only sums structured steps when
- * they are present and trivially parseable. This keeps the estimate robust.
+ * Sum the durations (seconds) of a LEGACY flat structured workout array, if
+ * present and trivially parseable. Returns null when steps are missing or
+ * unparseable. Kept as a fallback for stored v1 arrays that
+ * `parseStructuredWorkout` cannot upgrade (bare `{ durationSeconds }` rows).
  */
 function sumStructuredStepSeconds(steps: unknown): number | null {
     if (!Array.isArray(steps) || steps.length === 0) return null;
@@ -135,6 +146,147 @@ function sumStructuredStepSeconds(steps: unknown): number | null {
     return foundAny ? total : null;
 }
 
+// ---------------------------------------------------------------------------
+// Canonical v2 tree walking (task A2, step 3)
+// ---------------------------------------------------------------------------
+
+/** Result of walking a v2 step tree. */
+interface V2TreeTotals {
+    /** Seconds from non-power steps (or power steps without a usable FTP). */
+    plainSeconds: number;
+    /** TSS already computed with the true power formula for power-targeted steps. */
+    powerTss: number;
+    /** True when at least one step contributed a power-formula TSS. */
+    usedPower: boolean;
+}
+
+const WARMUP_COOLDOWN_PACE_FACTOR = 1.15;
+
+/** Watts implied by a power target, grounded on the athlete's FTP. */
+function wattsFromPowerTarget(
+    target: Extract<StructuredStep['target'], { type: 'power' }>,
+    ftpWatts: number,
+): number | null {
+    if (ftpWatts <= 0) return null;
+    if (target.ftpPercent !== undefined && target.ftpPercent > 0) {
+        return (target.ftpPercent / 100) * ftpWatts;
+    }
+    const watts = target.minWatts !== undefined && target.maxWatts !== undefined
+        ? (target.minWatts + target.maxWatts) / 2
+        : target.maxWatts ?? target.minWatts;
+    return watts && watts > 0 ? watts : null;
+}
+
+/** True power-based planned TSS for one step (task A2 formula). */
+function powerStepTss(durationSeconds: number, watts: number, ftpWatts: number): number {
+    if (durationSeconds <= 0 || watts <= 0 || ftpWatts <= 0) return 0;
+    return (durationSeconds * watts * (watts / ftpWatts)) / (ftpWatts * 3600) * 100;
+}
+
+/**
+ * Seconds for one distance-based v2 step. Uses the step's own pace target
+ * (unit-aware) and falls back to `workout.targetPace` — slowed by 15% for
+ * warmup / cooldown / recovery steps, which are walked rather than raced.
+ * Returns null when neither is available (the caller then abandons the whole
+ * tree and falls back to `workout.targetDuration`).
+ */
+function distanceStepSeconds(
+    step: StructuredStep,
+    workout: WorkoutForPlannedTss,
+    isSwim: boolean,
+): number | null {
+    if (step.duration.type !== 'distance') return null;
+    const meters = step.duration.meters;
+
+    const target = step.target;
+    if (target && target.type === 'pace') {
+        const pace = target.max ?? target.min;
+        if (pace && pace > 0) {
+            const perUnitMeters = target.unit === 'sec_per_100m' ? 100 : 1000;
+            return (meters / perUnitMeters) * pace;
+        }
+    }
+
+    const fallbackPace = workout.targetPace ?? null;
+    if (fallbackPace && fallbackPace > 0) {
+        const pace = fallbackPace * (step.kind === 'warmup' || step.kind === 'cooldown' || step.kind === 'recovery'
+            ? WARMUP_COOLDOWN_PACE_FACTOR
+            : 1);
+        const perUnitMeters = isSwim ? 100 : 1000;
+        return (meters / perUnitMeters) * pace;
+    }
+    return null;
+}
+
+/**
+ * Recursively sum a validated v2 step tree into `{ plainSeconds, powerTss }`.
+ * Repeat groups contribute `times * childSeconds + (times - 1) * setRest`.
+ * `lap_press` steps (and distance steps without any convertible pace) make the
+ * whole tree unusable → null, so the caller falls back to `targetDuration`.
+ */
+function sumV2TreeSeconds(
+    nodes: StepNode[],
+    workout: WorkoutForPlannedTss,
+    isSwim: boolean,
+    ftpWatts: number,
+    depth = 0,
+): V2TreeTotals | null {
+    // parseStructuredWorkout bounds nesting at MAX_REPEAT_DEPTH; the depth
+    // check is defensive for hand-built trees.
+    if (depth > 3) return null;
+
+    let plainSeconds = 0;
+    let powerTss = 0;
+    let usedPower = false;
+
+    for (const node of nodes) {
+        if (node.kind === 'repeat') {
+            const childTotals = sumV2TreeSeconds(node.steps, workout, isSwim, ftpWatts, depth + 1);
+            if (!childTotals) return null;
+            plainSeconds += childTotals.plainSeconds * node.times;
+            powerTss += childTotals.powerTss * node.times;
+            usedPower = usedPower || childTotals.usedPower;
+            if (node.setRest) {
+                if (node.setRest.type === 'time') {
+                    plainSeconds += node.setRest.seconds * (node.times - 1);
+                } else {
+                    // Distance- or lap-press rest cannot be resolved to seconds.
+                    return null;
+                }
+            }
+            continue;
+        }
+
+        const step = node as StructuredStep;
+        let seconds: number | null;
+        switch (step.duration.type) {
+            case 'time':
+                seconds = step.duration.seconds;
+                break;
+            case 'distance':
+                seconds = distanceStepSeconds(step, workout, isSwim);
+                break;
+            case 'lap_press':
+            default:
+                return null;
+        }
+        if (seconds === null || seconds <= 0) return null;
+
+        const target = step.target;
+        if (target && target.type === 'power' && ftpWatts > 0) {
+            const watts = wattsFromPowerTarget(target, ftpWatts);
+            if (watts != null) {
+                powerTss += powerStepTss(seconds, watts, ftpWatts);
+                usedPower = true;
+                continue;
+            }
+        }
+        plainSeconds += seconds;
+    }
+
+    return { plainSeconds, powerTss, usedPower };
+}
+
 /**
  * Round to one decimal place (matches the convention in fitness.ts).
  */
@@ -148,14 +300,20 @@ function round1(value: number): number {
  *
  * - If `workout.plannedTss` is already persisted (set at generation time),
  *   return it directly.
- * - If `targetDuration` (seconds) is missing -> return null (cannot estimate).
- * - Derive an Intensity Factor from workout type (see {@link deriveIntensityFactor}).
- * - durationHours = targetDuration / 3600.
- * - rTSS = durationHours * IF^2 * 100.
- *
- * If `structuredSteps` is present and trivially parseable, its summed step
- * durations are used instead of `targetDuration` for a more accurate duration
- * (v1 best-effort; falls back to `targetDuration`).
+ * - If a canonical v2 (or upgradable legacy) `structuredSteps` tree parses:
+ *   durations are summed recursively across `StructuredStep`s and
+ *   `RepeatGroup`s (`times * steps + (times - 1) * setRest`), distance steps
+ *   convert via their pace target (fallback `targetPace`, ×1.15 for
+ *   warmup/cooldown/recovery, unit-aware for `sec_per_100m` swims), and steps
+ *   with power targets compute TRUE power-based TSS
+ *   `(seconds * watts * (watts / ftp)) / (ftp * 3600) * 100` when `ftpWatts`
+ *   is known. `lap_press` steps (or unconvertible distance steps) make the
+ *   tree unusable and the estimate falls back to `targetDuration`.
+ * - Otherwise the workout-level duration is used: `targetDuration`, then a
+ *   legacy flat-array step sum.
+ * - Bike workouts with `targetPowerWatts` / `targetFtpPercent` and `ftpWatts`
+ *   use the same power formula over the whole duration.
+ * - Remaining cases: durationHours × IF² × 100 with the type-derived IF.
  */
 export function calculateWorkoutPlannedTss(workout: WorkoutForPlannedTss): number | null {
     // Persisted estimate wins when present.
@@ -163,7 +321,27 @@ export function calculateWorkoutPlannedTss(workout: WorkoutForPlannedTss): numbe
         return round1(workout.plannedTss);
     }
 
-    // Determine duration in seconds, preferring structured steps when available.
+    const ftpWatts = typeof workout.ftpWatts === 'number' && workout.ftpWatts > 0 ? workout.ftpWatts : 0;
+    const isSwim = resolveWorkoutSportSafe(workout) === 'SWIM';
+
+    // Preferred path: canonical v2 (or upgradable legacy) structured tree.
+    const parsed = parseStructuredWorkout(workout.structuredSteps, workout.workoutType, 45, ftpWatts || 200);
+    if (parsed && parsed.steps.length > 0) {
+        const totals = sumV2TreeSeconds(parsed.steps, workout, isSwim, ftpWatts);
+        if (totals) {
+            const totalSeconds = totals.plainSeconds;
+            if (totalSeconds <= 0 && !totals.usedPower) {
+                return null;
+            }
+            const intensityFactor = deriveIntensityFactor(workout);
+            const plainTss = (totalSeconds / 3600) * Math.pow(intensityFactor, 2) * 100;
+            const tss = plainTss + totals.powerTss;
+            return tss > 0 ? round1(tss) : null;
+        }
+        // Tree unusable (lap_press / unconvertible) → fall through to duration.
+    }
+
+    // Determine duration in seconds, preferring legacy structured steps when available.
     let durationSeconds = workout.targetDuration ?? null;
     const stepSeconds = sumStructuredStepSeconds(workout.structuredSteps);
     if (stepSeconds !== null && stepSeconds > 0) {
@@ -174,11 +352,28 @@ export function calculateWorkoutPlannedTss(workout: WorkoutForPlannedTss): numbe
         return null;
     }
 
+    // Bike power-based planned TSS from the first-class target columns.
+    if (resolveWorkoutSportSafe(workout) === 'BIKE' && ftpWatts > 0) {
+        const watts = workout.targetPowerWatts != null && workout.targetPowerWatts > 0
+            ? workout.targetPowerWatts
+            : (workout.targetFtpPercent != null && workout.targetFtpPercent > 0
+                ? (workout.targetFtpPercent / 100) * ftpWatts
+                : null);
+        if (watts != null && watts > 0) {
+            return round1(powerStepTss(durationSeconds, watts, ftpWatts));
+        }
+    }
+
     const intensityFactor = deriveIntensityFactor(workout);
     const durationHours = durationSeconds / 3600;
     const tss = durationHours * Math.pow(intensityFactor, 2) * 100;
 
     return round1(tss);
+}
+
+/** Sport resolution that never throws and never imports Prisma enums. */
+function resolveWorkoutSportSafe(workout: Pick<WorkoutForPlannedTss, 'workoutType' | 'sport'>): 'RUN' | 'BIKE' | 'SWIM' | 'STRENGTH' {
+    return resolveWorkoutSport(workout.workoutType as string | null, workout.sport ?? null);
 }
 
 /**

@@ -2,8 +2,11 @@ import { prisma } from '@/lib/db';
 import { analyzeRace, calculateTrainingPaces, calculateVdot, DISTANCES, type RaceDistance } from '@/lib/metrics/vdot';
 import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 import { calculateProjectedGoalTime, type PlanSettings } from '@/lib/metrics/goalProjection';
-import { buildStructuredStepsForWorkout, generateTrainingPlan, PLAN_CONSTANTS, type PlanConfig, type GeneratedWorkout, getMinStartVolume } from '@/lib/plans';
-import { WorkoutType, RaceType, PlanSport, PlanCreationMode } from '@/generated/prisma/browser';
+import { buildPlanPhaseBlocks, buildStructuredStepsForWorkout, generateTrainingPlan, PLAN_CONSTANTS, type PlanConfig, type GeneratedWorkout, getMinStartVolume } from '@/lib/plans';
+import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
+import { estimateBikeFtpFromVdot } from '@/lib/plans/bike-zones';
+import { estimateSwimPaceFromVdot } from '@/lib/plans/swim-pace';
+import { WorkoutType, RaceType, PlanSport, PlanCreationMode, Prisma } from '@/generated/prisma/browser';
 import { logger } from '@/lib/logging/logger';
 import { z } from 'zod';
 import { getRaceDefaults } from '@/lib/plans/defaults';
@@ -253,6 +256,61 @@ export interface MapWorkoutsOptions {
     goalId: string;
     subGoalId?: string;
     descriptionPrefix?: string;
+    /** Athlete bike FTP — grounds power-based planned-TSS estimates. */
+    ftpWatts?: number | null;
+}
+
+/**
+ * Peak weekly volume/TSS targets for `Goal.weeklyBikeTssGoal` /
+ * `weeklySwimMetersGoal` / `targetWeeklyTss`: the maximum weekly totals across
+ * the plan (Sunday-start weeks anchored on the plan start, as the generators
+ * build them). Zero/empty sums resolve to null so pure-run plans don't store
+ * misleading 0 targets.
+ */
+export function computePlanWeeklyVolumeGoals(
+    config: Pick<PlanConfig, 'startDate'>,
+    workouts: GeneratedWorkout[],
+): { bikeTss: number | null; swimMeters: number | null; totalTss: number | null } {
+    if (workouts.length === 0) return { bikeTss: null, swimMeters: null, totalTss: null };
+
+    const anchor = new Date(config.startDate ?? workouts[0].date);
+    anchor.setDate(anchor.getDate() - anchor.getDay()); // Sunday-start week 1
+    anchor.setHours(0, 0, 0, 0);
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+    interface WeekTotals { bikeTss: number; swimMeters: number; totalTss: number }
+    const weeks = new Map<number, WeekTotals>();
+    for (const w of workouts) {
+        const weekIndex = Math.max(1, Math.floor((w.date.getTime() - anchor.getTime()) / WEEK_MS) + 1);
+        let totals = weeks.get(weekIndex);
+        if (!totals) {
+            totals = { bikeTss: 0, swimMeters: 0, totalTss: 0 };
+            weeks.set(weekIndex, totals);
+        }
+        if (w.plannedTss != null && w.plannedTss > 0) totals.totalTss += w.plannedTss;
+        const wt = w.type as WorkoutType;
+        if (wt === WorkoutType.RIDE || wt === WorkoutType.LONG_RIDE || wt === WorkoutType.RIDE_INTERVALS) {
+            if (w.plannedTss != null && w.plannedTss > 0) totals.bikeTss += w.plannedTss;
+        }
+        if (wt === WorkoutType.SWIM || wt === WorkoutType.SWIM_DRILL || wt === WorkoutType.OPEN_WATER_SWIM) {
+            totals.swimMeters += w.totalDistance;
+        }
+    }
+
+    let bikeTss: number | null = null;
+    let swimMeters: number | null = null;
+    let totalTss: number | null = null;
+    for (const totals of weeks.values()) {
+        bikeTss = bikeTss == null ? totals.bikeTss : Math.max(bikeTss, totals.bikeTss);
+        swimMeters = swimMeters == null ? totals.swimMeters : Math.max(swimMeters, totals.swimMeters);
+        totalTss = totalTss == null ? totals.totalTss : Math.max(totalTss, totals.totalTss);
+    }
+    const round1 = (value: number): number => Math.round(value * 10) / 10;
+    return {
+        bikeTss: bikeTss != null && bikeTss > 0 ? round1(bikeTss) : null,
+        swimMeters: swimMeters != null && swimMeters > 0 ? Math.round(swimMeters) : null,
+        totalTss: totalTss != null && totalTss > 0 ? round1(totalTss) : null,
+    };
 }
 
 export function mapWorkoutsForDb(
@@ -263,6 +321,15 @@ export function mapWorkoutsForDb(
         const displayDesc = w.displayDescription ?? null;
         const intensityZone = w.intensityZone ?? null;
         const structuredSteps = w.structuredSteps ?? buildStructuredStepsForWorkout(w);
+        const plannedTss = w.plannedTss ?? calculateWorkoutPlannedTss({
+            workoutType: w.type as WorkoutType,
+            sport: w.sport ?? null,
+            targetDistance: w.totalDistance,
+            targetDuration: w.targetDuration ?? null,
+            targetPace: w.targetPace ?? null,
+            structuredSteps,
+            ftpWatts: options.ftpWatts ?? null,
+        });
         return {
             goalId: options.goalId,
             ...(options.subGoalId && { subGoalId: options.subGoalId }),
@@ -289,10 +356,10 @@ export function mapWorkoutsForDb(
             targetFtpPercent: w.targetFtpPercent ?? null,
             targetCadenceRpm: w.targetCadenceRpm ?? null,
             targetRpe: w.targetRpe ?? null,
-            plannedTss: w.plannedTss ?? null,
+            plannedTss,
             phase: w.phase ?? 'BASE',
             isCompleted: false,
-            ...(structuredSteps && { structuredSteps }),
+            ...(structuredSteps && { structuredSteps: structuredSteps as unknown as Prisma.InputJsonValue }),
             ...(displayDesc && { customName: displayDesc, displayDesc }),
             ...(intensityZone && { intensityZone, notes: `[auto] intensity:${intensityZone}` }),
         };
@@ -842,6 +909,15 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
 
     const effectiveVdot = currentVdot;
 
+    // Task A2 threshold snapshots: prefer the athlete's stored thresholds,
+    // falling back to VDOT-derived estimates (mirrors buildStructuredStepsForWorkout).
+    const userThresholds = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { ftpWatts: true, swimCssSecPer100m: true },
+    });
+    const ftpAtCreation = userThresholds?.ftpWatts ?? estimateBikeFtpFromVdot(effectiveVdot);
+    const swimCssAtCreation = userThresholds?.swimCssSecPer100m ?? estimateSwimPaceFromVdot(effectiveVdot);
+
     const trainingVdotResult = resolveTrainingVdotForGoal({
         currentVdot: effectiveVdot,
         targetTime,
@@ -935,8 +1011,6 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         ...(customRunDistM != null && { customRunDistM }),
     };
 
-    const goal = await prisma.goal.create({ data: goalData });
-
     const planConfig: PlanConfig = {
         vdot: effectiveTrainingVdot,
         targetVdot: trainingVdotResult.targetVdot ?? null,
@@ -974,9 +1048,42 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         customSwimDistM: customSwimDistM ?? undefined,
         customBikeDistM: customBikeDistM ?? undefined,
         customRunDistM: customRunDistM ?? undefined,
+        ftpWatts: ftpAtCreation,
+        swimCssSecPer100m: swimCssAtCreation,
     };
 
     const workouts = generateTrainingPlan(planConfig);
+
+    // Task A2: per-workout planned TSS, plan-level phaseBlocks, and peak
+    // weekly volume/TSS targets — computed from the generated workouts so the
+    // Goal row persists the full structured plan metadata at creation time.
+    for (const w of workouts) {
+        if (w.plannedTss == null) {
+            w.plannedTss = calculateWorkoutPlannedTss({
+                workoutType: w.type as WorkoutType,
+                sport: w.sport ?? null,
+                targetDistance: w.totalDistance,
+                targetDuration: w.targetDuration ?? null,
+                targetPace: w.targetPace ?? null,
+                structuredSteps: w.structuredSteps ?? null,
+                ftpWatts: ftpAtCreation,
+            });
+        }
+    }
+    const phaseBlocks = buildPlanPhaseBlocks(planConfig, workouts);
+    const weeklyGoals = computePlanWeeklyVolumeGoals(planConfig, workouts);
+
+    const goal = await prisma.goal.create({
+        data: {
+            ...goalData,
+            ftpAtCreation,
+            swimCssAtCreation,
+            weeklyBikeTssGoal: weeklyGoals.bikeTss,
+            weeklySwimMetersGoal: weeklyGoals.swimMeters,
+            targetWeeklyTss: weeklyGoals.totalTss,
+            ...(phaseBlocks.length > 0 && { phaseBlocks: phaseBlocks as unknown as Prisma.InputJsonValue }),
+        },
+    });
 
     if (workouts.length > 0) {
         // Hard backstop on rows per createMany: the clamped horizon bounds
@@ -986,7 +1093,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
             ? workouts.slice(0, MAX_PERSISTED_WORKOUTS)
             : workouts;
         await prisma.workout.createMany({
-            data: mapWorkoutsForDb(boundedWorkouts, { goalId: goal.id }),
+            data: mapWorkoutsForDb(boundedWorkouts, { goalId: goal.id, ftpWatts: ftpAtCreation }),
         });
     } else {
         logger.warn('Plan generation returned 0 workouts', {
@@ -1070,6 +1177,8 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
                         hrZone6Max: hrZone6Max ?? null,
                         hrMax: hrMax ?? maxHeartRate ?? null,
                         hrRest: hrRest ?? restingHeartRate ?? null,
+                        ftpWatts: ftpAtCreation,
+                        swimCssSecPer100m: swimCssAtCreation,
                     });
 
                     const parentRaceDate = raceDate ? new Date(raceDate) : null;
@@ -1086,6 +1195,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
                                 goalId: goal.id,
                                 subGoalId: subGoal.id,
                                 descriptionPrefix: `[${sg.name.trim()}] `,
+                                ftpWatts: ftpAtCreation,
                             }),
                         });
                     }

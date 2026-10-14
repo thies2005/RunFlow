@@ -1,12 +1,22 @@
 import { WorkoutType, RaceType, PlanSport, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '../metrics/vdot';
-import { getZoneTarget, resolveHrZones } from '../metrics/hr-zones';
+import { getZoneTarget, resolveHrZones, type HrZoneDefinition } from '../metrics/hr-zones';
 import { generateUltraPlan } from './generators/run-ultra';
 import { generateTriathlonPlan } from './generators/triathlon';
 import { generateNoRacePlan } from './generators/no-race';
 import { fixBackToBackSameType } from './schedule-utils';
 import { enrichWorkoutsWithDescriptions, getRacePace } from './descriptions';
-import { estimateBikeFtpFromVdot, calculateBikeZones } from './bike-zones';
+import { estimateBikeFtpFromVdot, calculateBikeZones, type BikeZones } from './bike-zones';
+import { estimateSwimPaceFromVdot, calculateSwimPaces } from './swim-pace';
+import type {
+    StructuredWorkoutV2,
+    StepNode,
+    StructuredStep,
+    RepeatGroup,
+    Duration,
+    Target,
+} from './structured';
+import { MAX_REPEAT_TIMES } from './structured';
 
 export const ULTRA_RACE_TYPES: RaceType[] = [
     'FIFTY_K', 'FIFTY_MILE', 'HUNDRED_K', 'HUNDRED_MILE',
@@ -279,6 +289,10 @@ export type PlanConfig = {
     customSwimDistM?: number;
     customBikeDistM?: number;
     customRunDistM?: number;
+    /** Athlete bike FTP in watts (falls back to `estimateBikeFtpFromVdot(vdot)`). */
+    ftpWatts?: number | null;
+    /** Athlete swim CSS in seconds per 100m (falls back to `estimateSwimPaceFromVdot(vdot)`). */
+    swimCssSecPer100m?: number | null;
 };
 
 export type GeneratedWorkout = {
@@ -293,7 +307,8 @@ export type GeneratedWorkout = {
     displayDescription?: string;
     sport?: string;
     intensityZone?: string | null;
-    structuredSteps?: StructuredWorkoutPlan | null;
+    /** Canonical v2 structured step tree (task A1 schema). */
+    structuredSteps?: StructuredWorkoutV2 | null;
     targetHrZoneLabel?: string | null;
     targetHrMinBpm?: number | null;
     targetHrMaxBpm?: number | null;
@@ -308,21 +323,6 @@ export type GeneratedWorkout = {
     targetCadenceRpm?: number | null;
     targetRpe?: number | null;
     plannedTss?: number | null;
-};
-
-export type StructuredWorkoutPlan = {
-    version: 1;
-    source: 'generated-plan';
-    steps: StructuredWorkoutStep[];
-};
-
-export type StructuredWorkoutStep = {
-    type: 'warmup' | 'work' | 'recovery' | 'cooldown' | 'steady';
-    name: string;
-    distanceMeters?: number;
-    durationSeconds?: number;
-    paceSecondsPerKm?: number;
-    hrZone?: number;
 };
 
 type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
@@ -365,6 +365,18 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
             ...config,
             usePhaseVdot: options?.usePhaseVdot,
         });
+        // Task A2: emit the canonical v2 structured step tree for every
+        // generated workout across ALL sports (run, bike, swim, brick,
+        // strength) — both generators and the no-race path flow through here.
+        for (const w of workouts) {
+            if (!w.structuredSteps) {
+                w.structuredSteps = buildStructuredStepsForWorkout(w, {
+                    vdot: config.vdot,
+                    ftpWatts: config.ftpWatts ?? undefined,
+                    swimCssSecPer100m: config.swimCssSecPer100m ?? undefined,
+                });
+            }
+        }
         return workouts;
     };
 
@@ -1797,74 +1809,263 @@ export function fillDurations(workouts: GeneratedWorkout[], paces: TrainingPaces
     }
 }
 
-export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, 'type' | 'description' | 'totalDistance' | 'targetPace' | 'targetDuration' | 'targetHrZone'>): StructuredWorkoutPlan | null {
+/**
+ * Context used to resolve pace / power / HR / swim targets when building the
+ * canonical v2 structured step tree. Everything is optional: sensible defaults
+ * are derived from `vdot` (bike FTP from VDOT, swim CSS from VDOT, VDOT 45)
+ * so the builder never throws on partial input.
+ */
+export interface StructuredStepsContext {
+    vdot?: number;
+    ftpWatts?: number;
+    swimCssSecPer100m?: number;
+    /** Pre-resolved HR zone bpm bounds (from `resolveHrZones`). */
+    hrZones?: HrZoneDefinition[] | null;
+}
+
+/** Minimal workout surface the structured-steps builder reads AND mutates. */
+export type StructuredStepsWorkout = Pick<
+    GeneratedWorkout,
+    | 'type' | 'description' | 'totalDistance' | 'targetPace' | 'targetDuration' | 'targetHrZone'
+    | 'targetPaceMinSecondsPerKm' | 'targetPaceMaxSecondsPerKm' | 'targetPaceZoneLabel'
+    | 'targetHrZoneLabel' | 'targetHrMinBpm' | 'targetHrMaxBpm'
+    | 'targetPowerWatts' | 'targetPowerMinWatts' | 'targetPowerMaxWatts' | 'targetPowerZone'
+    | 'targetFtpPercent' | 'targetCadenceRpm' | 'targetRpe'
+>;
+
+const clampInt = (value: number, min: number, max: number): number =>
+    Math.min(max, Math.max(min, Math.round(value)));
+
+const clampStepSeconds = (seconds: number): number => clampInt(seconds, 1, 86400);
+const clampStepMeters = (meters: number): number => clampInt(meters, 1, 100000);
+
+function timeStep(
+    kind: StructuredStep['kind'],
+    label: string,
+    seconds: number,
+    extra?: Partial<StructuredStep>,
+): StructuredStep {
+    return { kind, label, duration: { type: 'time', seconds: clampStepSeconds(seconds) }, ...extra };
+}
+
+function distanceStep(
+    kind: StructuredStep['kind'],
+    label: string,
+    meters: number,
+    extra?: Partial<StructuredStep>,
+): StructuredStep {
+    return { kind, label, duration: { type: 'distance', meters: clampStepMeters(meters) }, ...extra };
+}
+
+/** Power target for a bike zone range, with a midpoint %FTP and zone label. */
+function powerTarget(zone: { min: number; max: number }, label: string, ftpWatts: number): Target {
+    const midWatts = (zone.min + zone.max) / 2;
+    return {
+        type: 'power',
+        minWatts: Math.round(zone.min),
+        maxWatts: Math.round(zone.max),
+        ftpPercent: ftpWatts > 0 ? Math.round((midWatts / ftpWatts) * 100) : undefined,
+        zoneLabel: label,
+    };
+}
+
+/** Pace target fixed at one sec/km value (the generator's exact step pace). */
+function exactPaceTarget(paceSecPerKm: number): Target {
+    const pace = Math.round(paceSecPerKm);
+    return { type: 'pace', unit: 'sec_per_km', min: pace, max: pace };
+}
+
+/** Pace window around a sec/km value (±3%), used for brick run legs. */
+function paceWindowTarget(paceSecPerKm: number, label?: string): Target {
+    return {
+        type: 'pace',
+        unit: 'sec_per_km',
+        min: Math.round(paceSecPerKm * 0.97),
+        max: Math.round(paceSecPerKm * 1.03),
+        zoneLabel: label,
+    };
+}
+
+function repeatGroup(
+    times: number,
+    setRest: Duration | undefined,
+    steps: StepNode[],
+    label?: string,
+): RepeatGroup {
+    const group: RepeatGroup = { kind: 'repeat', times: clampInt(times, 1, MAX_REPEAT_TIMES), steps };
+    if (setRest) group.setRest = setRest;
+    if (label) group.label = label;
+    return group;
+}
+
+/**
+ * Fill the workout-level numeric target fields the builder can derive, WITHOUT
+ * overwriting values the enrichment pipeline already set (every write is
+ * guarded by `== null`).
+ */
+function populateStructuredTargets(
+    workout: StructuredStepsWorkout,
+    paces: TrainingPaces,
+    hrZones: HrZoneDefinition[] | null,
+    bikeZones: BikeZones,
+    bikeFtp: number,
+    bikeZoneNumber: number | null,
+    bikeCadenceRpm: number | null,
+): void {
+    const paceTarget = getPaceTarget(
+        { type: workout.type as WorkoutType, description: workout.description, targetPace: workout.targetPace },
+        paces,
+    );
+    if (paceTarget) {
+        if (workout.targetPaceMinSecondsPerKm == null) workout.targetPaceMinSecondsPerKm = paceTarget.min;
+        if (workout.targetPaceMaxSecondsPerKm == null) workout.targetPaceMaxSecondsPerKm = paceTarget.max;
+        if (workout.targetPaceZoneLabel == null) workout.targetPaceZoneLabel = paceTarget.label;
+    }
+
+    const hrTarget = getZoneTarget(workout.targetHrZone, hrZones);
+    if (hrTarget) {
+        if (workout.targetHrZoneLabel == null) workout.targetHrZoneLabel = hrTarget.label;
+        if (workout.targetHrMinBpm == null) workout.targetHrMinBpm = hrTarget.min;
+        if (workout.targetHrMaxBpm == null) workout.targetHrMaxBpm = hrTarget.max;
+    }
+
+    if (bikeZoneNumber != null) {
+        const zone = bikeZoneNumber === 4 ? bikeZones.threshold : bikeZones.endurance;
+        const midWatts = Math.round((zone.min + zone.max) / 2);
+        if (workout.targetPowerWatts == null) workout.targetPowerWatts = midWatts;
+        if (workout.targetPowerMinWatts == null) workout.targetPowerMinWatts = zone.min;
+        if (workout.targetPowerMaxWatts == null) workout.targetPowerMaxWatts = zone.max;
+        if (workout.targetPowerZone == null) workout.targetPowerZone = bikeZoneNumber;
+        if (workout.targetFtpPercent == null && bikeFtp > 0) {
+            workout.targetFtpPercent = Math.round((midWatts / bikeFtp) * 100);
+        }
+        if (bikeCadenceRpm != null && workout.targetCadenceRpm == null) {
+            workout.targetCadenceRpm = bikeCadenceRpm;
+        }
+    }
+}
+
+/**
+ * Build the canonical v2 structured step tree for a generated workout and
+ * populate its first-class numeric target fields (task A2, step 1).
+ *
+ * Sport coverage:
+ *   - RUN (EASY / LONG_RUN / RECOVERY / TEMPO / INTERVALS / REPETITIONS /
+ *     FARTLEK / RACE): the exact v1 step paces, distances, durations and
+ *     `hrZone` numbers, wrapped in v2 — intervals/repeats/fartlek mains become
+ *     `RepeatGroup`s whose flatten yields the identical work/recovery sequence.
+ *   - BIKE (RIDE / LONG_RIDE / RIDE_INTERVALS): power targets from
+ *     `calculateBikeZones(ftp)` plus cadence (85–95 RPM endurance,
+ *     90–100 RPM intervals), and the workout-level `targetPower*` columns.
+ *   - SWIM (SWIM / SWIM_DRILL / OPEN_WATER_SWIM): warmup + main-set
+ *     `RepeatGroup` in meters with a 20s `setRest` + cooldown, with
+ *     `sec_per_100m` pace windows from `calculateSwimPaces(swimCss)`.
+ *   - BRICK: bike steady (power) → 120s `T2 Bike-to-Run Transition` → run leg
+ *     (pace).
+ *   - STRENGTH: warmup + main circuit `RepeatGroup` + mobility cooldown with
+ *     RPE targets (work rounds at RPE 7).
+ *
+ * Returns null when the workout carries neither distance nor duration.
+ */
+export function buildStructuredStepsForWorkout(
+    workout: StructuredStepsWorkout,
+    context: StructuredStepsContext = {},
+): StructuredWorkoutV2 | null {
     if (workout.totalDistance <= 0 && (!workout.targetDuration || workout.targetDuration <= 0)) return null;
 
     const type = workout.type as WorkoutType;
+    const vdot = context.vdot && context.vdot > 0 ? context.vdot : 45;
+    const bikeFtp = context.ftpWatts && context.ftpWatts > 0
+        ? Math.round(context.ftpWatts)
+        : estimateBikeFtpFromVdot(vdot);
+    const swimCss = context.swimCssSecPer100m && context.swimCssSecPer100m > 0
+        ? context.swimCssSecPer100m
+        : estimateSwimPaceFromVdot(vdot);
+    const bikeZones = calculateBikeZones(bikeFtp);
+    const swimPaces = calculateSwimPaces(swimCss);
+    const paces = calculateTrainingPaces(vdot);
     const targetPace = workout.targetPace && workout.targetPace > 0 ? workout.targetPace : undefined;
     const hrZone = workout.targetHrZone;
 
-    // 1. STRENGTH & TRANSITION
+    // 1. STRENGTH & TRANSITION PRACTICE — RPE-targeted circuits.
     if (type === WorkoutType.STRENGTH || type === WorkoutType.TRANSITION_PRACTICE) {
-        return {
-            version: 1,
-            source: 'generated-plan',
-            steps: [{
-                type: 'steady',
-                name: type === WorkoutType.STRENGTH ? 'Strength Session' : 'Transition Practice',
-                durationSeconds: workout.targetDuration || 2700,
-            }],
-        };
-    }
+        if (type === WorkoutType.TRANSITION_PRACTICE) {
+            populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+            if (workout.targetRpe == null) workout.targetRpe = 5;
+            return {
+                version: 2,
+                source: 'engine',
+                steps: [timeStep('steady', 'Transition Practice', workout.targetDuration || 1800, {
+                    target: { type: 'rpe', value: 5 },
+                })],
+            };
+        }
 
-    // 2. BRICK (Grouped Bike + Transition + Run)
-    if (type === WorkoutType.BRICK) {
-        const match = workout.description.match(/(\d+)\s*min\s*Bike\s*(?:\u2192|->)\s*(\d+)\s*min\s*Run/i);
-        const bikeMinutes = match ? parseInt(match[1]) : 45;
-        const runMinutes = match ? parseInt(match[2]) : 15;
-        const bikeSeconds = bikeMinutes * 60;
-        const runSeconds = runMinutes * 60;
-        const plannedSeconds = workout.targetDuration && workout.targetDuration > 0
-            ? workout.targetDuration
-            : bikeSeconds + runSeconds + 300;
-        const transitionSeconds = Math.max(0, plannedSeconds - bikeSeconds - runSeconds);
+        const totalSec = workout.targetDuration && workout.targetDuration > 0 ? workout.targetDuration : 2700;
+        const warmupSec = Math.max(240, Math.round(totalSec * 0.12));
+        const cooldownSec = Math.max(240, Math.round(totalSec * 0.12));
+        const roundRestSec = 60;
+        const rounds = 3;
+        const roundSec = Math.max(
+            240,
+            Math.round((totalSec - warmupSec - cooldownSec - roundRestSec * (rounds - 1)) / rounds),
+        );
+
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+        if (workout.targetRpe == null) workout.targetRpe = 7;
 
         return {
-            version: 1,
-            source: 'generated-plan',
+            version: 2,
+            source: 'engine',
             steps: [
-                {
-                    type: 'work',
-                    name: 'Bike Leg',
-                    durationSeconds: bikeSeconds,
-                    hrZone: 2,
-                },
-                ...(transitionSeconds > 0 ? [{
-                    type: 'recovery',
-                    name: 'Transition Practice (T2)',
-                    durationSeconds: transitionSeconds,
-                } as StructuredWorkoutStep] : []),
-                {
-                    type: 'work',
-                    name: 'Run Leg',
-                    durationSeconds: runSeconds,
-                    hrZone: 2,
-                }
+                timeStep('warmup', 'Warmup & Mobility', warmupSec, { target: { type: 'rpe', value: 4 } }),
+                repeatGroup(rounds, { type: 'time', seconds: roundRestSec }, [
+                    timeStep('work', 'Strength Circuit', roundSec, { target: { type: 'rpe', value: 7 } }),
+                ], 'Main Circuit'),
+                timeStep('cooldown', 'Mobility & Stretching', cooldownSec, { target: { type: 'rpe', value: 3 } }),
             ],
         };
     }
 
-    // 3. BIKE RIDES (Steady & Intervals)
-    if (type === WorkoutType.RIDE || type === WorkoutType.LONG_RIDE) {
+    // 2. BRICK — bike steady (power) → T2 transition → run leg (pace).
+    if (type === WorkoutType.BRICK) {
+        const match = workout.description.match(/(\d+)\s*min\s*Bike\s*(?:\u2192|->)\s*(\d+)\s*min\s*Run/i);
+        const bikeSeconds = (match ? parseInt(match[1]) : 45) * 60;
+        const runSeconds = (match ? parseInt(match[2]) : 15) * 60;
+        const runBrickPace = targetPace ?? Math.round((paces.easy.min + paces.easy.max) / 2);
+
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, 2, 90);
+
         return {
-            version: 1,
-            source: 'generated-plan',
-            steps: [{
-                type: 'steady',
-                name: type === WorkoutType.LONG_RIDE ? 'Long Ride' : 'Easy Ride',
-                durationSeconds: workout.targetDuration || undefined,
-                hrZone: hrZone || 2,
-            }],
+            version: 2,
+            source: 'engine',
+            steps: [
+                timeStep('steady', 'Bike Leg', bikeSeconds, {
+                    target: powerTarget(bikeZones.endurance, 'Z2 Endurance', bikeFtp),
+                    cadenceRpm: 90,
+                    hrZone: 2,
+                }),
+                timeStep('transition', 'T2 Bike-to-Run Transition', 120, { target: { type: 'free' } }),
+                timeStep('work', 'Run Leg', runSeconds, {
+                    target: paceWindowTarget(runBrickPace, 'Brick Run'),
+                    hrZone: hrZone ?? 2,
+                }),
+            ],
+        };
+    }
+
+    // 3. BIKE RIDES (Steady & Intervals) — power targets + cadence.
+    if (type === WorkoutType.RIDE || type === WorkoutType.LONG_RIDE) {
+        const durationSec = workout.targetDuration && workout.targetDuration > 0 ? workout.targetDuration : 3600;
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, 2, 90);
+        return {
+            version: 2,
+            source: 'engine',
+            steps: [timeStep('steady', type === WorkoutType.LONG_RIDE ? 'Long Ride' : 'Easy Ride', durationSec, {
+                target: powerTarget(bikeZones.endurance, 'Z2 Endurance', bikeFtp),
+                cadenceRpm: 90,
+                hrZone: hrZone ?? 2,
+            })],
         };
     }
 
@@ -1879,67 +2080,102 @@ export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, '
         const fixedSeconds = warmupSeconds + (reps * repSeconds) + ((reps - 1) * recoverySeconds);
         const cooldownSeconds = Math.max(300, (workout.targetDuration || 0) - fixedSeconds);
 
-        const steps: StructuredWorkoutStep[] = [
-            { type: 'warmup', name: 'Warm up spin', durationSeconds: warmupSeconds, hrZone: 1 }
-        ];
-
-        for (let i = 0; i < reps; i++) {
-            steps.push({
-                type: 'work',
-                name: `Interval Rep ${i + 1}`,
-                durationSeconds: repSeconds,
-                hrZone: 4,
-            });
-            if (i < reps - 1) {
-                steps.push({
-                    type: 'recovery',
-                    name: 'Recovery spin',
-                    durationSeconds: recoverySeconds,
-                    hrZone: 1,
-                });
-            }
-        }
-
-        steps.push({ type: 'cooldown', name: 'Cool down spin', durationSeconds: cooldownSeconds, hrZone: 1 });
-
-        return { version: 1, source: 'generated-plan', steps };
-    }
-
-    // 4. SWIM SETS
-    if (type === WorkoutType.SWIM || type === WorkoutType.SWIM_DRILL || type === WorkoutType.OPEN_WATER_SWIM) {
-        const totalDist = workout.totalDistance;
-        const warmup = Math.min(200, Math.max(50, Math.round(totalDist * 0.15 / 50) * 50));
-        const cooldown = Math.min(200, Math.max(50, Math.round(totalDist * 0.15 / 50) * 50));
-        const mainSetDist = totalDist - warmup - cooldown;
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, 4, 95);
 
         return {
-            version: 1,
-            source: 'generated-plan',
+            version: 2,
+            source: 'engine',
             steps: [
-                { type: 'warmup', name: 'Warm up swim', distanceMeters: warmup, paceSecondsPerKm: targetPace },
-                { type: 'work', name: 'Main Set', distanceMeters: mainSetDist, paceSecondsPerKm: targetPace },
-                { type: 'cooldown', name: 'Cool down swim', distanceMeters: cooldown, paceSecondsPerKm: targetPace },
+                timeStep('warmup', 'Warm up spin', warmupSeconds, {
+                    target: powerTarget(bikeZones.recovery, 'Z1 Recovery', bikeFtp),
+                    cadenceRpm: 85,
+                    hrZone: 1,
+                }),
+                repeatGroup(reps, { type: 'time', seconds: recoverySeconds }, [
+                    timeStep('work', 'Interval', repSeconds, {
+                        target: powerTarget(bikeZones.threshold, 'Z4 Threshold', bikeFtp),
+                        cadenceRpm: 95,
+                        hrZone: hrZone ?? 4,
+                    }),
+                ], `${reps}×${repMinutes}min`),
+                timeStep('cooldown', 'Cool down spin', cooldownSeconds, {
+                    target: powerTarget(bikeZones.recovery, 'Z1 Recovery', bikeFtp),
+                    cadenceRpm: 85,
+                    hrZone: 1,
+                }),
             ],
         };
     }
 
-    // 5. RUN EASY / RECOVERY / LONG RUN
-    if (type === WorkoutType.EASY || type === WorkoutType.RECOVERY || type === WorkoutType.LONG_RUN) {
-        return {
-            version: 1,
-            source: 'generated-plan',
-            steps: [{
-                type: 'steady',
-                name: type === WorkoutType.RECOVERY ? 'Recovery run' : type === WorkoutType.LONG_RUN ? 'Long run' : 'Easy run',
-                distanceMeters: workout.totalDistance || undefined,
-                durationSeconds: workout.targetDuration || undefined,
-                paceSecondsPerKm: targetPace,
-                hrZone,
-            }],
-        };
+    // 4. SWIM SETS — warmup + main-set repeat group (meters, 20s setRest) + cooldown.
+    if (type === WorkoutType.SWIM || type === WorkoutType.SWIM_DRILL || type === WorkoutType.OPEN_WATER_SWIM) {
+        const totalDist = workout.totalDistance;
+        const warmup = Math.min(200, Math.max(50, Math.round(totalDist * 0.15 / 50) * 50));
+        const cooldown = Math.min(200, Math.max(50, Math.round(totalDist * 0.15 / 50) * 50));
+        const mainSetDist = Math.max(0, totalDist - warmup - cooldown);
+
+        // Pace windows: ground in calculateSwimPaces(css); when the generator
+        // supplied an explicit sec/100m targetPace, center the main-set window
+        // on it (±3%) so step targets agree with the workout-level pace.
+        const easyWindow = swimPaces.easy;
+        const warmupPaceTarget: Target = targetPace
+            ? {
+                type: 'pace', unit: 'sec_per_100m',
+                min: Math.round(targetPace * 1.02), max: Math.round(targetPace * 1.08),
+                zoneLabel: easyWindow.label,
+            }
+            : { type: 'pace', unit: 'sec_per_100m', min: easyWindow.min, max: easyWindow.max, zoneLabel: easyWindow.label };
+        const mainWindow = swimPaces.steady;
+        const mainPaceTarget: Target = targetPace
+            ? {
+                type: 'pace', unit: 'sec_per_100m',
+                min: Math.round(targetPace * 0.97), max: Math.round(targetPace * 1.03),
+                zoneLabel: type === WorkoutType.SWIM_DRILL ? 'Swim Drill' : mainWindow.label,
+            }
+            : { type: 'pace', unit: 'sec_per_100m', min: mainWindow.min, max: mainWindow.max, zoneLabel: mainWindow.label };
+
+        const repDistance = type === WorkoutType.SWIM_DRILL ? 50 : 100;
+        const steps: StepNode[] = [
+            distanceStep('warmup', 'Warm up swim', warmup, { target: warmupPaceTarget, hrZone: 1 }),
+        ];
+        if (mainSetDist > 0) {
+            const times = clampInt(Math.floor(mainSetDist / repDistance), 1, MAX_REPEAT_TIMES);
+            const remainder = mainSetDist - times * repDistance;
+            steps.push(repeatGroup(
+                times,
+                { type: 'time', seconds: 20 },
+                [distanceStep('work', type === WorkoutType.SWIM_DRILL ? 'Drill' : 'Swim', repDistance, {
+                    target: mainPaceTarget,
+                    hrZone: hrZone ?? 2,
+                })],
+                `Main Set ${times}×${repDistance}m`,
+            ));
+            if (remainder >= repDistance / 2) {
+                steps.push(distanceStep('steady', 'Steady swim', remainder, { target: mainPaceTarget, hrZone: hrZone ?? 2 }));
+            }
+        }
+        steps.push(distanceStep('cooldown', 'Cool down swim', cooldown, { target: warmupPaceTarget, hrZone: 1 }));
+
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+        return { version: 2, source: 'engine', steps };
     }
 
-    // 6. RUN QUALITY / INTERVALS
+    // 5. RUN EASY / RECOVERY / LONG RUN — flat steady step.
+    if (type === WorkoutType.EASY || type === WorkoutType.RECOVERY || type === WorkoutType.LONG_RUN) {
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+        const step: StructuredStep = workout.totalDistance > 0
+            ? distanceStep('steady',
+                type === WorkoutType.RECOVERY ? 'Recovery run' : type === WorkoutType.LONG_RUN ? 'Long run' : 'Easy run',
+                workout.totalDistance, { hrZone })
+            : timeStep('steady',
+                type === WorkoutType.RECOVERY ? 'Recovery run' : type === WorkoutType.LONG_RUN ? 'Long run' : 'Easy run',
+                workout.targetDuration || 3600, { hrZone });
+        if (targetPace) step.target = exactPaceTarget(targetPace);
+        return { version: 2, source: 'engine', steps: [step] };
+    }
+
+    // 6. RUN QUALITY / INTERVALS — RepeatGroup so the flattened work/recovery
+    // sequence is identical to the v1 flat list.
     const repMatch = workout.description.match(/(\d+)x(\d+(?:\.\d+)?)\s*(km|m)/i);
     if (repMatch) {
         const reps = parseInt(repMatch[1]);
@@ -1959,46 +2195,31 @@ export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, '
             ? Math.max(0, (supportDistance - warmupDistance - cooldownDistance) / (reps - 1))
             : 0;
 
-        const steps: StructuredWorkoutStep[] = [];
-        if (warmupDistance > 0) {
-            steps.push({ type: 'warmup', name: 'Warm up', distanceMeters: warmupDistance, hrZone: 1 });
+        const steps: StepNode[] = [];
+        if (warmupDistance >= 1) {
+            steps.push(distanceStep('warmup', 'Warm up', warmupDistance, { hrZone: 1 }));
         }
 
-        let recoveryName = 'Recovery jog';
+        const setRest: Duration = recoveryDistance >= 1
+            ? { type: 'distance', meters: clampStepMeters(recoveryDistance) }
+            : { type: 'time', seconds: 120 };
 
-        if (type === WorkoutType.REPETITIONS) {
-            recoveryName = 'Rest';
-        } else if (workout.description.includes('Threshold') || workout.description.includes('MP')) {
-            recoveryName = 'Tempo rest';
+        const workStep = distanceStep('work', 'Rep', repDistMeters, { hrZone });
+        if (targetPace) workStep.target = exactPaceTarget(targetPace);
+        const repLabel = repDistMeters >= 1000
+            ? `${Number.isInteger(repDistMeters / 1000) ? repDistMeters / 1000 : (repDistMeters / 1000).toFixed(1)}km`
+            : `${Math.round(repDistMeters)}m`;
+        steps.push(repeatGroup(reps, setRest, [workStep], `${reps}×${repLabel}`));
+
+        if (cooldownDistance >= 1) {
+            steps.push(distanceStep('cooldown', 'Cool down', cooldownDistance, { hrZone: 1 }));
         }
 
-        for (let i = 0; i < reps; i++) {
-            steps.push({
-                type: 'work',
-                name: `Rep ${i + 1}`,
-                distanceMeters: repDistMeters,
-                paceSecondsPerKm: targetPace,
-                hrZone,
-            });
-            if (i < reps - 1) {
-                steps.push({
-                    type: 'recovery',
-                    name: recoveryName,
-                    distanceMeters: recoveryDistance || undefined,
-                    durationSeconds: recoveryDistance ? undefined : 120,
-                    hrZone: 1,
-                });
-            }
-        }
-
-        if (cooldownDistance > 0) {
-            steps.push({ type: 'cooldown', name: 'Cool down', distanceMeters: cooldownDistance, hrZone: 1 });
-        }
-
-        return { version: 1, source: 'generated-plan', steps };
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+        return { version: 2, source: 'engine', steps };
     }
 
-    // 7. RUN FARTLEK
+    // 7. RUN FARTLEK — hard/easy cycles as a RepeatGroup (recovery inside).
     const fartlekMatch = workout.description.match(/(\d+)\s*min\s*(?:hard|@\s*F).*?(\d+)\s*min\s*(?:easy|@\s*E)/i);
     if (fartlekMatch) {
         const hardMin = parseInt(fartlekMatch[1]);
@@ -2011,52 +2232,217 @@ export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, '
         const mainSecs = Math.max(cycleSeconds, totalSecs - warmupSeconds - cooldownSeconds);
         const reps = Math.max(1, Math.floor(mainSecs / cycleSeconds));
 
-        const steps: StructuredWorkoutStep[] = [
-            { type: 'warmup', name: 'Warm up', durationSeconds: warmupSeconds, hrZone: 1 }
-        ];
+        const workStep = timeStep('work', 'Fartlek Hard', hardMin * 60, { hrZone });
+        if (targetPace) workStep.target = exactPaceTarget(targetPace);
+        const easyStep = timeStep('recovery', 'Fartlek Easy', easyMin * 60, {
+            hrZone: 2,
+        });
+        if (targetPace) easyStep.target = exactPaceTarget(Math.round(targetPace * 1.15));
 
-        for (let i = 0; i < reps; i++) {
-            steps.push({
-                type: 'work',
-                name: `Fartlek Hard ${i + 1}`,
-                durationSeconds: hardMin * 60,
-                paceSecondsPerKm: targetPace,
-                hrZone,
-            });
-            steps.push({
-                type: 'recovery',
-                name: `Fartlek Easy ${i + 1}`,
-                durationSeconds: easyMin * 60,
-                paceSecondsPerKm: targetPace ? Math.round(targetPace * 1.15) : undefined,
-                hrZone: 2,
-            });
-        }
-
-        steps.push({ type: 'cooldown', name: 'Cool down', durationSeconds: cooldownSeconds, hrZone: 1 });
-
-        return { version: 1, source: 'generated-plan', steps };
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+        return {
+            version: 2,
+            source: 'engine',
+            steps: [
+                timeStep('warmup', 'Warm up', warmupSeconds, { hrZone: 1 }),
+                repeatGroup(reps, undefined, [workStep, easyStep], 'Fartlek Cycles'),
+                timeStep('cooldown', 'Cool down', cooldownSeconds, { hrZone: 1 }),
+            ],
+        };
     }
 
+    // 8. Generic fallback — warmup + work + cooldown around the main body.
     const warmupDistance = workout.totalDistance >= 5000 ? 1500 : 0;
     const cooldownDistance = workout.totalDistance >= 5000 ? 1000 : 0;
     const remainingDistance = Math.max(0, workout.totalDistance - warmupDistance - cooldownDistance);
 
-    const steps: StructuredWorkoutStep[] = [];
-    if (warmupDistance > 0) {
-        steps.push({ type: 'warmup', name: 'Warm up', distanceMeters: warmupDistance, hrZone: 1 });
+    const steps: StepNode[] = [];
+    if (warmupDistance >= 1) {
+        steps.push(distanceStep('warmup', 'Warm up', warmupDistance, { hrZone: 1 }));
     }
-    steps.push({
-        type: 'work',
-        name: workout.description.split(':')[0] || 'Main set',
-        distanceMeters: remainingDistance || workout.totalDistance || undefined,
-        paceSecondsPerKm: targetPace,
-        hrZone,
-    });
-    if (cooldownDistance > 0) {
-        steps.push({ type: 'cooldown', name: 'Cool down', distanceMeters: cooldownDistance, hrZone: 1 });
+    const workStep = distanceStep(
+        'work',
+        workout.description.split(':')[0] || 'Main set',
+        remainingDistance > 0 ? remainingDistance : workout.totalDistance,
+        { hrZone },
+    );
+    if (targetPace) workStep.target = exactPaceTarget(targetPace);
+    steps.push(workStep);
+    if (cooldownDistance >= 1) {
+        steps.push(distanceStep('cooldown', 'Cool down', cooldownDistance, { hrZone: 1 }));
     }
 
-    return { version: 1, source: 'generated-plan', steps };
+    populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+    return { version: 2, source: 'engine', steps };
+}
+
+// ---------------------------------------------------------------------------
+// Plan-level phase blocks (task A2, step 2)
+// ---------------------------------------------------------------------------
+
+/** Structured plan-phase metadata persisted on `Goal.phaseBlocks` (Json). */
+export interface PhaseBlock {
+    phase: PlanPhase;
+    /** 1-based plan-week range (inclusive). */
+    startWeek: number;
+    endWeek: number;
+    /** ISO date (YYYY-MM-DD) of the first day of `startWeek` (Sunday-start). */
+    startDate: string;
+    /** ISO date (YYYY-MM-DD) of the last day of `endWeek`. */
+    endDate: string;
+    /** Average planned running volume per week in this block, in km. */
+    weeklyRunKmTarget: number;
+    /** Average planned cycling TSS per week in this block (null when no rides). */
+    weeklyBikeTssTarget: number | null;
+    /** Average planned swim volume per week in this block, in meters (null when no swims). */
+    weeklySwimMetersTarget: number | null;
+    /** Average planned total TSS per week in this block (null when unknowable). */
+    targetTss: number | null;
+    focus: string;
+}
+
+const PHASE_FOCUS: Record<string, string> = {
+    BASE: 'Aerobic base & weekly volume',
+    BUILD: 'Intensity & race-specific work',
+    PEAK: 'Race-specific sharpness at peak volume',
+    TAPER: 'Volume reduction & freshness',
+    RACE_WEEK: 'Race execution & taper',
+    ENDURANCE: 'Time-on-feet endurance',
+    MENTAL_PREP: 'Mental preparation & race simulation',
+    RECOVERY: 'Recovery & adaptation',
+    TUNE_UP: 'Tune-up race sharpening',
+    MAINTAIN: 'Fitness maintenance',
+};
+
+const RUN_WORKOUT_TYPES = new Set<WorkoutType>([
+    WorkoutType.EASY, WorkoutType.LONG_RUN, WorkoutType.TEMPO, WorkoutType.INTERVALS,
+    WorkoutType.FARTLEK, WorkoutType.RECOVERY, WorkoutType.RACE, WorkoutType.REPETITIONS,
+]);
+const BIKE_WORKOUT_TYPES = new Set<WorkoutType>([
+    WorkoutType.RIDE, WorkoutType.LONG_RIDE, WorkoutType.RIDE_INTERVALS,
+]);
+const SWIM_WORKOUT_TYPES = new Set<WorkoutType>([
+    WorkoutType.SWIM, WorkoutType.SWIM_DRILL, WorkoutType.OPEN_WATER_SWIM,
+]);
+
+const isoDay = (date: Date): string => date.toISOString().slice(0, 10);
+
+/**
+ * Build explicit structured phase metadata from the generated workout list
+ * (task A2, step 2). Weeks are Sunday-start, matching the plan generators'
+ * calendar normalization. Consecutive weeks sharing a phase are merged into a
+ * single {@link PhaseBlock}; weekly volume/TSS targets are the averages over
+ * the weeks in the block. `workout.plannedTss` should already be populated
+ * (see `calculateWorkoutPlannedTss`) for TSS columns to be meaningful.
+ */
+export function buildPlanPhaseBlocks(config: PlanConfig, workouts: GeneratedWorkout[]): PhaseBlock[] {
+    if (workouts.length === 0) return [];
+
+    const requestedStart = config.startDate ?? new Date();
+    const planStart = new Date(requestedStart);
+    planStart.setDate(planStart.getDate() - planStart.getDay()); // Sunday-start, as the generators do
+    planStart.setHours(0, 0, 0, 0);
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+    interface WeekAcc {
+        phase: PlanPhase | null;
+        runMeters: number;
+        bikeTss: number;
+        bikeCount: number;
+        swimMeters: number;
+        swimCount: number;
+        tss: number;
+        tssCount: number;
+    }
+    const weeks = new Map<number, WeekAcc>();
+
+    for (const w of workouts) {
+        const weekIndex = Math.max(1, Math.floor((w.date.getTime() - planStart.getTime()) / WEEK_MS) + 1);
+        let acc = weeks.get(weekIndex);
+        if (!acc) {
+            acc = { phase: null, runMeters: 0, bikeTss: 0, bikeCount: 0, swimMeters: 0, swimCount: 0, tss: 0, tssCount: 0 };
+            weeks.set(weekIndex, acc);
+        }
+        if (w.phase && acc.phase === null) acc.phase = w.phase;
+        if (w.plannedTss != null && w.plannedTss > 0) {
+            acc.tss += w.plannedTss;
+            acc.tssCount += 1;
+        }
+        const wt = w.type as WorkoutType;
+        if (RUN_WORKOUT_TYPES.has(wt)) acc.runMeters += w.totalDistance;
+        if (BIKE_WORKOUT_TYPES.has(wt) && w.plannedTss != null && w.plannedTss > 0) {
+            acc.bikeTss += w.plannedTss;
+            acc.bikeCount += 1;
+        }
+        if (SWIM_WORKOUT_TYPES.has(wt)) acc.swimMeters += w.totalDistance;
+    }
+
+    const minWeek = Math.min(...weeks.keys());
+    const maxWeek = Math.max(...weeks.keys());
+
+    // Resolve a phase for every week in the range; gap weeks inherit the
+    // previous week's phase (or the next one at the head of the plan).
+    const phases: (PlanPhase | null)[] = [];
+    for (let week = minWeek; week <= maxWeek; week++) {
+        phases.push(weeks.get(week)?.phase ?? null);
+    }
+    let lastPhase: PlanPhase | null = null;
+    for (let i = 0; i < phases.length; i++) {
+        if (phases[i] !== null) lastPhase = phases[i];
+        else phases[i] = lastPhase;
+    }
+    for (let i = phases.length - 1; i >= 0; i--) {
+        if (phases[i] === null) phases[i] = lastPhase;
+        else lastPhase = phases[i];
+    }
+
+    const round1 = (value: number): number => Math.round(value * 10) / 10;
+    const weekStartDate = (week: number): Date => new Date(planStart.getTime() + (week - 1) * WEEK_MS);
+
+    const blocks: PhaseBlock[] = [];
+    let blockStart = minWeek;
+    for (let week = minWeek + 1; week <= maxWeek + 1; week++) {
+        const prevPhase = phases[week - 1 - minWeek];
+        const boundary = week > maxWeek || prevPhase !== phases[week - minWeek];
+        if (!boundary) continue;
+
+        const endWeek = week - 1;
+        let runMeters = 0;
+        let bikeTss = 0;
+        let bikeCount = 0;
+        let swimMeters = 0;
+        let swimCount = 0;
+        let tss = 0;
+        let tssCount = 0;
+        for (let w = blockStart; w <= endWeek; w++) {
+            const acc = weeks.get(w);
+            if (!acc) continue;
+            runMeters += acc.runMeters;
+            bikeTss += acc.bikeTss;
+            bikeCount += acc.bikeCount;
+            swimMeters += acc.swimMeters;
+            swimCount += acc.swimCount;
+            tss += acc.tss;
+            tssCount += acc.tssCount;
+        }
+        const weekCount = endWeek - blockStart + 1;
+        const phase = (phases[blockStart - minWeek] ?? 'BASE') as PlanPhase;
+        blocks.push({
+            phase,
+            startWeek: blockStart,
+            endWeek,
+            startDate: isoDay(weekStartDate(blockStart)),
+            endDate: isoDay(new Date(weekStartDate(endWeek).getTime() + 6 * 24 * 60 * 60 * 1000)),
+            weeklyRunKmTarget: round1(runMeters / weekCount / 1000),
+            weeklyBikeTssTarget: bikeCount > 0 ? round1(bikeTss / weekCount) : null,
+            weeklySwimMetersTarget: swimCount > 0 ? Math.round(swimMeters / weekCount) : null,
+            targetTss: tssCount > 0 ? round1(tss / weekCount) : null,
+            focus: PHASE_FOCUS[phase] ?? 'Continuous training',
+        });
+        blockStart = week;
+    }
+
+    return blocks;
 }
 
 function updateDescription(type: WorkoutType, distance: number, pace: number): string {

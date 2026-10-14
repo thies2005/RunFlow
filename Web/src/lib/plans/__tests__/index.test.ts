@@ -1,6 +1,7 @@
 import { buildStructuredStepsForWorkout, generateTrainingPlan, getRaceWeekRunVolumeCap, PLAN_CONSTANTS, resolvePhaseBudget, scaleQualitySessionDistance } from '../index';
 import { calculateTrainingPaces } from '../../metrics/vdot';
 import { WorkoutType } from '@/generated/prisma/browser';
+import type { StructuredStep } from '../structured';
 
 jest.mock('../../metrics/vdot', () => ({
     calculateTrainingPaces: jest.fn(),
@@ -802,18 +803,20 @@ describe('Training Plan Generation', () => {
             });
 
             expect(steps).not.toBeNull();
-            expect(steps?.source).toBe('generated-plan');
-            expect(steps?.steps.map(s => s.type)).toEqual([
-                'warmup',
-                'work', 'recovery',
-                'work', 'recovery',
-                'work', 'recovery',
-                'work', 'recovery',
-                'work',
-                'cooldown'
-            ]);
-            expect(steps?.steps[1].paceSecondsPerKm).toBe(240);
-            expect(steps?.steps[1].hrZone).toBe(4);
+            expect(steps?.version).toBe(2);
+            expect(steps?.source).toBe('engine');
+            // warmup + repeat(5x1km) + cooldown
+            expect(steps?.steps.map(s => s.kind)).toEqual(['warmup', 'repeat', 'cooldown']);
+
+            const group = steps!.steps.find((s): s is Extract<typeof s, { kind: 'repeat' }> => s.kind === 'repeat');
+            expect(group?.times).toBe(5);
+            const work = group?.steps[0] as StructuredStep | undefined;
+            expect(work).toMatchObject({
+                kind: 'work',
+                duration: { type: 'distance', meters: 1000 },
+                hrZone: 4,
+            });
+            expect(work?.target).toMatchObject({ type: 'pace', unit: 'sec_per_km', min: 240, max: 240 });
         });
 
         it('builds single steady step for easy workouts', () => {
@@ -827,12 +830,17 @@ describe('Training Plan Generation', () => {
             });
 
             expect(steps?.steps).toHaveLength(1);
-            expect(steps?.steps[0]).toMatchObject({
-                type: 'steady',
-                distanceMeters: 8000,
-                durationSeconds: 2880,
-                paceSecondsPerKm: 360,
+            const s0 = steps?.steps[0] as StructuredStep;
+            expect(s0).toMatchObject({
+                kind: 'steady',
+                duration: { type: 'distance', meters: 8000 },
                 hrZone: 2,
+            });
+            expect(s0.target).toMatchObject({
+                type: 'pace',
+                unit: 'sec_per_km',
+                min: 360,
+                max: 360,
             });
         });
 

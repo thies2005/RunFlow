@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
-import { getCyclingAnalytics } from '@/lib/metrics/power';
+import { getCyclingAnalytics } from '@/lib/metrics/cyclingAnalytics';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 

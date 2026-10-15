@@ -293,7 +293,7 @@ describe('Cycling Power Engine', () => {
 
     describe('getCyclingAnalytics', () => {
         it('aggregates user rides and returns structured cycling analytics data', async () => {
-            const { getCyclingAnalytics } = await import('../power');
+            const { getCyclingAnalytics } = await import('../cyclingAnalytics');
             const mockUser = {
                 ftpWatts: 260,
                 autoEstimateFtp: true,

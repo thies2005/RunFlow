@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { getCyclingAnalytics } from '@/lib/metrics/power';
+import { getCyclingAnalytics } from '@/lib/metrics/cyclingAnalytics';
 
 export const dynamic = 'force-dynamic';
 

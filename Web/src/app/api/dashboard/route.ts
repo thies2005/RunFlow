@@ -6,7 +6,6 @@ import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 import { startOfWeek, endOfWeek, subDays } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { cachedResponse } from '@/lib/api/apiResponse';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 import { handleError } from '@/lib/errors/handler';
 import { getRedisClient } from '@/lib/redis';
@@ -58,7 +57,9 @@ export async function GET(req: NextRequest) {
         try {
             const cachedData = await redisClient?.get(cacheKey);
             if (cachedData) {
-                return cachedResponse(JSON.parse(cachedData), { maxAge: 60, staleWhileRevalidate: 30 });
+                return NextResponse.json(JSON.parse(cachedData), {
+                    headers: { 'Cache-Control': 'private, no-cache, no-store, must-revalidate' },
+                });
             }
         } catch (e) {
             console.error('Redis cache error:', e);
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest) {
         });
 
         const activeGoalsPromise = prisma.goal.findMany({
-            where: { userId, isActive: true },
+            where: { userId, isActive: true, deletedAt: null },
             orderBy: { raceDate: 'asc' },
             include: {
                 workouts: {
@@ -348,7 +349,9 @@ export async function GET(req: NextRequest) {
             console.error('Redis cache set error:', e);
         }
 
-        return cachedResponse(responseData, { maxAge: 60, staleWhileRevalidate: 30 });
+        return NextResponse.json(responseData, {
+            headers: { 'Cache-Control': 'private, no-cache, no-store, must-revalidate' },
+        });
 
     } catch (error) {
         return handleError(error);

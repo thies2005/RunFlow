@@ -80,10 +80,15 @@ export function RaceCountdown({
             if (!res.ok) throw new Error('Failed to delete plan');
             return res.json();
         },
-        onSuccess: () => {
+        onSuccess: (_data, goalId) => {
             toast.success('Plan deleted');
             setIsDeleteConfirmOpen(false);
             queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+            queryClient.invalidateQueries({ queryKey: ['goals'] });
+            queryClient.invalidateQueries({ queryKey: ['plans'] });
+            queryClient.invalidateQueries({ queryKey: ['plan'] });
+            queryClient.invalidateQueries({ queryKey: ['plan-advanced'] });
+            queryClient.removeQueries({ queryKey: ['plan-advanced', goalId] });
         },
         onError: () => {
             toast.error('Failed to delete plan');

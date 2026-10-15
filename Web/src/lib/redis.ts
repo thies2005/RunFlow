@@ -123,3 +123,15 @@ export async function releaseLock(key: string): Promise<void> {
         logger.error('Redis release lock error', { key, error: error instanceof Error ? error.message : String(error) });
     }
 }
+
+export async function invalidateUserDashboardCache(userId: string): Promise<void> {
+    try {
+        const redis = await getRedisClient();
+        if (redis) {
+            await redis.incr(`dashboard:cachever:${userId}`);
+        }
+    } catch (e) {
+        console.error('[DashboardCache] Invalidation error:', e);
+    }
+}
+

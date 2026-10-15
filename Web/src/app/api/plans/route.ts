@@ -6,6 +6,7 @@ import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { createPlanWithWorkouts, PlanCreateInputSchema, normalizePlanInput } from '@/lib/services/plan-creation';
 import { enrichWorkoutForResponse } from '@/lib/api/workoutSerializer';
+import { invalidateUserDashboardCache } from '@/lib/redis';
 
 async function authenticate(request: NextRequest): Promise<string | null> {
     const session = await auth();
@@ -124,6 +125,8 @@ export async function POST(request: NextRequest) {
             ...goal,
             ...(goal.workouts && { workouts: goal.workouts.map(enrichWorkoutForResponse) }),
         };
+
+        await invalidateUserDashboardCache(userId);
 
         // Return aliased as both goal and plan for backward compatibility
         return NextResponse.json({ goal: enrichedGoal, plan: enrichedGoal }, {

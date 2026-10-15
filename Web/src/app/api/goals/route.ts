@@ -3,11 +3,11 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { cachedResponse } from '@/lib/api/apiResponse';
 import { validateBody } from '@/lib/validation/validator';
 import { goalSchema } from '@/lib/validation/schemas';
 import { handleError } from '@/lib/errors/handler';
 import { createPlanWithWorkouts } from '@/lib/services/plan-creation';
+import { invalidateUserDashboardCache } from '@/lib/redis';
 
 // GET - List goals
 export async function GET(request: NextRequest) {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         const end = endOfWeek(now, { weekStartsOn: 1 });
 
         const goals = await prisma.goal.findMany({
-            where: { userId: session.user.id },
+            where: { userId: session.user.id, deletedAt: null },
             orderBy: { raceDate: 'asc' },
             include: {
                 workouts: {
@@ -50,7 +50,14 @@ export async function GET(request: NextRequest) {
             },
         });
 
-        return cachedResponse({ goals }, { maxAge: 60, staleWhileRevalidate: 30 });
+        return NextResponse.json(
+            { goals },
+            {
+                headers: {
+                    'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+                },
+            }
+        );
     } catch (error) {
         return handleError(error);
     }
@@ -149,6 +156,8 @@ export async function POST(request: NextRequest) {
             hrRest: user?.hrRest ?? null,
         });
 
+        await invalidateUserDashboardCache(session.user.id);
+
         return NextResponse.json({ goal }, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {
         return handleError(error);
@@ -184,7 +193,7 @@ export async function DELETE(request: NextRequest) {
             });
         } else {
             goal = await prisma.goal.findFirst({
-                where: { userId: session.user.id, isActive: true },
+                where: { userId: session.user.id, isActive: true, deletedAt: null },
             });
         }
 
@@ -198,7 +207,6 @@ export async function DELETE(request: NextRequest) {
             where: {
                 goalId: goal.id,
                 isCompleted: false,
-                scheduledDate: { gte: now },
             },
         });
 
@@ -206,6 +214,8 @@ export async function DELETE(request: NextRequest) {
             where: { id: goal.id },
             data: { isActive: false, completedAt: now, deletedAt: now },
         });
+
+        await invalidateUserDashboardCache(session.user.id);
 
         return NextResponse.json({
             success: true,

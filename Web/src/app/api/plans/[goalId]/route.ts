@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { enrichWorkoutForResponse } from '@/lib/api/workoutSerializer';
+import { invalidateUserDashboardCache } from '@/lib/redis';
 
 async function authenticate(request: NextRequest): Promise<string | null> {
     const session = await auth();
@@ -79,7 +80,7 @@ export async function PUT(
         }
 
         const existing = await prisma.goal.findFirst({
-            where: { id: goalId, userId },
+            where: { id: goalId, userId, deletedAt: null },
         });
 
         if (!existing) {
@@ -127,6 +128,8 @@ export async function PUT(
             workouts: goal.workouts.map(enrichWorkoutForResponse),
         };
 
+        await invalidateUserDashboardCache(userId);
+
         return NextResponse.json({ goal: enrichedGoal }, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {
         return handleApiError(error, { path: '/api/plans/[goalId]' });
@@ -165,7 +168,6 @@ export async function DELETE(
             where: {
                 goalId: goal.id,
                 isCompleted: false,
-                scheduledDate: { gte: now },
             },
         });
 
@@ -173,6 +175,8 @@ export async function DELETE(
             where: { id: goal.id },
             data: { isActive: false, completedAt: now, deletedAt: now },
         });
+
+        await invalidateUserDashboardCache(userId);
 
         return NextResponse.json({
             success: true,

@@ -7,18 +7,21 @@ import { useEffect } from 'react';
 export default function PlanAdvancedPage() {
     const router = useRouter();
 
-    const { data, isLoading } = useQuery<{ goals: Array<{ id: string; isActive: boolean }> }>({
+    const { data, isLoading } = useQuery<{ goals: Array<{ id: string; isActive: boolean; deletedAt?: string | null }> }>({
         queryKey: ['plans', { parentOnly: true }],
         queryFn: async () => {
-            const res = await fetch('/api/plans?parentOnly=true');
+            const res = await fetch('/api/plans?parentOnly=true', { cache: 'no-store' });
             if (!res.ok) throw new Error('Failed to fetch plans');
             return res.json();
         },
+        staleTime: 0,
+        gcTime: 0,
+        refetchOnMount: 'always',
     });
 
     useEffect(() => {
         if (data) {
-            const activePlan = data.goals?.find((p) => p.isActive);
+            const activePlan = data.goals?.find((p: any) => p.isActive && !p.deletedAt);
             if (activePlan) {
                 router.replace(`/plan-advanced/${activePlan.id}`);
             } else {

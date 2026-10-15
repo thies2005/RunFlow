@@ -39,7 +39,12 @@ export function PlanActionsMenu({ goalId, planName, onImportCsv, onExportCsv }: 
         onSuccess: () => {
             toast.success('Plan deleted');
             setIsDeleteConfirmOpen(false);
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+            queryClient.invalidateQueries({ queryKey: ['goals'] });
+            queryClient.invalidateQueries({ queryKey: ['plans'] });
+            queryClient.invalidateQueries({ queryKey: ['plan'] });
             queryClient.invalidateQueries({ queryKey: ['plan-advanced'] });
+            queryClient.removeQueries({ queryKey: ['plan-advanced', goalId] });
             window.location.href = '/plan-advanced';
         },
         onError: () => {

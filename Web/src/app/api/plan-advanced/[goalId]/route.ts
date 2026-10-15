@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { createSnapshot } from '@/lib/plan/snapshot';
+import { invalidateUserDashboardCache } from '@/lib/redis';
 
 type RouteContext = { params: Promise<{ goalId: string }> };
 
@@ -17,7 +18,7 @@ export async function GET(req: Request, ctx: RouteContext) {
         const { goalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id },
+            where: { id: goalId, userId: session.user.id, deletedAt: null },
             include: {
                 workouts: {
                     orderBy: { scheduledDate: 'asc' },
@@ -96,7 +97,7 @@ export async function PATCH(req: Request, ctx: RouteContext) {
         }
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id },
+            where: { id: goalId, userId: session.user.id, deletedAt: null },
         });
 
         if (!goal) {
@@ -107,6 +108,8 @@ export async function PATCH(req: Request, ctx: RouteContext) {
             where: { id: goalId },
             data: { planSource: 'advanced' },
         });
+
+        await invalidateUserDashboardCache(session.user.id);
 
         return NextResponse.json({ success: true, plan: goal });
     } catch (error) {
@@ -134,7 +137,7 @@ export async function DELETE(req: Request, ctx: RouteContext) {
         const { goalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id },
+            where: { id: goalId, userId: session.user.id, deletedAt: null },
         });
 
         if (!goal) {
@@ -150,7 +153,6 @@ export async function DELETE(req: Request, ctx: RouteContext) {
                 where: {
                     goalId,
                     isCompleted: false,
-                    scheduledDate: { gte: now },
                 },
             });
 
@@ -166,7 +168,6 @@ export async function DELETE(req: Request, ctx: RouteContext) {
                     where: {
                         subGoalId: { in: subGoalIds },
                         isCompleted: false,
-                        scheduledDate: { gte: now },
                     },
                 });
 
@@ -184,6 +185,8 @@ export async function DELETE(req: Request, ctx: RouteContext) {
                 },
             });
         });
+
+        await invalidateUserDashboardCache(session.user.id);
 
         return NextResponse.json({ success: true });
     } catch (error) {

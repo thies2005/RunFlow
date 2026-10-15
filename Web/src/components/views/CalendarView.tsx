@@ -118,7 +118,7 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
 
     const activeGoal = useMemo(() => {
         const goals = goalsData?.goals ?? [];
-        return goals.find((g) => g.isActive && !g.deletedAt) ?? goals[0] ?? null;
+        return goals.find((g) => g.isActive && !g.deletedAt) ?? null;
     }, [goalsData]);
 
     // 2. Plan workouts (planned training) — only if there's an active goal

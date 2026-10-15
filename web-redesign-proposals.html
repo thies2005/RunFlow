@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunFlow — Web Redesign Proposals</title>
+<style>
+/* ============================================================
+   DOC CHROME (neutral wrapper, not part of the proposals)
+   ============================================================ */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  background:#EDEFEA;color:#16181A;line-height:1.5;
+}
+.doc{max-width:1240px;margin:0 auto;padding:48px 24px 120px}
+.doc-header{border-bottom:2px solid #16181A;padding-bottom:24px;margin-bottom:32px}
+.doc-header h1{font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
+.doc-header p{color:#4A5158;font-size:.95rem;margin-top:6px;max-width:70ch}
+.diagnosis{background:#fff;border:1px solid #D9DDD7;border-radius:8px;padding:20px 24px;margin-bottom:64px}
+.diagnosis h2{font-size:1rem;font-weight:700;margin-bottom:10px}
+.diagnosis p{font-size:.9rem;color:#3A4147;max-width:80ch;margin-bottom:10px}
+.diagnosis ul{list-style:none;font-size:.85rem;color:#3A4147;columns:2;column-gap:40px}
+.diagnosis li{padding:3px 0 3px 18px;position:relative;break-inside:avoid}
+.diagnosis li::before{content:'';position:absolute;left:0;top:.62em;width:8px;height:2px;background:#E8501A}
+.spec{background:#fff;border:1px solid #D9DDD7;border-radius:8px;padding:20px 24px;margin:0 0 16px}
+.spec .dir{font-size:.75rem;font-weight:600;color:#6E747B;letter-spacing:.02em}
+.spec h2{font-size:1.25rem;font-weight:700;letter-spacing:-.01em;margin:2px 0 6px}
+.spec .idea{font-size:.92rem;color:#3A4147;max-width:75ch;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.chip{display:flex;align-items:center;gap:7px;font-size:.78rem;color:#3A4147}
+.chip i{width:22px;height:22px;border-radius:4px;border:1px solid rgba(0,0,0,.15);display:inline-block}
+.spec .meta{display:flex;flex-wrap:wrap;gap:24px;font-size:.8rem;color:#4A5158}
+.spec .meta b{color:#16181A;font-weight:600}
+.spec .notes{margin-top:12px;padding-top:12px;border-top:1px solid #E7EAE4;font-size:.83rem;color:#4A5158}
+.spec .notes b{color:#16181A;font-weight:600}
+.spec .notes li{margin-left:18px;margin-top:4px}
+.canvas{border:1px solid #C9CEC7;border-radius:8px;overflow:hidden;margin-bottom:10px}
+.canvas-tag{font-size:.75rem;color:#6E747B;padding:10px 16px;background:#F6F7F5;border-bottom:1px solid #E0E3DD}
+.canvas-tag.sub{border-top:1px solid #C9CEC7;background:#F0F2EE;color:#4A5158}
+.gap{height:56px}
+a:focus-visible,button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+
+/* ============================================================
+   DIRECTION A — RACE TIMING (light instrument)
+   Fonts: Archivo (UI/display) + IBM Plex Mono (data)
+   ============================================================ */
+.aw{font-family:'Archivo',system-ui,sans-serif;background:#F6F7F5;color:#16181A}
+.a-nav{display:flex;min-height:640px}
+.a-rail{width:216px;flex-shrink:0;background:#16181A;color:#F6F7F5;padding:24px 0 20px;display:flex;flex-direction:column}
+.a-rail .logo{padding:0 24px 24px;border-bottom:1px solid #2A2D31;font-weight:700;font-size:1.05rem;letter-spacing:.01em}
+.a-rail .logo span{color:#E8501A}
+.a-rail nav{padding:16px 0;flex:1}
+.a-rail nav a{display:flex;align-items:center;gap:12px;padding:10px 24px;color:#A6ABA5;font-size:.9rem;text-decoration:none;border-left:3px solid transparent}
+.a-rail nav a:hover{color:#F6F7F5}
+.a-rail nav a.on{color:#F6F7F5;border-left-color:#E8501A;background:rgba(232,80,26,.08)}
+.a-rail .who{padding:16px 24px 4px;border-top:1px solid #2A2D31;display:flex;align-items:center;gap:10px;font-size:.85rem;color:#A6ABA5}
+.a-rail .who i{width:28px;height:28px;border-radius:50%;background:#E8501A;color:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:600;font-size:.75rem}
+.a-main{flex:1;min-width:0;padding:28px 32px 40px}
+.a-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.a-top .date{font-size:.85rem;color:#6E747B}
+.a-top h1{font-size:1.7rem;font-weight:700;letter-spacing:-.015em;line-height:1.15}
+.a-actions{display:flex;gap:10px;flex-shrink:0}
+.a-btn{font:inherit;font-size:.85rem;font-weight:600;padding:9px 16px;border-radius:6px;border:1px solid #C9CEC7;background:#fff;color:#16181A;cursor:pointer}
+.a-btn:hover{border-color:#16181A}
+.a-btn.pri{background:#E8501A;border-color:#E8501A;color:#fff}
+.a-btn.pri:hover{background:#C74214}
+.a-board{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #16181A;background:#fff;margin-bottom:24px}
+.a-cell{padding:18px 20px 16px;border-left:1px solid #D9DDD7}
+.a-cell:first-child{border-left:none}
+.a-cell .lbl{font-size:.78rem;color:#6E747B;margin-bottom:6px}
+.a-cell .val{font-family:'IBM Plex Mono',monospace;font-size:2.5rem;font-weight:600;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.a-cell .val small{font-size:.95rem;font-weight:400;color:#6E747B;margin-left:2px}
+.a-cell .delta{font-family:'IBM Plex Mono',monospace;font-size:.75rem;margin-top:8px}
+.a-cell .delta.up{color:#2E7D5B}
+.a-cell .delta.dn{color:#C0392F}
+.a-cell.hi{background:#16181A;color:#fff}
+.a-cell.hi .lbl{color:#A6ABA5}
+.a-cell.hi .val small{color:#A6ABA5}
+.a-cell .delta.word{font-family:'Archivo',sans-serif;font-weight:600}
+.a-grid{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:16px;margin-bottom:24px}
+.a-panel{background:#fff;border:1px solid #D9DDD7;border-radius:6px;padding:18px 20px}
+.a-panel h3{font-size:.95rem;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:baseline}
+.a-panel h3 a{font-size:.78rem;font-weight:500;color:#6E747B;text-decoration:underline;text-underline-offset:2px}
+.a-week{list-style:none}
+.a-week li{display:grid;grid-template-columns:50px 1fr auto;gap:14px;padding:11px 2px;border-top:1px solid #EDEFEA;align-items:center}
+.a-week li:first-child{border-top:none}
+.a-week .d{font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:#6E747B}
+.a-week .t{font-size:.9rem}
+.a-week .t em{font-style:normal;display:block;font-size:.76rem;color:#6E747B;margin-top:1px}
+.a-week .m{font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:#3A4147;text-align:right;white-space:nowrap}
+.a-week li.done .t{color:#9AA09B}
+.a-week li.done .d::after{content:' ✓';color:#2E7D5B}
+.a-week li.today{background:#FDF1EC;border-radius:4px;box-shadow:0 0 0 4px #FDF1EC;margin:0 -6px;padding:11px 8px}
+.a-week li.today .d{color:#E8501A;font-weight:600}
+.a-week li.today .t::before{content:'';display:inline-block;width:7px;height:7px;background:#E8501A;border-radius:50%;margin-right:8px;vertical-align:1px}
+.a-race .big{font-family:'IBM Plex Mono',monospace;font-size:3.4rem;font-weight:600;letter-spacing:-.02em;line-height:1}
+.a-race .big small{font-size:1rem;color:#6E747B;font-weight:400}
+.a-race .name{font-size:.95rem;font-weight:600;margin:10px 0 2px}
+.a-race .sub{font-size:.8rem;color:#6E747B}
+.a-race .goal{margin-top:14px;padding-top:12px;border-top:1px solid #EDEFEA;font-size:.82rem;color:#3A4147;display:flex;justify-content:space-between}
+.a-race .goal b{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.a-bars{list-style:none}
+.a-bars li{display:grid;grid-template-columns:92px 1fr 52px;gap:12px;align-items:center;padding:7px 0;font-size:.82rem}
+.a-bars .k{color:#6E747B}
+.a-bars .v{font-family:'IBM Plex Mono',monospace;text-align:right}
+.a-bars .track{height:8px;background:#EDEFEA;position:relative}
+.a-bars .fill{position:absolute;inset:0 auto 0 0;background:#16181A}
+.a-bars li.crit .fill{background:#E8501A}
+.a-note{font-size:.8rem;color:#6E747B;margin-top:10px;padding-top:10px;border-top:1px solid #EDEFEA;line-height:1.55}
+.a-note b{color:#2E7D5B;font-weight:600}
+.a-table{width:100%;border-collapse:collapse;background:#fff}
+.a-table th{font-size:.75rem;font-weight:500;color:#6E747B;text-align:left;padding:10px 20px;border-bottom:1px solid #D9DDD7}
+.a-table td{padding:12px 20px;border-bottom:1px solid #EDEFEA;font-size:.88rem}
+.a-table tr:hover td{background:#FBFBFA}
+.a-table .num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;text-align:right}
+.a-table th.num{text-align:right}
+.a-table .tt{display:flex;align-items:center;gap:10px}
+.a-table .tag{font-size:.68rem;font-weight:600;padding:2px 7px;border-radius:3px;border:1px solid}
+.a-tag-tempo{color:#9A6B00;border-color:#E3C46B;background:#FBF3DD}
+.a-tag-ride{color:#1F4FA8;border-color:#A9C0EA;background:#EDF3FC}
+.a-tag-strength{color:#6B3FA0;border-color:#C9AFE4;background:#F4EDFA}
+.a-tag-recovery{color:#2E7D5B;border-color:#9CCDB5;background:#EDF7F2}
+.a-h2{font-size:1.05rem;font-weight:600;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline}
+.a-h2 span{font-size:.78rem;font-weight:400;color:#6E747B}
+
+/* Direction A — login card */
+.a-login{display:grid;grid-template-columns:1fr 1fr;background:#fff;border-top:1px solid #D9DDD7}
+.a-login .pitch{background:#16181A;color:#F6F7F5;padding:44px 40px}
+.a-login .pitch .logo{font-weight:700;font-size:1.2rem;margin-bottom:26px}
+.a-login .pitch .logo span{color:#E8501A}
+.a-login .pitch blockquote{font-size:1.15rem;line-height:1.45;font-weight:500;max-width:26ch;letter-spacing:-.01em}
+.a-login .pitch .nums{margin-top:34px;font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:#A6ABA5;line-height:2}
+.a-login .pitch .nums b{color:#fff;font-weight:600}
+.a-login form{padding:44px 40px;display:flex;flex-direction:column;gap:14px}
+.a-login label{font-size:.8rem;color:#3A4147;font-weight:500}
+.a-login input{font:inherit;font-size:.9rem;padding:10px 12px;border:1px solid #C9CEC7;border-radius:6px;background:#F6F7F5;color:#16181A}
+.a-login input:focus{outline:2px solid #E8501A;outline-offset:0;background:#fff}
+.a-login .strava{margin-top:4px}
+
+/* ============================================================
+   DIRECTION B — HEAD UNIT (dark, pre-dawn)
+   Fonts: Space Grotesk (UI) + IBM Plex Mono (data)
+   ============================================================ */
+.bw{font-family:'Space Grotesk',system-ui,sans-serif;background:#101312;color:#E8ECE9}
+.b-top{display:flex;align-items:center;gap:28px;padding:0 28px;height:60px;border-bottom:1px solid #2A302D}
+.b-top .logo{font-weight:700;font-size:1.05rem;letter-spacing:.01em}
+.b-top .logo span{color:#FFB000}
+.b-top nav{display:flex;gap:4px;flex:1}
+.b-top nav a{color:#9AA5A0;font-size:.88rem;text-decoration:none;padding:8px 14px;border-radius:6px}
+.b-top nav a:hover{color:#E8ECE9;background:#1B201E}
+.b-top nav a.on{color:#FFB000;background:rgba(255,176,0,.1)}
+.b-top .avatar{width:30px;height:30px;border-radius:50%;background:#FFB000;color:#101312;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+.b-wrap{padding:26px 28px 44px;max-width:1160px}
+.b-hello{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+.b-hello h1{font-size:1.45rem;font-weight:600;letter-spacing:-.01em}
+.b-hello .dt{font-size:.85rem;color:#9AA5A0}
+.b-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px}
+.b-field{background:#171B1A;border:1px solid #2A302D;border-radius:10px;padding:16px 18px 14px;position:relative}
+.b-field .lbl{font-size:.74rem;color:#9AA5A0;margin-bottom:8px}
+.b-field .val{font-family:'IBM Plex Mono',monospace;font-size:2.1rem;font-weight:500;letter-spacing:-.01em;line-height:1;font-variant-numeric:tabular-nums}
+.b-field .val small{font-size:.8rem;color:#9AA5A0;font-weight:400;margin-left:1px}
+.b-field .sub{font-size:.72rem;color:#96A19C;margin-top:8px}
+.b-field.hot{border-color:#FFB000}
+.b-field.hot .lbl{color:#FFB000}
+.b-field .lamp{position:absolute;top:14px;right:14px;width:8px;height:8px;border-radius:50%}
+.b-lamp-ok{background:#3FBF9F}
+.b-lamp-warn{background:#FFB000}
+.b-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px;margin-bottom:22px}
+.b-panel{background:#171B1A;border:1px solid #2A302D;border-radius:10px;padding:18px 20px}
+.b-panel h3{font-size:.92rem;font-weight:600;margin-bottom:12px}
+.b-panel h3 span{font-size:.74rem;color:#6E7973;font-weight:400;float:right}
+.b-week{list-style:none}
+.b-week li{display:grid;grid-template-columns:48px 1fr auto;gap:12px;padding:10px 0;border-top:1px solid #232825;align-items:center}
+.b-week li:first-child{border-top:none}
+.b-week .d{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:#8C9791}
+.b-week .t{font-size:.88rem;color:#E8ECE9}
+.b-week .t em{font-style:normal;display:block;font-size:.74rem;color:#8C9791}
+.b-week .m{font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:#9AA5A0;text-align:right;white-space:nowrap}
+.b-week li.done .t{color:#7E8883}
+.b-week li.done .d::after{content:' ✓';color:#4FD3B0}
+.b-week li.today{background:rgba(255,176,0,.07);border-radius:6px;box-shadow:0 0 0 4px rgba(255,176,0,.07);margin:0 -8px;padding:10px 6px;border-top-color:transparent}
+.b-week li.today .d{color:#FFB000;font-weight:600}
+.b-count{display:flex;flex-direction:column;justify-content:center;min-height:190px}
+.b-count .n{font-family:'IBM Plex Mono',monospace;font-size:4rem;font-weight:500;letter-spacing:-.02em;line-height:1;color:#FFB000}
+.b-count .n small{font-size:1rem;color:#9AA5A0;font-weight:400}
+.b-count .rn{font-size:.95rem;font-weight:600;margin-top:10px}
+.b-count .rs{font-size:.78rem;color:#9AA5A0;margin-top:2px}
+.b-count .gp{margin-top:14px;padding-top:12px;border-top:1px solid #232825;font-size:.8rem;color:#9AA5A0;display:flex;justify-content:space-between}
+.b-count .gp b{color:#E8ECE9;font-family:'IBM Plex Mono',monospace;font-weight:500}
+.b-mets{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.b-met{padding:12px 0;border-top:1px solid #232825}
+.b-met:nth-child(-n+2){border-top:none}
+.b-met .k{font-size:.74rem;color:#8C9791}
+.b-met .v{font-family:'IBM Plex Mono',monospace;font-size:1.5rem;margin-top:4px;font-variant-numeric:tabular-nums}
+.b-met .v.up{color:#3FBF9F}
+.b-met .v.hot{color:#FFB000}
+.b-met .s{font-size:.7rem;color:#8C9791;margin-top:2px}
+.b-note{margin-top:14px;padding-top:12px;border-top:1px solid #232825;font-size:.78rem;color:#9AA5A0;line-height:1.55}
+.b-note b{color:#FFB000;font-weight:600}
+.b-table{width:100%;border-collapse:collapse}
+.b-table th{font-size:.72rem;font-weight:500;color:#6E7973;text-align:left;padding:9px 14px;border-bottom:1px solid #2A302D}
+.b-table td{padding:11px 14px;border-bottom:1px solid #1D2220;font-size:.86rem}
+.b-table tr:hover td{background:#1B201E}
+.b-table .num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;text-align:right}
+.b-table th.num{text-align:right}
+.b-table .tag{font-size:.66rem;font-weight:600;padding:2px 7px;border-radius:4px}
+.b-tag-tempo{color:#0F1211;background:#E3C46B}
+.b-tag-ride{color:#EDF3FC;background:#2B5DD7}
+.b-tag-strength{color:#F4EDFA;background:#8A5FC0}
+.b-tag-recovery{color:#0F1211;background:#3FBF9F}
+.b-act{background:#171B1A;border:1px solid #2A302D;border-radius:10px;overflow:hidden}
+.b-act .hd{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px}
+.b-act .hd h3{font-size:.95rem;font-weight:600}
+.b-sync{font:inherit;font-size:.8rem;font-weight:500;padding:7px 13px;border-radius:6px;border:1px solid #2A302D;background:transparent;color:#9AA5A0;cursor:pointer}
+.b-sync:hover{color:#E8ECE9;border-color:#6E7973}
+
+/* Direction B — login card */
+.b-login{display:flex;align-items:center;justify-content:center;padding:56px 28px;background:#101312}
+.b-card{width:380px;background:#171B1A;border:1px solid #2A302D;border-radius:12px;padding:34px 32px}
+.b-card .logo{font-weight:700;font-size:1.15rem;margin-bottom:6px}
+.b-card .logo span{color:#FFB000}
+.b-card .sub{font-size:.85rem;color:#9AA5A0;margin-bottom:24px}
+.b-card label{display:block;font-size:.78rem;color:#9AA5A0;margin:14px 0 6px}
+.b-card input{width:100%;font:inherit;font-size:.9rem;padding:10px 12px;border:1px solid #2A302D;border-radius:8px;background:#101312;color:#E8ECE9}
+.b-card input:focus{outline:2px solid #FFB000;outline-offset:0;border-color:#FFB000}
+.or,.b-or{display:flex;align-items:center;gap:12px;color:#8C9791;font-size:.75rem;margin:20px 0}
+.b-or::before,.b-or::after{content:'';flex:1;height:1px;background:#2A302D}
+
+/* ============================================================
+   DIRECTION C — LAB REPORT (clinical light, ECG paper)
+   Fonts: Source Serif 4 (prose/headings) + IBM Plex Mono (data)
+   ============================================================ */
+.cw{font-family:'Source Serif 4',Georgia,serif;background:#FBFAF7;color:#1A1B1E}
+.c-sheet{max-width:1080px;margin:0 auto;padding:44px 48px 60px}
+.c-head{border-bottom:2px solid #1A1B1E;padding-bottom:18px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-end}
+.c-head h1{font-size:1.85rem;font-weight:600;letter-spacing:-.01em}
+.c-head h1 span{color:#C0392F}
+.c-head .period{font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:#6E6E73;text-align:right;line-height:1.7}
+.c-sub{font-size:.88rem;font-style:italic;color:#6E6E73;padding:10px 0 0;border-bottom:1px solid #D8D5CC;display:flex;justify-content:space-between}
+.c-cols{display:grid;grid-template-columns:1fr 296px;gap:40px;margin-top:26px}
+.c-cols>div{min-width:0}
+.c-ecg svg{max-width:100%}
+.c-sec{margin-bottom:30px}
+.c-sec>h2{font-size:.98rem;font-weight:600;font-style:italic;color:#1A1B1E;padding-bottom:6px;border-bottom:1px solid #1A1B1E;margin-bottom:14px;display:flex;justify-content:space-between;align-items:baseline}
+.c-sec>h2 .no{font-family:'IBM Plex Mono',monospace;font-style:normal;font-size:.7rem;color:#C0392F;font-weight:500}
+.c-ecg{border:1px solid #C9C4B8;background:
+  repeating-linear-gradient(0deg,transparent 0 7px,rgba(198,90,96,.14) 7px 8px),
+  repeating-linear-gradient(90deg,transparent 0 7px,rgba(198,90,96,.14) 7px 8px),
+  repeating-linear-gradient(0deg,transparent 0 35px,rgba(198,90,96,.25) 35px 36px),
+  repeating-linear-gradient(90deg,transparent 0 35px,rgba(198,90,96,.25) 35px 36px),
+  #FFFDF9;
+  padding:16px 14px 10px}
+.c-ecg svg{display:block;width:100%;height:auto}
+.c-vitals{display:grid;grid-template-columns:repeat(4,1fr);margin-top:12px;border:1px solid #D8D5CC}
+.c-vit{padding:12px 14px;border-left:1px solid #D8D5CC}
+.c-vit:first-child{border-left:none}
+.c-vit .k{font-size:.78rem;color:#6E6E73}
+.c-vit .v{font-family:'IBM Plex Mono',monospace;font-size:1.55rem;margin-top:3px;font-variant-numeric:tabular-nums}
+.c-vit .v small{font-size:.72rem;color:#6E6E73;font-weight:400}
+.c-vit .s{font-size:.72rem;margin-top:2px;color:#6E6E73;font-style:italic}
+.c-vit .s.ok{color:#2E7D5B}
+.c-vit .s.warn{color:#C0392F}
+.c-table{width:100%;border-collapse:collapse;font-size:.9rem}
+.c-table th{font-family:'Source Serif 4',serif;font-weight:500;font-size:.82rem;color:#6E6E73;text-align:left;padding:8px 10px;border-bottom:1px solid #1A1B1E}
+.c-table td{padding:10px;border-bottom:1px solid #E4E1D7;vertical-align:top}
+.c-table .num{font-family:'IBM Plex Mono',monospace;font-size:.82rem;text-align:right;font-variant-numeric:tabular-nums}
+.c-table th.num{text-align:right}
+.c-table .day{font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:#6E6E73;width:64px}
+.c-table tr.rx td{color:#9B978C}
+.c-table tr.today td{background:#F6ECE7}
+.c-table tr.today .day{color:#C0392F;font-weight:600}
+.c-mark{display:inline-block;width:9px;height:9px;border:1.5px solid #C0392F;border-radius:50%;vertical-align:-1px;margin-right:2px}
+.c-mark.f{background:#C0392F}
+.c-mark.g{border-color:#2E7D5B;background:#2E7D5B}
+.c-rail .blk{border:1px solid #D8D5CC;padding:16px 18px;margin-bottom:16px;background:#FFFDF9}
+.c-rail .blk.lead{border-top:2px solid #1A1B1E}
+.c-rail .blk.plain{border:none;background:transparent;padding:16px 2px 4px}
+.c-rail h3{font-size:.9rem;font-weight:600;margin-bottom:10px}
+.c-rail .row{display:flex;justify-content:space-between;font-size:.84rem;padding:6px 0;border-bottom:1px dotted #D8D5CC}
+.c-rail .row:last-child{border-bottom:none}
+.c-rail .row .k{color:#6E6E73}
+.c-rail .row .v{font-family:'IBM Plex Mono',monospace;font-size:.84rem}
+.c-rail .row .v b{font-weight:600}
+.c-days{text-align:center;padding:6px 0 2px}
+.c-days .n{font-family:'IBM Plex Mono',monospace;font-size:3.6rem;font-weight:500;letter-spacing:-.02em;line-height:1;color:#1A1B1E}
+.c-days .n small{font-size:.95rem;color:#6E6E73;font-weight:400}
+.c-days .rn{font-size:.9rem;font-weight:600;margin-top:8px}
+.c-days .rs{font-size:.78rem;font-style:italic;color:#6E6E73;margin-top:2px}
+.c-form{margin-top:8px}
+.c-note{font-size:.8rem;font-style:italic;color:#6E6E73;margin-top:10px;line-height:1.55}
+.c-note b{font-style:normal;color:#2E7D5B;font-weight:600}
+.c-nav{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;padding:14px 0;border-bottom:1px solid #D8D5CC;max-width:1080px;margin:0 auto;font-size:.9rem}
+.c-nav .logo{font-weight:600;font-size:1.02rem}
+.c-nav .logo span{color:#C0392F}
+.c-nav a{color:#6E6E73;text-decoration:none}
+.c-nav a:hover{color:#1A1B1E;text-decoration:underline;text-underline-offset:3px}
+.c-nav a.on{color:#C0392F}
+.c-nav .sp{flex:1}
+
+/* Direction C — login card */
+.c-login{background:#FBFAF7;display:flex;justify-content:center;padding:56px 28px;border-top:1px solid #D8D5CC}
+.c-lcard{width:400px;border:1px solid #1A1B1E;background:#FFFDF9;padding:34px 36px}
+.c-lcard .logo{font-size:1.3rem;font-weight:600}
+.c-lcard .logo span{color:#C0392F}
+.c-lcard .sub{font-style:italic;color:#6E6E73;font-size:.88rem;margin:4px 0 24px}
+.c-lcard label{display:block;font-size:.82rem;font-style:italic;color:#6E6E73;margin:14px 0 5px}
+.c-lcard input{width:100%;font:inherit;font-size:.92rem;padding:9px 11px;border:1px solid #C9C4B8;background:#FBFAF7;color:#1A1B1E;border-radius:0}
+.c-lcard input:focus{outline:2px solid #C0392F;outline-offset:0}
+
+/* shared buttons per direction live inline below */
+.btn-a-pri{font:600 .9rem 'Archivo',sans-serif;background:#E8501A;color:#fff;border:none;padding:11px 18px;border-radius:6px;cursor:pointer}
+.btn-a-pri:hover{background:#C74214}
+.btn-a-sec{font:500 .9rem 'Archivo',sans-serif;background:transparent;color:#16181A;border:1px solid #C9CEC7;padding:10px 17px;border-radius:6px;cursor:pointer}
+.btn-a-sec:hover{border-color:#16181A}
+.btn-a-strava{font:600 .88rem 'Archivo',sans-serif;background:#16181A;color:#fff;border:none;padding:11px 18px;border-radius:6px;cursor:pointer;width:100%}
+.btn-a-strava:hover{background:#2A2D31}
+.btn-b-pri{font:600 .9rem 'Space Grotesk',sans-serif;background:#FFB000;color:#101312;border:none;padding:11px 18px;border-radius:8px;cursor:pointer}
+.btn-b-pri:hover{background:#FFC233}
+.btn-b-strava{font:600 .88rem 'Space Grotesk',sans-serif;background:#FC4C02;color:#fff;border:none;padding:11px 18px;border-radius:8px;cursor:pointer;width:100%}
+.btn-b-strava:hover{background:#E34402}
+.btn-c-pri{font:600 .92rem 'Source Serif 4',serif;background:#1A1B1E;color:#FBFAF7;border:none;padding:10px 18px;cursor:pointer}
+.btn-c-pri:hover{background:#33343A}
+.btn-c-strava{font:600 .9rem 'Source Serif 4',serif;background:#C0392F;color:#fff;border:none;padding:10px 18px;cursor:pointer;width:100%}
+.btn-c-strava:hover{background:#A33028}
+
+/* responsive floor */
+@media (max-width: 1020px){
+  .a-grid,.b-grid{grid-template-columns:1fr 1fr}
+  .c-cols{grid-template-columns:1fr}
+  .a-board,.b-strip{grid-template-columns:repeat(2,1fr)}
+  .a-cell,.b-field{border-top:1px solid #D9DDD7}
+  .b-field{border-top-color:#2A302D}
+  .a-rail{display:none}
+  .a-login{grid-template-columns:1fr}
+  .diagnosis ul{columns:1}
+}
+@media (max-width: 640px){
+  .a-grid,.b-grid,.a-board,.b-strip,.a-login{grid-template-columns:1fr}
+  .a-table,.b-table,.c-table{display:block;overflow-x:auto}
+  .c-sheet{padding:28px 20px}
+  .c-nav{padding:12px 16px}
+  .c-vitals{grid-template-columns:1fr 1fr}
+  .c-vit:nth-child(3){border-left:none}
+  .c-vit:nth-child(n+3){border-top:1px solid #D8D5CC}
+  .b-top nav{display:none}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,500&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="doc">
+
+  <div class="doc-header">
+    <h1>RunFlow web — redesign proposals</h1>
+    <p>Three directions for replacing the current glassmorphism look. Each direction is a full dashboard mockup using real RunFlow content (this week's plan, race countdown, CTL/ATL/TSB, readiness, activity log), followed by a login variant. All three share the same rules: no gradients, no glow, no glass, borders instead of shadows, sentence-case labels, and motion only on state change.</p>
+  </div>
+
+  <div class="diagnosis">
+    <h2>Why the current UI reads as vibe-coded</h2>
+    <p>Taken from <code>globals.css</code> and the dashboard markup — these are the tells to eliminate, regardless of which direction is chosen:</p>
+    <ul>
+      <li>Orange→pink→purple gradient (#ff6b35 → #f72585 → #7209b7) on buttons, badges, avatars, borders</li>
+      <li>Gradient-clipped text on stat values (background-clip on .stat-value)</li>
+      <li>Glassmorphism: backdrop-blur cards, translucent borders, .glass-card everywhere</li>
+      <li>Glow shadows (.glow-orange/.glow-pink, 0 8px 25px rgba pink) around interactive elements</li>
+      <li>translateY(-2px) hover bounce on every button</li>
+      <li>Infinite pulse/glow/slide-up animations on non-interactive content</li>
+      <li>Inter — the default font — with font-black + tracking-tighter vs tracking-widest mixed</li>
+      <li>Uppercase tracked-out labels on every metric (uppercase tracking-widest font-bold)</li>
+      <li>~15 accent colors in play at once (orange, pink, purple, cyan + 7 workout + 5 zone colors)</li>
+      <li>One 16px border-radius on everything regardless of hierarchy</li>
+    </ul>
+  </div>
+
+  <!-- ============================================================
+       DIRECTION A
+       ============================================================ -->
+  <div class="spec">
+    <div class="dir">Direction A</div>
+    <h2>Race Timing</h2>
+    <p class="idea">RunFlow's numbers come from timing: paces in seconds per kilometre, CTL in daily load, a race in days. This direction treats the app as a timing board — flat signal orange, tabular monospace digits at scoreboard scale, a dark instrument rail for navigation, and white panels divided by 1px rules instead of shadows. The one bold element is the black stat board; everything around it stays quiet.</p>
+    <div class="chips">
+      <span class="chip"><i style="background:#F6F7F5"></i>Paper #F6F7F5</span>
+      <span class="chip"><i style="background:#16181A"></i>Ink #16181A</span>
+      <span class="chip"><i style="background:#E8501A"></i>Signal #E8501A</span>
+      <span class="chip"><i style="background:#2E7D5B"></i>Green #2E7D5B</span>
+      <span class="chip"><i style="background:#C0392F"></i>Red #C0392F</span>
+    </div>
+    <div class="meta">
+      <span><b>Type</b> — Archivo (UI) / IBM Plex Mono (data)</span>
+      <span><b>Radius</b> — 6px panels, 3px tags</span>
+      <span><b>Elevation</b> — none; 1px borders</span>
+    </div>
+    <div class="notes"><b>What changes from today:</b>
+      <li>Gradients and glow replaced by one flat signal orange, reserved for three jobs only: today's session, primary actions, and the critical series. Green and red carry delta direction; nothing else gets color.</li>
+      <li>The training-status card is promoted to a full-width scoreboard — the first thing you see is your numbers, set in tabular mono like a clock. Words stay in the grotesque, numerals in mono.</li>
+      <li>Navigation moves to a dark left rail, which gives the content area a calm paper field instead of a sticky glass bar.</li>
+    </div>
+  </div>
+  <div class="canvas">
+    <div class="canvas-tag">Dashboard — desktop 1280</div>
+    <div class="aw">
+      <div class="a-nav">
+        <aside class="a-rail">
+          <div class="logo">Run<span>Flow</span></div>
+          <nav>
+            <a href="#" class="on">Today</a>
+            <a href="#">Plan</a>
+            <a href="#">Analytics</a>
+            <a href="#">Health</a>
+            <a href="#">Calendar</a>
+            <a href="#">Activities</a>
+          </nav>
+          <div class="who"><i>T</i> Thies</div>
+        </aside>
+        <main class="a-main">
+          <div class="a-top">
+            <div>
+              <div class="date">Thursday, 9 October 2026 — week 41</div>
+              <h1>Morning, Thies</h1>
+            </div>
+            <div class="a-actions">
+              <button class="a-btn" type="button">Sync Strava</button>
+              <button class="a-btn pri" type="button">Log workout</button>
+            </div>
+          </div>
+
+          <div class="a-board" role="group" aria-label="Training status">
+            <div class="a-cell">
+              <div class="lbl">Fitness (CTL)</div>
+              <div class="val">61.8</div>
+              <div class="delta up">+3.2 / 4 wk</div>
+            </div>
+            <div class="a-cell">
+              <div class="lbl">Fatigue (ATL)</div>
+              <div class="val">54.2</div>
+              <div class="delta up">+8.9 / wk</div>
+            </div>
+            <div class="a-cell hi">
+              <div class="lbl">Form (TSB)</div>
+              <div class="val">+7.6</div>
+              <div class="delta word" style="color:#E8501A">Productive</div>
+            </div>
+            <div class="a-cell">
+              <div class="lbl">Effective VO₂max</div>
+              <div class="val">52.4<small>ml/kg</small></div>
+              <div class="delta up">+0.8 / 4 wk</div>
+            </div>
+          </div>
+
+          <div class="a-grid">
+            <section class="a-panel">
+              <h3>This week <a href="#">Full plan</a></h3>
+              <ul class="a-week">
+                <li class="done"><span class="d">Mon 5</span><span class="t">Recovery run<em>zone 2, soft surface</em></span><span class="m">8.2 km · 5:49</span></li>
+                <li class="done"><span class="d">Tue 6</span><span class="t">Strength<em>lower body + core</em></span><span class="m">45 min</span></li>
+                <li class="done"><span class="d">Wed 7</span><span class="t">Tempo run<em>3 × 2 km @ threshold</em></span><span class="m">10.4 km · 4:56</span></li>
+                <li class="done"><span class="d">Thu 8</span><span class="t">Easy ride<em>zone 1–2 · 31.6 km/h</em></span><span class="m">38.2 km</span></li>
+                <li class="today"><span class="d">Fri 9</span><span class="t">Intervals<em>8 × 600 m · 90 s jog</em></span><span class="m">12 km · 3:48/km</span></li>
+                <li><span class="d">Sat 10</span><span class="t">Long run<em>zone 2, last 5 km marathon pace</em></span><span class="m">26 km · 5:05</span></li>
+                <li><span class="d">Sun 11</span><span class="t">Swim<em>technique focus</em></span><span class="m">2.0 km</span></li>
+              </ul>
+            </section>
+
+            <section class="a-panel a-race">
+              <h3>Race day</h3>
+              <div class="big">58<small> days</small></div>
+              <div class="name">Valencia Marathon</div>
+              <div class="sub">Sunday 6 December 2026</div>
+              <div class="goal"><span>Goal</span><b>3:29:00 · 4:57/km</b></div>
+              <div class="goal"><span>Predicted (today)</span><b>3:31:20</b></div>
+              <div class="goal"><span>Plan week</span><b>9 of 16</b></div>
+              <div class="goal"><span>Peak long run</span><b>32 km · wk 13</b></div>
+              <div class="goal"><span>Tune-up race</span><b>10 km · 22 Nov</b></div>
+            </section>
+
+            <section class="a-panel">
+              <h3>Readiness</h3>
+              <ul class="a-bars">
+                <li><span class="k">Score</span><span class="track"><span class="fill" style="width:78%"></span></span><span class="v">78</span></li>
+                <li><span class="k">Resting HR</span><span class="track"><span class="fill" style="width:46%"></span></span><span class="v">48</span></li>
+                <li><span class="k">HRV</span><span class="track"><span class="fill" style="width:71%"></span></span><span class="v">68</span></li>
+                <li><span class="k">Sleep</span><span class="track"><span class="fill" style="width:82%"></span></span><span class="v">7:42</span></li>
+              </ul>
+              <div class="a-note"><b>Good to train.</b> HRV is steady against your 60-day baseline; legs may feel Thursday's ride in the second half of the interval set.</div>
+            </section>
+          </div>
+
+          <h2 class="a-h2">Recent activities <span>412 activities synced · last sync 06:02</span></h2>
+          <table class="a-table">
+            <thead>
+              <tr><th>Activity</th><th class="num">Distance</th><th class="num">Time</th><th class="num">Pace</th><th class="num">Avg HR</th><th class="num">TRIMP</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="tt">Thu 06:41 — Recovery run <span class="tag a-tag-recovery">recovery</span></div></td>
+                <td class="num">8.2 km</td><td class="num">47:40</td><td class="num">5:49/km</td><td class="num">132</td><td class="num">47</td>
+              </tr>
+              <tr>
+                <td><div class="tt">Wed 18:05 — Tempo run <span class="tag a-tag-tempo">tempo</span></div></td>
+                <td class="num">10.4 km</td><td class="num">51:22</td><td class="num">4:56/km</td><td class="num">156</td><td class="num">88</td>
+              </tr>
+              <tr>
+                <td><div class="tt">Tue 17:30 — Strength <span class="tag a-tag-strength">strength</span></div></td>
+                <td class="num">—</td><td class="num">45:00</td><td class="num">—</td><td class="num">121</td><td class="num">61</td>
+              </tr>
+              <tr>
+                <td><div class="tt">Mon 06:30 — Easy ride <span class="tag a-tag-ride">ride</span></div></td>
+                <td class="num">38.2 km</td><td class="num">1:12:34</td><td class="num">31.6 km/h</td><td class="num">128</td><td class="num">54</td>
+              </tr>
+            </tbody>
+          </table>
+        </main>
+      </div>
+
+      <div class="canvas-tag sub">Login screen — separate frame, shown to demonstrate how the identity extends to auth</div>
+      <div class="aw">
+      <div class="a-login">
+        <div class="pitch">
+          <div class="logo">Run<span>Flow</span></div>
+          <blockquote>Training that answers back — fitness, fatigue and form, computed from every run you log.</blockquote>
+          <div class="nums">
+            CTL / ATL / TSB — Banister model<br>
+            Effective VO₂max — 7-zone HR<br>
+            Plans — Daniels VDOT-based
+          </div>
+        </div>
+        <form onsubmit="return false">
+          <label for="a-email">Email</label>
+          <input id="a-email" type="email" placeholder="you@example.com">
+          <label for="a-pass">Password</label>
+          <input id="a-pass" type="password" placeholder="••••••••">
+          <button class="btn-a-pri strava" type="button">Continue with Strava</button>
+          <button class="btn-a-sec" type="button" style="width:100%">Sign in with email</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="gap"></div>
+
+  <!-- ============================================================
+       DIRECTION B
+       ============================================================ -->
+  <div class="spec">
+    <div class="dir">Direction B</div>
+    <h2>Head Unit</h2>
+    <p class="idea">Most RunFlow sessions start before sunrise, next to a watch. This direction borrows the grammar of a GPS head unit: matte charcoal panels, data fields as bordered cells with big monospace readouts, status lamps instead of badges, and a single sodium-amber accent for "now". Readability in the dark is the design argument; the watch strip across the top is the one bold element.</p>
+    <div class="chips">
+      <span class="chip"><i style="background:#101312"></i>Predawn #101312</span>
+      <span class="chip"><i style="background:#171B1A"></i>Panel #171B1A</span>
+      <span class="chip"><i style="background:#FFB000"></i>Amber #FFB000</span>
+      <span class="chip"><i style="background:#3FBF9F"></i>Teal #3FBF9F</span>
+      <span class="chip"><i style="background:#E8ECE9"></i>FG #E8ECE9</span>
+    </div>
+    <div class="meta">
+      <span><b>Type</b> — Space Grotesk (UI) / IBM Plex Mono (data)</span>
+      <span><b>Radius</b> — 10px fields</span>
+      <span><b>Elevation</b> — none; 1px #2A302D borders</span>
+    </div>
+    <div class="notes"><b>What changes from today:</b>
+      <li>Dark mode without glass: opaque matte panels, no backdrop-blur, no glow — contrast comes from the digits, not from light effects.</li>
+      <li>Color has strict semantics: amber marks now (today's cell, active marker, primary action), teal marks positive physiology (VO₂max gain, completed sessions); Strava orange appears only on Strava's own button.</li>
+      <li>Readiness is promoted to a watch-style field strip (score, RHR, HRV, sleep, weekly load) — one glance answers "how am I today".</li>
+      <li>Completed sessions are dimmed rather than decorated — completion is the default state, not an achievement.</li>
+    </div>
+  </div>
+  <div class="canvas">
+    <div class="canvas-tag">Dashboard — desktop 1280</div>
+    <div class="bw">
+      <header class="b-top">
+        <div class="logo">Run<span>Flow</span></div>
+        <nav>
+          <a href="#" class="on">Today</a>
+          <a href="#">Plan</a>
+          <a href="#">Analytics</a>
+          <a href="#">Health</a>
+          <a href="#">Calendar</a>
+        </nav>
+        <div class="avatar">T</div>
+      </header>
+
+      <div class="b-wrap">
+        <div class="b-hello">
+          <h1>Thursday, 9 October</h1>
+          <div class="dt">Week 41 · plan week 9 of 16</div>
+        </div>
+
+        <div class="b-strip" role="group" aria-label="Readiness">
+          <div class="b-field hot">
+            <span class="lamp b-lamp-ok"></span>
+            <div class="lbl">Readiness</div>
+            <div class="val">78</div>
+            <div class="sub">Good to train</div>
+          </div>
+          <div class="b-field">
+            <div class="lbl">Resting HR</div>
+            <div class="val">48<small>bpm</small></div>
+            <div class="sub">−1 vs baseline</div>
+          </div>
+          <div class="b-field">
+            <div class="lbl">HRV</div>
+            <div class="val">68<small>ms</small></div>
+            <div class="sub">Steady vs 60-day</div>
+          </div>
+          <div class="b-field">
+            <div class="lbl">Sleep</div>
+            <div class="val">7:42</div>
+            <div class="sub">91% efficiency</div>
+          </div>
+          <div class="b-field">
+            <div class="lbl">Weekly load</div>
+            <div class="val">412</div>
+            <div class="sub">of 460 planned</div>
+          </div>
+        </div>
+
+        <div class="b-grid">
+          <section class="b-panel">
+            <h3>This week <span>3 of 7 done</span></h3>
+            <ul class="b-week">
+              <li class="done"><span class="d">Mon 5</span><span class="t">Recovery run<em>zone 2, soft surface</em></span><span class="m">8.2 km · 5:49</span></li>
+              <li class="done"><span class="d">Tue 6</span><span class="t">Strength<em>lower body + core</em></span><span class="m">45 min</span></li>
+              <li class="done"><span class="d">Wed 7</span><span class="t">Tempo run<em>3 × 2 km @ threshold</em></span><span class="m">10.4 km · 4:56</span></li>
+              <li class="done"><span class="d">Thu 8</span><span class="t">Easy ride<em>zone 1–2</em></span><span class="m">38.2 km · 31.6 km/h</span></li>
+              <li class="today"><span class="d">Fri 9</span><span class="t">Intervals<em>8 × 600 m @ 3:48/km, 90 s jog</em></span><span class="m">12 km total</span></li>
+              <li><span class="d">Sat 10</span><span class="t">Long run<em>last 5 km marathon pace</em></span><span class="m">26 km · 5:05</span></li>
+              <li><span class="d">Sun 11</span><span class="t">Swim<em>technique focus</em></span><span class="m">2.0 km</span></li>
+            </ul>
+          </section>
+
+          <section class="b-panel b-count">
+            <div class="n">58<small> days</small></div>
+            <div class="rn">Valencia Marathon</div>
+            <div class="rs">Sunday 6 December 2026</div>
+            <div class="gp"><span>Goal</span><b>3:29:00 · 4:57/km</b></div>
+            <div class="gp"><span>Predicted</span><b>3:31:20</b></div>
+          </section>
+
+          <section class="b-panel">
+            <h3>Training status</h3>
+            <div class="b-mets">
+              <div class="b-met"><div class="k">Fitness (CTL)</div><div class="v">61.8</div><div class="s">+3.2 / 4 wk</div></div>
+              <div class="b-met"><div class="k">Fatigue (ATL)</div><div class="v">54.2</div><div class="s">+8.9 / wk</div></div>
+              <div class="b-met"><div class="k">Form (TSB)</div><div class="v hot">+7.6</div><div class="s">Productive</div></div>
+              <div class="b-met"><div class="k">VO₂max</div><div class="v up">52.4</div><div class="s">+0.8 / 4 wk</div></div>
+            </div>
+            <div class="b-note"><b>Ramp ratio 1.18 — productive band.</b> Fastest four-week fitness gain since June; hold volume here through week 13, then taper.</div>
+          </section>
+        </div>
+
+        <div class="b-act">
+          <div class="hd">
+            <h3>Recent activities</h3>
+            <button class="b-sync" type="button">Sync · 06:02</button>
+          </div>
+          <table class="b-table">
+            <thead>
+              <tr><th>Activity</th><th class="num">Distance</th><th class="num">Time</th><th class="num">Pace</th><th class="num">Avg HR</th><th class="num">TRIMP</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Thu 06:41 — Recovery run</td><td class="num">8.2 km</td><td class="num">47:40</td><td class="num">5:49/km</td><td class="num">132</td><td class="num">47</td></tr>
+              <tr><td>Wed 18:05 — Tempo run <span class="tag b-tag-tempo">tempo</span></td><td class="num">10.4 km</td><td class="num">51:22</td><td class="num">4:56/km</td><td class="num">156</td><td class="num">88</td></tr>
+              <tr><td>Tue 17:30 — Strength <span class="tag b-tag-strength">strength</span></td><td class="num">—</td><td class="num">45:00</td><td class="num">—</td><td class="num">121</td><td class="num">61</td></tr>
+              <tr><td>Mon 06:30 — Easy ride <span class="tag b-tag-ride">ride</span></td><td class="num">38.2 km</td><td class="num">1:12:34</td><td class="num">31.6 km/h</td><td class="num">128</td><td class="num">54</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="canvas-tag sub">Login screen — separate frame, shown to demonstrate how the identity extends to auth</div>
+      <div class="bw">
+      <div class="b-login">
+        <div class="b-card">
+          <div class="logo">Run<span>Flow</span></div>
+          <div class="sub">Your running performance dashboard</div>
+          <button class="btn-b-strava" type="button">Continue with Strava</button>
+          <div class="b-or">or</div>
+          <label for="b-email">Email</label>
+          <input id="b-email" type="email" placeholder="you@example.com">
+          <label for="b-pass">Password</label>
+          <input id="b-pass" type="password" placeholder="••••••••">
+          <button class="btn-b-pri" type="button" style="width:100%;margin-top:18px">Sign in</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gap"></div>
+
+  <!-- ============================================================
+       DIRECTION C
+       ============================================================ -->
+  <div class="spec">
+    <div class="dir">Direction C</div>
+    <h2>Lab Report</h2>
+    <p class="idea">RunFlow's health data — RHR, HRV, sleep, readiness — is physiology, and physiology has a native visual language: the millimetre grid of ECG paper and the ruled tables of a lab report. This direction sets the app as a periodic report: a serif "chart note" voice, italic field labels, ruled tables with day-gutters, and one clinical red used for the trace and for "today". The ECG-grid chart panel is the one bold element.</p>
+    <div class="chips">
+      <span class="chip"><i style="background:#FBFAF7"></i>Paper #FBFAF7</span>
+      <span class="chip"><i style="background:#1A1B1E"></i>Ink #1A1B1E</span>
+      <span class="chip"><i style="background:#C0392F"></i>Clinical red #C0392F</span>
+      <span class="chip"><i style="background:#2E7D5B"></i>Green #2E7D5B</span>
+      <span class="chip"><i style="background:#E6C6C4"></i>ECG grid pink</span>
+    </div>
+    <div class="meta">
+      <span><b>Type</b> — Source Serif 4 (prose/labels) / IBM Plex Mono (data)</span>
+      <span><b>Radius</b> — 0</span>
+      <span><b>Elevation</b> — none; ruled lines only</span>
+    </div>
+    <div class="notes"><b>What changes from today:</b>
+      <li>Zeros in on the analytical promise: the page reads as a document you consult, not a feed you scroll — full-width ruled sections instead of a card mosaic.</li>
+      <li>The ECG millimetre grid is used only where it means something (physiology charts); it is texture with an axis, not decoration.</li>
+      <li>Race day, form values and race predictions sit in a fixed right margin like a report's reference block.</li>
+    </div>
+  </div>
+  <div class="canvas">
+    <div class="canvas-tag">Dashboard — desktop 1280</div>
+    <div class="cw">
+      <nav class="c-nav">
+        <div class="logo">Run<span>Flow</span></div>
+        <a href="#" class="on">Today</a>
+        <a href="#">Plan</a>
+        <a href="#">Analytics</a>
+        <a href="#">Health</a>
+        <a href="#">Calendar</a>
+        <span class="sp"></span>
+        <a href="#">Thies</a>
+      </nav>
+
+      <div class="c-sheet">
+        <div class="c-head">
+          <h1>Training <span>report</span></h1>
+          <div class="period">Week 41 · Thu 9 Oct 2026<br>issued 06:02</div>
+        </div>
+        <div class="c-sub">
+          <span>Subject: Thies — preparing Valencia Marathon, plan week 9 of 16</span>
+          <span>412 activities on record</span>
+        </div>
+
+        <div class="c-cols">
+          <div>
+            <section class="c-sec">
+              <h2>Readiness <span class="no">1.</span></h2>
+              <div class="c-ecg">
+                <svg viewBox="0 0 640 180" role="img" aria-label="Resting heart rate, last 14 days">
+                  <line x1="2" y1="50" x2="14" y2="50" stroke="#6E6E73" stroke-width="1"/>
+                  <line x1="2" y1="100" x2="14" y2="100" stroke="#6E6E73" stroke-width="1"/>
+                  <line x1="2" y1="150" x2="14" y2="150" stroke="#6E6E73" stroke-width="1"/>
+                  <text x="18" y="54" font-family="IBM Plex Mono, monospace" font-size="10" fill="#6E6E73">52</text>
+                  <text x="18" y="104" font-family="IBM Plex Mono, monospace" font-size="10" fill="#6E6E73">48</text>
+                  <text x="18" y="154" font-family="IBM Plex Mono, monospace" font-size="10" fill="#6E6E73">44</text>
+                  <polyline fill="none" stroke="#C0392F" stroke-width="2"
+                    points="8,63 55,63 103,75 150,75 198,88 245,81 292,88 340,94 387,100 434,113 482,106 529,125 577,125 624,100"/>
+                  <g fill="#FBFAF7" stroke="#C0392F" stroke-width="1.5">
+                    <circle cx="8" cy="63" r="3.5"/><circle cx="55" cy="63" r="3.5"/><circle cx="103" cy="75" r="3.5"/>
+                    <circle cx="150" cy="75" r="3.5"/><circle cx="198" cy="88" r="3.5"/><circle cx="245" cy="81" r="3.5"/>
+                    <circle cx="292" cy="88" r="3.5"/><circle cx="340" cy="94" r="3.5"/><circle cx="387" cy="100" r="3.5"/>
+                    <circle cx="434" cy="113" r="3.5"/><circle cx="482" cy="106" r="3.5"/><circle cx="529" cy="125" r="3.5"/>
+                    <circle cx="577" cy="125" r="3.5"/>
+                  </g>
+                  <g fill="#C0392F">
+                    <circle cx="624" cy="100" r="4"/>
+                  </g>
+                  <text x="8" y="16" font-family="IBM Plex Mono, monospace" font-size="11" fill="#6E6E73">Resting HR — last 14 days (bpm)</text>
+                  <text x="576" y="86" font-family="IBM Plex Mono, monospace" font-size="11" fill="#C0392F">today</text>
+                </svg>
+              </div>
+              <div class="c-vitals">
+                <div class="c-vit"><div class="k">Readiness</div><div class="v">78</div><div class="s ok">Good to train</div></div>
+                <div class="c-vit"><div class="k">Resting HR</div><div class="v">48<small> bpm</small></div><div class="s">−1 vs baseline</div></div>
+                <div class="c-vit"><div class="k">HRV</div><div class="v">68<small> ms</small></div><div class="s">steady</div></div>
+                <div class="c-vit"><div class="k">Sleep</div><div class="v">7:42</div><div class="s">91% efficiency</div></div>
+              </div>
+            </section>
+
+            <section class="c-sec">
+              <h2>Prescription — week 41 <span class="no">2.</span></h2>
+              <table class="c-table">
+                <thead>
+                  <tr><th>Day</th><th>Session</th><th class="num">Dose</th><th class="num">Pace</th></tr>
+                </thead>
+                <tbody>
+                  <tr class="rx"><td class="day">Mon 5</td><td><span class="c-mark f"></span> Recovery run</td><td class="num">8.2 km</td><td class="num">5:49/km</td></tr>
+                  <tr class="rx"><td class="day">Tue 6</td><td><span class="c-mark f"></span> Strength — lower body, core</td><td class="num">45 min</td><td class="num">—</td></tr>
+                  <tr class="rx"><td class="day">Wed 7</td><td><span class="c-mark f"></span> Tempo run — 3 × 2 km at threshold</td><td class="num">10.4 km</td><td class="num">4:56/km</td></tr>
+                  <tr class="rx"><td class="day">Thu 8</td><td><span class="c-mark f"></span> Easy ride — zone 1–2</td><td class="num">38.2 km</td><td class="num">31.6 km/h</td></tr>
+                  <tr class="today"><td class="day">Fri 9</td><td><span class="c-mark"></span> Intervals — 8 × 600 m, 90 s jog</td><td class="num">12 km</td><td class="num">3:48/km</td></tr>
+                  <tr><td class="day">Sat 10</td><td>Long run — last 5 km at marathon pace</td><td class="num">26 km</td><td class="num">5:05/km</td></tr>
+                  <tr><td class="day">Sun 11</td><td>Swim — technique</td><td class="num">2.0 km</td><td class="num">—</td></tr>
+                </tbody>
+              </table>
+              <p class="c-note">Filled markers denote completed sessions (4 of 7). <b>Today:</b> readiness supports the interval session; expect residual fatigue from Thursday's ride in repetitions 5–8.</p>
+            </section>
+
+            <section class="c-sec">
+              <h2>Activity log <span class="no">3.</span></h2>
+              <table class="c-table">
+                <thead>
+                  <tr><th>Entry</th><th class="num">Distance</th><th class="num">Duration</th><th class="num">Avg HR</th><th class="num">TRIMP</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Thu 06:41 — Recovery run</td><td class="num">8.2 km</td><td class="num">47:40</td><td class="num">132</td><td class="num">47</td></tr>
+                  <tr><td>Wed 18:05 — Tempo run</td><td class="num">10.4 km</td><td class="num">51:22</td><td class="num">156</td><td class="num">88</td></tr>
+                  <tr><td>Tue 17:30 — Strength</td><td class="num">—</td><td class="num">45:00</td><td class="num">121</td><td class="num">61</td></tr>
+                  <tr><td>Mon 06:30 — Easy ride</td><td class="num">38.2 km</td><td class="num">1:12:34</td><td class="num">128</td><td class="num">54</td></tr>
+                </tbody>
+              </table>
+            </section>
+          </div>
+
+          <aside class="c-rail">
+            <div class="blk lead c-days">
+              <div class="n">58<small> days</small></div>
+              <div class="rn">Valencia Marathon</div>
+              <div class="rs">Sunday, 6 December 2026</div>
+            </div>
+            <div class="blk c-form">
+              <h3>Form</h3>
+              <div class="row"><span class="k">Fitness (CTL)</span><span class="v">61.8</span></div>
+              <div class="row"><span class="k">Fatigue (ATL)</span><span class="v">54.2</span></div>
+              <div class="row"><span class="k">Form (TSB)</span><span class="v"><b>+7.6</b></span></div>
+              <div class="row"><span class="k">Effective VO₂max</span><span class="v">52.4</span></div>
+              <div class="row"><span class="k">Ramp ratio</span><span class="v">1.18</span></div>
+            </div>
+            <div class="blk plain">
+              <h3>Race predictions</h3>
+              <div class="row"><span class="k">10 km</span><span class="v">39:52</span></div>
+              <div class="row"><span class="k">Half marathon</span><span class="v">1:27:44</span></div>
+              <div class="row"><span class="k">Marathon</span><span class="v"><b>3:31:20</b></span></div>
+              <div class="row"><span class="k">Goal</span><span class="v">3:29:00</span></div>
+            </div>
+            <div class="blk">
+              <h3>Note</h3>
+              <p class="c-note" style="margin-top:0">Fitness has risen four weeks straight while form stayed positive — a productive block. Keep the taper honest from week 13.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="canvas-tag sub">Login screen — separate frame, shown to demonstrate how the identity extends to auth</div>
+      <div class="cw">
+      <div class="c-login">
+        <div class="c-lcard">
+          <div class="logo">Run<span>Flow</span></div>
+          <div class="sub">Your running performance dashboard</div>
+          <button class="btn-c-strava" type="button">Continue with Strava</button>
+          <div class="b-or" style="color:#8B877C">or</div>
+          <label for="c-email">Email</label>
+          <input id="c-email" type="email" placeholder="you@example.com">
+          <label for="c-pass">Password</label>
+          <input id="c-pass" type="password" placeholder="••••••••">
+          <button class="btn-c-pri" type="button" style="width:100%;margin-top:18px">Sign in</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

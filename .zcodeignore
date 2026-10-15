@@ -1,0 +1,74 @@
+# IDE
+.vscode/
+.claude/
+.idea/
+*.swp
+*.swo
+
+# Node / Web
+node_modules/
+dist/
+.next/
+out/
+build/
+.tools/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Android
+.gradle/
+local.properties
+capture/
+memory_heap_dumps/
+*.jks
+*.keystore
+*.apk
+*.aar
+
+# BLS food database source (large XLSX)
+data/bls/
+
+# OS
+.DS_Store
+Thumbs.db
+Web/nul
+Web/src/nul
+.playwright-mcp/
+pagespeed-results-new.png
+gh_2.67.0_linux_amd64.tar.gz
+.opencode/
+.zcode/
+
+# ===== ↑ 以上同步自 .gitignore（「从 .gitignore 同步」只重写以上部分）=====
+.git/
+.hg/
+.svn/
+bower_components/
+jspm_packages/
+__pycache__/
+site-packages/
+venv/
+coverage/
+htmlcov/
+lcov-report/
+cmakefiles/
+cmake-build-*/
+bazel-*/
+pods/
+deriveddata/
+storybook-static/
+playwright-report/
+test-results/
+allure-results/
+allure-report/
+cdk.out/
+*.egg-info/
+*.dist-info/
+eggs/
+pip-wheel-metadata/
+wheels/
+# ----- ↑ 以上为 ZCode 默认排除规则（自定义规则请写在本行下方，不会被同步/恢复改动）-----
+# 自定义规则写在下方（本行提示可删除）

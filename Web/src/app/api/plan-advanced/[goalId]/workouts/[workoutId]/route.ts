@@ -61,6 +61,15 @@ export async function PATCH(req: Request, ctx: RouteContext) {
                     updateData[field] = body[field] ? new Date(body[field]) : undefined;
                 } else if (field === 'completedAt') {
                     updateData[field] = body[field] ? new Date(body[field]) : null;
+                } else if (field === 'targetPowerZone') {
+                    if (body.targetPowerZone === null || body.targetPowerZone === '') {
+                        updateData.targetPowerZone = null;
+                    } else if (typeof body.targetPowerZone === 'number') {
+                        updateData.targetPowerZone = isNaN(body.targetPowerZone) ? null : Math.round(body.targetPowerZone);
+                    } else {
+                        const parsed = parseInt(String(body.targetPowerZone).replace(/^Z/i, ''), 10);
+                        updateData.targetPowerZone = isNaN(parsed) ? null : parsed;
+                    }
                 } else {
                     updateData[field] = body[field];
                 }

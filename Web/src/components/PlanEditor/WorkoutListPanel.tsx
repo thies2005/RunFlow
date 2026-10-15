@@ -304,18 +304,22 @@ export function WorkoutListPanel({
                 body: JSON.stringify({
                     scheduledDate: date.toISOString(),
                     workoutType: 'EASY',
-                    description: '',
-                    targetDistance: null,
-                    targetDuration: null,
+                    sport: 'RUN',
+                    description: 'Easy Run: 5.0km',
+                    targetDistance: 5000,
+                    targetDuration: 1500,
                     phase: weekPhase,
                 }),
             });
             if (!res.ok) throw new Error('Failed to create workout');
             return res.json();
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId] });
             toast.success('Workout added');
+            if (data?.workout) {
+                onWorkoutClick(data.workout);
+            }
         },
         onError: () => {
             toast.error('Failed to add workout');

@@ -1824,14 +1824,23 @@ export interface StructuredStepsContext {
 }
 
 /** Minimal workout surface the structured-steps builder reads AND mutates. */
-export type StructuredStepsWorkout = Pick<
+export type StructuredStepsWorkout = Partial<Pick<
     GeneratedWorkout,
     | 'type' | 'description' | 'totalDistance' | 'targetPace' | 'targetDuration' | 'targetHrZone'
     | 'targetPaceMinSecondsPerKm' | 'targetPaceMaxSecondsPerKm' | 'targetPaceZoneLabel'
     | 'targetHrZoneLabel' | 'targetHrMinBpm' | 'targetHrMaxBpm'
     | 'targetPowerWatts' | 'targetPowerMinWatts' | 'targetPowerMaxWatts' | 'targetPowerZone'
     | 'targetFtpPercent' | 'targetCadenceRpm' | 'targetRpe'
->;
+>> & {
+    type?: WorkoutType | string;
+    workoutType?: WorkoutType | string;
+    description?: string;
+    totalDistance?: number;
+    distanceMeters?: number;
+    sport?: string;
+    vdot?: number;
+    ftpWatts?: number;
+};
 
 const clampInt = (value: number, min: number, max: number): number =>
     Math.min(max, Math.max(min, Math.round(value)));
@@ -1913,7 +1922,7 @@ function populateStructuredTargets(
     bikeCadenceRpm: number | null,
 ): void {
     const paceTarget = getPaceTarget(
-        { type: workout.type as WorkoutType, description: workout.description, targetPace: workout.targetPace },
+        { type: workout.type as WorkoutType, description: workout.description || '', targetPace: workout.targetPace },
         paces,
     );
     if (paceTarget) {
@@ -1971,19 +1980,38 @@ export function buildStructuredStepsForWorkout(
     workout: StructuredStepsWorkout,
     context: StructuredStepsContext = {},
 ): StructuredWorkoutV2 | null {
-    if (workout.totalDistance <= 0 && (!workout.targetDuration || workout.targetDuration <= 0)) return null;
+    const rawType = workout.type || workout.workoutType;
+    if (!rawType) return null;
+    const type = rawType as WorkoutType;
+    const totalDist = workout.totalDistance ?? workout.distanceMeters ?? 0;
+    const targetDur = workout.targetDuration ?? null;
+    if (totalDist <= 0 && (!targetDur || targetDur <= 0)) return null;
 
-    const type = workout.type as WorkoutType;
-    const vdot = context.vdot && context.vdot > 0 ? context.vdot : 45;
+    workout.type = type;
+    workout.totalDistance = totalDist;
+    if (!workout.description) {
+        workout.description = typeof rawType === 'string' ? rawType : 'Workout';
+    }
+
+    const vdot = context.vdot && context.vdot > 0
+        ? context.vdot
+        : (workout.vdot && workout.vdot > 0 ? workout.vdot : 45);
     const bikeFtp = context.ftpWatts && context.ftpWatts > 0
         ? Math.round(context.ftpWatts)
-        : estimateBikeFtpFromVdot(vdot);
+        : (workout.ftpWatts && workout.ftpWatts > 0 ? Math.round(workout.ftpWatts) : estimateBikeFtpFromVdot(vdot));
     const swimCss = context.swimCssSecPer100m && context.swimCssSecPer100m > 0
         ? context.swimCssSecPer100m
         : estimateSwimPaceFromVdot(vdot);
     const bikeZones = calculateBikeZones(bikeFtp);
     const swimPaces = calculateSwimPaces(swimCss);
     const paces = calculateTrainingPaces(vdot);
+    const easyPaceWindowTarget: Target = {
+        type: 'pace',
+        unit: 'sec_per_km',
+        min: Math.round(paces.easy.min),
+        max: Math.round(paces.easy.max),
+        zoneLabel: 'E',
+    };
     const targetPace = workout.targetPace && workout.targetPace > 0 ? workout.targetPace : undefined;
     const hrZone = workout.targetHrZone;
 
@@ -2160,17 +2188,101 @@ export function buildStructuredStepsForWorkout(
         return { version: 2, source: 'engine', steps };
     }
 
-    // 5. RUN EASY / RECOVERY / LONG RUN — flat steady step.
-    if (type === WorkoutType.EASY || type === WorkoutType.RECOVERY || type === WorkoutType.LONG_RUN) {
+    // 5. RUN EASY / RECOVERY — flat steady step, or steady + strides repeat group.
+    if (type === WorkoutType.EASY || type === WorkoutType.RECOVERY) {
+        const stridesMatch = workout.description.match(/(\d+)x(\d+)m\s*Strides/i);
+        if (stridesMatch) {
+            const reps = parseInt(stridesMatch[1], 10);
+            const repMeters = parseInt(stridesMatch[2], 10);
+            const stridesTotalDist = reps * repMeters;
+            const mainDist = workout.totalDistance > stridesTotalDist
+                ? workout.totalDistance - stridesTotalDist
+                : (workout.totalDistance > 0 ? workout.totalDistance : 0);
+
+            const mainStep: StructuredStep = mainDist > 0
+                ? distanceStep('steady', type === WorkoutType.RECOVERY ? 'Recovery run' : 'Easy run', mainDist, {
+                    target: targetPace ? exactPaceTarget(targetPace) : easyPaceWindowTarget,
+                    hrZone: hrZone ?? (type === WorkoutType.RECOVERY ? 1 : 2),
+                })
+                : timeStep('steady', type === WorkoutType.RECOVERY ? 'Recovery run' : 'Easy run', workout.targetDuration || 3600, {
+                    target: targetPace ? exactPaceTarget(targetPace) : easyPaceWindowTarget,
+                    hrZone: hrZone ?? (type === WorkoutType.RECOVERY ? 1 : 2),
+                });
+
+            const repPace = Math.round(paces.repetition);
+            const strideStep = distanceStep('work', 'Strides', repMeters, {
+                target: { type: 'pace', unit: 'sec_per_km', min: repPace, max: repPace, zoneLabel: 'R' },
+                hrZone: 5,
+            });
+
+            const stridesGroup = repeatGroup(
+                reps,
+                { type: 'time', seconds: 60 },
+                [strideStep],
+                `${reps}×${repMeters}m Strides`,
+            );
+
+            populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+            return {
+                version: 2,
+                source: 'engine',
+                steps: [mainStep, stridesGroup],
+            };
+        }
+
         populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
         const step: StructuredStep = workout.totalDistance > 0
             ? distanceStep('steady',
-                type === WorkoutType.RECOVERY ? 'Recovery run' : type === WorkoutType.LONG_RUN ? 'Long run' : 'Easy run',
-                workout.totalDistance, { hrZone })
+                type === WorkoutType.RECOVERY ? 'Recovery run' : 'Easy run',
+                workout.totalDistance, { hrZone: hrZone ?? (type === WorkoutType.RECOVERY ? 1 : 2), target: targetPace ? exactPaceTarget(targetPace) : easyPaceWindowTarget })
             : timeStep('steady',
-                type === WorkoutType.RECOVERY ? 'Recovery run' : type === WorkoutType.LONG_RUN ? 'Long run' : 'Easy run',
-                workout.targetDuration || 3600, { hrZone });
-        if (targetPace) step.target = exactPaceTarget(targetPace);
+                type === WorkoutType.RECOVERY ? 'Recovery run' : 'Easy run',
+                workout.targetDuration || 3600, { hrZone: hrZone ?? (type === WorkoutType.RECOVERY ? 1 : 2), target: targetPace ? exactPaceTarget(targetPace) : easyPaceWindowTarget });
+        return { version: 2, source: 'engine', steps: [step] };
+    }
+
+    // 5b. RUN LONG RUN — flat steady step, or steady easy + goal pace / progressive finish.
+    if (type === WorkoutType.LONG_RUN) {
+        const goalPaceMatch = workout.description.match(/([\d.]+)km\s*Easy\s*\+\s*([\d.]+)km\s*@\s*Goal\s*Pace/i);
+        const progMatch = workout.description.match(/last\s*(\d+(?:\.\d+)?)\s*km\s*progressive/i);
+
+        if (goalPaceMatch || progMatch) {
+            let easyDist: number;
+            let finishDist: number;
+            let finishLabel: string;
+
+            if (goalPaceMatch) {
+                easyDist = Math.round(parseFloat(goalPaceMatch[1]) * 1000);
+                finishDist = Math.round(parseFloat(goalPaceMatch[2]) * 1000);
+                finishLabel = 'Goal Pace finish';
+            } else {
+                const progKm = parseFloat(progMatch![1]);
+                finishDist = Math.round(progKm * 1000);
+                easyDist = Math.max(0, workout.totalDistance - finishDist);
+                finishLabel = 'Progressive finish';
+            }
+
+            populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+            return {
+                version: 2,
+                source: 'engine',
+                steps: [
+                    distanceStep('steady', 'Easy segment', easyDist > 0 ? easyDist : 1000, {
+                        target: easyPaceWindowTarget,
+                        hrZone: 2,
+                    }),
+                    distanceStep('work', finishLabel, finishDist, {
+                        target: paceWindowTarget(paces.marathon, 'M'),
+                        hrZone: 3,
+                    }),
+                ],
+            };
+        }
+
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+        const step: StructuredStep = workout.totalDistance > 0
+            ? distanceStep('steady', 'Long run', workout.totalDistance, { hrZone: hrZone ?? 2, target: targetPace ? exactPaceTarget(targetPace) : easyPaceWindowTarget })
+            : timeStep('steady', 'Long run', workout.targetDuration || 3600, { hrZone: hrZone ?? 2, target: targetPace ? exactPaceTarget(targetPace) : easyPaceWindowTarget });
         return { version: 2, source: 'engine', steps: [step] };
     }
 
@@ -2197,7 +2309,7 @@ export function buildStructuredStepsForWorkout(
 
         const steps: StepNode[] = [];
         if (warmupDistance >= 1) {
-            steps.push(distanceStep('warmup', 'Warm up', warmupDistance, { hrZone: 1 }));
+            steps.push(distanceStep('warmup', 'Warm up', warmupDistance, { hrZone: 1, target: easyPaceWindowTarget }));
         }
 
         const setRest: Duration = recoveryDistance >= 1
@@ -2212,7 +2324,7 @@ export function buildStructuredStepsForWorkout(
         steps.push(repeatGroup(reps, setRest, [workStep], `${reps}×${repLabel}`));
 
         if (cooldownDistance >= 1) {
-            steps.push(distanceStep('cooldown', 'Cool down', cooldownDistance, { hrZone: 1 }));
+            steps.push(distanceStep('cooldown', 'Cool down', cooldownDistance, { hrZone: 1, target: easyPaceWindowTarget }));
         }
 
         populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
@@ -2244,9 +2356,9 @@ export function buildStructuredStepsForWorkout(
             version: 2,
             source: 'engine',
             steps: [
-                timeStep('warmup', 'Warm up', warmupSeconds, { hrZone: 1 }),
+                timeStep('warmup', 'Warm up', warmupSeconds, { hrZone: 1, target: easyPaceWindowTarget }),
                 repeatGroup(reps, undefined, [workStep, easyStep], 'Fartlek Cycles'),
-                timeStep('cooldown', 'Cool down', cooldownSeconds, { hrZone: 1 }),
+                timeStep('cooldown', 'Cool down', cooldownSeconds, { hrZone: 1, target: easyPaceWindowTarget }),
             ],
         };
     }
@@ -2258,7 +2370,7 @@ export function buildStructuredStepsForWorkout(
 
     const steps: StepNode[] = [];
     if (warmupDistance >= 1) {
-        steps.push(distanceStep('warmup', 'Warm up', warmupDistance, { hrZone: 1 }));
+        steps.push(distanceStep('warmup', 'Warm up', warmupDistance, { hrZone: 1, target: easyPaceWindowTarget }));
     }
     const workStep = distanceStep(
         'work',
@@ -2269,7 +2381,7 @@ export function buildStructuredStepsForWorkout(
     if (targetPace) workStep.target = exactPaceTarget(targetPace);
     steps.push(workStep);
     if (cooldownDistance >= 1) {
-        steps.push(distanceStep('cooldown', 'Cool down', cooldownDistance, { hrZone: 1 }));
+        steps.push(distanceStep('cooldown', 'Cool down', cooldownDistance, { hrZone: 1, target: easyPaceWindowTarget }));
     }
 
     populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);

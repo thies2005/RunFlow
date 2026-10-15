@@ -30,6 +30,7 @@ import {
     type Target,
 } from '@/lib/plans/structured';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
+import { buildStructuredStepsForWorkout } from '@/lib/plans';
 
 export interface StructuredWorkoutEditorProps {
     value: unknown;
@@ -49,6 +50,8 @@ export interface StructuredWorkoutEditorProps {
     }) => void;
     targetPace?: number;
     paceZoneLabels?: string[];
+    targetDistance?: number | null;
+    targetDuration?: number | null;
 }
 
 const STEP_KINDS: Array<StructuredStep['kind']> = [
@@ -137,6 +140,8 @@ export function StructuredWorkoutEditor({
     onSummaryChange,
     targetPace,
     paceZoneLabels,
+    targetDistance,
+    targetDuration,
 }: StructuredWorkoutEditorProps) {
     const resolvedSport = useMemo(() => resolveWorkoutSport(workoutType, sport), [workoutType, sport]);
     const trainingPaces = useMemo(() => calculateTrainingPaces(vdot > 0 ? vdot : 45), [vdot]);
@@ -145,66 +150,101 @@ export function StructuredWorkoutEditor({
     const parsedValue = useMemo(() => {
         const parsed = parseStructuredWorkout(value, workoutType || sport, vdot, ftpWatts);
         if (parsed) return parsed;
-        // Default workout with Warmup, 4x(400m Work + 60s Rest), Cooldown
+
+        // Try building sensible structured steps using buildStructuredStepsForWorkout
+        const built = buildStructuredStepsForWorkout(
+            {
+                workoutType: (workoutType as any) || 'EASY',
+                sport: sport || undefined,
+                description: workoutType || 'Workout',
+                distanceMeters: targetDistance && targetDistance > 0 ? targetDistance : undefined,
+                targetDistance: targetDistance && targetDistance > 0 ? targetDistance : undefined,
+                targetDuration: targetDuration && targetDuration > 0 ? targetDuration : undefined,
+                targetPace,
+                vdot,
+                ftpWatts,
+            } as any,
+            { vdot, ftpWatts }
+        );
+        if (built) return built;
+
+        // Fallback: build a single steady step matching targetDistance / targetDuration
+        const hasDist = targetDistance && targetDistance > 0;
+        const dist = hasDist ? Math.round(targetDistance) : 5000;
+        const dur = targetDuration && targetDuration > 0 ? Math.round(targetDuration) : 1800;
+
         return {
             version: 2 as const,
             source: 'editor' as const,
             steps: [
                 {
-                    kind: 'warmup' as const,
-                    label: 'Warmup',
-                    duration: { type: 'distance' as const, meters: 1000 },
-                    target: {
-                        type: 'pace' as const,
-                        unit: resolvedSport === 'SWIM' ? ('sec_per_100m' as const) : ('sec_per_km' as const),
-                        min: trainingPaces.easy.min,
-                        max: trainingPaces.easy.max,
-                        zoneLabel: 'E',
-                    },
-                },
-                {
-                    kind: 'repeat' as const,
-                    times: 4,
-                    setRest: { type: 'time' as const, seconds: 60 },
-                    steps: [
-                        {
-                            kind: 'work' as const,
-                            label: 'Interval',
-                            duration: { type: 'distance' as const, meters: 400 },
-                            target: {
-                                type: 'pace' as const,
-                                unit: resolvedSport === 'SWIM' ? ('sec_per_100m' as const) : ('sec_per_km' as const),
-                                min: trainingPaces.interval,
-                                max: trainingPaces.interval,
-                                zoneLabel: 'I',
-                            },
-                        },
-                    ],
-                },
-                {
-                    kind: 'cooldown' as const,
-                    label: 'Cooldown',
-                    duration: { type: 'distance' as const, meters: 1000 },
-                    target: {
-                        type: 'pace' as const,
-                        unit: resolvedSport === 'SWIM' ? ('sec_per_100m' as const) : ('sec_per_km' as const),
-                        min: trainingPaces.easy.min,
-                        max: trainingPaces.easy.max,
-                        zoneLabel: 'E',
-                    },
+                    kind: 'steady' as const,
+                    label: workoutType ? workoutType.replace(/_/g, ' ') : 'Steady',
+                    duration: hasDist
+                        ? ({ type: 'distance' as const, meters: dist })
+                        : ({ type: 'time' as const, seconds: dur }),
+                    target: resolvedSport === 'BIKE'
+                        ? {
+                              type: 'power' as const,
+                              minWatts: Math.round(ftpWatts * 0.65),
+                              maxWatts: Math.round(ftpWatts * 0.75),
+                              ftpPercent: 70,
+                              zoneLabel: 'Z2',
+                          }
+                        : {
+                              type: 'pace' as const,
+                              unit: resolvedSport === 'SWIM' ? ('sec_per_100m' as const) : ('sec_per_km' as const),
+                              min: trainingPaces.easy.min,
+                              max: trainingPaces.easy.max,
+                              zoneLabel: 'E',
+                          },
                 },
             ],
         };
-    }, [value, workoutType, sport, vdot, ftpWatts, resolvedSport, trainingPaces]);
+    }, [value, workoutType, sport, vdot, ftpWatts, resolvedSport, trainingPaces, targetDistance, targetDuration, targetPace]);
 
     const [workout, setWorkout] = useState<StructuredWorkoutV2>(parsedValue);
 
-    // Sync if outside value changes significantly
+    const emitSummary = useCallback(
+        (sw: StructuredWorkoutV2) => {
+            if (!onSummaryChange) return;
+            const updatedSummary = summarizeStructuredWorkout(sw, targetPace, ftpWatts);
+            const updatedFlattened = flattenStructuredWorkout(sw);
+            let minPace: number | undefined;
+            let maxPace: number | undefined;
+            let minWatts: number | undefined;
+            let maxWatts: number | undefined;
+
+            for (const s of updatedFlattened) {
+                if (s.target?.type === 'pace') {
+                    if (s.target.min) minPace = minPace ? Math.min(minPace, s.target.min) : s.target.min;
+                    if (s.target.max) maxPace = maxPace ? Math.max(maxPace, s.target.max) : s.target.max;
+                } else if (s.target?.type === 'power') {
+                    if (s.target.minWatts) minWatts = minWatts ? Math.min(minWatts, s.target.minWatts) : s.target.minWatts;
+                    if (s.target.maxWatts) maxWatts = maxWatts ? Math.max(maxWatts, s.target.maxWatts) : s.target.maxWatts;
+                }
+            }
+
+            onSummaryChange({
+                targetDistance: updatedSummary.totalDistanceMeters,
+                targetDuration: updatedSummary.totalDurationSeconds,
+                targetPaceMin: minPace,
+                targetPaceMax: maxPace,
+                targetPowerMinWatts: minWatts,
+                targetPowerMaxWatts: maxWatts,
+                plannedTss: updatedSummary.estimatedTss,
+            });
+        },
+        [onSummaryChange, targetPace, ftpWatts]
+    );
+
+    // Sync if outside value changes significantly, and trigger initial summary
     useEffect(() => {
         if (parsedValue) {
             setWorkout(parsedValue);
+            emitSummary(parsedValue);
         }
-    }, [parsedValue]);
+    }, [parsedValue, emitSummary]);
 
     // Live computed summary
     const summary = useMemo(() => {
@@ -216,42 +256,13 @@ export function StructuredWorkoutEditor({
         return flattenStructuredWorkout(workout);
     }, [workout]);
 
-    // Sync summary changes back to parent
-    useEffect(() => {
-        if (onSummaryChange) {
-            let minPace: number | undefined;
-            let maxPace: number | undefined;
-            let minWatts: number | undefined;
-            let maxWatts: number | undefined;
-
-            for (const s of flattenedSteps) {
-                if (s.target?.type === 'pace') {
-                    if (s.target.min) minPace = minPace ? Math.min(minPace, s.target.min) : s.target.min;
-                    if (s.target.max) maxPace = maxPace ? Math.max(maxPace, s.target.max) : s.target.max;
-                } else if (s.target?.type === 'power') {
-                    if (s.target.minWatts) minWatts = minWatts ? Math.min(minWatts, s.target.minWatts) : s.target.minWatts;
-                    if (s.target.maxWatts) maxWatts = maxWatts ? Math.max(maxWatts, s.target.maxWatts) : s.target.maxWatts;
-                }
-            }
-
-            onSummaryChange({
-                targetDistance: summary.totalDistanceMeters,
-                targetDuration: summary.totalDurationSeconds,
-                targetPaceMin: minPace,
-                targetPaceMax: maxPace,
-                targetPowerMinWatts: minWatts,
-                targetPowerMaxWatts: maxWatts,
-                plannedTss: summary.estimatedTss,
-            });
-        }
-    }, [flattenedSteps, summary, onSummaryChange]);
-
     const emitChange = useCallback(
         (updated: StructuredWorkoutV2) => {
             setWorkout(updated);
             onChange(updated);
+            emitSummary(updated);
         },
-        [onChange]
+        [onChange, emitSummary]
     );
 
     const updateStepNodes = useCallback(
@@ -548,7 +559,19 @@ function RepeatGroupCard({
     };
 
     const handleRestSeconds = (sec: number) => {
-        onChange({ ...group, setRest: { type: 'time', seconds: Math.max(1, sec) } });
+        onChange({ ...group, setRest: { type: 'time', seconds: Math.max(1, isNaN(sec) ? 60 : sec) } });
+    };
+
+    const handleRestMeters = (meters: number) => {
+        onChange({ ...group, setRest: { type: 'distance', meters: Math.max(1, isNaN(meters) ? 100 : meters) } });
+    };
+
+    const handleRestTypeChange = (type: 'time' | 'distance') => {
+        if (type === 'distance') {
+            onChange({ ...group, setRest: { type: 'distance', meters: 200 } });
+        } else {
+            onChange({ ...group, setRest: { type: 'time', seconds: 60 } });
+        }
     };
 
     const addChildStep = () => {
@@ -649,17 +672,41 @@ function RepeatGroupCard({
                     />
                     <span>Rest between sets:</span>
                 </label>
-                {group.setRest && group.setRest.type === 'time' && (
-                    <div className="flex items-center gap-1">
-                        <input
-                            type="number"
-                            min={1}
-                            max={3600}
-                            value={group.setRest.seconds}
-                            onChange={(e) => handleRestSeconds(parseInt(e.target.value, 10))}
-                            className="w-14 bg-background-tertiary border border-glass-border rounded px-1.5 py-0.5 text-center font-mono text-xs text-foreground focus:outline-none"
-                        />
-                        <span className="text-[10px] text-foreground-muted">sec</span>
+                {group.setRest && (
+                    <div className="flex items-center gap-1.5">
+                        <select
+                            value={group.setRest.type === 'distance' ? 'distance' : 'time'}
+                            onChange={(e) => handleRestTypeChange(e.target.value as 'time' | 'distance')}
+                            className="bg-background-tertiary border border-glass-border rounded px-1.5 py-0.5 text-xs text-foreground focus:outline-none"
+                        >
+                            <option value="time">Time</option>
+                            <option value="distance">Distance</option>
+                        </select>
+                        {group.setRest.type === 'distance' ? (
+                            <div className="flex items-center gap-1">
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={100000}
+                                    value={group.setRest.meters}
+                                    onChange={(e) => handleRestMeters(parseInt(e.target.value, 10))}
+                                    className="w-16 bg-background-tertiary border border-glass-border rounded px-1.5 py-0.5 text-center font-mono text-xs text-foreground focus:outline-none"
+                                />
+                                <span className="text-[10px] text-foreground-muted">m</span>
+                            </div>
+                        ) : group.setRest.type === 'time' ? (
+                            <div className="flex items-center gap-1">
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={3600}
+                                    value={group.setRest.seconds}
+                                    onChange={(e) => handleRestSeconds(parseInt(e.target.value, 10))}
+                                    className="w-14 bg-background-tertiary border border-glass-border rounded px-1.5 py-0.5 text-center font-mono text-xs text-foreground focus:outline-none"
+                                />
+                                <span className="text-[10px] text-foreground-muted">sec</span>
+                            </div>
+                        ) : null}
                     </div>
                 )}
             </div>
@@ -919,6 +966,7 @@ function StepCard({
                             <input
                                 type="text"
                                 placeholder="mm:ss"
+                                key={`dur-${step.duration.seconds}`}
                                 defaultValue={formatSecondsToMmSs(step.duration.seconds)}
                                 onBlur={(e) => handleDurationTimeMmSs(e.target.value)}
                                 className="w-16 bg-background-tertiary border border-glass-border rounded px-1.5 py-0.5 text-center font-mono text-xs text-foreground focus:outline-none"
@@ -1030,6 +1078,7 @@ function StepCard({
                     <input
                         type="text"
                         placeholder="Min (mm:ss)"
+                        key={`min-${step.target.min ?? 0}-${step.target.zoneLabel ?? ''}`}
                         defaultValue={step.target.min ? formatSecondsToMmSs(step.target.min) : ''}
                         onBlur={(e) => {
                             const sec = parseMmSsToSeconds(e.target.value);
@@ -1047,6 +1096,7 @@ function StepCard({
                     <input
                         type="text"
                         placeholder="Max (mm:ss)"
+                        key={`max-${step.target.max ?? 0}-${step.target.zoneLabel ?? ''}`}
                         defaultValue={step.target.max ? formatSecondsToMmSs(step.target.max) : ''}
                         onBlur={(e) => {
                             const sec = parseMmSsToSeconds(e.target.value);

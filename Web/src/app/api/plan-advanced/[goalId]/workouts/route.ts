@@ -5,6 +5,9 @@ export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { createSnapshot } from '@/lib/plan/snapshot';
 import { WorkoutType as WT, PlanPhase } from '@/generated/prisma/client';
+import { buildStructuredStepsForWorkout } from '@/lib/plans';
+import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
+import { resolveWorkoutSport } from '@/lib/plans/structured';
 
 type RouteContext = { params: Promise<{ goalId: string }> };
 
@@ -113,7 +116,41 @@ export async function POST(req: Request, ctx: RouteContext) {
         }
 
         const body = await req.json();
-        const { scheduledDate, workoutType, description, phase, order, notes, targetDistance, targetDuration, targetPace, targetHrZone, customName, color, structuredSteps, groupId, subGoalId, isCompleted, linkedActivityId } = body;
+        const {
+            scheduledDate,
+            workoutType,
+            description,
+            displayDesc,
+            sport,
+            phase,
+            order,
+            notes,
+            targetDistance,
+            targetDuration,
+            targetPace,
+            targetPaceMinSecondsPerKm,
+            targetPaceMaxSecondsPerKm,
+            targetPaceZoneLabel,
+            targetHrZone,
+            targetHrMinBpm,
+            targetHrMaxBpm,
+            targetHrZoneLabel,
+            targetPowerWatts,
+            targetPowerMinWatts,
+            targetPowerMaxWatts,
+            targetPowerZone,
+            targetFtpPercent,
+            targetCadenceRpm,
+            targetRpe,
+            plannedTss,
+            customName,
+            color,
+            structuredSteps,
+            groupId,
+            subGoalId,
+            isCompleted,
+            linkedActivityId,
+        } = body;
 
         if (!scheduledDate || isNaN(new Date(scheduledDate).getTime())) {
             return NextResponse.json({ error: 'Valid scheduledDate is required' }, { status: 400 });
@@ -127,8 +164,18 @@ export async function POST(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: 'Invalid workoutType' }, { status: 400 });
         }
 
-        if (!description || typeof description !== 'string') {
-            return NextResponse.json({ error: 'description is required' }, { status: 400 });
+        const desc = (typeof description === 'string' && description.trim().length > 0)
+            ? description.trim()
+            : workoutType.replace(/_/g, ' ');
+
+        const resolvedSport = sport || resolveWorkoutSport(workoutType, sport);
+
+        let normalizedPowerZone: number | null = null;
+        if (targetPowerZone !== undefined && targetPowerZone !== null && targetPowerZone !== '') {
+            const parsed = typeof targetPowerZone === 'number'
+                ? Math.round(targetPowerZone)
+                : parseInt(String(targetPowerZone).replace(/^Z/i, ''), 10);
+            normalizedPowerZone = isNaN(parsed) ? null : parsed;
         }
 
         if (linkedActivityId) {
@@ -140,6 +187,35 @@ export async function POST(req: Request, ctx: RouteContext) {
             }
         }
 
+        let finalStructuredSteps = structuredSteps ?? null;
+        if (!finalStructuredSteps) {
+            const vdot = goal.currentVdot || 45;
+            const ftpWatts = goal.ftpAtCreation || undefined;
+            finalStructuredSteps = buildStructuredStepsForWorkout(
+                {
+                    type: workoutType as WT,
+                    description: desc,
+                    totalDistance: targetDistance ?? 0,
+                    targetDuration: targetDuration ?? null,
+                    targetPace: targetPace ?? null,
+                    targetHrZone: targetHrZone ?? null,
+                } as any,
+                { vdot, ftpWatts }
+            );
+        }
+
+        const finalPlannedTss = plannedTss !== undefined && plannedTss !== null
+            ? plannedTss
+            : calculateWorkoutPlannedTss({
+                  workoutType: workoutType as WT,
+                  sport: resolvedSport,
+                  targetDistance: targetDistance || 0,
+                  targetDuration: targetDuration || null,
+                  targetPace: targetPace || null,
+                  structuredSteps: finalStructuredSteps,
+                  ftpWatts: goal.ftpAtCreation || undefined,
+              });
+
         await createSnapshot(goalId, 'Before workout create', 'create_workout');
 
         const workout = await prisma.workout.create({
@@ -147,17 +223,33 @@ export async function POST(req: Request, ctx: RouteContext) {
                 goalId,
                 scheduledDate: new Date(scheduledDate),
                 workoutType: workoutType as WT,
-                description,
+                description: desc,
+                displayDesc: displayDesc || null,
+                sport: resolvedSport,
                 phase: (phase as PlanPhase) || PlanPhase.BASE,
                 order: order ?? 0,
                 notes: notes || null,
                 targetDistance: targetDistance ?? null,
                 targetDuration: targetDuration ?? null,
                 targetPace: targetPace ?? null,
+                targetPaceMinSecondsPerKm: targetPaceMinSecondsPerKm ?? null,
+                targetPaceMaxSecondsPerKm: targetPaceMaxSecondsPerKm ?? null,
+                targetPaceZoneLabel: targetPaceZoneLabel || null,
                 targetHrZone: targetHrZone ?? null,
+                targetHrMinBpm: targetHrMinBpm ?? null,
+                targetHrMaxBpm: targetHrMaxBpm ?? null,
+                targetHrZoneLabel: targetHrZoneLabel || null,
+                targetPowerWatts: targetPowerWatts ?? null,
+                targetPowerMinWatts: targetPowerMinWatts ?? null,
+                targetPowerMaxWatts: targetPowerMaxWatts ?? null,
+                targetPowerZone: normalizedPowerZone,
+                targetFtpPercent: targetFtpPercent ?? null,
+                targetCadenceRpm: targetCadenceRpm ?? null,
+                targetRpe: targetRpe ?? null,
+                plannedTss: finalPlannedTss,
                 customName: customName || null,
                 color: color || null,
-                structuredSteps: structuredSteps ?? null,
+                structuredSteps: finalStructuredSteps ?? undefined,
                 groupId: groupId || null,
                 subGoalId: subGoalId || null,
                 isCompleted: Boolean(isCompleted),

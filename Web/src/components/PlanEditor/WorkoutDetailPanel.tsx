@@ -69,7 +69,7 @@ export interface Workout {
     targetPowerWatts?: number | null;
     targetPowerMinWatts?: number | null;
     targetPowerMaxWatts?: number | null;
-    targetPowerZone?: string | null;
+    targetPowerZone?: number | null;
     targetFtpPercent?: number | null;
     targetCadenceRpm?: number | null;
     targetHrMinBpm?: number | null;
@@ -137,17 +137,20 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showStructuredEditor, setShowStructuredEditor] = useState(true);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isDirtyRef = useRef(false);
 
     useEffect(() => {
         setForm({
             ...workout,
             sport: workout.sport || resolveWorkoutSport(workout.workoutType, workout.sport),
         });
+        isDirtyRef.current = false;
         setSaveState('idle');
         setShowDeleteConfirm(false);
     }, [workout.id]);
 
     const updateField = useCallback((field: keyof Workout, value: any) => {
+        isDirtyRef.current = true;
         setForm((prev) => ({ ...prev, [field]: value }));
     }, []);
 
@@ -218,16 +221,20 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
     }, []);
 
     const triggerAutoSave = useCallback(() => {
+        if (!isDirtyRef.current) return;
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
+            if (!isDirtyRef.current) return;
             const { id, isCompleted, ...patch } = form;
             void saveMutation.mutate(patch);
         }, 600);
     }, [form, saveMutation]);
 
     useEffect(() => {
-        triggerAutoSave();
-    }, [form]);
+        if (isDirtyRef.current) {
+            triggerAutoSave();
+        }
+    }, [form, triggerAutoSave]);
 
     const handleManualSave = useCallback(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -238,6 +245,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
     // Handle Structured Steps Update & Auto-sync summaries
     const handleStructuredChange = useCallback(
         (v2Workout: StructuredWorkoutV2) => {
+            isDirtyRef.current = true;
             updateField('structuredSteps', v2Workout);
         },
         [updateField]
@@ -418,6 +426,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                             <div>
                                 <label className="block text-[10px] text-foreground-muted mb-0.5">Min Pace (mm:ss)</label>
                                 <input
+                                    key={`${form.id}-min-${form.targetPaceMinSecondsPerKm ?? ''}`}
                                     type="text"
                                     placeholder="e.g. 4:30"
                                     defaultValue={formatSecToMmSs(form.targetPaceMinSecondsPerKm)}
@@ -428,6 +437,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                             <div>
                                 <label className="block text-[10px] text-foreground-muted mb-0.5">Max Pace (mm:ss)</label>
                                 <input
+                                    key={`${form.id}-max-${form.targetPaceMaxSecondsPerKm ?? ''}`}
                                     type="text"
                                     placeholder="e.g. 5:00"
                                     defaultValue={formatSecToMmSs(form.targetPaceMaxSecondsPerKm)}
@@ -519,12 +529,12 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                                 <label className="block text-[10px] text-foreground-muted mb-0.5">Power Zone</label>
                                 <select
                                     value={form.targetPowerZone ?? ''}
-                                    onChange={(e) => updateField('targetPowerZone', e.target.value || null)}
+                                    onChange={(e) => updateField('targetPowerZone', e.target.value ? parseInt(e.target.value, 10) : null)}
                                     className="w-full bg-background-tertiary border border-glass-border rounded px-1.5 py-1 text-xs text-foreground focus:outline-none"
                                 >
                                     <option value="">None</option>
-                                    {['Z1', 'Z2', 'Z3', 'Z4', 'Z5', 'Z6', 'Z7'].map((z) => (
-                                        <option key={z} value={z}>{z}</option>
+                                    {[1, 2, 3, 4, 5, 6, 7].map((z) => (
+                                        <option key={z} value={z}>Z{z}</option>
                                     ))}
                                 </select>
                             </div>
@@ -646,6 +656,8 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                             onSummaryChange={handleSummaryChange}
                             targetPace={form.targetPace ?? undefined}
                             paceZoneLabels={paceZoneLabels}
+                            targetDistance={form.targetDistance}
+                            targetDuration={form.targetDuration}
                         />
                     )}
                 </div>

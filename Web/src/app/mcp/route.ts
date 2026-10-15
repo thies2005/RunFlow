@@ -15,7 +15,8 @@ import { adaptPlanAfterCompletion } from '@/lib/plans/adapt';
 import { ensureFitnessCacheUpToDate, updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
 import { createPlanWithWorkouts } from '@/lib/services/plan-creation';
-import { parseStructuredWorkout } from '@/lib/plans/structured';
+import { parseStructuredWorkout, summarizeStructuredWorkout, flattenStructuredWorkout, type StructuredWorkoutV2 } from '@/lib/plans/structured';
+import { buildStructuredStepsForWorkout } from '@/lib/plans';
 import { prisma } from '@/lib/db';
 import { WorkoutType, PlanPhase, RaceType, PlanSport } from '@/generated/prisma/client';
 
@@ -687,6 +688,97 @@ const updateTrainingPlanPhasesTool: McpTool = {
     },
 };
 
+const structuredStepsSchema = {
+    type: 'object',
+    description: 'Structured workout steps v2 tree (version: 2, steps: Array<Step | RepeatGroup>). Supports nested repeats, distance/time durations, and pace/power/hr/cadence/rpe targets.',
+    properties: {
+        version: { type: 'number', description: 'Schema version (2)' },
+        source: { type: 'string', description: 'Source identifier (e.g. mcp, engine, coach, editor)' },
+        sport: { type: 'string', enum: ['RUN', 'BIKE', 'SWIM', 'STRENGTH'], description: 'Primary workout sport' },
+        steps: {
+            type: 'array',
+            description: 'Ordered list of step nodes (StructuredStep or RepeatGroup)',
+            items: {
+                type: 'object',
+                properties: {
+                    kind: {
+                        type: 'string',
+                        enum: ['warmup', 'work', 'recovery', 'cooldown', 'steady', 'transition', 'repeat'],
+                        description: 'Step kind: warmup, work, recovery, cooldown, steady, transition, or repeat for blocks',
+                    },
+                    label: { type: 'string', description: 'Step label or title' },
+                    times: { type: 'number', description: 'Number of times to repeat steps (for kind: repeat, 1-100)' },
+                    setRest: {
+                        type: 'object',
+                        description: 'Rest duration between repeat sets',
+                        properties: {
+                            type: { type: 'string', enum: ['time', 'distance', 'lap_press'] },
+                            seconds: { type: 'number' },
+                            meters: { type: 'number' },
+                        },
+                    },
+                    duration: {
+                        type: 'object',
+                        description: 'Step duration (distance, time, or lap_press)',
+                        properties: {
+                            type: { type: 'string', enum: ['distance', 'time', 'lap_press'] },
+                            meters: { type: 'number', description: 'Distance in meters' },
+                            seconds: { type: 'number', description: 'Time in seconds' },
+                        },
+                    },
+                    target: {
+                        type: 'object',
+                        description: 'Target intensity (pace, power, hr, cadence, rpe, free)',
+                        properties: {
+                            type: { type: 'string', enum: ['pace', 'power', 'hr', 'cadence', 'rpe', 'free'] },
+                            unit: { type: 'string', enum: ['sec_per_km', 'sec_per_100m', 'sec_per_mile'] },
+                            min: { type: 'number', description: 'Fast pace bound in seconds' },
+                            max: { type: 'number', description: 'Slow pace bound in seconds' },
+                            minWatts: { type: 'number', description: 'Lower power bound in watts' },
+                            maxWatts: { type: 'number', description: 'Upper power bound in watts' },
+                            ftpPercent: { type: 'number', description: 'Percentage of FTP' },
+                            zoneLabel: { type: 'string', description: 'Zone label (e.g. E, M, T, Z2, etc.)' },
+                            minBpm: { type: 'number', description: 'Lower HR bound in bpm' },
+                            maxBpm: { type: 'number', description: 'Upper HR bound in bpm' },
+                            zone: { type: 'number', description: 'HR zone number (1-5)' },
+                            value: { type: 'number', description: 'RPE value (1-10)' },
+                        },
+                    },
+                    cadenceRpm: { type: 'number', description: 'Cadence RPM target' },
+                    hrZone: { type: 'number', description: 'Target HR zone number' },
+                    notes: { type: 'string', description: 'Step coaching notes' },
+                    steps: {
+                        type: 'array',
+                        description: 'Nested child steps (for kind: repeat)',
+                        items: { type: 'object' },
+                    },
+                },
+            },
+        },
+    },
+};
+
+function normalizeMcpStructuredSteps(
+    raw: any,
+    workoutType?: string | null,
+    sport?: string | null,
+    vdot?: number,
+    ftpWatts?: number,
+): StructuredWorkoutV2 | null {
+    if (!raw) return null;
+    let candidate = raw;
+    if (typeof candidate === 'object' && candidate !== null) {
+        if (!candidate.version && (Array.isArray(candidate.steps) || Array.isArray(candidate))) {
+            candidate = {
+                version: 2,
+                source: 'mcp',
+                steps: Array.isArray(candidate) ? candidate : candidate.steps,
+            };
+        }
+    }
+    return parseStructuredWorkout(candidate, workoutType || sport, vdot, ftpWatts);
+}
+
 const createStructuredWorkoutTool: McpTool = {
     name: 'create_structured_workout',
     description: 'Insert a new structured workout with canonical steps, targets, and auto-computed planned TSS.',
@@ -708,13 +800,19 @@ const createStructuredWorkoutTool: McpTool = {
             targetPace: { type: 'number', description: 'Target pace in seconds per km' },
             targetPaceMinSecondsPerKm: { type: 'number', description: 'Fast pace bound in sec/km' },
             targetPaceMaxSecondsPerKm: { type: 'number', description: 'Slow pace bound in sec/km' },
+            targetPaceZoneLabel: { type: 'string', description: 'Target pace zone label (e.g. E, M, T, I, R)' },
             targetPowerWatts: { type: 'number', description: 'Target cycling watts' },
             targetPowerMinWatts: { type: 'number', description: 'Low power bound in watts' },
             targetPowerMaxWatts: { type: 'number', description: 'High power bound in watts' },
+            targetPowerZone: { type: 'number', description: 'Target Coggan power zone (integer 1..7)' },
+            targetFtpPercent: { type: 'number', description: 'Target intensity as % of FTP' },
+            targetCadenceRpm: { type: 'number', description: 'Target cadence in RPM' },
+            targetRpe: { type: 'number', description: 'Target RPE on 1-10 scale' },
+            targetHrZone: { type: 'number', description: 'Target HR zone (1-5)' },
             targetHrMinBpm: { type: 'number', description: 'Low HR bound in bpm' },
             targetHrMaxBpm: { type: 'number', description: 'High HR bound in bpm' },
             plannedTss: { type: 'number', description: 'Planned TSS (auto-computed if omitted)' },
-            structuredSteps: { type: 'object', description: 'Structured workout steps v2 tree' },
+            structuredSteps: structuredStepsSchema,
         },
         required: ['goalId', 'scheduledDate', 'workoutType', 'description'],
     },
@@ -729,18 +827,100 @@ const createStructuredWorkoutTool: McpTool = {
         await createSnapshot(goal.id, `Create workout ${params.workoutType} on ${params.scheduledDate}`, 'ai_mcp_mutation');
 
         const sport = params.sport || (params.workoutType?.startsWith('RIDE') ? 'BIKE' : params.workoutType?.startsWith('SWIM') ? 'SWIM' : 'RUN');
+        const vdot = goal.currentVdot || 45;
+        const ftpWatts = goal.ftpAtCreation || undefined;
 
-        const plannedTss = params.plannedTss !== undefined
-            ? params.plannedTss
-            : calculateWorkoutPlannedTss({
-                  workoutType: params.workoutType as WorkoutType,
-                  sport,
-                  targetDistance: params.targetDistance || 0,
-                  targetDuration: params.targetDuration || null,
-                  targetPace: params.targetPace || null,
-                  structuredSteps: params.structuredSteps || null,
-                  ftpWatts: goal.ftpAtCreation || undefined,
-              });
+        let structuredSteps = normalizeMcpStructuredSteps(
+            params.structuredSteps,
+            params.workoutType,
+            sport,
+            vdot,
+            ftpWatts,
+        );
+
+        if (!structuredSteps) {
+            structuredSteps = buildStructuredStepsForWorkout(
+                {
+                    type: params.workoutType as WorkoutType,
+                    description: params.description,
+                    totalDistance: params.targetDistance || 0,
+                    targetDuration: params.targetDuration || null,
+                    targetPace: params.targetPace || null,
+                    targetHrZone: params.targetHrZone || null,
+                } as any,
+                { vdot, ftpWatts },
+            );
+        }
+
+        let targetDistance = params.targetDistance ?? null;
+        let targetDuration = params.targetDuration ?? null;
+        let targetPaceMinSecondsPerKm = params.targetPaceMinSecondsPerKm ?? null;
+        let targetPaceMaxSecondsPerKm = params.targetPaceMaxSecondsPerKm ?? null;
+        let targetPowerMinWatts = params.targetPowerMinWatts ?? null;
+        let targetPowerMaxWatts = params.targetPowerMaxWatts ?? null;
+        let plannedTss = params.plannedTss;
+
+        if (structuredSteps) {
+            const summary = summarizeStructuredWorkout(structuredSteps, params.targetPace, ftpWatts);
+            const flattened = flattenStructuredWorkout(structuredSteps);
+
+            let derivedMinPace: number | undefined;
+            let derivedMaxPace: number | undefined;
+            let derivedMinWatts: number | undefined;
+            let derivedMaxWatts: number | undefined;
+
+            for (const s of flattened) {
+                if (s.target?.type === 'pace') {
+                    if (s.target.min) derivedMinPace = derivedMinPace ? Math.min(derivedMinPace, s.target.min) : s.target.min;
+                    if (s.target.max) derivedMaxPace = derivedMaxPace ? Math.max(derivedMaxPace, s.target.max) : s.target.max;
+                } else if (s.target?.type === 'power') {
+                    if (s.target.minWatts) derivedMinWatts = derivedMinWatts ? Math.min(derivedMinWatts, s.target.minWatts) : s.target.minWatts;
+                    if (s.target.maxWatts) derivedMaxWatts = derivedMaxWatts ? Math.max(derivedMaxWatts, s.target.maxWatts) : s.target.maxWatts;
+                }
+            }
+
+            if (targetDistance == null && summary.totalDistanceMeters > 0) {
+                targetDistance = summary.totalDistanceMeters;
+            }
+            if (targetDuration == null && summary.totalDurationSeconds > 0) {
+                targetDuration = summary.totalDurationSeconds;
+            }
+            if (targetPaceMinSecondsPerKm == null && derivedMinPace) {
+                targetPaceMinSecondsPerKm = derivedMinPace;
+            }
+            if (targetPaceMaxSecondsPerKm == null && derivedMaxPace) {
+                targetPaceMaxSecondsPerKm = derivedMaxPace;
+            }
+            if (targetPowerMinWatts == null && derivedMinWatts) {
+                targetPowerMinWatts = derivedMinWatts;
+            }
+            if (targetPowerMaxWatts == null && derivedMaxWatts) {
+                targetPowerMaxWatts = derivedMaxWatts;
+            }
+            if (plannedTss === undefined && summary.estimatedTss > 0) {
+                plannedTss = summary.estimatedTss;
+            }
+        }
+
+        if (plannedTss === undefined) {
+            plannedTss = calculateWorkoutPlannedTss({
+                workoutType: params.workoutType as WorkoutType,
+                sport,
+                targetDistance: targetDistance || 0,
+                targetDuration: targetDuration || null,
+                targetPace: params.targetPace || null,
+                structuredSteps: structuredSteps || null,
+                ftpWatts,
+            });
+        }
+
+        let normalizedPowerZone: number | null = null;
+        if (params.targetPowerZone !== undefined && params.targetPowerZone !== null && params.targetPowerZone !== '') {
+            const parsed = typeof params.targetPowerZone === 'number'
+                ? Math.round(params.targetPowerZone)
+                : parseInt(String(params.targetPowerZone).replace(/^Z/i, ''), 10);
+            normalizedPowerZone = isNaN(parsed) ? null : parsed;
+        }
 
         const workout = await prisma.workout.create({
             data: {
@@ -753,18 +933,24 @@ const createStructuredWorkoutTool: McpTool = {
                 phase: (params.phase as PlanPhase) || 'BASE',
                 order: params.order || 0,
                 notes: params.notes || null,
-                targetDistance: params.targetDistance || null,
-                targetDuration: params.targetDuration || null,
+                targetDistance: targetDistance || null,
+                targetDuration: targetDuration || null,
                 targetPace: params.targetPace || null,
-                targetPaceMinSecondsPerKm: params.targetPaceMinSecondsPerKm || null,
-                targetPaceMaxSecondsPerKm: params.targetPaceMaxSecondsPerKm || null,
+                targetPaceMinSecondsPerKm: targetPaceMinSecondsPerKm || null,
+                targetPaceMaxSecondsPerKm: targetPaceMaxSecondsPerKm || null,
+                targetPaceZoneLabel: params.targetPaceZoneLabel || null,
                 targetPowerWatts: params.targetPowerWatts || null,
-                targetPowerMinWatts: params.targetPowerMinWatts || null,
-                targetPowerMaxWatts: params.targetPowerMaxWatts || null,
+                targetPowerMinWatts: targetPowerMinWatts || null,
+                targetPowerMaxWatts: targetPowerMaxWatts || null,
+                targetPowerZone: normalizedPowerZone,
+                targetFtpPercent: params.targetFtpPercent ?? null,
+                targetCadenceRpm: params.targetCadenceRpm ?? null,
+                targetRpe: params.targetRpe ?? null,
+                targetHrZone: params.targetHrZone ?? null,
                 targetHrMinBpm: params.targetHrMinBpm || null,
                 targetHrMaxBpm: params.targetHrMaxBpm || null,
                 plannedTss,
-                structuredSteps: params.structuredSteps || undefined,
+                structuredSteps: (structuredSteps as any) || undefined,
             },
         });
 
@@ -797,13 +983,19 @@ const modifyWorkoutTool: McpTool = {
             targetPace: { type: 'number' },
             targetPaceMinSecondsPerKm: { type: 'number' },
             targetPaceMaxSecondsPerKm: { type: 'number' },
+            targetPaceZoneLabel: { type: 'string', description: 'Target pace zone label (e.g. E, M, T, I, R)' },
             targetPowerWatts: { type: 'number' },
             targetPowerMinWatts: { type: 'number' },
             targetPowerMaxWatts: { type: 'number' },
+            targetPowerZone: { type: 'number', description: 'Target Coggan power zone (integer 1..7)' },
+            targetFtpPercent: { type: 'number', description: 'Target intensity as % of FTP' },
+            targetCadenceRpm: { type: 'number', description: 'Target cadence in RPM' },
+            targetRpe: { type: 'number', description: 'Target RPE on 1-10 scale' },
+            targetHrZone: { type: 'number', description: 'Target HR zone (1-5)' },
             targetHrMinBpm: { type: 'number' },
             targetHrMaxBpm: { type: 'number' },
             plannedTss: { type: 'number' },
-            structuredSteps: { type: 'object' },
+            structuredSteps: structuredStepsSchema,
         },
         required: ['workoutId'],
     },
@@ -822,22 +1014,94 @@ const modifyWorkoutTool: McpTool = {
 
         const workoutType = (params.workoutType || workout.workoutType) as WorkoutType;
         const sport = params.sport || workout.sport;
-        const targetDistance = params.targetDistance !== undefined ? params.targetDistance : workout.targetDistance;
-        const targetDuration = params.targetDuration !== undefined ? params.targetDuration : workout.targetDuration;
-        const targetPace = params.targetPace !== undefined ? params.targetPace : workout.targetPace;
-        const structuredSteps = params.structuredSteps !== undefined ? params.structuredSteps : workout.structuredSteps;
+        const vdot = workout.goal.currentVdot || 45;
+        const ftpWatts = workout.goal.ftpAtCreation || undefined;
 
+        let structuredSteps: StructuredWorkoutV2 | null = workout.structuredSteps
+            ? parseStructuredWorkout(workout.structuredSteps)
+            : null;
+        if (params.structuredSteps !== undefined) {
+            structuredSteps = normalizeMcpStructuredSteps(
+                params.structuredSteps,
+                workoutType,
+                sport,
+                vdot,
+                ftpWatts,
+            );
+        }
+
+        let targetDistance = params.targetDistance !== undefined ? params.targetDistance : workout.targetDistance;
+        let targetDuration = params.targetDuration !== undefined ? params.targetDuration : workout.targetDuration;
+        let targetPaceMinSecondsPerKm = params.targetPaceMinSecondsPerKm !== undefined ? params.targetPaceMinSecondsPerKm : workout.targetPaceMinSecondsPerKm;
+        let targetPaceMaxSecondsPerKm = params.targetPaceMaxSecondsPerKm !== undefined ? params.targetPaceMaxSecondsPerKm : workout.targetPaceMaxSecondsPerKm;
+        let targetPowerMinWatts = params.targetPowerMinWatts !== undefined ? params.targetPowerMinWatts : workout.targetPowerMinWatts;
+        let targetPowerMaxWatts = params.targetPowerMaxWatts !== undefined ? params.targetPowerMaxWatts : workout.targetPowerMaxWatts;
         let plannedTss = params.plannedTss;
+
+        if (params.structuredSteps !== undefined && structuredSteps) {
+            const summary = summarizeStructuredWorkout(structuredSteps, params.targetPace ?? workout.targetPace, ftpWatts);
+            const flattened = flattenStructuredWorkout(structuredSteps);
+
+            let derivedMinPace: number | undefined;
+            let derivedMaxPace: number | undefined;
+            let derivedMinWatts: number | undefined;
+            let derivedMaxWatts: number | undefined;
+
+            for (const s of flattened) {
+                if (s.target?.type === 'pace') {
+                    if (s.target.min) derivedMinPace = derivedMinPace ? Math.min(derivedMinPace, s.target.min) : s.target.min;
+                    if (s.target.max) derivedMaxPace = derivedMaxPace ? Math.max(derivedMaxPace, s.target.max) : s.target.max;
+                } else if (s.target?.type === 'power') {
+                    if (s.target.minWatts) derivedMinWatts = derivedMinWatts ? Math.min(derivedMinWatts, s.target.minWatts) : s.target.minWatts;
+                    if (s.target.maxWatts) derivedMaxWatts = derivedMaxWatts ? Math.max(derivedMaxWatts, s.target.maxWatts) : s.target.maxWatts;
+                }
+            }
+
+            if (params.targetDistance === undefined && summary.totalDistanceMeters > 0) {
+                targetDistance = summary.totalDistanceMeters;
+            }
+            if (params.targetDuration === undefined && summary.totalDurationSeconds > 0) {
+                targetDuration = summary.totalDurationSeconds;
+            }
+            if (params.targetPaceMinSecondsPerKm === undefined && derivedMinPace) {
+                targetPaceMinSecondsPerKm = derivedMinPace;
+            }
+            if (params.targetPaceMaxSecondsPerKm === undefined && derivedMaxPace) {
+                targetPaceMaxSecondsPerKm = derivedMaxPace;
+            }
+            if (params.targetPowerMinWatts === undefined && derivedMinWatts) {
+                targetPowerMinWatts = derivedMinWatts;
+            }
+            if (params.targetPowerMaxWatts === undefined && derivedMaxWatts) {
+                targetPowerMaxWatts = derivedMaxWatts;
+            }
+            if (plannedTss === undefined && summary.estimatedTss > 0) {
+                plannedTss = summary.estimatedTss;
+            }
+        }
+
         if (plannedTss === undefined) {
             plannedTss = calculateWorkoutPlannedTss({
                 workoutType,
                 sport,
                 targetDistance: targetDistance || 0,
                 targetDuration: targetDuration || null,
-                targetPace: targetPace || null,
+                targetPace: (params.targetPace !== undefined ? params.targetPace : workout.targetPace) || null,
                 structuredSteps: structuredSteps || null,
-                ftpWatts: workout.goal.ftpAtCreation || undefined,
+                ftpWatts,
             });
+        }
+
+        let normalizedPowerZone: number | null | undefined = undefined;
+        if (params.targetPowerZone !== undefined) {
+            if (params.targetPowerZone === null || params.targetPowerZone === '') {
+                normalizedPowerZone = null;
+            } else {
+                const parsed = typeof params.targetPowerZone === 'number'
+                    ? Math.round(params.targetPowerZone)
+                    : parseInt(String(params.targetPowerZone).replace(/^Z/i, ''), 10);
+                normalizedPowerZone = isNaN(parsed) ? null : parsed;
+            }
         }
 
         const updated = await prisma.workout.update({
@@ -849,18 +1113,24 @@ const modifyWorkoutTool: McpTool = {
                 ...(params.phase !== undefined && { phase: params.phase as PlanPhase }),
                 ...(params.sport !== undefined && { sport }),
                 ...(params.notes !== undefined && { notes: params.notes }),
-                ...(params.targetDistance !== undefined && { targetDistance }),
-                ...(params.targetDuration !== undefined && { targetDuration }),
-                ...(params.targetPace !== undefined && { targetPace }),
-                ...(params.targetPaceMinSecondsPerKm !== undefined && { targetPaceMinSecondsPerKm: params.targetPaceMinSecondsPerKm }),
-                ...(params.targetPaceMaxSecondsPerKm !== undefined && { targetPaceMaxSecondsPerKm: params.targetPaceMaxSecondsPerKm }),
+                ...(targetDistance !== undefined && { targetDistance }),
+                ...(targetDuration !== undefined && { targetDuration }),
+                ...(params.targetPace !== undefined && { targetPace: params.targetPace }),
+                ...(targetPaceMinSecondsPerKm !== undefined && { targetPaceMinSecondsPerKm }),
+                ...(targetPaceMaxSecondsPerKm !== undefined && { targetPaceMaxSecondsPerKm }),
+                ...(params.targetPaceZoneLabel !== undefined && { targetPaceZoneLabel: params.targetPaceZoneLabel }),
                 ...(params.targetPowerWatts !== undefined && { targetPowerWatts: params.targetPowerWatts }),
-                ...(params.targetPowerMinWatts !== undefined && { targetPowerMinWatts: params.targetPowerMinWatts }),
-                ...(params.targetPowerMaxWatts !== undefined && { targetPowerMaxWatts: params.targetPowerMaxWatts }),
+                ...(targetPowerMinWatts !== undefined && { targetPowerMinWatts }),
+                ...(targetPowerMaxWatts !== undefined && { targetPowerMaxWatts }),
+                ...(normalizedPowerZone !== undefined && { targetPowerZone: normalizedPowerZone }),
+                ...(params.targetFtpPercent !== undefined && { targetFtpPercent: params.targetFtpPercent }),
+                ...(params.targetCadenceRpm !== undefined && { targetCadenceRpm: params.targetCadenceRpm }),
+                ...(params.targetRpe !== undefined && { targetRpe: params.targetRpe }),
+                ...(params.targetHrZone !== undefined && { targetHrZone: params.targetHrZone }),
                 ...(params.targetHrMinBpm !== undefined && { targetHrMinBpm: params.targetHrMinBpm }),
                 ...(params.targetHrMaxBpm !== undefined && { targetHrMaxBpm: params.targetHrMaxBpm }),
                 plannedTss,
-                ...(params.structuredSteps !== undefined && { structuredSteps: params.structuredSteps }),
+                ...(params.structuredSteps !== undefined && { structuredSteps: (structuredSteps as any) ?? undefined }),
             },
         });
 

@@ -6,11 +6,11 @@ import { createHash } from 'crypto';
 import { GET as getProtectedResource } from '@/app/.well-known/oauth-protected-resource/route';
 import { GET as getAuthorizationServer } from '@/app/.well-known/oauth-authorization-server/route';
 import { POST as registerClient } from '@/app/mcp/oauth/register/route';
-import { POST as authorizePost } from '@/app/mcp/oauth/authorize/route';
+import { GET as authorizeGet, POST as authorizePost } from '@/app/mcp/oauth/authorize/route';
 import { POST as tokenPost } from '@/app/mcp/oauth/token/route';
 import { GET as mcpGet, POST as mcpPost } from '@/app/mcp/route';
 import { evaluatePlanSafety } from '@/lib/mcp/safety';
-import { createConsentCsrfToken } from '@/lib/mcp/oauth';
+import { createConsentCsrfToken, isAllowedMcpRedirectUri, getPublicOrigin } from '@/lib/mcp/oauth';
 
 // Mock dependencies
 jest.mock('@/lib/redis', () => ({
@@ -28,6 +28,7 @@ jest.mock('@/lib/db', () => {
         mcpOAuthClient: {
             create: jest.fn(),
             findUnique: jest.fn(),
+            update: jest.fn(),
         },
         mcpOAuthCode: {
             create: jest.fn(),
@@ -199,6 +200,7 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             const evilUris = [
                 'https://attacker.evil.com/callback',
                 'https://claude.ai.evil.com/cb',
+                'https://google.com.attacker.com',
                 'javascript:alert(1)',
                 'http://example.com/cb',
                 'https://claude.ai/../evil',
@@ -215,6 +217,185 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
                 const data = await res.json();
                 expect(data.error).toBe('invalid_redirect_uri');
             }
+        });
+
+        it('strictly validates allowed redirect URIs via isAllowedMcpRedirectUri', () => {
+            // Must allow:
+            expect(isAllowedMcpRedirectUri('https://vertexaisearch.cloud.google.com/oauth/callback')).toBe(true);
+            expect(isAllowedMcpRedirectUri('https://oauth-redirect.googleusercontent.com/r/project')).toBe(true);
+            expect(isAllowedMcpRedirectUri('https://gemini.google.com/oauth')).toBe(true);
+            expect(isAllowedMcpRedirectUri('cursor://anyscheme/callback')).toBe(true);
+            expect(isAllowedMcpRedirectUri('vscode://vscode.github-authentication/did-authenticate')).toBe(true);
+            expect(isAllowedMcpRedirectUri('http://127.0.0.1:8080/callback')).toBe(true);
+            expect(isAllowedMcpRedirectUri('http://localhost:3000/callback')).toBe(true);
+
+            // Must reject:
+            expect(isAllowedMcpRedirectUri('https://claude.ai.evil.com/cb')).toBe(false);
+            expect(isAllowedMcpRedirectUri('https://google.com.attacker.com')).toBe(false);
+            expect(isAllowedMcpRedirectUri('http://example.com/cb')).toBe(false);
+            expect(isAllowedMcpRedirectUri('javascript:alert(1)')).toBe(false);
+            expect(isAllowedMcpRedirectUri('https://claude.ai/../evil')).toBe(false);
+            expect(isAllowedMcpRedirectUri('https://claude.ai/%2e%2e/evil')).toBe(false);
+            expect(isAllowedMcpRedirectUri('https://10.0.0.1/cb')).toBe(false);
+            expect(isAllowedMcpRedirectUri('https://192.168.1.1/cb')).toBe(false);
+        });
+
+        it('resolves public origin properly via getPublicOrigin with reverse-proxy headers', () => {
+            const reqForwarded = new Request('http://0.0.0.0:3000/mcp/oauth/authorize', {
+                headers: {
+                    'x-forwarded-proto': 'https',
+                    'x-forwarded-host': 'runflow.schuelken.uk',
+                },
+            });
+            expect(getPublicOrigin(reqForwarded)).toBe('https://runflow.schuelken.uk');
+
+            const reqHost = new Request('http://localhost:3000/mcp/oauth/authorize', {
+                headers: {
+                    host: 'runflow.schuelken.uk',
+                },
+            });
+            expect(getPublicOrigin(reqHost)).toBe('https://runflow.schuelken.uk');
+        });
+
+        it('auto-creates client on GET /mcp/oauth/authorize if client does not exist and URI is allowed', async () => {
+            mockDb.mcpOAuthClient.findUnique.mockResolvedValue(null);
+            mockDb.mcpOAuthClient.create.mockResolvedValue({
+                clientId: 'auto-gemini-client',
+                clientName: 'Google Gemini',
+                redirectUris: ['https://oauth-redirect.googleusercontent.com/r/project'],
+            });
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp/oauth/authorize?client_id=auto-gemini-client&redirect_uri=https://oauth-redirect.googleusercontent.com/r/project&client_name=Google%20Gemini',
+                'GET',
+                undefined,
+                {
+                    'x-forwarded-proto': 'https',
+                    'x-forwarded-host': 'runflow.schuelken.uk',
+                }
+            );
+
+            const res = await authorizeGet(req);
+            expect(res.status).toBe(307); // Next.js NextResponse.redirect status
+            expect(res.headers.get('location')).toContain('https://runflow.schuelken.uk/mcp/authorize');
+            expect(mockDb.mcpOAuthClient.create).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        clientId: 'auto-gemini-client',
+                        clientName: 'Google Gemini',
+                        redirectUris: ['https://oauth-redirect.googleusercontent.com/r/project'],
+                    }),
+                })
+            );
+        });
+
+        it('auto-registers redirect_uri on GET /mcp/oauth/authorize if client exists under same provider', async () => {
+            mockDb.mcpOAuthClient.findUnique.mockResolvedValue({
+                clientId: 'gemini-client-1',
+                clientName: 'Google Gemini',
+                redirectUris: ['https://gemini.google.com/oauth'],
+            });
+            mockDb.mcpOAuthClient.update.mockResolvedValue({});
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp/oauth/authorize?client_id=gemini-client-1&redirect_uri=https://oauth-redirect.googleusercontent.com/r/project',
+                'GET',
+                undefined,
+                {
+                    'x-forwarded-proto': 'https',
+                    'x-forwarded-host': 'runflow.schuelken.uk',
+                }
+            );
+
+            const res = await authorizeGet(req);
+            expect(res.status).toBe(307);
+            expect(mockDb.mcpOAuthClient.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: { clientId: 'gemini-client-1' },
+                    data: {
+                        redirectUris: [
+                            'https://gemini.google.com/oauth',
+                            'https://oauth-redirect.googleusercontent.com/r/project',
+                        ],
+                    },
+                })
+            );
+        });
+
+        it('rejects GET /mcp/oauth/authorize if client exists and redirect_uri is from a different provider', async () => {
+            mockDb.mcpOAuthClient.findUnique.mockResolvedValue({
+                clientId: 'claude-client-1',
+                clientName: 'Claude',
+                redirectUris: ['https://claude.ai/callback'],
+            });
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp/oauth/authorize?client_id=claude-client-1&redirect_uri=https://oauth-redirect.googleusercontent.com/r/project',
+                'GET'
+            );
+
+            const res = await authorizeGet(req);
+            expect(res.status).toBe(400);
+            const data = await res.json();
+            expect(data.error).toBe('invalid_redirect_uri');
+        });
+
+        it('validates Origin header on POST /mcp/oauth/authorize allowing reverse-proxy public origin', async () => {
+            mockDb.user.findUnique.mockResolvedValue({
+                id: 'user-paid-1',
+                isAdmin: false,
+                aiSettings: { usageTier: 'tier2' },
+            });
+
+            mockDb.mcpOAuthClient.findUnique.mockResolvedValue({
+                clientId: 'cuid-claude-client',
+                redirectUris: ['https://claude.ai/api/mcp/callback'],
+            });
+
+            // Rejected untrusted origin
+            const reqBadOrigin = makeRequest(
+                'http://0.0.0.0:3000/mcp/oauth/authorize',
+                'POST',
+                {
+                    client_id: 'cuid-claude-client',
+                    redirect_uri: 'https://claude.ai/api/mcp/callback',
+                    code_challenge: 'test-challenge',
+                },
+                {
+                    origin: 'https://evil-cross-origin.com',
+                }
+            );
+            const resBadOrigin = await authorizePost(reqBadOrigin);
+            expect(resBadOrigin.status).toBe(403);
+
+            // Allowed public origin via x-forwarded headers
+            const consentCsrfToken = createConsentCsrfToken({
+                userId: 'user-paid-1',
+                clientId: 'cuid-claude-client',
+                redirectUri: 'https://claude.ai/api/mcp/callback',
+                codeChallenge: 'abc-challenge-123',
+                state: 'random-state-1',
+            });
+            mockDb.mcpOAuthCode.create.mockResolvedValue({ id: 'code-1' });
+
+            const reqGoodOrigin = makeRequest(
+                'http://0.0.0.0:3000/mcp/oauth/authorize',
+                'POST',
+                {
+                    client_id: 'cuid-claude-client',
+                    redirect_uri: 'https://claude.ai/api/mcp/callback',
+                    code_challenge: 'abc-challenge-123',
+                    state: 'random-state-1',
+                    consentCsrfToken,
+                },
+                {
+                    origin: 'https://runflow.schuelken.uk',
+                    'x-forwarded-proto': 'https',
+                    'x-forwarded-host': 'runflow.schuelken.uk',
+                }
+            );
+            const resGoodOrigin = await authorizePost(reqGoodOrigin);
+            expect(resGoodOrigin.status).toBe(200);
         });
 
         it('rejects authorization for Free Tier user (none / tier1)', async () => {

@@ -6,6 +6,8 @@ import {
     hashToken,
     isUserPaidPremium,
     isAllowedMcpRedirectUri,
+    isSameProviderOrLoopback,
+    getPublicOrigin,
     verifyConsentCsrfToken,
     AUTH_CODE_TTL_SECONDS,
 } from '@/lib/mcp/oauth';
@@ -22,23 +24,40 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    if (clientId && redirectUri) {
+    if (clientId && redirectUri && isAllowedMcpRedirectUri(redirectUri)) {
         const client = await prisma.mcpOAuthClient.findUnique({
             where: { clientId },
-            select: { redirectUris: true },
         });
-        if (client) {
+
+        if (!client) {
+            await prisma.mcpOAuthClient.create({
+                data: {
+                    clientId,
+                    clientName: searchParams.get('client_name') || 'External AI Assistant (MCP)',
+                    redirectUris: [redirectUri],
+                },
+            });
+        } else {
             const registeredUris = (client.redirectUris as string[]) || [];
             if (!registeredUris.includes(redirectUri)) {
-                return NextResponse.json(
-                    { error: 'invalid_redirect_uri', error_description: 'Redirect URI does not match client registration' },
-                    { status: 400 }
-                );
+                const isMatch = registeredUris.some((regUri) => isSameProviderOrLoopback(redirectUri, regUri));
+                if (isMatch) {
+                    await prisma.mcpOAuthClient.update({
+                        where: { clientId },
+                        data: { redirectUris: [...registeredUris, redirectUri] },
+                    });
+                } else {
+                    return NextResponse.json(
+                        { error: 'invalid_redirect_uri', error_description: 'Redirect URI does not match client registration' },
+                        { status: 400 }
+                    );
+                }
             }
         }
     }
 
-    const authorizePageUrl = new URL('/mcp/authorize', request.nextUrl.origin);
+    const publicOrigin = getPublicOrigin(request);
+    const authorizePageUrl = new URL('/mcp/authorize', publicOrigin);
     searchParams.forEach((value, key) => {
         authorizePageUrl.searchParams.set(key, value);
     });
@@ -50,8 +69,19 @@ export async function POST(request: NextRequest) {
     try {
         const originHeader = request.headers.get('origin');
         if (originHeader) {
-            const expectedOrigin = request.nextUrl.origin;
-            if (originHeader !== expectedOrigin) {
+            let nextAuthOrigin = '';
+            try {
+                if (process.env.NEXTAUTH_URL) nextAuthOrigin = new URL(process.env.NEXTAUTH_URL).origin;
+            } catch {}
+            let appUrlOrigin = '';
+            try {
+                if (process.env.NEXT_PUBLIC_APP_URL) appUrlOrigin = new URL(process.env.NEXT_PUBLIC_APP_URL).origin;
+            } catch {}
+
+            const allowedOrigins = new Set(
+                [request.nextUrl.origin, getPublicOrigin(request), nextAuthOrigin, appUrlOrigin].filter(Boolean)
+            );
+            if (!allowedOrigins.has(originHeader)) {
                 return NextResponse.json(
                     { error: 'invalid_request', error_description: 'Cross-origin authorization approval is forbidden' },
                     { status: 403 }
@@ -127,23 +157,42 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const client = await prisma.mcpOAuthClient.findUnique({
+        let client = await prisma.mcpOAuthClient.findUnique({
             where: { clientId },
         });
 
         if (!client) {
-            return NextResponse.json(
-                { error: 'invalid_client', error_description: 'OAuth client not found' },
-                { status: 400 }
-            );
+            if (isAllowedMcpRedirectUri(redirectUri)) {
+                client = await prisma.mcpOAuthClient.create({
+                    data: {
+                        clientId,
+                        clientName: 'External AI Assistant (MCP)',
+                        redirectUris: [redirectUri],
+                    },
+                });
+            } else {
+                return NextResponse.json(
+                    { error: 'invalid_client', error_description: 'OAuth client not found' },
+                    { status: 400 }
+                );
+            }
         }
 
         const registeredUris = (client.redirectUris as string[]) || [];
         if (!registeredUris.includes(redirectUri)) {
-            return NextResponse.json(
-                { error: 'invalid_redirect_uri', error_description: 'The requested redirect URI does not match client registration' },
-                { status: 400 }
-            );
+            const isMatch = registeredUris.some((regUri) => isSameProviderOrLoopback(redirectUri, regUri));
+            if (isMatch) {
+                const updatedUris = [...registeredUris, redirectUri];
+                await prisma.mcpOAuthClient.update({
+                    where: { clientId },
+                    data: { redirectUris: updatedUris },
+                });
+            } else {
+                return NextResponse.json(
+                    { error: 'invalid_redirect_uri', error_description: 'The requested redirect URI does not match client registration' },
+                    { status: 400 }
+                );
+            }
         }
 
         // Verify cryptographic consent CSRF token

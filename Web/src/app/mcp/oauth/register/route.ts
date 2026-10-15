@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
         }
 
         const {
+            client_id,
             client_name,
             redirect_uris,
             grant_types = ['authorization_code', 'refresh_token'],
@@ -70,21 +71,26 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json(
                     {
                         error: 'invalid_redirect_uri',
-                        error_description: `Redirect URI "${uri}" is not allowed. Supported providers are Claude, Anthropic, Google, and localhost/127.0.0.1.`,
+                        error_description: `Redirect URI "${uri}" is not allowed. Supported providers are Claude, Anthropic, Google, OpenAI, supported native applications (Cursor, VS Code, etc.), and local loopback.`,
                     },
                     { status: 400, headers: CORS_HEADERS }
                 );
             }
         }
 
+        const clientData: any = {
+            clientName: client_name.trim(),
+            redirectUris: redirect_uris,
+            grantTypes: grant_types,
+            responseTypes: response_types,
+            tokenEndpointAuthMethod: token_endpoint_auth_method,
+        };
+        if (client_id && typeof client_id === 'string') {
+            clientData.clientId = client_id;
+        }
+
         const client = await prisma.mcpOAuthClient.create({
-            data: {
-                clientName: client_name.trim(),
-                redirectUris: redirect_uris,
-                grantTypes: grant_types,
-                responseTypes: response_types,
-                tokenEndpointAuthMethod: token_endpoint_auth_method,
-            },
+            data: clientData,
         });
 
         return NextResponse.json(

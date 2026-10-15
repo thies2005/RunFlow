@@ -28,12 +28,37 @@ export function verifyPkce(codeVerifier: string, codeChallenge: string): boolean
 }
 
 /**
+ * Determines the public canonical origin of an incoming request taking reverse-proxy headers into account
+ */
+export function getPublicOrigin(request: Request): string {
+    const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
+    const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+    const host = forwardedHost || request.headers.get('host')?.split(',')[0]?.trim();
+    if (host && !host.startsWith('0.0.0.0') && !host.startsWith('127.0.0.1') && !host.startsWith('localhost')) {
+        const proto = forwardedProto || 'https';
+        return `${proto}://${host}`;
+    }
+    if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('0.0.0.0')) {
+        try { return new URL(process.env.NEXTAUTH_URL).origin; } catch {}
+    }
+    if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('0.0.0.0')) {
+        try { return new URL(process.env.NEXT_PUBLIC_APP_URL).origin; } catch {}
+    }
+    if (host) {
+        const proto = forwardedProto || (host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https');
+        return `${proto}://${host}`;
+    }
+    return new URL(request.url).origin;
+}
+
+/**
  * Strict Redirect URI Validator for MCP OAuth 2.1 (RFC 6749 / RFC 7591 / RFC 8252).
  * Parses with `new URL(uri)`:
  * - Rejects any URI with username, password, or URL fragment (#)
  * - Rejects path traversal (.. or %2e%2e)
- * - If http:: ONLY allows loopback (localhost or 127.0.0.1)
- * - If https:: ONLY allows claude.ai / *.claude.ai, *.anthropic.com, aistudio.google.com, gemini.google.com
+ * - Allows custom native app schemes: cursor:, vscode:, claude:, windsurf:
+ * - If http:: ONLY allows loopback (localhost, 127.0.0.1, [::1])
+ * - If https:: allows Claude/Anthropic, Google/Gemini/Googleusercontent, ChatGPT/OpenAI, and MCP_ALLOWED_REDIRECT_HOSTS
  * - Rejects any other scheme or host
  */
 export function isAllowedMcpRedirectUri(uri: string): boolean {
@@ -53,23 +78,79 @@ export function isAllowedMcpRedirectUri(uri: string): boolean {
             return false;
         }
 
-        const host = parsed.hostname.toLowerCase();
         const protocol = parsed.protocol;
+        const host = parsed.hostname.toLowerCase();
+
+        // Allow custom native app schemes (RFC 8252)
+        const ALLOWED_NATIVE_SCHEMES = ['cursor:', 'vscode:', 'claude:', 'windsurf:'];
+        if (ALLOWED_NATIVE_SCHEMES.includes(protocol)) {
+            return true;
+        }
 
         if (protocol === 'http:') {
-            return host === '127.0.0.1' || host === 'localhost';
+            return host === '127.0.0.1' || host === 'localhost' || host === '[::1]';
         }
 
         if (protocol === 'https:') {
-            if (host === 'claude.ai' || host.endsWith('.claude.ai')) {
+            // Reject local and private IPv4 ranges on https
+            if (
+                host === 'localhost' ||
+                host === '127.0.0.1' ||
+                host === '0.0.0.0' ||
+                host === '[::1]' ||
+                /^10\./.test(host) ||
+                /^192\.168\./.test(host) ||
+                /^172\.(1[6-9]|2\d|3[0-1])\./.test(host) ||
+                /^169\.254\./.test(host)
+            ) {
+                return false;
+            }
+
+            // Claude / Anthropic
+            if (
+                host === 'claude.ai' ||
+                host.endsWith('.claude.ai') ||
+                host === 'anthropic.com' ||
+                host.endsWith('.anthropic.com')
+            ) {
                 return true;
             }
-            if (host.endsWith('.anthropic.com')) {
+
+            // Google / Gemini / Vertex
+            if (
+                host === 'google.com' ||
+                host.endsWith('.google.com') ||
+                host === 'googleusercontent.com' ||
+                host.endsWith('.googleusercontent.com') ||
+                host === 'gstatic.com' ||
+                host.endsWith('.gstatic.com')
+            ) {
                 return true;
             }
-            if (host === 'aistudio.google.com' || host === 'gemini.google.com') {
+
+            // OpenAI / ChatGPT
+            if (
+                host === 'chatgpt.com' ||
+                host.endsWith('.chatgpt.com') ||
+                host === 'openai.com' ||
+                host.endsWith('.openai.com')
+            ) {
                 return true;
             }
+
+            // Additional configured redirect hosts
+            const extraHostsEnv = process.env.MCP_ALLOWED_REDIRECT_HOSTS;
+            if (extraHostsEnv) {
+                const extraHosts = extraHostsEnv
+                    .split(',')
+                    .map((h) => h.trim().toLowerCase())
+                    .filter(Boolean);
+                if (extraHosts.some((h) => host === h || host.endsWith('.' + h))) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         return false;
@@ -79,6 +160,78 @@ export function isAllowedMcpRedirectUri(uri: string): boolean {
 }
 
 export const isValidRedirectUri = isAllowedMcpRedirectUri;
+
+/**
+ * Resolves the provider or domain group for an MCP OAuth redirect URI
+ */
+export function getUriProvider(uri: string): string | null {
+    try {
+        const parsed = new URL(uri);
+        const protocol = parsed.protocol;
+        const host = parsed.hostname.toLowerCase();
+
+        const ALLOWED_NATIVE_SCHEMES = ['cursor:', 'vscode:', 'claude:', 'windsurf:'];
+        if (ALLOWED_NATIVE_SCHEMES.includes(protocol)) {
+            return protocol.replace(':', '');
+        }
+
+        if (protocol === 'http:' && (host === '127.0.0.1' || host === 'localhost' || host === '[::1]')) {
+            return 'loopback';
+        }
+
+        if (protocol === 'https:') {
+            if (
+                host === 'claude.ai' ||
+                host.endsWith('.claude.ai') ||
+                host === 'anthropic.com' ||
+                host.endsWith('.anthropic.com')
+            ) {
+                return 'anthropic';
+            }
+            if (
+                host === 'google.com' ||
+                host.endsWith('.google.com') ||
+                host === 'googleusercontent.com' ||
+                host.endsWith('.googleusercontent.com') ||
+                host === 'gstatic.com' ||
+                host.endsWith('.gstatic.com')
+            ) {
+                return 'google';
+            }
+            if (
+                host === 'chatgpt.com' ||
+                host.endsWith('.chatgpt.com') ||
+                host === 'openai.com' ||
+                host.endsWith('.openai.com')
+            ) {
+                return 'openai';
+            }
+
+            const extraHostsEnv = process.env.MCP_ALLOWED_REDIRECT_HOSTS;
+            if (extraHostsEnv) {
+                const extraHosts = extraHostsEnv
+                    .split(',')
+                    .map((h) => h.trim().toLowerCase())
+                    .filter(Boolean);
+                for (const h of extraHosts) {
+                    if (host === h || host.endsWith('.' + h)) {
+                        return h;
+                    }
+                }
+            }
+        }
+    } catch {}
+    return null;
+}
+
+/**
+ * Checks if two redirect URIs share the same provider, loopback group, or registered base domain
+ */
+export function isSameProviderOrLoopback(uriA: string, uriB: string): boolean {
+    const provA = getUriProvider(uriA);
+    const provB = getUriProvider(uriB);
+    return provA !== null && provA === provB;
+}
 
 /**
  * Generates an HMAC-SHA256 bound consent CSRF token for the OAuth 2.1 authorization step.

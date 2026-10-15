@@ -96,17 +96,9 @@ function EditorContent({
 
     const handleViewModeChange = useCallback(
         (vm: 'calendar' | 'analysis') => {
-            if (vm === 'analysis') {
-                if (isPremium) {
-                    setViewMode('analysis');
-                } else {
-                    toast.info('Upgrade to premium to access AI plan analysis.');
-                }
-            } else {
-                setViewMode('calendar');
-            }
+            setViewMode(vm);
         },
-        [isPremium]
+        []
     );
 
     useEffect(() => {

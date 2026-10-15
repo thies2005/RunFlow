@@ -111,9 +111,10 @@ export function AnalysisView({ workouts, goalId, raceDate, raceType, isNoRace }:
         // Initial values from server data if available
         let initialCtl = 45;
         let initialAtl = 45;
-        if (serverFitnessData?.data && serverFitnessData.data.length > 0) {
-            initialCtl = serverFitnessData.data[0].plannedCtl || 45;
-            initialAtl = serverFitnessData.data[0].plannedAtl || 45;
+        const curvePoints = (serverFitnessData as any)?.curve ?? serverFitnessData?.data ?? [];
+        if (curvePoints.length > 0) {
+            initialCtl = curvePoints[0].plannedCtl || 45;
+            initialAtl = curvePoints[0].plannedAtl || 45;
         }
 
         const points = calculateProjectedFitness(dailyLoads, { initialCtl, initialAtl });

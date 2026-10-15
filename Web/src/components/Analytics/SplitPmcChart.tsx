@@ -187,15 +187,15 @@ function SplitPmcChartComponent({
             const atlComb = d.atlCombined ?? d.atl ?? 0;
             const tsbComb = d.tsbCombined ?? d.tsb ?? (ctlComb - atlComb);
 
-            const ctlRun = d.ctlRunning ?? 0;
-            const atlRun = d.atlRunning ?? 0;
-            const tsbRun = d.tsbRunning ?? (ctlRun - atlRun);
+            const ctlRun = d.ctlRunning ?? d.ctl ?? 0;
+            const atlRun = d.atlRunning ?? d.atl ?? 0;
+            const tsbRun = d.tsbRunning ?? d.tsb ?? (ctlRun - atlRun);
 
             const ctlB = d.ctlBike ?? 0;
             const atlB = d.atlBike ?? 0;
             const tsbB = d.tsbBike ?? (ctlB - atlB);
 
-            const runT = d.runTss ?? 0;
+            const runT = d.runTss ?? (d as any).runningTss ?? 0;
             const bikeT = d.bikeTss ?? 0;
             const combinedTss = runT + bikeT;
 

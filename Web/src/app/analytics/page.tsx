@@ -543,7 +543,7 @@ export default function AnalyticsPage() {
 
                                 {/* Split & Combined PMC Chart */}
                                 <SplitPmcChart
-                                    data={cyclingData?.pmcSeries || fitnessData}
+                                    data={cyclingData?.pmcSeries?.length ? cyclingData.pmcSeries : fitnessData}
                                     initialView="combined"
                                     title="Multi-Sport Performance Management (PMC)"
                                     hideRangeSelector
@@ -654,7 +654,7 @@ export default function AnalyticsPage() {
 
                                 {/* Running PMC */}
                                 <SplitPmcChart
-                                    data={cyclingData?.pmcSeries || fitnessData}
+                                    data={cyclingData?.pmcSeries?.length ? cyclingData.pmcSeries : fitnessData}
                                     initialView="running"
                                     title="Running Fitness & Fatigue (rTSS PMC)"
                                     hideRangeSelector

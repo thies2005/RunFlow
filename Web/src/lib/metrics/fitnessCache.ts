@@ -94,30 +94,42 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             }
         }
 
-        const activities = await prisma.activity.findMany({
-            where: {
-                userId,
-                startDate: { gte: startDate }
-            },
-            orderBy: { startDate: 'asc' },
-            select: {
-                id: true,
-                type: true,
-                startDate: true,
-                distance: true,
-                movingTime: true,
-                trimp: true,
-                runningTss: true,
-                bikeTss: true,
-                hrZone1Time: true,
-                hrZone2Time: true,
-                hrZone3Time: true,
-                hrZone4Time: true,
-                hrZone5Time: true,
-                hrZone6Time: true,
-                hrZone7Time: true,
-            }
-        });
+        const [user, activities] = await Promise.all([
+            prisma.user?.findUnique
+                ? prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { ftpWatts: true }
+                })
+                : Promise.resolve(null),
+            prisma.activity.findMany({
+                where: {
+                    userId,
+                    startDate: { gte: startDate }
+                },
+                orderBy: { startDate: 'asc' },
+                select: {
+                    id: true,
+                    type: true,
+                    startDate: true,
+                    distance: true,
+                    movingTime: true,
+                    trimp: true,
+                    runningTss: true,
+                    bikeTss: true,
+                    averageWatts: true,
+                    weightedAverageWatts: true,
+                    npWatts: true,
+                    hrZone1Time: true,
+                    hrZone2Time: true,
+                    hrZone3Time: true,
+                    hrZone4Time: true,
+                    hrZone5Time: true,
+                    hrZone6Time: true,
+                    hrZone7Time: true,
+                }
+            })
+        ]);
+        const userFtp = user?.ftpWatts;
 
         // 5. Iterate Day by Day
         const today = toUtcMidnight(new Date());
@@ -186,14 +198,28 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
 
                 // Cycling Bike TSS
                 const isRide = a.type === 'RIDE' || a.type === 'VIRTUAL_RIDE';
-                const bikeTss = isRide ? (a.bikeTss ?? trimp) : 0;
+                let bikeTss = 0;
+                if (isRide) {
+                    if (a.bikeTss && a.bikeTss > 0) {
+                        bikeTss = a.bikeTss;
+                    } else {
+                        const np = a.npWatts ?? a.weightedAverageWatts ?? a.averageWatts;
+                        if (np && np > 0) {
+                            const ftp = userFtp || 200;
+                            const ifFactor = np / ftp;
+                            bikeTss = Math.round(((a.movingTime * np * ifFactor) / (ftp * 3600)) * 100);
+                        } else {
+                            bikeTss = trimp || 0;
+                        }
+                    }
+                }
 
                 dailyTrimp += trimp;
                 dailyRunningTss += runningTss;
                 dailyBikeTss += bikeTss;
 
                 // For combined fitness load: use bikeTss for rides instead of trimp when present
-                const activityCombinedLoad = (isRide && a.bikeTss && a.bikeTss > 0) ? a.bikeTss : trimp;
+                const activityCombinedLoad = (isRide && bikeTss > 0) ? bikeTss : trimp;
                 dailyCombinedLoad += activityCombinedLoad;
             }
 
@@ -291,14 +317,48 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
         const today = toUtcMidnight(new Date());
 
         // 1. Get latest cached entry
-        const latest = await prisma.dailyFitness.findFirst({
+        let latest = await prisma.dailyFitness.findFirst({
             where: { userId },
             orderBy: { date: 'desc' }
         });
 
-        if (!latest) return null;
+        if (!latest) {
+            const firstActivity = prisma.activity?.findFirst
+                ? await prisma.activity.findFirst({
+                    where: { userId },
+                    orderBy: { startDate: 'asc' },
+                    select: { id: true, startDate: true },
+                })
+                : null;
+            if (!firstActivity) return null;
+            await updateFitnessCache(userId, [firstActivity]);
+            return prisma.dailyFitness.findFirst({
+                where: { userId },
+                orderBy: { date: 'desc' },
+            });
+        }
 
-        const latestDate = toUtcMidnight(new Date(latest.date));
+        let latestDate = toUtcMidnight(new Date(latest.date));
+
+        if (latestDate.getTime() < today.getTime()) {
+            const recentActivity = prisma.activity?.findFirst
+                ? await prisma.activity.findFirst({
+                    where: { userId, startDate: { gte: latestDate } },
+                    select: { id: true },
+                })
+                : null;
+            if (recentActivity) {
+                await updateFitnessCache(userId, [{ startDate: latestDate }]);
+                const refreshedLatest = await prisma.dailyFitness.findFirst({
+                    where: { userId },
+                    orderBy: { date: 'desc' },
+                });
+                if (refreshedLatest) {
+                    latest = refreshedLatest;
+                    latestDate = toUtcMidnight(new Date(latest.date));
+                }
+            }
+        }
 
         // If cache is already up to date (or in the future??), return it
         if (latestDate.getTime() >= today.getTime()) {

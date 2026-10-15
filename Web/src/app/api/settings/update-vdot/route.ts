@@ -31,6 +31,8 @@ export async function GET() {
                 useImperial: true,
                 healthTrackingEnabled: true,
                 vdotCorrectionFactor: true,
+                effectiveVo2maxCorrectionFactor: true,
+                matchToMyWhoosh: true,
                 vdotReferenceRaceDate: true,
                 vdotReferenceRaceTime: true,
                 vdotReferenceRaceType: true,
@@ -91,7 +93,9 @@ export async function GET() {
             hrZone4Max: user?.hrZone4Max || 170,
             hrZone5Max: user?.hrZone5Max || 178,
             hrZone6Max: user?.hrZone6Max || 187,
-            includeCrossTraining: user?.includeCrossTraining ?? true,
+            includeCrossTraining: user?.includeCrossTraining ?? false,
+            effectiveVo2maxCorrectionFactor: user?.effectiveVo2maxCorrectionFactor ?? 1.0,
+            matchToMyWhoosh: user?.matchToMyWhoosh ?? false,
             useImperial: user?.useImperial ?? false,
             healthTrackingEnabled: user?.healthTrackingEnabled ?? false,
             runsPerWeek: activeGoal?.runsPerWeek || 4,
@@ -139,7 +143,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, maxLongRunKm, calibrationFactor, longRunDay, qualityDay, swimDay, restDays } = body;
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, maxLongRunKm, calibrationFactor, effectiveVo2maxCorrectionFactor, matchToMyWhoosh, longRunDay, qualityDay, swimDay, restDays } = body;
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -170,6 +174,16 @@ export async function POST(req: NextRequest) {
                 userUpdateData.autoRevolvingVo2max = null;
                 userUpdateData.autoRevolvingCalculatedAt = null;
             }
+        }
+
+        // Effective VO2max correction factor (Shared-Baseline pipeline): 0.75 to 1.25
+        if (typeof effectiveVo2maxCorrectionFactor === 'number' && effectiveVo2maxCorrectionFactor >= 0.75 && effectiveVo2maxCorrectionFactor <= 1.25) {
+            userUpdateData.effectiveVo2maxCorrectionFactor = effectiveVo2maxCorrectionFactor;
+        }
+
+        // MyWhoosh structured-workout auto-matching preference
+        if (typeof matchToMyWhoosh === 'boolean') {
+            userUpdateData.matchToMyWhoosh = matchToMyWhoosh;
         }
 
         // Persist calibration reference race data so the form can restore it

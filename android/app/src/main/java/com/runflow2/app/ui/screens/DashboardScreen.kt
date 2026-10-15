@@ -24,7 +24,6 @@ import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Flag
-import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Timer
@@ -66,7 +65,6 @@ import com.runflow2.app.core.util.LoginPrompt
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.analytics.AnalyticsBundle
-import com.runflow2.app.domain.analytics.MetricSource
 import com.runflow2.app.ui.components.DailyFormSheet
 import com.runflow2.app.ui.components.DeltaGood
 import com.runflow2.app.ui.components.InfoChip
@@ -216,24 +214,10 @@ fun DashboardScreen(
                 // ---- This week ----
                 item {
                     val a = analytics
-                    // Lifetime metrics get a change caption so they don't look
-                    // frozen: reference is the newest trend/daily entry at
-                    // least N days old (the first entry when the series is
-                    // younger); suppressed when the change rounds to zero.
-                    // Server-sourced VDOT is never diffed against the local
-                    // trend series — the two sources are never mixed; the
-                    // caption returns on the next local computation.
-                    val vdotDelta = a?.let { bundle ->
-                        if (bundle.vdotSource == MetricSource.SERVER) {
-                            null
-                        } else {
-                            bundle.effectiveVdot?.let { current ->
-                                val ref = bundle.vdotTrend.lastOrNull { it.date <= today.minusDays(30) }
-                                    ?: bundle.vdotTrend.firstOrNull()
-                                ref?.let { current - it.vdot }
-                            }
-                        }
-                    }?.takeIf { abs(it) >= 0.05 }
+                    // Fitness gets a change caption so it doesn't look frozen:
+                    // reference is the newest daily point at least 7 days old
+                    // (the first entry when the series is younger); suppressed
+                    // when the change rounds to zero.
                     val ctlDelta = a?.let { bundle ->
                         val ref = bundle.daily.lastOrNull { it.date <= today.minusDays(7) }
                             ?: bundle.daily.firstOrNull()
@@ -293,19 +277,6 @@ fun DashboardScreen(
                                     captionGood = ctlDelta?.let { it > 0 },
                                 )
                             }
-                            // Full width so the long two-metric label never
-                            // truncates against the neighboring tiles.
-                            StatTile(
-                                label = "VDOT (Training Paces)",
-                                value = Format.oneDecimal(a?.effectiveVdot),
-                                icon = Icons.Outlined.MonitorHeart,
-                                accent = MaterialTheme.colorScheme.tertiary,
-                                caption = vdotDelta?.let {
-                                    if (it > 0) "Δ30d +${Format.oneDecimal(it)}"
-                                    else "Δ30d -${Format.oneDecimal(abs(it))}"
-                                },
-                                captionGood = vdotDelta?.let { it > 0 },
-                            )
                         }
                     }
                 }
@@ -442,15 +413,23 @@ fun DashboardScreen(
                         val total = workouts.size.coerceAtLeast(1)
                         val a = analytics
                         val race = goal.raceType()
+                        // "Now" projection: the HR-based aerobic VO2max is the
+                        // primary race-prediction VO2max (training VDOT is the
+                        // fallback), penalised by the current marathon shape.
                         // Triathlon goals project the WHOLE race (swim + T1 +
                         // bike + T2 + run) — a run-distance prediction would
                         // show just the run leg (~1:40 for a middle distance).
-                        val projected = a?.effectiveVdot?.let { eff ->
-                            if (race.tri) {
-                                TriathlonTimeEstimator.estimate(eff, race)?.projected?.totalSeconds
-                            } else {
-                                (goal.customDistanceKm ?: race.distanceKm)?.let { km ->
-                                    VdotMath.predictTimeSec(eff, km * 1000.0)?.toInt()
+                        val vo2 = a?.aerobicVo2max ?: a?.effectiveVdot
+                        val nowPredicted = if (race.tri) {
+                            vo2?.let { TriathlonTimeEstimator.estimate(it, race)?.projected?.totalSeconds }
+                        } else {
+                            (goal.customDistanceKm ?: race.distanceKm)?.let { km ->
+                                vo2?.let {
+                                    VdotMath.predictTimeWithShapeSec(
+                                        it,
+                                        km * 1000.0,
+                                        a?.marathonShape?.roundToInt() ?: 100,
+                                    )?.toInt()
                                 }
                             }
                         }
@@ -500,13 +479,13 @@ fun DashboardScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                     ) {
                                         Column {
-                                            Text("Target", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Goal", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             Text(Format.duration(goal.targetTimeSec), style = MaterialTheme.typography.titleMedium)
                                         }
                                         Column(horizontalAlignment = Alignment.End) {
-                                            Text("Projected", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Now", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                             Text(
-                                                projected?.let { Format.duration(it) } ?: "—",
+                                                nowPredicted?.let { Format.duration(it) } ?: "—",
                                                 style = MaterialTheme.typography.titleMedium,
                                                 color = MaterialTheme.colorScheme.primary,
                                             )

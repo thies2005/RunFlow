@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         const [user, activeGoal] = await Promise.all([
             prisma.user.findUnique({
                 where: { id: userId },
-                select: { hrMax: true, includeCrossTraining: true, vdotCorrectionFactor: true }
+                select: { hrMax: true, includeCrossTraining: true, effectiveVo2maxCorrectionFactor: true }
             }),
             prisma.goal.findFirst({
                 where: { userId, isActive: true },
@@ -32,8 +32,8 @@ export async function GET(request: Request) {
 
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
         const maxHR = user?.hrMax || 185;
-        const includeCrossTraining = user?.includeCrossTraining ?? true;
-        const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
+        const includeCrossTraining = user?.includeCrossTraining ?? false;
+        const effectiveVo2maxCorrectionFactor = user?.effectiveVo2maxCorrectionFactor ?? 1.0;
 
         const { searchParams } = new URL(request.url);
         const range = searchParams.get('range') || '1_YEAR'; // Default to 1 year
@@ -375,9 +375,10 @@ export async function GET(request: Request) {
             }
             const weekCrossTraining = crossTrainingActivitiesForShape.slice(crossStartIdx, crossEndIdx);
 
-            // Calculate raw VO2 and apply correction factor (matching stats API)
+            // Calculate raw VO2 and apply the effective VO2max correction factor
+            // (matching stats API: aerobicVo2max = rawVO2max * effectiveVo2maxCorrectionFactor)
             const rawVO2 = calculateWeightedEffectiveVO2max(weekRuns, maxHR);
-            const effectiveVO2 = rawVO2 ? rawVO2 * vdotCorrectionFactor : 0;
+            const effectiveVO2 = rawVO2 ? rawVO2 * effectiveVo2maxCorrectionFactor : 0;
 
             // Respect user's cross-training preference
             const tempShape = calculateMarathonShape(

@@ -1,18 +1,3 @@
-/**
- * Two-metric core computation
- * ===========================
- *
- * The single source of the two fitness metrics, shared by
- * /api/analytics/stats and /api/mobile/v1/analytics/stats so the two
- * endpoints can never disagree:
- *
- *  - bestEffortVdot: performance VDOT — THE planning metric (training paces,
- *    plan creation, race projections). 0 when no run qualifies (>= 5 km
- *    within 90 days). Already scaled by vdotCorrectionFactor.
- *  - aerobicVo2max: HR-based aerobic-fitness trend (display only, never
- *    feeds paces), scaled by vdotCorrectionFactor.
- *  - rawVo2max: the aerobic value before the correction factor.
- */
 import { AnalyticsService } from '@/lib/services/analytics';
 import { bestEffortVdot } from './effectiveVdot';
 import type { ActivityForShape } from './runalyze';
@@ -21,17 +6,43 @@ export interface CoreMetrics {
     bestEffortVdot: number;
     aerobicVo2max: number;
     rawVo2max: number;
+    effectiveVo2maxCorrectionFactor: number;
+    vdotCorrectionFactor: number;
 }
 
+/**
+ * Shared-Baseline Two-Stage Pipeline:
+ * 1. calibratedEffectiveVo2max (aerobicVo2max) = rawVo2max * effectiveVo2maxCorrectionFactor
+ *    -> Drives Dashboard VO2max and Race Predictions (+ Marathon Shape penalty)
+ * 2. trainingVdot (bestEffortVdot) = calibratedEffectiveVo2max * vdotCorrectionFactor
+ *    -> Drives Training Paces (falls back to pace-only bestEffortVdot if no HR data exists)
+ */
 export function computeCoreMetrics(
     runActivities: ActivityForShape[],
     maxHr: number,
-    vdotCorrectionFactor: number,
+    vdotCorrectionFactor: number = 1.0,
+    effectiveVo2maxCorrectionFactor: number = 1.0,
 ): CoreMetrics {
-    const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHr, vdotCorrectionFactor);
+    const effFactor = effectiveVo2maxCorrectionFactor > 0 ? effectiveVo2maxCorrectionFactor : 1.0;
+    const paceFactor = vdotCorrectionFactor > 0 ? vdotCorrectionFactor : 1.0;
+
+    const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(
+        runActivities,
+        maxHr,
+        effFactor
+    );
+
+    const fallbackPaceVdot = bestEffortVdot(runActivities, 1.0);
+    const baselineFitness = effectiveVO2max > 0 ? effectiveVO2max : fallbackPaceVdot;
+    const trainingVdot = baselineFitness > 0
+        ? parseFloat((baselineFitness * paceFactor).toFixed(1))
+        : 0;
+
     return {
-        bestEffortVdot: bestEffortVdot(runActivities, vdotCorrectionFactor),
+        bestEffortVdot: trainingVdot,
         aerobicVo2max: effectiveVO2max,
         rawVo2max: rawVO2max,
+        effectiveVo2maxCorrectionFactor: effFactor,
+        vdotCorrectionFactor: paceFactor,
     };
 }

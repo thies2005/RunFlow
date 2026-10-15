@@ -413,6 +413,7 @@ export function MobileLayout() {
                 effectiveVO2max={analyticsMetrics.runalyzeMetrics.effectiveVO2max}
                 rawVO2max={analyticsMetrics.runalyzeMetrics.rawVO2max}
                 vdotCorrectionFactor={analyticsMetrics.runalyzeMetrics.vdotCorrectionFactor}
+                effectiveVo2maxCorrectionFactor={statsData?.effectiveVo2maxCorrectionFactor || 1.0}
                 shapePercent={analyticsMetrics.runalyzeMetrics.shape}
                 activities={activitiesData?.activities || []}
             />

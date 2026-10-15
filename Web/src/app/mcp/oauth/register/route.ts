@@ -6,7 +6,7 @@ import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Mcp-Session-Id, MCP-Protocol-Version',
 };
 
 export async function OPTIONS() {
@@ -51,12 +51,11 @@ export async function POST(request: NextRequest) {
             token_endpoint_auth_method = 'none',
         } = body || {};
 
-        if (!client_name || typeof client_name !== 'string' || !client_name.trim() || client_name.trim().length > 100) {
-            return NextResponse.json(
-                { error: 'invalid_client_metadata', error_description: 'client_name is required (1-100 characters)' },
-                { status: 400, headers: CORS_HEADERS }
-            );
-        }
+        // RFC 7591 §2: client_name is OPTIONAL — default when omitted or blank
+        const resolvedClientName =
+            typeof client_name === 'string' && client_name.trim().length > 0
+                ? client_name.trim().slice(0, 100)
+                : 'MCP Client';
 
         if (!Array.isArray(redirect_uris) || redirect_uris.length === 0 || redirect_uris.length > 5) {
             return NextResponse.json(
@@ -71,7 +70,7 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json(
                     {
                         error: 'invalid_redirect_uri',
-                        error_description: `Redirect URI "${uri}" is not allowed. Supported providers are Claude, Anthropic, Google, OpenAI, supported native applications (Cursor, VS Code, etc.), and local loopback.`,
+                        error_description: `Redirect URI "${uri}" is not allowed. Use an https:// URI, an RFC 8252 loopback URI (http://localhost, http://127.0.0.1, http://[::1]), or a valid custom app URI scheme (e.g. cursor://, vscode://, claude://).`,
                     },
                     { status: 400, headers: CORS_HEADERS }
                 );
@@ -79,7 +78,7 @@ export async function POST(request: NextRequest) {
         }
 
         const clientData: any = {
-            clientName: client_name.trim(),
+            clientName: resolvedClientName,
             redirectUris: redirect_uris,
             grantTypes: grant_types,
             responseTypes: response_types,

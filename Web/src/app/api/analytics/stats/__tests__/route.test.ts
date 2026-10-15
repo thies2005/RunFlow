@@ -63,7 +63,7 @@ import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
 import { handleError } from '@/lib/errors/handler';
-import { calculateVdot } from '@/lib/metrics/vdot';
+import { AnalyticsService } from '@/lib/services/analytics';
 
 describe('GET /api/analytics/stats', () => {
     beforeEach(() => {
@@ -198,8 +198,10 @@ describe('GET /api/analytics/stats', () => {
         const response = await GET(mockRequest);
         const data = await response.json();
 
-        const liveVdot = calculateVdot({ distance: 5000, timeSeconds: 1800 });
-        expect(data.vdot).toBeCloseTo(liveVdot, 10);
+        // Shared-baseline two-stage pipeline: the planning VDOT is computed live
+        // (calibrated effective VO2max x vdotCorrectionFactor = 44 x 1.0), never
+        // the stale persisted value.
+        expect(data.vdot).toBe(44);
         expect(data.vdot).not.toBe(55);
         // HR-based aerobic-fitness trend is computed live, never from storage
         expect(data.effectiveVO2max).toBe(44);
@@ -214,6 +216,10 @@ describe('GET /api/analytics/stats', () => {
             autoRevolvingVo2max: 55,
         });
         (prisma.activity.findMany as jest.Mock).mockResolvedValue([]);
+        // No HR-qualifying data either: the real service returns zeros here,
+        // so the live calibrated VDOT is 0 and the persisted value is the
+        // only remaining source.
+        (AnalyticsService.calculateVO2max as jest.Mock).mockReturnValueOnce({ rawVO2max: 0, effectiveVO2max: 0 });
 
         const mockRequest = new NextRequest('http://localhost:3000/api/analytics/stats');
 

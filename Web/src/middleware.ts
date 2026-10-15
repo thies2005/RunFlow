@@ -257,7 +257,7 @@ export async function middleware(request: NextRequest) {
         `frame-src 'none'`,
         `object-src 'none'`,
         `base-uri 'self'`,
-        `form-action 'self'`,
+        `form-action 'self' https: http:`,
         `manifest-src 'self'`,
         `upgrade-insecure-requests`
     ].join('; ')

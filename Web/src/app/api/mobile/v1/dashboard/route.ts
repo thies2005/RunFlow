@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         // Parallel data fetching
         const userPromise = prisma.user.findUnique({
             where: { id: userId },
-            select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true }
+            select: { hrMax: true, vdotCorrectionFactor: true, effectiveVo2maxCorrectionFactor: true, includeCrossTraining: true }
         });
 
         const activeGoalsPromise = prisma.goal.findMany({
@@ -133,7 +133,8 @@ export async function GET(request: NextRequest) {
         // Calculate metrics
         const maxHR = userData?.hrMax || 185;
         const vdotCorrectionFactor = userData?.vdotCorrectionFactor || 1.0;
-        const includeCrossTraining = userData?.includeCrossTraining ?? true;
+        const effectiveVo2maxCorrectionFactor = userData?.effectiveVo2maxCorrectionFactor ?? 1.0;
+        const includeCrossTraining = userData?.includeCrossTraining ?? false;
 
         const runActivities = statsActivities.filter(a => a.type === 'RUN');
         const crossTrainingActivities = statsActivities.filter(a =>
@@ -141,7 +142,7 @@ export async function GET(request: NextRequest) {
         );
 
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
-        const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+        const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, effectiveVo2maxCorrectionFactor);
         // Conditionally include cross-training based on user preference
         const marathonShape = AnalyticsService.calculateShape(
             runActivities,
@@ -253,6 +254,7 @@ export async function GET(request: NextRequest) {
                 effectiveVO2max,
                 rawVO2max,
                 vdotCorrectionFactor,
+                effectiveVo2maxCorrectionFactor,
                 marathonShape,
                 currentVdot: goals[0]?.currentVdot || null,
                 ctl,

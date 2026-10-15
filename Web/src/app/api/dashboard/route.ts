@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
         // 1. User Settings & Active Goals
         const userPromise = prisma.user.findUnique({
             where: { id: userId },
-            select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true, healthTrackingEnabled: true, vdotReferenceRaceDate: true, autoRevolvingVo2max: true }
+            select: { hrMax: true, vdotCorrectionFactor: true, effectiveVo2maxCorrectionFactor: true, includeCrossTraining: true, healthTrackingEnabled: true, vdotReferenceRaceDate: true, autoRevolvingVo2max: true }
         });
 
         const activeGoalsPromise = prisma.goal.findMany({
@@ -217,7 +217,8 @@ export async function GET(req: NextRequest) {
         // --- METRIC CALCULATION (Server-Side) ---
         const maxHR = user?.hrMax || 185;
         const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
-        const includeCrossTraining = user?.includeCrossTraining ?? true;
+        const effectiveVo2maxCorrectionFactor = user?.effectiveVo2maxCorrectionFactor ?? 1.0;
+        const includeCrossTraining = user?.includeCrossTraining ?? false;
         const autoRevolvingVo2max = user?.autoRevolvingVo2max || null;
 
         // Split for stats logic
@@ -245,9 +246,10 @@ export async function GET(req: NextRequest) {
         const threeMonthPeriodEnd = monday(new Date());
         const weeksInThreeMonths = Math.max(1, Math.round((threeMonthPeriodEnd.getTime() - threeMonthPeriodStart.getTime()) / (7 * 24 * 60 * 60 * 1000)));
         const avgWeeklyKmLast3Months = Math.round(((threeMonthRunDist / weeksInThreeMonths / 1000) * 10)) / 10;
-        // Aerobic-fitness trend (HR-based, Swain). Display/trend only — never
-        // feeds paces or planning.
-        const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+        // Aerobic-fitness trend (HR-based). Display/trend only — never
+        // feeds paces or planning. Scaled by the effective VO2max correction
+        // factor (Shared-Baseline pipeline), not the pace factor.
+        const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, effectiveVo2maxCorrectionFactor);
 
         // Planning VDOT: best-effort performance VDOT, computed live so it can
         // never lag behind the latest activities. The persisted
@@ -314,6 +316,7 @@ export async function GET(req: NextRequest) {
             effectiveVO2max,
             rawVO2max,
             vdotCorrectionFactor,
+            effectiveVo2maxCorrectionFactor,
             autoRevolvingVo2max,
             marathonShape,
             currentVdot: goals[0]?.currentVdot || null,

@@ -699,10 +699,23 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
 
     const [weight, setWeight] = useState(70);
     const [height, setHeight] = useState(175);
-    const [includeCrossTraining, setIncludeCrossTraining] = useState(true);
+    const [includeCrossTraining, setIncludeCrossTraining] = useState(false);
     const [useImperial, setUseImperial] = useState(false);
     const [healthTrackingEnabled, setHealthTrackingEnabled] = useState(false);
+    const [matchToMyWhoosh, setMatchToMyWhoosh] = useState(false);
+    const [effectiveVo2maxCorrectionFactor, setEffectiveVo2maxCorrectionFactor] = useState(1.0);
+    const [vdotCorrectionFactor, setVdotCorrectionFactor] = useState(1.0);
     const [message, setMessage] = useState('');
+
+    const { data: cyclingData } = useQuery({
+        queryKey: ['cycling-settings'],
+        queryFn: async () => {
+            const res = await fetch('/api/settings/cycling');
+            if (!res.ok) throw new Error('Failed to fetch cycling settings');
+            return res.json();
+        },
+        refetchOnWindowFocus: false,
+    });
 
     useEffect(() => {
         if (settingsData) {
@@ -711,8 +724,20 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             if (typeof settingsData.includeCrossTraining === 'boolean') setIncludeCrossTraining(settingsData.includeCrossTraining);
             if (typeof settingsData.useImperial === 'boolean') setUseImperial(settingsData.useImperial);
             if (typeof settingsData.healthTrackingEnabled === 'boolean') setHealthTrackingEnabled(settingsData.healthTrackingEnabled);
+            if (typeof settingsData.effectiveVo2maxCorrectionFactor === 'number' && settingsData.effectiveVo2maxCorrectionFactor > 0) {
+                setEffectiveVo2maxCorrectionFactor(settingsData.effectiveVo2maxCorrectionFactor);
+            }
+            if (typeof settingsData.vdotCorrectionFactor === 'number' && settingsData.vdotCorrectionFactor > 0) {
+                setVdotCorrectionFactor(settingsData.vdotCorrectionFactor);
+            }
         }
     }, [settingsData]);
+
+    useEffect(() => {
+        if (typeof cyclingData?.matchToMyWhoosh === 'boolean') {
+            setMatchToMyWhoosh(cyclingData.matchToMyWhoosh);
+        }
+    }, [cyclingData]);
 
     const saveMutation = useMutation({
         mutationFn: async () => {
@@ -731,6 +756,46 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             setTimeout(() => setMessage(''), 2000);
         },
         onError: () => setMessage('Error updating profile.'),
+    });
+
+    const mywhooshToggleMutation = useMutation({
+        mutationFn: async (enabled: boolean) => {
+            const res = await fetch('/api/settings/cycling', {
+                method: 'PUT',
+                body: JSON.stringify({ matchToMyWhoosh: enabled }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!res.ok) throw new Error('Failed to update MyWhoosh setting');
+            return res.json();
+        },
+        onSuccess: () => {
+            setMessage('MyWhoosh preference saved!');
+            queryClient.invalidateQueries({ queryKey: ['cycling-settings'] });
+            setTimeout(() => setMessage(''), 2000);
+        },
+        onError: () => setMessage('Error saving MyWhoosh setting.'),
+    });
+
+    const vdotCorrectionMutation = useMutation({
+        mutationFn: async (payload: { manualEffectiveVo2maxFactor?: number; manualFactor?: number; correctionFactor?: number }) => {
+            const res = await fetch('/api/settings/vdot-correction', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to update calibration');
+            }
+            return res.json();
+        },
+        onSuccess: () => {
+            setMessage('Calibration saved!');
+            queryClient.invalidateQueries({ queryKey: ['user-settings'] });
+            queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
+            setTimeout(() => setMessage(''), 2000);
+        },
+        onError: (err: Error) => setMessage(`Error saving calibration: ${err.message}`),
     });
 
     const healthToggleMutation = useMutation({
@@ -792,6 +857,110 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeCrossTraining ? 'bg-accent-orange' : 'bg-line-strong'}`}
                     >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeCrossTraining ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="space-y-3 pt-2 border-t border-line">
+                <h4 className="text-xs text-accent-orange font-semibold">Running Fitness · Race Predictions</h4>
+
+                <div className="p-3 rounded-md bg-surface border border-line space-y-2">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-foreground">Effective VO2max Correction Factor</p>
+                            <p className="text-[10px] text-foreground-muted">Scales HR-based aerobic fitness for race predictions</p>
+                        </div>
+                        <span className="text-sm font-mono tabular-nums text-foreground shrink-0">{effectiveVo2maxCorrectionFactor.toFixed(2)}x</span>
+                    </div>
+                    <input
+                        type="range"
+                        min="0.85"
+                        max="1.15"
+                        step="0.01"
+                        value={effectiveVo2maxCorrectionFactor}
+                        onChange={e => setEffectiveVo2maxCorrectionFactor(parseFloat(e.target.value))}
+                        className="w-full accent-accent-orange"
+                        aria-label="Effective VO2max Correction Factor"
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setEffectiveVo2maxCorrectionFactor(1.0);
+                                vdotCorrectionMutation.mutate({ manualEffectiveVo2maxFactor: 1.0 });
+                            }}
+                            disabled={vdotCorrectionMutation.isPending}
+                            className="text-xs text-foreground-muted hover:text-foreground underline disabled:opacity-50"
+                        >
+                            Reset to 1.00x
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => vdotCorrectionMutation.mutate({ manualEffectiveVo2maxFactor: effectiveVo2maxCorrectionFactor })}
+                            disabled={vdotCorrectionMutation.isPending}
+                            className="px-3 py-1.5 rounded-md bg-accent-blue text-white text-xs font-medium disabled:opacity-50"
+                        >
+                            {vdotCorrectionMutation.isPending ? 'Saving...' : 'Save Factor'}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="p-3 rounded-md bg-surface border border-line space-y-2">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-foreground">Training Pace Adjustment</p>
+                            <p className="text-[10px] text-foreground-muted">Scales best-effort VDOT for training paces</p>
+                        </div>
+                        <span className="text-sm font-mono tabular-nums text-foreground shrink-0">{vdotCorrectionFactor.toFixed(2)}x</span>
+                    </div>
+                    <input
+                        type="range"
+                        min="0.75"
+                        max="1.25"
+                        step="0.01"
+                        value={vdotCorrectionFactor}
+                        onChange={e => setVdotCorrectionFactor(parseFloat(e.target.value))}
+                        className="w-full accent-accent-orange"
+                        aria-label="Training Pace Adjustment"
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setVdotCorrectionFactor(1.0);
+                                vdotCorrectionMutation.mutate({ manualFactor: 1.0, correctionFactor: 1.0 });
+                            }}
+                            disabled={vdotCorrectionMutation.isPending}
+                            className="text-xs text-foreground-muted hover:text-foreground underline disabled:opacity-50"
+                        >
+                            Reset to 1.00x
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => vdotCorrectionMutation.mutate({ manualFactor: vdotCorrectionFactor, correctionFactor: vdotCorrectionFactor })}
+                            disabled={vdotCorrectionMutation.isPending}
+                            className="px-3 py-1.5 rounded-md bg-accent-blue text-white text-xs font-medium disabled:opacity-50"
+                        >
+                            {vdotCorrectionMutation.isPending ? 'Saving...' : 'Save Factor'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-3 pt-2 border-t border-line">
+                <h4 className="text-xs text-accent-cyan font-semibold">Cycling</h4>
+                <div className="flex items-center justify-between p-3 rounded-md bg-surface border border-line">
+                    <div>
+                        <p className="text-sm text-foreground">Match Cycling Workouts to MyWhoosh</p>
+                        <p className="text-[10px] text-foreground-muted">Match planned rides to the closest official MyWhoosh workout & enable custom .zwo workout import</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => mywhooshToggleMutation.mutate(!matchToMyWhoosh)}
+                        disabled={mywhooshToggleMutation.isPending}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${matchToMyWhoosh ? 'bg-accent-cyan' : 'bg-line-strong'} ${mywhooshToggleMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                 </div>
             </div>

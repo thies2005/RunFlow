@@ -39,10 +39,34 @@ export async function POST(request: NextRequest) {
                 );
             }
         } else {
-            const formData = await request.formData();
-            formData.forEach((value, key) => {
-                params[key] = value.toString();
-            });
+            // Safe form parsing: URLSearchParams over raw text never throws on
+            // odd client payloads, unlike request.formData()
+            const rawBody = await request.text();
+            for (const [key, value] of new URLSearchParams(rawBody).entries()) {
+                params[key] = value;
+            }
+        }
+
+        // RFC 6749 §2.3.1 (client_secret_basic): decode client_id/client_secret
+        // from the HTTP Basic authorization header when not present in the body
+        const authHeader = request.headers.get('authorization');
+        if (authHeader && /^Basic\s+\S+/i.test(authHeader)) {
+            try {
+                const decoded = Buffer.from(authHeader.replace(/^Basic\s+/i, ''), 'base64').toString('utf-8');
+                const separatorIndex = decoded.indexOf(':');
+                if (separatorIndex >= 0) {
+                    const basicClientId = decoded.slice(0, separatorIndex);
+                    const basicClientSecret = decoded.slice(separatorIndex + 1);
+                    if (!params.client_id && basicClientId) {
+                        params.client_id = decodeURIComponent(basicClientId);
+                    }
+                    if (!params.client_secret && basicClientSecret) {
+                        params.client_secret = decodeURIComponent(basicClientSecret);
+                    }
+                }
+            } catch {
+                // Malformed Basic header: fall through to body-provided credentials
+            }
         }
 
         const grantType = params.grant_type;

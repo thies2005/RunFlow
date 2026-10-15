@@ -293,6 +293,8 @@ export type PlanConfig = {
     ftpWatts?: number | null;
     /** Athlete swim CSS in seconds per 100m (falls back to `estimateSwimPaceFromVdot(vdot)`). */
     swimCssSecPer100m?: number | null;
+    /** When true, append the closest official MyWhoosh workout to generated cycling workouts' descriptions. */
+    matchToMyWhoosh?: boolean;
 };
 
 export type GeneratedWorkout = {

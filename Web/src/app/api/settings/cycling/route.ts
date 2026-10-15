@@ -59,6 +59,7 @@ export async function GET() {
                 ftpWatts: true,
                 autoEstimateFtp: true,
                 swimCssSecPer100m: true,
+                matchToMyWhoosh: true,
                 weight: true,
             },
         });
@@ -79,6 +80,7 @@ export async function GET() {
             resolvedFtp,
             autoEstimateFtp: user.autoEstimateFtp,
             swimCssSecPer100m: user.swimCssSecPer100m,
+            matchToMyWhoosh: user.matchToMyWhoosh ?? false,
             weightKg,
             wPerKg,
             zones,
@@ -98,7 +100,7 @@ export async function PUT(request: NextRequest) {
 
         const userId = session.user.id;
         const body = await request.json();
-        const { ftpWatts, autoEstimateFtp, swimCssSecPer100m } = body;
+        const { ftpWatts, autoEstimateFtp, swimCssSecPer100m, matchToMyWhoosh } = body;
 
         // Validation
         if (ftpWatts !== undefined && ftpWatts !== null) {
@@ -109,6 +111,10 @@ export async function PUT(request: NextRequest) {
 
         if (autoEstimateFtp !== undefined && typeof autoEstimateFtp !== 'boolean') {
             return NextResponse.json({ error: 'autoEstimateFtp must be a boolean' }, { status: 400 });
+        }
+
+        if (matchToMyWhoosh !== undefined && typeof matchToMyWhoosh !== 'boolean') {
+            return NextResponse.json({ error: 'matchToMyWhoosh must be a boolean' }, { status: 400 });
         }
 
         if (swimCssSecPer100m !== undefined && swimCssSecPer100m !== null) {
@@ -123,11 +129,13 @@ export async function PUT(request: NextRequest) {
                 ...(ftpWatts !== undefined && { ftpWatts: ftpWatts === null ? null : Math.round(ftpWatts) }),
                 ...(autoEstimateFtp !== undefined && { autoEstimateFtp }),
                 ...(swimCssSecPer100m !== undefined && { swimCssSecPer100m: swimCssSecPer100m === null ? null : Math.round(swimCssSecPer100m) }),
+                ...(matchToMyWhoosh !== undefined && { matchToMyWhoosh }),
             },
             select: {
                 ftpWatts: true,
                 autoEstimateFtp: true,
                 swimCssSecPer100m: true,
+                matchToMyWhoosh: true,
                 weight: true,
             },
         });
@@ -144,6 +152,7 @@ export async function PUT(request: NextRequest) {
             resolvedFtp,
             autoEstimateFtp: updatedUser.autoEstimateFtp,
             swimCssSecPer100m: updatedUser.swimCssSecPer100m,
+            matchToMyWhoosh: updatedUser.matchToMyWhoosh ?? false,
             weightKg,
             wPerKg,
             zones,

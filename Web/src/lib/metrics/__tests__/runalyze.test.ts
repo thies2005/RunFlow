@@ -25,12 +25,16 @@ describe('Runalyze Metrics', () => {
             expect(calculateEffectiveVO2max(1000, 1200, 180, 200)).toBe(0);
         });
 
-        it('should map %HRmax to %VO2max with the Swain equation (0.72 -> 0.594)', () => {
+        it('should map %HRmax to %VO2max with the blended Runalyze/Swain relation (0.72 -> ~0.573)', () => {
             // 5 km in 20:00 -> velocity 250 m/min -> VO2 cost 47.4645
-            // Swain: %VO2max = 1.45 * 0.72 - 0.45 = 0.594
-            // Effective = 47.4645 / 0.594 = 79.9
+            // Blended mapping below 85% HRmax:
+            //   exp = 0.64 * e^(1.92 * (0.72 - 1)) + 0.26 * 0.72 ≈ 0.5611
+            //   swain = 1.45 * 0.72 - 0.45 = 0.594
+            //   %VO2max = 0.65 * exp + 0.35 * swain ≈ 0.5726
+            // Effective = 47.4645 / 0.5726 ≈ 82.9 (lower %VO2max than pure Swain,
+            // so easy Zone 2 runs no longer inflate the VO2max estimate)
             const vo2 = calculateEffectiveVO2max(5000, 1200, 144, 200);
-            expect(vo2).toBe(79.9);
+            expect(vo2).toBe(82.9);
         });
 
         it('should clamp the Swain mapping at 100% VO2max at HRmax', () => {

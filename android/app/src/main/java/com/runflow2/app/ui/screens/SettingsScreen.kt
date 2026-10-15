@@ -26,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -48,6 +49,7 @@ import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.ThemeMode
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -357,6 +359,51 @@ fun SettingsScreen(
                     subtitle = "Smooth noisy fixes and drop GPS spikes from distance & route",
                     checked = settings.gpsSmoothing,
                     onChecked = { scope.launch { container.settings.setGpsSmoothing(it) } },
+                )
+            }
+
+            // The cycling FTP card itself lives on the athlete screen; the
+            // MyWhoosh matching toggle is a plain app setting, so it gets its
+            // own cycling section here.
+            SettingSection("Cycling") {
+                SwitchRow(
+                    title = "Match to MyWhoosh",
+                    subtitle = "Match cycling workouts to closest MyWhoosh workout & enable custom .zwo export",
+                    checked = settings.matchToMyWhoosh,
+                    onChecked = { scope.launch { container.settings.setMatchToMyWhoosh(it) } },
+                )
+            }
+
+            SettingSection("Running & fitness") {
+                SwitchRow(
+                    title = "Include Cross-Training in Marathon Shape",
+                    subtitle = "Rides, swims and workouts count toward the shape's cross-training component",
+                    checked = settings.includeCrossTraining,
+                    onChecked = { scope.launch { container.settings.setIncludeCrossTraining(it) } },
+                )
+                // Effective VO2max correction: 0.85x–1.15x in 0.01 steps (default 1.00x).
+                val correction = ((settings.effectiveVo2maxCorrection * 100).roundToInt().toDouble() / 100.0)
+                    .coerceIn(0.85, 1.15)
+                Text(
+                    "Effective VO2max Correction Factor: ${"%.2f".format(correction)}×",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Slider(
+                    value = correction.toFloat(),
+                    onValueChange = { raw ->
+                        scope.launch {
+                            container.settings.setEffectiveVo2maxCorrection(
+                                (raw * 100).roundToInt().toDouble() / 100.0,
+                            )
+                        }
+                    },
+                    valueRange = 0.85f..1.15f,
+                    steps = 29,
+                )
+                Text(
+                    "Scales the HR-based aerobic VO2max (and with it race predictions and marathon-shape penalties). 1.00× = uncorrected.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 

@@ -21,7 +21,7 @@ class MarathonShapeTest {
 
     @Test
     fun `mileage component drives shape when runs are short`() {
-        // 26 weekly 12 km runs, vdot 24 → mileage 12/24×100 = 50, no long runs (<13 km)
+        // 26 weekly 12 km runs, vdot 24 → mileage 12/24×100 = 50, no long runs (<15 km)
         val runs = (0..25).map { run(it * 7L, 12.0) }
         val r = MarathonShape.calculate(runs, emptyList(), 24.0, today)
         assertEquals(50.0, r.mileageScore, 0.001)
@@ -33,12 +33,12 @@ class MarathonShapeTest {
     fun `decayed long run adds one third weight`() {
         // single 30 km run 7 days ago, vdot 50:
         // mileage = (30/26)/50×100 = 2.3077
-        // base = 1.7^1.5×0.5+0.5 = 1.60826; decay 0.98^7 → longRunPoints = 1.39618
-        // (the web's details.longRunPoints is the DECAYED sum) → 13.9618 score
-        // shape = round(2.3077×2/3 + 13.9618/3) = round(6.19) = 6
+        // base = 1.7^1.5×0.5+0.5 = 1.60826; decay 0.965^7 → longRunPoints = 1.25328
+        // (the web's details.longRunPoints is the DECAYED sum) → 12.5328 score
+        // shape = round(2.3077×2/3 + 12.5328/3) = round(5.72) = 6
         val r = MarathonShape.calculate(listOf(run(7, 30.0)), emptyList(), 50.0, today)
-        assertEquals(1.39618, r.longRunPoints, 0.001)
-        assertEquals(13.9618, r.longRunScore, 0.01)
+        assertEquals(1.25328, r.longRunPoints, 0.001)
+        assertEquals(12.5328, r.longRunScore, 0.01)
         assertEquals(6, r.shape)
     }
 
@@ -57,12 +57,13 @@ class MarathonShapeTest {
 
     @Test
     fun `component and total caps apply`() {
-        // 26 weekly 100 km runs, vdot 30 → mileage capped 120, long runs capped 120
-        // raw = 120×2/3 + 120/3 = 120 → capped at 100
+        // 26 weekly 100 km runs, vdot 30 → mileage capped 100, long runs capped 100
+        // (components cap at 100 so over-target mileage cannot mask missing long runs)
+        // raw = 100×2/3 + 100/3 = 100 → capped at 100
         val runs = (0..25).map { run(it * 7L, 100.0) }
         val r = MarathonShape.calculate(runs, emptyList(), 30.0, today)
-        assertEquals(120.0, r.mileageScore, 0.001)
-        assertEquals(120.0, r.longRunScore, 0.001)
+        assertEquals(100.0, r.mileageScore, 0.001)
+        assertEquals(100.0, r.longRunScore, 0.001)
         assertEquals(100, r.shape)
     }
 

@@ -191,6 +191,9 @@ export default function PlanSetupForm({
     const [athleteCssOverride, setAthleteCssOverride] = useState<number | null>(null);
     const [athleteBikeSpeedOverride, setAthleteBikeSpeedOverride] = useState<number | null>(null);
 
+    // MyWhoosh
+    const [matchToMyWhoosh, setMatchToMyWhoosh] = useState(false);
+
     // Sub-Goals (advanced mode)
     const [subGoals, setSubGoals] = useState<SubGoalForm[]>([]);
     const [showSubGoalForm, setShowSubGoalForm] = useState(false);
@@ -351,6 +354,10 @@ export default function PlanSetupForm({
             if (settingsData.vdotCorrectionFactor && settingsData.vdotCorrectionFactor !== 1.0) {
                 setCalibrationFactor(settingsData.vdotCorrectionFactor);
                 hasExistingCalibration.current = true;
+            }
+            // Restore MyWhoosh preference
+            if (typeof settingsData.matchToMyWhoosh === 'boolean') {
+                setMatchToMyWhoosh(settingsData.matchToMyWhoosh);
             }
             if (settingsData.vdotReferenceRaceTime && settingsData.vdotReferenceRaceType) {
                 const raceTime = settingsData.vdotReferenceRaceTime;
@@ -694,6 +701,7 @@ export default function PlanSetupForm({
                 swimDay,
                 restDays,
                 sport: effectiveSport,
+                matchToMyWhoosh,
                 maxHeartRate,
                 restingHeartRate,
                 hrZoneMethod: 'CUSTOM',
@@ -796,6 +804,7 @@ export default function PlanSetupForm({
                     buildWeeks,
                     maxLongRunKm,
                     calibrationFactor,
+                    matchToMyWhoosh,
                     longRunDay,
                     qualityDay,
                     restDays,
@@ -1057,6 +1066,25 @@ export default function PlanSetupForm({
                 setRestDays={setRestDays}
                 computedPlanWeeks={computedPlanWeeks}
             />
+
+            {/* MyWhoosh (visible when cycling rides are part of the plan) */}
+            {ridesPerWeek > 0 && (
+                <div className="border-t border-glass-border pt-6">
+                    <div className="flex items-center justify-between p-3 rounded-md bg-surface border border-glass-border">
+                        <div className="pr-3">
+                            <p className="text-sm text-foreground">Match Cycling Workouts to MyWhoosh</p>
+                            <p className="text-xs text-foreground-muted">Match planned rides to the closest official MyWhoosh workout and enable custom .zwo workout import</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setMatchToMyWhoosh(!matchToMyWhoosh)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${matchToMyWhoosh ? 'bg-accent-cyan' : 'bg-glass-border'}`}
+                        >
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <HeartRateZonesSection
                 showHeartRate={showHeartRate}

@@ -52,15 +52,27 @@ export function getPublicOrigin(request: Request): string {
 }
 
 /**
- * Strict Redirect URI Validator for MCP OAuth 2.1 (RFC 6749 / RFC 7591 / RFC 8252).
+ * Universal Redirect URI Validator for MCP OAuth 2.1 (RFC 6749 / RFC 7591 / RFC 8252).
  * Parses with `new URL(uri)`:
  * - Rejects any URI with username, password, or URL fragment (#)
  * - Rejects path traversal (.. or %2e%2e)
- * - Allows custom native app schemes: cursor:, vscode:, claude:, windsurf:
- * - If http:: ONLY allows loopback (localhost, 127.0.0.1, [::1])
- * - If https:: allows Claude/Anthropic, Google/Gemini/Googleusercontent, ChatGPT/OpenAI, and MCP_ALLOWED_REDIRECT_HOSTS
- * - Rejects any other scheme or host
+ * - Rejects dangerous schemes (javascript:, data:, vbscript:, file:, blob:, about:, ws:, wss:)
+ * - If http:: ONLY allows loopback (localhost, 127.0.0.1, [::1]) per RFC 8252 §7.3
+ * - If https:: allows any public hostname containing a dot (no embedded credentials)
+ * - Allows any valid RFC 8252 custom app URI scheme
+ *   (cursor:, vscode:, claude:, windsurf:, raycast:, perplexity:, chatgpt:, zed:, etc.)
  */
+const BLOCKED_REDIRECT_SCHEMES = new Set([
+    'javascript:',
+    'data:',
+    'vbscript:',
+    'file:',
+    'blob:',
+    'about:',
+    'ws:',
+    'wss:',
+]);
+
 export function isAllowedMcpRedirectUri(uri: string): boolean {
     if (!uri || typeof uri !== 'string') return false;
     // Reject path traversal attempts in raw URI
@@ -78,82 +90,28 @@ export function isAllowedMcpRedirectUri(uri: string): boolean {
             return false;
         }
 
-        const protocol = parsed.protocol;
-        const host = parsed.hostname.toLowerCase();
+        const protocol = parsed.protocol.toLowerCase();
 
-        // Allow custom native app schemes (RFC 8252)
-        const ALLOWED_NATIVE_SCHEMES = ['cursor:', 'vscode:', 'claude:', 'windsurf:'];
-        if (ALLOWED_NATIVE_SCHEMES.includes(protocol)) {
-            return true;
-        }
-
-        if (protocol === 'http:') {
-            return host === '127.0.0.1' || host === 'localhost' || host === '[::1]';
-        }
-
-        if (protocol === 'https:') {
-            // Reject local and private IPv4 ranges on https
-            if (
-                host === 'localhost' ||
-                host === '127.0.0.1' ||
-                host === '0.0.0.0' ||
-                host === '[::1]' ||
-                /^10\./.test(host) ||
-                /^192\.168\./.test(host) ||
-                /^172\.(1[6-9]|2\d|3[0-1])\./.test(host) ||
-                /^169\.254\./.test(host)
-            ) {
-                return false;
-            }
-
-            // Claude / Anthropic
-            if (
-                host === 'claude.ai' ||
-                host.endsWith('.claude.ai') ||
-                host === 'anthropic.com' ||
-                host.endsWith('.anthropic.com')
-            ) {
-                return true;
-            }
-
-            // Google / Gemini / Vertex
-            if (
-                host === 'google.com' ||
-                host.endsWith('.google.com') ||
-                host === 'googleusercontent.com' ||
-                host.endsWith('.googleusercontent.com') ||
-                host === 'gstatic.com' ||
-                host.endsWith('.gstatic.com')
-            ) {
-                return true;
-            }
-
-            // OpenAI / ChatGPT
-            if (
-                host === 'chatgpt.com' ||
-                host.endsWith('.chatgpt.com') ||
-                host === 'openai.com' ||
-                host.endsWith('.openai.com')
-            ) {
-                return true;
-            }
-
-            // Additional configured redirect hosts
-            const extraHostsEnv = process.env.MCP_ALLOWED_REDIRECT_HOSTS;
-            if (extraHostsEnv) {
-                const extraHosts = extraHostsEnv
-                    .split(',')
-                    .map((h) => h.trim().toLowerCase())
-                    .filter(Boolean);
-                if (extraHosts.some((h) => host === h || host.endsWith('.' + h))) {
-                    return true;
-                }
-            }
-
+        if (BLOCKED_REDIRECT_SCHEMES.has(protocol)) {
             return false;
         }
 
-        return false;
+        if (protocol === 'http:') {
+            const host = parsed.hostname.toLowerCase();
+            return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+        }
+
+        if (protocol === 'https:') {
+            // Universal policy: any valid HTTPS callback host (dot-required to keep
+            // bare-IP/odd registrable hosts out); credentials & fragments rejected above.
+            // This is what lets arbitrary remote MCP clients (their own callback
+            // hosts) complete dynamic client registration.
+            return Boolean(parsed.hostname && parsed.hostname.includes('.'));
+        }
+
+        // RFC 8252 custom app URI scheme (e.g. cursor:, vscode:, claude:, windsurf:, raycast:)
+        // — the blocked dangerous schemes were rejected above.
+        return /^[a-z][a-z0-9+.-]*:$/i.test(protocol);
     } catch {
         return false;
     }

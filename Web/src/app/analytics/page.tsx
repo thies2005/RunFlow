@@ -224,7 +224,9 @@ export default function AnalyticsPage() {
         const dailyTimeMap = new Map<string, number>();
         const dailyVO2Map = new Map<string, { values: number[]; vo2max?: number }>();
         const maxHR = userData?.user?.hrMax || userData?.hrMax || 190;
-        const factor = statsData?.vdotCorrectionFactor || 1.0;
+        // Daily VO2max trend uses the Effective VO2max calibration (race-prediction baseline),
+        // not the Training Pace (vdotCorrectionFactor) adjustment.
+        const factor = statsData?.effectiveVo2maxCorrectionFactor || 1.0;
 
         activities.forEach(activity => {
             const dateKey = new Date(activity.startDate).toISOString().split('T')[0];
@@ -435,30 +437,34 @@ export default function AnalyticsPage() {
                                     <Layers className="w-4 h-4" />
                                     Combined
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedSport('RUNNING')}
-                                    className={`flex items-center gap-2 px-4 py-2 font-medium rounded-md transition-all ${
-                                        selectedSport === 'RUNNING'
-                                            ? 'bg-accent-blue text-white font-semibold shadow-xs'
-                                            : 'text-foreground-muted hover:text-foreground'
-                                    }`}
-                                >
-                                    <ActivityIcon className="w-4 h-4" />
-                                    Running
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedSport('CYCLING')}
-                                    className={`flex items-center gap-2 px-4 py-2 font-medium rounded-md transition-all ${
-                                        selectedSport === 'CYCLING'
-                                            ? 'bg-accent-orange text-white font-semibold shadow-xs'
-                                            : 'text-foreground-muted hover:text-foreground'
-                                    }`}
-                                >
-                                    <Zap className="w-4 h-4" />
-                                    Cycling
-                                </button>
+                                {combinedSportStats.runCount > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedSport('RUNNING')}
+                                        className={`flex items-center gap-2 px-4 py-2 font-medium rounded-md transition-all ${
+                                            selectedSport === 'RUNNING'
+                                                ? 'bg-accent-blue text-white font-semibold shadow-xs'
+                                                : 'text-foreground-muted hover:text-foreground'
+                                        }`}
+                                    >
+                                        <ActivityIcon className="w-4 h-4" />
+                                        Running
+                                    </button>
+                                )}
+                                {combinedSportStats.bikeCount > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedSport('CYCLING')}
+                                        className={`flex items-center gap-2 px-4 py-2 font-medium rounded-md transition-all ${
+                                            selectedSport === 'CYCLING'
+                                                ? 'bg-accent-orange text-white font-semibold shadow-xs'
+                                                : 'text-foreground-muted hover:text-foreground'
+                                        }`}
+                                    >
+                                        <Zap className="w-4 h-4" />
+                                        Cycling
+                                    </button>
+                                )}
                             </div>
 
                             {/* Range Selector */}
@@ -744,6 +750,7 @@ export default function AnalyticsPage() {
                 effectiveVO2max={runalyzeMetrics.effectiveVO2max}
                 rawVO2max={runalyzeMetrics.rawVO2max}
                 vdotCorrectionFactor={runalyzeMetrics.vdotCorrectionFactor}
+                effectiveVo2maxCorrectionFactor={statsData?.effectiveVo2maxCorrectionFactor || 1.0}
                 shapePercent={runalyzeMetrics.shape}
                 activities={activitiesData?.activities || []}
             />

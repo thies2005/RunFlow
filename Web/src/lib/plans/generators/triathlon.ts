@@ -5,6 +5,7 @@ import { estimateBikeFtpFromVdot, calculateBikeZones } from '../bike-zones';
 import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume, resolvePhaseBudget } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
 import { enrichWorkoutsWithDescriptions, getRacePace } from '../descriptions';
+import { findClosestMyWhooshWorkout } from '../mywhooshMatcher';
 
 type TriPhase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 
@@ -315,6 +316,23 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
     const result = fixBackToBackSameType(workouts, { raceDate, restDays: config.restDays });
     const racePace = getRacePace(effectiveRaceType, paces);
     enrichWorkoutsWithDescriptions(result, racePace);
+
+    if (config.matchToMyWhoosh) {
+        for (const w of result) {
+            if (w.type === WorkoutType.RIDE || w.type === WorkoutType.LONG_RIDE) {
+                const match = findClosestMyWhooshWorkout({
+                    workoutType: w.type,
+                    targetDurationSeconds: w.targetDuration || 3600,
+                    description: w.description,
+                    phase: w.phase,
+                });
+                if (match) {
+                    w.description += ` | MyWhoosh: ${match.name} (${Math.round(match.durationSeconds / 60)}m · TSS ${match.tss} · ${match.stepsSummary})`;
+                }
+            }
+        }
+    }
+
     return result;
 }
 

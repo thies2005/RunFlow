@@ -6,7 +6,6 @@ import {
     hashToken,
     isUserPaidPremium,
     isAllowedMcpRedirectUri,
-    isSameProviderOrLoopback,
     getPublicOrigin,
     verifyConsentCsrfToken,
     AUTH_CODE_TTL_SECONDS,
@@ -40,8 +39,9 @@ export async function GET(request: NextRequest) {
         } else {
             const registeredUris = (client.redirectUris as string[]) || [];
             if (!registeredUris.includes(redirectUri)) {
-                const isMatch = registeredUris.some((regUri) => isSameProviderOrLoopback(redirectUri, regUri));
-                if (isMatch) {
+                // Universal compatibility: accept and register any redirect URI that
+                // passes the universal validator (RFC 8252 loopback, https, custom schemes)
+                if (isAllowedMcpRedirectUri(redirectUri)) {
                     await prisma.mcpOAuthClient.update({
                         where: { clientId },
                         data: { redirectUris: [...registeredUris, redirectUri] },
@@ -78,8 +78,12 @@ export async function POST(request: NextRequest) {
                 if (process.env.NEXT_PUBLIC_APP_URL) appUrlOrigin = new URL(process.env.NEXT_PUBLIC_APP_URL).origin;
             } catch {}
 
+            // Reverse-proxy deployments: also accept the origin derived from the
+            // forwarded proto/host headers so consent posts do not 403 behind a proxy
+            const forwardedOrigin = `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('x-forwarded-host') || request.headers.get('host')}`;
+
             const allowedOrigins = new Set(
-                [request.nextUrl.origin, getPublicOrigin(request), nextAuthOrigin, appUrlOrigin].filter(Boolean)
+                [request.nextUrl.origin, getPublicOrigin(request), forwardedOrigin, nextAuthOrigin, appUrlOrigin].filter(Boolean)
             );
             if (!allowedOrigins.has(originHeader)) {
                 return NextResponse.json(
@@ -180,8 +184,9 @@ export async function POST(request: NextRequest) {
 
         const registeredUris = (client.redirectUris as string[]) || [];
         if (!registeredUris.includes(redirectUri)) {
-            const isMatch = registeredUris.some((regUri) => isSameProviderOrLoopback(redirectUri, regUri));
-            if (isMatch) {
+            // Universal compatibility: accept and register any redirect URI that
+            // passes the universal validator (RFC 8252 loopback, https, custom schemes)
+            if (isAllowedMcpRedirectUri(redirectUri)) {
                 const updatedUris = [...registeredUris, redirectUri];
                 await prisma.mcpOAuthClient.update({
                     where: { clientId },

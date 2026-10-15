@@ -52,6 +52,10 @@ data class AppSettings(
     // ---- cycling FTP settings ----
     val ftpWatts: Int = 0, // 0 = auto-estimate
     val autoEstimateFtp: Boolean = true,
+    // ---- analytics: marathon shape, MyWhoosh matching & VO2max calibration ----
+    val includeCrossTraining: Boolean = false,
+    val matchToMyWhoosh: Boolean = false,
+    val effectiveVo2maxCorrection: Double = 1.0,
 )
 
 class SettingsRepository(private val context: Context) {
@@ -87,6 +91,10 @@ class SettingsRepository(private val context: Context) {
         // ---- cycling FTP settings ----
         val FTP_WATTS = intPreferencesKey("ftp_watts")
         val AUTO_ESTIMATE_FTP = booleanPreferencesKey("auto_estimate_ftp")
+        // ---- analytics: marathon shape, MyWhoosh matching & VO2max calibration ----
+        val INCLUDE_CROSS_TRAINING = booleanPreferencesKey("include_cross_training")
+        val MATCH_TO_MY_WHOOSH = booleanPreferencesKey("match_to_my_whoosh")
+        val EFFECTIVE_VO2MAX_CORRECTION = doublePreferencesKey("effective_vo2max_correction")
         // ---- server two-metric snapshot (VDOT + aerobic VO2max) ----
         val SERVER_METRICS_VDOT = doublePreferencesKey("server_metrics_best_effort_vdot")
         val SERVER_METRICS_AEROBIC_VO2MAX = doublePreferencesKey("server_metrics_aerobic_vo2max")
@@ -124,6 +132,9 @@ class SettingsRepository(private val context: Context) {
             bodyAutoRefreshDay = p[Keys.BODY_AUTO_REFRESH_DAY] ?: 0L,
             ftpWatts = p[Keys.FTP_WATTS] ?: 0,
             autoEstimateFtp = p[Keys.AUTO_ESTIMATE_FTP] ?: true,
+            includeCrossTraining = p[Keys.INCLUDE_CROSS_TRAINING] ?: false,
+            matchToMyWhoosh = p[Keys.MATCH_TO_MY_WHOOSH] ?: false,
+            effectiveVo2maxCorrection = p[Keys.EFFECTIVE_VO2MAX_CORRECTION] ?: 1.0,
         )
     }
 
@@ -273,5 +284,22 @@ class SettingsRepository(private val context: Context) {
     suspend fun setCyclingFtpSettings(watts: Int, autoEstimate: Boolean) = context.dataStore.edit {
         it[Keys.FTP_WATTS] = watts
         it[Keys.AUTO_ESTIMATE_FTP] = autoEstimate
+    }
+
+    // ---- analytics: marathon shape, MyWhoosh matching & VO2max calibration ----
+
+    /** When true, rides/swims count toward the marathon-shape cross-training component. */
+    suspend fun setIncludeCrossTraining(enabled: Boolean) = context.dataStore.edit {
+        it[Keys.INCLUDE_CROSS_TRAINING] = enabled
+    }
+
+    /** When true, cycling workouts match to the closest MyWhoosh workout & enable custom .zwo export. */
+    suspend fun setMatchToMyWhoosh(enabled: Boolean) = context.dataStore.edit {
+        it[Keys.MATCH_TO_MY_WHOOSH] = enabled
+    }
+
+    /** Effective-VO2max calibration multiplier applied to the HR-based aerobic VO2max. */
+    suspend fun setEffectiveVo2maxCorrection(factor: Double) = context.dataStore.edit {
+        it[Keys.EFFECTIVE_VO2MAX_CORRECTION] = factor
     }
 }

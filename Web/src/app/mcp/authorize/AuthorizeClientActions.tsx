@@ -28,6 +28,7 @@ export function AuthorizeClientActions({
 }: AuthorizeClientActionsProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
 
     const handleAuthorize = async () => {
         setLoading(true);
@@ -57,7 +58,10 @@ export function AuthorizeClientActions({
             }
 
             if (data.redirect_uri) {
-                window.location.assign(data.redirect_uri);
+                // Keep the launch URL around so users of custom app schemes
+                // (cursor://, claude://, vscode://, ...) always get a clickable link
+                setFallbackUrl(data.redirect_uri);
+                window.location.href = data.redirect_uri;
             } else {
                 setError('Invalid server response');
                 setLoading(false);
@@ -103,6 +107,14 @@ export function AuthorizeClientActions({
                 <X className="w-4 h-4" />
                 Deny / Cancel
             </button>
+            {fallbackUrl && (
+                <a
+                    href={fallbackUrl}
+                    className="block mt-3 text-xs text-accent-cyan underline text-center"
+                >
+                    Click here if your app did not open automatically
+                </a>
+            )}
         </div>
     );
 }

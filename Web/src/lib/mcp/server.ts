@@ -292,9 +292,9 @@ export class McpServer {
 
         const commonHeaders: Record<string, string> = {
             'Access-Control-Allow-Origin': origin,
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, Mcp-Session-Id',
-            'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
+            'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Mcp-Session-Id, MCP-Protocol-Version, Last-Event-ID',
+            'Access-Control-Expose-Headers': 'Mcp-Session-Id, MCP-Protocol-Version, WWW-Authenticate',
             'Mcp-Session-Id': sessionId,
         };
 

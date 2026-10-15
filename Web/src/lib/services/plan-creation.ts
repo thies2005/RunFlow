@@ -87,6 +87,9 @@ export const PlanCreateInputSchema = z.object({
     calibrationDistance: z.enum(['5K', 'FIVE_K', '10K', 'TEN_K', 'HALF', 'HALF_MARATHON', 'MARATHON']).optional(),
     calibrationFactor: z.number().min(0.5).max(2.0).optional(),
 
+    // MyWhoosh ride matching (triathlon plans only)
+    matchToMyWhoosh: z.boolean().optional(),
+
     // Advanced fields
     planWeeks: z.number().int().positive().max(MAX_PLAN_WEEKS).nullable().optional(),
     planSource: z.string().optional(),
@@ -136,6 +139,7 @@ export function normalizePlanInput(
         longRunDay, workoutDay, swimDay, restDays,
         targetTime,
         calibrationTime, calibrationDistance, calibrationFactor,
+        matchToMyWhoosh,
         planWeeks, planSource, creationMode,
         backyardLoopDistM, backyardLoopTimeS, targetLaps,
         customDistanceM, customSwimDistM, customBikeDistM, customRunDistM,
@@ -226,6 +230,7 @@ export function normalizePlanInput(
         calibrationTime: calibrationTime ?? null,
         calibrationDistance: calibrationDistance ?? null,
         calibrationFactor: calibrationFactor ?? null,
+        matchToMyWhoosh: matchToMyWhoosh ?? false,
         deactivateExisting: planSource !== 'advanced',
         sport: resolvedSport === 'NO_RACE' ? 'RUN' : resolvedSport,
         planSource: planSource ?? undefined,
@@ -728,6 +733,7 @@ export interface CreatePlanInput {
     calibrationTime?: number | null;
     calibrationDistance?: string | null;
     calibrationFactor?: number | null;
+    matchToMyWhoosh?: boolean;
     planStartDate?: string | null;
     deactivateExisting?: boolean;
     sport?: PlanSport;
@@ -796,6 +802,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         maxLongRunKm,
         longRunDay, workoutDay, swimDay, restDays,
         calibrationTime, calibrationDistance, calibrationFactor,
+        matchToMyWhoosh,
         planStartDate, deactivateExisting = true,
         sport, planSource, creationMode,
         backyardLoopDistM, backyardLoopTimeS, targetLaps, customDistanceM,
@@ -1048,6 +1055,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         customSwimDistM: customSwimDistM ?? undefined,
         customBikeDistM: customBikeDistM ?? undefined,
         customRunDistM: customRunDistM ?? undefined,
+        matchToMyWhoosh: matchToMyWhoosh ?? false,
         ftpWatts: ftpAtCreation,
         swimCssSecPer100m: swimCssAtCreation,
     };

@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 
         const userPromise = prisma.user.findUnique({
             where: { id: userId },
-            select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true }
+            select: { hrMax: true, vdotCorrectionFactor: true, effectiveVo2maxCorrectionFactor: true, includeCrossTraining: true }
         });
 
         const activeGoalsPromise = prisma.goal.findMany({
@@ -138,7 +138,8 @@ export async function GET(req: NextRequest) {
 
         const maxHR = user?.hrMax || 185;
         const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
-        const includeCrossTraining = user?.includeCrossTraining ?? true;
+        const effectiveVo2maxCorrectionFactor = user?.effectiveVo2maxCorrectionFactor ?? 1.0;
+        const includeCrossTraining = user?.includeCrossTraining ?? false;
 
         const runActivities = statsActivities.filter(a => a.type === 'RUN');
         const crossTrainingActivities = statsActivities.filter(a =>
@@ -146,7 +147,7 @@ export async function GET(req: NextRequest) {
         );
 
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
-        const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+        const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, effectiveVo2maxCorrectionFactor);
         const marathonShape = AnalyticsService.calculateShape(
             runActivities,
             includeCrossTraining ? crossTrainingActivities : [],
@@ -193,6 +194,7 @@ export async function GET(req: NextRequest) {
             effectiveVO2max,
             rawVO2max,
             vdotCorrectionFactor,
+            effectiveVo2maxCorrectionFactor,
             marathonShape,
             currentVdot: goals[0]?.currentVdot || null,
             ctl,

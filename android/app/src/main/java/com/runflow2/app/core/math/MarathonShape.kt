@@ -37,7 +37,12 @@ object MarathonShape {
     private const val CT_LONG_RUN_WEIGHT = 0.25
     private const val CT_AEROBIC_WEIGHT = 0.25
     private const val CT_COEFFICIENT = 0.5
-    private const val COMPONENT_CAP = 120.0
+    // Component scores cap at 100: mileage over-target must not mask
+    // missing long runs (web parity — calculateMarathonShape caps both).
+    private const val MILEAGE_SCORE_CAP = 100.0
+    private const val LONG_RUN_SCORE_CAP = 100.0
+    private const val LONG_RUN_THRESHOLD_KM = 15.0
+    private const val LONG_RUN_DECAY_PER_DAY = 0.965
     private const val CT_SCORE_CAP = 100.0
     private const val CT_TARGET_WEEKLY_MINUTES = 300.0
     private const val SHAPE_CAP = 100.0
@@ -57,18 +62,18 @@ object MarathonShape {
         val last6Months = runs.filter { !it.date.isBefore(sixMonthsAgo) }
         val avgWeeklyKm = last6Months.sumOf { it.distanceKm } / 26.0
         val targetWeeklyKm = effectiveVdot
-        val mileageScore = min(COMPONENT_CAP, avgWeeklyKm / targetWeeklyKm * 100.0)
+        val mileageScore = min(MILEAGE_SCORE_CAP, avgWeeklyKm / targetWeeklyKm * 100.0)
 
-        // === LONG RUNS: >= 13 km in the last 10 weeks, 2%/day decay, 10 pts target ===
+        // === LONG RUNS: >= 15 km in the last 10 weeks, ~3.5%/day decay, 10 pts target ===
         val tenWeeksAgo = today.minusDays(70)
         var longRunPoints = 0.0
         for (run in runs) {
-            if (run.date.isBefore(tenWeeksAgo) || run.distanceKm < 13.0) continue
+            if (run.date.isBefore(tenWeeksAgo) || run.distanceKm < LONG_RUN_THRESHOLD_KM) continue
             val daysAgo = (today.toEpochDay() - run.date.toEpochDay()).toDouble()
             val basePoints = ((run.distanceKm - 13.0) / 10.0).pow(1.5) * 0.5 + 0.5
-            longRunPoints += basePoints * 0.98.pow(daysAgo)
+            longRunPoints += basePoints * LONG_RUN_DECAY_PER_DAY.pow(daysAgo)
         }
-        val longRunScore = min(COMPONENT_CAP, longRunPoints / 10.0 * 100.0)
+        val longRunScore = min(LONG_RUN_SCORE_CAP, longRunPoints / 10.0 * 100.0)
 
         // === CROSS-TRAINING: aerobic minutes over 90 days vs 300 min/week ===
         var ctScore = 0.0

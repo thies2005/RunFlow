@@ -1,6 +1,9 @@
 import { Workout } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { Edit2, Check, Activity, Zap, Flame, Dumbbell, Moon, Bike, Waves, Target, Rocket } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Edit2, Check, Activity, Zap, Flame, Dumbbell, Moon, Bike, Waves, Target, Rocket, Download, ExternalLink } from 'lucide-react';
+import { findClosestMyWhooshWorkout } from '@/lib/plans/mywhooshMatcher';
+import { generateMyWhooshZwoXml } from '@/lib/plans/zwoExporter';
 
 interface WorkoutScheduleCardProps {
     weeklyWorkouts: Workout[];
@@ -9,8 +12,48 @@ interface WorkoutScheduleCardProps {
     onCompleteWorkout: (_workout: Workout) => void;
 }
 
+const MYWHOOSH_CYCLING_TYPES = new Set(['RIDE', 'LONG_RIDE', 'BRICK']);
+
+function exportMyWhooshZwo(workout: Workout) {
+    const mwMatch = findClosestMyWhooshWorkout({
+        workoutType: workout.workoutType,
+        targetDurationSeconds: workout.targetDuration || 3600,
+        description: workout.description,
+    });
+    const xml = generateMyWhooshZwoXml({
+        name: workout.description || workout.workoutType,
+        description: workout.description || '',
+        workoutType: workout.workoutType,
+        targetDurationSeconds: workout.targetDuration || 3600,
+        phase: workout.phase || undefined,
+        matchedWorkout: mwMatch,
+    });
+    const blob = new Blob([xml], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RunFlow_${workout.workoutType}_${mwMatch?.id || 'custom'}.zwo`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+
 export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorkout, onCompleteWorkout }: WorkoutScheduleCardProps) {
     const router = useRouter();
+
+    // MyWhoosh preference (cycling settings)
+    const { data: cyclingSettings } = useQuery({
+        queryKey: ['cycling-settings'],
+        queryFn: async () => {
+            const res = await fetch('/api/settings/cycling');
+            if (!res.ok) throw new Error('Failed to fetch cycling settings');
+            return res.json();
+        },
+        refetchOnWindowFocus: false,
+        staleTime: 5 * 60 * 1000,
+    });
+    const matchToMyWhooshEnabled = cyclingSettings?.matchToMyWhoosh === true;
 
     // Find interesting workouts logic moved here
     const firstUncompletedIndex = weeklyWorkouts.findIndex((w: Workout) => !w.isCompleted);
@@ -28,6 +71,14 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
                         const isNextWorkout = index === firstUncompletedIndex;
                         const isTodayPending = !workout.isCompleted && isWorkoutToday;
                         const isNextPending = !workout.isCompleted && isNextWorkout;
+                        const isMyWhooshCycling = MYWHOOSH_CYCLING_TYPES.has(workout.workoutType);
+                        const mwMatch = isMyWhooshCycling && matchToMyWhooshEnabled
+                            ? findClosestMyWhooshWorkout({
+                                workoutType: workout.workoutType,
+                                targetDurationSeconds: workout.targetDuration || 3600,
+                                description: workout.description,
+                            })
+                            : null;
 
                         return (
                             <div key={workout.id || index} className={`p-3 rounded-md border transition-colors ${workout.isCompleted
@@ -83,6 +134,30 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
                                         )}
                                     </div>
                                 </div>
+                                {mwMatch && (
+                                    <div className="mt-2 pt-2 border-t border-line space-y-1.5">
+                                        <p className="text-[10px] text-foreground-muted leading-relaxed">
+                                            Closest MyWhoosh:{' '}
+                                            <a
+                                                href={mwMatch.mywhooshWebLibraryUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-accent-cyan hover:underline inline-flex items-center gap-0.5"
+                                            >
+                                                {mwMatch.name} ({Math.round(mwMatch.durationSeconds / 60)}m · TSS {mwMatch.tss})
+                                                <ExternalLink className="w-2.5 h-2.5" />
+                                            </a>
+                                            {' '}— {mwMatch.stepsSummary}
+                                        </p>
+                                        <button
+                                            onClick={() => exportMyWhooshZwo(workout)}
+                                            className="text-[10px] text-accent-cyan border border-accent-cyan/30 rounded px-1.5 py-0.5 hover:bg-accent-cyan/10 transition-colors inline-flex items-center gap-1"
+                                        >
+                                            <Download className="w-3 h-3" />
+                                            Export Custom MyWhoosh (.zwo)
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}

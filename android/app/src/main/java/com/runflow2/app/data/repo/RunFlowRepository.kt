@@ -1076,6 +1076,9 @@ class RunFlowRepository(
                 rangeDays = rangeDays,
                 ftpWatts = s?.ftpWatts ?: 0,
                 weightKg = profile.weightKg,
+                includeCrossTraining = s?.includeCrossTraining ?: false,
+                effectiveVo2maxCorrection = s?.effectiveVo2maxCorrection ?: 1.0,
+                maxHr = profile.hrMax,
             ),
         )
     }
@@ -1126,6 +1129,13 @@ class RunFlowRepository(
      * REPLACE the locally computed ones wholesale — never blended or averaged;
      * when it is stale, absent or reports no value, the bundle stays exactly
      * what [AnalyticsEngine] computed (the offline port — its math untouched).
+     *
+     * Shared-baseline two-stage pipeline (web parity): [aerobicVo2max]
+     * (raw VO2max × effective-VO2max correction) is the primary
+     * race-prediction VO2max, while [effectiveVdot] — the server's
+     * bestEffortVdot = calibratedEffectiveVo2max × vdotCorrection — drives
+     * training paces. When the server reports no aerobic value, the locally
+     * computed HR-based one is kept rather than nulled out.
      */
     private suspend fun applyServerMetrics(local: AnalyticsBundle): AnalyticsBundle {
         val snapshot = settings?.serverMetricsSnapshotOnce() ?: return local
@@ -1133,7 +1143,7 @@ class RunFlowRepository(
         val serverVdot = ServerMetrics.freshBestEffortVdot(snapshot, now)
         val serverAerobic = ServerMetrics.freshAerobicVo2max(snapshot, now)
         if (serverVdot == null && serverAerobic == null) return local
-        if (serverVdot == null) return local.copy(aerobicVo2max = serverAerobic)
+        if (serverVdot == null) return local.copy(aerobicVo2max = serverAerobic ?: local.aerobicVo2max)
         // The server value already includes the correction factor; rawVdot stays
         // the UNCORRECTED number the calibration UI divides by (race-result
         // correction), so invert it mechanically — still one source, no mixing.
@@ -1141,7 +1151,7 @@ class RunFlowRepository(
         return local.copy(
             rawVdot = raw,
             effectiveVdot = serverVdot,
-            aerobicVo2max = serverAerobic,
+            aerobicVo2max = serverAerobic ?: local.aerobicVo2max,
             vdotSource = MetricSource.SERVER,
         )
     }

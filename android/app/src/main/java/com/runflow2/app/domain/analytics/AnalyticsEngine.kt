@@ -7,6 +7,7 @@ import com.runflow2.app.domain.model.ActivityType
 import com.runflow2.app.domain.model.TsbStatus
 import java.time.DayOfWeek
 import java.time.LocalDate
+import kotlin.math.exp
 import kotlin.math.roundToInt
 import kotlin.math.pow
 
@@ -100,9 +101,15 @@ data class AnalyticsBundle(
     val vdotTrend: List<VdotPoint>,
     val totalRuns: Int,
     val cycling: CyclingAnalyticsSummary? = null,
-    // ---- server-override fields (set by RunFlowRepository after compute();
-    // the engine itself always produces the LOCAL defaults) ----
-    /** HR-based aerobic-fitness trend from a fresh server snapshot (display only). */
+    // ---- server-override fields (overlaid by RunFlowRepository after
+    // compute(); the engine itself always produces the LOCAL defaults) ----
+    /**
+     * HR-based aerobic-fitness trend — computed locally from recent runs
+     * (× the effective-VO2max correction) and replaced by a fresh server
+     * snapshot when available. Display only; it never feeds paces (that is
+     * effectiveVdot) but IS the primary race-prediction VO2max
+     * (web parity: calibratedEffectiveVo2max).
+     */
     val aerobicVo2max: Double? = null,
     /** Which source won the VDOT pair — UI must never mix the two sources. */
     val vdotSource: MetricSource = MetricSource.LOCAL,
@@ -117,6 +124,9 @@ object AnalyticsEngine {
         rangeDays: Int = 365,
         ftpWatts: Int = 0,
         weightKg: Double? = null,
+        includeCrossTraining: Boolean = false,
+        effectiveVo2maxCorrection: Double = 1.0,
+        maxHr: Int = 190,
     ): AnalyticsBundle {
         // CTL/ATL/TSB and zone distribution cover ALL sports (web parity);
         // distance-based metrics (VO₂ max, weekly km, volume bars) stay run-only.
@@ -190,16 +200,32 @@ object AnalyticsEngine {
 
         // Marathon shape — the web's mileage + long-run (+ cross-training)
         // composite (Web/src/lib/metrics/runalyze.ts), not a CTL ratio.
+        // Cross-training counts only when the user opted in; otherwise the
+        // 2/3 mileage + 1/3 long-run formula applies.
+        val crossTrainingActivities = if (includeCrossTraining) {
+            activities
+                .filter { it.type == ActivityType.RIDE || it.type == ActivityType.VIRTUAL_RIDE || it.type == ActivityType.SWIM || it.type == ActivityType.WORKOUT }
+                .map { MarathonShape.CrossTraining(it.date, it.movingTimeSec, it.zoneSeconds) }
+        } else {
+            emptyList()
+        }
         val shape = effectiveVdot?.let {
             MarathonShape.calculate(
                 runs = runs.map { MarathonShape.Run(it.date, it.distanceKm) },
-                crossTraining = activities
-                    .filter { it.type == ActivityType.RIDE || it.type == ActivityType.VIRTUAL_RIDE || it.type == ActivityType.SWIM || it.type == ActivityType.WORKOUT }
-                    .map { MarathonShape.CrossTraining(it.date, it.movingTimeSec, it.zoneSeconds) },
+                crossTraining = crossTrainingActivities,
                 effectiveVdot = it,
                 today = today,
             ).shape.toDouble()
         }
+
+        // Aerobic fitness (VO2max) — the HR-based trend, computed on device
+        // (web parity: calculateWeightedEffectiveVO2max × effective-VO2max
+        // correction). Display-only metric; a fresh server snapshot replaces
+        // it in RunFlowRepository.applyServerMetrics.
+        val aerobicVo2maxLocal = weightedAerobicVo2max(runs, maxHr, today)
+            ?.let { it * effectiveVo2maxCorrection }
+            ?.let { (it * 10.0).roundToInt() / 10.0 }
+            ?.takeIf { it > 0.0 }
 
         // ---- cycling analytics summary ----
         val vdotEftp = effectiveVdot?.let { estimateBikeFtpFromVdot(it, weightKg ?: 70.0) }
@@ -300,6 +326,7 @@ object AnalyticsEngine {
             vdotTrend = trend,
             totalRuns = runs.size,
             cycling = cyclingSummary,
+            aerobicVo2max = aerobicVo2maxLocal,
         )
     }
 
@@ -410,6 +437,93 @@ object AnalyticsEngine {
         if (distanceKm < 3.0 || movingTimeSec < 300) return null
         val v = VdotMath.vdot(distanceKm * 1000.0, movingTimeSec.toDouble())
         return v.takeIf { it in 15.0..90.0 }
+    }
+
+    // ---- HR-based aerobic fitness (VO2max), ported from the web's
+    // calculateEffectiveVO2max / calculateWeightedEffectiveVO2max
+    // (Web/src/lib/metrics/runalyze.ts). Display-only metric: it never
+    // feeds paces or plan creation — that is the performance-based VDOT. ----
+
+    private const val VO2MAX_MIN_DISTANCE_M = 3000.0 // 3 km
+    private const val VO2MAX_MIN_DURATION_SEC = 720 // 12 minutes
+    private const val VO2MAX_MIN_HR_PERCENT = 0.60
+    private const val VO2MAX_DECAY_HALF_LIFE_DAYS = 30.0
+    private const val VO2MAX_MIN_ACTIVITIES_FOR_MEDIAN = 5
+    private const val VO2MAX_MAX_LOOKBACK_DAYS = 120
+    private const val VO2MAX_OUTLIER_SIGMA = 1.5
+    private const val VO2MAX_CAP = 85.0
+
+    /**
+     * Effective VO2max for a single run: Daniels/Gilbert oxygen cost at the
+     * run's velocity divided by the fraction of VO2max sustained, estimated
+     * from %HRmax via the Runalyze exponential relation blended with the
+     * Swain equation above 85% HRmax. Null for too-short/too-easy efforts.
+     */
+    private fun effectiveVo2maxFor(distanceMeters: Double, timeSec: Int, avgHr: Double, maxHr: Int): Double? {
+        if (timeSec < VO2MAX_MIN_DURATION_SEC || distanceMeters < VO2MAX_MIN_DISTANCE_M || avgHr <= 0.0 || maxHr <= 0) {
+            return null
+        }
+        val hrPercent = avgHr / maxHr
+        if (hrPercent < VO2MAX_MIN_HR_PERCENT) return null
+
+        val timeMin = timeSec / 60.0
+        val velocity = distanceMeters / timeMin // m/min
+        val vo2Cost = -4.60 + 0.182258 * velocity + 0.000104 * velocity * velocity
+
+        val expPctVo2 = exp(1.92 * (hrPercent - 1.0)) * 0.64 + 0.26 * hrPercent
+        val swainPctVo2 = 1.45 * hrPercent - 0.45
+        val rawPctVo2 = if (hrPercent < 0.85) 0.65 * expPctVo2 + 0.35 * swainPctVo2 else swainPctVo2
+        val percentVo2max = rawPctVo2.coerceIn(0.0, 1.0)
+        if (percentVo2max <= 0.01) return null
+
+        val vo2 = vo2Cost / percentVo2max
+        // Cap at 85 (elite) to filter invalid GPS/HR data; 1-decimal rounding
+        return ((vo2 * 10.0).roundToInt() / 10.0)
+            .takeIf { it > 0.0 }
+            ?.coerceAtMost(VO2MAX_CAP)
+    }
+
+    /**
+     * Recency-weighted average aerobic VO2max over recent runs (raw, no
+     * correction — the caller applies the effective-VO2max factor). With 5+
+     * valid activities, outliers outside ±1.5·IQR of the median are excluded
+     * (web parity). Null when no run qualifies.
+     */
+    private fun weightedAerobicVo2max(runs: List<ActivityInput>, maxHr: Int, today: LocalDate): Double? {
+        if (maxHr <= 0) return null
+
+        val entries = ArrayList<Pair<Double, Double>>() // (vo2, recency weight)
+        for (run in runs) {
+            val avgHr = run.averageHr ?: continue
+            if (avgHr <= 0.0) continue
+            if (run.distanceKm * 1000.0 < VO2MAX_MIN_DISTANCE_M) continue
+            if (run.movingTimeSec < VO2MAX_MIN_DURATION_SEC) continue
+            val daysAgo = (today.toEpochDay() - run.date.toEpochDay()).toDouble()
+            if (daysAgo > VO2MAX_MAX_LOOKBACK_DAYS) continue
+            if (avgHr / maxHr < VO2MAX_MIN_HR_PERCENT) continue
+            val vo2 = effectiveVo2maxFor(run.distanceKm * 1000.0, run.movingTimeSec, avgHr, maxHr) ?: continue
+            val decayConstant = kotlin.math.ln(2.0) / VO2MAX_DECAY_HALF_LIFE_DAYS
+            entries += vo2 to exp(-decayConstant * daysAgo)
+        }
+        if (entries.isEmpty()) return null
+
+        val inliers = if (entries.size >= VO2MAX_MIN_ACTIVITIES_FOR_MEDIAN) {
+            val sorted = entries.map { it.first }.sorted()
+            val median = sorted[sorted.size / 2]
+            val q1 = sorted[(sorted.size * 0.25).toInt()]
+            val q3 = sorted[(sorted.size * 0.75).toInt()]
+            val iqr = q3 - q1
+            val lower = median - VO2MAX_OUTLIER_SIGMA * iqr
+            val upper = median + VO2MAX_OUTLIER_SIGMA * iqr
+            entries.filter { it.first >= lower && it.first <= upper }
+        } else {
+            entries
+        }
+        val totalWeight = inliers.sumOf { it.second }
+        if (totalWeight <= 0.0) return null
+        return (inliers.sumOf { it.first * it.second } / totalWeight)
+            .let { (it * 10.0).roundToInt() / 10.0 }
+            .takeIf { it > 0.0 }
     }
 
     /**

@@ -6,7 +6,6 @@ import {
     isUserPaidPremium,
     createConsentCsrfToken,
     isAllowedMcpRedirectUri,
-    isSameProviderOrLoopback,
 } from '@/lib/mcp/oauth';
 import { Shield, ShieldAlert, Sparkles, Check, ArrowRight } from 'lucide-react';
 import { AuthorizeClientActions } from './AuthorizeClientActions';
@@ -28,6 +27,7 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
     const {
         client_id,
         redirect_uri,
+        response_type,
         code_challenge,
         code_challenge_method = 'S256',
         state = '',
@@ -37,8 +37,17 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
     const session = await auth();
 
     if (!session?.user?.id) {
-        const fullPath = `/mcp/authorize?client_id=${encodeURIComponent(client_id || '')}&redirect_uri=${encodeURIComponent(redirect_uri || '')}&code_challenge=${encodeURIComponent(code_challenge || '')}&code_challenge_method=${encodeURIComponent(code_challenge_method)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scope)}`;
-        redirect(`/login?callbackUrl=${encodeURIComponent(fullPath)}`);
+        // Carry the full OAuth request (incl. response_type and scope) through the login redirect
+        const currentParams = new URLSearchParams({
+            client_id: client_id || '',
+            redirect_uri: redirect_uri || '',
+            response_type: response_type || 'code',
+            code_challenge: code_challenge || '',
+            code_challenge_method,
+            state,
+            scope,
+        });
+        redirect(`/login?callbackUrl=${encodeURIComponent(`/mcp/authorize?${currentParams.toString()}`)}`);
     }
 
     if (!client_id || !redirect_uri || !code_challenge) {
@@ -72,7 +81,7 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
                         <h1 className="text-xl font-bold">Invalid Redirect URI</h1>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        The requested redirect URI is not permitted. Only authorized external AI hosts (Claude, Google, OpenAI) or local loopback are allowed.
+                        The requested redirect URI is not permitted. Use an https:// URI, an RFC 8252 loopback URI (localhost / 127.0.0.1 / [::1]), or a valid custom app URI scheme.
                     </p>
                     <Link
                         href="/"
@@ -123,7 +132,9 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
 
     const registeredUris = (client.redirectUris as string[]) || [];
     if (!registeredUris.includes(redirect_uri)) {
-        if (isAllowedMcpRedirectUri(redirect_uri) && registeredUris.some((regUri) => isSameProviderOrLoopback(redirect_uri, regUri))) {
+        // Universal compatibility: accept and register any redirect URI that passes
+        // the universal validator (RFC 8252 loopback, https, custom app schemes)
+        if (isAllowedMcpRedirectUri(redirect_uri)) {
             const updatedUris = [...registeredUris, redirect_uri];
             await prisma.mcpOAuthClient.update({
                 where: { clientId: client_id },

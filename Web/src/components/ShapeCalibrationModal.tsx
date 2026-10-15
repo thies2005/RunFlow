@@ -19,6 +19,7 @@ export interface ShapeCalibrationModalProps {
     effectiveVO2max: number;
     rawVO2max?: number;
     vdotCorrectionFactor?: number;
+    effectiveVo2maxCorrectionFactor?: number;
     shapePercent: number;
     activities?: Activity[];
 }
@@ -46,11 +47,12 @@ export default function ShapeCalibrationModal({
     effectiveVO2max,
     rawVO2max,
     vdotCorrectionFactor = 1.0,
+    effectiveVo2maxCorrectionFactor = 1.0,
     shapePercent,
     activities = []
 }: ShapeCalibrationModalProps) {
     const queryClient = useQueryClient();
-    const [mode, setMode] = useState<'SHAPE' | 'VDOT' | 'MANUAL'>('VDOT');
+    const [mode, setMode] = useState<'SHAPE' | 'VDOT' | 'EVO2MAX' | 'MANUAL'>('VDOT');
 
     // VDOT Correction State
     const [vdotRaceType, setVdotRaceType] = useState<RaceType>('5K');
@@ -108,6 +110,41 @@ export default function ShapeCalibrationModal({
     // Manual Mode State
     const [manualFactor, setManualFactor] = useState(currentFactor.toString());
 
+    // Effective VO2max Calibration State (two-stage: race predictions)
+    const [evo2RaceType, setEvo2RaceType] = useState<'5K' | '10K' | 'HALF'>('5K');
+    const [evo2Hours, setEvo2Hours] = useState('');
+    const [evo2Minutes, setEvo2Minutes] = useState('');
+    const [evo2Seconds, setEvo2Seconds] = useState('');
+    const [selectedEvo2ActivityId, setSelectedEvo2ActivityId] = useState<string>('');
+    const [manualEffectiveFactor, setManualEffectiveFactor] = useState(effectiveVo2maxCorrectionFactor.toString());
+
+    // Handle activity selection for the Effective VO2max race calibration
+    const handleEvo2ActivitySelect = (activityId: string) => {
+        setSelectedEvo2ActivityId(activityId);
+        const activity = activities.find(a => a.id === activityId);
+
+        if (activity) {
+            const timeSeconds = activity.elapsedTime || activity.movingTime;
+            const h = Math.floor(timeSeconds / 3600);
+            const m = Math.floor((timeSeconds % 3600) / 60);
+            const s = timeSeconds % 60;
+
+            setEvo2Hours(h.toString());
+            setEvo2Minutes(m.toString());
+            setEvo2Seconds(s.toString());
+
+            // Map any distance in the 5K–Half band to the nearest standard race
+            const dist = activity.distance; // meters
+            if (dist < 7500) {
+                setEvo2RaceType('5K');
+            } else if (dist < 15500) {
+                setEvo2RaceType('10K');
+            } else {
+                setEvo2RaceType('HALF');
+            }
+        }
+    };
+
     // Shape Calibration Mutation (existing)
     const shapeMutation = useMutation({
         mutationFn: async (factor: number) => {
@@ -129,7 +166,18 @@ export default function ShapeCalibrationModal({
 
     // VDOT Correction Mutation (new)
     const vdotMutation = useMutation({
-        mutationFn: async (data: { raceType?: RaceType; raceTimeSeconds: number; distanceMeters?: number } | { correctionFactor: number }) => {
+        mutationFn: async (data: {
+            raceActivityId?: string;
+            raceType?: RaceType;
+            raceTime?: number;
+            raceTimeSeconds?: number;
+            raceDate?: string;
+            distanceMeters?: number;
+            correctionFactor?: number;
+            manualFactor?: number;
+            manualEffectiveVo2maxFactor?: number;
+            resetToDefault?: boolean;
+        }) => {
             const res = await fetch('/api/settings/vdot-correction', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -191,6 +239,47 @@ export default function ShapeCalibrationModal({
         vdotCalcData.newFactor >= 0.5 &&
         vdotCalcData.newFactor <= 1.5;
 
+    // Effective VO2max Calibration Calculations (two-stage stage 1: impliedVdot / rawVO2max)
+    const evo2CalcData = (() => {
+        const h = parseInt(evo2Hours) || 0;
+        const m = parseInt(evo2Minutes) || 0;
+        const s = parseInt(evo2Seconds) || 0;
+        const totalSeconds = h * 3600 + m * 60 + s;
+
+        if (totalSeconds <= 0) return null;
+
+        let impliedVdot = 0;
+        let baseRawVo2max = 0;
+        if (rawVO2max && rawVO2max > 0) {
+            baseRawVo2max = rawVO2max;
+        } else if (effectiveVO2max > 0) {
+            // Fallback: estimate raw VO2max from effective VO2max and the current factor
+            baseRawVo2max = effectiveVO2max / (effectiveVo2maxCorrectionFactor > 0 ? effectiveVo2maxCorrectionFactor : 1.0);
+        }
+
+        impliedVdot = calculateVdot({ distance: evo2RaceType, timeSeconds: totalSeconds });
+
+        let newEffectiveFactor = 0;
+        if (baseRawVo2max > 0) {
+            newEffectiveFactor = impliedVdot / baseRawVo2max;
+        }
+
+        return { impliedVdot, baseRawVo2max, newEffectiveFactor };
+    })();
+
+    // Typical range for the effective factor — outside this we warn but still allow applying
+    const evo2FactorTypical = !!evo2CalcData &&
+        evo2CalcData.newEffectiveFactor >= 0.85 &&
+        evo2CalcData.newEffectiveFactor <= 1.15;
+    // The API clamps to [0.75, 1.25] — anything outside cannot be applied from a race
+    const evo2FactorValid = !!evo2CalcData &&
+        evo2CalcData.newEffectiveFactor >= 0.75 &&
+        evo2CalcData.newEffectiveFactor <= 1.25;
+
+    const evo2ManualValue = parseFloat(manualEffectiveFactor);
+    const evo2ManualValid = !isNaN(evo2ManualValue) && evo2ManualValue >= 0.75 && evo2ManualValue <= 1.25;
+    const evo2ApplyValid = evo2CalcData ? evo2FactorValid : evo2ManualValid;
+
     // Shape Calibration Calculations (existing)
     const shapeCalcData = (() => {
         const h = parseInt(shapeHours) || 0;
@@ -242,9 +331,42 @@ export default function ShapeCalibrationModal({
         }
     };
 
+    const handleEvo2RaceSubmit = () => {
+        const h = parseInt(evo2Hours) || 0;
+        const m = parseInt(evo2Minutes) || 0;
+        const s = parseInt(evo2Seconds) || 0;
+        const totalSeconds = h * 3600 + m * 60 + s;
+
+        if (totalSeconds <= 0) return;
+
+        const selectedActivity = activities.find(a => a.id === selectedEvo2ActivityId);
+        vdotMutation.mutate({
+            ...(selectedActivity ? {
+                raceActivityId: selectedActivity.id,
+                // API contract is raceDate?: string — serialize DB/Prisma Date objects
+                raceDate: selectedActivity.startDate instanceof Date
+                    ? selectedActivity.startDate.toISOString()
+                    : selectedActivity.startDate
+            } : {}),
+            raceType: evo2RaceType,
+            raceTime: totalSeconds,
+            raceTimeSeconds: totalSeconds,
+        });
+    };
+
+    const handleEvo2ManualSubmit = (factor: number) => {
+        vdotMutation.mutate({ manualEffectiveVo2maxFactor: factor });
+    };
+
     const handleApply = () => {
         if (mode === 'VDOT' && vdotCalcData && vdotCorrectionValid) {
             handleVdotSubmit();
+        } else if (mode === 'EVO2MAX' && evo2ApplyValid) {
+            if (evo2CalcData) {
+                handleEvo2RaceSubmit();
+            } else if (!isNaN(evo2ManualValue)) {
+                handleEvo2ManualSubmit(evo2ManualValue);
+            }
         } else if (mode === 'SHAPE' && shapeFactor && isShapeInputValid) {
             shapeMutation.mutate(shapeFactor);
         } else if (mode === 'MANUAL') {
@@ -271,7 +393,13 @@ export default function ShapeCalibrationModal({
                     onClick={() => setMode('VDOT')}
                     className={`flex-1 py-3 text-sm font-medium transition ${mode === 'VDOT' ? 'text-accent-blue border-b-2 border-accent-blue' : 'text-foreground-muted hover:text-foreground'}`}
                 >
-                    VDOT Correction
+                    Training Pace
+                </button>
+                <button
+                    onClick={() => setMode('EVO2MAX')}
+                    className={`flex-1 py-3 text-sm font-medium transition ${mode === 'EVO2MAX' ? 'text-accent-cyan border-b-2 border-accent-cyan' : 'text-foreground-muted hover:text-foreground'}`}
+                >
+                    Effective VO2max
                 </button>
                 <button
                     onClick={() => setMode('SHAPE')}
@@ -417,6 +545,151 @@ export default function ShapeCalibrationModal({
                     </div>
                 )}
 
+                {/* Effective VO2max Mode (two-stage stage 1: race predictions) */}
+                {mode === 'EVO2MAX' && (
+                    <div className="space-y-4">
+                        <div className="bg-accent-cyan/10 p-3 rounded-md border border-accent-cyan/20">
+                            <p className="text-sm text-accent-cyan">
+                                Calibrate your Effective VO2max Correction Factor. This scales your HR-based
+                                aerobic fitness (raw VO2max) for race predictions and marathon shape.
+                            </p>
+                        </div>
+
+                        {/* Race auto-calibration */}
+                        <div className="space-y-2">
+                            <label className="text-sm text-foreground-muted">Auto-calibrate from a race (5K &ndash; Half Marathon)</label>
+                            <select
+                                className="w-full bg-background-secondary border border-line rounded-md px-3 py-2 text-foreground text-sm focus:border-accent-cyan outline-hidden"
+                                value={selectedEvo2ActivityId}
+                                onChange={(e) => handleEvo2ActivitySelect(e.target.value)}
+                            >
+                                <option value="">Select a race activity...</option>
+                                {activities
+                                    .filter(a => a.type === 'RUN' && a.distance >= 4800 && a.distance <= 21600)
+                                    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+                                    .slice(0, 20)
+                                    .map(a => (
+                                        <option key={a.id} value={a.id}>
+                                            {new Date(a.startDate).toLocaleDateString()} - {(a.distance / 1000).toFixed(2)}km - {formatTime(a.elapsedTime || a.movingTime)}
+                                        </option>
+                                    ))
+                                }
+                            </select>
+                        </div>
+
+                        <div className="flex gap-2">
+                            {(['5K', '10K', 'HALF'] as const).map(rt => (
+                                <button
+                                    key={rt}
+                                    onClick={() => setEvo2RaceType(rt)}
+                                    className={`px-3 py-1.5 rounded-md text-sm ${evo2RaceType === rt ? 'bg-accent-cyan text-white' : 'bg-background-secondary text-foreground-muted'}`}
+                                >
+                                    {rt === 'HALF' ? 'Half Marathon' : rt}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="flex gap-2 items-center">
+                            <input
+                                type="number" placeholder="HH" value={evo2Hours}
+                                onChange={e => setEvo2Hours(validateTimeInput(e.target.value, 23))}
+                                className="w-16 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
+                                min="0" max="23"
+                            />
+                            <span className="text-foreground-muted">:</span>
+                            <input
+                                type="number" placeholder="MM" value={evo2Minutes}
+                                onChange={e => setEvo2Minutes(validateTimeInput(e.target.value, 59))}
+                                className="w-16 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
+                                min="0" max="59"
+                            />
+                            <span className="text-foreground-muted">:</span>
+                            <input
+                                type="number" placeholder="SS" value={evo2Seconds}
+                                onChange={e => setEvo2Seconds(validateTimeInput(e.target.value, 59))}
+                                className="w-16 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
+                                min="0" max="59"
+                            />
+                        </div>
+
+                        {/* Race-derived factor preview */}
+                        {evo2CalcData && (
+                            <div className="space-y-2">
+                                <div className="grid grid-cols-3 gap-2 text-sm">
+                                    <div className="p-2 bg-background-secondary rounded-md text-center">
+                                        <p className="text-foreground-muted text-xs">Race VDOT</p>
+                                        <p className="text-foreground font-mono text-lg tabular-nums">{evo2CalcData.impliedVdot.toFixed(1)}</p>
+                                    </div>
+                                    <div className="p-2 bg-background-secondary rounded-md text-center">
+                                        <p className="text-foreground-muted text-xs">Raw VO2max</p>
+                                        <p className="text-foreground-muted font-mono text-lg tabular-nums">{evo2CalcData.baseRawVo2max.toFixed(1)}</p>
+                                    </div>
+                                    <div className="p-2 bg-background-secondary rounded-md text-center">
+                                        <p className="text-foreground-muted text-xs">Factor</p>
+                                        <p className={`font-mono text-lg tabular-nums ${evo2FactorTypical ? 'text-positive' : 'text-negative'}`}>
+                                            {evo2CalcData.newEffectiveFactor.toFixed(3)}x
+                                        </p>
+                                    </div>
+                                </div>
+                                {!evo2FactorTypical && (
+                                    <div className="p-3 rounded-md bg-negative/10 border border-negative/20">
+                                        <p className="text-xs text-negative leading-relaxed">
+                                            <strong>Warning:</strong> The race-derived factor ({evo2CalcData.newEffectiveFactor.toFixed(2)}x)
+                                            is outside the typical 0.85x&ndash;1.15x range. This usually indicates an inaccurate
+                                            Max HR, a sub-maximal effort, or heat/hills on the day.
+                                        </p>
+                                    </div>
+                                )}
+                                {!evo2FactorValid && (
+                                    <p className="text-xs text-negative">
+                                        Factor must be between 0.75x and 1.25x. Your race result differs too much from current data.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Manual adjustment */}
+                        <div className="pt-3 border-t border-line space-y-2">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm text-foreground-muted">Manual factor</label>
+                                <span className="text-xs text-foreground-muted font-mono">
+                                    Current: {effectiveVo2maxCorrectionFactor.toFixed(2)}x
+                                </span>
+                            </div>
+                            <div className="flex gap-4 items-center">
+                                <input
+                                    type="range" min="0.85" max="1.15" step="0.01"
+                                    value={manualEffectiveFactor}
+                                    onChange={e => setManualEffectiveFactor(e.target.value)}
+                                    className="flex-1 accent-accent-cyan"
+                                />
+                                <input
+                                    type="number" step="0.01" min="0.85" max="1.15"
+                                    value={manualEffectiveFactor}
+                                    onChange={e => setManualEffectiveFactor(e.target.value)}
+                                    className="w-20 bg-background-secondary border border-line rounded-md p-2 text-foreground text-center font-mono"
+                                />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setManualEffectiveFactor('1');
+                                        handleEvo2ManualSubmit(1.0);
+                                    }}
+                                    disabled={isPending}
+                                    className="text-xs text-foreground-muted hover:text-foreground underline disabled:opacity-50"
+                                >
+                                    Reset to 1.00x
+                                </button>
+                                {!isNaN(evo2ManualValue) && (evo2ManualValue < 0.85 || evo2ManualValue > 1.15) && (
+                                    <p className="text-xs text-negative">Outside typical 0.85x&ndash;1.15x range</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Shape Factor Mode */}
                 {mode === 'SHAPE' && (
                     <div className="space-y-4">
@@ -529,6 +802,7 @@ export default function ShapeCalibrationModal({
                         disabled={
                             isPending ||
                             (mode === 'VDOT' && !vdotCorrectionValid) ||
+                            (mode === 'EVO2MAX' && !evo2ApplyValid) ||
                             (mode === 'SHAPE' && !isShapeInputValid)
                         }
                         className="btn-primary px-4 py-2 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"

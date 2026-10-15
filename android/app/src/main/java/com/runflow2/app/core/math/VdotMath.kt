@@ -1,6 +1,7 @@
 package com.runflow2.app.core.math
 
 import kotlin.math.exp
+import kotlin.math.pow
 import kotlin.math.sqrt
 
 /**
@@ -54,6 +55,33 @@ object VdotMath {
             if (vdot(distanceM, mid * 60.0) > vdot) lo = mid else hi = mid
         }
         return ((lo + hi) / 2.0) * 60.0
+    }
+
+    /**
+     * Predicted time (seconds) for [distanceM] with the marathon-shape
+     * fitness penalty applied (web parity: calculateShapePenalty /
+     * applyShapePenalty). A sub-100% shape slows the raw VDOT prediction by
+     * a near-linear fraction of the remaining deficit — long races punish
+     * missing specific endurance much harder than short ones
+     * (max penalty 30% marathon, 15% half, 8% 10K, 4% 5K).
+     * [calibrationFactor] scales the penalty itself (user calibration).
+     */
+    fun predictTimeWithShapeSec(
+        effectiveVo2max: Double,
+        distanceMeters: Double,
+        shapePercent: Int,
+        calibrationFactor: Double = 1.0,
+    ): Double? {
+        val base = predictTimeSec(effectiveVo2max, distanceMeters) ?: return null
+        val maxPenalty = when {
+            distanceMeters >= 42195.0 -> 0.30 // marathon
+            distanceMeters >= 21097.5 -> 0.15 // half marathon
+            distanceMeters >= 10000.0 -> 0.08 // 10 km
+            else -> 0.04 // 5 km and shorter
+        }
+        val deficit = ((100 - shapePercent).coerceAtLeast(0)) / 100.0
+        val penalty = deficit.pow(1.05) * maxPenalty * calibrationFactor
+        return base * (1.0 + penalty)
     }
 
     /** Common race prediction distances in meters. */

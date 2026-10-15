@@ -44,6 +44,8 @@ export async function GET(request: NextRequest) {
                 select: {
                     hrMax: true,
                     vdotCorrectionFactor: true,
+                    effectiveVo2maxCorrectionFactor: true,
+                    matchToMyWhoosh: true,
                     includeCrossTraining: true,
                     updatedAt: true
                 }
@@ -69,7 +71,8 @@ export async function GET(request: NextRequest) {
 
         const maxHR = userData?.hrMax || 185;
         const vdotCorrectionFactor = userData?.vdotCorrectionFactor || 1.0;
-        const includeCrossTraining = userData?.includeCrossTraining ?? true;
+        const effectiveVo2maxCorrectionFactor = userData?.effectiveVo2maxCorrectionFactor ?? 1.0;
+        const includeCrossTraining = userData?.includeCrossTraining ?? false;
         const currentVdot = activeGoal?.currentVdot || null;
 
         // Try Cache
@@ -77,11 +80,13 @@ export async function GET(request: NextRequest) {
         // v2: the response gained the two-metric fields (bestEffortVdot,
         // aerobicVo2max, computedAt) — bumping the version keeps pre-deploy
         // cached entries (without them) from being served.
+        // v3: the response gained effectiveVo2maxCorrectionFactor (shared-baseline
+        // two-stage pipeline) — same rationale.
         const userUpdate = userData?.updatedAt?.getTime() || 0;
         const goalUpdate = activeGoal?.updatedAt?.getTime() || 0;
         const activityUpdate = lastActivityUpdate?.updatedAt?.getTime() || 0;
 
-        const cacheKey = `analytics:stats:${user.id}:v2:${userUpdate}:${goalUpdate}:${activityUpdate}:${activityCount}`;
+        const cacheKey = `analytics:stats:${user.id}:v3:${userUpdate}:${goalUpdate}:${activityUpdate}:${activityCount}`;
 
         if (redis) {
             try {
@@ -141,7 +146,7 @@ export async function GET(request: NextRequest) {
         // uses, so the two endpoints can never disagree: bestEffortVdot is the
         // planning metric (0 when no run qualifies), aerobicVo2max the
         // HR-based fitness trend (display only, never feeds paces).
-        const { bestEffortVdot, aerobicVo2max, rawVo2max } = computeCoreMetrics(runActivities, maxHR, vdotCorrectionFactor);
+        const { bestEffortVdot, aerobicVo2max, rawVo2max } = computeCoreMetrics(runActivities, maxHR, vdotCorrectionFactor, effectiveVo2maxCorrectionFactor);
         // Conditionally include cross-training based on user preference
         const marathonShape = AnalyticsService.calculateShape(
             runActivities,
@@ -156,6 +161,7 @@ export async function GET(request: NextRequest) {
             effectiveVO2max: aerobicVo2max,
             rawVO2max: rawVo2max,
             vdotCorrectionFactor,
+            effectiveVo2maxCorrectionFactor,
             marathonShape,
             currentVdot,
             ctl,

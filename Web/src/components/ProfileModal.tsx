@@ -34,7 +34,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [hrZone6Max, setHrZone6Max] = useState(187);
 
     // Marathon Shape settings
-    const [includeCrossTraining, setIncludeCrossTraining] = useState(true);
+    const [includeCrossTraining, setIncludeCrossTraining] = useState(false);
 
     // Display preferences
     const [useImperial, setUseImperial] = useState(false);

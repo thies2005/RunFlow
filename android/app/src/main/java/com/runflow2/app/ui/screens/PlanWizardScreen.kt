@@ -117,6 +117,8 @@ private data class WizardData(
     val hrRestText: String = "",
     val lthrText: String = "",
     val thresholdPaceText: String = "", // m:ss per km
+    // MyWhoosh matching for cycling workouts (web-parity wizard option)
+    val matchToMyWhoosh: Boolean = false,
     // schedule
     val longRunDay: DayOfWeek = DayOfWeek.SUNDAY,
     val workoutDay: DayOfWeek = DayOfWeek.THURSDAY,
@@ -185,6 +187,11 @@ fun PlanWizardScreen(
                 "${p.thresholdPaceSecPerKm / 60}:${(p.thresholdPaceSecPerKm % 60).toString().padStart(2, '0')}"
             } else "",
         )
+    }
+
+    // seed the MyWhoosh toggle from the stored setting once (default false)
+    LaunchedEffect(Unit) {
+        data = data.copy(matchToMyWhoosh = container.settings.settingsOnce().matchToMyWhoosh)
     }
 
     val effectiveVdot = data.calibrationVdot ?: analytics?.effectiveVdot ?: 47.5
@@ -270,6 +277,9 @@ fun PlanWizardScreen(
                         } else if (!creating) {
                             creating = true
                             scope.launch {
+                                // remember the wizard's MyWhoosh choice for the
+                                // settings screen and future plans
+                                container.settings.setMatchToMyWhoosh(data.matchToMyWhoosh)
                                 val noRace = data.raceType == RaceType.NONE
                                 val spec = PlanSpec(
                                     name = data.name.ifBlank { data.raceType.label },
@@ -937,6 +947,22 @@ private fun StepAdvanced(
                 )
             }
         }
+    }
+
+    // ---- MyWhoosh matching (persists with the created plan's settings) ----
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Match Cycling Workouts to MyWhoosh", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                "Match cycling workouts to closest MyWhoosh workout & enable custom .zwo export",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(
+            checked = data.matchToMyWhoosh,
+            onCheckedChange = { update(data.copy(matchToMyWhoosh = it)) },
+        )
     }
 
     // ---- starting mileage ----

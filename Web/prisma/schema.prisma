@@ -35,16 +35,18 @@ model User {
   hrZone5Max            Int                  @default(178)
   hrZone6Max            Int                  @default(187)
   hrZoneMethod          String?              @default("LTHR")
-  vdotCorrectionFactor  Float                @default(1.0)
-  vdotReferenceRaceDate DateTime?
-  vdotReferenceRaceTime Int?
-  vdotReferenceRaceType String?
-  autoRevolvingVo2max      Float?
-  autoRevolvingCalculatedAt DateTime?
-  includeCrossTraining  Boolean              @default(true)
-  useImperial           Boolean              @default(false)
-  ftpWatts                  Int?
-  autoEstimateFtp           Boolean              @default(true)
+  vdotCorrectionFactor             Float                @default(1.0)
+  effectiveVo2maxCorrectionFactor  Float                @default(1.0)
+  vdotReferenceRaceDate            DateTime?
+  vdotReferenceRaceTime            Int?
+  vdotReferenceRaceType            String?
+  autoRevolvingVo2max              Float?
+  autoRevolvingCalculatedAt        DateTime?
+  includeCrossTraining             Boolean              @default(false)
+  useImperial                      Boolean              @default(false)
+  ftpWatts                         Int?
+  autoEstimateFtp                  Boolean              @default(true)
+  matchToMyWhoosh                  Boolean              @default(false)
   swimCssSecPer100m         Int?
   mcpOAuthCodes             McpOAuthCode[]
   mcpOAuthTokens            McpOAuthToken[]

@@ -40,6 +40,7 @@ export type UserAvgAggregateOutputType = {
   hrZone5Max: number | null
   hrZone6Max: number | null
   vdotCorrectionFactor: number | null
+  effectiveVo2maxCorrectionFactor: number | null
   vdotReferenceRaceTime: number | null
   autoRevolvingVo2max: number | null
   ftpWatts: number | null
@@ -61,6 +62,7 @@ export type UserSumAggregateOutputType = {
   hrZone5Max: number | null
   hrZone6Max: number | null
   vdotCorrectionFactor: number | null
+  effectiveVo2maxCorrectionFactor: number | null
   vdotReferenceRaceTime: number | null
   autoRevolvingVo2max: number | null
   ftpWatts: number | null
@@ -96,6 +98,7 @@ export type UserMinAggregateOutputType = {
   hrZone6Max: number | null
   hrZoneMethod: string | null
   vdotCorrectionFactor: number | null
+  effectiveVo2maxCorrectionFactor: number | null
   vdotReferenceRaceDate: Date | null
   vdotReferenceRaceTime: number | null
   vdotReferenceRaceType: string | null
@@ -105,6 +108,7 @@ export type UserMinAggregateOutputType = {
   useImperial: boolean | null
   ftpWatts: number | null
   autoEstimateFtp: boolean | null
+  matchToMyWhoosh: boolean | null
   swimCssSecPer100m: number | null
   lastSyncAt: Date | null
   syncInProgress: boolean | null
@@ -143,6 +147,7 @@ export type UserMaxAggregateOutputType = {
   hrZone6Max: number | null
   hrZoneMethod: string | null
   vdotCorrectionFactor: number | null
+  effectiveVo2maxCorrectionFactor: number | null
   vdotReferenceRaceDate: Date | null
   vdotReferenceRaceTime: number | null
   vdotReferenceRaceType: string | null
@@ -152,6 +157,7 @@ export type UserMaxAggregateOutputType = {
   useImperial: boolean | null
   ftpWatts: number | null
   autoEstimateFtp: boolean | null
+  matchToMyWhoosh: boolean | null
   swimCssSecPer100m: number | null
   lastSyncAt: Date | null
   syncInProgress: boolean | null
@@ -190,6 +196,7 @@ export type UserCountAggregateOutputType = {
   hrZone6Max: number
   hrZoneMethod: number
   vdotCorrectionFactor: number
+  effectiveVo2maxCorrectionFactor: number
   vdotReferenceRaceDate: number
   vdotReferenceRaceTime: number
   vdotReferenceRaceType: number
@@ -199,6 +206,7 @@ export type UserCountAggregateOutputType = {
   useImperial: number
   ftpWatts: number
   autoEstimateFtp: number
+  matchToMyWhoosh: number
   swimCssSecPer100m: number
   lastSyncAt: number
   syncInProgress: number
@@ -225,6 +233,7 @@ export type UserAvgAggregateInputType = {
   hrZone5Max?: true
   hrZone6Max?: true
   vdotCorrectionFactor?: true
+  effectiveVo2maxCorrectionFactor?: true
   vdotReferenceRaceTime?: true
   autoRevolvingVo2max?: true
   ftpWatts?: true
@@ -246,6 +255,7 @@ export type UserSumAggregateInputType = {
   hrZone5Max?: true
   hrZone6Max?: true
   vdotCorrectionFactor?: true
+  effectiveVo2maxCorrectionFactor?: true
   vdotReferenceRaceTime?: true
   autoRevolvingVo2max?: true
   ftpWatts?: true
@@ -281,6 +291,7 @@ export type UserMinAggregateInputType = {
   hrZone6Max?: true
   hrZoneMethod?: true
   vdotCorrectionFactor?: true
+  effectiveVo2maxCorrectionFactor?: true
   vdotReferenceRaceDate?: true
   vdotReferenceRaceTime?: true
   vdotReferenceRaceType?: true
@@ -290,6 +301,7 @@ export type UserMinAggregateInputType = {
   useImperial?: true
   ftpWatts?: true
   autoEstimateFtp?: true
+  matchToMyWhoosh?: true
   swimCssSecPer100m?: true
   lastSyncAt?: true
   syncInProgress?: true
@@ -328,6 +340,7 @@ export type UserMaxAggregateInputType = {
   hrZone6Max?: true
   hrZoneMethod?: true
   vdotCorrectionFactor?: true
+  effectiveVo2maxCorrectionFactor?: true
   vdotReferenceRaceDate?: true
   vdotReferenceRaceTime?: true
   vdotReferenceRaceType?: true
@@ -337,6 +350,7 @@ export type UserMaxAggregateInputType = {
   useImperial?: true
   ftpWatts?: true
   autoEstimateFtp?: true
+  matchToMyWhoosh?: true
   swimCssSecPer100m?: true
   lastSyncAt?: true
   syncInProgress?: true
@@ -375,6 +389,7 @@ export type UserCountAggregateInputType = {
   hrZone6Max?: true
   hrZoneMethod?: true
   vdotCorrectionFactor?: true
+  effectiveVo2maxCorrectionFactor?: true
   vdotReferenceRaceDate?: true
   vdotReferenceRaceTime?: true
   vdotReferenceRaceType?: true
@@ -384,6 +399,7 @@ export type UserCountAggregateInputType = {
   useImperial?: true
   ftpWatts?: true
   autoEstimateFtp?: true
+  matchToMyWhoosh?: true
   swimCssSecPer100m?: true
   lastSyncAt?: true
   syncInProgress?: true
@@ -509,6 +525,7 @@ export type UserGroupByOutputType = {
   hrZone6Max: number
   hrZoneMethod: string | null
   vdotCorrectionFactor: number
+  effectiveVo2maxCorrectionFactor: number
   vdotReferenceRaceDate: Date | null
   vdotReferenceRaceTime: number | null
   vdotReferenceRaceType: string | null
@@ -518,6 +535,7 @@ export type UserGroupByOutputType = {
   useImperial: boolean
   ftpWatts: number | null
   autoEstimateFtp: boolean
+  matchToMyWhoosh: boolean
   swimCssSecPer100m: number | null
   lastSyncAt: Date | null
   syncInProgress: boolean
@@ -579,6 +597,7 @@ export type UserWhereInput = {
   hrZone6Max?: Prisma.IntFilter<"User"> | number
   hrZoneMethod?: Prisma.StringNullableFilter<"User"> | string | null
   vdotCorrectionFactor?: Prisma.FloatFilter<"User"> | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFilter<"User"> | number
   vdotReferenceRaceDate?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   vdotReferenceRaceTime?: Prisma.IntNullableFilter<"User"> | number | null
   vdotReferenceRaceType?: Prisma.StringNullableFilter<"User"> | string | null
@@ -588,6 +607,7 @@ export type UserWhereInput = {
   useImperial?: Prisma.BoolFilter<"User"> | boolean
   ftpWatts?: Prisma.IntNullableFilter<"User"> | number | null
   autoEstimateFtp?: Prisma.BoolFilter<"User"> | boolean
+  matchToMyWhoosh?: Prisma.BoolFilter<"User"> | boolean
   swimCssSecPer100m?: Prisma.IntNullableFilter<"User"> | number | null
   lastSyncAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolFilter<"User"> | boolean
@@ -660,6 +680,7 @@ export type UserOrderByWithRelationInput = {
   hrZone6Max?: Prisma.SortOrder
   hrZoneMethod?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
+  effectiveVo2maxCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceDate?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotReferenceRaceType?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -669,6 +690,7 @@ export type UserOrderByWithRelationInput = {
   useImperial?: Prisma.SortOrder
   ftpWatts?: Prisma.SortOrderInput | Prisma.SortOrder
   autoEstimateFtp?: Prisma.SortOrder
+  matchToMyWhoosh?: Prisma.SortOrder
   swimCssSecPer100m?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
@@ -744,6 +766,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   hrZone6Max?: Prisma.IntFilter<"User"> | number
   hrZoneMethod?: Prisma.StringNullableFilter<"User"> | string | null
   vdotCorrectionFactor?: Prisma.FloatFilter<"User"> | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFilter<"User"> | number
   vdotReferenceRaceDate?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   vdotReferenceRaceTime?: Prisma.IntNullableFilter<"User"> | number | null
   vdotReferenceRaceType?: Prisma.StringNullableFilter<"User"> | string | null
@@ -753,6 +776,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   useImperial?: Prisma.BoolFilter<"User"> | boolean
   ftpWatts?: Prisma.IntNullableFilter<"User"> | number | null
   autoEstimateFtp?: Prisma.BoolFilter<"User"> | boolean
+  matchToMyWhoosh?: Prisma.BoolFilter<"User"> | boolean
   swimCssSecPer100m?: Prisma.IntNullableFilter<"User"> | number | null
   lastSyncAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolFilter<"User"> | boolean
@@ -825,6 +849,7 @@ export type UserOrderByWithAggregationInput = {
   hrZone6Max?: Prisma.SortOrder
   hrZoneMethod?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
+  effectiveVo2maxCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceDate?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotReferenceRaceType?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -834,6 +859,7 @@ export type UserOrderByWithAggregationInput = {
   useImperial?: Prisma.SortOrder
   ftpWatts?: Prisma.SortOrderInput | Prisma.SortOrder
   autoEstimateFtp?: Prisma.SortOrder
+  matchToMyWhoosh?: Prisma.SortOrder
   swimCssSecPer100m?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
@@ -880,6 +906,7 @@ export type UserScalarWhereWithAggregatesInput = {
   hrZone6Max?: Prisma.IntWithAggregatesFilter<"User"> | number
   hrZoneMethod?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   vdotCorrectionFactor?: Prisma.FloatWithAggregatesFilter<"User"> | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatWithAggregatesFilter<"User"> | number
   vdotReferenceRaceDate?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   vdotReferenceRaceTime?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
   vdotReferenceRaceType?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
@@ -889,6 +916,7 @@ export type UserScalarWhereWithAggregatesInput = {
   useImperial?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   ftpWatts?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
   autoEstimateFtp?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  matchToMyWhoosh?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   swimCssSecPer100m?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
   lastSyncAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
@@ -927,6 +955,7 @@ export type UserCreateInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -936,6 +965,7 @@ export type UserCreateInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -1008,6 +1038,7 @@ export type UserUncheckedCreateInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -1017,6 +1048,7 @@ export type UserUncheckedCreateInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -1089,6 +1121,7 @@ export type UserUpdateInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1098,6 +1131,7 @@ export type UserUpdateInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1170,6 +1204,7 @@ export type UserUncheckedUpdateInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1179,6 +1214,7 @@ export type UserUncheckedUpdateInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1251,6 +1287,7 @@ export type UserCreateManyInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -1260,6 +1297,7 @@ export type UserCreateManyInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -1298,6 +1336,7 @@ export type UserUpdateManyMutationInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1307,6 +1346,7 @@ export type UserUpdateManyMutationInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1345,6 +1385,7 @@ export type UserUncheckedUpdateManyInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1354,6 +1395,7 @@ export type UserUncheckedUpdateManyInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1392,6 +1434,7 @@ export type UserCountOrderByAggregateInput = {
   hrZone6Max?: Prisma.SortOrder
   hrZoneMethod?: Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
+  effectiveVo2maxCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceDate?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   vdotReferenceRaceType?: Prisma.SortOrder
@@ -1401,6 +1444,7 @@ export type UserCountOrderByAggregateInput = {
   useImperial?: Prisma.SortOrder
   ftpWatts?: Prisma.SortOrder
   autoEstimateFtp?: Prisma.SortOrder
+  matchToMyWhoosh?: Prisma.SortOrder
   swimCssSecPer100m?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
@@ -1425,6 +1469,7 @@ export type UserAvgOrderByAggregateInput = {
   hrZone5Max?: Prisma.SortOrder
   hrZone6Max?: Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
+  effectiveVo2maxCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   autoRevolvingVo2max?: Prisma.SortOrder
   ftpWatts?: Prisma.SortOrder
@@ -1460,6 +1505,7 @@ export type UserMaxOrderByAggregateInput = {
   hrZone6Max?: Prisma.SortOrder
   hrZoneMethod?: Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
+  effectiveVo2maxCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceDate?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   vdotReferenceRaceType?: Prisma.SortOrder
@@ -1469,6 +1515,7 @@ export type UserMaxOrderByAggregateInput = {
   useImperial?: Prisma.SortOrder
   ftpWatts?: Prisma.SortOrder
   autoEstimateFtp?: Prisma.SortOrder
+  matchToMyWhoosh?: Prisma.SortOrder
   swimCssSecPer100m?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
@@ -1507,6 +1554,7 @@ export type UserMinOrderByAggregateInput = {
   hrZone6Max?: Prisma.SortOrder
   hrZoneMethod?: Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
+  effectiveVo2maxCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceDate?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   vdotReferenceRaceType?: Prisma.SortOrder
@@ -1516,6 +1564,7 @@ export type UserMinOrderByAggregateInput = {
   useImperial?: Prisma.SortOrder
   ftpWatts?: Prisma.SortOrder
   autoEstimateFtp?: Prisma.SortOrder
+  matchToMyWhoosh?: Prisma.SortOrder
   swimCssSecPer100m?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
@@ -1540,6 +1589,7 @@ export type UserSumOrderByAggregateInput = {
   hrZone5Max?: Prisma.SortOrder
   hrZone6Max?: Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
+  effectiveVo2maxCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   autoRevolvingVo2max?: Prisma.SortOrder
   ftpWatts?: Prisma.SortOrder
@@ -2112,6 +2162,7 @@ export type UserCreateWithoutConsentsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -2121,6 +2172,7 @@ export type UserCreateWithoutConsentsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -2192,6 +2244,7 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -2201,6 +2254,7 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -2288,6 +2342,7 @@ export type UserUpdateWithoutConsentsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2297,6 +2352,7 @@ export type UserUpdateWithoutConsentsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2368,6 +2424,7 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2377,6 +2434,7 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2448,6 +2506,7 @@ export type UserCreateWithoutAiSettingsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -2457,6 +2516,7 @@ export type UserCreateWithoutAiSettingsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -2528,6 +2588,7 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -2537,6 +2598,7 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -2624,6 +2686,7 @@ export type UserUpdateWithoutAiSettingsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2633,6 +2696,7 @@ export type UserUpdateWithoutAiSettingsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2704,6 +2768,7 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2713,6 +2778,7 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2784,6 +2850,7 @@ export type UserCreateWithoutFeedbackJobsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -2793,6 +2860,7 @@ export type UserCreateWithoutFeedbackJobsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -2864,6 +2932,7 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -2873,6 +2942,7 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -2960,6 +3030,7 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2969,6 +3040,7 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3040,6 +3112,7 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3049,6 +3122,7 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3120,6 +3194,7 @@ export type UserCreateWithoutAccountsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -3129,6 +3204,7 @@ export type UserCreateWithoutAccountsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -3200,6 +3276,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -3209,6 +3286,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -3296,6 +3374,7 @@ export type UserUpdateWithoutAccountsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3305,6 +3384,7 @@ export type UserUpdateWithoutAccountsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3376,6 +3456,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3385,6 +3466,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3456,6 +3538,7 @@ export type UserCreateWithoutSessionsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -3465,6 +3548,7 @@ export type UserCreateWithoutSessionsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -3536,6 +3620,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -3545,6 +3630,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -3632,6 +3718,7 @@ export type UserUpdateWithoutSessionsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3641,6 +3728,7 @@ export type UserUpdateWithoutSessionsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3712,6 +3800,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3721,6 +3810,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3792,6 +3882,7 @@ export type UserCreateWithoutActivitiesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -3801,6 +3892,7 @@ export type UserCreateWithoutActivitiesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -3872,6 +3964,7 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -3881,6 +3974,7 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -3968,6 +4062,7 @@ export type UserUpdateWithoutActivitiesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3977,6 +4072,7 @@ export type UserUpdateWithoutActivitiesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4048,6 +4144,7 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4057,6 +4154,7 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4128,6 +4226,7 @@ export type UserCreateWithoutDailyFitnessInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -4137,6 +4236,7 @@ export type UserCreateWithoutDailyFitnessInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -4208,6 +4308,7 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -4217,6 +4318,7 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -4304,6 +4406,7 @@ export type UserUpdateWithoutDailyFitnessInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4313,6 +4416,7 @@ export type UserUpdateWithoutDailyFitnessInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4384,6 +4488,7 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4393,6 +4498,7 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4464,6 +4570,7 @@ export type UserCreateWithoutSupplementStacksInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -4473,6 +4580,7 @@ export type UserCreateWithoutSupplementStacksInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -4544,6 +4652,7 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -4553,6 +4662,7 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -4640,6 +4750,7 @@ export type UserUpdateWithoutSupplementStacksInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4649,6 +4760,7 @@ export type UserUpdateWithoutSupplementStacksInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4720,6 +4832,7 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4729,6 +4842,7 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4800,6 +4914,7 @@ export type UserCreateWithoutSupplementsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -4809,6 +4924,7 @@ export type UserCreateWithoutSupplementsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -4880,6 +4996,7 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -4889,6 +5006,7 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -4976,6 +5094,7 @@ export type UserUpdateWithoutSupplementsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4985,6 +5104,7 @@ export type UserUpdateWithoutSupplementsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5056,6 +5176,7 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5065,6 +5186,7 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5136,6 +5258,7 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -5145,6 +5268,7 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -5216,6 +5340,7 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -5225,6 +5350,7 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -5312,6 +5438,7 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5321,6 +5448,7 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5392,6 +5520,7 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5401,6 +5530,7 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5472,6 +5602,7 @@ export type UserCreateWithoutGoalsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -5481,6 +5612,7 @@ export type UserCreateWithoutGoalsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -5552,6 +5684,7 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -5561,6 +5694,7 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -5648,6 +5782,7 @@ export type UserUpdateWithoutGoalsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5657,6 +5792,7 @@ export type UserUpdateWithoutGoalsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5728,6 +5864,7 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5737,6 +5874,7 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5808,6 +5946,7 @@ export type UserCreateWithoutNotificationsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -5817,6 +5956,7 @@ export type UserCreateWithoutNotificationsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -5888,6 +6028,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -5897,6 +6038,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -5984,6 +6126,7 @@ export type UserUpdateWithoutNotificationsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5993,6 +6136,7 @@ export type UserUpdateWithoutNotificationsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6064,6 +6208,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6073,6 +6218,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6144,6 +6290,7 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -6153,6 +6300,7 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -6224,6 +6372,7 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -6233,6 +6382,7 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -6320,6 +6470,7 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6329,6 +6480,7 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6400,6 +6552,7 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6409,6 +6562,7 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6480,6 +6634,7 @@ export type UserCreateWithoutReminderSettingsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -6489,6 +6644,7 @@ export type UserCreateWithoutReminderSettingsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -6560,6 +6716,7 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -6569,6 +6726,7 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -6656,6 +6814,7 @@ export type UserUpdateWithoutReminderSettingsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6665,6 +6824,7 @@ export type UserUpdateWithoutReminderSettingsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6736,6 +6896,7 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6745,6 +6906,7 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6816,6 +6978,7 @@ export type UserCreateWithoutApiKeyInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -6825,6 +6988,7 @@ export type UserCreateWithoutApiKeyInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -6896,6 +7060,7 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -6905,6 +7070,7 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -6992,6 +7158,7 @@ export type UserUpdateWithoutApiKeyInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7001,6 +7168,7 @@ export type UserUpdateWithoutApiKeyInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7072,6 +7240,7 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7081,6 +7250,7 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7152,6 +7322,7 @@ export type UserCreateWithoutChatMessagesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -7161,6 +7332,7 @@ export type UserCreateWithoutChatMessagesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -7232,6 +7404,7 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -7241,6 +7414,7 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -7328,6 +7502,7 @@ export type UserUpdateWithoutChatMessagesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7337,6 +7512,7 @@ export type UserUpdateWithoutChatMessagesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7408,6 +7584,7 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7417,6 +7594,7 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7488,6 +7666,7 @@ export type UserCreateWithoutChatSessionsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -7497,6 +7676,7 @@ export type UserCreateWithoutChatSessionsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -7568,6 +7748,7 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -7577,6 +7758,7 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -7664,6 +7846,7 @@ export type UserUpdateWithoutChatSessionsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7673,6 +7856,7 @@ export type UserUpdateWithoutChatSessionsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7744,6 +7928,7 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7753,6 +7938,7 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7824,6 +8010,7 @@ export type UserCreateWithoutUsageHistoryInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -7833,6 +8020,7 @@ export type UserCreateWithoutUsageHistoryInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -7904,6 +8092,7 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -7913,6 +8102,7 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -8000,6 +8190,7 @@ export type UserUpdateWithoutUsageHistoryInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8009,6 +8200,7 @@ export type UserUpdateWithoutUsageHistoryInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8080,6 +8272,7 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8089,6 +8282,7 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8160,6 +8354,7 @@ export type UserCreateWithoutNutritionLogsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -8169,6 +8364,7 @@ export type UserCreateWithoutNutritionLogsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -8240,6 +8436,7 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -8249,6 +8446,7 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -8336,6 +8534,7 @@ export type UserUpdateWithoutNutritionLogsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8345,6 +8544,7 @@ export type UserUpdateWithoutNutritionLogsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8416,6 +8616,7 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8425,6 +8626,7 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8496,6 +8698,7 @@ export type UserCreateWithoutNutritionTargetInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -8505,6 +8708,7 @@ export type UserCreateWithoutNutritionTargetInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -8576,6 +8780,7 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -8585,6 +8790,7 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -8672,6 +8878,7 @@ export type UserUpdateWithoutNutritionTargetInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8681,6 +8888,7 @@ export type UserUpdateWithoutNutritionTargetInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8752,6 +8960,7 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8761,6 +8970,7 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8832,6 +9042,7 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -8841,6 +9052,7 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -8912,6 +9124,7 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -8921,6 +9134,7 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -9008,6 +9222,7 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9017,6 +9232,7 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9088,6 +9304,7 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9097,6 +9314,7 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9168,6 +9386,7 @@ export type UserCreateWithoutFastingSessionsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -9177,6 +9396,7 @@ export type UserCreateWithoutFastingSessionsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -9248,6 +9468,7 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -9257,6 +9478,7 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -9344,6 +9566,7 @@ export type UserUpdateWithoutFastingSessionsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9353,6 +9576,7 @@ export type UserUpdateWithoutFastingSessionsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9424,6 +9648,7 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9433,6 +9658,7 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9504,6 +9730,7 @@ export type UserCreateWithoutHealthInsightsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -9513,6 +9740,7 @@ export type UserCreateWithoutHealthInsightsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -9584,6 +9812,7 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -9593,6 +9822,7 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -9680,6 +9910,7 @@ export type UserUpdateWithoutHealthInsightsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9689,6 +9920,7 @@ export type UserUpdateWithoutHealthInsightsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9760,6 +9992,7 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9769,6 +10002,7 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9840,6 +10074,7 @@ export type UserCreateWithoutSavedMealsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -9849,6 +10084,7 @@ export type UserCreateWithoutSavedMealsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -9920,6 +10156,7 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -9929,6 +10166,7 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -10016,6 +10254,7 @@ export type UserUpdateWithoutSavedMealsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10025,6 +10264,7 @@ export type UserUpdateWithoutSavedMealsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10096,6 +10336,7 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10105,6 +10346,7 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10176,6 +10418,7 @@ export type UserCreateWithoutFoodFavoritesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -10185,6 +10428,7 @@ export type UserCreateWithoutFoodFavoritesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -10256,6 +10500,7 @@ export type UserUncheckedCreateWithoutFoodFavoritesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -10265,6 +10510,7 @@ export type UserUncheckedCreateWithoutFoodFavoritesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -10352,6 +10598,7 @@ export type UserUpdateWithoutFoodFavoritesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10361,6 +10608,7 @@ export type UserUpdateWithoutFoodFavoritesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10432,6 +10680,7 @@ export type UserUncheckedUpdateWithoutFoodFavoritesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10441,6 +10690,7 @@ export type UserUncheckedUpdateWithoutFoodFavoritesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10512,6 +10762,7 @@ export type UserCreateWithoutDeviceTokensInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -10521,6 +10772,7 @@ export type UserCreateWithoutDeviceTokensInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -10592,6 +10844,7 @@ export type UserUncheckedCreateWithoutDeviceTokensInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -10601,6 +10854,7 @@ export type UserUncheckedCreateWithoutDeviceTokensInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -10688,6 +10942,7 @@ export type UserUpdateWithoutDeviceTokensInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10697,6 +10952,7 @@ export type UserUpdateWithoutDeviceTokensInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10768,6 +11024,7 @@ export type UserUncheckedUpdateWithoutDeviceTokensInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10777,6 +11034,7 @@ export type UserUncheckedUpdateWithoutDeviceTokensInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10848,6 +11106,7 @@ export type UserCreateWithoutDailyReadinessRecordsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -10857,6 +11116,7 @@ export type UserCreateWithoutDailyReadinessRecordsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -10928,6 +11188,7 @@ export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -10937,6 +11198,7 @@ export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -11024,6 +11286,7 @@ export type UserUpdateWithoutDailyReadinessRecordsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -11033,6 +11296,7 @@ export type UserUpdateWithoutDailyReadinessRecordsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11104,6 +11368,7 @@ export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -11113,6 +11378,7 @@ export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11184,6 +11450,7 @@ export type UserCreateWithoutReadinessBaselinesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -11193,6 +11460,7 @@ export type UserCreateWithoutReadinessBaselinesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -11264,6 +11532,7 @@ export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -11273,6 +11542,7 @@ export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -11360,6 +11630,7 @@ export type UserUpdateWithoutReadinessBaselinesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -11369,6 +11640,7 @@ export type UserUpdateWithoutReadinessBaselinesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11440,6 +11712,7 @@ export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -11449,6 +11722,7 @@ export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11520,6 +11794,7 @@ export type UserCreateWithoutAdaptedWorkoutsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -11529,6 +11804,7 @@ export type UserCreateWithoutAdaptedWorkoutsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -11600,6 +11876,7 @@ export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -11609,6 +11886,7 @@ export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -11696,6 +11974,7 @@ export type UserUpdateWithoutAdaptedWorkoutsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -11705,6 +11984,7 @@ export type UserUpdateWithoutAdaptedWorkoutsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11776,6 +12056,7 @@ export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -11785,6 +12066,7 @@ export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11856,6 +12138,7 @@ export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -11865,6 +12148,7 @@ export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -11936,6 +12220,7 @@ export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -11945,6 +12230,7 @@ export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -12032,6 +12318,7 @@ export type UserUpdateWithoutWeeklyReconciliationRecordsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -12041,6 +12328,7 @@ export type UserUpdateWithoutWeeklyReconciliationRecordsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12112,6 +12400,7 @@ export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -12121,6 +12410,7 @@ export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12192,6 +12482,7 @@ export type UserCreateWithoutWeekTemplatesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -12201,6 +12492,7 @@ export type UserCreateWithoutWeekTemplatesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -12272,6 +12564,7 @@ export type UserUncheckedCreateWithoutWeekTemplatesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -12281,6 +12574,7 @@ export type UserUncheckedCreateWithoutWeekTemplatesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -12368,6 +12662,7 @@ export type UserUpdateWithoutWeekTemplatesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -12377,6 +12672,7 @@ export type UserUpdateWithoutWeekTemplatesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12448,6 +12744,7 @@ export type UserUncheckedUpdateWithoutWeekTemplatesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -12457,6 +12754,7 @@ export type UserUncheckedUpdateWithoutWeekTemplatesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12528,6 +12826,7 @@ export type UserCreateWithoutGuidedPlanSessionsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -12537,6 +12836,7 @@ export type UserCreateWithoutGuidedPlanSessionsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -12608,6 +12908,7 @@ export type UserUncheckedCreateWithoutGuidedPlanSessionsInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -12617,6 +12918,7 @@ export type UserUncheckedCreateWithoutGuidedPlanSessionsInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -12704,6 +13006,7 @@ export type UserUpdateWithoutGuidedPlanSessionsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -12713,6 +13016,7 @@ export type UserUpdateWithoutGuidedPlanSessionsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12784,6 +13088,7 @@ export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -12793,6 +13098,7 @@ export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12864,6 +13170,7 @@ export type UserCreateWithoutMcpOAuthCodesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -12873,6 +13180,7 @@ export type UserCreateWithoutMcpOAuthCodesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -12944,6 +13252,7 @@ export type UserUncheckedCreateWithoutMcpOAuthCodesInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -12953,6 +13262,7 @@ export type UserUncheckedCreateWithoutMcpOAuthCodesInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -13040,6 +13350,7 @@ export type UserUpdateWithoutMcpOAuthCodesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -13049,6 +13360,7 @@ export type UserUpdateWithoutMcpOAuthCodesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -13120,6 +13432,7 @@ export type UserUncheckedUpdateWithoutMcpOAuthCodesInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -13129,6 +13442,7 @@ export type UserUncheckedUpdateWithoutMcpOAuthCodesInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -13200,6 +13514,7 @@ export type UserCreateWithoutMcpOAuthTokensInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -13209,6 +13524,7 @@ export type UserCreateWithoutMcpOAuthTokensInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -13280,6 +13596,7 @@ export type UserUncheckedCreateWithoutMcpOAuthTokensInput = {
   hrZone6Max?: number
   hrZoneMethod?: string | null
   vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
@@ -13289,6 +13606,7 @@ export type UserUncheckedCreateWithoutMcpOAuthTokensInput = {
   useImperial?: boolean
   ftpWatts?: number | null
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
@@ -13376,6 +13694,7 @@ export type UserUpdateWithoutMcpOAuthTokensInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -13385,6 +13704,7 @@ export type UserUpdateWithoutMcpOAuthTokensInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -13456,6 +13776,7 @@ export type UserUncheckedUpdateWithoutMcpOAuthTokensInput = {
   hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
   hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -13465,6 +13786,7 @@ export type UserUncheckedUpdateWithoutMcpOAuthTokensInput = {
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -13828,6 +14150,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   hrZone6Max?: boolean
   hrZoneMethod?: boolean
   vdotCorrectionFactor?: boolean
+  effectiveVo2maxCorrectionFactor?: boolean
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
   vdotReferenceRaceType?: boolean
@@ -13837,6 +14160,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   useImperial?: boolean
   ftpWatts?: boolean
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
@@ -13910,6 +14234,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   hrZone6Max?: boolean
   hrZoneMethod?: boolean
   vdotCorrectionFactor?: boolean
+  effectiveVo2maxCorrectionFactor?: boolean
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
   vdotReferenceRaceType?: boolean
@@ -13919,6 +14244,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   useImperial?: boolean
   ftpWatts?: boolean
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
@@ -13957,6 +14283,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   hrZone6Max?: boolean
   hrZoneMethod?: boolean
   vdotCorrectionFactor?: boolean
+  effectiveVo2maxCorrectionFactor?: boolean
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
   vdotReferenceRaceType?: boolean
@@ -13966,6 +14293,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   useImperial?: boolean
   ftpWatts?: boolean
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
@@ -14004,6 +14332,7 @@ export type UserSelectScalar = {
   hrZone6Max?: boolean
   hrZoneMethod?: boolean
   vdotCorrectionFactor?: boolean
+  effectiveVo2maxCorrectionFactor?: boolean
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
   vdotReferenceRaceType?: boolean
@@ -14013,6 +14342,7 @@ export type UserSelectScalar = {
   useImperial?: boolean
   ftpWatts?: boolean
   autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
   swimCssSecPer100m?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
@@ -14023,7 +14353,7 @@ export type UserSelectScalar = {
   tokenVersion?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "ftpWatts" | "autoEstimateFtp" | "swimCssSecPer100m" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin" | "tokenVersion", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "effectiveVo2maxCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "ftpWatts" | "autoEstimateFtp" | "matchToMyWhoosh" | "swimCssSecPer100m" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin" | "tokenVersion", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   mcpOAuthCodes?: boolean | Prisma.User$mcpOAuthCodesArgs<ExtArgs>
   mcpOAuthTokens?: boolean | Prisma.User$mcpOAuthTokensArgs<ExtArgs>
@@ -14130,6 +14460,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     hrZone6Max: number
     hrZoneMethod: string | null
     vdotCorrectionFactor: number
+    effectiveVo2maxCorrectionFactor: number
     vdotReferenceRaceDate: Date | null
     vdotReferenceRaceTime: number | null
     vdotReferenceRaceType: string | null
@@ -14139,6 +14470,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     useImperial: boolean
     ftpWatts: number | null
     autoEstimateFtp: boolean
+    matchToMyWhoosh: boolean
     swimCssSecPer100m: number | null
     lastSyncAt: Date | null
     syncInProgress: boolean
@@ -14631,6 +14963,7 @@ export interface UserFieldRefs {
   readonly hrZone6Max: Prisma.FieldRef<"User", 'Int'>
   readonly hrZoneMethod: Prisma.FieldRef<"User", 'String'>
   readonly vdotCorrectionFactor: Prisma.FieldRef<"User", 'Float'>
+  readonly effectiveVo2maxCorrectionFactor: Prisma.FieldRef<"User", 'Float'>
   readonly vdotReferenceRaceDate: Prisma.FieldRef<"User", 'DateTime'>
   readonly vdotReferenceRaceTime: Prisma.FieldRef<"User", 'Int'>
   readonly vdotReferenceRaceType: Prisma.FieldRef<"User", 'String'>
@@ -14640,6 +14973,7 @@ export interface UserFieldRefs {
   readonly useImperial: Prisma.FieldRef<"User", 'Boolean'>
   readonly ftpWatts: Prisma.FieldRef<"User", 'Int'>
   readonly autoEstimateFtp: Prisma.FieldRef<"User", 'Boolean'>
+  readonly matchToMyWhoosh: Prisma.FieldRef<"User", 'Boolean'>
   readonly swimCssSecPer100m: Prisma.FieldRef<"User", 'Int'>
   readonly lastSyncAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly syncInProgress: Prisma.FieldRef<"User", 'Boolean'>

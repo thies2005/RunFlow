@@ -33,7 +33,7 @@ export async function GET(req: Request) {
         const [user, activeGoal] = await Promise.all([
             prisma.user.findUnique({
                 where: { id: userId },
-                select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true, vdotReferenceRaceDate: true, autoRevolvingVo2max: true }
+                select: { hrMax: true, vdotCorrectionFactor: true, effectiveVo2maxCorrectionFactor: true, matchToMyWhoosh: true, includeCrossTraining: true, vdotReferenceRaceDate: true, autoRevolvingVo2max: true }
             }),
             prisma.goal.findFirst({
                 where: { userId, isActive: true },
@@ -42,7 +42,8 @@ export async function GET(req: Request) {
 
         const maxHR = user?.hrMax || 185;
         const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
-        const includeCrossTraining = user?.includeCrossTraining ?? true;
+        const effectiveVo2maxCorrectionFactor = user?.effectiveVo2maxCorrectionFactor ?? 1.0;
+        const includeCrossTraining = user?.includeCrossTraining ?? false;
         const currentVdot = activeGoal?.currentVdot || null;
         const autoRevolvingVo2max = user?.autoRevolvingVo2max || null;
 
@@ -94,7 +95,7 @@ export async function GET(req: Request) {
         // Two-metric core — the SAME shared computation the mobile endpoint
         // (/api/mobile/v1/analytics/stats) uses, so the two can never disagree.
         const { bestEffortVdot: computedVdot, aerobicVo2max: calculatedAerobicVo2max, rawVo2max: rawVO2max } =
-            computeCoreMetrics(runActivities, maxHR, vdotCorrectionFactor);
+            computeCoreMetrics(runActivities, maxHR, vdotCorrectionFactor, effectiveVo2maxCorrectionFactor);
 
         // Planning VDOT: best-effort performance VDOT, computed live so it can
         // never lag behind the latest activities. The persisted
@@ -182,6 +183,7 @@ export async function GET(req: Request) {
             effectiveVO2max,
             rawVO2max,
             vdotCorrectionFactor,
+            effectiveVo2maxCorrectionFactor,
             autoRevolvingVo2max,
             marathonShape,
             currentVdot,

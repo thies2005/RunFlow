@@ -76,11 +76,12 @@ export function Toolbar({
             <div className="h-14 border-b border-glass-border flex items-center px-4 gap-3 shrink-0 bg-background-secondary/50 backdrop-blur-sm">
                 <button
                     type="button"
-                    onClick={() => router.push('/plan-advanced')}
-                    className="p-1.5 rounded-md text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
-                    title="Back to Plans"
+                    onClick={() => router.push('/')}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
+                    title="Back to Dashboard"
                 >
                     <ArrowLeft className="w-4 h-4" />
+                    <span>Dashboard</span>
                 </button>
 
                 <div className="w-px h-6 bg-background-tertiary shrink-0" />

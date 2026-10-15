@@ -105,19 +105,41 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
     var showCtl by remember { mutableStateOf(true) }
     var showAtl by remember { mutableStateOf(true) }
     var showTsb by remember { mutableStateOf(true) }
-    var selectedTab by rememberSaveable { mutableStateOf(AnalyticsSportTab.RUNNING) }
+    var selectedTab by rememberSaveable { mutableStateOf(AnalyticsSportTab.COMBINED) }
 
     val listState = rememberLazyListState()
+    val a = analytics ?: return Scaffold { }
+
+    // Sport presence drives which header chips render: Combined always
+    // exists (load/form + health data); Running/Cycling only appear when
+    // that sport has activities.
+    val hasRunActivities = (a.totalRuns > 0) || a.weeklyVolume.any { it.km > 0.0 }
+    val hasCyclingActivities = a.cycling?.let { c ->
+        c.totalBikeTss30d > 0 ||
+            c.recentRideNpSeries.isNotEmpty() ||
+            c.bikeFitnessSeries.any { it.load > 0 } ||
+            c.weeklyBikeKm.any { it.value > 0.0 }
+    } == true
+
     // Deep-link from the dashboard squares: jump to the requested section.
     // Re-runs when analytics loads so the first composition (empty scaffold)
     // still lands on the section once items exist.
     LaunchedEffect(targetSection, analytics) {
         when (targetSection) {
-            "form" -> listState.scrollToItem(0)
-            "recovery" -> listState.scrollToKeyedItem("sec-recovery")
+            "form" -> {
+                selectedTab = AnalyticsSportTab.COMBINED
+                listState.scrollToItem(0)
+            }
+            "recovery" -> {
+                selectedTab = AnalyticsSportTab.COMBINED
+                listState.scrollToKeyedItem("sec-recovery")
+            }
+            "volume" -> {
+                if (hasRunActivities) selectedTab = AnalyticsSportTab.RUNNING
+                listState.scrollToKeyedItem("sec-volume")
+            }
         }
     }
-    val a = analytics ?: return Scaffold { }
 
     Scaffold(
         topBar = {
@@ -143,136 +165,80 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
             contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // ---- Running | Cycling sport switcher ----
+            // ---- Combined | Running | Cycling sport switcher ----
             item(key = "tab-selector") {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     FilterChip(
-                        selected = selectedTab == AnalyticsSportTab.RUNNING,
-                        onClick = { selectedTab = AnalyticsSportTab.RUNNING },
+                        selected = selectedTab == AnalyticsSportTab.COMBINED,
+                        onClick = { selectedTab = AnalyticsSportTab.COMBINED },
                         label = {
                             Text(
-                                "Running",
-                                fontWeight = if (selectedTab == AnalyticsSportTab.RUNNING) FontWeight.Bold else FontWeight.Normal,
+                                "Combined",
+                                fontWeight = if (selectedTab == AnalyticsSportTab.COMBINED) FontWeight.Bold else FontWeight.Normal,
                             )
                         },
                         leadingIcon = {
                             Icon(
-                                Icons.Outlined.DirectionsRun,
+                                Icons.Outlined.MonitorHeart,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
                             )
                         },
                         modifier = Modifier.weight(1f),
                     )
-                    FilterChip(
-                        selected = selectedTab == AnalyticsSportTab.CYCLING,
-                        onClick = { selectedTab = AnalyticsSportTab.CYCLING },
-                        label = {
-                            Text(
-                                "Cycling",
-                                fontWeight = if (selectedTab == AnalyticsSportTab.CYCLING) FontWeight.Bold else FontWeight.Normal,
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.DirectionsBike,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        },
-                        modifier = Modifier.weight(1f),
-                    )
+                    if (hasRunActivities) {
+                        FilterChip(
+                            selected = selectedTab == AnalyticsSportTab.RUNNING,
+                            onClick = { selectedTab = AnalyticsSportTab.RUNNING },
+                            label = {
+                                Text(
+                                    "Running",
+                                    fontWeight = if (selectedTab == AnalyticsSportTab.RUNNING) FontWeight.Bold else FontWeight.Normal,
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Outlined.DirectionsRun,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (hasCyclingActivities) {
+                        FilterChip(
+                            selected = selectedTab == AnalyticsSportTab.CYCLING,
+                            onClick = { selectedTab = AnalyticsSportTab.CYCLING },
+                            label = {
+                                Text(
+                                    "Cycling",
+                                    fontWeight = if (selectedTab == AnalyticsSportTab.CYCLING) FontWeight.Bold else FontWeight.Normal,
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Outlined.DirectionsBike,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
 
-            if (selectedTab == AnalyticsSportTab.RUNNING) {
-            // ---- training status (web parity: % of all-time max) ----
-            item(key = "sec-fitness") {
+            if (selectedTab == AnalyticsSportTab.COMBINED) {
+            // ---- combined load & form (CTL / ATL / TSB) ----
+            item(key = "sec-load") {
                 var showAbsoluteCtl by rememberSaveable { mutableStateOf(false) }
                 var showAbsoluteAtl by rememberSaveable { mutableStateOf(false) }
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            // weight(1f): the tile owns the space left of the
-                            // marathon-shape column, so the long two-metric
-                            // label wraps instead of ellipsizing.
-                            StatTile(
-                                label = "VDOT (Training Paces)",
-                                value = Format.oneDecimal(a.effectiveVdot),
-                                icon = Icons.Outlined.MonitorHeart,
-                                accent = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.weight(1f),
-                            )
-                            if (a.marathonShape != null) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                ) {
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            "${a.marathonShape.roundToInt()}%",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                        )
-                                        Text(
-                                            "Marathon shape",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier.size(46.dp),
-                                    ) {
-                                        ProgressRing(
-                                            progress = (a.marathonShape / 100.0)
-                                                .coerceIn(0.0, 1.0).toFloat(),
-                                            modifier = Modifier.fillMaxSize(),
-                                            color = ChartCtl,
-                                            strokeWidth = 6f,
-                                        )
-                                        Text(
-                                            "${a.marathonShape.roundToInt()}",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = ChartCtl,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Aerobic Fitness (VO2max) — the HR-based trend metric
-                        // from the server's two-metric stats (display only; it
-                        // never feeds paces — that is VDOT above). No local
-                        // computation exists, so it only shows when fresh.
-                        a.aerobicVo2max?.let { aerobic ->
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    "Aerobic Fitness (VO2max)",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Text(
-                                    Format.oneDecimal(aerobic),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
-                        }
-
                         MetricBarRow(
                             label = "Fitness · CTL",
                             color = ChartCtl,
@@ -329,14 +295,6 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                 }
                             }
                             TsbBar(tsb = a.tsb)
-                        }
-
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            LabelValue("Weekly", Format.distance(a.currentWeekKm, unit))
-                            LabelValue("12-wk avg", "${Format.distance(a.avgWeeklyKm12, unit)}/wk")
                         }
                     }
                 }
@@ -402,8 +360,102 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                 }
             }
 
-            // ---- weekly volume ----
-            item {
+            } else if (selectedTab == AnalyticsSportTab.RUNNING) {
+            // ---- running status: VDOT, marathon-shape ring, aerobic VO2max ----
+            item(key = "sec-fitness") {
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            // weight(1f): the tile owns the space left of the
+                            // marathon-shape column, so the long two-metric
+                            // label wraps instead of ellipsizing.
+                            StatTile(
+                                label = "VDOT (Training Paces)",
+                                value = Format.oneDecimal(a.effectiveVdot),
+                                icon = Icons.Outlined.MonitorHeart,
+                                accent = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (a.marathonShape != null) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(
+                                            "${a.marathonShape.roundToInt()}%",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                        Text(
+                                            "Marathon shape",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.size(46.dp),
+                                    ) {
+                                        ProgressRing(
+                                            progress = (a.marathonShape / 100.0)
+                                                .coerceIn(0.0, 1.0).toFloat(),
+                                            modifier = Modifier.fillMaxSize(),
+                                            color = ChartCtl,
+                                            strokeWidth = 6f,
+                                        )
+                                        Text(
+                                            "${a.marathonShape.roundToInt()}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ChartCtl,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Aerobic Fitness (VO2max) — the HR-based trend metric
+                        // (display only; it never feeds paces — that is VDOT
+                        // above). Computed on device and replaced by a fresh
+                        // server value when one exists.
+                        a.aerobicVo2max?.let { aerobic ->
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    "Aerobic Fitness (VO2max)",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    Format.oneDecimal(aerobic),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            LabelValue("Weekly", Format.distance(a.currentWeekKm, unit))
+                            LabelValue("12-wk avg", "${Format.distance(a.avgWeeklyKm12, unit)}/wk")
+                        }
+                    }
+                }
+            }
+
+            // ---- running distance (weekly volume) ----
+            item(key = "sec-volume") {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
                         SectionTitle("Weekly volume · last 26 weeks")
@@ -427,8 +479,16 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
+                            // Primary race-prediction VO2max: the HR-based
+                            // aerobic VO2max when present, else training VDOT —
+                            // penalised by the current marathon shape.
+                            val predVo2 = a.aerobicVo2max ?: a.effectiveVdot
                             VdotMath.predictionDistances.forEach { (label, distM) ->
-                                val t = VdotMath.predictTimeSec(a.effectiveVdot, distM)
+                                val t = VdotMath.predictTimeWithShapeSec(
+                                    predVo2,
+                                    distM,
+                                    a.marathonShape?.roundToInt() ?: 100,
+                                )
                                 Row(
                                     Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
@@ -568,6 +628,10 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                     }
                 }
             }
+            } // end Running tab
+
+            // ---- health data (recovery + sleep) lives on the Combined tab ----
+            if (selectedTab == AnalyticsSportTab.COMBINED) {
 
             // ---- recovery · RHR & HRV ----
             item(key = "sec-recovery") {
@@ -788,7 +852,10 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                     }
                 }
             }
-        } else {
+        }
+
+        // ---- cycling analytics ----
+        if (selectedTab == AnalyticsSportTab.CYCLING) {
                 val cycling = a.cycling
                 if (cycling != null && (cycling.recentRideNpSeries.isNotEmpty() || cycling.totalBikeTss30d > 0 || cycling.bikeFitnessSeries.any { it.load > 0 })) {
                     item(key = "sec-cycling-status") {
@@ -848,7 +915,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
     }
 }
 
-private enum class AnalyticsSportTab { RUNNING, CYCLING }
+private enum class AnalyticsSportTab { COMBINED, RUNNING, CYCLING }
 
 @Composable
 private fun CyclingStatusCard(

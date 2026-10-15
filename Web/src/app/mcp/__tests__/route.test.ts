@@ -196,20 +196,19 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(data.redirect_uris).toEqual(['https://claude.ai/api/mcp/callback']);
         });
 
-        it('rejects client registration with unauthorized or evil redirect URIs', async () => {
-            const evilUris = [
-                'https://attacker.evil.com/callback',
-                'https://claude.ai.evil.com/cb',
-                'https://google.com.attacker.com',
+        it('rejects client registration with invalid redirect URIs', async () => {
+            // Still invalid under the universal policy: dangerous schemes,
+            // non-loopback http, and path traversal.
+            const invalidUris = [
                 'javascript:alert(1)',
                 'http://example.com/cb',
                 'https://claude.ai/../evil',
             ];
 
-            for (const evilUri of evilUris) {
+            for (const invalidUri of invalidUris) {
                 const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/register', 'POST', {
                     client_name: 'Evil App',
-                    redirect_uris: [evilUri],
+                    redirect_uris: [invalidUri],
                 });
 
                 const res = await registerClient(req);
@@ -219,7 +218,38 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             }
         });
 
-        it('strictly validates allowed redirect URIs via isAllowedMcpRedirectUri', () => {
+        it('accepts lookalike https redirect URIs under the universal policy', async () => {
+            // Task 1.1 (universal https): any https host containing a dot is a
+            // valid callback — lookalike hosts are accepted by design so arbitrary
+            // remote MCP clients can register their own endpoints.
+            mockDb.mcpOAuthClient.create.mockResolvedValue({
+                id: 'client-db-2',
+                clientId: 'cuid-universal-client',
+                clientName: 'Universal Client',
+                redirectUris: ['https://attacker.evil.com/callback'],
+                grantTypes: ['authorization_code', 'refresh_token'],
+                responseTypes: ['code'],
+                tokenEndpointAuthMethod: 'none',
+            });
+
+            const lookalikeUris = [
+                'https://attacker.evil.com/callback',
+                'https://claude.ai.evil.com/cb',
+                'https://google.com.attacker.com',
+            ];
+
+            for (const lookalikeUri of lookalikeUris) {
+                const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/register', 'POST', {
+                    client_name: 'Universal Client',
+                    redirect_uris: [lookalikeUri],
+                });
+
+                const res = await registerClient(req);
+                expect(res.status).toBe(201);
+            }
+        });
+
+        it('applies the universal https policy via isAllowedMcpRedirectUri', () => {
             // Must allow:
             expect(isAllowedMcpRedirectUri('https://vertexaisearch.cloud.google.com/oauth/callback')).toBe(true);
             expect(isAllowedMcpRedirectUri('https://oauth-redirect.googleusercontent.com/r/project')).toBe(true);
@@ -229,15 +259,22 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(isAllowedMcpRedirectUri('http://127.0.0.1:8080/callback')).toBe(true);
             expect(isAllowedMcpRedirectUri('http://localhost:3000/callback')).toBe(true);
 
+            // Universal https policy: any https host containing a dot is a valid
+            // callback, including lookalike hosts (accepted by design — Task 1.1).
+            expect(isAllowedMcpRedirectUri('https://claude.ai.evil.com/cb')).toBe(true);
+            expect(isAllowedMcpRedirectUri('https://google.com.attacker.com')).toBe(true);
+
             // Must reject:
-            expect(isAllowedMcpRedirectUri('https://claude.ai.evil.com/cb')).toBe(false);
-            expect(isAllowedMcpRedirectUri('https://google.com.attacker.com')).toBe(false);
             expect(isAllowedMcpRedirectUri('http://example.com/cb')).toBe(false);
             expect(isAllowedMcpRedirectUri('javascript:alert(1)')).toBe(false);
             expect(isAllowedMcpRedirectUri('https://claude.ai/../evil')).toBe(false);
             expect(isAllowedMcpRedirectUri('https://claude.ai/%2e%2e/evil')).toBe(false);
-            expect(isAllowedMcpRedirectUri('https://10.0.0.1/cb')).toBe(false);
-            expect(isAllowedMcpRedirectUri('https://192.168.1.1/cb')).toBe(false);
+
+            // Universal https policy (Task 1.1): the only https gate is "hostname
+            // contains a dot", so dotted-quad IPv4 hosts (incl. private ranges)
+            // are accepted by design.
+            expect(isAllowedMcpRedirectUri('https://10.0.0.1/cb')).toBe(true);
+            expect(isAllowedMcpRedirectUri('https://192.168.1.1/cb')).toBe(true);
         });
 
         it('resolves public origin properly via getPublicOrigin with reverse-proxy headers', () => {
@@ -322,7 +359,38 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             );
         });
 
-        it('rejects GET /mcp/oauth/authorize if client exists and redirect_uri is from a different provider', async () => {
+        it('auto-registers any validator-passing redirect_uri on GET /mcp/oauth/authorize, even across providers', async () => {
+            // Universal compatibility (Task 1.3): an existing client is broadened
+            // with any redirect URI that passes the universal validator — provider
+            // grouping no longer gates the route-side append.
+            mockDb.mcpOAuthClient.findUnique.mockResolvedValue({
+                clientId: 'claude-client-1',
+                clientName: 'Claude',
+                redirectUris: ['https://claude.ai/callback'],
+            });
+            mockDb.mcpOAuthClient.update.mockResolvedValue({});
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp/oauth/authorize?client_id=claude-client-1&redirect_uri=https://oauth-redirect.googleusercontent.com/r/project',
+                'GET'
+            );
+
+            const res = await authorizeGet(req);
+            expect(res.status).toBe(307);
+            expect(mockDb.mcpOAuthClient.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: { clientId: 'claude-client-1' },
+                    data: {
+                        redirectUris: [
+                            'https://claude.ai/callback',
+                            'https://oauth-redirect.googleusercontent.com/r/project',
+                        ],
+                    },
+                })
+            );
+        });
+
+        it('rejects GET /mcp/oauth/authorize when redirect_uri fails the universal validator', async () => {
             mockDb.mcpOAuthClient.findUnique.mockResolvedValue({
                 clientId: 'claude-client-1',
                 clientName: 'Claude',
@@ -330,7 +398,7 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             });
 
             const req = makeRequest(
-                'https://runflow.schuelken.uk/mcp/oauth/authorize?client_id=claude-client-1&redirect_uri=https://oauth-redirect.googleusercontent.com/r/project',
+                'https://runflow.schuelken.uk/mcp/oauth/authorize?client_id=claude-client-1&redirect_uri=http://example.com/cb',
                 'GET'
             );
 

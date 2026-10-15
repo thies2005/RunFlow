@@ -91,20 +91,13 @@ export function calculateEffectiveVO2max(
     // VO2 = -4.60 + 0.182258 * v + 0.000104 * v^2
     const vo2Cost = -4.60 + 0.182258 * velocity + 0.000104 * Math.pow(velocity, 2);
 
-    // === STANDARD: Swain equation (Swain et al., 1994) ===
-    // %VO2max = 1.45 * %HRmax - 45 (percent form), clamped into (0, 1].
-    // Anchored so 100% HRmax = 100% VO2max:
-    //
-    //   %HRmax | %VO2max
-    //   60%    | 42.0%
-    //   70%    | 56.5%
-    //   80%    | 71.0%
-    //   90%    | 85.5%
-    //   100%   | 100%
-    const percentVO2max = Math.min(
-        1.0,
-        Math.max(0, 1.45 * hrPercent - 0.45)
-    );
+    // Runalyze exponential %HRmax -> %VO2max relation:
+    // %VO2max = 0.64 * e^(1.92 * (hrPercent - 1)) blended with Swain above 85% HRmax
+    // At 70% HRmax -> ~61.5% VO2max (prevents 10% VO2max inflation on easy Zone 2 runs)
+    const expPctVo2 = Math.exp(1.92 * (hrPercent - 1.0)) * 0.64 + 0.26 * hrPercent;
+    const swainPctVo2 = 1.45 * hrPercent - 0.45;
+    const rawPctVo2 = hrPercent < 0.85 ? (0.65 * expPctVo2 + 0.35 * swainPctVo2) : swainPctVo2;
+    const percentVO2max = Math.min(1.0, Math.max(0, rawPctVo2));
 
     // Guard: prevent division by zero or near-zero
     if (percentVO2max <= 0.01) {
@@ -235,31 +228,29 @@ export function calculateMarathonShape(
     const weeksInPeriod = 26;
     const avgWeeklyKm = totalDistanceKm / weeksInPeriod;
 
-    // Mileage score as percentage of target (capped at 120%)
-    const mileageScore = Math.min(120, (avgWeeklyKm / targetWeeklyKm) * 100);
+    // Mileage score as percentage of target (strictly capped at 100% so mileage cannot mask missing long runs)
+    const mileageScore = Math.min(100, (avgWeeklyKm / targetWeeklyKm) * 100);
 
     // === LONG RUN COMPONENT (33.3%) ===
-    // Score runs over 13km, need 10 points total
-    // Points awarded exponentially for distance, decay over time
-    const longRuns = last10Weeks.filter(a => a.distance >= 13000);
+    // Score runs >= 15km, need 10 points total
+    const longRuns = last10Weeks.filter(a => a.distance >= 15000);
 
     let longRunPoints = 0;
     longRuns.forEach(run => {
         const distKm = run.distance / 1000;
         const daysAgo = (nowTime - run.timestamp) / DAY_MS;
 
-        // Points formula: exponential for distance, decay for recency
-        // Base: 0.5 points at 13km, ~1.1 at 30km, ~1.8 at 35km
-        const basePoints = Math.pow((distKm - 13) / 10, 1.5) * 0.5 + 0.5;
+        // Base: ~0.4 points at 15km, ~1.5 at 25km, ~2.6 at 32km
+        const basePoints = Math.pow((distKm - 14) / 10, 1.5) * 0.75 + 0.35;
 
-        // Time decay: lose 2% per day
-        const decayFactor = Math.pow(0.98, daysAgo);
+        // Time decay: ~3.5% per day (~20-day half-life)
+        const decayFactor = Math.pow(0.965, daysAgo);
 
         longRunPoints += basePoints * decayFactor;
     });
 
     const targetPoints = 10;
-    const longRunScore = Math.min(120, (longRunPoints / targetPoints) * 100);
+    const longRunScore = Math.min(100, (longRunPoints / targetPoints) * 100);
 
     // === CROSS-TRAINING COMPONENT ===
     // Calculate aerobic contribution from non-running activities

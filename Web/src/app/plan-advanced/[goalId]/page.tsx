@@ -68,10 +68,10 @@ export default function GoalEditorPage() {
                     <p className="text-sm text-foreground-secondary">Plan not found or an error occurred.</p>
                     <button
                         type="button"
-                        onClick={() => router.push('/plan-advanced')}
+                        onClick={() => router.push('/')}
                         className="px-4 py-2 rounded-md bg-background-tertiary text-foreground-secondary text-sm hover:bg-foreground/15 transition-colors"
                     >
-                        Back to Plans
+                        Back to Dashboard
                     </button>
                 </div>
             </div>

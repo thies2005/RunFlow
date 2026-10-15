@@ -22,20 +22,48 @@ import { prisma } from '@/lib/db';
 import { WorkoutType, PlanPhase, RaceType, PlanSport } from '@/generated/prisma/client';
 
 function getOrigin(request: Request): string {
-    const proto = request.headers.get('x-forwarded-proto') || 'https';
-    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    const proto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() || 'https';
+    const host = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim()
+        || request.headers.get('host')?.split(',')[0]?.trim();
+    let requestOrigin = '';
     if (host) {
-        return `${proto}://${host}`;
+        requestOrigin = `${proto}://${host}`;
+    } else {
+        try {
+            requestOrigin = new URL(request.url).origin;
+        } catch {}
     }
-    const url = new URL(request.url);
-    return url.origin;
+
+    // Behind reverse proxies that strip the forwarding headers, the raw request
+    // origin is the internal bind address (localhost / 127.0.0.1 / 0.0.0.0) —
+    // prefer the configured public URL in exactly that case, so the
+    // WWW-Authenticate resource_metadata URL is correct while a genuinely
+    // public request origin is never shadowed by a stale NEXTAUTH_URL.
+    let rawHost = '';
+    try {
+        rawHost = requestOrigin ? new URL(requestOrigin).hostname : '';
+    } catch {
+        rawHost = '';
+    }
+    const isInternalHost =
+        rawHost === 'localhost' || rawHost === '127.0.0.1' || rawHost === '0.0.0.0' ||
+        rawHost === '[::1]' || rawHost === '::1' || rawHost.endsWith('.localhost');
+    if (requestOrigin && !isInternalHost) {
+        return requestOrigin;
+    }
+    if (process.env.NEXTAUTH_URL) {
+        try {
+            return new URL(process.env.NEXTAUTH_URL).origin;
+        } catch {}
+    }
+    return requestOrigin || 'https://localhost';
 }
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Mcp-Session-Id',
-    'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Mcp-Session-Id, MCP-Protocol-Version, Last-Event-ID',
+    'Access-Control-Expose-Headers': 'Mcp-Session-Id, MCP-Protocol-Version, WWW-Authenticate',
 };
 
 // -------------------------------------------------------------
@@ -1605,6 +1633,19 @@ export async function OPTIONS() {
     return new Response(null, {
         status: 204,
         headers: CORS_HEADERS,
+    });
+}
+
+// MCP session teardown: clients (Claude Desktop, Cursor, etc.) DELETE /mcp with
+// their Mcp-Session-Id header to end a session; this server is stateless, so 204.
+export async function DELETE() {
+    return new Response(null, {
+        status: 204,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Mcp-Session-Id, MCP-Protocol-Version',
+        },
     });
 }
 

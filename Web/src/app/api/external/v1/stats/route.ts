@@ -75,13 +75,15 @@ export async function GET(request: NextRequest) {
                 hrZone3Max: true,
                 hrZone4Max: true,
                 vdotCorrectionFactor: true,
+                effectiveVo2maxCorrectionFactor: true,
                 includeCrossTraining: true,
             }
         });
 
         const maxHR = userSettings?.hrMax || 185;
         const vdotCorrectionFactor = userSettings?.vdotCorrectionFactor || 1.0;
-        const includeCrossTraining = userSettings?.includeCrossTraining ?? true;
+        const effectiveVo2maxCorrectionFactor = userSettings?.effectiveVo2maxCorrectionFactor ?? 1.0;
+        const includeCrossTraining = userSettings?.includeCrossTraining ?? false;
 
         // Fetch activities from last 6 months
         const sixMonthsAgo = new Date();
@@ -120,7 +122,7 @@ export async function GET(request: NextRequest) {
         // Calculate metrics
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
         const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(
-            runActivities, maxHR, vdotCorrectionFactor
+            runActivities, maxHR, effectiveVo2maxCorrectionFactor
         );
         const marathonShape = AnalyticsService.calculateShape(
             runActivities,
@@ -177,6 +179,7 @@ export async function GET(request: NextRequest) {
                         effective: effectiveVO2max,
                         raw: rawVO2max,
                         correctionFactor: vdotCorrectionFactor,
+                        effectiveVo2maxCorrectionFactor,
                     },
                     marathonShape: {
                         percentage: marathonShape?.shape || 0,

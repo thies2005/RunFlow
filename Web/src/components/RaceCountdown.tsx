@@ -1,4 +1,4 @@
-import { Activity, Calendar, Target, Timer, Trophy, CheckCircle, Loader2, Trash2 } from 'lucide-react';
+import { Activity, Calendar, Target, Trophy, CheckCircle, Loader2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -6,7 +6,6 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import type { Goal, SuggestedRaceActivity } from '@/lib/types';
-import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import type { RaceDistance } from '@/lib/metrics/vdot';
 import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { estimateTriathlonTime } from '@/lib/plans/triathlon-time';
@@ -63,9 +62,7 @@ export function RaceCountdown({
     const router = useRouter();
     const {
         marathonShape,
-        vdot,
         aerobicVo2max,
-        correctionFactor,
         currentWeekMileage
     } = useUserMetrics();
     const { isMobile } = useDeviceType();
@@ -145,36 +142,6 @@ export function RaceCountdown({
     const totalWeeks = goal.planWeeks || 12;
     const weeksCompleted = Math.max(0, totalWeeks - weeksToRace);
     const progressPercent = Math.min(100, (weeksCompleted / totalWeeks) * 100);
-
-    // Planning projection runs off the VDOT metric (best-effort performance),
-    // never the HR-based aerobic-fitness trend.
-    const currentVdot = vdot;
-    const targetDistance = raceDistanceMap[goal.raceType] || 'MARATHON';
-    const weeksUntil = calculateWeeksUntilRace(raceDate);
-
-    const planSettings: PlanSettings = {
-        durationWeeks: weeksUntil,
-        runsPerWeek: goal.runsPerWeek || 4,
-        weeklyMileageGoal: (goal.weeklyMileageGoal || 40000) / 1000,
-        raceDistance: targetDistance,
-        taperWeeks: goal.taperWeeks,
-        peakWeeks: goal.peakWeeks,
-        buildWeeks: goal.buildWeeks,
-    };
-
-    const projection = calculateProjectedGoalTime(
-        currentVdot,
-        planSettings,
-        shapePercent,
-        currentWeekMileage
-    );
-
-    // Triathlon goals project the WHOLE race (swim + T1 + bike + T2 + run) from
-    // the projected VDOT — a run-distance prediction would collapse a ~6h
-    // middle distance race into its ~1:40 run leg.
-    const dynamicPredictedTime = TRI_RACE_TYPES.has(goal.raceType)
-        ? (estimateTriathlonTime({ vdot: projection.projectedVdot, raceType: goal.raceType as RaceType })?.projected.totalSeconds ?? 0)
-        : projection.projectedTime;
 
     // CURRENT-fitness prediction for the goal's distance, from the HR-based
     // Aerobic Fitness (VO2max) metric — the SAME inputs the Analytics page
@@ -258,7 +225,7 @@ export function RaceCountdown({
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-6">
                 {goal.targetTime && (
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-md bg-workout-long-run/15 flex items-center justify-center shrink-0">
@@ -278,27 +245,10 @@ export function RaceCountdown({
                         </div>
                         <div>
                             <p className="text-xs text-foreground-muted flex items-center gap-1">
-                                Now &middot; Aerobic Fitness
-                                <span className="cursor-help" title="What your current HR-based aerobic fitness (VO2max) and marathon shape predict for this distance today &#8212; a fitness trend indicator, not your training target">&#8505;</span>
+                                Now
+                                <span className="cursor-help" title="Current predicted finish time based on your calibrated Effective VO2max and Marathon Shape">&#8505;</span>
                             </p>
                             <p className="text-xl font-mono tabular-nums font-semibold text-foreground">{formatTime(nowPredictedTime)}</p>
-                        </div>
-                    </div>
-                )}
-
-                {dynamicPredictedTime > 0 && (
-                    <div className={`flex items-center gap-3 ${nowPredictedTime > 0 ? 'col-span-2 md:col-span-1' : ''}`}>
-                        <div className="w-10 h-10 rounded-md bg-accent-orange/15 flex items-center justify-center shrink-0">
-                            <Timer className="w-5 h-5 text-accent-orange" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-foreground-muted flex items-center gap-1">
-                                Projected Finish &middot; VDOT
-                                <span className="cursor-help" title="Estimated finish time on race day based on your training plan and expected fitness improvement, derived from your VDOT">&#8505;</span>
-                                {correctionFactor !== 1.0 && <span className="ml-1 text-[10px] text-accent-cyan" title="Using calibrated VDOT">&#9679;</span>}
-                            </p>
-                            <p className="text-xl font-mono tabular-nums font-semibold text-foreground">{formatTime(dynamicPredictedTime)}</p>
-                            <p className="text-[10px] text-foreground-muted">Target VDOT {projection.projectedVdot.toFixed(1)}</p>
                         </div>
                     </div>
                 )}

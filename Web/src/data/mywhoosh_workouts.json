@@ -1,0 +1,369 @@
+[
+  {
+    "id": "mw-endurance-1",
+    "name": "Endurance Base #1",
+    "category": "Endurance",
+    "durationSeconds": 3600,
+    "tss": 42.5,
+    "intensityFactor": 0.65,
+    "zoneSeconds": {
+      "z1": 0,
+      "z2": 3600,
+      "z3": 0,
+      "ss": 0,
+      "z4": 0,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 40m @ 68% FTP, 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.68,
+        "cadenceRpm": 85
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 2400,
+        "powerLowPct": 0.68,
+        "powerHighPct": 0.68,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-tempo-varied-1",
+    "name": "15min Varied Tempo #1",
+    "category": "Tempo",
+    "durationSeconds": 2700,
+    "tss": 49.4,
+    "intensityFactor": 0.81,
+    "zoneSeconds": {
+      "z1": 680,
+      "z2": 780,
+      "z3": 1200,
+      "ss": 0,
+      "z4": 0,
+      "z5": 0,
+      "z6": 40
+    },
+    "stepsSummary": "4x (10s @ 180%, 50s @ 50%), 15m Progressive Tempo @ 80-85% FTP (90-100rpm)",
+    "steps": [
+      {
+        "type": "steadystate",
+        "durationSeconds": 180,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.5
+      },
+      {
+        "type": "interval",
+        "repeatCount": 4,
+        "durationSeconds": 10,
+        "powerLowPct": 1.8,
+        "powerHighPct": 1.8,
+        "offDurationSeconds": 50,
+        "offPowerPct": 0.5
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 180,
+        "powerLowPct": 0.7,
+        "powerHighPct": 0.7
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 120,
+        "powerLowPct": 0.57,
+        "powerHighPct": 0.57
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 300,
+        "powerLowPct": 0.81,
+        "powerHighPct": 0.81
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 180,
+        "powerLowPct": 0.56,
+        "powerHighPct": 0.56
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 300,
+        "powerLowPct": 0.86,
+        "powerHighPct": 0.86,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 300,
+        "powerLowPct": 0.85,
+        "powerHighPct": 0.85,
+        "cadenceRpm": 95
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 300,
+        "powerLowPct": 0.85,
+        "powerHighPct": 0.85,
+        "cadenceRpm": 100
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 300,
+        "powerLowPct": 0.56,
+        "powerHighPct": 0.56
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 300,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.5
+      }
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-sweetspot-1",
+    "name": "Sweet Spot #1",
+    "category": "Sweet Spot",
+    "durationSeconds": 3900,
+    "tss": 65.1,
+    "intensityFactor": 0.78,
+    "zoneSeconds": {
+      "z1": 0,
+      "z2": 2100,
+      "z3": 0,
+      "ss": 1800,
+      "z4": 0,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 3x10m @ 90% FTP (5m recovery), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.75,
+        "cadenceRpm": 85
+      },
+      {
+        "type": "interval",
+        "repeatCount": 3,
+        "durationSeconds": 600,
+        "powerLowPct": 0.9,
+        "powerHighPct": 0.9,
+        "offDurationSeconds": 300,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-threshold-1",
+    "name": "Threshold #1",
+    "category": "Threshold",
+    "durationSeconds": 3360,
+    "tss": 63.5,
+    "intensityFactor": 0.82,
+    "zoneSeconds": {
+      "z1": 0,
+      "z2": 1920,
+      "z3": 0,
+      "ss": 0,
+      "z4": 1440,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 3x8m @ 98% FTP (4m recovery), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.8,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "interval",
+        "repeatCount": 3,
+        "durationSeconds": 480,
+        "powerLowPct": 0.98,
+        "powerHighPct": 0.98,
+        "offDurationSeconds": 240,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 92
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-vo2max-1",
+    "name": "VO2Max #1",
+    "category": "VO2 Max",
+    "durationSeconds": 3000,
+    "tss": 61.5,
+    "intensityFactor": 0.86,
+    "zoneSeconds": {
+      "z1": 900,
+      "z2": 1200,
+      "z3": 0,
+      "ss": 0,
+      "z4": 0,
+      "z5": 900,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 5x3m @ 112% FTP (3m recovery), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.8,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "interval",
+        "repeatCount": 5,
+        "durationSeconds": 180,
+        "powerLowPct": 1.12,
+        "powerHighPct": 1.12,
+        "offDurationSeconds": 180,
+        "offPowerPct": 0.5,
+        "cadenceRpm": 95
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-under35-hiit-1",
+    "name": "Fast 30min HIIT #1",
+    "category": "Under 35 Min",
+    "durationSeconds": 1800,
+    "tss": 40.1,
+    "intensityFactor": 0.9,
+    "zoneSeconds": {
+      "z1": 900,
+      "z2": 300,
+      "z3": 0,
+      "ss": 0,
+      "z4": 0,
+      "z5": 600,
+      "z6": 0
+    },
+    "stepsSummary": "5m Warmup, 10x (1m @ 115% FTP, 1m @ 50% FTP), 5m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 300,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.75,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "interval",
+        "repeatCount": 10,
+        "durationSeconds": 60,
+        "powerLowPct": 1.15,
+        "powerHighPct": 1.15,
+        "offDurationSeconds": 60,
+        "offPowerPct": 0.5,
+        "cadenceRpm": 95
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 300,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.6,
+        "cadenceRpm": 85
+      }
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-uae-tadej-1",
+    "name": "Train Like Tadej \u2014 Poga\u010dar Climb Intervals",
+    "category": "UAE Team Emirates",
+    "durationSeconds": 3360,
+    "tss": 68.1,
+    "intensityFactor": 0.85,
+    "zoneSeconds": {
+      "z1": 0,
+      "z2": 1920,
+      "z3": 0,
+      "ss": 0,
+      "z4": 1440,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 4x6m @ 102% FTP (75rpm climbing cadence, 3m recovery), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.8,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "interval",
+        "repeatCount": 4,
+        "durationSeconds": 360,
+        "powerLowPct": 1.02,
+        "powerHighPct": 1.02,
+        "offDurationSeconds": 180,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 75
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  }
+]

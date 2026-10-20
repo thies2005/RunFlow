@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { McpServer, type McpTool, applyPlanDefaults } from '@/lib/mcp/server';
-import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders, type RateLimitConfig } from '@/lib/rateLimit';
+import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders, type RateLimitConfig, type RateLimitResult } from '@/lib/rateLimit';
 import { generateTrainingPlan, buildPlanPhaseBlocks, type PlanConfig } from '@/lib/plans';
 import { calculateTrainingPaces, calculateVdot, predictRaceTime, formatPace, formatTime, type RaceDistance } from '@/lib/metrics/vdot';
 import { calculateBikeZones, estimateBikeFtpFromVdot } from '@/lib/plans/bike-zones';
@@ -18,8 +18,15 @@ const PUBLIC_MCP_RATE_LIMIT: RateLimitConfig = {
 // a token matching PUBLIC_MCP_TOKEN (falling back to CRON_SECRET) via
 // Authorization: Bearer or ?token= unlocks a high-volume bucket. Anonymous
 // callers keep the 10/hour public limit.
+// Operator hourly cap is configurable: PUBLIC_MCP_OPERATOR_LIMIT = requests per
+// hour (unset or invalid → 600; 0 → unlimited).
+const OPERATOR_HOURLY_LIMIT = (() => {
+    const raw = Number.parseInt(process.env.PUBLIC_MCP_OPERATOR_LIMIT ?? '', 10);
+    return Number.isFinite(raw) && raw >= 0 ? raw : 600;
+})();
+
 const OPERATOR_MCP_RATE_LIMIT: RateLimitConfig = {
-    limit: 600,
+    limit: OPERATOR_HOURLY_LIMIT,
     windowSeconds: 3600,
     prefix: 'mcp-public-operator',
 };
@@ -40,8 +47,11 @@ function isOperatorRequest(request: NextRequest): boolean {
     return cronSecret ? operatorTokenMatches(provided, cronSecret) : false;
 }
 
-async function checkPublicMcpRateLimit(request: NextRequest) {
+async function checkPublicMcpRateLimit(request: NextRequest): Promise<RateLimitResult | null> {
     if (isOperatorRequest(request)) {
+        if (OPERATOR_HOURLY_LIMIT === 0) {
+            return null; // unlimited
+        }
         return checkRateLimitAsync('operator', OPERATOR_MCP_RATE_LIMIT);
     }
     return checkRateLimitAsync(getClientIdentifier(request), PUBLIC_MCP_RATE_LIMIT);
@@ -551,7 +561,7 @@ const publicMcpServer = new McpServer({
 
 export async function GET(request: NextRequest) {
     const rateLimitResult = await checkPublicMcpRateLimit(request);
-    if (!rateLimitResult.allowed) {
+    if (rateLimitResult && !rateLimitResult.allowed) {
         return NextResponse.json(
             { error: 'Rate limit exceeded' },
             { status: 429, headers: rateLimitHeaders(rateLimitResult) }
@@ -563,7 +573,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     const rateLimitResult = await checkPublicMcpRateLimit(request);
-    if (!rateLimitResult.allowed) {
+    if (rateLimitResult && !rateLimitResult.allowed) {
         return NextResponse.json(
             { error: 'Rate limit exceeded' },
             { status: 429, headers: rateLimitHeaders(rateLimitResult) }

@@ -61,16 +61,29 @@ export async function POST(request: NextRequest) {
                 ? client_name.trim().slice(0, 100)
                 : 'MCP Client';
 
-        if (!Array.isArray(redirect_uris) || redirect_uris.length === 0 || redirect_uris.length > 5) {
+        // RFC 7591 §2: redirect_uris is OPTIONAL (native clients may omit it) and
+        // some MCP connectors send a bare string instead of an array — normalize
+        // all three shapes. Every URI is re-validated at authorization time, where
+        // unknown-but-valid URIs are appended to the client anyway.
+        let normalizedRedirectUris: string[] = [];
+        if (typeof redirect_uris === 'string') {
+            normalizedRedirectUris = [redirect_uris];
+        } else if (Array.isArray(redirect_uris)) {
+            normalizedRedirectUris = redirect_uris.filter(
+                (uri: unknown): uri is string => typeof uri === 'string'
+            );
+        }
+
+        if (normalizedRedirectUris.length > 20) {
             return NextResponse.json(
-                { error: 'invalid_redirect_uri', error_description: 'redirect_uris must be an array of 1 to 5 URIs' },
+                { error: 'invalid_redirect_uri', error_description: 'redirect_uris must contain at most 20 URIs' },
                 { status: 400, headers: CORS_HEADERS }
             );
         }
 
-        // Validate each redirect URI against allowed hosts
-        for (const uri of redirect_uris) {
-            if (typeof uri !== 'string' || !isAllowedMcpRedirectUri(uri)) {
+        // Validate each redirect URI against allowed schemes/hosts
+        for (const uri of normalizedRedirectUris) {
+            if (!isAllowedMcpRedirectUri(uri)) {
                 return NextResponse.json(
                     {
                         error: 'invalid_redirect_uri',
@@ -83,7 +96,7 @@ export async function POST(request: NextRequest) {
 
         const clientData: any = {
             clientName: resolvedClientName,
-            redirectUris: redirect_uris,
+            redirectUris: normalizedRedirectUris,
             grantTypes: grant_types,
             responseTypes: response_types,
             tokenEndpointAuthMethod: token_endpoint_auth_method,

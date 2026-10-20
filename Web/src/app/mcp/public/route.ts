@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { McpServer, type McpTool, applyPlanDefaults } from '@/lib/mcp/server';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders, type RateLimitConfig } from '@/lib/rateLimit';
 import { generateTrainingPlan, buildPlanPhaseBlocks, type PlanConfig } from '@/lib/plans';
@@ -12,6 +13,39 @@ const PUBLIC_MCP_RATE_LIMIT: RateLimitConfig = {
     windowSeconds: 3600,
     prefix: 'mcp-public',
 };
+
+// Operator tier for bulk testing (e.g. plan generation from a local agent):
+// a token matching PUBLIC_MCP_TOKEN (falling back to CRON_SECRET) via
+// Authorization: Bearer or ?token= unlocks a high-volume bucket. Anonymous
+// callers keep the 10/hour public limit.
+const OPERATOR_MCP_RATE_LIMIT: RateLimitConfig = {
+    limit: 600,
+    windowSeconds: 3600,
+    prefix: 'mcp-public-operator',
+};
+
+function operatorTokenMatches(provided: string, expected: string): boolean {
+    if (!provided || !expected || provided.length !== expected.length) return false;
+    return timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+}
+
+function isOperatorRequest(request: NextRequest): boolean {
+    const authHeader = request.headers.get('authorization');
+    const bearer = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+    const provided = bearer || request.nextUrl.searchParams.get('token');
+    if (!provided) return false;
+    const dedicated = process.env.PUBLIC_MCP_TOKEN || '';
+    if (dedicated && operatorTokenMatches(provided, dedicated)) return true;
+    const cronSecret = process.env.CRON_SECRET || '';
+    return cronSecret ? operatorTokenMatches(provided, cronSecret) : false;
+}
+
+async function checkPublicMcpRateLimit(request: NextRequest) {
+    if (isOperatorRequest(request)) {
+        return checkRateLimitAsync('operator', OPERATOR_MCP_RATE_LIMIT);
+    }
+    return checkRateLimitAsync(getClientIdentifier(request), PUBLIC_MCP_RATE_LIMIT);
+}
 
 const ALL_17_RACE_TYPES = [
     'FIVE_K', 'TEN_K', 'HALF_MARATHON', 'MARATHON',
@@ -516,8 +550,7 @@ const publicMcpServer = new McpServer({
 });
 
 export async function GET(request: NextRequest) {
-    const clientId = getClientIdentifier(request);
-    const rateLimitResult = await checkRateLimitAsync(clientId, PUBLIC_MCP_RATE_LIMIT);
+    const rateLimitResult = await checkPublicMcpRateLimit(request);
     if (!rateLimitResult.allowed) {
         return NextResponse.json(
             { error: 'Rate limit exceeded' },
@@ -529,8 +562,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    const clientId = getClientIdentifier(request);
-    const rateLimitResult = await checkRateLimitAsync(clientId, PUBLIC_MCP_RATE_LIMIT);
+    const rateLimitResult = await checkPublicMcpRateLimit(request);
     if (!rateLimitResult.allowed) {
         return NextResponse.json(
             { error: 'Rate limit exceeded' },

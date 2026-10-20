@@ -27,6 +27,15 @@ Versioning note: the web app (`Web/package.json`) and the Android app
 - **`.zwo` export** (Zwift/MyWhoosh-compatible) + MyWhoosh catalog matching
   (`User.matchToMyWhoosh`), backed by the scraped MyWhoosh seed catalog.
 
+### MyWhoosh workout file import (web)
+- **Import `.zwo` / MyWhoosh workout-JSON files** into any plan from the `/plan-advanced` editor
+  (next to CSV import): structured steps are preserved and workouts are scheduled one per day
+  from a chosen start date (up to 100 files / 5 MB per import).
+- **Auto-classification**: rides become `RIDE` / `RIDE_INTERVALS` / `LONG_RIDE` based on
+  intensity and duration; run files import as RUN workouts — all editable in the v2 editor.
+- **File-based import only — no MyWhoosh account connection.** Files are parsed in the app and
+  never sent anywhere; the unofficial MyWhoosh API is intentionally not used.
+
 ### Cycling power engine
 - Strava watts-stream sync; **eFTP**, MMP power curves, NP/IF/VI, bike TSS, efficiency factor
   & aerobic decoupling; split run/ride/combined PMC; backfill of power/TSS on existing rides.

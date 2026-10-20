@@ -1,6 +1,7 @@
 package com.runflow2.app
 
 import com.runflow2.app.core.math.TrainingLoad
+import com.runflow2.app.core.math.VdotMath
 import com.runflow2.app.domain.analytics.ActivityInput
 import com.runflow2.app.domain.analytics.AnalyticsEngine
 import com.runflow2.app.domain.model.ActivityType
@@ -27,12 +28,13 @@ class AnalyticsEngineTest {
         trimp: Double = 100.0,
         vdot: Double? = null,
         zones: List<Int> = emptyList(),
+        movingTimeSec: Int = (km * 60).toInt(),
     ) = ActivityInput(
         id = "r-${date}-${km}-${trimp}",
         type = ActivityType.RUN,
         date = date,
         distanceKm = km,
-        movingTimeSec = (km * 60).toInt(),
+        movingTimeSec = movingTimeSec,
         averageHr = 150.0,
         trimp = trimp,
         estimatedVdot = vdot,
@@ -144,27 +146,42 @@ class AnalyticsEngineTest {
     // ---- VDOT scoping ----
 
     @Test
-    fun `effective vdot uses recent best run and correction`() {
+    fun `effective vdot uses recent best run performance and correction`() {
+        // rawVdot is computed from distance/time (Daniels-Gilbert), not from
+        // Activity.estimatedVdot, which the server fills with HR-based values.
+        val t55 = VdotMath.predictTimeSec(55.0, 10000.0)!!.toInt() // 10K time of a VDOT-55 runner
+        val t50 = VdotMath.predictTimeSec(50.0, 10000.0)!!.toInt()
         val b = AnalyticsEngine.compute(
             listOf(
-                run(today.minusDays(10), km = 10.0, vdot = 50.0),
-                run(today.minusDays(5), km = 10.0, vdot = 55.0),
+                run(today.minusDays(10), km = 10.0, movingTimeSec = t50),
+                run(today.minusDays(5), km = 10.0, movingTimeSec = t55),
                 ride(today.minusDays(5)),
             ),
             today,
             1.0,
         )
-        assertEquals(55.0, b.rawVdot!!, 0.001)
-        assertEquals(55.0, b.effectiveVdot!!, 0.001)
+        assertEquals(VdotMath.vdot(10000.0, t55.toDouble()), b.rawVdot!!, 0.001)
+        assertEquals(b.rawVdot!!, b.effectiveVdot!!, 0.001)
+        assertTrue("round-tripped VDOT should be ~55, got ${b.rawVdot}", b.rawVdot!! in 54.0..56.0)
         assertNotNull(b.marathonShape)
     }
 
     @Test
-    fun `old or short vdot runs are ignored`() {
+    fun `high outlier estimatedVdot values do not leak into rawVdot`() {
+        // Server-synced HR-based estimatedVdot of 70 on an easy 45:00 10K must
+        // not win: the pace-based Daniels VDOT of that run is the only input.
+        val easy = run(today.minusDays(5), km = 10.0, vdot = 70.0, movingTimeSec = 2700) // 45:00
+        val b = AnalyticsEngine.compute(listOf(easy), today, 1.0)
+        assertEquals(VdotMath.vdot(10000.0, 2700.0), b.rawVdot!!, 0.001)
+        assertTrue(b.rawVdot!! < 60.0)
+    }
+
+    @Test
+    fun `old or short runs are ignored for vdot`() {
         val b = AnalyticsEngine.compute(
             listOf(
-                run(today.minusDays(120), km = 10.0, vdot = 70.0), // > 90 days
-                run(today.minusDays(10), km = 2.0, vdot = 70.0), // < 5 km
+                run(today.minusDays(120), km = 10.0, movingTimeSec = 2400), // > 90 days
+                run(today.minusDays(10), km = 2.0), // < 5 km
             ),
             today,
             1.0,
@@ -176,15 +193,18 @@ class AnalyticsEngineTest {
     @Test
     fun `marathon shape is the web composite, never a ctl ratio`() {
         // 120 days of solid training → CTL far above 65: the old invented
-        // formula (ctl/65×100) would have shown >100%; the web composite cannot
-        val acts = (0 until 120).map { run(today.minusDays(120L - it), km = 12.0, trimp = 150.0, vdot = 55.0) }
+        // formula (ctl/65×100) would have shown >100%; the web composite cannot.
+        // Runs are 12 km at exactly VDOT-55 pace (predictTimeSec round-trip),
+        // so effectiveVdot lands on ~55 like the old explicit vdot = 55.0.
+        val t55for12k = VdotMath.predictTimeSec(55.0, 12000.0)!!.toInt()
+        val acts = (0 until 120).map { run(today.minusDays(120L - it), km = 12.0, trimp = 150.0, movingTimeSec = t55for12k) }
         val b = AnalyticsEngine.compute(acts, today, 1.0)
         assertTrue("ctl ${b.ctl} should exceed the old 65 target", b.ctl > 65.0)
         assertNotNull(b.marathonShape)
         assertTrue("shape ${b.marathonShape} must be capped at 100", b.marathonShape!! <= 100.0)
         // web mileage divides the 6-month total by a flat 26 weeks: 1440 km/26
-        // = 55.4 km/wk vs vdot 55 → mileage 100.7, no long runs (<13 km), no
-        // CT → shape = round(100.7 × 2/3) = 67
+        // = 55.4 km/wk vs vdot ~55 → mileage ~100.7, no long runs (<13 km), no
+        // CT → shape = round(mileage × 2/3) = 67
         assertEquals(67.0, b.marathonShape!!, 0.0)
     }
 

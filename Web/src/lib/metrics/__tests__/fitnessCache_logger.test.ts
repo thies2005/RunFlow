@@ -12,9 +12,15 @@ jest.mock('@/lib/db', () => ({
       createMany: jest.fn(),
       deleteMany: jest.fn(),
       findMany: jest.fn(),
+      aggregate: jest.fn().mockResolvedValue({ _max: { ctlBike: 0 } }),
     },
     activity: {
       findMany: jest.fn(),
+      findFirst: jest.fn().mockResolvedValue({ id: 'activity-1', startDate: new Date() }),
+      count: jest.fn().mockResolvedValue(0),
+    },
+    user: {
+      findUnique: jest.fn().mockResolvedValue(null),
     },
     $transaction: jest.fn((args) => Promise.resolve(args)),
   },

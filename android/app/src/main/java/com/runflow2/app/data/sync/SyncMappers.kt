@@ -136,6 +136,7 @@ fun UserDto.applyTo(profile: ProfileEntity, accountEmail: String? = null): Profi
         hrMax = this.hrMax ?: profile.hrMax,
         hrRest = this.hrRest ?: profile.hrRest,
         vdotCorrection = this.vdotCorrectionFactor ?: profile.vdotCorrection,
+        effectiveVo2maxCorrection = this.effectiveVo2maxCorrectionFactor ?: profile.effectiveVo2maxCorrection,
         dirty = false,
     )
 }
@@ -143,6 +144,7 @@ fun UserDto.applyTo(profile: ProfileEntity, accountEmail: String? = null): Profi
 fun ProfileEntity.toUpdateRequest(
     ftpWatts: Int? = null,
     autoEstimateFtp: Boolean? = null,
+    includeCrossTraining: Boolean? = null,
 ): UpdateProfileRequest {
     // Birth date is a plain date, not a wall-clock moment: anchor it to UTC so
     // the server receives 1995-01-01 regardless of device timezone.
@@ -157,6 +159,8 @@ fun ProfileEntity.toUpdateRequest(
         weight = weightKg,
         height = heightCm,
         vdotCorrectionFactor = vdotCorrection,
+        effectiveVo2maxCorrectionFactor = effectiveVo2maxCorrection,
+        includeCrossTraining = includeCrossTraining,
         ftpWatts = ftpWatts,
         autoEstimateFtp = autoEstimateFtp,
     )

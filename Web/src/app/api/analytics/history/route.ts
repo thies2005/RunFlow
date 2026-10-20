@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
-import { calculateTrimpFromZones, FALLBACK_TRIMP_PER_MINUTE } from '@/lib/metrics/trimp';
-import { calculateFitnessHistory, getActivityContribution, calculateRunningTss, type DailyLoad } from '@/lib/metrics/fitness';
 import { calculateMarathonShape, calculateWeightedEffectiveVO2max, type ActivityForShape } from '@/lib/metrics/runalyze';
 import { cachedResponse } from '@/lib/api/apiResponse';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
@@ -49,141 +47,11 @@ export async function GET(request: Request) {
             case '1_YEAR': default: cutoff.setFullYear(now.getFullYear() - 1); break;
         }
 
-        // --- 1. Update Fitness Cache (Incremental) ---
-
-        // Get the last cached date
-        const lastCached = await prisma.dailyFitness.findFirst({
-            where: { userId },
-            orderBy: { date: 'desc' },
-            select: { date: true, ctl: true, atl: true, ctlRunning: true }
-        });
-
-        // Determine where to start calculation
-        // If we have a cache, start from the next day. 
-        // If not, we want to start from the beginning of time (or reasonable history).
-        let calcStart = new Date(0);
-        let initialCtl = 0;
-        let initialAtl = 0;
-        let initialCtlRunning = 0;
-
-        if (lastCached && lastCached.date) {
-            calcStart = new Date(lastCached.date);
-            calcStart.setDate(calcStart.getDate() + 1); // Start next day
-            initialCtl = lastCached.ctl;
-            initialAtl = lastCached.atl;
-            initialCtlRunning = lastCached.ctlRunning;
-        } else {
-            // If no cache, maybe fetch first activity to define start? 
-            // Or just use a default safe start like 2 years ago to avoid processing too much if user has ancient data?
-            // Ideally we find the first activity date.
-            const firstActivity = await prisma.activity.findFirst({
-                where: { userId },
-                orderBy: { startDate: 'asc' },
-                select: { startDate: true }
-            });
-            if (firstActivity) {
-                calcStart = new Date(firstActivity.startDate);
-            }
-        }
-
-        // Only calculate if we are behind (calcStart <= now)
-        // Normalize calcStart to midnight to compare dates safely
-        const calcStartMidnight = new Date(calcStart);
-        calcStartMidnight.setHours(0, 0, 0, 0);
-        const nowMidnight = new Date();
-        nowMidnight.setHours(0, 0, 0, 0);
-
-        if (calcStartMidnight <= nowMidnight) {
-            // Fetch NEW activities since the calculation start
-            const newActivities = await prisma.activity.findMany({
-                where: {
-                    userId,
-                    startDate: { gte: calcStartMidnight }
-                },
-                select: {
-                    startDate: true,
-                    distance: true,
-                    movingTime: true,
-                    type: true,
-                    hrZone1Time: true,
-                    hrZone2Time: true,
-                    hrZone3Time: true,
-                    hrZone4Time: true,
-                    hrZone5Time: true,
-                    hrZone6Time: true,
-                    hrZone7Time: true,
-                },
-                orderBy: { startDate: 'asc' }
-            });
-
-            // Prepare daily loads for the calculator
-            const dailyLoadsMap: Map<string, DailyLoad> = new Map();
-
-            newActivities.forEach(a => {
-                const dateKey = new Date(a.startDate).toISOString().split('T')[0];
-
-                // Fallback TRIMP
-                let trimp = calculateTrimpFromZones(a.hrZone1Time, a.hrZone2Time, a.hrZone3Time, a.hrZone4Time, a.hrZone5Time, a.hrZone6Time, a.hrZone7Time);
-                if (trimp === 0 && a.movingTime > 0) {
-                    trimp = (a.movingTime / 60) * FALLBACK_TRIMP_PER_MINUTE;
-                }
-
-                // TSS Calc
-                const contribution = getActivityContribution(a.type || 'RUN');
-                const runningTss = contribution.contributesToRunningTss
-                    ? calculateRunningTss(a.movingTime, a.distance, 300)
-                    : 0;
-
-                const existing = dailyLoadsMap.get(dateKey);
-                if (existing) {
-                    existing.trimp += trimp;
-                    existing.runningTss += runningTss;
-                    existing.activityTypes.push(a.type || 'RUN');
-                } else {
-                    dailyLoadsMap.set(dateKey, {
-                        date: new Date(dateKey),
-                        trimp,
-                        runningTss,
-                        activityTypes: [a.type || 'RUN']
-                    });
-                }
-            });
-
-            // Calculate new history
-            // We pass the start date explicitly so it fills in gaps (decay) from the last cached date
-            const newHistory = calculateFitnessHistory(
-                Array.from(dailyLoadsMap.values()),
-                initialCtl,
-                initialAtl,
-                initialCtlRunning,
-                calcStartMidnight
-            );
-
-            // Batch update DB
-            if (newHistory.length > 0) {
-                // Prisma createMany is efficient
-                await prisma.dailyFitness.createMany({
-                    data: newHistory.map(h => ({
-                        userId,
-                        date: h.date,
-                        ctl: h.metrics.ctl,
-                        atl: h.metrics.atl,
-                        tsb: h.metrics.tsb,
-                        ctlRunning: h.metrics.ctlRunning,
-                        // We also need to store source data if we want to be able to rebuild... 
-                        // The current schema has trimp/runningTss/etc.
-                        // We can get these from the dailyLoadsMap
-                        trimp: dailyLoadsMap.get(h.date.toISOString().split('T')[0])?.trimp || 0,
-                        runningTss: dailyLoadsMap.get(h.date.toISOString().split('T')[0])?.runningTss || 0,
-                    })),
-                    skipDuplicates: true, // Safety
-                });
-            }
-        }
-
-        // --- 1.5. Ensure Cache is Up-to-Date (Gap Filling) ---
-        // If there were no new activities, the block above did nothing.
-        // We need to fill gap days with decay up to today.
+        // --- 1. Ensure the DailyFitness cache is up to date ---
+        // updateFitnessCache (via ensureFitnessCacheUpToDate) is the single authoritative
+        // cache writer. The legacy inline incremental writer that used to live here wrote
+        // bike-blind rows (ctlBike/atlBike/tsbBike/bikeTss = 0) that won the insert race
+        // and poisoned the multi-sport PMC series.
         await ensureFitnessCacheUpToDate(userId);
 
         // --- 2. Fetch Data for Response ---
@@ -197,12 +65,34 @@ export async function GET(request: Request) {
             orderBy: { date: 'asc' }
         });
 
-        const filteredFitness = cachedFitness.map(h => ({
-            date: h.date.toISOString().split('T')[0],
-            ctl: Math.round(h.ctl),
-            atl: Math.round(h.atl),
-            tsb: Math.round(h.tsb),
-        }));
+        // Full PMC fallback: include multi-sport fields so SplitPmcChart can render
+        // from this route even when /api/analytics/cycling has no data yet.
+        // atlRunning/tsbRunning are derived here via EMA over runningTss (the
+        // DailyFitness table has no columns for them), matching the derivation
+        // in cyclingAnalytics.ts so the running view stays internally consistent.
+        const atlRunDecay = Math.exp(-1 / 7);
+        let currentAtlRun = cachedFitness.length > 0 ? (cachedFitness[0].ctlRunning || 0) : 0;
+        const filteredFitness = cachedFitness.map(h => {
+            currentAtlRun = currentAtlRun * atlRunDecay + (h.runningTss || 0) * (1 - atlRunDecay);
+            return {
+                date: h.date.toISOString().split('T')[0],
+                ctl: Number(h.ctl.toFixed(1)),
+                atl: Number(h.atl.toFixed(1)),
+                tsb: Number(h.tsb.toFixed(1)),
+                ctlCombined: Number(h.ctl.toFixed(1)),
+                atlCombined: Number(h.atl.toFixed(1)),
+                tsbCombined: Number(h.tsb.toFixed(1)),
+                ctlRunning: Number((h.ctlRunning ?? 0).toFixed(1)),
+                atlRunning: Number(currentAtlRun.toFixed(1)),
+                tsbRunning: Number(((h.ctlRunning ?? 0) - currentAtlRun).toFixed(1)),
+                ctlBike: Number((h.ctlBike ?? 0).toFixed(1)),
+                atlBike: Number((h.atlBike ?? 0).toFixed(1)),
+                tsbBike: Number((h.tsbBike ?? 0).toFixed(1)),
+                runTss: Number((h.runningTss ?? 0).toFixed(1)),
+                bikeTss: Number((h.bikeTss ?? 0).toFixed(1)),
+                trimp: Number((h.trimp ?? 0).toFixed(1)),
+            };
+        });
 
 
         // B. Fetch All Required Activities (Consolidated Query)

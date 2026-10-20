@@ -49,24 +49,32 @@ class BodyAutoTest {
     @Test
     fun `observed max HR ignores non-efforts and picks the highest`() {
         val efforts = listOf(
-            HrEffort(maxHr = 185, averageHr = 150.0),
-            HrEffort(maxHr = 150, averageHr = 80.0), // easy jog: no max-HR signal
-            HrEffort(maxHr = 205, averageHr = 140.0),
+            HrEffort(maxHr = 185, averageHr = 160.0),
+            HrEffort(maxHr = 150, averageHr = 120.0), // easy jog: no max-HR signal
+            HrEffort(maxHr = 182, averageHr = 155.0),
         )
-        assertEquals(205, BodyAuto.observedHrMax(efforts))
+        assertEquals(185, BodyAuto.observedHrMax(efforts))
+    }
+
+    @Test
+    fun `observed max HR rejects optical-sensor spikes (max - avg spread too wide)`() {
+        // cadence-lock spike: easy run, avg 125, "max" 205 — not a real max-HR effort
+        assertNull(BodyAuto.observedHrMax(listOf(HrEffort(maxHr = 205, averageHr = 125.0))))
+        // same 205 but a genuinely hard effort (avg 165, spread 40) is believable
+        assertEquals(205, BodyAuto.observedHrMax(listOf(HrEffort(maxHr = 205, averageHr = 165.0))))
     }
 
     @Test
     fun `observed max HR requires average HR strictly above the effort floor`() {
         assertNull(BodyAuto.observedHrMax(listOf(HrEffort(maxHr = 190, averageHr = BodyAuto.HR_EFFORT_MIN_AVG_HR))))
-        assertNull(BodyAuto.observedHrMax(listOf(HrEffort(maxHr = 190, averageHr = 99.9))))
+        assertNull(BodyAuto.observedHrMax(listOf(HrEffort(maxHr = 190, averageHr = 134.9))))
     }
 
     @Test
     fun `observed max HR respects the absolute ceiling`() {
-        assertNull(BodyAuto.observedHrMax(listOf(HrEffort(maxHr = 220, averageHr = 150.0))))
+        assertNull(BodyAuto.observedHrMax(listOf(HrEffort(maxHr = 220, averageHr = 180.0))))
         // a strap glitch above the ceiling must not mask a believable value
-        assertEquals(190, BodyAuto.observedHrMax(listOf(HrEffort(maxHr = 190, averageHr = 140.0), HrEffort(maxHr = 250, averageHr = 150.0))))
+        assertEquals(190, BodyAuto.observedHrMax(listOf(HrEffort(maxHr = 190, averageHr = 160.0), HrEffort(maxHr = 250, averageHr = 200.0))))
     }
 
     @Test
@@ -112,30 +120,42 @@ class BodyAutoTest {
     // ---- compute: hrMax ----
 
     @Test
-    fun `hrMax rises to the highest believable observation`() {
-        val efforts = listOf(HrEffort(maxHr = 198, averageHr = 140.0), HrEffort(maxHr = 185, averageHr = 150.0))
+    fun `hrMax rises to the highest corroborated observation`() {
+        // two hard efforts peaking within 3 bpm of each other corroborate 198
+        val efforts = listOf(
+            HrEffort(maxHr = 198, averageHr = 160.0),
+            HrEffort(maxHr = 197, averageHr = 165.0),
+            HrEffort(maxHr = 185, averageHr = 160.0),
+        )
         val updates = BodyAuto.compute(currentHrRest = 52, currentHrMax = 192, rhrValues = emptyList(), observedMaxCandidates = efforts)
         assertEquals(198, updates.hrMax)
     }
 
     @Test
+    fun `a single qualifying observation does not ratchet hrMax`() {
+        // one hard effort peaking 198: no second observation within 3 bpm -> keep
+        val efforts = listOf(HrEffort(maxHr = 198, averageHr = 160.0), HrEffort(maxHr = 185, averageHr = 160.0))
+        assertNull(BodyAuto.compute(52, 192, emptyList(), efforts).hrMax)
+    }
+
+    @Test
     fun `hrMax never lowers on a lower or equal observation`() {
-        val lower = listOf(HrEffort(maxHr = 190, averageHr = 150.0))
+        val lower = listOf(HrEffort(maxHr = 190, averageHr = 160.0), HrEffort(maxHr = 191, averageHr = 158.0))
         assertNull(BodyAuto.compute(52, 192, emptyList(), lower).hrMax)
-        val equal = listOf(HrEffort(maxHr = 192, averageHr = 150.0))
+        val equal = listOf(HrEffort(maxHr = 192, averageHr = 160.0), HrEffort(maxHr = 191, averageHr = 158.0))
         assertNull(BodyAuto.compute(52, 192, emptyList(), equal).hrMax)
     }
 
     @Test
     fun `hrMax never exceeds the absolute ceiling`() {
-        val efforts = listOf(HrEffort(maxHr = 215, averageHr = 140.0))
+        val efforts = listOf(HrEffort(maxHr = 215, averageHr = 180.0), HrEffort(maxHr = 214, averageHr = 178.0))
         assertNull(BodyAuto.compute(52, 192, emptyList(), efforts).hrMax)
     }
 
     @Test
     fun `hrRest and hrMax update together in one pass`() {
         val values = listOf(50.0, 52.0, 54.0, 56.0, 58.0, 60.0, 62.0)
-        val efforts = listOf(HrEffort(maxHr = 196, averageHr = 145.0))
+        val efforts = listOf(HrEffort(maxHr = 196, averageHr = 160.0), HrEffort(maxHr = 195, averageHr = 158.0))
         val updates = BodyAuto.compute(currentHrRest = 52, currentHrMax = 192, rhrValues = values, observedMaxCandidates = efforts)
         assertEquals(56, updates.hrRest)
         assertEquals(196, updates.hrMax)

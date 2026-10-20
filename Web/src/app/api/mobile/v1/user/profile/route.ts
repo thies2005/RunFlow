@@ -52,6 +52,8 @@ export async function GET(request: NextRequest) {
                 thresholdHeartRate: true,
                 thresholdPace: true,
                 vdotCorrectionFactor: true,
+                effectiveVo2maxCorrectionFactor: true,
+                includeCrossTraining: true,
                 ftpWatts: true,
                 autoEstimateFtp: true,
                 swimCssSecPer100m: true,
@@ -103,7 +105,7 @@ export async function PUT(request: NextRequest) {
             name, sex, birthDate, hrMax, hrRest, weight, height,
             hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
             thresholdHeartRate, thresholdPace,
-            vdotCorrectionFactor,
+            vdotCorrectionFactor, effectiveVo2maxCorrectionFactor, includeCrossTraining,
             ftpWatts, autoEstimateFtp, swimCssSecPer100m
         } = body;
 
@@ -112,6 +114,22 @@ export async function PUT(request: NextRequest) {
             return errorResponses.validation(
                 'HR Max must be between 100 and 250',
                 { field: 'hrMax', min: 100, max: 250 }
+            );
+        }
+
+        // Validate correction factors if provided
+        if (effectiveVo2maxCorrectionFactor !== undefined && effectiveVo2maxCorrectionFactor !== null &&
+            (typeof effectiveVo2maxCorrectionFactor !== 'number' || effectiveVo2maxCorrectionFactor < 0.5 || effectiveVo2maxCorrectionFactor > 1.5)) {
+            return errorResponses.validation(
+                'Effective VO2max correction factor must be between 0.5 and 1.5',
+                { field: 'effectiveVo2maxCorrectionFactor', min: 0.5, max: 1.5 }
+            );
+        }
+
+        if (includeCrossTraining !== undefined && includeCrossTraining !== null && typeof includeCrossTraining !== 'boolean') {
+            return errorResponses.validation(
+                'includeCrossTraining must be a boolean',
+                { field: 'includeCrossTraining' }
             );
         }
 
@@ -134,6 +152,8 @@ export async function PUT(request: NextRequest) {
                 thresholdHeartRate: undefined !== thresholdHeartRate ? thresholdHeartRate : undefined,
                 thresholdPace: undefined !== thresholdPace ? thresholdPace : undefined,
                 vdotCorrectionFactor: undefined !== vdotCorrectionFactor ? vdotCorrectionFactor : undefined,
+                effectiveVo2maxCorrectionFactor: undefined !== effectiveVo2maxCorrectionFactor ? effectiveVo2maxCorrectionFactor : undefined,
+                includeCrossTraining: undefined !== includeCrossTraining ? includeCrossTraining : undefined,
                 ftpWatts: undefined !== ftpWatts ? ftpWatts : undefined,
                 autoEstimateFtp: undefined !== autoEstimateFtp ? autoEstimateFtp : undefined,
                 swimCssSecPer100m: undefined !== swimCssSecPer100m ? swimCssSecPer100m : undefined,
@@ -158,6 +178,8 @@ export async function PUT(request: NextRequest) {
                 thresholdHeartRate: true,
                 thresholdPace: true,
                 vdotCorrectionFactor: true,
+                effectiveVo2maxCorrectionFactor: true,
+                includeCrossTraining: true,
                 ftpWatts: true,
                 autoEstimateFtp: true,
                 swimCssSecPer100m: true,

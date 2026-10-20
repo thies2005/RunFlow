@@ -1,34 +1,65 @@
 # RunFlow Release Notes
 
-## Recent Updates (Beta v1.x)
+Versioning note: the web app (`Web/package.json`) and the Android app
+(`android/app/build.gradle.kts`, `versionName`) version independently. Current as of
+**2026-10-20**: web `1.2.9`, Android `2.8.0` (versionCode 21). For fine-grained history see
+`git log` / git tags.
 
-### 📱 Mobile & Integration
-- **Hybrid Mobile App**: Transitioned to a Capacitor-based Android app for a unified codebase.
-- **Health Connect**: Native integration to sync workouts from third-party apps (Garmin, Peloton, etc.) directly via the Android app.
-- **7-Zone Heart Rate**: Upgraded sync logic and user model to support a full 7-Zone Heart Rate model (Z1-Z5 + Anaerobic/Neuromuscular).
+---
 
-### 🔐 Authentication
-- **Email Login**: Added support for Email/Password authentication.
-- **Magic Links**: Secure passwordless login via email codes.
+## Android 2.8.0 / Web 1.2.9 (October 2026)
 
-### 🏃 Performance & Analytics
-- **Effective VO2max**: Refined calculations for more accurate physiological metrics.
-- **Unified Icons**: Standardized application icons across Web and Android.
+### Dual MCP (Model Context Protocol)
+- **Private MCP at `/mcp`** for Paid-Premium users: 16 coaching tools (fitness, cycling
+  analytics, readiness/health, plan & structured-workout mutations) behind **OAuth 2.1 with
+  PKCE + dynamic client registration** — works as a Custom MCP in Claude and Gemini.
+- **Public stateless MCP at `/mcp/public`**: `generate_running_plan`, `calculate_vdot_paces`,
+  `export_plan_url` — no account required, rate-limited 10 req/hour.
+- Hardening rounds: redirect-URI allowlist, code-replay protection, CSRF, cross-tenant IDOR,
+  token refresh bounding (only SHA-256 hashes stored).
 
-### 🛠️ Fixes & Improvements
-- **Dark Mode**: Enhanced visibility for modal backgrounds.
-- **Onboarding**: Improved empty-state handling for new users without Strava history.
-- **Top Bar**: Fixed overlap issues on mobile devices (Safe Area Insets).
+### Structured Workouts v2 + studio
+- v2 schema: nested repeat groups (depth ≤ 3), per-step pace/HR/power/RPE/cadence targets with
+  ranges, `lap_press` durations, planned TSS (flattened-step cap 500).
+- **`/calendar`** replaces the old `/plan` week list (drag-reschedule, detail drawer);
+  **`/plan-advanced`** studio upgraded: v2 editor, engine generator, phase blocks, week
+  copy/paste, live planned-TSS/PMC projection.
+- **`.zwo` export** (Zwift/MyWhoosh-compatible) + MyWhoosh catalog matching
+  (`User.matchToMyWhoosh`), backed by the scraped MyWhoosh seed catalog.
 
-### 👮 Administration
-- **User Management**: Admins can now manually trigger password reset emails for users from the dashboard.
-- **Observability**: Enhanced email system logging for better troubleshooting of delivery issues.
+### Cycling power engine
+- Strava watts-stream sync; **eFTP**, MMP power curves, NP/IF/VI, bike TSS, efficiency factor
+  & aerobic decoupling; split run/ride/combined PMC; backfill of power/TSS on existing rides.
+- Web: analytics sport switcher + ride power modal; Android: dedicated **Cycling tab**, ride
+  power card, FTP settings.
 
-### 🛡️ Security Hardening
-- **Admin Authentication**: Standardized on JWT-based authentication for all admin routes, replacing legacy checks.
-- **CSRF Protection**: Comprehensive CSRF validation added to all state-changing admin operations.
-- **Rate Limiting**: Added strict rate limiting to authentication code verification endpoints.
-- **Cookie Security**: Upgraded admin session cookies to `SameSite=Strict` for enhanced protection.
+### Two-metric VO2max calibration
+- **Effective VO2max** (best-effort from activities, 90-day lookback) and the **Swain
+  HR-based** estimate are tracked and calibrated independently, with unified labels on web and
+  Android.
+
+### Android 2.5–2.8 line
+- **Health & readiness** (2.5.0): Health Connect daily metrics (RHR/HRV/sleep), on-device
+  readiness scoring & sync, data-source setup.
+- **Recovery rounds** (2.6.0–2.7.3): HRV scoring, sleep analysis, auto body/zones (Room v12),
+  split RHR/HRV recovery charts.
+- **Guided player v2 + Room v13** (2.4.x): per-step range enforcement, manual lap button,
+  structured v2 editor on device.
+
+### Security hardening (web)
+- Tenant-ownership enforcement across progression/week-copy/stacks/push endpoints; ReactMarkdown
+  sanitization; BYOK quota-bypass fix + full AI route metering; bounded analytics ranges &
+  plan horizons; admin CSRF/lockout fixes; service-worker cache eviction on sign-out.
+
+---
+
+## Earlier (Beta v1.x era — historical)
+
+- Capacitor-based Android app (since replaced by the native Kotlin app; Flutter removed at
+  v2.3.0), Health Connect integration, 7-zone heart-rate model.
+- Email/password + magic-code login; JWT admin authentication, CSRF on admin mutations,
+  strict rate limiting on verification endpoints, `SameSite=Strict` admin cookies.
+- Effective VO2max introduction, unified app icons, dark-mode and onboarding polish.
 
 ---
 

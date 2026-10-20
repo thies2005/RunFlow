@@ -54,6 +54,8 @@ import { handleError } from '@/lib/errors/handler';
 describe('GET /api/activities', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        (getClientIdentifier as jest.Mock).mockReturnValue('test-client');
+        (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
         (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });

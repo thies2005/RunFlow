@@ -11,11 +11,14 @@ export interface CoreMetrics {
 }
 
 /**
- * Shared-Baseline Two-Stage Pipeline:
- * 1. calibratedEffectiveVo2max (aerobicVo2max) = rawVo2max * effectiveVo2maxCorrectionFactor
+ * Two-Metric Pipeline (pace-first):
+ * 1. aerobicVo2max = rawVo2max * effectiveVo2maxCorrectionFactor (HR-based)
  *    -> Drives Dashboard VO2max and Race Predictions (+ Marathon Shape penalty)
- * 2. trainingVdot (bestEffortVdot) = calibratedEffectiveVo2max * vdotCorrectionFactor
- *    -> Drives Training Paces (falls back to pace-only bestEffortVdot if no HR data exists)
+ * 2. bestEffortVdot = pace-based Daniels-Gilbert VDOT of the best qualifying
+ *    run (>= 5 km within 90 days) * vdotCorrectionFactor
+ *    -> Drives Training Paces; falls back to the HR-based effectiveVO2max ONLY
+ *       when no qualifying pace performance exists, so a single outlier HR run
+ *       can no longer inflate the training-pace VDOT.
  */
 export function computeCoreMetrics(
     runActivities: ActivityForShape[],
@@ -32,10 +35,10 @@ export function computeCoreMetrics(
         effFactor
     );
 
-    const fallbackPaceVdot = bestEffortVdot(runActivities, 1.0);
-    const baselineFitness = effectiveVO2max > 0 ? effectiveVO2max : fallbackPaceVdot;
-    const trainingVdot = baselineFitness > 0
-        ? parseFloat((baselineFitness * paceFactor).toFixed(1))
+    const paceVdot = bestEffortVdot(runActivities, 1.0);
+    const baselineForPaces = paceVdot > 0 ? paceVdot : effectiveVO2max;
+    const trainingVdot = baselineForPaces > 0
+        ? parseFloat((baselineForPaces * paceFactor).toFixed(1))
         : 0;
 
     return {

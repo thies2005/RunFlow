@@ -122,6 +122,14 @@ export function mapActivityType(stravaType: string): ActivityType {
         'TrailRun': ActivityType.RUN,
         'Ride': ActivityType.RIDE,
         'VirtualRide': ActivityType.VIRTUAL_RIDE,
+        // Human-powered bike variants must count as rides or they never reach
+        // the cycling analytics (FTP, bike TSS, PMC bike series).
+        'GravelRide': ActivityType.RIDE,
+        'MountainBikeRide': ActivityType.RIDE,
+        'Handcycle': ActivityType.RIDE,
+        'Velomobile': ActivityType.RIDE,
+        // EBikeRide stays OTHER: motor-assisted power data would pollute
+        // FTP/bike-TSS and the combined fitness load.
         'Walk': ActivityType.WALK,
         'Hike': ActivityType.HIKE,
         'Swim': ActivityType.SWIM,

@@ -40,7 +40,7 @@ The `/api/health` endpoint provides real-time system status:
 {
   "status": "healthy" | "degraded" | "unhealthy",
   "timestamp": "2026-02-09T12:00:00.000Z",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "uptime": 3600,
   "responseTime": {
     "ms": 45,
@@ -215,7 +215,7 @@ Sentry.addBreadcrumb({
 ```env
 SENTRY_DSN=https://your-dsn@sentry.io/project-id
 NEXT_PUBLIC_SENTRY_DSN=https://your-dsn@sentry.io/project-id
-NEXT_PUBLIC_APP_VERSION=1.2.8
+NEXT_PUBLIC_APP_VERSION=1.2.9
 ```
 
 ### Performance Sampling Rate

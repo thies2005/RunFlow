@@ -184,7 +184,7 @@ describe('GET /api/analytics/stats', () => {
         expect(data.tsb).toBe(10);
     });
 
-    it('returns BOTH metrics: live best-effort VDOT must not be overridden by the stale persisted value', async () => {
+    it('returns BOTH metrics: pace-based VDOT stays independent of the HR-based VO2max', async () => {
         (prisma.user.findUnique as jest.Mock).mockResolvedValue({
             id: 'user-1',
             hrMax: 185,
@@ -198,10 +198,11 @@ describe('GET /api/analytics/stats', () => {
         const response = await GET(mockRequest);
         const data = await response.json();
 
-        // Shared-baseline two-stage pipeline: the planning VDOT is computed live
-        // (calibrated effective VO2max x vdotCorrectionFactor = 44 x 1.0), never
-        // the stale persisted value.
-        expect(data.vdot).toBe(44);
+        // Pace-first two-metric pipeline: the planning VDOT is the Daniels-Gilbert
+        // VDOT of the best qualifying run (5 km in 30:00 -> 30.8) x the correction
+        // factor — it is NOT derived from the HR-based effectiveVO2max (44) and
+        // never the stale persisted value (55).
+        expect(data.vdot).toBe(30.8);
         expect(data.vdot).not.toBe(55);
         // HR-based aerobic-fitness trend is computed live, never from storage
         expect(data.effectiveVO2max).toBe(44);

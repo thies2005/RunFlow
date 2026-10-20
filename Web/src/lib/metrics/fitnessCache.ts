@@ -13,6 +13,18 @@ import {
 const CTL_TIME_CONSTANT = 42;
 const ATL_TIME_CONSTANT = 7;
 
+// Structural bound on rebuild cost: updateFitnessCache never iterates further
+// back than this, even if a legacy row with an ancient date exists (the API
+// schemas reject such dates, but old DB rows may predate that).
+const MAX_REBUILD_LOOKBACK_MS = 20 * 365 * DAY_MS;
+
+// Cooldown between full self-healing rebuilds per user. When the rebuild
+// cannot clear its own trigger (pathological data, e.g. rides with zero
+// watts/HR/duration keeping max ctlBike at 0), this stops every analytics
+// request from paying a full delete+rebuild.
+const REBUILD_RETRY_COOLDOWN_MS = 10 * 60 * 1000;
+const lastRebuildAttemptByUser = new Map<string, number>();
+
 /**
  * Normalize a date to UTC midnight.
  * This is crucial for consistent daily bucketing regardless of timezone.
@@ -53,7 +65,14 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             .map(a => a.startDate ? toUtcMidnight(new Date(a.startDate)) : toUtcMidnight(new Date()))
             .sort((a, b) => a.getTime() - b.getTime());
 
-        const startDate = dates[0];
+        let startDate = dates[0];
+
+        // Bound the rebuild horizon so a single ancient activity date cannot
+        // turn this into a multi-decade day-by-day recompute.
+        const earliestAllowed = new Date(Date.now() - MAX_REBUILD_LOOKBACK_MS);
+        if (startDate.getTime() < earliestAllowed.getTime()) {
+            startDate = new Date(earliestAllowed);
+        }
 
         // 2. Get Baseline State (Latest before Start Date)
         // Find the most recent fitness entry before the start date to handle gaps
@@ -98,7 +117,7 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             prisma.user?.findUnique
                 ? prisma.user.findUnique({
                     where: { id: userId },
-                    select: { ftpWatts: true }
+                    select: { ftpWatts: true, thresholdPace: true }
                 })
                 : Promise.resolve(null),
             prisma.activity.findMany({
@@ -130,6 +149,7 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             })
         ]);
         const userFtp = user?.ftpWatts;
+        const userThresholdPace = user?.thresholdPace;
 
         // 5. Iterate Day by Day
         const today = toUtcMidnight(new Date());
@@ -190,10 +210,13 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
                     trimp = (a.movingTime / 60) * 2.5;
                 }
 
-                // Running TSS
+                // Running TSS: prefer the stored per-activity value (computed at import
+                // time with enrichment) and only recompute when it is missing.
                 const contribution = getActivityContribution(a.type);
                 const runningTss = contribution.contributesToRunningTss && a.type === 'RUN' && a.distance > 0
-                    ? calculateRunningTss(a.movingTime, a.distance, 300)
+                    ? (a.runningTss && a.runningTss > 0
+                        ? a.runningTss
+                        : calculateRunningTss(a.movingTime, a.distance, userThresholdPace || 300))
                     : 0;
 
                 // Cycling Bike TSS
@@ -272,7 +295,8 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
                 }),
                 // Insert calculated records
                 prisma.dailyFitness.createMany({
-                    data: updates
+                    data: updates,
+                    skipDuplicates: true
                 })
             ]);
         }
@@ -339,6 +363,66 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
         }
 
         let latestDate = toUtcMidnight(new Date(latest.date));
+
+        // --- Self-healing: detect a poisoned or partial cache and rebuild from scratch ---
+        // A cache written by the legacy /api/analytics/history inline writer can be
+        // up-to-date by date but bike-blind (ctlBike = 0) or fully zeroed, which would
+        // otherwise make the early-exit below skip the rebuild forever.
+        const [earliest, firstActivity, lastActivity, rideCount, bikeAgg] = await Promise.all([
+            prisma.dailyFitness.findFirst({
+                where: { userId },
+                orderBy: { date: 'asc' },
+                select: { date: true },
+            }),
+            prisma.activity.findFirst({
+                where: { userId },
+                orderBy: { startDate: 'asc' },
+                select: { id: true, startDate: true },
+            }),
+            prisma.activity.findFirst({
+                where: { userId },
+                orderBy: { startDate: 'desc' },
+                select: { id: true },
+            }),
+            prisma.activity.count({
+                where: { userId, type: { in: ['RIDE', 'VIRTUAL_RIDE'] } },
+            }),
+            prisma.dailyFitness.aggregate({
+                where: { userId },
+                _max: { ctlBike: true },
+            }),
+        ]);
+
+        const needsFullRebuild = !!firstActivity && (
+            // Activities predate the cache window (cache is missing history)
+            (!!earliest && toUtcMidnight(new Date(firstActivity.startDate)).getTime() < toUtcMidnight(new Date(earliest.date)).getTime()) ||
+            // Cache exists but the latest row is zeroed while activities exist
+            (!!lastActivity && latest.ctl === 0 && latest.atl === 0) ||
+            // Rides exist but no bike CTL was ever computed (bike-blind legacy cache)
+            (rideCount > 0 && (bikeAgg._max.ctlBike ?? 0) === 0)
+        );
+
+        if (needsFullRebuild) {
+            const lastAttempt = lastRebuildAttemptByUser.get(userId) || 0;
+            if (Date.now() - lastAttempt < REBUILD_RETRY_COOLDOWN_MS) {
+                // A recent rebuild did not clear the trigger (pathological
+                // data) — do not hammer the DB on every request; fall through
+                // with whatever the cache currently holds.
+                logger.info('[FitnessCache] Rebuild trigger still active, cooling down', { userId });
+            } else {
+                lastRebuildAttemptByUser.set(userId, Date.now());
+                logger.info('[FitnessCache] Poisoned/partial cache detected, rebuilding from first activity', { userId });
+                await prisma.dailyFitness.deleteMany({ where: { userId } });
+                await updateFitnessCache(userId, [firstActivity]);
+                const rebuiltLatest = await prisma.dailyFitness.findFirst({
+                    where: { userId },
+                    orderBy: { date: 'desc' },
+                });
+                if (!rebuiltLatest) return null;
+                latest = rebuiltLatest;
+                latestDate = toUtcMidnight(new Date(latest.date));
+            }
+        }
 
         if (latestDate.getTime() < today.getTime()) {
             const recentActivity = prisma.activity?.findFirst

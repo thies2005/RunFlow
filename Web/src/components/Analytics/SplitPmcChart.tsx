@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 import { BarChart2, Layers } from 'lucide-react';
 
 export type PmcViewMode = 'combined' | 'running' | 'cycling' | 'split';
-export type PmcRange = '42d' | '90d' | '1y' | 'all';
+export type PmcRange = '42d' | '90d' | '180d' | '1y' | 'all';
 
 export interface SplitPmcDataPoint {
     date: string;
@@ -161,6 +161,9 @@ function SplitPmcChartComponent({
                 break;
             case '90d':
                 cutoff.setDate(now.getDate() - 90);
+                break;
+            case '180d':
+                cutoff.setDate(now.getDate() - 180);
                 break;
             case '1y':
                 cutoff.setFullYear(now.getFullYear() - 1);
@@ -309,7 +312,7 @@ function SplitPmcChartComponent({
                     {/* Range Switcher (42d | 90d | 1y | All) */}
                     {!hideRangeSelector && (
                         <div className="inline-flex rounded-lg bg-background-tertiary p-1 border border-line text-xs">
-                            {(['42d', '90d', '1y', 'all'] as PmcRange[]).map(r => (
+                            {(['42d', '90d', '180d', '1y', 'all'] as PmcRange[]).map(r => (
                                 <button
                                     key={r}
                                     type="button"

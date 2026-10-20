@@ -12,6 +12,7 @@ import { logger } from '@/lib/logging/logger';
 import { recordMetric } from '@/lib/monitoring/metrics';
 import { MINUTE_MS } from '@/lib/constants';
 import { calculateAge, calculateCalories } from '@/lib/metrics/calories';
+import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 
 // Type for Prisma where clause with optional filters
 type ActivityWhereClause = {
@@ -26,6 +27,15 @@ export async function GET(request: NextRequest) {
     let isError = false;
 
     try {
+        const clientId = getClientIdentifier(request);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.activities);
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+            );
+        }
+
         const session = await auth();
 
         if (!session?.user?.id) {
@@ -34,7 +44,7 @@ export async function GET(request: NextRequest) {
         }
 
         const { searchParams } = new URL(request.url);
-        const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20'), 1), 100);
+        const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20'), 1), 1000);
         const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
         const type = searchParams.get('type');
         const raceEligible = searchParams.get('raceEligible') === 'true';
@@ -258,6 +268,9 @@ export async function POST(request: NextRequest) {
                 totalElevation: 0,
             },
         });
+
+        // Refresh the DailyFitness cache so CTL/ATL/TSB reflect this activity
+        await updateFitnessCache(session.user.id, [{ startDate: activity.startDate }]);
 
         // Convert BigInt for response
         return NextResponse.json({

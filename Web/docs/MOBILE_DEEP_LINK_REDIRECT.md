@@ -1,5 +1,11 @@
 # Mobile Deep Link Redirection Issue
 
+> **Status: historical (2026-02).** The primary auth return path is now a **verified App Link**
+> (`https://runflow.schuelken.uk/auth/app-callback`, see `android/README.md` and
+> `Web/MOBILE_API.md`); the `runflow://` custom scheme survives only as an unverified fallback
+> and in the trampoline's manual tap button. This page documents why the JS-redirect page
+> exists at all.
+
 ## The Problem
 When using **Chrome Custom Tabs** (or certain other in-app browsers) on Android for OAuth, the browser restricts automatic HTTP 302/301 redirects to custom URI schemes (like `runflow://`). 
 

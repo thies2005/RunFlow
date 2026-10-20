@@ -21,8 +21,21 @@ object BodyAuto {
     /** Hard physiological ceiling: observed max HRs above it are sensor noise. */
     const val HR_ABS_CEILING = 210
 
-    /** A run only counts as a max-HR observation when its average HR shows a real effort. */
-    const val HR_EFFORT_MIN_AVG_HR = 100.0
+    /** A run only counts as a max-HR observation when its average HR shows a real hard effort. */
+    const val HR_EFFORT_MIN_AVG_HR = 135.0
+
+    /**
+     * Max-to-average HR spread within one activity above which the maxHr is
+     * treated as optical-sensor noise (an easy run with avgHr 125 and maxHr
+     * 205 is a cadence-lock spike, not a true max-HR effort).
+     */
+    const val HR_MAX_SPIKE_DIFF = 45.0
+
+    /** Observations required within this many bpm of the candidate before hrMax may rise. */
+    const val HR_MAX_CORROBORATION_BPM = 3
+
+    /** Minimum corroborating observations (see [HR_MAX_CORROBORATION_BPM]). */
+    const val HR_MAX_MIN_OBSERVATIONS = 2
 
     /** One activity's HR summary relevant to a max-HR observation. */
     data class HrEffort(val maxHr: Int?, val averageHr: Double?)
@@ -46,15 +59,23 @@ object BodyAuto {
     }
 
     /**
-     * Highest believable observed max HR: an activity's maxHr only counts
-     * when its averageHr shows a real effort (> [HR_EFFORT_MIN_AVG_HR]) and
-     * the value itself stays within 1..[HR_ABS_CEILING]; null when nothing
-     * qualifies.
+     * All believable max-HR observations: an activity's maxHr only counts when
+     * its averageHr shows a real hard effort (> [HR_EFFORT_MIN_AVG_HR]), the
+     * max-to-average spread stays within [HR_MAX_SPIKE_DIFF], and the value
+     * itself stays within 1..[HR_ABS_CEILING].
      */
-    fun observedHrMax(efforts: List<HrEffort>): Int? = efforts
-        .mapNotNull { e -> e.maxHr?.takeIf { (e.averageHr ?: 0.0) > HR_EFFORT_MIN_AVG_HR } }
+    fun believableMaxes(efforts: List<HrEffort>): List<Int> = efforts
+        .mapNotNull { e ->
+            val avg = e.averageHr
+            e.maxHr?.takeIf { avg != null && avg > HR_EFFORT_MIN_AVG_HR && (it - avg) <= HR_MAX_SPIKE_DIFF }
+        }
         .filter { it in 1..HR_ABS_CEILING }
-        .maxOrNull()
+
+    /**
+     * Highest believable observed max HR (see [believableMaxes]); null when
+     * nothing qualifies.
+     */
+    fun observedHrMax(efforts: List<HrEffort>): Int? = believableMaxes(efforts).maxOrNull()
 
     /**
      * The whole decision in one pure function:
@@ -63,7 +84,12 @@ object BodyAuto {
      *    to a value that keeps hrRest < currentHrMax (so the Karvonen math
      *    downstream can never be handed an inverted pair);
      *  - hrMax RISES ONLY, to the highest believable observation not above
-     *    [HR_ABS_CEILING] — a lower or equal observation never lowers it.
+     *    [HR_ABS_CEILING] AND corroborated by at least
+     *    [HR_MAX_MIN_OBSERVATIONS] observations within
+     *    [HR_MAX_CORROBORATION_BPM] bpm of it — a single spike never
+     *    ratchets hrMax up (which would silently inflate every HR-based
+     *    VO2max estimate afterwards). A lower or equal observation never
+     *    lowers it.
      */
     fun compute(
         currentHrRest: Int,
@@ -76,8 +102,11 @@ object BodyAuto {
             ?.takeIf { abs(it - currentHrRest) >= RHR_CHANGE_THRESHOLD }
             ?.roundToInt()
             ?.takeIf { it in 1 until currentHrMax }
-        val hrMax = observedHrMax(observedMaxCandidates)
-            ?.takeIf { it > currentHrMax && it <= HR_ABS_CEILING }
+        val maxes = believableMaxes(observedMaxCandidates)
+        val hrMax = maxes.maxOrNull()?.takeIf { candidate ->
+            candidate > currentHrMax && candidate <= HR_ABS_CEILING &&
+                maxes.count { abs(it - candidate) <= HR_MAX_CORROBORATION_BPM } >= HR_MAX_MIN_OBSERVATIONS
+        }
         return Updates(hrRest = hrRest, hrMax = hrMax)
     }
 }

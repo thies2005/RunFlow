@@ -106,6 +106,9 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
     var showAtl by remember { mutableStateOf(true) }
     var showTsb by remember { mutableStateOf(true) }
     var selectedTab by rememberSaveable { mutableStateOf(AnalyticsSportTab.COMBINED) }
+    // Multi-sport PMC view mode on the Combined tab (web parity: the
+    // SplitPmcChart view switcher Combined | Running | Cycling | Split).
+    var pmcMode by rememberSaveable { mutableStateOf("combined") }
 
     val listState = rememberLazyListState()
     val a = analytics ?: return Scaffold { }
@@ -233,6 +236,88 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
             }
 
             if (selectedTab == AnalyticsSportTab.COMBINED) {
+            // ---- combined multi-sport overview KPI tiles ----
+            item(key = "sec-combined-overview") {
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        SectionTitle("Combined overview")
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    "Combined Fitness",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    "${Format.roundedIntOrDash(a.ctl)} CTL",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "ATL ${Format.roundedIntOrDash(a.atl)} · TSB " +
+                                        (if (a.tsb > 0) "+" else "") + Format.roundedIntOrDash(a.tsb),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = a.tsbStatus.color(),
+                                )
+                            }
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    "Running Volume",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    Format.distance(a.totalRunKm, unit),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "${a.totalRuns} runs recorded",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    "Cycling Distance",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    Format.distance(a.totalBikeKm, unit),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "${a.totalRides} rides recorded",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    "Total Training Time",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    "${Format.roundedIntOrDash(a.totalMovingHours)} h",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "${a.totalActivities} total activities",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // ---- combined load & form (CTL / ATL / TSB) ----
             item(key = "sec-load") {
                 var showAbsoluteCtl by rememberSaveable { mutableStateOf(false) }
@@ -300,11 +385,30 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                 }
             }
 
-            // ---- fitness chart ----
-            item {
+            // ---- multi-sport PMC (Combined | Running | Cycling | Split) ----
+            item(key = "sec-pmc") {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SectionTitle("Fitness & fatigue")
+                        SectionTitle("Multi-Sport Performance Management (PMC)")
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            listOf(
+                                "combined" to "Combined",
+                                "running" to "Running",
+                                "cycling" to "Cycling",
+                                "split" to "Split",
+                            ).forEach { (mode, label) ->
+                                FilterChip(
+                                    selected = pmcMode == mode,
+                                    onClick = { pmcMode = mode },
+                                    label = { Text(label) },
+                                )
+                            }
+                        }
                         Row(
                             Modifier
                                 .fillMaxWidth()
@@ -319,43 +423,158 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                 )
                             }
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(
-                                selected = showCtl,
-                                onClick = { showCtl = !showCtl },
-                                label = { Text("CTL") },
-                                leadingIcon = {
-                                    Box(Modifier.size(8.dp).background(ChartCtl, CircleShape))
-                                },
+                        if (pmcMode != "split") {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                FilterChip(
+                                    selected = showCtl,
+                                    onClick = { showCtl = !showCtl },
+                                    label = { Text("CTL") },
+                                    leadingIcon = {
+                                        Box(Modifier.size(8.dp).background(ChartCtl, CircleShape))
+                                    },
+                                )
+                                FilterChip(
+                                    selected = showAtl,
+                                    onClick = { showAtl = !showAtl },
+                                    label = { Text("ATL") },
+                                    leadingIcon = {
+                                        Box(Modifier.size(8.dp).background(ChartAtl, CircleShape))
+                                    },
+                                )
+                                FilterChip(
+                                    selected = showTsb,
+                                    onClick = { showTsb = !showTsb },
+                                    label = { Text("TSB") },
+                                    leadingIcon = {
+                                        Box(Modifier.size(8.dp).background(ChartTsb, CircleShape))
+                                    },
+                                )
+                            }
+                            val series = when (pmcMode) {
+                                "running" -> a.runFitnessSeries.map { it.toDailyLoad() }
+                                "cycling" -> a.cycling?.bikeFitnessSeries?.map { it.toDailyLoad() } ?: emptyList()
+                                else -> a.daily
+                            }
+                            if (series.isEmpty()) {
+                                Text(
+                                    if (pmcMode == "cycling") "No cycling load in this range" else "No load data yet",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            } else {
+                                FitnessChart(
+                                    daily = series.takeLast(rangeDays),
+                                    showCtl = showCtl,
+                                    showAtl = showAtl,
+                                    showTsb = showTsb,
+                                )
+                            }
+                        } else {
+                            // Split overlay: running and cycling CTL side by side
+                            // (FitnessChart draws one series, so split stacks the two)
+                            Text(
+                                "Running CTL",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            FilterChip(
-                                selected = showAtl,
-                                onClick = { showAtl = !showAtl },
-                                label = { Text("ATL") },
-                                leadingIcon = {
-                                    Box(Modifier.size(8.dp).background(ChartAtl, CircleShape))
-                                },
+                            if (a.runFitnessSeries.isEmpty()) {
+                                Text(
+                                    "No running load yet",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            } else {
+                                FitnessChart(
+                                    daily = a.runFitnessSeries.map { it.toDailyLoad() }.takeLast(rangeDays),
+                                    showCtl = true,
+                                    showAtl = false,
+                                    showTsb = false,
+                                )
+                            }
+                            Text(
+                                "Cycling CTL",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            FilterChip(
-                                selected = showTsb,
-                                onClick = { showTsb = !showTsb },
-                                label = { Text("TSB") },
-                                leadingIcon = {
-                                    Box(Modifier.size(8.dp).background(ChartTsb, CircleShape))
-                                },
-                            )
+                            val bikeSeries = a.cycling?.bikeFitnessSeries?.map { it.toDailyLoad() } ?: emptyList()
+                            if (bikeSeries.isEmpty()) {
+                                Text(
+                                    "No cycling load yet",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            } else {
+                                FitnessChart(
+                                    daily = bikeSeries.takeLast(rangeDays),
+                                    showCtl = true,
+                                    showAtl = false,
+                                    showTsb = false,
+                                )
+                            }
                         }
-                        FitnessChart(
-                            daily = a.daily.takeLast(rangeDays),
-                            showCtl = showCtl,
-                            showAtl = showAtl,
-                            showTsb = showTsb,
-                        )
                         Text(
                             "Drag on the chart to inspect a day",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                    }
+                }
+            }
+
+            // ---- sport highlights with tap-through ----
+            if (hasRunActivities || hasCyclingActivities) {
+                item(key = "sec-combined-highlights") {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        if (hasRunActivities) {
+                            Card(
+                                Modifier
+                                    .weight(1f)
+                                    .clickable { selectedTab = AnalyticsSportTab.RUNNING },
+                            ) {
+                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(
+                                        "Running Highlights",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                    LabelValue("VDOT", Format.oneDecimal(a.effectiveVdot))
+                                    LabelValue("Aerobic VO2max", Format.oneDecimal(a.aerobicVo2max))
+                                    LabelValue("Marathon Shape", a.marathonShape?.roundToInt()?.let { "$it%" } ?: "-")
+                                    Text(
+                                        "Open full running analytics →",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
+                        }
+                        if (hasCyclingActivities) {
+                            Card(
+                                Modifier
+                                    .weight(1f)
+                                    .clickable { selectedTab = AnalyticsSportTab.CYCLING },
+                            ) {
+                                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    val c = a.cycling
+                                    val activeFtp = c?.ftpWatts?.takeIf { it > 0 } ?: c?.eFtpWatts
+                                    Text(
+                                        "Cycling Highlights",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                    LabelValue("FTP", activeFtp?.let { "$it W" } ?: "-")
+                                    LabelValue("30d Bike TSS", c?.totalBikeTss30d?.toString() ?: "-")
+                                    LabelValue("Avg NP", c?.avgNpWatts?.let { "$it W" } ?: "-")
+                                    Text(
+                                        "Open full cycling analytics →",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

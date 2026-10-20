@@ -3,6 +3,8 @@ import type { Activity, Goal } from '@/lib/types';
 import { calculatePredictedTimes, calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 export function useAnalyticsMetrics(
     activitiesData: any,
     goalsData: any,
@@ -39,14 +41,18 @@ export function useAnalyticsMetrics(
         });
 
         const shapeTrendData = (historyData?.shapeTrend || []).map((s: any) => ({ week: s.week, shape: s.shape }));
-        const fitnessData = (historyData?.fitnessTrend || []).map((f: any) => ({ date: f.date, ctl: f.ctl, atl: f.atl, tsb: f.tsb }));
+        // Pass the full fitness trend through: SplitPmcChart uses the multi-sport
+        // fields (ctlRunning/ctlBike/runTss/bikeTss) as fallback PMC data.
+        const fitnessData = historyData?.fitnessTrend || [];
 
         // Combined data for charts (matching desktop implementation)
         const dailyVolumeMap = new Map<string, number>();
         const dailyTimeMap = new Map<string, number>();
         const dailyVO2Map = new Map<string, { values: number[]; vo2max?: number }>();
         const maxHR = userData?.user?.hrMax || userData?.hrMax || 190;
-        const factor = statsData?.vdotCorrectionFactor || 1.0;
+        // Daily VO2max trend uses the Effective VO2max calibration (race-prediction
+        // baseline), not the Training Pace (vdotCorrectionFactor) adjustment.
+        const factor = statsData?.effectiveVo2maxCorrectionFactor || 1.0;
         const serverFitnessTrend = historyData?.fitnessTrend || [];
 
         activities.forEach((activity: any) => {
@@ -91,6 +97,20 @@ export function useAnalyticsMetrics(
             ...Array.from(dailyTimeMap.keys()),
             ...Array.from(fitnessDateSet)
         ]);
+
+        // Fill a contiguous daily range from the earliest known date through today,
+        // so rest days without activities exist and rolling windows sum full weeks
+        // even when serverFitnessTrend is empty or sparse.
+        if (allDates.size > 0) {
+            const sortedDates = Array.from(allDates).sort();
+            const startMs = new Date(`${sortedDates[0]}T00:00:00Z`).getTime();
+            const todayMs = new Date();
+            todayMs.setUTCHours(0, 0, 0, 0);
+            for (let t = startMs; t <= todayMs.getTime(); t += MS_PER_DAY) {
+                allDates.add(new Date(t).toISOString().split('T')[0]);
+            }
+        }
+
         const combinedDataRaw = Array.from(allDates).sort().map((date: string) => {
             const fitnessEntry = serverFitnessTrend.find((f: { date: string }) => normalizeDate(f.date) === date);
             return {
@@ -104,12 +124,16 @@ export function useAnalyticsMetrics(
             };
         });
 
-        // Calculate rolling averages for combined data
+        // 7-calendar-day rolling sums (weekly km / weekly minutes / VO2 average).
+        // Window by date distance, not array index, so it stays correct even if a
+        // day is ever missing from combinedDataRaw.
         const combinedData = combinedDataRaw.map((d, index) => {
-            const windowSize = 7;
             let volSum = 0, timeSum = 0, vo2Sum = 0, vo2Count = 0;
+            const endTime = new Date(`${d.date}T00:00:00Z`).getTime();
 
-            for (let i = index; i >= 0 && index - i < windowSize; i--) {
+            for (let i = index; i >= 0; i--) {
+                const pointTime = new Date(`${combinedDataRaw[i].date}T00:00:00Z`).getTime();
+                if (endTime - pointTime > 6 * MS_PER_DAY) break; // 7 calendar days incl. today
                 volSum += combinedDataRaw[i].volume;
                 timeSum += combinedDataRaw[i].trainingTime;
                 const v = combinedDataRaw[i].vo2max;

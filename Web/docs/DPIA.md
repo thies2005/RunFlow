@@ -1,8 +1,15 @@
 # RunFlow Data Protection Impact Assessment (DPIA)
 
-**Date:** 26 February 2026
+**Date:** 26 February 2026 (review due note 2026-10-20)
 **Version:** 1.0
 **Author:** RunFlow Compliance Team
+
+> **Review note (2026-10-20):** This DPIA predates several processing additions and should be
+> re-versioned before it is relied on for compliance sign-off: MCP OAuth tokens & API keys
+> (third-party MCP clients receiving fitness data — §AI sub-processors covers only the
+> user-initiated AI Coach), HRV/sleep health-readiness features, cycling power data, and the
+> native Android app's Health Connect ingestion. No conclusions here are known to be wrong;
+> the processing inventory is simply incomplete for 2026-10.
 
 ## 1. Introduction
 This Data Protection Impact Assessment (DPIA) is conducted pursuant to Article 35 of the General Data Protection Regulation (GDPR). RunFlow processes special categories of personal data (health data, Art. 9) for the purpose of providing advanced running analytics, training plans, and AI coaching.

@@ -379,7 +379,13 @@ fun SettingsScreen(
                     title = "Include Cross-Training in Marathon Shape",
                     subtitle = "Rides, swims and workouts count toward the shape's cross-training component",
                     checked = settings.includeCrossTraining,
-                    onChecked = { scope.launch { container.settings.setIncludeCrossTraining(it) } },
+                    onChecked = { checked ->
+                        scope.launch {
+                            container.settings.setIncludeCrossTraining(checked)
+                            // keep the server in sync so web stats use the same preference
+                            container.repository.saveProfile(container.repository.profileOnce())
+                        }
+                    },
                 )
                 // Effective VO2max correction: 0.85x–1.15x in 0.01 steps (default 1.00x).
                 val correction = ((settings.effectiveVo2maxCorrection * 100).roundToInt().toDouble() / 100.0)
@@ -397,11 +403,52 @@ fun SettingsScreen(
                             )
                         }
                     },
+                    onValueChangeFinished = {
+                        // mirror the finished value into the profile outbox so the
+                        // server (and with it the web dashboard) stays in sync
+                        scope.launch {
+                            val factor = container.settings.settingsOnce().effectiveVo2maxCorrection
+                            container.repository.saveProfile(
+                                container.repository.profileOnce().copy(effectiveVo2maxCorrection = factor)
+                            )
+                        }
+                    },
                     valueRange = 0.85f..1.15f,
                     steps = 29,
                 )
                 Text(
                     "Scales the HR-based aerobic VO2max (and with it race predictions and marathon-shape penalties). 1.00× = uncorrected.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                // VDOT (training paces) correction: 0.85x–1.15x in 0.01 steps (default 1.00x).
+                // Lives on the profile row (like the race-result calibration on the
+                // plan screen) so it syncs through the profile outbox.
+                val profile by container.repository.profile.collectAsState(initial = null)
+                var vdotSlider by remember { mutableStateOf<Float?>(null) }
+                val vdotCorrection = (vdotSlider ?: profile?.vdotCorrection?.toFloat() ?: 1.0f)
+                    .coerceIn(0.85f, 1.15f)
+                Text(
+                    "VDOT (Training Paces) Correction Factor: ${"%.2f".format(vdotCorrection)}×",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Slider(
+                    value = vdotCorrection,
+                    onValueChange = { raw -> vdotSlider = raw },
+                    onValueChangeFinished = {
+                        val finished = ((vdotCorrection * 100).roundToInt().toDouble() / 100.0)
+                        scope.launch {
+                            container.repository.saveProfile(
+                                container.repository.profileOnce().copy(vdotCorrection = finished)
+                            )
+                            vdotSlider = null // fall back to the persisted profile value
+                        }
+                    },
+                    valueRange = 0.85f..1.15f,
+                    steps = 29,
+                )
+                Text(
+                    "Scales the performance-based VDOT that drives training paces. 1.00× = uncorrected; race-result calibration on the plan screen sets this too.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

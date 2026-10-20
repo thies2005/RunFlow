@@ -104,7 +104,11 @@ class RunFlowRepository(
             val s = settings?.settingsOnce()
             val payload = Api.json.encodeToString(
                 com.runflow2.app.data.net.UpdateProfileRequest.serializer(),
-                profile.toUpdateRequest(ftpWatts = s?.ftpWatts, autoEstimateFtp = s?.autoEstimateFtp),
+                profile.toUpdateRequest(
+                    ftpWatts = s?.ftpWatts,
+                    autoEstimateFtp = s?.autoEstimateFtp,
+                    includeCrossTraining = s?.includeCrossTraining,
+                ),
             )
             db.withTransaction {
                 profileDao.upsert(profile.copy(dirty = true))

@@ -27,27 +27,64 @@ export default function ZoneDistributionSection({ activities, userData }: ZoneDi
         ? activities
         : activities.filter(a => new Date(a.startDate) >= cutoff);
 
-    // Aggregate zone times
-    const zoneTotals = filteredActivities.reduce((acc, activity) => ({
-        Z1: acc.Z1 + (activity.hrZone1Time || 0),
-        Z2: acc.Z2 + (activity.hrZone2Time || 0),
-        Z3: acc.Z3 + (activity.hrZone3Time || 0),
-        Z4: acc.Z4 + (activity.hrZone4Time || 0),
-        Z5: acc.Z5 + (activity.hrZone5Time || 0),
-        Z6: acc.Z6 + (activity.hrZone6Time || 0),
-        Z7: acc.Z7 + (activity.hrZone7Time || 0),
-    }), { Z1: 0, Z2: 0, Z3: 0, Z4: 0, Z5: 0, Z6: 0, Z7: 0 });
-
-    const total = Object.values(zoneTotals).reduce((sum, v) => sum + v, 0);
-    if (total === 0) return null;
-
-    // Get HR zone thresholds from userData
+    // Get HR zone thresholds from userData (needed for the averageHr fallback below)
     const z1Max = userData?.hrZone1Max || 130;
     const z2Max = userData?.hrZone2Max || 148;
     const z3Max = userData?.hrZone3Max || 160;
     const z4Max = userData?.hrZone4Max || 170;
     const z5Max = userData?.hrZone5Max || 178;
     const z6Max = userData?.hrZone6Max || 187;
+
+    // Zone containing a given average HR (used when no per-zone stream data exists)
+    const zoneForHr = (hr: number): keyof typeof zoneTotals => {
+        if (hr < z1Max) return 'Z1';
+        if (hr < z2Max) return 'Z2';
+        if (hr < z3Max) return 'Z3';
+        if (hr < z4Max) return 'Z4';
+        if (hr < z5Max) return 'Z5';
+        if (hr <= z6Max) return 'Z6';
+        return 'Z7';
+    };
+
+    // Aggregate zone times; fall back to attributing the whole moving time to the
+    // averageHr zone for activities imported without second-by-second HR streams.
+    const zoneTotals = filteredActivities.reduce((acc, activity) => {
+        const zones = {
+            Z1: activity.hrZone1Time || 0,
+            Z2: activity.hrZone2Time || 0,
+            Z3: activity.hrZone3Time || 0,
+            Z4: activity.hrZone4Time || 0,
+            Z5: activity.hrZone5Time || 0,
+            Z6: activity.hrZone6Time || 0,
+            Z7: activity.hrZone7Time || 0,
+        };
+        const hasZoneData = Object.values(zones).some(v => v > 0);
+
+        if (!hasZoneData && activity.averageHr && activity.averageHr > 0 && activity.movingTime > 0) {
+            zones[zoneForHr(activity.averageHr)] += activity.movingTime;
+        }
+
+        return {
+            Z1: acc.Z1 + zones.Z1,
+            Z2: acc.Z2 + zones.Z2,
+            Z3: acc.Z3 + zones.Z3,
+            Z4: acc.Z4 + zones.Z4,
+            Z5: acc.Z5 + zones.Z5,
+            Z6: acc.Z6 + zones.Z6,
+            Z7: acc.Z7 + zones.Z7,
+        };
+    }, { Z1: 0, Z2: 0, Z3: 0, Z4: 0, Z5: 0, Z6: 0, Z7: 0 });
+
+    const total = Object.values(zoneTotals).reduce((sum, v) => sum + v, 0);
+
+    if (total === 0) {
+        return (
+            <div className="glass-card p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Time in Zones Distribution</h3>
+                <p className="text-foreground-muted text-sm py-8 text-center">No heart-rate zone data in this time range</p>
+            </div>
+        );
+    }
 
     const pieData = [
         { name: 'Z1 Recovery', value: zoneTotals.Z1, color: 'var(--zone-1)', hrRange: `<${z1Max}` },

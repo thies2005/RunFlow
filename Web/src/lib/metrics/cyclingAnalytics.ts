@@ -79,6 +79,74 @@ export interface CyclingAnalyticsData {
     }>;
 }
 
+interface ParsedStreams {
+    watts?: number[];
+    time?: number[];
+    heartrate?: number[];
+}
+
+/**
+ * Parses the raw `streams` Json column into typed stream arrays. The column is
+ * usually already an object, but some paths persist it stringified, so both
+ * forms are handled here (previously only the enrichedRides loop parsed it).
+ */
+function parseStreams(raw: unknown): ParsedStreams | null {
+    let obj: unknown = raw;
+    if (typeof obj === 'string') {
+        try {
+            obj = JSON.parse(obj);
+        } catch {
+            return null;
+        }
+    }
+    if (!obj || typeof obj !== 'object') return null;
+    const o = obj as Record<string, unknown>;
+    return {
+        watts: Array.isArray(o.watts) ? (o.watts as number[]) : undefined,
+        time: Array.isArray(o.time) ? (o.time as number[]) : undefined,
+        heartrate: Array.isArray(o.heartrate) ? (o.heartrate as number[]) : undefined,
+    };
+}
+
+/**
+ * Fills estimated mean-maximal power (MMP) points for a ride that has summary
+ * watts (NP / weighted / average) but no second-by-second watts stream, so the
+ * Power Duration Curve renders instead of being empty. Estimates interpolate
+ * log-linearly from the ride's max watts at ~5 s toward sustained watts at
+ * ~1 h, only for durations the ride actually lasted.
+ */
+function applyEstimatedMmpPoints(
+    peakWatts: number[],
+    ride: { movingTime: number; maxWatts: number | null; npWatts: number | null; weightedAverageWatts: number | null; averageWatts: number | null },
+): void {
+    const sustained = ride.npWatts ?? ride.weightedAverageWatts ?? ride.averageWatts;
+    if (!sustained || sustained <= 0 || ride.movingTime <= 0) return;
+    const peak = ride.maxWatts && ride.maxWatts > sustained ? ride.maxWatts : Math.round(sustained * 1.25);
+
+    for (let i = 0; i < STANDARD_POWER_DURATIONS.length; i++) {
+        const dur = STANDARD_POWER_DURATIONS[i];
+        if (dur > ride.movingTime) break;
+        const t = Math.min(1, Math.log10(Math.max(dur, 1) / 5) / Math.log10(3600 / 5));
+        const estimated = Math.round(peak + (sustained - peak) * t);
+        if (estimated > peakWatts[i]) peakWatts[i] = estimated;
+    }
+}
+
+/**
+ * Returns the Coggan zone (0-based index 0..6) whose range contains the given
+ * watts, using the standard FTP multipliers (0.55/0.75/0.90/1.05/1.20/1.50).
+ */
+function cogganZoneIndexForWatts(watts: number, ftp: number): number {
+    const ratio = watts / ftp;
+    if (ratio < 0.55) return 0;
+    if (ratio < 0.75) return 1;
+    if (ratio < 0.90) return 2;
+    if (ratio <= 1.05) return 3;
+    if (ratio <= 1.20) return 4;
+    if (ratio <= 1.50) return 5;
+    return 6;
+}
+
 export async function getCyclingAnalytics(
     userId: string,
     range: string = '90d'
@@ -163,7 +231,7 @@ export async function getCyclingAnalytics(
     let allTimeEftp: number | null = null;
 
     for (const r of allRides) {
-        const streams = r.streams as { watts?: number[]; time?: number[] } | null;
+        const streams = parseStreams(r.streams);
         let eftp: number | null = null;
 
         if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
@@ -175,8 +243,13 @@ export async function getCyclingAnalytics(
                 }
             });
             eftp = estimateFtpFromPowerCurve(curve, r.weightedAverageWatts ?? r.averageWatts);
-        } else if (r.weightedAverageWatts || r.averageWatts) {
-            eftp = estimateFtpFromPowerCurve([], r.weightedAverageWatts ?? r.averageWatts);
+        } else {
+            if (r.weightedAverageWatts || r.averageWatts) {
+                eftp = estimateFtpFromPowerCurve([], r.weightedAverageWatts ?? r.averageWatts);
+            }
+            // No watts stream: estimate MMP points from summary watts so the
+            // all-time curve is populated for rides without raw streams.
+            applyEstimatedMmpPoints(allTimePeakWatts, r);
         }
 
         if (eftp && (allTimeEftp === null || eftp > allTimeEftp)) {
@@ -190,7 +263,7 @@ export async function getCyclingAnalytics(
     // Range peak power curve
     const rangePeakWatts = STANDARD_POWER_DURATIONS.map(() => 0);
     for (const r of rangeRides) {
-        const streams = r.streams as { watts?: number[]; time?: number[] } | null;
+        const streams = parseStreams(r.streams);
         if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
             const curve = calculatePowerCurve(streams.watts, streams.time);
             curve.forEach(pt => {
@@ -199,6 +272,8 @@ export async function getCyclingAnalytics(
                     rangePeakWatts[durIdx] = pt.peakWatts;
                 }
             });
+        } else {
+            applyEstimatedMmpPoints(rangePeakWatts, r);
         }
     }
 
@@ -214,17 +289,10 @@ export async function getCyclingAnalytics(
 
     // Map over rangeRides so any ride missing stored metrics computes them on the fly
     const enrichedRides = rangeRides.map(r => {
-        let streamsObj: any = r.streams;
-        if (typeof streamsObj === 'string') {
-            try {
-                streamsObj = JSON.parse(streamsObj);
-            } catch {
-                streamsObj = null;
-            }
-        }
-        const wattsStream: number[] | undefined = Array.isArray(streamsObj?.watts) ? streamsObj.watts : undefined;
-        const timeStream: number[] | undefined = Array.isArray(streamsObj?.time) ? streamsObj.time : undefined;
-        const hrStream: number[] | undefined = Array.isArray(streamsObj?.heartrate) ? streamsObj.heartrate : undefined;
+        const parsed = parseStreams(r.streams);
+        const wattsStream: number[] | undefined = parsed?.watts;
+        const timeStream: number[] | undefined = parsed?.time;
+        const hrStream: number[] | undefined = parsed?.heartrate;
 
         let npWatts = r.npWatts;
         let intensityFactor = r.intensityFactor;
@@ -290,6 +358,20 @@ export async function getCyclingAnalytics(
             }
             if (efficiencyFactor == null && npWatts != null && r.averageHr) {
                 efficiencyFactor = calculateEfficiencyFactor(npWatts, r.averageHr);
+            }
+            // No watts stream: when no stored power-zone times exist either,
+            // attribute the whole moving time to the Coggan zone matching the
+            // sustained power so the 7-zone distribution is not all zeros.
+            if (powerZone1Time == null && npWatts != null && resolvedFtp > 0) {
+                const zTimes = [0, 0, 0, 0, 0, 0, 0];
+                zTimes[cogganZoneIndexForWatts(npWatts, resolvedFtp)] += r.movingTime;
+                powerZone1Time = zTimes[0];
+                powerZone2Time = zTimes[1];
+                powerZone3Time = zTimes[2];
+                powerZone4Time = zTimes[3];
+                powerZone5Time = zTimes[4];
+                powerZone6Time = zTimes[5];
+                powerZone7Time = zTimes[6];
             }
         }
 

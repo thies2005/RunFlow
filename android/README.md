@@ -1,13 +1,14 @@
-# RunFlow — Native Kotlin Rewrite (Material 3 Expressive)
+# RunFlow Android — Native Kotlin / Compose (Material 3 Expressive)
 
-Native Android (Kotlin + Jetpack Compose) rewrite of the RunFlow Flutter app, focused on
-**training, planning, analytics, account sync and an AI coach**. Health & nutrition features
-(food logging, supplements, fasting, sleep, readiness) are intentionally deferred to a later
-phase. Server sync is offline-first: everything works without a connection and reconciles with
-`https://runflow.schuelken.uk` whenever one is available.
+The RunFlow mobile app: native Android (Kotlin + Jetpack Compose), focused on **training,
+planning (run / ultra / triathlon), cycling and running analytics, health & readiness, account
+sync and an AI coach**. Server sync is offline-first: everything works without a connection and
+reconciles with `https://runflow.schuelken.uk` whenever one is available.
 
-- **Package / applicationId:** `com.runflow2.app` (same identity as the Flutter app)
+- **Package / applicationId:** `com.runflow2.app`
+- **Current release:** versionName `2.8.0` (versionCode 21)
 - **minSdk 29 · target/compile SDK 36 · JDK 17 · Kotlin 2.2.20 · AGP 8.11.1**
+- Wire protocol & server endpoints: [`Web/MOBILE_API.md`](../Web/MOBILE_API.md)
 
 ## Build & run
 
@@ -15,7 +16,9 @@ phase. Server sync is offline-first: everything works without a connection and r
 cd android
 ./gradlew assembleDebug          # debug APK  → app/build/outputs/apk/debug/
 ./gradlew assembleRelease        # R8-minified + signed (needs android/key.properties) → app/build/outputs/apk/release/
-./gradlew testDebugUnitTest      # 273 unit tests (math, streams/GAP, stream capture, plan, sync mappers, plan mappers, SSE parser, Strava OAuth, API contract, logging, login nudge, wizard flow, Health Connect import, plan-config parity)
+./gradlew testDebugUnitTest      # unit tests (38 test files: math, streams/GAP, stream capture, plan engine parity,
+                                 # structured-workout v2 parser parity, readiness scoring, cycling analytics,
+                                 # sync/plan mappers, SSE parser, Strava OAuth, API contract, Health Connect mapping, …)
 ```
 
 No API keys or backend required — the app is **fully local-first** (Room + DataStore) and seeds
@@ -29,7 +32,10 @@ active marathon plan) on first launch.
   emulators and de-Googled devices), foreground service with live notification
 - Live pace (30 s smoothed window), distance, elevation gain, auto-lap per km, auto-pause
 - Pace-zone indicator (±10 % of target) + TTS voice coach (km splits, pace warnings, step cues)
-- Structured workout steps engine (warm-up / main / cool-down with progress + next preview)
+- **Guided workout player v2**: executes structured v2 workouts step by step with per-step
+  range enforcement (pace/HR/power), progress + next-step preview, and a manual-lap button for
+  `lap_press` steps; workouts are authored in the built-in **StructuredEditor** (v2 schema,
+  web parity)
 - Post-run summary with route canvas, splits, and automatic TRIMP / VDOT estimation
 - **Run detail analysis charts (v2.2.7, web parity)**: Strava-style interactive streams chart —
   heart rate, pace, **GAP** (grade-adjusted pace, dashed) and elevation with cadence toggle,
@@ -77,6 +83,15 @@ active marathon plan) on first launch.
   both RunFlow and another app wrote it. Read-only permissions, no data leaves the device
   except through the normal (opt-in) account sync.
 
+**Health & readiness**
+- Health data sources setup screen: chooses which providers feed daily metrics (resting HR,
+  HRV, sleep) via Health Connect
+- **Continuous readiness scoring on-device** (`domain/readiness/`): the daily readiness score is
+  computed locally from the health metrics (same model as the web's stored records), with the
+  result synced to the server; recovery/sleep charts on the dashboard round it out
+- Two-metric VO₂max parity: the athlete profile surfaces the same two calibrated VO₂max/VDOT
+  metrics as the website under unified labels
+
 **Analytics**
 - **Training-status header (v2.2.6, web parity)**: Fitness (CTL) and Fatigue (ATL) shown as a bar
   with **% of all-time max** (tap the number to flip to the absolute value), Form (TSB) as a
@@ -91,6 +106,13 @@ active marathon plan) on first launch.
 - Weekly volume (26 weeks), 7-zone HR distribution (all sports; per-activity zone times now come
   from the server — the mobile activities endpoint includes `hrZone1..7Time` since v2.2.6),
   marathon-shape ring + VDOT trend
+
+**Cycling (v2.4+)**
+- Dedicated **Cycling tab** in Analytics: ride-side metrics (eFTP, power, bike TSS) with
+  split/combined views
+- **Ride power card** on activity detail: average/weighted watts, NP/IF where available
+- **FTP settings** in the Athlete screen (manual FTP or server-side auto-estimation), feeding
+  the Coggan power zones used by rides
 
 **Athlete**
 - Profile, body & threshold metrics, editable 7-zone HR model with validation
@@ -158,32 +180,36 @@ active marathon plan) on first launch.
 ## Architecture
 
 ```
-core/math        VdotMath, TrainingLoad (TRIMP/CTL/ATL/TSB), TrainingPaces, StreamMath
-                 (pace/GAP series from streams, pure + tested)            (pure Kotlin, tested)
-core/util        AppLog (logcat + on-device ring buffer), LoginPrompt logic (pure, tested)
+core/            math (VdotMath, TrainingLoad, TrainingPaces, StreamMath, MarathonShape — pure, tested),
+                 export (CSV/PDF), gps, text, util (AppLog logcat + ring buffer)
 domain/model     enums + pace-zone evaluator
-domain/plan      WebPlanEngine (on-device web-engine port), WizardStep/PlanMethodFlow (wizard flow), RaceDefaults, PlanMath/PlanSpec  (pure Kotlin, tested)
-domain/analytics AnalyticsEngine                                            (pure Kotlin)
-data/db          Room: activities / goals / workouts / profile / sync_queue (outbox) /
-                 chat_messages / plan_snapshots; schema v8 with v1→v8 migrations (v8 adds the
-                 per-activity streamsJson cache)
-data/net         Retrofit API mirroring the Flutter wire contract + the web plan
-                 contract (/api/plans, workout/goal writes, activity detail + streams,
-                 AI activity feedback), AuthStore (tokens + OAuth hand-off), NetworkClient
-                 (bearer header + single-flight 401 refresh), StravaAuth (authorize URL /
-                 deep-link parser, pure + tested)
+domain/plan      WebPlanEngine (on-device web-engine port, ultra/triathlon/no-race variants,
+                 pure + golden-fixture tested), structured/ (StructuredWorkoutV2 model +
+                 parser, web-parity tested), wizard flow, race defaults
+domain/readiness ReadinessScoring / ReadinessComposer / ReadinessJson — on-device daily
+                 readiness scoring (pure, tested)
+domain/analytics AnalyticsEngine + CyclingAnalytics (pure Kotlin, tested)
+data/db          Room v13 (migrations v1→v13): activities, goals, workouts, profile,
+                 sync_queue (outbox), chat_messages, plan_snapshots, daily_entries
+data/health      HealthConnectManager + mapping (reads runs & health metrics, pure + tested)
+data/net         Retrofit API (mobile JWT contract /api/mobile/v1 + web plan contract),
+                 AuthStore (tokens + OAuth hand-off), NetworkClient (bearer + single-flight
+                 401 refresh), StravaAuth (Custom Tabs authorize URL / deep-link parser,
+                 pure + tested)
 data/sync        SyncManager (push→pull reconciliation incl. plans + forced Strava import),
-                 SyncMappers + PlanMappers (pure, tested), SyncWorker (WorkManager periodic
-                 + on-demand)
+                 SyncMappers + PlanMappers (pure, tested), ReadinessSync,
+                 SyncWorker (WorkManager periodic + on-demand)
 data/ai          AiCoachRepository (SSE streaming), SseParser (pure, tested)
 data/repo        RunFlowRepository (analytics aggregation, plan creation, streams caching,
                  AI feedback calls, outbox enqueue), SettingsRepository (DataStore)
 data/seed        DemoSeeder (26 weeks of history + goals incl. synthetic streams, flagged isDemo)
-recording        RecordingController (state machine, single-thread confinement),
-                 RecordingService (foreground, LocationManager, TTS voice coach),
-                 StreamCapture (GeoPt list → streams, pure + tested)
-ui               theme / components (incl. StreamsChart) / screens (dashboard, plan, wizard,
-                 record, analytics, athlete + subscreens, activity detail, onboarding)
+recording        RecordingController (guided player v2: state machine, per-step ranges,
+                 manual lap; single-thread confinement), RecordingService (foreground,
+                 LocationManager, TTS voice coach), StreamCapture (pure + tested)
+ui               theme / components (incl. StreamsChart) / 16 screens: dashboard, activities,
+                 activity detail (ride power card), analytics (running + cycling tab), athlete,
+                 AI coach, data-source setup, HR zones, login, onboarding, plan, plan wizard,
+                 record (guided player), settings, structured editor (v2)
 ```
 
 All recording state mutations are confined to the main thread (GPS callback + service ticker)
@@ -204,11 +230,12 @@ keyAlias=runflow2
 keyPassword=<password>
 ```
 
-A ready-to-install signed APK is at `android/RunFlow2-v2.4.1-release.apk`.
+A ready-to-install signed APK is produced with `./gradlew assembleRelease` (output under
+`app/build/outputs/apk/release/`); there is no committed binary — build from source.
 
 ## Deferred (next phases)
 
-- Health & nutrition (food/macro logging, barcode & AI scan, supplements, fasting, sleep,
-  readiness scoring) — the Flutter implementation in `flutter/lib/presentation/screens/health/`
-  is the reference
-- AI coach chat, workout template library, strength recorder, route heatmap
+- Nutrition tracking UI on Android (food/macro logging, barcode & AI scan, supplements, fasting) —
+  available on the web app, and the mobile API already carries `/api/mobile/v1/health/nutrition/*`,
+  but no Android screen uses it yet
+- Workout template library, strength recorder, route heatmap

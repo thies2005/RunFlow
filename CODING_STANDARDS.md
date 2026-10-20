@@ -1,7 +1,7 @@
 # RunFlow Coding Standards
 
-> **Last Updated:** February 2026  
-> **Purpose:** Maintain code consistency, improve readability, and ensure code quality across the RunFlow codebase.
+> **Last Updated:** October 2026  
+> **Purpose:** Maintain code consistency, improve readability, and ensure code quality across the RunFlow codebase (web `Web/` and Android `android/`).
 
 ---
 
@@ -1361,7 +1361,8 @@ Before submitting code for review, ensure:
 
 - Exported functions should have JSDoc comments for complex logic
 - Complex algorithms should include explanatory comments
-- API endpoints should be documented in `MOBILE_API.md` or inline
+- API endpoints should be documented where they live: web REST surface in `Web/DOCUMENTATION.md` §6,
+  native-app endpoints in `Web/MOBILE_API.md`, MCP tools in `docs/MCP_API.md` — or inline for small changes
 
 **Good:**
 ```typescript
@@ -1444,6 +1445,30 @@ describe('functionName', () => {
   });
 });
 ```
+
+---
+
+## Kotlin / Android (`android/`)
+
+The native Android app follows the same principles, with Kotlin-specific conventions:
+
+- **Structure**: code is layered — `core/` (pure math/util), `domain/` (pure business logic:
+  plan engine, structured-workout parser, readiness scoring, analytics), `data/` (Room,
+  Retrofit, sync, Health Connect), `recording/`, `ui/` (Compose screens). Pure logic lives in
+  `core`/`domain` and is unit-tested; Android framework types stay at the edges.
+- **Purity & parity**: engines that must match the web (plan generation, structured workout v2
+  parsing, readiness scoring, cycling analytics) are pure Kotlin with parity/golden-fixture
+  tests against web output. Change them together with their web counterparts.
+- **Compose UI**: Material 3 (Expressive), screens in `ui/screens/`, custom Canvas charts over
+  chart libraries, state confined to the declared thread (recording mutations are
+  main-thread-only).
+- **Database**: Room schema changes require a migration in `AppDatabase.kt` (bump `version`,
+  add `MIGRATION_n_m`) — never edit an existing migration; the app must migrate in place.
+- **Offline-first**: local writes go to Room + the `sync_queue` outbox in one transaction; sync
+  code must dead-letter instead of silently dropping, and server data wins except for dirty
+  (unpushed) local edits.
+- **Tests**: JUnit4 (`./gradlew testDebugUnitTest`); pre-push gate is
+  `:app:compileDebugKotlin` + `testDebugUnitTest`, both green (see `AGENTS.md`).
 
 ---
 

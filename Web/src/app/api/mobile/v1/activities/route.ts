@@ -8,6 +8,7 @@ import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders
 import { ActivityType } from '@/generated/prisma/browser';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { enrichActivityMetrics, type MetricsInput } from '@/lib/strava/transform';
+import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { MINUTE_MS } from '@/lib/constants';
 
 type ActivityWhereClause = {
@@ -34,8 +35,8 @@ export async function GET(request: NextRequest) {
         }
 
         const { searchParams } = new URL(request.url);
-        const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
-        const offset = parseInt(searchParams.get('offset') || '0');
+        const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50'), 1), 1000);
+        const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
         const type = searchParams.get('type');
 
         const where: ActivityWhereClause = { userId: user.id };
@@ -119,7 +120,14 @@ const streamsSchema = z.object({
 const createActivitySchema = z.object({
     name: z.string().min(1).max(200),
     type: z.enum(['RUN', 'VIRTUAL_RIDE', 'RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER']),
-    startDate: z.string().datetime(),
+    // Bounded like the web activitySchema: an unbounded backdated date would
+    // make the post-create DailyFitness rebuild iterate years of day-rows.
+    startDate: z.string().datetime().refine((value) => {
+        const t = new Date(value).getTime();
+        if (Number.isNaN(t)) return false;
+        const now = Date.now();
+        return t > now - 20 * 365 * 24 * 60 * 60 * 1000 && t < now + 24 * 60 * 60 * 1000;
+    }, { message: 'startDate must be within the last 20 years and not more than 1 day in the future' }),
     distance: z.number().min(0),
     movingTime: z.number().int().min(0),
     elapsedTime: z.number().int().min(0),
@@ -314,6 +322,14 @@ export async function POST(request: NextRequest) {
         const enriched = await prisma.activity.findUnique({
             where: { id: activity.id },
         });
+
+        // Refresh the DailyFitness cache so CTL/ATL/TSB reflect the uploaded
+        // activity (after enrichment so stored trimp/runningTss are preferred).
+        try {
+            await updateFitnessCache(user.id, [{ startDate: activity.startDate }]);
+        } catch {
+            // cache refresh is best-effort; the upload itself already succeeded
+        }
 
         const serialized = enriched
             ? { ...enriched, stravaId: enriched.stravaId.toString(), startDate: enriched.startDate.toISOString() }

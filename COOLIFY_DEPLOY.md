@@ -12,6 +12,7 @@ This guide walks you through deploying RunFlow (frontend + PostgreSQL database) 
 |---|---|
 | `app` | Next.js 15 frontend (port 3000, proxied by Coolify) |
 | `db` | PostgreSQL 16 database (internal only) |
+| `redis` | Redis 7 (rate limiting & caches; optional — the app falls back to in-memory) |
 | `migrator` | One-shot container — runs Prisma migrations on every deploy |
 | `permissions-fixer` | One-shot container — sets correct ownership on the backups volume |
 | `backup` | Automated pg_dump every 6 hours, keeps 7 days / 4 weeks / 6 months |

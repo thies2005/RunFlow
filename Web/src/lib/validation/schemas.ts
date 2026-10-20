@@ -2,9 +2,23 @@ import { z } from 'zod'
 import { RaceType } from '@/generated/prisma/browser'
 import { PASSWORD_POLICY } from '@/lib/constants'
 
+// Activity dates are bounded: no older than 20 years, no more than 1 day in
+// the future. Beyond rejecting obvious garbage, this bounds the DailyFitness
+// cache rebuild that runs after every activity create — an unbounded
+// backdated date would rebuild years of day-rows per request.
+const ACTIVITY_DATE_MIN_AGE_MS = 20 * 365 * 24 * 60 * 60 * 1000
+const withinActivityDateBounds = (value: string) => {
+  const t = new Date(value).getTime()
+  if (Number.isNaN(t)) return false
+  const now = Date.now()
+  return t > now - ACTIVITY_DATE_MIN_AGE_MS && t < now + 24 * 60 * 60 * 1000
+}
+
 export const activitySchema = z.object({
   name: z.string().min(1).max(200),
-  date: z.string().datetime(),
+  date: z.string().datetime().refine(withinActivityDateBounds, {
+    message: 'date must be within the last 20 years and not more than 1 day in the future',
+  }),
   type: z.enum(['RUN', 'VIRTUAL_RIDE', 'RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER']).optional(),
   distance: z.number().positive().max(500),
   duration: z.number().int().positive().max(2880),

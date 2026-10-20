@@ -223,9 +223,15 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         return { status: 'skipped' as const };
                     }
 
+                    // H-04 + spike guard: only trust max_heartrate as an hrMax upgrade
+                    // candidate when the activity itself was a real high-effort effort.
+                    // A single optical-sensor cadence-lock spike (low avg HR, very high
+                    // max HR) must not permanently ratchet up hrMax.
                     if (activity.max_heartrate &&
                         activity.max_heartrate > (currentHrMax || 0) + 5 &&
-                        activity.max_heartrate < HR_MAX_UPPER_BOUND) {
+                        activity.max_heartrate < HR_MAX_UPPER_BOUND &&
+                        activity.average_heartrate && activity.average_heartrate >= 135 &&
+                        (activity.max_heartrate - activity.average_heartrate) <= 45) {
 
                         // Track highest observed HR max; persist after the loop (H-04)
                         currentHrMax = activity.max_heartrate;

@@ -2,6 +2,14 @@
 
 Use the prompt below with an AI agent to generate a comprehensive evaluation dataset for RunFlow's plan creation performance.
 
+> **Scope note (2026-10-20):** This is an eval-dataset prompt, not a changelog. The generator
+> has evolved since it was written — plans now carry `structuredSteps` (Structured Workout v2)
+> and `plannedTss` alongside the flat workout fields, and **pace units are sport-aware**:
+> running targets are sec/km, swim targets are sec/100m. The public endpoint intentionally
+> accepts only the 12 race types listed below — the full 17-value `RaceType` (including
+> `TWELVE_HOUR`, `TWENTY_FOUR_HOUR`, `BACKYARD_ULTRA`, `CUSTOM_DISTANCE`, `CUSTOM_TRI`) exists
+> only on the authenticated API. See `Web/DOCUMENTATION.md` §5 and `Web/src/lib/plans/structured.ts`.
+
 ---
 
 ## Full Agent Prompt
@@ -36,7 +44,7 @@ Content-Type: application/json
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `raceType` | string enum | **yes** | One of: `FIVE_K`, `TEN_K`, `HALF_MARATHON`, `MARATHON`, `FIFTY_K`, `FIFTY_MILE`, `HUNDRED_K`, `HUNDRED_MILE`, `SPRINT_TRI`, `OLYMPIC_TRI`, `HALF_IRONMAN`, `FULL_IRONMAN` |
+| `raceType` | string enum | **yes** | One of: `FIVE_K`, `TEN_K`, `HALF_MARATHON`, `MARATHON`, `FIFTY_K`, `FIFTY_MILE`, `HUNDRED_K`, `HUNDRED_MILE`, `SPRINT_TRI`, `OLYMPIC_TRI`, `HALF_IRONMAN`, `FULL_IRONMAN` — deliberately 12 of the schema's 17 `RaceType` values (the time-based/backyard/custom types are authenticated-API only) |
 | `raceDate` | string (ISO date) | **yes** | Must be a future date in `YYYY-MM-DD` format |
 | `fitnessLevel` | string enum | **yes** | One of: `beginner`, `intermediate`, `advanced` |
 | `runsPerWeek` | integer | no | 2–7. Defaults vary by race type (see §2) |
@@ -381,7 +389,7 @@ Understanding these rules is essential for writing evaluation assertions:
 3. **Quality sessions:** One per week (intervals/tempo/fartlek/repetitions) based on race type and phase. Selection varies by phase.
 4. **Easy/recovery runs:** Fill remaining run slots. Recovery runs placed the day after hard sessions.
 5. **Rest days:** User-designated rest days are respected. No workouts scheduled on rest days.
-6. **Paces:** Calculated from VDOT using Jack Daniels training pace formula. All workout targets include pace in seconds/km.
+6. **Paces:** Calculated from VDOT using Jack Daniels training pace formula. Pace targets are sport-aware: running targets are in **seconds/km**, swim targets in **seconds/100m**.
 7. **Phase assignment:** BASE → BUILD → PEAK → TAPER → RACE_WEEK, with duration determined by `taperWeeks`, `peakWeeks`, `buildWeeks` parameters. Remaining weeks are BASE.
 8. **No back-to-back same type:** The generator fixes any consecutive same-type workouts.
 9. **Triathlon plans:** Include swim, bike, and run sessions distributed across the week.
@@ -685,7 +693,7 @@ When evaluating a generated plan response, score it on these dimensions (each 0�
 | **Phase Correctness** | 15% | Phases appear in correct order (BASE→BUILD→PEAK→TAPER→RACE_WEEK). Phase durations match input parameters. |
 | **Volume Progression** | 20% | Volume increases during base/build, peaks before taper, decreases during taper. Recovery weeks (~80% of previous) appear every 4th week. |
 | **Workout Diversity** | 10% | Plan includes appropriate mix of EASY, LONG_RUN, quality sessions, REST. No back-to-back same type. |
-| **Pace Consistency** | 10% | Paces are physiologically plausible for the given VDOT. Easy pace > threshold pace > interval pace (in sec/km). |
+| **Pace Consistency** | 10% | Paces are physiologically plausible for the given VDOT. Easy pace > threshold pace > interval pace (run pace in sec/km; swim targets in sec/100m). |
 | **Parameter Respect** | 15% | Plan respects input parameters: runsPerWeek, weeklyVolumeKm, maxLongRunKm, restDays, etc. |
 | **Edge Case Handling** | 10% | Very short/long plans, extreme parameters, and invalid inputs are handled gracefully. |
 

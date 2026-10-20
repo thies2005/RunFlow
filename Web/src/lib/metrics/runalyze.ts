@@ -91,10 +91,12 @@ export function calculateEffectiveVO2max(
     // VO2 = -4.60 + 0.182258 * v + 0.000104 * v^2
     const vo2Cost = -4.60 + 0.182258 * velocity + 0.000104 * Math.pow(velocity, 2);
 
-    // Runalyze exponential %HRmax -> %VO2max relation:
-    // %VO2max = 0.64 * e^(1.92 * (hrPercent - 1)) blended with Swain above 85% HRmax
-    // At 70% HRmax -> ~61.5% VO2max (prevents 10% VO2max inflation on easy Zone 2 runs)
-    const expPctVo2 = Math.exp(1.92 * (hrPercent - 1.0)) * 0.64 + 0.26 * hrPercent;
+    // Normalized Runalyze exponential %HRmax -> %VO2max relation blended with Swain.
+    // The exponential is normalized to ~1.0 at 100% HRmax (the previous
+    // 0.64*e^... + 0.26*hr coefficients only summed to 0.90 there, which
+    // under-predicted %VO2max on sub-threshold runs by ~10% and inflated
+    // every HR-based VO2max estimate accordingly).
+    const expPctVo2 = Math.exp((hrPercent - 1.00466) / 0.68725);
     const swainPctVo2 = 1.45 * hrPercent - 0.45;
     const rawPctVo2 = hrPercent < 0.85 ? (0.65 * expPctVo2 + 0.35 * swainPctVo2) : swainPctVo2;
     const percentVO2max = Math.min(1.0, Math.max(0, rawPctVo2));

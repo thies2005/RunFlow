@@ -185,6 +185,10 @@ data class ProfileEntity(
     val thresholdHr: Int = 172,
     val thresholdPaceSecPerKm: Int = 275,
     val vdotCorrection: Double = 1.0,
+    // ---- v14: mirrors the server's effectiveVo2maxCorrectionFactor so the
+    // Android calibration slider syncs both directions through the profile
+    // outbox. defaultValue mirrors the ALTER TABLE used in MIGRATION_13_14. ----
+    @ColumnInfo(defaultValue = "1.0") val effectiveVo2maxCorrection: Double = 1.0,
     // ---- sync metadata (v2) ----
     @ColumnInfo(defaultValue = "0") val dirty: Boolean = false,
 )
@@ -525,7 +529,7 @@ interface DailyEntryDao {
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
         DailyEntryEntity::class,
     ],
-    version = 13,
+    version = 14,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -752,6 +756,19 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE activities ADD COLUMN bikeTss REAL")
                 db.execSQL("ALTER TABLE activities ADD COLUMN efficiencyFactor REAL")
                 db.execSQL("ALTER TABLE activities ADD COLUMN aerobicDecoupling REAL")
+            }
+        }
+
+        /**
+         * v13 -> v14 adds the effective-VO2max correction factor to the profile
+         * so the Android calibration slider can sync to the server through the
+         * profile outbox (the server field already existed). Purely additive;
+         * the default matches ProfileEntity.effectiveVo2maxCorrection's
+         * @ColumnInfo defaultValue.
+         */
+        val MIGRATION_13_14: Migration = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE profile ADD COLUMN effectiveVo2maxCorrection REAL NOT NULL DEFAULT 1.0")
             }
         }
     }

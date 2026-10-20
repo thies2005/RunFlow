@@ -101,6 +101,13 @@ data class AnalyticsBundle(
     val vdotTrend: List<VdotPoint>,
     val totalRuns: Int,
     val cycling: CyclingAnalyticsSummary? = null,
+    // ---- multi-sport combined overview (web parity: Combined KPI strip) ----
+    val totalRunKm: Double = 0.0,
+    val totalBikeKm: Double = 0.0,
+    val totalRides: Int = 0,
+    val totalActivities: Int = 0,
+    val totalMovingHours: Double = 0.0,
+    val runFitnessSeries: List<FitnessPoint> = emptyList(),
     // ---- server-override fields (overlaid by RunFlowRepository after
     // compute(); the engine itself always produces the LOCAL defaults) ----
     /**
@@ -133,10 +140,13 @@ object AnalyticsEngine {
         val runs = activities.filter { it.type == ActivityType.RUN }
         val rides = activities.filter { it.type == ActivityType.RIDE || it.type == ActivityType.VIRTUAL_RIDE }
 
-        // daily TRIMP map
+        // daily combined load map: bikeTss for rides when present, TRIMP for
+        // everything else (web parity: fitnessCache.ts dailyCombinedLoad)
         val trimpByDate = HashMap<LocalDate, Double>()
         for (a in activities) {
-            trimpByDate[a.date] = (trimpByDate[a.date] ?: 0.0) + effectiveTrimp(a)
+            val isRide = a.type == ActivityType.RIDE || a.type == ActivityType.VIRTUAL_RIDE
+            val load = if (isRide && (a.bikeTss ?: 0.0) > 0.0) a.bikeTss!! else effectiveTrimp(a)
+            trimpByDate[a.date] = (trimpByDate[a.date] ?: 0.0) + load
         }
 
         val daily = TrainingLoad.dailySeriesWarmedUp(trimpByDate, today, rangeDays)
@@ -154,12 +164,17 @@ object AnalyticsEngine {
         val maxCtl = peakSeries.maxOfOrNull { it.ctl } ?: 0.0
         val maxAtl = peakSeries.maxOfOrNull { it.atl } ?: 0.0
 
-        // best recent performance VDOT (last 90 days, >= 5 km runs)
+        // best recent performance VDOT (last 90 days, >= 5 km runs), computed
+        // from distance/time via Daniels-Gilbert — NOT from Activity.estimatedVdot,
+        // which the server fills with an HR-based single-run VO2max whose max()
+        // spikes on any easy run with a low HR reading (web parity:
+        // effectiveVdot.ts bestEffortVdot).
         val cutoff = today.minusDays(90)
         val rawVdot = runs
-            .filter { it.date.isAfter(cutoff) && it.distanceKm >= 5.0 && (it.estimatedVdot ?: 0.0) > 20.0 }
-            .maxOfOrNull { it.estimatedVdot ?: 0.0 }
-            ?.takeIf { it > 0.0 }
+            .filter { it.date.isAfter(cutoff) && it.distanceKm >= 5.0 && it.movingTimeSec > 0 }
+            .map { VdotMath.vdot(it.distanceKm * 1000.0, it.movingTimeSec.toDouble()) }
+            .filter { it in 20.0..85.0 }
+            .maxOrNull()
         val effectiveVdot = rawVdot?.times(vdotCorrection)
 
         // current week (Monday start)
@@ -235,6 +250,16 @@ object AnalyticsEngine {
         val wPerKg = if (activeFtp > 0 && weightKg != null && weightKg > 0.0) {
             (activeFtp / weightKg * 100.0).roundToInt() / 100.0
         } else null
+
+        // Daily running load series (TRIMP/rTSS based) for the split PMC view
+        val runLoadByDate = HashMap<LocalDate, Double>()
+        for (r in runs) {
+            runLoadByDate[r.date] = (runLoadByDate[r.date] ?: 0.0) + effectiveTrimp(r)
+        }
+        val runDaily = TrainingLoad.dailySeriesWarmedUp(runLoadByDate, today, rangeDays)
+        val runFitnessSeries = runDaily.map {
+            FitnessPoint(date = it.date, ctl = it.ctl, atl = it.atl, tsb = it.tsb, load = it.trimp)
+        }
 
         // Daily bike load series (prefer bikeTss, fallback to TRIMP)
         val bikeLoadByDate = HashMap<LocalDate, Double>()
@@ -326,6 +351,12 @@ object AnalyticsEngine {
             vdotTrend = trend,
             totalRuns = runs.size,
             cycling = cyclingSummary,
+            totalRunKm = runs.sumOf { it.distanceKm },
+            totalBikeKm = rides.sumOf { it.distanceKm },
+            totalRides = rides.size,
+            totalActivities = activities.size,
+            totalMovingHours = activities.sumOf { it.movingTimeSec } / 3600.0,
+            runFitnessSeries = runFitnessSeries,
             aerobicVo2max = aerobicVo2maxLocal,
         )
     }
@@ -470,7 +501,12 @@ object AnalyticsEngine {
         val velocity = distanceMeters / timeMin // m/min
         val vo2Cost = -4.60 + 0.182258 * velocity + 0.000104 * velocity * velocity
 
-        val expPctVo2 = exp(1.92 * (hrPercent - 1.0)) * 0.64 + 0.26 * hrPercent
+        // Normalized Runalyze exponential %HRmax -> %VO2max blended with Swain
+        // (web parity: runalyze.ts). The exponential is normalized to ~1.0 at
+        // 100% HRmax; the previous 0.64/0.26 coefficients only summed to 0.90
+        // there, under-predicting %VO2max on sub-threshold runs and inflating
+        // every HR-based VO2max estimate by ~10%.
+        val expPctVo2 = exp((hrPercent - 1.00466) / 0.68725)
         val swainPctVo2 = 1.45 * hrPercent - 0.45
         val rawPctVo2 = if (hrPercent < 0.85) 0.65 * expPctVo2 + 0.35 * swainPctVo2 else swainPctVo2
         val percentVo2max = rawPctVo2.coerceIn(0.0, 1.0)

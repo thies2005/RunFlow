@@ -123,8 +123,8 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
         ctl: true,
         atl: true,
         tsb: true,
-        volume: false,
-        trainingTime: false,
+        volume: true,
+        trainingTime: true,
     });
 
     const toggleSeries = useCallback((key: SeriesKey) => {
@@ -323,8 +323,8 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                 />
                             )}
 
-                            {/* Volume Bar (Only visible in 1M view OR if explicitly enabled in other views - but user request implies specific handling) */}
-                            {visibleSeries.volume && timeRange === '1M' && (
+                            {/* Volume Bar (daily bars up to 6M; weekly rolling line covers longer ranges) */}
+                            {visibleSeries.volume && timeRange !== '1Y' && timeRange !== 'ALL' && (
                                 <Bar
                                     yAxisId="volume"
                                     dataKey="volume"
@@ -349,8 +349,8 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                 />
                             )}
 
-                            {/* Training Time (Area - Daily - Only in 1M view) */}
-                            {visibleSeries.trainingTime && timeRange === '1M' && (
+                            {/* Training Time (Area - Daily - up to 6M; weekly rolling line covers longer ranges) */}
+                            {visibleSeries.trainingTime && timeRange !== '1Y' && timeRange !== 'ALL' && (
                                 <Area
                                     yAxisId="volume"
                                     type="monotone"

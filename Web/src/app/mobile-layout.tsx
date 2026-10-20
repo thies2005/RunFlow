@@ -171,6 +171,24 @@ export function MobileLayout() {
         enabled: status === 'authenticated' && isAnalyticsPath,
     });
 
+    // Cycling Analytics Query (multi-sport PMC + cycling highlights)
+    const { data: cyclingData } = useQuery({
+        queryKey: ['cycling-analytics', timeRange],
+        queryFn: async () => {
+            const rangeMap: Record<string, string> = {
+                'ALL': 'all',
+                '1Y': '1y',
+                '6M': '180d',
+                '3M': '90d',
+                '1M': '42d'
+            };
+            const res = await fetch(`/api/analytics/cycling?range=${rangeMap[timeRange] || '90d'}`);
+            if (!res.ok) return null;
+            return res.json();
+        },
+        enabled: status === 'authenticated' && isAnalyticsPath,
+    });
+
     // Background Sync for Native Mobile Notifications
     // Whenever the mobile layout mounts and auth is ready, fetch reminder settings to ensure alarms are in sync
     useEffect(() => {
@@ -239,7 +257,12 @@ export function MobileLayout() {
             if (!res.ok) throw new Error('Failed to recalculate');
             return res.json();
         },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['all-activities'] }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['all-activities'] });
+            queryClient.invalidateQueries({ queryKey: ['analytics-history'] });
+            queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['cycling-analytics'] });
+        },
     });
 
     // === DERIVED DATA ===
@@ -366,6 +389,7 @@ export function MobileLayout() {
                         trainingPaces={analyticsMetrics.trainingPaces}
                         userData={userData}
                         activitiesData={activitiesData}
+                        cyclingData={cyclingData}
                         timeRange={timeRange}
                         zonesTimeRange={zonesTimeRange}
                         setTimeRange={setTimeRange}

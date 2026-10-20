@@ -7,6 +7,17 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, RefreshCw, Activity as ActivityIcon, Zap, Layers, Trophy, TrendingUp, Sparkles, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
+import type { PmcRange } from '@/components/Analytics/SplitPmcChart';
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+// Maps the page TimeRange to the equivalent PMC/cycling range
+const timeRangeToPmcRange = (range: TimeRange): PmcRange =>
+    range === '1M' ? '42d'
+        : range === '3M' ? '90d'
+            : range === '6M' ? '180d'
+                : range === '1Y' ? '1y'
+                    : 'all';
 
 // Dynamic imports for heavy chart components to enable lazy loading and reduce initial bundle size
 const ShapeCalibrationModal = dynamic(() => import('@/components/ShapeCalibrationModal'), { ssr: false });
@@ -128,7 +139,7 @@ export default function AnalyticsPage() {
             const rangeMap: Record<string, string> = {
                 'ALL': 'all',
                 '1Y': '1y',
-                '6M': '90d',
+                '6M': '180d',
                 '3M': '90d',
                 '1M': '42d'
             };
@@ -210,14 +221,14 @@ export default function AnalyticsPage() {
             }
         });
 
-        // Use server-provided fitness trend
+        // Use server-provided fitness trend. Pass the FULL point through (not just
+        // ctl/atl/tsb): SplitPmcChart consumes the multi-sport fields
+        // (ctlRunning/ctlBike/atlBike/tsbBike/runTss/bikeTss/trimp) as fallback data
+        // when /api/analytics/cycling has no series.
         const serverFitnessTrend = historyData?.fitnessTrend || [];
-        const fitness: { date: string; ctl: number; atl: number; tsb: number }[] = serverFitnessTrend.map((f: { date: string; ctl: number; atl: number; tsb: number }) => ({
-            date: f.date,
-            ctl: f.ctl,
-            atl: f.atl,
-            tsb: f.tsb
-        }));
+        const fitness = serverFitnessTrend as Array<
+            { date: string; ctl: number; atl: number; tsb: number } & { [key: string]: unknown }
+        >;
 
         // === Combined Data for Charts (Volume + Training Time) - still local ===
         const dailyVolumeMap = new Map<string, number>();
@@ -272,6 +283,20 @@ export default function AnalyticsPage() {
             ...Array.from(dailyTimeMap.keys()),
             ...Array.from(fitnessDateSet)  // Include server fitness dates (including rest days up to today)
         ]);
+
+        // Fill a contiguous daily range from the earliest known date through today,
+        // so rest days without activities exist and rolling windows sum full weeks
+        // even when serverFitnessTrend is empty or sparse.
+        if (allDates.size > 0) {
+            const sortedDates = Array.from(allDates).sort();
+            const startMs = new Date(`${sortedDates[0]}T00:00:00Z`).getTime();
+            const todayMs = new Date();
+            todayMs.setUTCHours(0, 0, 0, 0);
+            for (let t = startMs; t <= todayMs.getTime(); t += MS_PER_DAY) {
+                allDates.add(new Date(t).toISOString().split('T')[0]);
+            }
+        }
+
         const combinedDataRaw = Array.from(allDates).sort().map((date: string) => {
             // date is YYYY-MM-DD from dailyVolumeMap
             const fitnessEntry = serverFitnessTrend.find((f: { date: string }) => normalizeDate(f.date) === date);
@@ -286,12 +311,16 @@ export default function AnalyticsPage() {
             };
         });
 
-        // Calculate rolling averages for combined data
+        // 7-calendar-day rolling sums (weekly km / weekly minutes / VO2 average).
+        // Window by date distance, not array index, so it stays correct even if a
+        // day is ever missing from combinedDataRaw.
         const combinedDataWithRolling = combinedDataRaw.map((d, index) => {
-            const windowSize = 7;
             let volSum = 0, timeSum = 0, vo2Sum = 0, vo2Count = 0;
+            const endTime = new Date(`${d.date}T00:00:00Z`).getTime();
 
-            for (let i = index; i >= 0 && index - i < windowSize; i--) {
+            for (let i = index; i >= 0; i--) {
+                const pointTime = new Date(`${combinedDataRaw[i].date}T00:00:00Z`).getTime();
+                if (endTime - pointTime > 6 * MS_PER_DAY) break; // 7 calendar days incl. today
                 volSum += combinedDataRaw[i].volume;
                 timeSum += combinedDataRaw[i].trainingTime;
                 if (combinedDataRaw[i].vo2max) {
@@ -391,6 +420,8 @@ export default function AnalyticsPage() {
     }
 
     const showLoading = status === 'loading' || isLoading;
+    // PMC/cycling range matching the page-level time range selector
+    const pmcRange = timeRangeToPmcRange(timeRange);
 
     return (
         <div className="min-h-screen bg-background">
@@ -469,8 +500,8 @@ export default function AnalyticsPage() {
 
                             {/* Range Selector */}
                             <div className="inline-flex rounded-lg bg-background-tertiary p-1 border border-line text-xs self-start sm:self-auto">
-                                {(['42d', '90d', '1y', 'all'] as const).map((r) => {
-                                    const mappedRange: TimeRange = r === '42d' ? '1M' : r === '90d' ? '3M' : r === '1y' ? '1Y' : 'ALL';
+                                {(['42d', '90d', '180d', '1y', 'all'] as const).map((r) => {
+                                    const mappedRange: TimeRange = r === '42d' ? '1M' : r === '90d' ? '3M' : r === '180d' ? '6M' : r === '1y' ? '1Y' : 'ALL';
                                     const isActive = timeRange === mappedRange;
                                     return (
                                         <button
@@ -553,6 +584,7 @@ export default function AnalyticsPage() {
                                     initialView="combined"
                                     title="Multi-Sport Performance Management (PMC)"
                                     hideRangeSelector
+                                    currentRange={pmcRange}
                                 />
 
                                 {/* Combined Volume & Training Time Chart */}
@@ -664,6 +696,7 @@ export default function AnalyticsPage() {
                                     initialView="running"
                                     title="Running Fitness & Fatigue (rTSS PMC)"
                                     hideRangeSelector
+                                    currentRange={pmcRange}
                                 />
 
                                 {/* Combined Analytics Chart */}
@@ -736,7 +769,7 @@ export default function AnalyticsPage() {
 
                         {/* === CYCLING SPORT VIEW === */}
                         {selectedSport === 'CYCLING' && (
-                            <CyclingAnalyticsSection initialRange={timeRange === '1M' ? '42d' : timeRange === '3M' ? '90d' : timeRange === '1Y' ? '1y' : 'all'} />
+                            <CyclingAnalyticsSection initialRange={pmcRange} />
                         )}
                     </>
                 )}

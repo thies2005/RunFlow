@@ -20,6 +20,7 @@ import { PlanPhase } from '@/generated/prisma/client';
 import type { Prisma } from '@/generated/prisma/client';
 import {
     classifyImportedWorkout,
+    decodeXmlEntities,
     parseMyWhooshStepsToStructuredV2,
     parseMyWhooshWorkoutFile,
     parseZwoXmlToStructuredV2,
@@ -202,9 +203,12 @@ function startsWithXml(text: string): boolean {
 
 function importZwo(fileName: string, xml: string): ImportedWorkout {
     const structured = parseZwoXmlToStructuredV2(xml);
+    // The JSON path needs no decoding; raw XML tag text stores entities literally.
+    const rawName = zwoTagText(xml, 'name');
+    const rawDescription = zwoTagText(xml, 'description');
     return finalizeImport(fileName, structured, {
-        name: zwoTagText(xml, 'name'),
-        description: zwoTagText(xml, 'description'),
+        name: rawName === null ? null : decodeXmlEntities(rawName),
+        description: rawDescription === null ? null : decodeXmlEntities(rawDescription),
         plannedTss: null,
         intensityFactor: null,
         xmlSportType: zwoTagText(xml, 'sportType'),

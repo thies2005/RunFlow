@@ -1,5 +1,6 @@
 import {
     classifyImportedWorkout,
+    decodeXmlEntities,
     parseMyWhooshStepsToStructuredV2,
     parseMyWhooshWorkoutFile,
     parseZwoXmlToStructuredV2,
@@ -335,6 +336,47 @@ describe('parseZwoXmlToStructuredV2', () => {
         // 1.8M '€' chars = 5.4 MB of UTF-8 bytes but only 1.8M chars: must trip the byte-based bound.
         const big = '€'.repeat(1_800_000);
         expect(() => parseZwoXmlToStructuredV2(big)).toThrow(/5 MB/);
+    });
+});
+
+describe('decodeXmlEntities', () => {
+    it('decodes the five named XML entities', () => {
+        expect(decodeXmlEntities('Fish &amp; Chips')).toBe('Fish & Chips');
+        expect(decodeXmlEntities('&lt; easy')).toBe('< easy');
+        expect(decodeXmlEntities('power &gt; 0.9')).toBe('power > 0.9');
+        expect(decodeXmlEntities('&quot;quoted&quot;')).toBe('"quoted"');
+        expect(decodeXmlEntities('it&apos;s')).toBe("it's");
+    });
+
+    it('decodes decimal and hex numeric character references incl. non-ASCII codepoints', () => {
+        expect(decodeXmlEntities('&#65;&#66;')).toBe('AB');
+        expect(decodeXmlEntities('&#x41;&#x42;')).toBe('AB');
+        expect(decodeXmlEntities('&#x1F600;')).toBe('😀');
+        expect(decodeXmlEntities('&#128512;')).toBe('😀');
+        expect(decodeXmlEntities('&#X41;')).toBe('A'); // uppercase X hex marker
+        expect(decodeXmlEntities('&#x26;')).toBe('&'); // hex-encoded ampersand
+    });
+
+    it('leaves strings without entities unchanged', () => {
+        expect(decodeXmlEntities('Plain Endurance Ride')).toBe('Plain Endurance Ride');
+        expect(decodeXmlEntities('')).toBe('');
+        expect(decodeXmlEntities('50% FTP, 2 x 10 min')).toBe('50% FTP, 2 x 10 min');
+    });
+
+    it('decodes in a single pass: &amp;lt; becomes &lt;, never <', () => {
+        expect(decodeXmlEntities('&amp;lt;')).toBe('&lt;');
+        expect(decodeXmlEntities('&amp;amp;')).toBe('&amp;');
+    });
+
+    it('passes unknown or malformed references through unchanged', () => {
+        expect(decodeXmlEntities('café &nbsp; core')).toBe('café &nbsp; core');
+        expect(decodeXmlEntities('&unknown;')).toBe('&unknown;');
+        expect(decodeXmlEntities('bare & ampersand')).toBe('bare & ampersand');
+        expect(decodeXmlEntities('dangling &amp')).toBe('dangling &amp');
+        expect(decodeXmlEntities('&#;')).toBe('&#;');
+        expect(decodeXmlEntities('&#xZZ;')).toBe('&#xZZ;');
+        expect(decodeXmlEntities('&#999999999999;')).toBe('&#999999999999;'); // out of pattern bound
+        expect(decodeXmlEntities('&#1114112;')).toBe('&#1114112;'); // > U+10FFFF
     });
 });
 

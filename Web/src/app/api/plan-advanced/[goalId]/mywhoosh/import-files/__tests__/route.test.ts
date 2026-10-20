@@ -110,6 +110,17 @@ const ZWO_XML = `<?xml version="1.0" encoding="UTF-8"?>
     </workout>
 </workout_file>`;
 
+// Entities in name/description must be decoded before the row is created.
+const ZWO_XML_ENTITIES = `<?xml version="1.0" encoding="UTF-8"?>
+<workout_file>
+    <name>Sweet &amp; Short</name>
+    <description>Endurance &lt; 75% FTP, easy spins &amp; surges</description>
+    <sportType>bike</sportType>
+    <workout>
+        <SteadyState Duration="1800" Power="0.65"/>
+    </workout>
+</workout_file>`;
+
 // Array of two MyWhoosh workout-JSON objects: a hard sweet-spot session and
 // a pure free ride (no power target, no description -> fallback description).
 const MYWHOOSH_ARRAY = JSON.stringify([
@@ -380,6 +391,17 @@ describe('POST /api/plan-advanced/[goalId]/mywhoosh/import-files', () => {
         expect(res.status).toBe(200);
         expect((await res.json()).created).toBe(1);
         expect(createManyRows()[0].customName).toBe('Sample Ride');
+    });
+
+    it('decodes XML entities in .zwo names and descriptions before creating the row', async () => {
+        const res = await POST(multipartRequest([new File([ZWO_XML_ENTITIES], 'sweet.zwo')]), CTX);
+
+        expect(res.status).toBe(200);
+        expect((await res.json()).created).toBe(1);
+
+        const [row] = createManyRows();
+        expect(row.customName).toBe('Sweet & Short');
+        expect(row.description).toBe('Endurance < 75% FTP, easy spins & surges');
     });
 
     it('rejects a request with no files', async () => {

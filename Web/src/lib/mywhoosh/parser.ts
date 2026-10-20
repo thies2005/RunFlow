@@ -435,3 +435,36 @@ function hashName(name: string): string {
     }
     return `mw-${hash.toString(16)}`;
 }
+
+// ==========================================
+// XML entity decoding (.zwo tag text)
+// ==========================================
+
+const XML_NAMED_ENTITIES: ReadonlyMap<string, string> = new Map([
+    ['amp', '&'],
+    ['lt', '<'],
+    ['gt', '>'],
+    ['quot', '"'],
+    ['apos', "'"],
+]);
+// Tight classes + fixed {1,N} bounds: linear, no backtracking; longer digit
+// runs simply never match and pass through unchanged.
+const XML_ENTITY = /&(?:amp|lt|gt|quot|apos|#[xX][0-9a-fA-F]{1,6}|#[0-9]{1,7});/g;
+
+/**
+ * Decode the five named XML entities plus decimal/hex numeric character
+ * references in ONE left-to-right pass, so `&amp;lt;` becomes `&lt;` (never
+ * `<`). Unknown names (`&nbsp;`) and malformed or out-of-range references pass
+ * through unchanged. Treat the input as untrusted even though callers feed it
+ * already-extracted, bounded tag text.
+ */
+export function decodeXmlEntities(text: string): string {
+    return text.replace(XML_ENTITY, (entity: string): string => {
+        if (entity.charCodeAt(1) !== 35 /* '#' */) {
+            return XML_NAMED_ENTITIES.get(entity.slice(1, -1)) ?? entity;
+        }
+        const hex = entity[2] === 'x' || entity[2] === 'X';
+        const code = parseInt(entity.slice(hex ? 3 : 2, -1), hex ? 16 : 10);
+        return code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : entity;
+    });
+}

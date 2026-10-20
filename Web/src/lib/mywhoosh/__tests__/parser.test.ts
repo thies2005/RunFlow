@@ -292,6 +292,33 @@ describe('parseZwoXmlToStructuredV2', () => {
         expect(() => parseZwoXmlToStructuredV2(xml)).toThrow('Invalid .zwo file: no workout steps found');
     });
 
+    it('keeps the > pointer in sync across consecutive > characters (e.g. XML comments)', () => {
+        const xml = `<workout_file><workout>
+            <!-- Rest >> note -->
+            <SteadyState Duration="600" Power="0.70"/>
+        </workout></workout_file>`;
+
+        const structured = parseZwoXmlToStructuredV2(xml);
+
+        expect(() => structuredWorkoutV2Schema.parse(structured)).not.toThrow();
+        expect(structured.steps).toHaveLength(1);
+        const step = asStep(structured.steps[0]);
+        expect(step.kind).toBe('steady');
+        expect(step.duration).toEqual({ type: 'time', seconds: 600 });
+        expect(step.target).toEqual({ type: 'power', ftpPercent: 70 });
+    });
+
+    it('tolerates > inside attribute values when essential attributes precede it', () => {
+        const xml =
+            '<workout_file><workout><SteadyState Duration="600" note="hard >> effort" Power="0.70"/></workout></workout_file>';
+
+        const structured = parseZwoXmlToStructuredV2(xml);
+
+        expect(structured.steps).toHaveLength(1);
+        const step = asStep(structured.steps[0]);
+        expect(step.duration).toEqual({ type: 'time', seconds: 600 });
+    });
+
     it('throws on oversize XML (> 5 MB)', () => {
         const big = '<workout_file><workout>' + 'x'.repeat(5 * 1024 * 1024) + '</workout></workout_file>';
         expect(() => parseZwoXmlToStructuredV2(big)).toThrow(/5 MB/);

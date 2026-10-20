@@ -193,14 +193,16 @@ function isTagNameChar(code: number): boolean {
  * outer scan (bounded-greedy `[^>]{0,N}` still measured 3.2 s on a 5 MB flood).
  * Attribute runs longer than MAX_ZWO_ATTR_TEXT_LENGTH never match (real .zwo
  * attribute text is <200 bytes). Equivalent to
- * `<(warm_up|warmup|...)\b([^>]{0,MAX})>` per candidate.
+ * `<(warm_up|warmup|...)\b([^>]{0,MAX})>` per candidate, except that the run-based
+ * name extraction is slightly more lenient than `\b`: digit-glued names
+ * (e.g. `<steady_state2 ...>`) are accepted — harmless leniency.
  */
 function scanZwoTags(xml: string): { name: string; attrText: string }[] {
     const matches: { name: string; attrText: string }[] = [];
     let lt = xml.indexOf('<');
-    let gt = -1; // first '>' not yet passed; advances monotonically
+    let gt = xml.indexOf('>'); // first '>' not yet passed; advances monotonically
     while (lt !== -1) {
-        if (gt < lt) gt = xml.indexOf('>', gt + 1);
+        while (gt !== -1 && gt < lt) gt = xml.indexOf('>', gt + 1);
         if (gt === -1) break; // no '>' remaining: no tag can complete
         const nameStart = lt + 1;
         let nameEnd = nameStart;

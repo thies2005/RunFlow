@@ -37,7 +37,8 @@ const LONG_RIDE_MAX_IF = 0.8;
  * Narrows ONE MyWhoosh workout-JSON object (`WorkoutStepsArray` present) into
  * `MyWhooshWorkoutFile`. Tolerant of missing/garbage fields (nulls); throws
  * `Error('Not a MyWhoosh workout file')` when `raw` is not a single object
- * with a `WorkoutStepsArray`.
+ * with a `WorkoutStepsArray`, and
+ * `Error('MyWhoosh workout file has no steps: <name>')` when that array is empty.
  */
 export function parseMyWhooshWorkoutFile(raw: unknown, fallbackName: string): MyWhooshWorkoutFile {
     if (!isRecord(raw) || !Array.isArray(raw.WorkoutStepsArray)) {
@@ -52,6 +53,11 @@ export function parseMyWhooshWorkoutFile(raw: unknown, fallbackName: string): My
               ? String(raw.Id)
               : hashName(name);
 
+    const steps = raw.WorkoutStepsArray.flatMap(mapFileStep);
+    if (steps.length === 0) {
+        throw new Error(`MyWhoosh workout file has no steps: ${name}`);
+    }
+
     return {
         id,
         name,
@@ -59,7 +65,7 @@ export function parseMyWhooshWorkoutFile(raw: unknown, fallbackName: string): My
         tss: finiteNumber(raw.TSS),
         intensityFactor: finiteNumber(raw.IF),
         durationSeconds: finiteNumber(raw.Duration),
-        steps: raw.WorkoutStepsArray.flatMap(mapFileStep),
+        steps,
     };
 }
 

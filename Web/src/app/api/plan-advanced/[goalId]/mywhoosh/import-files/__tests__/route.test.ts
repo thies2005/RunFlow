@@ -246,6 +246,24 @@ describe('POST /api/plan-advanced/[goalId]/mywhoosh/import-files', () => {
         expect(createSnapshot).not.toHaveBeenCalled();
     });
 
+    it('returns 422 listing the file when a MyWhoosh JSON has an empty WorkoutStepsArray', async () => {
+        const files = [
+            new File([ZWO_XML], 'good.zwo'),
+            new File([JSON.stringify({ Name: 'Empty Ride', WorkoutStepsArray: [] })], 'zero-steps.json'),
+        ];
+        const res = await POST(multipartRequest(files), CTX);
+
+        expect(res.status).toBe(422);
+        const body = await res.json();
+        expect(body.details.rejectedFiles).toEqual([
+            { file: 'zero-steps.json', reason: 'MyWhoosh workout file has no steps: Empty Ride' },
+        ]);
+        expect(body.message).toContain('zero-steps.json');
+        expect(body.message).not.toContain('good.zwo');
+        expect(prisma.workout.createMany).not.toHaveBeenCalled();
+        expect(createSnapshot).not.toHaveBeenCalled();
+    });
+
     it('imports 1 zwo + 1 json array as 3 workouts with correct dates, targets and snapshot', async () => {
         const res = await POST(
             multipartRequest([new File([ZWO_XML], 'ride.zwo'), new File([MYWHOOSH_ARRAY], 'workouts.json')]),

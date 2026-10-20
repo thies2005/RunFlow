@@ -66,15 +66,22 @@ describe('parseMyWhooshWorkoutFile', () => {
     });
 
     it('falls back to the given name and a deterministic name-hash id when Id/Name are missing', () => {
-        const a = parseMyWhooshWorkoutFile({ WorkoutStepsArray: [] }, 'Fallback Name');
-        const b = parseMyWhooshWorkoutFile({ WorkoutStepsArray: [] }, 'Fallback Name');
-        const c = parseMyWhooshWorkoutFile({ WorkoutStepsArray: [] }, 'Other Name');
+        const noName = { WorkoutStepsArray: [{ StepType: 'E_Normal', Time: 60 }] };
+        const a = parseMyWhooshWorkoutFile(noName, 'Fallback Name');
+        const b = parseMyWhooshWorkoutFile(noName, 'Fallback Name');
+        const c = parseMyWhooshWorkoutFile(noName, 'Other Name');
 
         expect(a.name).toBe('Fallback Name');
         expect(typeof a.id).toBe('string');
         expect(a.id.length).toBeGreaterThan(0);
         expect(a.id).toBe(b.id);
         expect(a.id).not.toBe(c.id);
+    });
+
+    it('throws on an empty WorkoutStepsArray (zero-step phantom row guard)', () => {
+        expect(() =>
+            parseMyWhooshWorkoutFile({ Name: 'Empty Ride', WorkoutStepsArray: [] }, 'fallback')
+        ).toThrow('MyWhoosh workout file has no steps: Empty Ride');
     });
 
     it('throws on garbage JSON (not a MyWhoosh workout object)', () => {

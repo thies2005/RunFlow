@@ -18,9 +18,6 @@ import { ApiError, ApiErrorCode, handleApiError } from '@/lib/apiError';
 import { createSnapshot } from '@/lib/plan/snapshot';
 import { PlanPhase } from '@/generated/prisma/client';
 import type { Prisma } from '@/generated/prisma/client';
-
-/** createMany input with a definite Date scheduledDate (the Prisma type also allows ISO strings). */
-type WorkoutRow = Omit<Prisma.WorkoutCreateManyInput, 'scheduledDate'> & { scheduledDate: Date };
 import {
     classifyImportedWorkout,
     parseMyWhooshStepsToStructuredV2,
@@ -28,6 +25,9 @@ import {
     parseZwoXmlToStructuredV2,
 } from '@/lib/mywhoosh/parser';
 import type { StepNode, StructuredWorkoutV2 } from '@/lib/plans/structured';
+
+/** createMany input with a definite Date scheduledDate (the Prisma type also allows ISO strings). */
+type WorkoutRow = Omit<Prisma.WorkoutCreateManyInput, 'scheduledDate'> & { scheduledDate: Date };
 
 export const dynamic = 'force-dynamic';
 

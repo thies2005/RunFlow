@@ -33,8 +33,9 @@ Versioning note: the web app (`Web/package.json`) and the Android app
   from a chosen start date (up to 100 files / 5 MB per import).
 - **Auto-classification**: rides become `RIDE` / `RIDE_INTERVALS` / `LONG_RIDE` based on
   intensity and duration; run files import as RUN workouts — all editable in the v2 editor.
-- **File-based import only — no MyWhoosh account connection.** Files are parsed in the app and
-  never sent anywhere; the unofficial MyWhoosh API is intentionally not used.
+- **File-based import only — no MyWhoosh account connection.** Files are uploaded to and parsed
+  on your own RunFlow server and never sent to any third party; the unofficial MyWhoosh API is
+  intentionally not used.
 
 ### Cycling power engine
 - Strava watts-stream sync; **eFTP**, MMP power curves, NP/IF/VI, bike TSS, efficiency factor

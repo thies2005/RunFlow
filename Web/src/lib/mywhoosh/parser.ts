@@ -17,7 +17,8 @@ import {
 } from '@/lib/plans/structured';
 import type { MyWhooshStepFile, MyWhooshWorkoutFile } from './types';
 
-const MAX_ZWO_XML_LENGTH = 5 * 1024 * 1024; // 5 MB of parsed XML input
+const MAX_ZWO_XML_LENGTH = 5 * 1024 * 1024; // 5 MB, measured in UTF-8 bytes
+const MAX_ZWO_ATTR_TEXT_LENGTH = 4096;
 const MAX_STEP_SECONDS = 86400;
 const MAX_REPEAT_TIMES = 100;
 const WORK_POWER_THRESHOLD = 0.85; // E_Normal/SteadyState power >= 0.85 -> work
@@ -186,7 +187,7 @@ const ZWO_ATTR = /([A-Za-z_][\w.:-]*)\s*=\s*"([^"]*)"/g;
  * remains. `<sportType>` is left for the caller to read for classification.
  */
 export function parseZwoXmlToStructuredV2(zwoXml: string): StructuredWorkoutV2 {
-    if (zwoXml.length > MAX_ZWO_XML_LENGTH) {
+    if (Buffer.byteLength(zwoXml, 'utf8') > MAX_ZWO_XML_LENGTH) {
         throw new Error('Invalid .zwo file: exceeds 5 MB size limit');
     }
 
@@ -194,6 +195,8 @@ export function parseZwoXmlToStructuredV2(zwoXml: string): StructuredWorkoutV2 {
     ZWO_STEP_TAG.lastIndex = 0;
     let match: RegExpExecArray | null;
     while ((match = ZWO_STEP_TAG.exec(zwoXml)) !== null) {
+        // Real .zwo attribute text is <200 bytes; skip longer runs (>4 KB) so parseAttrs cannot go quadratic on junk.
+        if (match[2].length > MAX_ZWO_ATTR_TEXT_LENGTH) continue;
         const node = mapZwoTag(match[1].toLowerCase(), parseAttrs(match[2]));
         if (node) nodes.push(node);
     }

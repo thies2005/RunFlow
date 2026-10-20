@@ -273,8 +273,30 @@ describe('parseZwoXmlToStructuredV2', () => {
         ).toThrow('Invalid .zwo file: no workout steps found');
     });
 
+    it('skips tags with pathological (>4 KB) attribute text but still parses the other steps', () => {
+        const junk = 'a'.repeat(5000); // no '=' anywhere: would drive attribute parsing quadratic without the bound
+        const xml = `<workout_file><workout>
+            <steady_state ${junk}/>
+            <FreeRide Duration="300"/>
+        </workout></workout_file>`;
+
+        const structured = parseZwoXmlToStructuredV2(xml);
+
+        expect(() => structuredWorkoutV2Schema.parse(structured)).not.toThrow();
+        expect(structured.steps).toHaveLength(1);
+        expect(asStep(structured.steps[0]).kind).toBe('steady');
+        expect(asStep(structured.steps[0]).target).toEqual({ type: 'free' });
+        expect(asStep(structured.steps[0]).duration).toEqual({ type: 'time', seconds: 300 });
+    });
+
     it('throws on oversize XML (> 5 MB)', () => {
         const big = '<workout_file><workout>' + 'x'.repeat(5 * 1024 * 1024) + '</workout></workout_file>';
+        expect(() => parseZwoXmlToStructuredV2(big)).toThrow(/5 MB/);
+    });
+
+    it('measures the 5 MB bound in UTF-8 bytes, not characters', () => {
+        // 1.8M '€' chars = 5.4 MB of UTF-8 bytes but only 1.8M chars: must trip the byte-based bound.
+        const big = '€'.repeat(1_800_000);
         expect(() => parseZwoXmlToStructuredV2(big)).toThrow(/5 MB/);
     });
 });

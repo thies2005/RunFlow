@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomBytes } from 'crypto';
 import { prisma } from '@/lib/db';
-import { isAllowedMcpRedirectUri } from '@/lib/mcp/oauth';
+import { isAllowedMcpRedirectUri, hashToken } from '@/lib/mcp/oauth';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
+
+// RFC 7591 §2: these auth methods require a client secret issued at registration
+const CONFIDENTIAL_AUTH_METHODS = new Set(['client_secret_basic', 'client_secret_post']);
 
 const CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -88,24 +92,35 @@ export async function POST(request: NextRequest) {
             clientData.clientId = client_id;
         }
 
+        // RFC 7591 §3.2.1: confidential clients MUST receive a client_secret in
+        // the registration response. Store only the hash; return it exactly once.
+        let issuedClientSecret: string | undefined;
+        if (typeof token_endpoint_auth_method === 'string' && CONFIDENTIAL_AUTH_METHODS.has(token_endpoint_auth_method)) {
+            issuedClientSecret = `rf_mcp_cs_${randomBytes(32).toString('hex')}`;
+            clientData.clientSecretHash = hashToken(issuedClientSecret);
+        }
+
         const client = await prisma.mcpOAuthClient.create({
             data: clientData,
         });
 
-        return NextResponse.json(
-            {
-                client_id: client.clientId,
-                client_name: client.clientName,
-                redirect_uris: client.redirectUris,
-                grant_types: client.grantTypes,
-                response_types: client.responseTypes,
-                token_endpoint_auth_method: client.tokenEndpointAuthMethod,
-            },
-            {
-                status: 201,
-                headers: CORS_HEADERS,
-            }
-        );
+        const registrationResponse: Record<string, unknown> = {
+            client_id: client.clientId,
+            client_name: client.clientName,
+            redirect_uris: client.redirectUris,
+            grant_types: client.grantTypes,
+            response_types: client.responseTypes,
+            token_endpoint_auth_method: client.tokenEndpointAuthMethod,
+        };
+        if (issuedClientSecret) {
+            registrationResponse.client_secret = issuedClientSecret;
+            registrationResponse.client_secret_expires_at = 0;
+        }
+
+        return NextResponse.json(registrationResponse, {
+            status: 201,
+            headers: CORS_HEADERS,
+        });
     } catch (error: any) {
         console.error('OAuth DCR registration error:', error);
         return NextResponse.json(

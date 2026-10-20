@@ -13,6 +13,18 @@ export function hashToken(token: string): string {
 }
 
 /**
+ * Verify an OAuth client secret against the stored SHA-256 hash (RFC 7591/6749
+ * confidential clients), using a timing-safe comparison.
+ */
+export function verifyClientSecret(clientSecret: string, storedHash: string): boolean {
+    if (!clientSecret || !storedHash) return false;
+    const providedHash = Buffer.from(hashToken(clientSecret), 'hex');
+    const expectedHash = Buffer.from(storedHash, 'hex');
+    if (providedHash.length === 0 || providedHash.length !== expectedHash.length) return false;
+    return timingSafeEqual(providedHash, expectedHash);
+}
+
+/**
  * Verify PKCE S256 code_verifier against code_challenge using timing-safe comparison (RFC 7636)
  */
 export function verifyPkce(codeVerifier: string, codeChallenge: string): boolean {

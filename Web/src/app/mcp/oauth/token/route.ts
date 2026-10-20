@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import {
     hashToken,
     verifyPkce,
+    verifyClientSecret,
     issueOAuthTokenPair,
     refreshOAuthTokenPair,
     isUserPaidPremium,
@@ -77,6 +78,26 @@ export async function POST(request: NextRequest) {
                 { error: 'invalid_client', error_description: 'client_id is required' },
                 { status: 400, headers: CORS_HEADERS }
             );
+        }
+
+        // RFC 6749 §2.3: confidential clients must authenticate with the secret
+        // issued at registration (Basic header or body, both parsed above)
+        const oauthClient = await prisma.mcpOAuthClient.findUnique({ where: { clientId } });
+        if (oauthClient?.clientSecretHash) {
+            const providedSecret = params.client_secret;
+            if (!providedSecret || !verifyClientSecret(providedSecret, oauthClient.clientSecretHash)) {
+                return NextResponse.json(
+                    { error: 'invalid_client', error_description: 'Client authentication failed' },
+                    {
+                        status: 401,
+                        headers: {
+                            ...CORS_HEADERS,
+                            'Cache-Control': 'no-store',
+                            ...(authHeader ? { 'WWW-Authenticate': 'Basic realm="mcp"' } : {}),
+                        },
+                    }
+                );
+            }
         }
 
         if (grantType === 'authorization_code') {

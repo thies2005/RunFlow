@@ -273,12 +273,10 @@ describe('parseZwoXmlToStructuredV2', () => {
         ).toThrow('Invalid .zwo file: no workout steps found');
     });
 
-    it('skips tags with pathological (>4 KB) attribute text but still parses the other steps', () => {
-        const junk = 'a'.repeat(5000); // no '=' anywhere: would drive attribute parsing quadratic without the bound
-        const xml = `<workout_file><workout>
-            <steady_state ${junk}/>
-            <FreeRide Duration="300"/>
-        </workout></workout_file>`;
+    it('skips tags whose attribute text exceeds the 4 KB bound even when valid attributes are embedded', () => {
+        // Old code parsed the embedded Duration (2 steps); bounded code never matches the oversize tag (1 step).
+        const junk = 'a'.repeat(4096) + ' Duration="300" ';
+        const xml = `<workout_file><workout><steady_state ${junk}/><FreeRide Duration="300"/></workout></workout_file>`;
 
         const structured = parseZwoXmlToStructuredV2(xml);
 
@@ -287,6 +285,11 @@ describe('parseZwoXmlToStructuredV2', () => {
         expect(asStep(structured.steps[0]).kind).toBe('steady');
         expect(asStep(structured.steps[0]).target).toEqual({ type: 'free' });
         expect(asStep(structured.steps[0]).duration).toEqual({ type: 'time', seconds: 300 });
+    });
+
+    it('rejects a >-free prefix flood quickly (no tag ever completes)', () => {
+        const xml = ('<steady_state ' + 'a').repeat(2000);
+        expect(() => parseZwoXmlToStructuredV2(xml)).toThrow('Invalid .zwo file: no workout steps found');
     });
 
     it('throws on oversize XML (> 5 MB)', () => {

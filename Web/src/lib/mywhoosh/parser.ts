@@ -18,7 +18,8 @@ import {
 import type { MyWhooshStepFile, MyWhooshWorkoutFile } from './types';
 
 const MAX_ZWO_XML_LENGTH = 5 * 1024 * 1024; // 5 MB, measured in UTF-8 bytes
-const MAX_ZWO_ATTR_TEXT_LENGTH = 4096;
+const MAX_ZWO_ATTR_TEXT_LENGTH = 4096; // real .zwo attribute text is <200 bytes; tags with longer attribute runs are not matched
+const MAX_ATTR_SCAN_LENGTH = 512;
 const MAX_STEP_SECONDS = 86400;
 const MAX_REPEAT_TIMES = 100;
 const WORK_POWER_THRESHOLD = 0.85; // E_Normal/SteadyState power >= 0.85 -> work
@@ -176,13 +177,53 @@ function higherPowerStep(a: MyWhooshStepFile, b: MyWhooshStepFile): MyWhooshStep
 // ==========================================
 
 // Both snake_case and camelCase tag spellings occur in the wild.
-const ZWO_STEP_TAG =
-    /<(warm_up|warmup|steady_state|steadystate|intervals_t|intervalsT|ramp|cool_down|cooldown|free_ride|freeride)\b([^>]*)\/?>/gi;
+const ZWO_KNOWN_TAG_NAMES: ReadonlySet<string> = new Set([
+    'warm_up', 'warmup', 'steady_state', 'steadystate', 'intervals_t', 'intervalst',
+    'ramp', 'cool_down', 'cooldown', 'free_ride', 'freeride',
+]);
+const MAX_ZWO_TAG_NAME_LENGTH = 12; // longest known tag name ('steady_state')
+
+function isTagNameChar(code: number): boolean {
+    return (code >= 65 && code <= 90) || (code >= 97 && code <= 122) || code === 95;
+}
+
+/**
+ * Monotone two-pointer tag scan: the candidate '<' (lt) and its '>' (gt) only ever
+ * advance, so malformed or '>'-free input costs O(n) — no regex backtracking on the
+ * outer scan (bounded-greedy `[^>]{0,N}` still measured 3.2 s on a 5 MB flood).
+ * Attribute runs longer than MAX_ZWO_ATTR_TEXT_LENGTH never match (real .zwo
+ * attribute text is <200 bytes). Equivalent to
+ * `<(warm_up|warmup|...)\b([^>]{0,MAX})>` per candidate.
+ */
+function scanZwoTags(xml: string): { name: string; attrText: string }[] {
+    const matches: { name: string; attrText: string }[] = [];
+    let lt = xml.indexOf('<');
+    let gt = -1; // first '>' not yet passed; advances monotonically
+    while (lt !== -1) {
+        if (gt < lt) gt = xml.indexOf('>', gt + 1);
+        if (gt === -1) break; // no '>' remaining: no tag can complete
+        const nameStart = lt + 1;
+        let nameEnd = nameStart;
+        while (nameEnd < gt && nameEnd - nameStart <= MAX_ZWO_TAG_NAME_LENGTH && isTagNameChar(xml.charCodeAt(nameEnd))) {
+            nameEnd++;
+        }
+        const name = xml.slice(nameStart, nameEnd).toLowerCase();
+        const known = name.length > 0 && name.length <= MAX_ZWO_TAG_NAME_LENGTH && ZWO_KNOWN_TAG_NAMES.has(name);
+        if (known && gt - nameEnd <= MAX_ZWO_ATTR_TEXT_LENGTH) {
+            matches.push({ name, attrText: xml.slice(nameEnd, gt) });
+            lt = xml.indexOf('<', gt + 1);
+        } else {
+            lt = xml.indexOf('<', lt + 1);
+        }
+    }
+    return matches;
+}
+
 const ZWO_ATTR = /([A-Za-z_][\w.:-]*)\s*=\s*"([^"]*)"/g;
 
 /**
- * Bounded lightweight .zwo parser (no XML dependency): regex-scans the known
- * workout tags with their attributes; unknown/absent tags are skipped. Throws
+ * Bounded lightweight .zwo parser (no XML dependency): scans the known workout
+ * tags with their attributes; unknown/absent tags are skipped. Throws
  * `Error('Invalid .zwo file: no workout steps found')` when nothing recognizable
  * remains. `<sportType>` is left for the caller to read for classification.
  */
@@ -192,12 +233,8 @@ export function parseZwoXmlToStructuredV2(zwoXml: string): StructuredWorkoutV2 {
     }
 
     const nodes: StepNode[] = [];
-    ZWO_STEP_TAG.lastIndex = 0;
-    let match: RegExpExecArray | null;
-    while ((match = ZWO_STEP_TAG.exec(zwoXml)) !== null) {
-        // Real .zwo attribute text is <200 bytes; skip longer runs (>4 KB) so parseAttrs cannot go quadratic on junk.
-        if (match[2].length > MAX_ZWO_ATTR_TEXT_LENGTH) continue;
-        const node = mapZwoTag(match[1].toLowerCase(), parseAttrs(match[2]));
+    for (const { name, attrText } of scanZwoTags(zwoXml)) {
+        const node = mapZwoTag(name, parseAttrs(attrText));
         if (node) nodes.push(node);
     }
 
@@ -268,9 +305,12 @@ function mapZwoTag(tag: string, attrs: Record<string, string>): StepNode | null 
 
 function parseAttrs(text: string): Record<string, string> {
     const attrs: Record<string, string> = {};
+    // Real .zwo tags have <200 bytes of attributes total; scanning only the prefix keeps
+    // '='-free junk from costing quadratic time.
+    const bounded = text.length > MAX_ATTR_SCAN_LENGTH ? text.slice(0, MAX_ATTR_SCAN_LENGTH) : text;
     ZWO_ATTR.lastIndex = 0;
     let match: RegExpExecArray | null;
-    while ((match = ZWO_ATTR.exec(text)) !== null) {
+    while ((match = ZWO_ATTR.exec(bounded)) !== null) {
         attrs[match[1].toLowerCase()] = match[2];
     }
     return attrs;

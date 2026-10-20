@@ -71,7 +71,14 @@ jest.mock('@/lib/rateLimit', () => ({
     checkRateLimitAsync: jest.fn(),
     getClientIdentifier: jest.fn(),
     RATE_LIMITS: { settings: { limit: 10, windowSeconds: 60, prefix: 'settings' } },
-    rateLimitHeaders: jest.fn(() => ({})),
+    // Same header names as the real helper in @/lib/rateLimit.
+    rateLimitHeaders: jest.fn(
+        (result: { limit: number; remaining: number; resetAt: number }) => ({
+            'X-RateLimit-Limit': String(result.limit),
+            'X-RateLimit-Remaining': String(result.remaining),
+            'X-RateLimit-Reset': String(result.resetAt),
+        }),
+    ),
 }));
 
 jest.mock('@/lib/plan/snapshot', () => ({
@@ -171,6 +178,26 @@ describe('POST /api/plan-advanced/[goalId]/mywhoosh/import-files', () => {
         expect(createSnapshot).not.toHaveBeenCalled();
     });
 
+    it('returns 429 with X-RateLimit-* headers when the rate limit is exceeded', async () => {
+        (checkRateLimitAsync as jest.Mock).mockResolvedValue({
+            allowed: false,
+            remaining: 0,
+            resetAt: 1900000000,
+            limit: 10,
+            retryAfter: 42,
+        });
+        const res = await POST(multipartRequest([new File([ZWO_XML], 'ride.zwo')]), CTX);
+
+        expect(res.status).toBe(429);
+        const body = await res.json();
+        expect(body.error).toBe('RATE_LIMITED');
+        expect(res.headers.get('X-RateLimit-Limit')).toBe('10');
+        expect(res.headers.get('X-RateLimit-Remaining')).toBe('0');
+        expect(res.headers.get('X-RateLimit-Reset')).toBe('1900000000');
+        expect(prisma.goal.findFirst).not.toHaveBeenCalled();
+        expect(createSnapshot).not.toHaveBeenCalled();
+    });
+
     it('returns 404 when the plan does not belong to the caller', async () => {
         (prisma.goal.findFirst as jest.Mock).mockResolvedValue(null);
         const res = await POST(multipartRequest([new File([ZWO_XML], 'ride.zwo')]), CTX);
@@ -192,6 +219,7 @@ describe('POST /api/plan-advanced/[goalId]/mywhoosh/import-files', () => {
 
         expect(res.status).toBe(413);
         const body = await res.json();
+        expect(body.error).toBe('PAYLOAD_TOO_LARGE');
         expect(body.message).toContain('5MB');
         expect(prisma.workout.createMany).not.toHaveBeenCalled();
         expect(createSnapshot).not.toHaveBeenCalled();
@@ -206,6 +234,7 @@ describe('POST /api/plan-advanced/[goalId]/mywhoosh/import-files', () => {
 
         expect(res.status).toBe(413);
         const body = await res.json();
+        expect(body.error).toBe('PAYLOAD_TOO_LARGE');
         expect(body.message).toContain('100');
         expect(prisma.workout.createMany).not.toHaveBeenCalled();
         expect(createSnapshot).not.toHaveBeenCalled();
@@ -220,6 +249,7 @@ describe('POST /api/plan-advanced/[goalId]/mywhoosh/import-files', () => {
 
         expect(res.status).toBe(413);
         const body = await res.json();
+        expect(body.error).toBe('PAYLOAD_TOO_LARGE');
         expect(body.message).toContain('500');
         expect(prisma.workout.createMany).not.toHaveBeenCalled();
         expect(createSnapshot).not.toHaveBeenCalled();
@@ -235,6 +265,7 @@ describe('POST /api/plan-advanced/[goalId]/mywhoosh/import-files', () => {
 
         expect(res.status).toBe(422);
         const body = await res.json();
+        expect(body.error).toBe('UNPROCESSABLE');
         expect(body.message).toContain('broken.json');
         expect(body.message).toContain('not-mywhoosh.json');
         expect(body.message).not.toContain('good.zwo');
@@ -255,6 +286,7 @@ describe('POST /api/plan-advanced/[goalId]/mywhoosh/import-files', () => {
 
         expect(res.status).toBe(422);
         const body = await res.json();
+        expect(body.error).toBe('UNPROCESSABLE');
         expect(body.details.rejectedFiles).toEqual([
             { file: 'zero-steps.json', reason: 'MyWhoosh workout file has no steps: Empty Ride' },
         ]);

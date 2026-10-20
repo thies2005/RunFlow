@@ -6,6 +6,10 @@
 
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logging/logger';
+// No import cycle: rateLimit.ts does not import this module (its withRateLimit
+// helper only dynamic-imports @/lib/api/apiResponse at call time).
+import { rateLimitHeaders } from '@/lib/rateLimit';
+import type { RateLimitResult } from '@/lib/rateLimit';
 
 /**
  * Standardized error codes for API responses
@@ -16,6 +20,8 @@ export enum ApiErrorCode {
     FORBIDDEN = 'FORBIDDEN',
     NOT_FOUND = 'NOT_FOUND',
     VALIDATION_ERROR = 'VALIDATION_ERROR',
+    PAYLOAD_TOO_LARGE = 'PAYLOAD_TOO_LARGE',
+    UNPROCESSABLE = 'UNPROCESSABLE',
     RATE_LIMITED = 'RATE_LIMITED',
     CONFLICT = 'CONFLICT',
     INTERNAL_ERROR = 'INTERNAL_ERROR',
@@ -41,7 +47,8 @@ export class ApiError extends Error {
         public readonly statusCode: number, // eslint-disable-line no-unused-vars
         public readonly code: ApiErrorCode, // eslint-disable-line no-unused-vars
         message: string,
-        public readonly details?: unknown // eslint-disable-line no-unused-vars
+        public readonly details?: unknown, // eslint-disable-line no-unused-vars
+        public readonly headers?: Record<string, string> // eslint-disable-line no-unused-vars
     ) {
         super(message);
         this.name = 'ApiError';
@@ -64,7 +71,10 @@ export class ApiError extends Error {
             payload.details = this.details;
         }
 
-        return NextResponse.json(payload, { status: this.statusCode });
+        return NextResponse.json(payload, {
+            status: this.statusCode,
+            ...(this.headers ? { headers: this.headers } : {}),
+        });
     }
 
     // Factory methods for common errors
@@ -84,8 +94,22 @@ export class ApiError extends Error {
         return new ApiError(400, ApiErrorCode.VALIDATION_ERROR, message, details);
     }
 
-    static rateLimited(message = 'Too many requests'): ApiError {
-        return new ApiError(429, ApiErrorCode.RATE_LIMITED, message);
+    static payloadTooLarge(message = 'Request entity too large', details?: unknown): ApiError {
+        return new ApiError(413, ApiErrorCode.PAYLOAD_TOO_LARGE, message, details);
+    }
+
+    static unprocessable(message = 'Unprocessable content', details?: unknown): ApiError {
+        return new ApiError(422, ApiErrorCode.UNPROCESSABLE, message, details);
+    }
+
+    static rateLimited(message = 'Too many requests', result?: RateLimitResult): ApiError {
+        return new ApiError(
+            429,
+            ApiErrorCode.RATE_LIMITED,
+            message,
+            undefined,
+            result ? rateLimitHeaders(result) : undefined
+        );
     }
 
     static conflict(message: string): ApiError {

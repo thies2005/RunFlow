@@ -14,7 +14,7 @@ import { z } from 'zod';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS } from '@/lib/rateLimit';
-import { ApiError, ApiErrorCode, handleApiError } from '@/lib/apiError';
+import { ApiError, handleApiError } from '@/lib/apiError';
 import { createSnapshot } from '@/lib/plan/snapshot';
 import { PlanPhase } from '@/generated/prisma/client';
 import type { Prisma } from '@/generated/prisma/client';
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest, ctx: RouteContext) {
         const clientId = getClientIdentifier(request);
         const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.settings);
         if (!rateLimitResult.allowed) {
-            throw ApiError.rateLimited('Too many requests. Please try again later.');
+            throw ApiError.rateLimited('Too many requests. Please try again later.', rateLimitResult);
         }
 
         const { goalId } = await ctx.params;
@@ -105,9 +105,7 @@ export async function POST(request: NextRequest, ctx: RouteContext) {
             throw ApiError.validation('At least one .zwo or .json file is required');
         }
         if (files.length > MAX_FILES) {
-            throw new ApiError(
-                413,
-                ApiErrorCode.VALIDATION_ERROR,
+            throw ApiError.payloadTooLarge(
                 `Too many files: ${files.length} exceeds the ${MAX_FILES}-file limit`,
             );
         }
@@ -115,9 +113,7 @@ export async function POST(request: NextRequest, ctx: RouteContext) {
         // (file.size is available on the File object before .text()).
         const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
         if (totalBytes > MAX_TOTAL_BYTES) {
-            throw new ApiError(
-                413,
-                ApiErrorCode.VALIDATION_ERROR,
+            throw ApiError.payloadTooLarge(
                 `Upload exceeds the ${MAX_TOTAL_BYTES / (1024 * 1024)}MB total size limit`,
             );
         }
@@ -125,9 +121,7 @@ export async function POST(request: NextRequest, ctx: RouteContext) {
         const { workouts: imported, rejectedFiles } = await parseFiles(files);
 
         if (rejectedFiles.length > 0) {
-            throw new ApiError(
-                422,
-                ApiErrorCode.VALIDATION_ERROR,
+            throw ApiError.unprocessable(
                 `Failed to parse ${rejectedFiles.length} file(s): ${rejectedFiles
                     .map((r) => `${r.file} (${r.reason})`)
                     .join('; ')}`,
@@ -138,9 +132,7 @@ export async function POST(request: NextRequest, ctx: RouteContext) {
             throw ApiError.validation('No workouts found in the uploaded files');
         }
         if (imported.length > MAX_WORKOUTS) {
-            throw new ApiError(
-                413,
-                ApiErrorCode.VALIDATION_ERROR,
+            throw ApiError.payloadTooLarge(
                 `Import contains ${imported.length} workouts; the limit is ${MAX_WORKOUTS}`,
             );
         }

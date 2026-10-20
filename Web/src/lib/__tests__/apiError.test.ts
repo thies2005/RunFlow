@@ -3,11 +3,18 @@
  */
 
 import { ApiError, ApiErrorCode, handleApiError } from '../apiError';
+import type { RateLimitResult } from '../rateLimit';
 
 interface MockApiResponseBody {
     error?: ApiErrorCode;
     message?: string;
     details?: unknown;
+}
+
+interface MockApiResponse {
+    body: MockApiResponseBody;
+    status: number;
+    headers?: Record<string, string>;
 }
 
 // Mock NextResponse.json
@@ -16,6 +23,7 @@ jest.mock('next/server', () => ({
         json: jest.fn((body, options) => ({
             body,
             status: options?.status || 200,
+            headers: options?.headers,
         })),
     },
 }));
@@ -58,10 +66,70 @@ describe('ApiError', () => {
             expect(error.details).toEqual({ field: 'email' });
         });
 
+        it('payloadTooLarge() creates 413 error', () => {
+            const error = ApiError.payloadTooLarge();
+            expect(error.statusCode).toBe(413);
+            expect(error.code).toBe(ApiErrorCode.PAYLOAD_TOO_LARGE);
+        });
+
+        it('payloadTooLarge() accepts a custom message and details', () => {
+            const error = ApiError.payloadTooLarge('Upload exceeds the 5MB total size limit', { bytes: 6 });
+            expect(error.statusCode).toBe(413);
+            expect(error.code).toBe(ApiErrorCode.PAYLOAD_TOO_LARGE);
+            expect(error.message).toBe('Upload exceeds the 5MB total size limit');
+            expect(error.details).toEqual({ bytes: 6 });
+        });
+
+        it('unprocessable() creates 422 error', () => {
+            const error = ApiError.unprocessable();
+            expect(error.statusCode).toBe(422);
+            expect(error.code).toBe(ApiErrorCode.UNPROCESSABLE);
+        });
+
+        it('unprocessable() accepts a custom message and details', () => {
+            const error = ApiError.unprocessable('Failed to parse 1 file(s)', { rejectedFiles: [] });
+            expect(error.statusCode).toBe(422);
+            expect(error.code).toBe(ApiErrorCode.UNPROCESSABLE);
+            expect(error.message).toBe('Failed to parse 1 file(s)');
+            expect(error.details).toEqual({ rejectedFiles: [] });
+        });
+
         it('rateLimited() creates 429 error', () => {
             const error = ApiError.rateLimited();
             expect(error.statusCode).toBe(429);
             expect(error.code).toBe(ApiErrorCode.RATE_LIMITED);
+        });
+
+        it('rateLimited(result) carries the rate-limit headers on toResponse()', () => {
+            const result: RateLimitResult = {
+                allowed: false,
+                remaining: 0,
+                resetAt: 1900000000,
+                limit: 10,
+                retryAfter: 42,
+            };
+            const error = ApiError.rateLimited('Too many requests. Please try again later.', result);
+            expect(error.statusCode).toBe(429);
+            expect(error.headers).toEqual({
+                'X-RateLimit-Limit': '10',
+                'X-RateLimit-Remaining': '0',
+                'X-RateLimit-Reset': '1900000000',
+            });
+
+            const response = error.toResponse() as unknown as MockApiResponse;
+            expect(response.headers).toEqual({
+                'X-RateLimit-Limit': '10',
+                'X-RateLimit-Remaining': '0',
+                'X-RateLimit-Reset': '1900000000',
+            });
+        });
+
+        it('rateLimited() without a result carries no headers', () => {
+            const error = ApiError.rateLimited();
+            expect(error.headers).toBeUndefined();
+
+            const response = error.toResponse() as unknown as MockApiResponse;
+            expect(response.headers).toBeUndefined();
         });
 
         it('internal() creates 500 error', () => {

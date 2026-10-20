@@ -433,6 +433,18 @@ All first-party endpoints live under `/api`. Session auth is NextAuth v5 (creden
 
 **Cycling**: `GET /api/analytics/cycling?…` returns eFTP, MMP curve points, ride power summaries and split/combined PMC for the selected sport and window.
 
+**`POST /api/plan-advanced/[goalId]/mywhoosh/import-files`** — imports MyWhoosh workout-JSON (`.json`) and Zwift `.zwo` files as workouts on an existing plan. Multipart form-data with repeatable `files` entries plus `startDate` (ISO date); workouts are scheduled on consecutive days from `startDate` in stable file-then-in-file order. Files are parsed server-side only — no MyWhoosh hosts are ever contacted. Returns:
+
+```typescript
+{
+  created: number, firstDate: string, lastDate: string,  // dates are ISO
+  filesProcessed: number,
+  rejectedFiles: Array<{ file, reason }>                 // always present; empty on success
+}
+```
+
+Errors: `413` when the upload exceeds 5 MB total, 100 files or 500 workouts; `422` when any file is unparseable — the message names each rejected file and `details.rejectedFiles` carries the `{ file, reason }` entries.
+
 ---
 
 ## 7. Strava Integration

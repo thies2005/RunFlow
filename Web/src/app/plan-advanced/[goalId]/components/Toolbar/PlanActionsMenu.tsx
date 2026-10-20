@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { MoreHorizontal, Download, Upload, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Download, Upload, FileUp, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
@@ -11,10 +11,11 @@ interface PlanActionsMenuProps {
     /** Plan name, used for the standardized deletion copy in the confirm dialog. */
     planName?: string;
     onImportCsv?: () => void;
+    onImportZwo?: () => void;
     onExportCsv?: () => void;
 }
 
-export function PlanActionsMenu({ goalId, planName, onImportCsv, onExportCsv }: PlanActionsMenuProps) {
+export function PlanActionsMenu({ goalId, planName, onImportCsv, onImportZwo, onExportCsv }: PlanActionsMenuProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -69,6 +70,14 @@ export function PlanActionsMenu({ goalId, planName, onImportCsv, onExportCsv }: 
                 onImportCsv?.();
             },
         },
+        {
+            label: 'Import .zwo / MyWhoosh files',
+            icon: FileUp,
+            onClick: () => {
+                setIsOpen(false);
+                onImportZwo?.();
+            },
+        },
         { separator: true },
         {
             label: 'Delete Plan',
@@ -92,7 +101,7 @@ export function PlanActionsMenu({ goalId, planName, onImportCsv, onExportCsv }: 
                 <MoreHorizontal className="w-4 h-4" />
             </button>
             {isOpen && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-background-secondary border border-foreground/20 rounded-md z-50 py-1">
+                <div className="absolute right-0 top-full mt-1 w-56 bg-background-secondary border border-foreground/20 rounded-md z-50 py-1">
                     {actions.map((action, i) => {
                         if ('separator' in action) {
                             return <div key={i} className="border-t border-glass-border my-1" />;

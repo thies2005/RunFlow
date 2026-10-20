@@ -16,6 +16,7 @@ interface PlanToolbarProps {
     onModeChange: (_mode: PlanCreationMode) => void;
     onNameChange?: (_name: string) => void;
     onImportCsv?: () => void;
+    onImportZwo?: () => void;
     onExportCsv?: () => void;
     /** Replaces the old onAnalyzePlan — drives the Calendar/Analysis view toggle */
     viewMode?: 'calendar' | 'analysis';
@@ -32,6 +33,7 @@ export function PlanToolbar({
     onModeChange,
     onNameChange,
     onImportCsv,
+    onImportZwo,
     onExportCsv,
     viewMode = 'calendar',
     onViewModeChange,
@@ -134,7 +136,7 @@ export function PlanToolbar({
                 isPremium={isPremium}
             />
 
-            <PlanActionsMenu goalId={goalId} planName={planName} onImportCsv={onImportCsv} onExportCsv={onExportCsv} />
+            <PlanActionsMenu goalId={goalId} planName={planName} onImportCsv={onImportCsv} onImportZwo={onImportZwo} onExportCsv={onExportCsv} />
         </div>
     );
 }

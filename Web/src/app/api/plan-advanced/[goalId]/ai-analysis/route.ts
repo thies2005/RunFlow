@@ -5,14 +5,18 @@ export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { validateBaseUrl, generateCompletion, tryDecryptAiKey, type ChatMessage, type AiConfig } from '@/lib/ai/providers';
 import { reserveUsageSlot, releaseUsageReservation, incrementUsage, checkProviderLimit, countTokens } from '@/lib/ai';
+import { fenceUntrusted } from '@/lib/ai/prompts';
 
 async function checkPremium(userId: string) {
     const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, isAdmin: true, aiSettings: { select: { usageTier: true } } },
+        select: { id: true, isAdmin: true, aiSettings: { select: { usageTier: true, aiEnabled: true, adminAllowed: true } } },
     });
     const tier = user?.aiSettings?.usageTier || 'none';
     if (tier !== 'tier2' && tier !== 'tier3' && !user?.isAdmin) {
+        return false;
+    }
+    if (!Boolean(user?.aiSettings?.aiEnabled && user?.aiSettings?.adminAllowed)) {
         return false;
     }
     return true;
@@ -72,10 +76,13 @@ function buildSystemPrompt(analysisType: string, targetWeekIndex?: number): stri
 function buildUserPrompt(goal: Record<string, unknown>, workouts: Array<Record<string, unknown>>, context?: string): string {
     const workoutSummary = workouts.map(w => {
         const date = w.scheduledDate instanceof Date ? w.scheduledDate.toISOString().split('T')[0] : String(w.scheduledDate);
-        return `- ${date}: ${w.workoutType} | ${w.targetDistance != null ? `${w.targetDistance}m` : 'no distance'} | ${w.targetDuration != null ? `${w.targetDuration}s` : 'no duration'} | ${w.description || ''}`;
+        const desc = fenceUntrusted(w.description as string | undefined);
+        return `- ${date}: ${w.workoutType} | ${w.targetDistance != null ? `${w.targetDistance}m` : 'no distance'} | ${w.targetDuration != null ? `${w.targetDuration}s` : 'no duration'} | ${desc}`;
     }).join('\n');
 
-    return `Training Plan: ${goal.name}
+    const boundedContext = context ? fenceUntrusted(context.slice(0, 2000)) : '';
+
+    return `Training Plan: ${fenceUntrusted(goal.name as string | undefined)}
 Sport: ${goal.sport}
 Race Type: ${goal.raceType || 'Not specified'}
 Race Date: ${goal.raceDate instanceof Date ? goal.raceDate.toISOString().split('T')[0] : String(goal.raceDate || 'Not set')}
@@ -85,7 +92,7 @@ Workout Day: ${goal.workoutDay ?? 3}
 Workouts:
 ${workoutSummary}
 
-${context ? `\nAdditional context from user:\n${context}` : ''}
+${boundedContext ? `\nAdditional context from user:\n${boundedContext}` : ''}
 
 Analyze this plan and respond with valid JSON containing: overallScore, overallSummary, weekAnalyses, riskFlags, raceReadiness, suggestions.`;
 }

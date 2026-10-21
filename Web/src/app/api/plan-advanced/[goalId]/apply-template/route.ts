@@ -84,6 +84,13 @@ export async function POST(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: 'weekEndIndex must be >= weekStartIndex' }, { status: 400 });
         }
 
+        if (weekEndIndex > 52 || (weekEndIndex - weekStartIndex) > 26) {
+            return NextResponse.json(
+                { error: 'Invalid week bounds: weekStartIndex and weekEndIndex must satisfy 1 <= weekStartIndex <= weekEndIndex <= 52 and (weekEndIndex - weekStartIndex) <= 26' },
+                { status: 400 },
+            );
+        }
+
         if (!planStartDate || isNaN(new Date(planStartDate).getTime())) {
             return NextResponse.json({ error: 'Valid planStartDate is required' }, { status: 400 });
         }
@@ -97,55 +104,63 @@ export async function POST(req: Request, ctx: RouteContext) {
         }
 
         const days = template.days as Array<Record<string, unknown>>;
+        if (!Array.isArray(days) || days.length === 0 || days.length > 28) {
+            return NextResponse.json({ error: 'Days must be an array with 1 to 28 days' }, { status: 400 });
+        }
 
         await createSnapshot(goalId, 'Before apply template', 'apply_template');
 
         const planStart = new Date(planStartDate);
+        const rows: Prisma.WorkoutCreateManyInput[] = [];
+
+        for (let weekIdx = weekStartIndex; weekIdx <= weekEndIndex; weekIdx++) {
+            const weekOffset = (weekIdx - 1) * 7;
+            const weekStart = new Date(planStart);
+            weekStart.setDate(weekStart.getDate() + weekOffset);
+
+            for (const day of days) {
+                const dayIndex = typeof day.dayIndex === 'number' ? day.dayIndex : 0;
+                const workoutTypeRaw = typeof day.workoutType === 'string' ? day.workoutType : undefined;
+                const workoutType = resolveWorkoutType(workoutTypeRaw);
+
+                if (!workoutType || workoutType === 'REST') continue;
+
+                const scheduledDate = new Date(weekStart);
+                scheduledDate.setDate(scheduledDate.getDate() + dayIndex);
+
+                const description = typeof day.description === 'string' ? day.description : (typeof workoutTypeRaw === 'string' ? workoutTypeRaw : 'Workout');
+                const customName = typeof day.name === 'string' ? day.name : null;
+                const targetDistance = typeof day.distanceM === 'number' ? day.distanceM : null;
+                const targetDuration = typeof day.durationS === 'number' ? day.durationS : null;
+                const targetPace = typeof day.paceSKm === 'number' ? day.paceSKm : null;
+                const targetHrZone = typeof day.hrZone === 'number' ? day.hrZone : null;
+                const structuredSteps = day.structuredSteps !== undefined && day.structuredSteps !== null
+                    ? (day.structuredSteps as Prisma.InputJsonValue)
+                    : Prisma.DbNull;
+                const phase = typeof day.phase === 'string' ? day.phase : PlanPhase.BASE;
+
+                rows.push({
+                    goalId,
+                    scheduledDate,
+                    workoutType,
+                    description,
+                    phase: phase as PlanPhase,
+                    order: dayIndex,
+                    customName,
+                    targetDistance,
+                    targetDuration,
+                    targetPace,
+                    targetHrZone,
+                    structuredSteps,
+                });
+            }
+        }
+
         let createdCount = 0;
-
         await prisma.$transaction(async (tx) => {
-            for (let weekIdx = weekStartIndex; weekIdx <= weekEndIndex; weekIdx++) {
-                const weekOffset = (weekIdx - 1) * 7;
-                const weekStart = new Date(planStart);
-                weekStart.setDate(weekStart.getDate() + weekOffset);
-
-                for (const day of days) {
-                    const dayIndex = typeof day.dayIndex === 'number' ? day.dayIndex : 0;
-                    const workoutTypeRaw = typeof day.workoutType === 'string' ? day.workoutType : undefined;
-                    const workoutType = resolveWorkoutType(workoutTypeRaw);
-
-                    if (!workoutType || workoutType === 'REST') continue;
-
-                    const scheduledDate = new Date(weekStart);
-                    scheduledDate.setDate(scheduledDate.getDate() + dayIndex);
-
-                    const description = typeof day.description === 'string' ? day.description : (typeof workoutTypeRaw === 'string' ? workoutTypeRaw : 'Workout');
-                    const customName = typeof day.name === 'string' ? day.name : null;
-                    const targetDistance = typeof day.distanceM === 'number' ? day.distanceM : null;
-                    const targetDuration = typeof day.durationS === 'number' ? day.durationS : null;
-                    const targetPace = typeof day.paceSKm === 'number' ? day.paceSKm : null;
-                    const targetHrZone = typeof day.hrZone === 'number' ? day.hrZone : null;
-                    const structuredSteps = day.structuredSteps ?? Prisma.DbNull;
-                    const phase = typeof day.phase === 'string' ? day.phase : PlanPhase.BASE;
-
-                    await tx.workout.create({
-                        data: {
-                            goalId,
-                            scheduledDate,
-                            workoutType,
-                            description,
-                            phase: phase as PlanPhase,
-                            order: dayIndex,
-                            customName,
-                            targetDistance,
-                            targetDuration,
-                            targetPace,
-                            targetHrZone,
-                            structuredSteps,
-                        },
-                    });
-                    createdCount++;
-                }
+            if (rows.length > 0) {
+                const res = await tx.workout.createMany({ data: rows });
+                createdCount = res.count;
             }
         });
 

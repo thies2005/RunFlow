@@ -1,6 +1,14 @@
 package com.runflow2.app.data.net
 
 import com.runflow2.app.core.util.AppLog
+import com.runflow2.app.data.repo.SettingsRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Interceptor
@@ -18,15 +26,67 @@ import java.util.concurrent.TimeUnit
  * refresh with one automatic retry, and a hot-swappable base URL (settings).
  */
 class NetworkClient(
-    private val authStore: AuthStore,
-    @Volatile var baseUrl: String = Api.DEFAULT_BASE_URL,
+    private val authStore: AuthStore?,
+    initialBaseUrl: String = Api.DEFAULT_BASE_URL,
+    settings: SettingsRepository? = null,
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) {
+    @Volatile
+    var previousBaseUrl: String? = null
+        internal set
+
+    @Volatile
+    internal var onOriginSwitched: (() -> Unit)? = null
+
+    @Volatile
+    var baseUrl: String = Api.normalizeServerUrl(initialBaseUrl)
+        set(value) {
+            val normalized = Api.normalizeServerUrl(value)
+            val prev = previousBaseUrl
+            if (prev != null && prev != normalized) {
+                AppLog.i("Net", "Server origin changed from $prev to $normalized via baseUrl setter — clearing session")
+                runCatching { runBlocking { authStore?.clear() } }
+                onOriginSwitched?.invoke()
+            }
+            previousBaseUrl = normalized
+            field = normalized
+        }
+
     @Volatile private var cachedApi: RunFlowApi? = null
     private val apiLock = Any()
 
+    init {
+        val targetSettings = settings ?: SettingsRepository.instance
+        if (targetSettings != null) {
+            observeSettings(targetSettings, scope)
+        }
+    }
+
+    fun observeSettings(settings: SettingsRepository, scope: CoroutineScope): Job =
+        observeServerUrl(settings.settings.map { it.serverUrl }, scope)
+
+    fun observeServerUrl(serverUrlFlow: Flow<String>, scope: CoroutineScope): Job {
+        return scope.launch {
+            serverUrlFlow.collect { rawUrl ->
+                val normalized = Api.normalizeServerUrl(rawUrl)
+                val prev = previousBaseUrl
+                if (prev != null && prev != normalized) {
+                    AppLog.i("Net", "Server origin changed from $prev to $normalized — clearing session")
+                    runCatching { authStore?.clear() }
+                    onOriginSwitched?.invoke()
+                }
+                previousBaseUrl = normalized
+                if (baseUrl != normalized) {
+                    baseUrl = normalized
+                    reset()
+                }
+            }
+        }
+    }
+
     private val authHeaderInterceptor = Interceptor { chain ->
         val request = chain.request()
-        val token = authStore.accessToken()
+        val token = authStore?.accessToken()
         val skipAuth = request.url.encodedPath.let {
             it.endsWith("/auth/refresh") || it.endsWith("/auth/email-login")
         }
@@ -47,7 +107,7 @@ class NetworkClient(
             }
             AppLog.i("Net", "401 on ${response.request.url.encodedPath} — refreshing session")
             val newToken = runBlocking {
-                authStore.refreshWith { api() }
+                authStore?.refreshWith { api() }
             } ?: run {
                 AppLog.w("Net", "token refresh failed — request left unauthenticated")
                 return null

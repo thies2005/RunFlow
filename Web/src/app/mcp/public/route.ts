@@ -526,14 +526,24 @@ const exportPlanUrlTool: McpTool = {
         if (args.customDistanceM) params.set('customDistanceM', String(args.customDistanceM));
 
         let origin = '';
-        if (context?.request?.nextUrl?.origin) {
-            origin = context.request.nextUrl.origin;
-        } else if (context?.request?.headers?.get('host')) {
-            const host = context.request.headers.get('host');
-            const proto = host.includes('localhost') ? 'http' : 'https';
-            origin = `${proto}://${host}`;
-        } else {
-            origin = process.env.NEXT_PUBLIC_APP_URL || 'https://runflow.schuelken.uk';
+        if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('0.0.0.0')) {
+            try { origin = new URL(process.env.NEXTAUTH_URL).origin; } catch {}
+        }
+        if (!origin && process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('0.0.0.0')) {
+            try { origin = new URL(process.env.NEXT_PUBLIC_APP_URL).origin; } catch {}
+        }
+        if (!origin) {
+            const host = context?.request?.headers?.get('x-forwarded-host')?.split(',')[0]?.trim()
+                || context?.request?.headers?.get('host')?.split(',')[0]?.trim();
+            if (host) {
+                const proto = context?.request?.headers?.get('x-forwarded-proto')?.split(',')[0]?.trim()
+                    || (host.includes('localhost') ? 'http' : 'https');
+                origin = `${proto}://${host}`;
+            } else if (context?.request?.nextUrl?.origin) {
+                origin = context.request.nextUrl.origin;
+            } else {
+                origin = 'https://runflow.schuelken.uk';
+            }
         }
 
         const url = `${origin}/api/public/plan/export?${params.toString()}`;

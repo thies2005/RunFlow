@@ -60,15 +60,27 @@ object Api {
      * /api/mobile/v1 must never be part of the base: API endpoints are
      * host-absolute, but the OAuth redirect URI is built by concatenation and
      * a path would silently produce a nonexistent callback URL.
+     *
+     * Insecure HTTP is rejected / upgraded to HTTPS for all remote hosts;
+     * only loopback / emulator hosts (10.0.2.2, localhost, 127.0.0.1, or local dev domains)
+     * are permitted over HTTP.
      */
     fun normalizeServerUrl(input: String): String {
         val raw = input.trim()
         if (raw.isEmpty()) return DEFAULT_BASE_URL
-        val withScheme = if (raw.startsWith("http://") || raw.startsWith("https://")) raw else "https://$raw"
+        val withScheme = if (raw.startsWith("http://", ignoreCase = true) || raw.startsWith("https://", ignoreCase = true)) {
+            raw
+        } else {
+            "https://$raw"
+        }
         return runCatching {
             val uri = java.net.URI(withScheme)
-            val port = if (uri.port > 0) ":${uri.port}" else ""
-            "${uri.scheme}://${uri.host}$port"
+            val host = uri.host?.lowercase() ?: error("Missing host")
+            val isLoopback = host == "10.0.2.2" || host == "localhost" || host == "127.0.0.1" ||
+                host == "::1" || host == "[::1]" || host == "staging.local" || host.endsWith(".local")
+            val scheme = if (isLoopback && uri.scheme?.equals("http", ignoreCase = true) == true) "http" else "https"
+            val port = if (uri.port > 0 && !(scheme == "https" && uri.port == 443) && !(scheme == "http" && uri.port == 80)) ":${uri.port}" else ""
+            "$scheme://$host$port"
         }.getOrDefault(DEFAULT_BASE_URL)
     }
 }

@@ -21,7 +21,8 @@ services:
       # admin limiter, and the general limiter trusts one appending proxy hop).
       - TRUSTED_CLIENT_IP_HEADER=${TRUSTED_CLIENT_IP_HEADER:-}
       - TRUSTED_PROXY_HOPS=${TRUSTED_PROXY_HOPS:-}
-      - TRUSTED_PROXY_COUNT=${TRUSTED_PROXY_COUNT:-0}
+      # Docker / reverse-proxy deployments have 1 trusted proxy hop (e.g. cloudflared tunnel or reverse proxy)
+      - TRUSTED_PROXY_COUNT=${TRUSTED_PROXY_COUNT:-1}
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}

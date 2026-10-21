@@ -371,6 +371,13 @@ export async function reserveUsageSlot(userId: string): Promise<UsageReservation
         return { allowed: false, claimed: false, reason: 'AI not configured' };
     }
 
+    if (
+        (userSettings.aiEnabled !== undefined && !userSettings.aiEnabled) ||
+        (userSettings.adminAllowed !== undefined && !userSettings.adminAllowed && !isByokActive(userSettings))
+    ) {
+        return { allowed: false, claimed: false, reason: 'AI features are not enabled for your account' };
+    }
+
     // Users with active BYOK (customApiKey and usageTier === 'none') are not billed against platform tiers.
     if (isByokActive(userSettings)) {
         return { allowed: true, claimed: false };

@@ -37,6 +37,10 @@ const CsvImportDialog = lazy(() =>
     import('@/app/plan-advanced/components/CsvImportExport').then((mod) => ({ default: mod.CsvImportDialog }))
 );
 
+const ZwoImportDialog = lazy(() =>
+    import('@/app/plan-advanced/components/CsvImportExport').then((mod) => ({ default: mod.ZwoImportDialog }))
+);
+
 const CsvExportDialog = lazy(() =>
     import('@/app/plan-advanced/components/CsvImportExport').then((mod) => ({ default: mod.CsvExportDialog }))
 );
@@ -80,6 +84,7 @@ function EditorContent({
     const [suggestWeekIndex, setSuggestWeekIndex] = useState<number | null>(null);
     const [dismissedAiSuggestions, setDismissedAiSuggestions] = useState<Set<string>>(new Set());
     const [csvImportOpen, setCsvImportOpen] = useState(false);
+    const [zwoImportOpen, setZwoImportOpen] = useState(false);
     const [csvExportOpen, setCsvExportOpen] = useState(false);
     const [copiedWeekStart, setCopiedWeekStart] = useState<string | null>(null);
     const [currentPhaseBlocks, setCurrentPhaseBlocks] = useState<PhaseBlock[]>(phaseBlocks);
@@ -393,6 +398,7 @@ function EditorContent({
                 mode={mode}
                 onModeChange={setMode}
                 onImportCsv={() => setCsvImportOpen(true)}
+                onImportZwo={() => setZwoImportOpen(true)}
                 onExportCsv={() => setCsvExportOpen(true)}
                 viewMode={viewMode}
                 onViewModeChange={handleViewModeChange}
@@ -514,6 +520,18 @@ function EditorContent({
                     onClose={() => setCsvImportOpen(false)}
                     onImported={() => {
                         setCsvImportOpen(false);
+                        queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId] });
+                    }}
+                />
+            </Suspense>
+
+            <Suspense fallback={null}>
+                <ZwoImportDialog
+                    goalId={goalId}
+                    isOpen={zwoImportOpen}
+                    onClose={() => setZwoImportOpen(false)}
+                    onImported={() => {
+                        setZwoImportOpen(false);
                         queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId] });
                     }}
                 />

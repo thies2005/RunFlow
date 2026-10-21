@@ -74,6 +74,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        if (normalizedRedirectUris.length < 1) {
+            return NextResponse.json(
+                { error: 'invalid_redirect_uri', error_description: 'redirect_uris must contain at least one valid redirect URI' },
+                { status: 400, headers: CORS_HEADERS }
+            );
+        }
+
         if (normalizedRedirectUris.length > 20) {
             return NextResponse.json(
                 { error: 'invalid_redirect_uri', error_description: 'redirect_uris must contain at most 20 URIs' },
@@ -101,9 +108,6 @@ export async function POST(request: NextRequest) {
             responseTypes: response_types,
             tokenEndpointAuthMethod: token_endpoint_auth_method,
         };
-        if (client_id && typeof client_id === 'string') {
-            clientData.clientId = client_id;
-        }
 
         // RFC 7591 §3.2.1: confidential clients MUST receive a client_secret in
         // the registration response. Store only the hash; return it exactly once.

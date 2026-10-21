@@ -5,7 +5,7 @@ import { estimateBikeFtpFromVdot, calculateBikeZones } from '../bike-zones';
 import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume, resolvePhaseBudget } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
 import { enrichWorkoutsWithDescriptions, getRacePace } from '../descriptions';
-import { findClosestMyWhooshWorkout } from '../mywhooshMatcher';
+import { findClosestMyWhooshWorkout, mywhooshWorkoutToStructuredV2 } from '../mywhooshMatcher';
 
 type TriPhase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 
@@ -147,7 +147,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
 
     const paces = calculateTrainingPaces(vdot);
     const css = estimateSwimPaceFromVdot(vdot);
-    const bikeFtp = estimateBikeFtpFromVdot(vdot);
+    const bikeFtp = config.ftpWatts && config.ftpWatts > 0 ? config.ftpWatts : estimateBikeFtpFromVdot(vdot);
     const bikeZones = calculateBikeZones(bikeFtp);
 
     const taperFractions = TRI_TAPER_FRACTIONS[effectiveRaceType] || [0.80, 0.60];
@@ -317,17 +317,31 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
     const racePace = getRacePace(effectiveRaceType, paces);
     enrichWorkoutsWithDescriptions(result, racePace);
 
-    if (config.matchToMyWhoosh) {
+    if (config.matchToMyWhoosh || config.mywhooshPlanId) {
+        let rideCounter = 0;
         for (const w of result) {
-            if (w.type === WorkoutType.RIDE || w.type === WorkoutType.LONG_RIDE) {
+            if (
+                w.type === WorkoutType.RIDE ||
+                w.type === WorkoutType.LONG_RIDE ||
+                w.type === WorkoutType.RIDE_INTERVALS
+            ) {
                 const match = findClosestMyWhooshWorkout({
                     workoutType: w.type,
                     targetDurationSeconds: w.targetDuration || 3600,
                     description: w.description,
                     phase: w.phase,
+                    mywhooshPlanId: config.mywhooshPlanId,
+                    rideIndexInWeek: rideCounter % Math.max(1, ridesPerWeek),
                 });
+                rideCounter++;
                 if (match) {
-                    w.description += ` | MyWhoosh: ${match.name} (${Math.round(match.durationSeconds / 60)}m · TSS ${match.tss} · ${match.stepsSummary})`;
+                    w.displayDescription = `MyWhoosh: ${match.name}`;
+                    w.description = `${w.description} | MyWhoosh: ${match.name} (${Math.round(match.durationSeconds / 60)}m · TSS ${match.tss} · ${match.stepsSummary})`;
+                    w.targetDuration = match.durationSeconds;
+                    w.plannedTss = match.tss;
+                    w.targetFtpPercent = Math.round(match.intensityFactor * 100);
+                    w.targetPowerWatts = Math.round(bikeFtp * match.intensityFactor);
+                    w.structuredSteps = mywhooshWorkoutToStructuredV2(match, bikeFtp);
                 }
             }
         }

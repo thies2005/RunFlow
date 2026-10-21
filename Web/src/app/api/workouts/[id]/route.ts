@@ -72,6 +72,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
+        if (typeof body.subGoalId === 'string' && body.subGoalId.trim() !== '') {
+            const subGoal = await prisma.goal.findFirst({
+                where: { id: String(body.subGoalId), userId: user.id, parentGoalId: workout.goalId },
+                select: { id: true },
+            });
+            if (!subGoal) return NextResponse.json({ error: 'Sub-goal not found' }, { status: 404 });
+        }
+
         // If linking an activity, verify ownership
         if (body.linkedActivityId) {
             const activity = await prisma.activity.findUnique({ where: { id: body.linkedActivityId } });

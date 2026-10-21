@@ -94,74 +94,53 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
         );
     }
 
-    let client = await prisma.mcpOAuthClient.findUnique({
+    const client = await prisma.mcpOAuthClient.findUnique({
         where: { clientId: client_id },
     });
 
     if (!client) {
-        if (isAllowedMcpRedirectUri(redirect_uri)) {
-            client = await prisma.mcpOAuthClient.create({
-                data: {
-                    clientId: client_id,
-                    clientName: 'External AI Assistant (MCP)',
-                    redirectUris: [redirect_uri],
-                },
-            });
-        } else {
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
-                    <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 border border-red-200 dark:border-red-900">
-                        <div className="flex items-center gap-3 text-red-600 mb-4">
-                            <ShieldAlert className="w-8 h-8" />
-                            <h1 className="text-xl font-bold">Unknown Client</h1>
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            Client ID was not found or has been revoked.
-                        </p>
-                        <Link
-                            href="/"
-                            className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                            Return to RunFlow
-                        </Link>
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
+                <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 border border-red-200 dark:border-red-900">
+                    <div className="flex items-center gap-3 text-red-600 mb-4">
+                        <ShieldAlert className="w-8 h-8" />
+                        <h1 className="text-xl font-bold">Unknown Client</h1>
                     </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        Client ID was not found or has been revoked.
+                    </p>
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                        Return to RunFlow
+                    </Link>
                 </div>
-            );
-        }
+            </div>
+        );
     }
 
     const registeredUris = (client.redirectUris as string[]) || [];
     if (!registeredUris.includes(redirect_uri)) {
-        // Universal compatibility: accept and register any redirect URI that passes
-        // the universal validator (RFC 8252 loopback, https, custom app schemes)
-        if (isAllowedMcpRedirectUri(redirect_uri)) {
-            const updatedUris = [...registeredUris, redirect_uri];
-            await prisma.mcpOAuthClient.update({
-                where: { clientId: client_id },
-                data: { redirectUris: updatedUris },
-            });
-            client.redirectUris = updatedUris;
-        } else {
-            return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
-                    <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 border border-red-200 dark:border-red-900">
-                        <div className="flex items-center gap-3 text-red-600 mb-4">
-                            <ShieldAlert className="w-8 h-8" />
-                            <h1 className="text-xl font-bold">Unregistered Redirect URI</h1>
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            The requested redirect URI does not match any URI registered for this client.
-                        </p>
-                        <Link
-                            href="/"
-                            className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                            Return to RunFlow
-                        </Link>
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
+                <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 border border-red-200 dark:border-red-900">
+                    <div className="flex items-center gap-3 text-red-600 mb-4">
+                        <ShieldAlert className="w-8 h-8" />
+                        <h1 className="text-xl font-bold">Unregistered Redirect URI</h1>
                     </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        The requested redirect URI does not match any URI registered for this client.
+                    </p>
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                        Return to RunFlow
+                    </Link>
                 </div>
-            );
-        }
+            </div>
+        );
     }
 
     const user = await prisma.user.findUnique({
@@ -258,6 +237,16 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
     // Deny URL
     const denyUrl = `${redirect_uri}${redirect_uri.includes('?') ? '&' : '?'}error=access_denied&error_description=The+user+denied+the+authorization+request${state ? `&state=${encodeURIComponent(state)}` : ''}`;
 
+    let callbackTarget = redirect_uri;
+    try {
+        const parsed = new URL(redirect_uri);
+        callbackTarget = parsed.origin !== 'null'
+            ? `${parsed.origin}${parsed.pathname}`
+            : `${parsed.protocol}//${parsed.host}${parsed.pathname}`;
+    } catch {
+        callbackTarget = redirect_uri;
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
             <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-800">
@@ -279,6 +268,10 @@ export default async function McpAuthorizePage({ searchParams }: AuthorizePagePr
                     <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed mb-3">
                         <strong>{client.clientName}</strong> is requesting permission to access your RunFlow personal training data on behalf of{' '}
                         <strong>{user.email || user.name || 'your account'}</strong>.
+                    </p>
+                    <p className="text-xs font-mono text-gray-600 dark:text-gray-400 break-all mb-3">
+                        <span className="font-semibold text-gray-500 dark:text-gray-400">Callback URL: </span>
+                        {callbackTarget}
                     </p>
                     <div className="space-y-2 text-xs text-gray-600 dark:text-gray-400">
                         <div className="flex items-start gap-2">

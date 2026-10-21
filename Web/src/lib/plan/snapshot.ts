@@ -84,15 +84,14 @@ export async function createSnapshot(goalId: string, description?: string, opera
 }
 
 export async function restoreFromSnapshot(goalId: string, snapshotId?: string) {
-    const snapshot = snapshotId
-        ? await prisma.planSnapshot.findUnique({ where: { id: snapshotId } })
-        : await prisma.planSnapshot.findFirst({
-              where: {
-                  goalId,
-                  OR: [{ operation: null }, { operation: { not: 'coaching_summary' } }],
-              },
-              orderBy: { createdAt: 'desc' },
-          });
+    const snapshot = await prisma.planSnapshot.findFirst({
+        where: {
+            goalId,
+            ...(snapshotId ? { id: snapshotId } : {}),
+            OR: [{ operation: null }, { operation: { not: 'coaching_summary' } }],
+        },
+        orderBy: { createdAt: 'desc' },
+    });
 
     if (!snapshot) {
         throw new Error('No snapshot found');

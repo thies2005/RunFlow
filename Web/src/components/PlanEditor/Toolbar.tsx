@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Pencil, Check, MessageSquare, ArrowLeft, Sparkles } from 'lucide-react';
 import { UndoRedoButtons } from '@/app/plan-advanced/[goalId]/components/Toolbar/UndoRedoButtons';
 import { ViewModeToggle } from '@/app/plan-advanced/[goalId]/components/Toolbar/ViewModeToggle';
@@ -17,6 +18,7 @@ export interface ToolbarProps {
     onModeChange: (_mode: PlanCreationMode) => void;
     onNameChange?: (_name: string) => void;
     onImportCsv?: () => void;
+    onImportZwo?: () => void;
     onExportCsv?: () => void;
     viewMode?: 'calendar' | 'analysis';
     onViewModeChange?: (_mode: 'calendar' | 'analysis') => void;
@@ -36,6 +38,7 @@ export function Toolbar({
     onModeChange,
     onNameChange,
     onImportCsv,
+    onImportZwo,
     onExportCsv,
     viewMode = 'calendar',
     onViewModeChange,
@@ -52,6 +55,7 @@ export function Toolbar({
     const [isEngineModalOpen, setIsEngineModalOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         setEditName(planName);
@@ -165,6 +169,7 @@ export function Toolbar({
                     goalId={goalId}
                     planName={planName}
                     onImportCsv={onImportCsv}
+                    onImportZwo={onImportZwo}
                     onExportCsv={onExportCsv}
                 />
             </div>
@@ -178,7 +183,10 @@ export function Toolbar({
                 initialRaceDate={raceDate}
                 initialVdot={currentVdot}
                 onSuccess={() => {
-                    // refresh if needed
+                    queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId] });
+                    queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId, 'planned-fitness'] });
+                    queryClient.invalidateQueries({ queryKey: ['goals'] });
+                    queryClient.invalidateQueries({ queryKey: ['plan'] });
                 }}
             />
         </>

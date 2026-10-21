@@ -22,41 +22,22 @@ import { prisma } from '@/lib/db';
 import { WorkoutType, PlanPhase, RaceType, PlanSport } from '@/generated/prisma/client';
 
 function getOrigin(request: Request): string {
+    if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('0.0.0.0')) {
+        try { return new URL(process.env.NEXTAUTH_URL).origin; } catch {}
+    }
+    if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('0.0.0.0')) {
+        try { return new URL(process.env.NEXT_PUBLIC_APP_URL).origin; } catch {}
+    }
     const proto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() || 'https';
     const host = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim()
         || request.headers.get('host')?.split(',')[0]?.trim();
-    let requestOrigin = '';
     if (host) {
-        requestOrigin = `${proto}://${host}`;
-    } else {
-        try {
-            requestOrigin = new URL(request.url).origin;
-        } catch {}
+        return `${proto}://${host}`;
     }
-
-    // Behind reverse proxies that strip the forwarding headers, the raw request
-    // origin is the internal bind address (localhost / 127.0.0.1 / 0.0.0.0) —
-    // prefer the configured public URL in exactly that case, so the
-    // WWW-Authenticate resource_metadata URL is correct while a genuinely
-    // public request origin is never shadowed by a stale NEXTAUTH_URL.
-    let rawHost = '';
     try {
-        rawHost = requestOrigin ? new URL(requestOrigin).hostname : '';
-    } catch {
-        rawHost = '';
-    }
-    const isInternalHost =
-        rawHost === 'localhost' || rawHost === '127.0.0.1' || rawHost === '0.0.0.0' ||
-        rawHost === '[::1]' || rawHost === '::1' || rawHost.endsWith('.localhost');
-    if (requestOrigin && !isInternalHost) {
-        return requestOrigin;
-    }
-    if (process.env.NEXTAUTH_URL) {
-        try {
-            return new URL(process.env.NEXTAUTH_URL).origin;
-        } catch {}
-    }
-    return requestOrigin || 'https://localhost';
+        return new URL(request.url).origin;
+    } catch {}
+    return 'https://localhost';
 }
 
 const CORS_HEADERS = {
@@ -1576,6 +1557,7 @@ async function authenticatePaidUser(request: Request): Promise<{
     user: any;
     userId: string;
     isPaidPremium: boolean;
+    authType: 'oauth' | 'api_key';
 } | null> {
     const authHeader = request.headers.get('authorization');
     if (!authHeader) return null;
@@ -1589,6 +1571,7 @@ async function authenticatePaidUser(request: Request): Promise<{
                 user: oauthResult.user,
                 userId: oauthResult.userId,
                 isPaidPremium: oauthResult.isPaidPremium,
+                authType: 'oauth',
             };
         }
         return null;
@@ -1618,6 +1601,7 @@ async function authenticatePaidUser(request: Request): Promise<{
                 user,
                 userId: user.id,
                 isPaidPremium: isUserPaidPremium(user),
+                authType: 'api_key',
             };
         }
     }
@@ -1685,8 +1669,18 @@ export async function GET(request: NextRequest) {
         userId: auth.userId,
         user: auth.user,
         isPaidPremium: auth.isPaidPremium,
+        authType: auth.authType,
     });
 }
+
+const WRITE_MCP_TOOLS = new Set([
+    'log_workout_completion',
+    'modify_workout',
+    'create_training_plan',
+    'delete_workout',
+    'recalibrate_thresholds',
+    'save_coaching_summary',
+]);
 
 export async function POST(request: NextRequest) {
     const origin = getOrigin(request);
@@ -1747,9 +1741,38 @@ export async function POST(request: NextRequest) {
         );
     }
 
+    let body: any = null;
+    try {
+        const cloned = request.clone();
+        body = await cloned.json();
+    } catch {}
+
+    if (body && typeof body === 'object') {
+        const requests = Array.isArray(body) ? body : [body];
+        for (const req of requests) {
+            if (req && req.method === 'tools/call') {
+                const toolName = req.params?.name;
+                if (auth.authType === 'api_key' && toolName && WRITE_MCP_TOOLS.has(toolName)) {
+                    return NextResponse.json(
+                        {
+                            jsonrpc: '2.0',
+                            id: req.id ?? null,
+                            error: {
+                                code: -32003,
+                                message: 'External API keys (rf_*) are read-only; authorize via MCP OAuth 2.1 for write tools',
+                            },
+                        },
+                        { status: 403, headers: CORS_HEADERS }
+                    );
+                }
+            }
+        }
+    }
+
     return paidMcpServer.handleHttpRequest(request, {
         userId: auth.userId,
         user: auth.user,
         isPaidPremium: auth.isPaidPremium,
+        authType: auth.authType,
     });
 }

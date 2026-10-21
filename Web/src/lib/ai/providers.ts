@@ -49,6 +49,8 @@ export interface AiConfig {
     keyOverride?: boolean;
     providerId?: string;
     fallback?: AiConfig;
+    allowedUrls?: string[];
+    statusOnly?: boolean;
 }
 
 const WELL_KNOWN_BASE_URLS = [
@@ -106,7 +108,7 @@ export function validateUrl(url: string, allowedUrls: readonly string[] = DEFAUL
     try {
         const parsed = new URL(url);
 
-        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+        if (parsed.protocol !== 'https:') {
             return false;
         }
 
@@ -213,10 +215,6 @@ async function assertResolvesToPublicHost(hostname: string): Promise<void> {
 export async function safeFetch(input: RequestInfo | URL, init?: RequestInit & { allowedUrls?: string[] }): Promise<Response> {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
 
-    if (!validateUrl(url, init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS)) {
-        throw new Error(`SSRF Protection: Blocked request to disallowed URL: ${url}`);
-    }
-
     // DNS-resolution guard: hostname-string checks do not stop a
     // caller-controlled DNS name that resolves into private/link-local
     // space (internal services on the docker bridge, cloud metadata). This
@@ -224,6 +222,10 @@ export async function safeFetch(input: RequestInfo | URL, init?: RequestInit & {
     // shape used by testAiConfig (/api/ai/test-key) and stored BYOK/admin
     // provider base URLs.
     await assertResolvesToPublicHost(new URL(url).hostname);
+
+    if (!validateUrl(url, init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS)) {
+        throw new Error(`SSRF Protection: Blocked request to disallowed URL: ${url}`);
+    }
 
     const response = await fetch(input, init);
 
@@ -1154,15 +1156,24 @@ function boundEchoText(value: unknown): string | undefined {
         : value;
 }
 
-export async function testAiConfig(config: AiConfig): Promise<{ success: boolean; error?: string; model?: string }> {
+export async function testAiConfig(
+    config: AiConfig,
+    options?: { statusOnly?: boolean; allowedUrls?: string[] }
+): Promise<{ success: boolean; error?: string; model?: string }> {
     try {
+        const allowedUrls = options?.allowedUrls ?? (config.allowedUrls ?? [config.baseUrl]);
+        const statusOnly = options?.statusOnly ?? config.statusOnly ?? false;
+
         if (config.provider === 'google') {
-            const url = `${config.baseUrl}/v1beta/models/${config.model}`;
+            const url = `${config.baseUrl.replace(/\/$/, '')}/v1beta/models/${encodeURIComponent(config.model)}`;
             const res = await safeFetch(url, {
                 headers: { 'x-goog-api-key': config.apiKey },
-                allowedUrls: [config.baseUrl],
+                allowedUrls,
             });
             if (res.ok) return { success: true, model: config.model };
+            if (statusOnly) {
+                return { success: false, error: `API returned ${res.status}` };
+            }
             const data = await res.json();
             return { success: false, error: boundEchoText(data.error?.message) || 'Google API Error' };
         }
@@ -1179,9 +1190,12 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
                     max_tokens: 1,
                     messages: [{ role: 'user', content: 'Hi' }]
                 }),
-                allowedUrls: [config.baseUrl],
+                allowedUrls,
             });
             if (res.ok) return { success: true, model: config.model };
+            if (statusOnly) {
+                return { success: false, error: `API returned ${res.status}` };
+            }
             const data = await res.json();
             return { success: false, error: boundEchoText(data.error?.message) || 'Anthropic API Error' };
         }
@@ -1197,12 +1211,15 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
                 messages: [{ role: 'user', content: 'Hi' }],
                 max_tokens: 5,
             }),
-            allowedUrls: [config.baseUrl],
+            allowedUrls,
         });
 
         if (chatResponse.ok) return { success: true, model: config.model };
 
         let errorMessage = `API returned ${chatResponse.status}`;
+        if (statusOnly) {
+            return { success: false, error: errorMessage };
+        }
         try {
             const data = await chatResponse.json();
             const message = boundEchoText(data.error?.message);

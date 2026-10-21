@@ -185,8 +185,14 @@ export function GoalTimeline({
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1.5 text-[8px] font-mono text-foreground-muted truncate">
-                                    <span>{block.weeklyRunKmTarget}k/wk</span>
-                                    {block.targetTss && <span>{block.targetTss} TSS</span>}
+                                    <span>{block.weeklyRunKmTarget}k run</span>
+                                    {block.weeklyBikeTssTarget != null && block.weeklyBikeTssTarget > 0 && (
+                                        <span>· {block.weeklyBikeTssTarget} bike TSS</span>
+                                    )}
+                                    {block.weeklySwimMetersTarget != null && block.weeklySwimMetersTarget > 0 && (
+                                        <span>· {block.weeklySwimMetersTarget}m swim</span>
+                                    )}
+                                    {block.targetTss && <span>· {block.targetTss} TSS</span>}
                                 </div>
                             </div>
                         );

@@ -187,6 +187,14 @@ export async function POST(req: Request, ctx: RouteContext) {
             }
         }
 
+        if (typeof subGoalId === 'string' && subGoalId.trim() !== '') {
+            const subGoal = await prisma.goal.findFirst({
+                where: { id: String(subGoalId), userId: user.id, parentGoalId: goalId },
+                select: { id: true },
+            });
+            if (!subGoal) return NextResponse.json({ error: 'Sub-goal not found' }, { status: 404 });
+        }
+
         let finalStructuredSteps = structuredSteps ?? null;
         if (!finalStructuredSteps) {
             const vdot = goal.currentVdot || 45;

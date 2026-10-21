@@ -66,7 +66,7 @@ export default function TargetRaceSection({
                 </div>
             )}
 
-            {(mode === 'onboarding' || mode === 'advanced') && setSport && (
+            {setSport && (
                 <div>
                     <label className="block text-xs text-foreground-muted mb-2">Sport</label>
                     <div className="grid grid-cols-3 gap-2">
@@ -121,7 +121,17 @@ export default function TargetRaceSection({
                         <label className="block text-xs text-foreground-muted mb-1">Distance</label>
                         <select
                             value={raceType}
-                            onChange={(e) => setRaceType(e.target.value)}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setRaceType(val);
+                                if (setSport) {
+                                    if (['SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'FULL_IRONMAN', 'CUSTOM_TRI'].includes(val)) {
+                                        setSport('TRIATHLON');
+                                    } else {
+                                        setSport('RUN');
+                                    }
+                                }
+                            }}
                             className={inputClass}
                         >
                             <optgroup label="Running">

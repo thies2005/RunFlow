@@ -399,167 +399,181 @@ function SplitPmcChartComponent({
                             strokeDasharray="2 2"
                         />
 
-                        {/* === COMBINED VIEW === */}
+                        {/* === COMBINED VIEW (direct children required by Recharts 2.x) === */}
                         {viewMode === 'combined' && (
-                            <>
-                                <Bar
-                                    yAxisId="right"
-                                    dataKey="combinedTss"
-                                    name="Daily TSS"
-                                    fill="#64748b"
-                                    opacity={0.35}
-                                    maxBarSize={8}
-                                />
-                                <Area
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="ctlCombined"
-                                    name="Fitness (CTL)"
-                                    stroke="#06b6d4"
-                                    strokeWidth={2.5}
-                                    fill="url(#ctlCombinedGrad)"
-                                    dot={false}
-                                />
-                                <Line
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="atlCombined"
-                                    name="Fatigue (ATL)"
-                                    stroke="#ec4899"
-                                    strokeWidth={1.8}
-                                    dot={false}
-                                />
-                                <Line
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="tsbCombined"
-                                    name="Form (TSB)"
-                                    stroke="#eab308"
-                                    strokeWidth={1.8}
-                                    strokeDasharray="3 3"
-                                    dot={false}
-                                />
-                            </>
+                            <Bar
+                                yAxisId="right"
+                                dataKey="combinedTss"
+                                name="Daily TSS"
+                                fill="#64748b"
+                                opacity={0.35}
+                                maxBarSize={8}
+                            />
+                        )}
+                        {viewMode === 'combined' && (
+                            <Area
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="ctlCombined"
+                                name="Fitness (CTL)"
+                                stroke="#06b6d4"
+                                strokeWidth={2.5}
+                                fill="url(#ctlCombinedGrad)"
+                                dot={false}
+                            />
+                        )}
+                        {viewMode === 'combined' && (
+                            <Line
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="atlCombined"
+                                name="Fatigue (ATL)"
+                                stroke="#ec4899"
+                                strokeWidth={1.8}
+                                dot={false}
+                            />
+                        )}
+                        {viewMode === 'combined' && (
+                            <Line
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="tsbCombined"
+                                name="Form (TSB)"
+                                stroke="#eab308"
+                                strokeWidth={1.8}
+                                strokeDasharray="3 3"
+                                dot={false}
+                            />
                         )}
 
                         {/* === RUNNING VIEW === */}
                         {viewMode === 'running' && (
-                            <>
-                                <Bar
-                                    yAxisId="right"
-                                    dataKey="runTss"
-                                    name="Run rTSS"
-                                    fill="#3b82f6"
-                                    opacity={0.35}
-                                    maxBarSize={8}
-                                />
-                                <Area
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="ctlRunning"
-                                    name="Running CTL"
-                                    stroke="#3b82f6"
-                                    strokeWidth={2.5}
-                                    fill="url(#ctlRunGrad)"
-                                    dot={false}
-                                />
-                                <Line
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="atlRunning"
-                                    name="Running ATL"
-                                    stroke="#ec4899"
-                                    strokeWidth={1.8}
-                                    dot={false}
-                                />
-                                <Line
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="tsbRunning"
-                                    name="Running TSB"
-                                    stroke="#10b981"
-                                    strokeWidth={1.8}
-                                    strokeDasharray="3 3"
-                                    dot={false}
-                                />
-                            </>
+                            <Bar
+                                yAxisId="right"
+                                dataKey="runTss"
+                                name="Run rTSS"
+                                fill="#3b82f6"
+                                opacity={0.35}
+                                maxBarSize={8}
+                            />
+                        )}
+                        {viewMode === 'running' && (
+                            <Area
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="ctlRunning"
+                                name="Running CTL"
+                                stroke="#3b82f6"
+                                strokeWidth={2.5}
+                                fill="url(#ctlRunGrad)"
+                                dot={false}
+                            />
+                        )}
+                        {viewMode === 'running' && (
+                            <Line
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="atlRunning"
+                                name="Running ATL"
+                                stroke="#ec4899"
+                                strokeWidth={1.8}
+                                dot={false}
+                            />
+                        )}
+                        {viewMode === 'running' && (
+                            <Line
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="tsbRunning"
+                                name="Running TSB"
+                                stroke="#10b981"
+                                strokeWidth={1.8}
+                                strokeDasharray="3 3"
+                                dot={false}
+                            />
                         )}
 
                         {/* === CYCLING VIEW === */}
                         {viewMode === 'cycling' && (
-                            <>
-                                <Bar
-                                    yAxisId="right"
-                                    dataKey="bikeTss"
-                                    name="Bike TSS"
-                                    fill="#f97316"
-                                    opacity={0.35}
-                                    maxBarSize={8}
-                                />
-                                <Area
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="ctlBike"
-                                    name="Cycling CTL"
-                                    stroke="#f97316"
-                                    strokeWidth={2.5}
-                                    fill="url(#ctlBikeGrad)"
-                                    dot={false}
-                                />
-                                <Line
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="atlBike"
-                                    name="Cycling ATL"
-                                    stroke="#ec4899"
-                                    strokeWidth={1.8}
-                                    dot={false}
-                                />
-                                <Line
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="tsbBike"
-                                    name="Cycling TSB"
-                                    stroke="#eab308"
-                                    strokeWidth={1.8}
-                                    strokeDasharray="3 3"
-                                    dot={false}
-                                />
-                            </>
+                            <Bar
+                                yAxisId="right"
+                                dataKey="bikeTss"
+                                name="Bike TSS"
+                                fill="#f97316"
+                                opacity={0.35}
+                                maxBarSize={8}
+                            />
+                        )}
+                        {viewMode === 'cycling' && (
+                            <Area
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="ctlBike"
+                                name="Cycling CTL"
+                                stroke="#f97316"
+                                strokeWidth={2.5}
+                                fill="url(#ctlBikeGrad)"
+                                dot={false}
+                            />
+                        )}
+                        {viewMode === 'cycling' && (
+                            <Line
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="atlBike"
+                                name="Cycling ATL"
+                                stroke="#ec4899"
+                                strokeWidth={1.8}
+                                dot={false}
+                            />
+                        )}
+                        {viewMode === 'cycling' && (
+                            <Line
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="tsbBike"
+                                name="Cycling TSB"
+                                stroke="#eab308"
+                                strokeWidth={1.8}
+                                strokeDasharray="3 3"
+                                dot={false}
+                            />
                         )}
 
                         {/* === SPLIT OVERLAY VIEW === */}
                         {viewMode === 'split' && (
-                            <>
-                                <Line
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="ctlRunning"
-                                    name="Running CTL"
-                                    stroke="#3b82f6"
-                                    strokeWidth={2.5}
-                                    dot={false}
-                                />
-                                <Line
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="ctlBike"
-                                    name="Cycling CTL"
-                                    stroke="#f97316"
-                                    strokeWidth={2.5}
-                                    dot={false}
-                                />
-                                <Line
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="ctlCombined"
-                                    name="Combined CTL"
-                                    stroke="#06b6d4"
-                                    strokeWidth={2}
-                                    strokeDasharray="4 4"
-                                    dot={false}
-                                />
-                            </>
+                            <Line
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="ctlRunning"
+                                name="Running CTL"
+                                stroke="#3b82f6"
+                                strokeWidth={2.5}
+                                dot={false}
+                            />
+                        )}
+                        {viewMode === 'split' && (
+                            <Line
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="ctlBike"
+                                name="Cycling CTL"
+                                stroke="#f97316"
+                                strokeWidth={2.5}
+                                dot={false}
+                            />
+                        )}
+                        {viewMode === 'split' && (
+                            <Line
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="ctlCombined"
+                                name="Combined CTL"
+                                stroke="#06b6d4"
+                                strokeWidth={2}
+                                strokeDasharray="4 4"
+                                dot={false}
+                            />
                         )}
                     </ComposedChart>
                 </ResponsiveContainer>

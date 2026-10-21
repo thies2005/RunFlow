@@ -3,15 +3,19 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { prisma } from '@/lib/db';
-import { RaceType } from '@/generated/prisma/browser';
+import { RaceType, PlanSport, WorkoutType, Prisma } from '@/generated/prisma/browser';
 import {
     resolvePhaseBudget,
     getPhase,
     getDefaultRunTaperWeeks,
     ULTRA_RACE_TYPES,
     TRIATHLON_RACE_TYPES,
+    generateTrainingPlan,
+    buildPlanPhaseBlocks,
     type PlanConfig,
 } from '@/lib/plans';
+import { mapWorkoutsForDb, computePlanWeeklyVolumeGoals } from '@/lib/services/plan-creation';
+import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
 
 type RouteContext = { params: Promise<{ goalId: string }> };
 
@@ -129,6 +133,134 @@ export async function POST(req: Request, ctx: RouteContext) {
 
         if (!goal) {
             return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+        }
+
+        let body: Record<string, unknown> = {};
+        try {
+            body = (await req.json()) as Record<string, unknown>;
+        } catch {
+            body = {};
+        }
+
+        const hasEngineParams =
+            typeof body.sport === 'string' ||
+            typeof body.raceType === 'string' ||
+            typeof body.runsPerWeek === 'number' ||
+            typeof body.ridesPerWeek === 'number' ||
+            typeof body.swimsPerWeek === 'number';
+
+        if (hasEngineParams) {
+            const nextRaceType = (typeof body.raceType === 'string' ? body.raceType : goal.raceType) as RaceType | null;
+            const isTri =
+                body.sport === 'TRIATHLON' ||
+                (nextRaceType != null && TRIATHLON_RACE_TYPES.includes(nextRaceType));
+            const nextSport: PlanSport = isTri ? 'TRIATHLON' : 'RUN';
+            const nextRaceDate =
+                typeof body.raceDate === 'string' && body.raceDate
+                    ? new Date(body.raceDate)
+                    : goal.raceDate || new Date(Date.now() + 12 * WEEK_MS);
+            const startDate = goal.planStartDate || new Date();
+            const totalWeeks = Math.max(4, Math.ceil((nextRaceDate.getTime() - startDate.getTime()) / WEEK_MS));
+
+            const nextVdot = typeof body.currentVdot === 'number' && body.currentVdot > 0 ? body.currentVdot : (goal.currentVdot || 45);
+            const nextFtp = typeof body.ftpWatts === 'number' && body.ftpWatts > 0 ? body.ftpWatts : (goal.ftpAtCreation || 220);
+            const nextCss = typeof body.swimCssSecPer100m === 'number' && body.swimCssSecPer100m > 0 ? body.swimCssSecPer100m : (goal.swimCssAtCreation || 115);
+            const nextRuns = typeof body.runsPerWeek === 'number' ? body.runsPerWeek : goal.runsPerWeek;
+            const nextRides = typeof body.ridesPerWeek === 'number' ? body.ridesPerWeek : (isTri ? Math.max(2, goal.ridesPerWeek) : goal.ridesPerWeek);
+            const nextSwims = typeof body.swimsPerWeek === 'number' ? body.swimsPerWeek : (isTri ? Math.max(2, goal.swimsPerWeek) : goal.swimsPerWeek);
+            const nextStrength = typeof body.strengthPerWeek === 'number' ? body.strengthPerWeek : goal.strengthPerWeek;
+            const rawMileage = typeof body.weeklyMileageGoal === 'number' ? body.weeklyMileageGoal : (goal.weeklyMileageGoal || 40000);
+            const nextMileageMeters = rawMileage < 500 ? rawMileage * 1000 : rawMileage;
+            const nextBuild = typeof body.buildWeeks === 'number' ? body.buildWeeks : (goal.buildWeeks ?? 4);
+            const nextPeak = typeof body.peakWeeks === 'number' ? body.peakWeeks : (goal.peakWeeks ?? 3);
+            const nextTaper = typeof body.taperWeeks === 'number' ? body.taperWeeks : (goal.taperWeeks ?? 2);
+            const matchToMyWhoosh = typeof body.matchToMyWhoosh === 'boolean' ? body.matchToMyWhoosh : true;
+            const mywhooshPlanId = typeof body.mywhooshPlanId === 'string' && body.mywhooshPlanId ? body.mywhooshPlanId : null;
+
+            const planConfig: PlanConfig = {
+                vdot: nextVdot,
+                raceType: nextRaceType,
+                raceDate: nextRaceDate,
+                startDate,
+                sport: nextSport,
+                runsPerWeek: nextRuns,
+                ridesPerWeek: nextRides,
+                swimsPerWeek: nextSwims,
+                strengthPerWeek: nextStrength,
+                weeklyMileageGoal: nextMileageMeters,
+                buildWeeks: nextBuild,
+                peakWeeks: nextPeak,
+                taperWeeks: nextTaper,
+                weeksTotal: totalWeeks,
+                ftpWatts: nextFtp,
+                swimCssSecPer100m: nextCss,
+                matchToMyWhoosh,
+                mywhooshPlanId,
+                longRunDay: goal.longRunDay,
+                workoutDay: goal.workoutDay,
+                swimDay: goal.swimDay ?? undefined,
+                restDays: Array.isArray(goal.restDays) ? (goal.restDays as number[]) : undefined,
+            };
+
+            const generated = generateTrainingPlan(planConfig);
+            for (const w of generated) {
+                if (w.plannedTss == null) {
+                    w.plannedTss = calculateWorkoutPlannedTss({
+                        workoutType: w.type as WorkoutType,
+                        sport: w.sport ?? null,
+                        targetDistance: w.totalDistance,
+                        targetDuration: w.targetDuration ?? null,
+                        targetPace: w.targetPace ?? null,
+                        structuredSteps: w.structuredSteps ?? null,
+                        ftpWatts: nextFtp,
+                    });
+                }
+            }
+            const phaseBlocks = buildPlanPhaseBlocks(planConfig, generated);
+            const weeklyGoals = computePlanWeeklyVolumeGoals(planConfig, generated);
+
+            await prisma.$transaction(async (tx) => {
+                await tx.workout.deleteMany({
+                    where: { goalId, isCompleted: false },
+                });
+                await tx.goal.update({
+                    where: { id: goalId },
+                    data: {
+                        sport: nextSport,
+                        raceType: nextRaceType,
+                        raceDate: nextRaceDate,
+                        planWeeks: totalWeeks,
+                        currentVdot: nextVdot,
+                        ftpAtCreation: nextFtp,
+                        swimCssAtCreation: nextCss,
+                        runsPerWeek: nextRuns,
+                        ridesPerWeek: nextRides,
+                        swimsPerWeek: nextSwims,
+                        strengthPerWeek: nextStrength,
+                        weeklyMileageGoal: nextMileageMeters,
+                        buildWeeks: nextBuild,
+                        peakWeeks: nextPeak,
+                        taperWeeks: nextTaper,
+                        weeklyBikeTssGoal: weeklyGoals.bikeTss,
+                        weeklySwimMetersGoal: weeklyGoals.swimMeters,
+                        targetWeeklyTss: weeklyGoals.totalTss,
+                        ...(phaseBlocks.length > 0 && { phaseBlocks: phaseBlocks as unknown as Prisma.InputJsonValue }),
+                    },
+                });
+                if (generated.length > 0) {
+                    await tx.workout.createMany({
+                        data: mapWorkoutsForDb(generated, { goalId, ftpWatts: nextFtp }),
+                    });
+                }
+            });
+
+            return NextResponse.json({
+                success: true,
+                regeneratedWorkouts: generated.length,
+                sport: nextSport,
+                raceType: nextRaceType,
+                totalWeeks,
+            });
         }
 
         const startDate = goal.planStartDate || new Date();

@@ -60,6 +60,19 @@ data class AppSettings(
 
 class SettingsRepository(private val context: Context) {
 
+    companion object {
+        @Volatile
+        internal var instance: SettingsRepository? = null
+
+        fun clearInstanceForTest() {
+            instance = null
+        }
+    }
+
+    init {
+        instance = this
+    }
+
     private object Keys {
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val SEEDED = booleanPreferencesKey("seeded")

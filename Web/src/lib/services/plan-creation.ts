@@ -89,6 +89,7 @@ export const PlanCreateInputSchema = z.object({
 
     // MyWhoosh ride matching (triathlon plans only)
     matchToMyWhoosh: z.boolean().optional(),
+    mywhooshPlanId: z.string().nullable().optional(),
 
     // Advanced fields
     planWeeks: z.number().int().positive().max(MAX_PLAN_WEEKS).nullable().optional(),
@@ -139,7 +140,7 @@ export function normalizePlanInput(
         longRunDay, workoutDay, swimDay, restDays,
         targetTime,
         calibrationTime, calibrationDistance, calibrationFactor,
-        matchToMyWhoosh,
+        matchToMyWhoosh, mywhooshPlanId,
         planWeeks, planSource, creationMode,
         backyardLoopDistM, backyardLoopTimeS, targetLaps,
         customDistanceM, customSwimDistM, customBikeDistM, customRunDistM,
@@ -231,6 +232,7 @@ export function normalizePlanInput(
         calibrationDistance: calibrationDistance ?? null,
         calibrationFactor: calibrationFactor ?? null,
         matchToMyWhoosh: matchToMyWhoosh ?? false,
+        mywhooshPlanId: mywhooshPlanId ?? null,
         deactivateExisting: planSource !== 'advanced',
         sport: resolvedSport === 'NO_RACE' ? 'RUN' : resolvedSport,
         planSource: planSource ?? undefined,
@@ -734,6 +736,7 @@ export interface CreatePlanInput {
     calibrationDistance?: string | null;
     calibrationFactor?: number | null;
     matchToMyWhoosh?: boolean;
+    mywhooshPlanId?: string | null;
     planStartDate?: string | null;
     deactivateExisting?: boolean;
     sport?: PlanSport;
@@ -802,7 +805,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         maxLongRunKm,
         longRunDay, workoutDay, swimDay, restDays,
         calibrationTime, calibrationDistance, calibrationFactor,
-        matchToMyWhoosh,
+        matchToMyWhoosh, mywhooshPlanId,
         planStartDate, deactivateExisting = true,
         sport, planSource, creationMode,
         backyardLoopDistM, backyardLoopTimeS, targetLaps, customDistanceM,
@@ -1056,6 +1059,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         customBikeDistM: customBikeDistM ?? undefined,
         customRunDistM: customRunDistM ?? undefined,
         matchToMyWhoosh: matchToMyWhoosh ?? false,
+        mywhooshPlanId: mywhooshPlanId ?? null,
         ftpWatts: ftpAtCreation,
         swimCssSecPer100m: swimCssAtCreation,
     };

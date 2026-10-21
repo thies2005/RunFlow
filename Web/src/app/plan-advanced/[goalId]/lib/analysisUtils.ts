@@ -36,7 +36,7 @@ const RUN_TYPES = new Set([
     'LONG_RUN', 'FARTLEK', 'TEMPO', 'EASY', 'RECOVERY', 'INTERVALS', 'REPETITIONS', 'RACE',
 ]);
 
-const BIKE_TYPES = new Set(['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS']);
+const BIKE_TYPES = new Set(['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS', 'BRICK']);
 
 const SWIM_TYPES = new Set(['SWIM', 'OPEN_WATER_SWIM', 'SWIM_DRILL']);
 

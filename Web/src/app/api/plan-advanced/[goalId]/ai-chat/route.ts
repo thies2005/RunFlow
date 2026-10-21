@@ -19,10 +19,13 @@ export const dynamic = 'force-dynamic';
 async function checkPremium(userId: string) {
     const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, isAdmin: true, aiSettings: { select: { usageTier: true } } },
+        select: { id: true, isAdmin: true, aiSettings: { select: { usageTier: true, aiEnabled: true, adminAllowed: true } } },
     });
     const tier = user?.aiSettings?.usageTier || 'none';
     if (tier !== 'tier2' && tier !== 'tier3' && !user?.isAdmin) {
+        return false;
+    }
+    if (!Boolean(user?.aiSettings?.aiEnabled && user?.aiSettings?.adminAllowed)) {
         return false;
     }
     return true;

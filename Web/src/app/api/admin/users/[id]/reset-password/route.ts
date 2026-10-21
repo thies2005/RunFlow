@@ -58,6 +58,21 @@ export async function POST(
             );
         }
 
+        // Invalidate active sessions/tokens and revoke MCP OAuth tokens/codes
+        await prisma.$transaction([
+            prisma.user.update({
+                where: { id: userId },
+                data: { tokenVersion: { increment: 1 } },
+            }),
+            prisma.mcpOAuthToken.updateMany({
+                where: { userId, revokedAt: null },
+                data: { revokedAt: new Date() },
+            }),
+            prisma.mcpOAuthCode.deleteMany({
+                where: { userId },
+            }),
+        ]);
+
         // Generate reset code
         const code = await createAuthCode(user.email, AuthCodeType.PASSWORD_RESET);
 

@@ -293,8 +293,10 @@ export type PlanConfig = {
     ftpWatts?: number | null;
     /** Athlete swim CSS in seconds per 100m (falls back to `estimateSwimPaceFromVdot(vdot)`). */
     swimCssSecPer100m?: number | null;
-    /** When true, append the closest official MyWhoosh workout to generated cycling workouts' descriptions. */
+    /** When true, match generated cycling workouts to official MyWhoosh workouts and populate their structured steps. */
     matchToMyWhoosh?: boolean;
+    /** Optional ID of a specific MyWhoosh Training Plan from mywhoosh_plans.json. */
+    mywhooshPlanId?: string | null;
 };
 
 export type GeneratedWorkout = {
@@ -613,6 +615,30 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     });
     const racePace = getRacePace(effectiveRaceType, paces);
     enrichWorkoutsWithDescriptions(result, racePace);
+    if (config.matchToMyWhoosh || config.mywhooshPlanId) {
+        const { findClosestMyWhooshWorkout, mywhooshWorkoutToStructuredV2 } = require('./mywhooshMatcher');
+        const bikeFtp = config.ftpWatts && config.ftpWatts > 0 ? config.ftpWatts : estimateBikeFtpFromVdot(vdot);
+        let rideIdx = 0;
+        for (const w of result) {
+            if (w.type === WorkoutType.RIDE || w.type === WorkoutType.LONG_RIDE || w.type === WorkoutType.RIDE_INTERVALS) {
+                const match = findClosestMyWhooshWorkout({
+                    workoutType: w.type,
+                    targetDurationSeconds: w.targetDuration || 3600,
+                    description: w.description,
+                    phase: w.phase,
+                    mywhooshPlanId: config.mywhooshPlanId,
+                    rideIndexInWeek: rideIdx++,
+                });
+                if (match) {
+                    w.displayDescription = `MyWhoosh: ${match.name}`;
+                    w.description = `${w.description} | MyWhoosh: ${match.name} (${Math.round(match.durationSeconds / 60)}m · TSS ${match.tss} · ${match.stepsSummary})`;
+                    w.targetDuration = match.durationSeconds;
+                    w.plannedTss = match.tss;
+                    w.structuredSteps = mywhooshWorkoutToStructuredV2(match, bikeFtp);
+                }
+            }
+        }
+    }
     return result;
 }
 

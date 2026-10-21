@@ -43,19 +43,15 @@ export function verifyPkce(codeVerifier: string, codeChallenge: string): boolean
  * Determines the public canonical origin of an incoming request taking reverse-proxy headers into account
  */
 export function getPublicOrigin(request: Request): string {
-    const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
-    const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
-    const host = forwardedHost || request.headers.get('host')?.split(',')[0]?.trim();
-    if (host && !host.startsWith('0.0.0.0') && !host.startsWith('127.0.0.1') && !host.startsWith('localhost')) {
-        const proto = forwardedProto || 'https';
-        return `${proto}://${host}`;
-    }
     if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('0.0.0.0')) {
         try { return new URL(process.env.NEXTAUTH_URL).origin; } catch {}
     }
     if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('0.0.0.0')) {
         try { return new URL(process.env.NEXT_PUBLIC_APP_URL).origin; } catch {}
     }
+    const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
+    const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+    const host = forwardedHost || request.headers.get('host')?.split(',')[0]?.trim();
     if (host) {
         const proto = forwardedProto || (host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https');
         return `${proto}://${host}`;
@@ -356,6 +352,8 @@ export async function validateMcpOAuthToken(token: string | null | undefined): P
         clientId: tokenRecord.clientId,
     };
 }
+
+export const validateMcpAccessToken = validateMcpOAuthToken;
 
 /**
  * Issue a new access token + refresh token pair for a client and user

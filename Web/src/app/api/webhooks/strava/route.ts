@@ -169,12 +169,31 @@ export async function POST(req: NextRequest) {
             });
 
             if (account) {
-                // Delete the User (Cascades to Account, Sessions, Goals, Activities)
-                // This ensures we strictly comply with data deletion requests.
-                await prisma.user.delete({
-                    where: { id: account.userId }
-                });
-                logger.info(`Deleted user ${account.userId} due to Strava deauthorization.`);
+                if (account.user.passwordHash !== null) {
+                    await prisma.$transaction(async (tx) => {
+                        await tx.account.deleteMany({
+                            where: { userId: account.userId, provider: 'strava' }
+                        });
+                        await tx.user.update({
+                            where: { id: account.userId },
+                            data: {
+                                stravaId: null,
+                                stravaAccessToken: null,
+                                stravaRefreshToken: null,
+                                stravaTokenExpiry: null
+                            }
+                        });
+                    });
+                    logger.info(`Disconnected Strava for user ${account.userId} due to Strava deauthorization.`);
+                } else {
+                    await prisma.$transaction([
+                        prisma.apiRouteMetric.deleteMany({ where: { userId: account.userId } }),
+                        prisma.errorLog.deleteMany({ where: { userId: account.userId } }),
+                        prisma.sessionReplay.deleteMany({ where: { userId: account.userId } }),
+                        prisma.user.delete({ where: { id: account.userId } })
+                    ]);
+                    logger.info(`Deleted user ${account.userId} and telemetry due to Strava deauthorization.`);
+                }
             }
         }
 

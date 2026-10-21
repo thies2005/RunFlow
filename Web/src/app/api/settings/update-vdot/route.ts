@@ -4,6 +4,15 @@ import { recalculateWorkoutPaces } from '@/lib/plans/recalculate-paces';
 import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { RaceType, PlanSport, WorkoutType, Prisma } from '@/generated/prisma/browser';
+import {
+    TRIATHLON_RACE_TYPES,
+    generateTrainingPlan,
+    buildPlanPhaseBlocks,
+    type PlanConfig,
+} from '@/lib/plans';
+import { mapWorkoutsForDb, computePlanWeeklyVolumeGoals } from '@/lib/services/plan-creation';
+import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
 
 export async function GET() {
     try {
@@ -143,7 +152,15 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, maxLongRunKm, calibrationFactor, effectiveVo2maxCorrectionFactor, matchToMyWhoosh, longRunDay, qualityDay, swimDay, restDays } = body;
+        const {
+            timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek,
+            weeklyMileageGoal, maxHeartRate, restingHeartRate, weight,
+            hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
+            thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks,
+            maxLongRunKm, calibrationFactor, effectiveVo2maxCorrectionFactor,
+            matchToMyWhoosh, longRunDay, qualityDay, swimDay, restDays,
+            raceType, raceDate, planStartDate, sport, mywhooshPlanId
+        } = body;
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -307,37 +324,179 @@ export async function POST(req: NextRequest) {
             });
 
             // Update Goal Settings (currentVdot is set inside recalculateWorkoutPaces)
-            await prisma.goal.update({
-                where: { id: activeGoal.id },
-                data: {
-                    runsPerWeek: runs,
-                    ridesPerWeek: rides,
-                    swimsPerWeek: swims,
-                    strengthPerWeek: strength,
-                    weeklyMileageGoal: mileageGoal,
-                    taperWeeks: taper,
-                    peakWeeks: peak,
-                    buildWeeks: build,
-                    ...(typeof longRunDay === 'number' && { longRunDay }),
-                    ...(typeof qualityDay === 'number' && { workoutDay: qualityDay }),
-                    ...(typeof swimDay === 'number' ? { swimDay } : { swimDay: null }),
-                    ...(Array.isArray(restDays) && { restDays }),
-                    ...(firstPendingWorkout?.scheduledDate && { planStartDate: firstPendingWorkout.scheduledDate }),
-                }
-            });
+            const nextRaceType = (raceType || activeGoal.raceType) as RaceType | null;
+            const isTri =
+                sport === 'TRIATHLON' ||
+                (nextRaceType != null && TRIATHLON_RACE_TYPES.includes(nextRaceType));
+            const nextSport: PlanSport = isTri ? 'TRIATHLON' : 'RUN';
 
-            const result = await recalculateWorkoutPaces(activeGoal.id, newVdot, {
-                thresholdHeartRate: typeof thresholdHeartRate === 'number' ? Math.round(thresholdHeartRate) : currentUser?.thresholdHeartRate ?? null,
-                hrZone1Max: typeof hrZone1Max === 'number' ? Math.round(hrZone1Max) : currentUser?.hrZone1Max ?? null,
-                hrZone2Max: typeof hrZone2Max === 'number' ? Math.round(hrZone2Max) : currentUser?.hrZone2Max ?? null,
-                hrZone3Max: typeof hrZone3Max === 'number' ? Math.round(hrZone3Max) : currentUser?.hrZone3Max ?? null,
-                hrZone4Max: typeof hrZone4Max === 'number' ? Math.round(hrZone4Max) : currentUser?.hrZone4Max ?? null,
-                hrZone5Max: typeof hrZone5Max === 'number' ? Math.round(hrZone5Max) : currentUser?.hrZone5Max ?? null,
-                hrZone6Max: typeof hrZone6Max === 'number' ? Math.round(hrZone6Max) : currentUser?.hrZone6Max ?? null,
-                hrMax: typeof maxHeartRate === 'number' ? Math.round(maxHeartRate) : currentUser?.hrMax ?? null,
-                hrRest: typeof restingHeartRate === 'number' ? Math.round(restingHeartRate) : currentUser?.hrRest ?? null,
-            });
-            console.log(`Pace recalculation complete: ${result.updatedCount} updated, ${result.skippedCount} skipped`);
+            const raceTypeChanged = raceType !== undefined && raceType !== activeGoal.raceType;
+            const sportChanged = sport !== undefined && sport !== activeGoal.sport;
+            const ridesChanged = typeof ridesPerWeek === 'number' && ridesPerWeek !== activeGoal.ridesPerWeek;
+            const swimsChanged = typeof swimsPerWeek === 'number' && swimsPerWeek !== activeGoal.swimsPerWeek;
+            const runsChanged = typeof runsPerWeek === 'number' && runsPerWeek !== activeGoal.runsPerWeek;
+            const mywhooshProvided = Boolean(mywhooshPlanId);
+
+            const shouldRegenerate =
+                raceTypeChanged ||
+                sportChanged ||
+                sport === 'TRIATHLON' ||
+                ridesChanged ||
+                swimsChanged ||
+                runsChanged ||
+                mywhooshProvided;
+
+            if (shouldRegenerate) {
+                const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
+                const startDate = (planStartDate ? new Date(planStartDate) : null) || firstPendingWorkout?.scheduledDate || activeGoal.planStartDate || new Date();
+                const nextRaceDate = (raceDate ? new Date(raceDate) : null) || activeGoal.raceDate || new Date(startDate.getTime() + 12 * MS_PER_WEEK);
+                const totalWeeks = Math.max(4, Math.ceil((new Date(nextRaceDate).getTime() - new Date(startDate).getTime()) / MS_PER_WEEK));
+
+                const userThresholds = await prisma.user.findUnique({
+                    where: { id: session.user.id },
+                    select: { ftpWatts: true, swimCssSecPer100m: true },
+                });
+                const nextFtp = userThresholds?.ftpWatts || activeGoal.ftpAtCreation || 220;
+                const nextCss = userThresholds?.swimCssSecPer100m || activeGoal.swimCssAtCreation || 115;
+
+                const rawMileage = typeof weeklyMileageGoal === 'number' ? weeklyMileageGoal : (activeGoal.weeklyMileageGoal || 40000);
+                const nextMileageMeters = rawMileage < 500 ? rawMileage * 1000 : rawMileage;
+
+                const nextRuns = typeof runsPerWeek === 'number' ? runsPerWeek : (activeGoal.runsPerWeek || 4);
+                const nextRides = typeof ridesPerWeek === 'number' ? ridesPerWeek : (isTri ? Math.max(2, activeGoal.ridesPerWeek || 0) : (activeGoal.ridesPerWeek || 0));
+                const nextSwims = typeof swimsPerWeek === 'number' ? swimsPerWeek : (isTri ? Math.max(2, activeGoal.swimsPerWeek || 0) : (activeGoal.swimsPerWeek || 0));
+                const nextStrength = typeof strengthPerWeek === 'number' ? strengthPerWeek : (activeGoal.strengthPerWeek || 0);
+
+                const nextLongRunDay = typeof longRunDay === 'number' ? longRunDay : activeGoal.longRunDay;
+                const nextWorkoutDay = typeof qualityDay === 'number' ? qualityDay : activeGoal.workoutDay;
+                const nextSwimDay = typeof swimDay === 'number' ? swimDay : (activeGoal.swimDay ?? undefined);
+                const nextRestDays = Array.isArray(restDays) ? (restDays as number[]) : (Array.isArray(activeGoal.restDays) ? (activeGoal.restDays as number[]) : undefined);
+
+                const planConfig: PlanConfig = {
+                    vdot: newVdot,
+                    raceType: nextRaceType,
+                    raceDate: nextRaceDate,
+                    startDate,
+                    sport: nextSport,
+                    runsPerWeek: nextRuns,
+                    ridesPerWeek: nextRides,
+                    swimsPerWeek: nextSwims,
+                    strengthPerWeek: nextStrength,
+                    weeklyMileageGoal: nextMileageMeters,
+                    buildWeeks: build,
+                    peakWeeks: peak,
+                    taperWeeks: taper,
+                    weeksTotal: totalWeeks,
+                    ftpWatts: nextFtp,
+                    swimCssSecPer100m: nextCss,
+                    matchToMyWhoosh: Boolean(matchToMyWhoosh),
+                    mywhooshPlanId: typeof mywhooshPlanId === 'string' && mywhooshPlanId ? mywhooshPlanId : null,
+                    longRunDay: nextLongRunDay,
+                    workoutDay: nextWorkoutDay,
+                    swimDay: nextSwimDay,
+                    restDays: nextRestDays,
+                    maxLongRunKm: normalizedMaxLongRunKm,
+                    thresholdHeartRate: typeof thresholdHeartRate === 'number' ? Math.round(thresholdHeartRate) : currentUser?.thresholdHeartRate ?? null,
+                    hrZone1Max: typeof hrZone1Max === 'number' ? Math.round(hrZone1Max) : currentUser?.hrZone1Max ?? null,
+                    hrZone2Max: typeof hrZone2Max === 'number' ? Math.round(hrZone2Max) : currentUser?.hrZone2Max ?? null,
+                    hrZone3Max: typeof hrZone3Max === 'number' ? Math.round(hrZone3Max) : currentUser?.hrZone3Max ?? null,
+                    hrZone4Max: typeof hrZone4Max === 'number' ? Math.round(hrZone4Max) : currentUser?.hrZone4Max ?? null,
+                    hrZone5Max: typeof hrZone5Max === 'number' ? Math.round(hrZone5Max) : currentUser?.hrZone5Max ?? null,
+                    hrZone6Max: typeof hrZone6Max === 'number' ? Math.round(hrZone6Max) : currentUser?.hrZone6Max ?? null,
+                    hrMax: typeof maxHeartRate === 'number' ? Math.round(maxHeartRate) : currentUser?.hrMax ?? null,
+                    hrRest: typeof restingHeartRate === 'number' ? Math.round(restingHeartRate) : currentUser?.hrRest ?? null,
+                };
+
+                const generated = generateTrainingPlan(planConfig);
+                for (const w of generated) {
+                    if (w.plannedTss == null) {
+                        w.plannedTss = calculateWorkoutPlannedTss({
+                            workoutType: w.type as WorkoutType,
+                            sport: w.sport ?? null,
+                            targetDistance: w.totalDistance,
+                            targetDuration: w.targetDuration ?? null,
+                            targetPace: w.targetPace ?? null,
+                            structuredSteps: w.structuredSteps ?? null,
+                            ftpWatts: nextFtp,
+                        });
+                    }
+                }
+                const phaseBlocks = buildPlanPhaseBlocks(planConfig, generated);
+                const weeklyGoals = computePlanWeeklyVolumeGoals(planConfig, generated);
+
+                await prisma.$transaction(async (tx) => {
+                    await tx.workout.deleteMany({
+                        where: { goalId: activeGoal.id, isCompleted: false },
+                    });
+                    await tx.goal.update({
+                        where: { id: activeGoal.id },
+                        data: {
+                            sport: nextSport,
+                            raceType: nextRaceType,
+                            raceDate: nextRaceDate,
+                            planStartDate: startDate,
+                            planWeeks: totalWeeks,
+                            currentVdot: newVdot,
+                            ftpAtCreation: nextFtp,
+                            swimCssAtCreation: nextCss,
+                            runsPerWeek: nextRuns,
+                            ridesPerWeek: nextRides,
+                            swimsPerWeek: nextSwims,
+                            strengthPerWeek: nextStrength,
+                            weeklyMileageGoal: nextMileageMeters,
+                            buildWeeks: build,
+                            peakWeeks: peak,
+                            taperWeeks: taper,
+                            longRunDay: nextLongRunDay,
+                            workoutDay: nextWorkoutDay,
+                            swimDay: typeof nextSwimDay === 'number' ? nextSwimDay : null,
+                            ...(nextRestDays && { restDays: nextRestDays }),
+                            weeklyBikeTssGoal: weeklyGoals.bikeTss,
+                            weeklySwimMetersGoal: weeklyGoals.swimMeters,
+                            targetWeeklyTss: weeklyGoals.totalTss,
+                            ...(phaseBlocks.length > 0 && { phaseBlocks: phaseBlocks as unknown as Prisma.InputJsonValue }),
+                        },
+                    });
+                    if (generated.length > 0) {
+                        await tx.workout.createMany({
+                            data: mapWorkoutsForDb(generated, { goalId: activeGoal.id, ftpWatts: nextFtp }),
+                        });
+                    }
+                });
+            } else {
+                // Update Goal Settings (currentVdot is set inside recalculateWorkoutPaces)
+                await prisma.goal.update({
+                    where: { id: activeGoal.id },
+                    data: {
+                        runsPerWeek: runs,
+                        ridesPerWeek: rides,
+                        swimsPerWeek: swims,
+                        strengthPerWeek: strength,
+                        weeklyMileageGoal: mileageGoal,
+                        taperWeeks: taper,
+                        peakWeeks: peak,
+                        buildWeeks: build,
+                        ...(typeof longRunDay === 'number' && { longRunDay }),
+                        ...(typeof qualityDay === 'number' && { workoutDay: qualityDay }),
+                        ...(typeof swimDay === 'number' ? { swimDay } : { swimDay: null }),
+                        ...(Array.isArray(restDays) && { restDays }),
+                        ...(firstPendingWorkout?.scheduledDate && { planStartDate: firstPendingWorkout.scheduledDate }),
+                    }
+                });
+
+                const result = await recalculateWorkoutPaces(activeGoal.id, newVdot, {
+                    thresholdHeartRate: typeof thresholdHeartRate === 'number' ? Math.round(thresholdHeartRate) : currentUser?.thresholdHeartRate ?? null,
+                    hrZone1Max: typeof hrZone1Max === 'number' ? Math.round(hrZone1Max) : currentUser?.hrZone1Max ?? null,
+                    hrZone2Max: typeof hrZone2Max === 'number' ? Math.round(hrZone2Max) : currentUser?.hrZone2Max ?? null,
+                    hrZone3Max: typeof hrZone3Max === 'number' ? Math.round(hrZone3Max) : currentUser?.hrZone3Max ?? null,
+                    hrZone4Max: typeof hrZone4Max === 'number' ? Math.round(hrZone4Max) : currentUser?.hrZone4Max ?? null,
+                    hrZone5Max: typeof hrZone5Max === 'number' ? Math.round(hrZone5Max) : currentUser?.hrZone5Max ?? null,
+                    hrZone6Max: typeof hrZone6Max === 'number' ? Math.round(hrZone6Max) : currentUser?.hrZone6Max ?? null,
+                    hrMax: typeof maxHeartRate === 'number' ? Math.round(maxHeartRate) : currentUser?.hrMax ?? null,
+                    hrRest: typeof restingHeartRate === 'number' ? Math.round(restingHeartRate) : currentUser?.hrRest ?? null,
+                });
+                console.log(`Pace recalculation complete: ${result.updatedCount} updated, ${result.skippedCount} skipped`);
+            }
         }
 
         return NextResponse.json({ success: true, vdot: newVdot });

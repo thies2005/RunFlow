@@ -56,33 +56,39 @@ export async function POST(request: NextRequest) {
         const log = await prisma.$transaction(async (tx) => {
             let dbFoodItem;
             if (foodItem.barcode) {
-                dbFoodItem = await tx.foodItem.upsert({
-                    where: { barcode: foodItem.barcode },
-                    update: {},
-                    create: {
-                        name: foodItem.name,
-                        brand: foodItem.brand,
-                        barcode: foodItem.barcode,
-                        calories: foodItem.calories,
-                        protein: foodItem.protein,
-                        carbs: foodItem.carbs,
-                        fats: foodItem.fats,
-                        servingSize: foodItem.servingSize,
-                        fiber: foodItem.fiber,
-                        sugar: foodItem.sugar,
-                        saturatedFat: foodItem.saturatedFat,
-                        sodium: foodItem.sodium,
-                        potassium: foodItem.potassium,
-                        cholesterol: foodItem.cholesterol,
-                        calcium: foodItem.calcium,
-                        iron: foodItem.iron,
-                    }
+                const existing = await tx.foodItem.findUnique({
+                    where: { barcode: String(foodItem.barcode) },
                 });
+                if (existing) {
+                    dbFoodItem = existing;
+                } else {
+                    dbFoodItem = await tx.foodItem.create({
+                        data: {
+                            name: foodItem.name,
+                            brand: foodItem.brand,
+                            barcode: null,
+                            calories: foodItem.calories,
+                            protein: foodItem.protein,
+                            carbs: foodItem.carbs,
+                            fats: foodItem.fats,
+                            servingSize: foodItem.servingSize,
+                            fiber: foodItem.fiber,
+                            sugar: foodItem.sugar,
+                            saturatedFat: foodItem.saturatedFat,
+                            sodium: foodItem.sodium,
+                            potassium: foodItem.potassium,
+                            cholesterol: foodItem.cholesterol,
+                            calcium: foodItem.calcium,
+                            iron: foodItem.iron,
+                        }
+                    });
+                }
             } else {
                 dbFoodItem = await tx.foodItem.create({
                     data: {
                         name: foodItem.name,
                         brand: foodItem.brand,
+                        barcode: null,
                         calories: foodItem.calories,
                         protein: foodItem.protein,
                         carbs: foodItem.carbs,

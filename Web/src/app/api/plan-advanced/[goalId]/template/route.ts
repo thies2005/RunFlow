@@ -76,8 +76,8 @@ export async function POST(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: 'Template name is required' }, { status: 400 });
         }
 
-        if (!Array.isArray(days) || days.length === 0) {
-            return NextResponse.json({ error: 'days must be a non-empty array' }, { status: 400 });
+        if (!Array.isArray(days) || days.length === 0 || days.length > 28) {
+            return NextResponse.json({ error: 'Days must be an array with 1 to 28 days' }, { status: 400 });
         }
 
         const template = await prisma.weekTemplate.create({
@@ -137,8 +137,8 @@ export async function PUT(req: Request, ctx: RouteContext) {
         }
         if (description !== undefined) updateData.description = description || null;
         if (days !== undefined) {
-            if (!Array.isArray(days) || days.length === 0) {
-                return NextResponse.json({ error: 'days must be a non-empty array' }, { status: 400 });
+            if (!Array.isArray(days) || days.length === 0 || days.length > 28) {
+                return NextResponse.json({ error: 'Days must be an array with 1 to 28 days' }, { status: 400 });
             }
             updateData.days = days;
         }

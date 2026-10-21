@@ -85,6 +85,14 @@ export async function PATCH(req: Request, ctx: RouteContext) {
             }
         }
 
+        if (typeof body.subGoalId === 'string' && body.subGoalId.trim() !== '') {
+            const subGoal = await prisma.goal.findFirst({
+                where: { id: String(body.subGoalId), userId: user.id, parentGoalId: goalId },
+                select: { id: true },
+            });
+            if (!subGoal) return NextResponse.json({ error: 'Sub-goal not found' }, { status: 404 });
+        }
+
         if (body.isCompleted !== undefined) {
             if (body.completedAt === undefined) {
                 updateData.completedAt = body.isCompleted ? (workout.completedAt ?? new Date()) : null;

@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
         const passwordHash = await hashPassword(password);
 
-        await prisma.user.update({
+        const user = await prisma.user.update({
             where: { email },
             data: {
                 passwordHash,
@@ -64,6 +64,19 @@ export async function POST(request: NextRequest) {
                 emailVerified: new Date()
             }
         });
+
+        if (prisma.mcpOAuthToken?.updateMany) {
+            await prisma.mcpOAuthToken.updateMany({
+                where: { userId: user.id, revokedAt: null },
+                data: { revokedAt: new Date() },
+            });
+        }
+
+        if (prisma.mcpOAuthCode?.deleteMany) {
+            await prisma.mcpOAuthCode.deleteMany({
+                where: { userId: user.id },
+            });
+        }
 
         return NextResponse.json({ success: true });
 

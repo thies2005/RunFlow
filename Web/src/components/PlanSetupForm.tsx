@@ -19,6 +19,7 @@ import PlanVolumeSection from './setup/PlanVolumeSection';
 import HeartRateZonesSection from './setup/HeartRateZonesSection';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { getRaceDefaults, adjustDefaultsForVdot, getScaledPhaseDefaults } from '@/lib/plans/defaults';
+import { MYWHOOSH_PLANS } from '@/lib/plans/mywhooshMatcher';
 
 
 interface RaceActivity {
@@ -193,6 +194,7 @@ export default function PlanSetupForm({
 
     // MyWhoosh
     const [matchToMyWhoosh, setMatchToMyWhoosh] = useState(false);
+    const [mywhooshPlanId, setMywhooshPlanId] = useState<string>('');
 
     // Sub-Goals (advanced mode)
     const [subGoals, setSubGoals] = useState<SubGoalForm[]>([]);
@@ -517,6 +519,7 @@ export default function PlanSetupForm({
 
                 setGoalName(activeGoal.name || 'My Race');
                 setRaceType(activeGoal.raceType || 'MARATHON');
+                setSport(activeGoal.sport || (TRIATHLON_RACE_TYPES.has(activeGoal.raceType) ? 'TRIATHLON' : 'RUN'));
                 if (activeGoal.raceDate) {
                     setRaceDate(new Date(activeGoal.raceDate).toISOString().split('T')[0]);
                 }
@@ -648,8 +651,8 @@ export default function PlanSetupForm({
         mutationFn: async () => {
             const timeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
 
-            const isTriathlon = TRIATHLON_RACE_TYPES.has(raceType);
-            const effectiveSport = sport || (isTriathlon ? 'TRIATHLON' : 'RUN');
+            const isTriathlon = TRIATHLON_RACE_TYPES.has(raceType) || sport === 'TRIATHLON';
+            const effectiveSport = sport === 'NO_RACE' ? 'NO_RACE' : (isTriathlon ? 'TRIATHLON' : 'RUN');
 
             let computedTargetTime: number | null = goalTimeSeconds;
             if (isTriathlon) {
@@ -702,6 +705,7 @@ export default function PlanSetupForm({
                 restDays,
                 sport: effectiveSport,
                 matchToMyWhoosh,
+                mywhooshPlanId: matchToMyWhoosh && mywhooshPlanId ? mywhooshPlanId : undefined,
                 maxHeartRate,
                 restingHeartRate,
                 hrZoneMethod: 'CUSTOM',
@@ -805,6 +809,11 @@ export default function PlanSetupForm({
                     maxLongRunKm,
                     calibrationFactor,
                     matchToMyWhoosh,
+                    mywhooshPlanId: matchToMyWhoosh && mywhooshPlanId ? mywhooshPlanId : undefined,
+                    raceType,
+                    raceDate,
+                    planStartDate,
+                    sport: TRIATHLON_RACE_TYPES.has(raceType) ? 'TRIATHLON' : sport,
                     longRunDay,
                     qualityDay,
                     restDays,
@@ -1067,13 +1076,13 @@ export default function PlanSetupForm({
                 computedPlanWeeks={computedPlanWeeks}
             />
 
-            {/* MyWhoosh (visible when cycling rides are part of the plan) */}
-            {ridesPerWeek > 0 && (
-                <div className="border-t border-glass-border pt-6">
+            {/* MyWhoosh (visible when cycling rides or triathlon are part of the plan) */}
+            {(ridesPerWeek > 0 || TRIATHLON_RACE_TYPES.has(raceType) || sport === 'TRIATHLON') && (
+                <div className="border-t border-glass-border pt-6 space-y-3">
                     <div className="flex items-center justify-between p-3 rounded-md bg-surface border border-glass-border">
                         <div className="pr-3">
                             <p className="text-sm text-foreground">Match Cycling Workouts to MyWhoosh</p>
-                            <p className="text-xs text-foreground-muted">Match planned rides to the closest official MyWhoosh workout and enable custom .zwo workout import</p>
+                            <p className="text-xs text-foreground-muted">Populate planned rides with official MyWhoosh workout steps (%FTP, intervals, cadence) and enable .zwo export</p>
                         </div>
                         <button
                             type="button"
@@ -1083,6 +1092,31 @@ export default function PlanSetupForm({
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                     </div>
+
+                    {matchToMyWhoosh && (
+                        <div className="p-3 rounded-md bg-surface border border-glass-border space-y-2">
+                            <label className="block text-xs font-semibold text-accent-cyan">
+                                MyWhoosh Training Plan / Workout Selector
+                            </label>
+                            <select
+                                value={mywhooshPlanId}
+                                onChange={(e) => setMywhooshPlanId(e.target.value)}
+                                className="bg-background-secondary border border-glass-border rounded-md p-2.5 text-xs text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-cyan"
+                            >
+                                <option value="">Auto-Match Closest MyWhoosh Workout by Phase & Duration</option>
+                                {MYWHOOSH_PLANS.map((plan) => (
+                                    <option key={plan.id} value={plan.id}>
+                                        {plan.name} ({plan.category} · {plan.level} · {plan.weeksCount}w)
+                                    </option>
+                                ))}
+                            </select>
+                            {mywhooshPlanId && (
+                                <p className="text-[11px] text-foreground-muted">
+                                    {MYWHOOSH_PLANS.find((p) => p.id === mywhooshPlanId)?.description}
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 

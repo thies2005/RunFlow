@@ -1,8 +1,57 @@
 [
   {
+    "id": "mw-recovery-spin-1",
+    "name": "Active Recovery Spin #1",
+    "category": "Recovery",
+    "description": "Official MyWhoosh Recovery session (5m Warmup, 20m @ 50% FTP (90rpm), 5m Cooldown)",
+    "durationSeconds": 1800,
+    "tss": 11.9,
+    "intensityFactor": 0.49,
+    "zoneSeconds": {
+      "z1": 1800,
+      "z2": 0,
+      "z3": 0,
+      "ss": 0,
+      "z4": 0,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "5m Warmup, 20m @ 50% FTP (90rpm), 5m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 300,
+        "powerLowPct": 0.4,
+        "powerHighPct": 0.5,
+        "cadenceRpm": 85
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 1200,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.5,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 300,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.5,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-triathlon-base",
+      "mw-plan-ftp-builder"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
     "id": "mw-endurance-1",
     "name": "Endurance Base #1",
     "category": "Endurance",
+    "description": "Official MyWhoosh Endurance session (10m Warmup, 40m @ 68% FTP, 10m Cooldown)",
     "durationSeconds": 3600,
     "tss": 42.5,
     "intensityFactor": 0.65,
@@ -39,6 +88,108 @@
         "cadenceRpm": 85
       }
     ],
+    "planIds": [
+      "mw-plan-triathlon-base",
+      "mw-plan-ftp-builder"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-endurance-long-2",
+    "name": "Endurance Foundation 90min #2",
+    "category": "Endurance",
+    "description": "Official MyWhoosh Endurance session (10m Warmup, 70m @ 70% FTP (90rpm), 10m Cooldown)",
+    "durationSeconds": 5400,
+    "tss": 69.1,
+    "intensityFactor": 0.68,
+    "zoneSeconds": {
+      "z1": 0,
+      "z2": 5400,
+      "z3": 0,
+      "ss": 0,
+      "z4": 0,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 70m @ 70% FTP (90rpm), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.7,
+        "cadenceRpm": 85
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 4200,
+        "powerLowPct": 0.7,
+        "powerHighPct": 0.7,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.48,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-triathlon-base",
+      "mw-plan-triathlon-703"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-endurance-progressive-3",
+    "name": "Aerobic Endurance 120min #3",
+    "category": "Endurance",
+    "description": "Official MyWhoosh Endurance session (15m Warmup, 3x30m @ 65-73% FTP (5m @ 55%), 10m Cooldown)",
+    "durationSeconds": 7800,
+    "tss": 98.4,
+    "intensityFactor": 0.67,
+    "zoneSeconds": {
+      "z1": 600,
+      "z2": 7200,
+      "z3": 0,
+      "ss": 0,
+      "z4": 0,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "15m Warmup, 3x30m @ 65-73% FTP (5m @ 55%), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 900,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.68,
+        "cadenceRpm": 85
+      },
+      {
+        "type": "interval",
+        "repeatCount": 3,
+        "durationSeconds": 1800,
+        "powerLowPct": 0.71,
+        "powerHighPct": 0.71,
+        "offDurationSeconds": 300,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.6,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-triathlon-703"
+    ],
     "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
     "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
   },
@@ -46,6 +197,7 @@
     "id": "mw-tempo-varied-1",
     "name": "15min Varied Tempo #1",
     "category": "Tempo",
+    "description": "Official MyWhoosh Tempo session (4x (10s @ 180%, 50s @ 50%), 15m Progressive Tempo @ 80-85% FTP (90-100rpm))",
     "durationSeconds": 2700,
     "tss": 49.4,
     "intensityFactor": 0.81,
@@ -133,6 +285,61 @@
         "powerHighPct": 0.5
       }
     ],
+    "planIds": [
+      "mw-plan-triathlon-base",
+      "mw-plan-ftp-builder"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-tempo-cruise-2",
+    "name": "Tempo Cruise 3x12min #2",
+    "category": "Tempo",
+    "description": "Official MyWhoosh Tempo session (10m Warmup, 3x12m @ 83% FTP (4m @ 55%), 10m Cooldown)",
+    "durationSeconds": 4080,
+    "tss": 62.4,
+    "intensityFactor": 0.74,
+    "zoneSeconds": {
+      "z1": 0,
+      "z2": 1920,
+      "z3": 2160,
+      "ss": 0,
+      "z4": 0,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 3x12m @ 83% FTP (4m @ 55%), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.75,
+        "cadenceRpm": 88
+      },
+      {
+        "type": "interval",
+        "repeatCount": 3,
+        "durationSeconds": 720,
+        "powerLowPct": 0.83,
+        "powerHighPct": 0.83,
+        "offDurationSeconds": 240,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 92
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-triathlon-base",
+      "mw-plan-triathlon-703"
+    ],
     "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
     "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
   },
@@ -140,6 +347,7 @@
     "id": "mw-sweetspot-1",
     "name": "Sweet Spot #1",
     "category": "Sweet Spot",
+    "description": "Official MyWhoosh Sweet Spot session (10m Warmup, 3x10m @ 90% FTP (5m recovery), 10m Cooldown)",
     "durationSeconds": 3900,
     "tss": 65.1,
     "intensityFactor": 0.78,
@@ -179,6 +387,62 @@
         "cadenceRpm": 85
       }
     ],
+    "planIds": [
+      "mw-plan-triathlon-base",
+      "mw-plan-ftp-builder",
+      "mw-plan-triathlon-703"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-sweetspot-2",
+    "name": "Sweet Spot 2x20min #2",
+    "category": "Sweet Spot",
+    "description": "Official MyWhoosh Sweet Spot session (10m Warmup, 2x20m @ 91% FTP (5m recovery), 10m Cooldown)",
+    "durationSeconds": 4200,
+    "tss": 77.4,
+    "intensityFactor": 0.81,
+    "zoneSeconds": {
+      "z1": 0,
+      "z2": 1800,
+      "z3": 0,
+      "ss": 2400,
+      "z4": 0,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 2x20m @ 91% FTP (5m recovery), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.75,
+        "cadenceRpm": 88
+      },
+      {
+        "type": "interval",
+        "repeatCount": 2,
+        "durationSeconds": 1200,
+        "powerLowPct": 0.91,
+        "powerHighPct": 0.91,
+        "offDurationSeconds": 300,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 92
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-triathlon-703",
+      "mw-plan-tt-specialist"
+    ],
     "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
     "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
   },
@@ -186,6 +450,7 @@
     "id": "mw-threshold-1",
     "name": "Threshold #1",
     "category": "Threshold",
+    "description": "Official MyWhoosh Threshold session (10m Warmup, 3x8m @ 98% FTP (4m recovery), 10m Cooldown)",
     "durationSeconds": 3360,
     "tss": 63.5,
     "intensityFactor": 0.82,
@@ -225,13 +490,70 @@
         "cadenceRpm": 85
       }
     ],
+    "planIds": [
+      "mw-plan-ftp-builder",
+      "mw-plan-triathlon-703",
+      "mw-plan-tt-specialist"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-threshold-overunder-2",
+    "name": "Over-Under Threshold 4x9min",
+    "category": "Threshold",
+    "description": "Official MyWhoosh Threshold session (10m Warmup, 4x9m Alternating 95% / 103% FTP (4m @ 55%), 10m Cooldown)",
+    "durationSeconds": 4320,
+    "tss": 88.0,
+    "intensityFactor": 0.86,
+    "zoneSeconds": {
+      "z1": 0,
+      "z2": 2160,
+      "z3": 0,
+      "ss": 0,
+      "z4": 2160,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 4x9m Alternating 95% / 103% FTP (4m @ 55%), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.8,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "interval",
+        "repeatCount": 4,
+        "durationSeconds": 540,
+        "powerLowPct": 0.99,
+        "powerHighPct": 0.99,
+        "offDurationSeconds": 240,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 94
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-tt-specialist",
+      "mw-plan-uae-pogacar"
+    ],
     "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
     "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
   },
   {
     "id": "mw-vo2max-1",
     "name": "VO2Max #1",
-    "category": "VO2 Max",
+    "category": "VO2max",
+    "description": "Official MyWhoosh VO2max session (10m Warmup, 5x3m @ 112% FTP (3m recovery), 10m Cooldown)",
     "durationSeconds": 3000,
     "tss": 61.5,
     "intensityFactor": 0.86,
@@ -271,6 +593,78 @@
         "cadenceRpm": 85
       }
     ],
+    "planIds": [
+      "mw-plan-ftp-builder",
+      "mw-plan-uae-pogacar",
+      "mw-plan-tt-specialist"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-vo2max-40-20",
+    "name": "VO2Max 40/20s Micro-Intervals",
+    "category": "VO2max",
+    "description": "Official MyWhoosh VO2max session (10m Warmup, 2x10x (40s @ 120% FTP, 20s @ 50% FTP), 10m Cooldown)",
+    "durationSeconds": 2700,
+    "tss": 62.3,
+    "intensityFactor": 0.91,
+    "zoneSeconds": {
+      "z1": 700,
+      "z2": 1200,
+      "z3": 0,
+      "ss": 0,
+      "z4": 0,
+      "z5": 800,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 2x10x (40s @ 120% FTP, 20s @ 50% FTP), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.8,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "interval",
+        "repeatCount": 10,
+        "durationSeconds": 40,
+        "powerLowPct": 1.2,
+        "powerHighPct": 1.2,
+        "offDurationSeconds": 20,
+        "offPowerPct": 0.5,
+        "cadenceRpm": 100
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 300,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.5,
+        "cadenceRpm": 85
+      },
+      {
+        "type": "interval",
+        "repeatCount": 10,
+        "durationSeconds": 40,
+        "powerLowPct": 1.2,
+        "powerHighPct": 1.2,
+        "offDurationSeconds": 20,
+        "offPowerPct": 0.5,
+        "cadenceRpm": 100
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-uae-pogacar"
+    ],
     "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
     "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
   },
@@ -278,6 +672,7 @@
     "id": "mw-under35-hiit-1",
     "name": "Fast 30min HIIT #1",
     "category": "Under 35 Min",
+    "description": "Official MyWhoosh Under 35 Min session (5m Warmup, 10x (1m @ 115% FTP, 1m @ 50% FTP), 5m Cooldown)",
     "durationSeconds": 1800,
     "tss": 40.1,
     "intensityFactor": 0.9,
@@ -317,6 +712,9 @@
         "cadenceRpm": 85
       }
     ],
+    "planIds": [
+      "mw-plan-triathlon-base"
+    ],
     "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
     "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
   },
@@ -324,6 +722,7 @@
     "id": "mw-uae-tadej-1",
     "name": "Train Like Tadej \u2014 Poga\u010dar Climb Intervals",
     "category": "UAE Team Emirates",
+    "description": "Official MyWhoosh UAE Team Emirates session (10m Warmup, 4x6m @ 102% FTP (75rpm climbing cadence, 3m recovery), 10m Cooldown)",
     "durationSeconds": 3360,
     "tss": 68.1,
     "intensityFactor": 0.85,
@@ -362,6 +761,68 @@
         "powerHighPct": 0.65,
         "cadenceRpm": 85
       }
+    ],
+    "planIds": [
+      "mw-plan-uae-pogacar"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-taper-opener-1",
+    "name": "Race Week Taper Opener #1",
+    "category": "Taper",
+    "description": "Official MyWhoosh Taper session (10m Warmup, 3x1m @ 105% FTP (2m easy), 15m @ 65% FTP, 6m Cooldown)",
+    "durationSeconds": 2400,
+    "tss": 31.1,
+    "intensityFactor": 0.68,
+    "zoneSeconds": {
+      "z1": 360,
+      "z2": 1860,
+      "z3": 0,
+      "ss": 0,
+      "z4": 180,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 3x1m @ 105% FTP (2m easy), 15m @ 65% FTP, 6m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.72,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "interval",
+        "repeatCount": 3,
+        "durationSeconds": 60,
+        "powerLowPct": 1.05,
+        "powerHighPct": 1.05,
+        "offDurationSeconds": 120,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 98
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 900,
+        "powerLowPct": 0.65,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 360,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.6,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-triathlon-base",
+      "mw-plan-triathlon-703",
+      "mw-plan-tt-specialist"
     ],
     "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
     "externalDetailUrl": "https://mywhooshinfo.com/workouts/"

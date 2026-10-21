@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { LRUCache } from 'lru-cache';
 import { NextResponse } from 'next/server';
 import { MINUTE_MS } from '@/lib/constants';
@@ -199,13 +200,21 @@ export async function adminRateLimit(
     operation: AdminOperation
 ): Promise<{ success: boolean; result?: AdminRateLimitResult; error?: NextResponse }> {
     const rawIp = getClientIP(request);
-    const hasAdminCookieOrBearer =
-        Boolean(request.headers.get('authorization')?.startsWith('Bearer ')) ||
-        Boolean(request.headers.get('cookie')?.includes('runflow_admin_token='));
-    const effectiveBucketId =
-        rawIp === 'unknown'
-            ? `${hasAdminCookieOrBearer ? 'auth-admin' : 'anon-login'}:${operation}`
-            : rawIp;
+    const authHeader = request.headers.get('authorization');
+    const cookieHeader = request.headers.get('cookie');
+    const adminToken =
+        (authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null) ||
+        cookieHeader?.match(/runflow_admin_token=([^;]+)/)?.[1]?.trim();
+
+    let effectiveBucketId: string;
+    if (adminToken) {
+        const tokenHash = createHash('sha256').update(adminToken).digest('hex').slice(0, 16);
+        effectiveBucketId = rawIp === 'unknown' ? `auth-admin:${tokenHash}` : `${rawIp}:auth-admin:${tokenHash}`;
+    } else if (rawIp === 'unknown') {
+        effectiveBucketId = `anon-login:${operation}`;
+    } else {
+        effectiveBucketId = rawIp;
+    }
     const client = await getAdminRedisClient();
 
     if (client) {

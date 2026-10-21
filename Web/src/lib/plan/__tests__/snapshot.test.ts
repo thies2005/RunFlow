@@ -181,8 +181,41 @@ describe('Plan Snapshot Service', () => {
             });
         });
 
+        it('scopes query by goalId when snapshotId is provided to prevent cross-goal IDOR', async () => {
+            mockPrisma.planSnapshot.findFirst.mockResolvedValue({
+                id: 'snap-specific',
+                snapshot: [],
+            });
+
+            await restoreFromSnapshot(GOAL_ID, 'snap-specific');
+
+            expect(mockPrisma.planSnapshot.findFirst).toHaveBeenCalledWith({
+                where: {
+                    goalId: GOAL_ID,
+                    id: 'snap-specific',
+                    OR: [{ operation: null }, { operation: { not: 'coaching_summary' } }],
+                },
+                orderBy: { createdAt: 'desc' },
+            });
+        });
+
+        it('throws when snapshot belongs to another goal or is not found', async () => {
+            mockPrisma.planSnapshot.findFirst.mockResolvedValue(null);
+
+            await expect(restoreFromSnapshot(GOAL_ID, 'foreign-snapshot')).rejects.toThrow('No snapshot found');
+
+            expect(mockPrisma.planSnapshot.findFirst).toHaveBeenCalledWith({
+                where: {
+                    goalId: GOAL_ID,
+                    id: 'foreign-snapshot',
+                    OR: [{ operation: null }, { operation: { not: 'coaching_summary' } }],
+                },
+                orderBy: { createdAt: 'desc' },
+            });
+        });
+
         it('returns false and does NOT wipe workouts when snapshot data is not an array', async () => {
-            mockPrisma.planSnapshot.findUnique.mockResolvedValue({
+            mockPrisma.planSnapshot.findFirst.mockResolvedValue({
                 id: 'snap-corrupt',
                 snapshot: 'corrupt non-array data' as any,
             });
@@ -216,7 +249,7 @@ describe('Plan Snapshot Service', () => {
                 },
             ];
 
-            mockPrisma.planSnapshot.findUnique.mockResolvedValue({
+            mockPrisma.planSnapshot.findFirst.mockResolvedValue({
                 id: 'snap-target',
                 snapshot: serializedWorkouts,
             });
@@ -224,6 +257,14 @@ describe('Plan Snapshot Service', () => {
             const result = await restoreFromSnapshot(GOAL_ID, 'snap-target');
 
             expect(result).toEqual(expect.objectContaining({ id: 'snap-target' }));
+            expect(mockPrisma.planSnapshot.findFirst).toHaveBeenCalledWith({
+                where: {
+                    goalId: GOAL_ID,
+                    id: 'snap-target',
+                    OR: [{ operation: null }, { operation: { not: 'coaching_summary' } }],
+                },
+                orderBy: { createdAt: 'desc' },
+            });
             expect(mockPrisma._tx.workout.deleteMany).toHaveBeenCalledWith({
                 where: { goalId: GOAL_ID },
             });

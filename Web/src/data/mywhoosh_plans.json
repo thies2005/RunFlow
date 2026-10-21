@@ -1,0 +1,179 @@
+[
+  {
+    "id": "mw-plan-triathlon-base",
+    "name": "MyWhoosh Triathlon Base & Build",
+    "category": "Triathlon",
+    "level": "Intermediate",
+    "weeksCount": 8,
+    "ridesPerWeek": 3,
+    "description": "Structured 8-week MyWhoosh cycling progression designed for Sprint and Olympic distance triathletes (Aerobic Endurance, Varied Tempo, Sweet Spot, and Race Openers).",
+    "externalUrl": "https://mywhooshinfo.com/workouts/category/1000",
+    "workoutIdsByPhase": {
+      "BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-endurance-long-2"
+      ],
+      "BUILD": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "PEAK": [
+        "mw-threshold-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1",
+        "mw-endurance-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-triathlon-703",
+    "name": "MyWhoosh Middle & Long Distance Tri (70.3 / 140.6)",
+    "category": "Triathlon",
+    "level": "Intermediate / Advanced",
+    "weeksCount": 12,
+    "ridesPerWeek": 3,
+    "description": "Sustained aero-position power and low-decoupling endurance rides tailored for Half Ironman (70.3) and Full Ironman bike legs.",
+    "externalUrl": "https://mywhooshinfo.com/workouts/category/1000",
+    "workoutIdsByPhase": {
+      "BASE": [
+        "mw-tempo-cruise-2",
+        "mw-endurance-1",
+        "mw-endurance-long-2"
+      ],
+      "BUILD": [
+        "mw-sweetspot-1",
+        "mw-sweetspot-2",
+        "mw-endurance-progressive-3"
+      ],
+      "PEAK": [
+        "mw-threshold-1",
+        "mw-sweetspot-2",
+        "mw-endurance-progressive-3"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-endurance-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-ftp-builder",
+    "name": "MyWhoosh 8-Week FTP Builder",
+    "category": "FTP Builder",
+    "level": "All Levels",
+    "weeksCount": 8,
+    "ridesPerWeek": 3,
+    "description": "Progressive 8-week threshold and sweet-spot block targeting a measurable increase in 20-minute Functional Threshold Power.",
+    "externalUrl": "https://mywhooshinfo.com/workouts/category/1000",
+    "workoutIdsByPhase": {
+      "BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-sweetspot-1"
+      ],
+      "BUILD": [
+        "mw-sweetspot-1",
+        "mw-threshold-1",
+        "mw-endurance-long-2"
+      ],
+      "PEAK": [
+        "mw-vo2max-1",
+        "mw-threshold-1",
+        "mw-sweetspot-2"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-uae-pogacar",
+    "name": "UAE Team Emirates \u2014 Train Like Tadej",
+    "category": "UAE Team Emirates",
+    "level": "Advanced",
+    "weeksCount": 6,
+    "ridesPerWeek": 3,
+    "description": "Pro-tour climbing torque intervals, over-unders, and 40/20s VO2max sessions designed with UAE Team Emirates coaches.",
+    "externalUrl": "https://mywhooshinfo.com/workouts/category/1000",
+    "workoutIdsByPhase": {
+      "BASE": [
+        "mw-uae-tadej-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "BUILD": [
+        "mw-uae-tadej-1",
+        "mw-threshold-overunder-2",
+        "mw-endurance-long-2"
+      ],
+      "PEAK": [
+        "mw-vo2max-40-20",
+        "mw-uae-tadej-1",
+        "mw-threshold-overunder-2"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-tt-specialist",
+    "name": "MyWhoosh Time Trial & Aero Threshold Plan",
+    "category": "Time Trial",
+    "level": "Intermediate / Advanced",
+    "weeksCount": 8,
+    "ridesPerWeek": 3,
+    "description": "Focuses on sustained 90-103% FTP power output at high cadence for non-drafting triathlon bike splits and ITT events.",
+    "externalUrl": "https://mywhooshinfo.com/workouts/category/1000",
+    "workoutIdsByPhase": {
+      "BASE": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "BUILD": [
+        "mw-sweetspot-2",
+        "mw-threshold-1",
+        "mw-endurance-long-2"
+      ],
+      "PEAK": [
+        "mw-threshold-overunder-2",
+        "mw-vo2max-1",
+        "mw-sweetspot-2"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  }
+]

@@ -128,6 +128,8 @@ function makeRequest(url: string, method: string, body?: any, headers?: Record<s
 describe('Paid-Premium MCP Suite (/mcp)', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        process.env.NEXTAUTH_URL = 'https://runflow.schuelken.uk';
+        process.env.NEXT_PUBLIC_APP_URL = 'https://runflow.schuelken.uk';
     });
 
     describe('1. OAuth Discovery Endpoints', () => {
@@ -218,6 +220,53 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             }
         });
 
+        it('ignores client_id in register body and enforces server-generated cuid() (RF-001)', async () => {
+            mockDb.mcpOAuthClient.create.mockResolvedValue({
+                id: 'client-db-2',
+                clientId: 'server-generated-cuid',
+                clientName: 'Spoofer Client',
+                redirectUris: ['https://legit.app/callback'],
+                grantTypes: ['authorization_code', 'refresh_token'],
+                responseTypes: ['code'],
+                tokenEndpointAuthMethod: 'none',
+            });
+
+            const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/register', 'POST', {
+                client_id: 'attacker-chosen-client-id',
+                client_name: 'Spoofer Client',
+                redirect_uris: ['https://legit.app/callback'],
+            });
+
+            const res = await registerClient(req);
+            expect(res.status).toBe(201);
+            expect(mockDb.mcpOAuthClient.create).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    data: expect.not.objectContaining({
+                        clientId: 'attacker-chosen-client-id',
+                    }),
+                })
+            );
+        });
+
+        it('rejects client registration when redirect_uris is empty or omitted (RF-001)', async () => {
+            const reqEmpty = makeRequest('https://runflow.schuelken.uk/mcp/oauth/register', 'POST', {
+                client_name: 'No Redirects Client',
+                redirect_uris: [],
+            });
+            const resEmpty = await registerClient(reqEmpty);
+            expect(resEmpty.status).toBe(400);
+            const dataEmpty = await resEmpty.json();
+            expect(dataEmpty.error).toBe('invalid_redirect_uri');
+
+            const reqOmitted = makeRequest('https://runflow.schuelken.uk/mcp/oauth/register', 'POST', {
+                client_name: 'No Redirects Client',
+            });
+            const resOmitted = await registerClient(reqOmitted);
+            expect(resOmitted.status).toBe(400);
+            const dataOmitted = await resOmitted.json();
+            expect(dataOmitted.error).toBe('invalid_redirect_uri');
+        });
+
         it('accepts lookalike https redirect URIs under the universal policy', async () => {
             // Task 1.1 (universal https): any https host containing a dot is a
             // valid callback — lookalike hosts are accepted by design so arbitrary
@@ -277,30 +326,47 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(isAllowedMcpRedirectUri('https://192.168.1.1/cb')).toBe(true);
         });
 
-        it('resolves public origin properly via getPublicOrigin with reverse-proxy headers', () => {
-            const reqForwarded = new Request('http://0.0.0.0:3000/mcp/oauth/authorize', {
-                headers: {
-                    'x-forwarded-proto': 'https',
-                    'x-forwarded-host': 'runflow.schuelken.uk',
-                },
-            });
-            expect(getPublicOrigin(reqForwarded)).toBe('https://runflow.schuelken.uk');
+        it('resolves public origin properly via getPublicOrigin with reverse-proxy headers when env unset', () => {
+            const origNextAuth = process.env.NEXTAUTH_URL;
+            const origAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+            delete process.env.NEXTAUTH_URL;
+            delete process.env.NEXT_PUBLIC_APP_URL;
 
-            const reqHost = new Request('http://localhost:3000/mcp/oauth/authorize', {
-                headers: {
-                    host: 'runflow.schuelken.uk',
-                },
-            });
-            expect(getPublicOrigin(reqHost)).toBe('https://runflow.schuelken.uk');
+            try {
+                const reqForwarded = new Request('http://0.0.0.0:3000/mcp/oauth/authorize', {
+                    headers: {
+                        'x-forwarded-proto': 'https',
+                        'x-forwarded-host': 'runflow.schuelken.uk',
+                    },
+                });
+                expect(getPublicOrigin(reqForwarded)).toBe('https://runflow.schuelken.uk');
+
+                const reqHost = new Request('http://localhost:3000/mcp/oauth/authorize', {
+                    headers: {
+                        host: 'runflow.schuelken.uk',
+                    },
+                });
+                expect(getPublicOrigin(reqHost)).toBe('https://runflow.schuelken.uk');
+            } finally {
+                process.env.NEXTAUTH_URL = origNextAuth;
+                process.env.NEXT_PUBLIC_APP_URL = origAppUrl;
+            }
         });
 
-        it('auto-creates client on GET /mcp/oauth/authorize if client does not exist and URI is allowed', async () => {
-            mockDb.mcpOAuthClient.findUnique.mockResolvedValue(null);
-            mockDb.mcpOAuthClient.create.mockResolvedValue({
-                clientId: 'auto-gemini-client',
-                clientName: 'Google Gemini',
-                redirectUris: ['https://oauth-redirect.googleusercontent.com/r/project'],
+        it('enforces canonical origin precedence over spoofed host headers (RF-007)', () => {
+            process.env.NEXTAUTH_URL = 'https://runflow.schuelken.uk';
+            const reqSpoofed = new Request('http://0.0.0.0:3000/mcp/oauth/authorize', {
+                headers: {
+                    'x-forwarded-proto': 'https',
+                    'x-forwarded-host': 'evil-attacker.com',
+                    host: 'evil-attacker.com',
+                },
             });
+            expect(getPublicOrigin(reqSpoofed)).toBe('https://runflow.schuelken.uk');
+        });
+
+        it('rejects GET /mcp/oauth/authorize with HTTP 400 invalid_client if client does not exist (RF-001)', async () => {
+            mockDb.mcpOAuthClient.findUnique.mockResolvedValue(null);
 
             const req = makeRequest(
                 'https://runflow.schuelken.uk/mcp/oauth/authorize?client_id=auto-gemini-client&redirect_uri=https://oauth-redirect.googleusercontent.com/r/project&client_name=Google%20Gemini',
@@ -313,26 +379,18 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             );
 
             const res = await authorizeGet(req);
-            expect(res.status).toBe(307); // Next.js NextResponse.redirect status
-            expect(res.headers.get('location')).toContain('https://runflow.schuelken.uk/mcp/authorize');
-            expect(mockDb.mcpOAuthClient.create).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    data: expect.objectContaining({
-                        clientId: 'auto-gemini-client',
-                        clientName: 'Google Gemini',
-                        redirectUris: ['https://oauth-redirect.googleusercontent.com/r/project'],
-                    }),
-                })
-            );
+            expect(res.status).toBe(400);
+            const data = await res.json();
+            expect(data.error).toBe('invalid_client');
+            expect(mockDb.mcpOAuthClient.create).not.toHaveBeenCalled();
         });
 
-        it('auto-registers redirect_uri on GET /mcp/oauth/authorize if client exists under same provider', async () => {
+        it('rejects GET /mcp/oauth/authorize with HTTP 400 invalid_redirect_uri if redirect_uri is not registered (RF-001)', async () => {
             mockDb.mcpOAuthClient.findUnique.mockResolvedValue({
                 clientId: 'gemini-client-1',
                 clientName: 'Google Gemini',
                 redirectUris: ['https://gemini.google.com/oauth'],
             });
-            mockDb.mcpOAuthClient.update.mockResolvedValue({});
 
             const req = makeRequest(
                 'https://runflow.schuelken.uk/mcp/oauth/authorize?client_id=gemini-client-1&redirect_uri=https://oauth-redirect.googleusercontent.com/r/project',
@@ -345,49 +403,28 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             );
 
             const res = await authorizeGet(req);
-            expect(res.status).toBe(307);
-            expect(mockDb.mcpOAuthClient.update).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    where: { clientId: 'gemini-client-1' },
-                    data: {
-                        redirectUris: [
-                            'https://gemini.google.com/oauth',
-                            'https://oauth-redirect.googleusercontent.com/r/project',
-                        ],
-                    },
-                })
-            );
+            expect(res.status).toBe(400);
+            const data = await res.json();
+            expect(data.error).toBe('invalid_redirect_uri');
+            expect(mockDb.mcpOAuthClient.update).not.toHaveBeenCalled();
         });
 
-        it('auto-registers any validator-passing redirect_uri on GET /mcp/oauth/authorize, even across providers', async () => {
-            // Universal compatibility (Task 1.3): an existing client is broadened
-            // with any redirect URI that passes the universal validator — provider
-            // grouping no longer gates the route-side append.
+        it('redirects to /mcp/authorize on GET when client exists and redirect_uri is registered (RF-001)', async () => {
             mockDb.mcpOAuthClient.findUnique.mockResolvedValue({
                 clientId: 'claude-client-1',
                 clientName: 'Claude',
                 redirectUris: ['https://claude.ai/callback'],
             });
-            mockDb.mcpOAuthClient.update.mockResolvedValue({});
 
             const req = makeRequest(
-                'https://runflow.schuelken.uk/mcp/oauth/authorize?client_id=claude-client-1&redirect_uri=https://oauth-redirect.googleusercontent.com/r/project',
+                'https://runflow.schuelken.uk/mcp/oauth/authorize?client_id=claude-client-1&redirect_uri=https://claude.ai/callback',
                 'GET'
             );
 
             const res = await authorizeGet(req);
             expect(res.status).toBe(307);
-            expect(mockDb.mcpOAuthClient.update).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    where: { clientId: 'claude-client-1' },
-                    data: {
-                        redirectUris: [
-                            'https://claude.ai/callback',
-                            'https://oauth-redirect.googleusercontent.com/r/project',
-                        ],
-                    },
-                })
-            );
+            expect(res.headers.get('location')).toContain('https://runflow.schuelken.uk/mcp/authorize');
+            expect(mockDb.mcpOAuthClient.update).not.toHaveBeenCalled();
         });
 
         it('rejects GET /mcp/oauth/authorize when redirect_uri fails the universal validator', async () => {
@@ -464,6 +501,49 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             );
             const resGoodOrigin = await authorizePost(reqGoodOrigin);
             expect(resGoodOrigin.status).toBe(200);
+        });
+
+        it('rejects POST /mcp/oauth/authorize with HTTP 400 invalid_client if client does not exist (RF-001)', async () => {
+            mockDb.user.findUnique.mockResolvedValue({
+                id: 'user-paid-1',
+                isAdmin: false,
+                aiSettings: { usageTier: 'tier2' },
+            });
+            mockDb.mcpOAuthClient.findUnique.mockResolvedValue(null);
+
+            const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/authorize', 'POST', {
+                client_id: 'non-existent-client',
+                redirect_uri: 'https://claude.ai/api/mcp/callback',
+                code_challenge: 'test-challenge',
+            });
+
+            const res = await authorizePost(req);
+            expect(res.status).toBe(400);
+            const data = await res.json();
+            expect(data.error).toBe('invalid_client');
+        });
+
+        it('rejects POST /mcp/oauth/authorize with HTTP 400 invalid_redirect_uri if redirect_uri is not registered (RF-001)', async () => {
+            mockDb.user.findUnique.mockResolvedValue({
+                id: 'user-paid-1',
+                isAdmin: false,
+                aiSettings: { usageTier: 'tier2' },
+            });
+            mockDb.mcpOAuthClient.findUnique.mockResolvedValue({
+                clientId: 'cuid-claude-client',
+                redirectUris: ['https://claude.ai/api/mcp/callback'],
+            });
+
+            const req = makeRequest('https://runflow.schuelken.uk/mcp/oauth/authorize', 'POST', {
+                client_id: 'cuid-claude-client',
+                redirect_uri: 'https://evil.com/callback',
+                code_challenge: 'test-challenge',
+            });
+
+            const res = await authorizePost(req);
+            expect(res.status).toBe(400);
+            const data = await res.json();
+            expect(data.error).toBe('invalid_redirect_uri');
         });
 
         it('rejects authorization for Free Tier user (none / tier1)', async () => {
@@ -764,6 +844,91 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(res.status).toBe(200);
             const data = await res.json();
             expect(data.result).toEqual({});
+        });
+
+        it('rejects external API keys (rf_*) on write tools with HTTP 403 and JSON-RPC -32003 (RF-002)', async () => {
+            mockDb.apiKey.findFirst.mockResolvedValue({
+                id: 'key-1',
+                userId: 'user-paid-1',
+                expiresAt: new Date(Date.now() + 86400000),
+                user: { id: 'user-paid-1', name: 'Pro Athlete', email: 'pro@test.com' },
+            });
+
+            mockDb.user.findUnique.mockResolvedValue({
+                id: 'user-paid-1',
+                isAdmin: true,
+                aiSettings: { usageTier: 'tier3', aiEnabled: true },
+            });
+
+            const writeTools = [
+                'log_workout_completion',
+                'modify_workout',
+                'create_training_plan',
+                'delete_workout',
+                'recalibrate_thresholds',
+                'save_coaching_summary',
+            ];
+
+            for (const toolName of writeTools) {
+                const req = makeRequest(
+                    'https://runflow.schuelken.uk/mcp',
+                    'POST',
+                    {
+                        jsonrpc: '2.0',
+                        id: 99,
+                        method: 'tools/call',
+                        params: {
+                            name: toolName,
+                            arguments: {},
+                        },
+                    },
+                    { Authorization: 'Bearer rf_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }
+                );
+
+                const res = await mcpPost(req);
+                expect(res.status).toBe(403);
+                const data = await res.json();
+                expect(data.error.code).toBe(-32003);
+                expect(data.error.message).toBe('External API keys (rf_*) are read-only; authorize via MCP OAuth 2.1 for write tools');
+            }
+        });
+
+        it('permits read-only tools via external API keys (rf_*) (RF-002)', async () => {
+            mockDb.apiKey.findFirst.mockResolvedValue({
+                id: 'key-1',
+                userId: 'user-paid-1',
+                expiresAt: new Date(Date.now() + 86400000),
+                user: { id: 'user-paid-1', name: 'Pro Athlete', email: 'pro@test.com' },
+            });
+
+            mockDb.user.findUnique.mockResolvedValue({
+                id: 'user-paid-1',
+                isAdmin: true,
+                vdot: 52,
+                trainingPaces: {},
+                aiSettings: { usageTier: 'tier3', aiEnabled: true },
+            });
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp',
+                'POST',
+                {
+                    jsonrpc: '2.0',
+                    id: 100,
+                    method: 'tools/call',
+                    params: {
+                        name: 'get_athlete_profile',
+                        arguments: {},
+                    },
+                },
+                { Authorization: 'Bearer rf_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }
+            );
+
+            const res = await mcpPost(req);
+            expect(res.status).toBe(200);
+            const data = await res.json();
+            expect(data.result).toBeDefined();
+            expect(data.error).toBeUndefined();
         });
 
         it('returns JSON-RPC error -32002 if user downgraded to free tier', async () => {

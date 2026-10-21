@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { MYWHOOSH_PLANS } from '@/lib/plans/mywhooshMatcher';
 
 interface EngineGenerateModalProps {
     isOpen: boolean;
@@ -68,6 +69,10 @@ export function EngineGenerateModal({
     const [peakWeeks, setPeakWeeks] = useState(3);
     const [taperWeeks, setTaperWeeks] = useState(3);
 
+    // MyWhoosh
+    const [matchToMyWhoosh, setMatchToMyWhoosh] = useState(true);
+    const [mywhooshPlanId, setMywhooshPlanId] = useState<string>('mw-plan-triathlon-base');
+
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -122,6 +127,8 @@ export function EngineGenerateModal({
                         buildWeeks,
                         peakWeeks,
                         taperWeeks,
+                        matchToMyWhoosh,
+                        mywhooshPlanId: matchToMyWhoosh ? mywhooshPlanId : null,
                     }),
                 });
 
@@ -153,6 +160,8 @@ export function EngineGenerateModal({
                         peakWeeks,
                         taperWeeks,
                         planSource: 'advanced',
+                        matchToMyWhoosh,
+                        mywhooshPlanId: matchToMyWhoosh ? mywhooshPlanId : null,
                     }),
                 });
 
@@ -412,6 +421,54 @@ export function EngineGenerateModal({
                             />
                         </div>
                     </div>
+
+                    {/* MyWhoosh Training Plan Selector */}
+                    {(sport === 'TRIATHLON' || ridesPerWeek > 0) && (
+                        <div className="p-3 bg-background-tertiary/30 rounded-md border border-glass-border space-y-2">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <span className="text-[11px] font-semibold text-accent-cyan uppercase tracking-wider block">
+                                        Match Cycling to MyWhoosh
+                                    </span>
+                                    <p className="text-[10px] text-foreground-muted">
+                                        Populate bike rides with structured MyWhoosh training workouts
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setMatchToMyWhoosh(!matchToMyWhoosh)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${matchToMyWhoosh ? 'bg-accent-cyan' : 'bg-glass-border'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+
+                            {matchToMyWhoosh && (
+                                <div className="pt-1 space-y-1.5">
+                                    <label className="block text-[10px] font-medium text-foreground-secondary">
+                                        MyWhoosh Training Plan
+                                    </label>
+                                    <select
+                                        value={mywhooshPlanId}
+                                        onChange={(e) => setMywhooshPlanId(e.target.value)}
+                                        className="w-full bg-background-tertiary border border-glass-border rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none"
+                                    >
+                                        <option value="">Auto-Match Closest MyWhoosh Workout</option>
+                                        {MYWHOOSH_PLANS.map((plan) => (
+                                            <option key={plan.id} value={plan.id}>
+                                                {plan.name} ({plan.category} · {plan.level} · {plan.weeksCount}w)
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {mywhooshPlanId && (
+                                        <p className="text-[10px] text-foreground-muted">
+                                            {MYWHOOSH_PLANS.find((p) => p.id === mywhooshPlanId)?.description}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}

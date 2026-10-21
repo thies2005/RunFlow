@@ -12,7 +12,7 @@ interface WorkoutScheduleCardProps {
     onCompleteWorkout: (_workout: Workout) => void;
 }
 
-const MYWHOOSH_CYCLING_TYPES = new Set(['RIDE', 'LONG_RIDE', 'BRICK']);
+const MYWHOOSH_CYCLING_TYPES = new Set(['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS', 'BRICK']);
 
 function exportMyWhooshZwo(workout: Workout) {
     const mwMatch = findClosestMyWhooshWorkout({

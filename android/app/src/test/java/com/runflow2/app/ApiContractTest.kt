@@ -7,12 +7,15 @@ import com.runflow2.app.data.net.CreatePlanRequest
 import com.runflow2.app.data.net.CreateWorkoutRequest
 import com.runflow2.app.data.net.EmailLoginRequest
 import com.runflow2.app.data.net.GenerateFeedbackRequest
+import com.runflow2.app.data.net.NetworkClient
 import com.runflow2.app.data.net.PatchWorkoutRequest
 import com.runflow2.app.data.net.RefreshRequest
 import com.runflow2.app.data.net.RunFlowApi
 import com.runflow2.app.data.net.UpdateGoalRequest
 import com.runflow2.app.domain.readiness.ReadinessPayload
 import com.runflow2.app.domain.readiness.RhrJson
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.decodeFromJsonElement
 import okhttp3.mockwebserver.MockResponse
@@ -472,5 +475,124 @@ class ApiContractTest {
         assertTrue(body.contains("\"rhrMedian30Day\":52.3"))
         assertTrue(body.contains("\"sleepAverage28Day\":420.5"))
         assertTrue(resp.isSuccessful)
+    }
+
+    // ---- RF-012: Enforce HTTPS & Clear AuthStore on Origin Switch ----
+
+    @Test
+    fun `normalizeServerUrl forces https for remote hosts and preserves http for loopback`() {
+        // Non-loopback HTTP must be upgraded to HTTPS
+        assertEquals(
+            "https://evil.example.com",
+            Api.normalizeServerUrl("http://evil.example.com"),
+        )
+        assertEquals(
+            "https://evil.example.com:8443",
+            Api.normalizeServerUrl("http://evil.example.com:8443"),
+        )
+        assertEquals(
+            "https://evil.example.com",
+            Api.normalizeServerUrl("http://evil.example.com/api/v1?token=secret"),
+        )
+
+        // Loopback / emulator addresses must remain HTTP
+        assertEquals(
+            "http://localhost:8080",
+            Api.normalizeServerUrl("http://localhost:8080"),
+        )
+        assertEquals(
+            "http://10.0.2.2:8000",
+            Api.normalizeServerUrl("http://10.0.2.2:8000"),
+        )
+        assertEquals(
+            "http://127.0.0.1:3000",
+            Api.normalizeServerUrl("http://127.0.0.1:3000"),
+        )
+        assertEquals(
+            "http://127.0.0.1",
+            Api.normalizeServerUrl("http://127.0.0.1"),
+        )
+        assertEquals(
+            "http://[::1]:8080",
+            Api.normalizeServerUrl("http://[::1]:8080"),
+        )
+
+        // Default & scheme-less inputs
+        assertEquals(
+            "https://runflow.schuelken.uk",
+            Api.normalizeServerUrl("runflow.schuelken.uk/"),
+        )
+        assertEquals(
+            Api.DEFAULT_BASE_URL,
+            Api.normalizeServerUrl(""),
+        )
+    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    @Test
+    fun `network client tracks previousBaseUrl and clears authStore when server origin switches`() = runTest {
+        val serverUrlFlow = MutableStateFlow("")
+        var originSwitchedCount = 0
+        val client = NetworkClient(
+            authStore = null,
+            initialBaseUrl = Api.DEFAULT_BASE_URL,
+        ).apply {
+            onOriginSwitched = { originSwitchedCount++ }
+        }
+
+        val job = client.observeServerUrl(serverUrlFlow, this)
+
+        // 1. Initial emission on startup should NOT trigger origin switch
+        advanceUntilIdle()
+        assertEquals(Api.DEFAULT_BASE_URL, client.previousBaseUrl)
+        assertEquals(Api.DEFAULT_BASE_URL, client.baseUrl)
+        assertEquals(0, originSwitchedCount)
+
+        // 2. Same origin variation should not trigger origin switch
+        serverUrlFlow.value = "${Api.DEFAULT_BASE_URL}/api/mobile/v1"
+        advanceUntilIdle()
+        assertEquals(Api.DEFAULT_BASE_URL, client.previousBaseUrl)
+        assertEquals(0, originSwitchedCount)
+
+        // 3. Different remote origin (http://evil.example.com) upgrades to HTTPS and triggers origin switch
+        serverUrlFlow.value = "http://evil.example.com"
+        advanceUntilIdle()
+        assertEquals("https://evil.example.com", client.previousBaseUrl)
+        assertEquals("https://evil.example.com", client.baseUrl)
+        assertEquals(1, originSwitchedCount)
+
+        // 4. Switching to local emulator origin triggers origin switch
+        serverUrlFlow.value = "http://10.0.2.2:8000"
+        advanceUntilIdle()
+        assertEquals("http://10.0.2.2:8000", client.previousBaseUrl)
+        assertEquals("http://10.0.2.2:8000", client.baseUrl)
+        assertEquals(2, originSwitchedCount)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `network client baseUrl setter triggers origin switch when changed from non-null previousBaseUrl`() {
+        var originSwitchedCount = 0
+        val client = NetworkClient(
+            authStore = null,
+            initialBaseUrl = Api.DEFAULT_BASE_URL,
+        ).apply {
+            onOriginSwitched = { originSwitchedCount++ }
+        }
+
+        // Initially previousBaseUrl is null
+        assertEquals(null, client.previousBaseUrl)
+
+        // Setting same origin sets previousBaseUrl without origin switch
+        client.baseUrl = Api.DEFAULT_BASE_URL
+        assertEquals(Api.DEFAULT_BASE_URL, client.previousBaseUrl)
+        assertEquals(0, originSwitchedCount)
+
+        // Setting different origin triggers origin switch
+        client.baseUrl = "http://evil.example.com"
+        assertEquals("https://evil.example.com", client.baseUrl)
+        assertEquals("https://evil.example.com", client.previousBaseUrl)
+        assertEquals(1, originSwitchedCount)
     }
 }

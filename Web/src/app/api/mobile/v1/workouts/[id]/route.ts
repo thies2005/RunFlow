@@ -86,6 +86,14 @@ export async function PATCH(
       }
     }
 
+    if (typeof body.subGoalId === 'string' && body.subGoalId.trim() !== '') {
+      const subGoal = await prisma.goal.findFirst({
+        where: { id: String(body.subGoalId), userId: user.id, parentGoalId: workout.goalId },
+        select: { id: true },
+      });
+      if (!subGoal) return NextResponse.json({ error: 'Sub-goal not found' }, { status: 404 });
+    }
+
     const allowedFields = [
       'scheduledDate', 'workoutType', 'description', 'displayDesc', 'phase', 'order', 'notes',
       'targetDistance', 'targetDuration', 'targetPace', 'targetPaceMinSecondsPerKm', 'targetPaceMaxSecondsPerKm',

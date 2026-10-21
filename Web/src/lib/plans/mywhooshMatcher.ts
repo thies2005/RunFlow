@@ -44,12 +44,85 @@ export interface MyWhooshTrainingPlan {
 export const MYWHOOSH_WORKOUTS: MyWhooshWorkout[] = mywhooshCatalog as MyWhooshWorkout[];
 export const MYWHOOSH_PLANS: MyWhooshTrainingPlan[] = mywhooshPlansCatalog as MyWhooshTrainingPlan[];
 
+export interface MyWhooshPhaseOption {
+    id: 'ALL' | 'EARLY_BASE' | 'LATE_BASE' | 'EARLY_BUILD' | 'LATE_BUILD' | 'PREPARATION';
+    label: string;
+    shortLabel: string;
+    weeks: number | null;
+    description: string;
+}
+
+export const MYWHOOSH_PHASES: MyWhooshPhaseOption[] = [
+    {
+        id: 'ALL',
+        label: 'All Phases — Full Progressive Plan',
+        shortLabel: 'All Phases',
+        weeks: null,
+        description: 'Progresses automatically through Early Base, Late Base, Early Build, Late Build, and Preparation.',
+    },
+    {
+        id: 'EARLY_BASE',
+        label: 'Phase 1: Early Base (4 Weeks — Aerobic Foundation)',
+        shortLabel: 'Phase 1 · Early Base',
+        weeks: 4,
+        description: '4-week block focused on Zone 2 aerobic efficiency, pedaling economy, and foundational endurance.',
+    },
+    {
+        id: 'LATE_BASE',
+        label: 'Phase 2: Late Base (4 Weeks — Tempo & Sweet Spot)',
+        shortLabel: 'Phase 2 · Late Base',
+        weeks: 4,
+        description: '4-week block introducing varied tempo (76–90% FTP) and muscular endurance intervals.',
+    },
+    {
+        id: 'EARLY_BUILD',
+        label: 'Phase 3: Early Build (4 Weeks — Threshold Development)',
+        shortLabel: 'Phase 3 · Early Build',
+        weeks: 4,
+        description: '4-week block targeting Functional Threshold Power (91–105% FTP) and sustained Sweet Spot.',
+    },
+    {
+        id: 'LATE_BUILD',
+        label: 'Phase 4: Late Build (4 Weeks — VO2max & High Intensity)',
+        shortLabel: 'Phase 4 · Late Build',
+        weeks: 4,
+        description: '4-week high-intensity block featuring VO2max intervals, over-unders, and race-specific surges.',
+    },
+    {
+        id: 'PREPARATION',
+        label: 'Phase 5: Preparation & Taper (4 Weeks — Peak & Openers)',
+        shortLabel: 'Phase 5 · Preparation',
+        weeks: 4,
+        description: '4-week sharpening and taper block with race openers, recovery spins, and peak power freshness.',
+    },
+];
+
+export function splitMyWhooshPlanAndPhase(rawId?: string | null): {
+    planId: string;
+    phaseKey: MyWhooshPhaseOption['id'];
+} {
+    if (!rawId) return { planId: '', phaseKey: 'ALL' };
+    const [baseId, rawPhase] = rawId.split('::');
+    const validPhase = MYWHOOSH_PHASES.find((p) => p.id === rawPhase)?.id ?? 'ALL';
+    return { planId: baseId || '', phaseKey: validPhase };
+}
+
+export function encodeMyWhooshPlanAndPhase(
+    planId: string,
+    phaseKey: MyWhooshPhaseOption['id'] = 'ALL',
+): string {
+    if (!planId) return '';
+    const cleanBase = planId.split('::')[0];
+    return phaseKey && phaseKey !== 'ALL' ? `${cleanBase}::${phaseKey}` : cleanBase;
+}
+
 export function getMyWhooshWorkoutById(id: string): MyWhooshWorkout | null {
     return MYWHOOSH_WORKOUTS.find((w) => w.id === id) ?? null;
 }
 
 export function getMyWhooshPlanById(planId: string): MyWhooshTrainingPlan | null {
-    return MYWHOOSH_PLANS.find((p) => p.id === planId) ?? null;
+    const { planId: cleanId } = splitMyWhooshPlanAndPhase(planId);
+    return MYWHOOSH_PLANS.find((p) => p.id === cleanId) ?? null;
 }
 
 /**
@@ -193,10 +266,20 @@ export function findClosestMyWhooshWorkout(params: {
 
     // 1. If a specific MyWhoosh Training Plan is selected, pick from its phase rotation first
     if (params.mywhooshPlanId) {
-        const plan = getMyWhooshPlanById(params.mywhooshPlanId);
+        const { planId: cleanPlanId, phaseKey: explicitPhase } = splitMyWhooshPlanAndPhase(params.mywhooshPlanId);
+        const plan = getMyWhooshPlanById(cleanPlanId);
         if (plan) {
-            const phaseKey = params.phase && plan.workoutIdsByPhase[params.phase] ? params.phase : 'BASE';
-            const phaseWorkoutIds = plan.workoutIdsByPhase[phaseKey] || plan.workoutIdsByPhase.BASE || [];
+            const resolvedPhaseKey =
+                explicitPhase !== 'ALL' && plan.workoutIdsByPhase[explicitPhase]
+                    ? explicitPhase
+                    : params.phase && plan.workoutIdsByPhase[params.phase]
+                    ? params.phase
+                    : 'BASE';
+            const phaseWorkoutIds =
+                plan.workoutIdsByPhase[resolvedPhaseKey] ||
+                plan.workoutIdsByPhase.EARLY_BASE ||
+                plan.workoutIdsByPhase.BASE ||
+                [];
             if (phaseWorkoutIds.length > 0) {
                 if (params.workoutType === 'LONG_RIDE') {
                     const lastId = phaseWorkoutIds[phaseWorkoutIds.length - 1];

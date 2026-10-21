@@ -163,21 +163,36 @@ export default function OnboardingWizard() {
             </div>
 
             <div className="flex-1 max-w-5xl mx-auto w-full p-6 flex flex-col justify-center">
-                {/* Header: Back button + step indicator */}
+                {/* Header: Back to Dashboard + step navigation */}
                 <div className="flex items-center justify-between mb-4">
-                    {step > 0 ? (
+                    <div className="flex items-center gap-2">
                         <button
-                            onClick={() => setStep(Math.max(0, step - 1))}
+                            type="button"
+                            onClick={() => {
+                                if (typeof window !== 'undefined') {
+                                    localStorage.setItem('runflow_onboarding_dismissed', 'true');
+                                }
+                                clearOnboardingState();
+                                router.push('/');
+                            }}
                             className="btn-secondary flex items-center gap-2 px-4 py-2"
+                            title="Return to Dashboard"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            Back
+                            Dashboard
                         </button>
-                    ) : (
-                        <div />
-                    )}
+                        {step > 0 && searchParams.get('step') !== '4' && (
+                            <button
+                                type="button"
+                                onClick={() => setStep(Math.max(0, step - 1))}
+                                className="px-3 py-2 rounded-md text-xs text-foreground-muted hover:text-foreground border border-line hover:bg-surface transition-colors"
+                            >
+                                Previous Step
+                            </button>
+                        )}
+                    </div>
                     <span className="text-sm text-foreground-muted font-mono tabular-nums">
-                        Step {step + 1} of 5
+                        {searchParams.get('step') === '4' ? 'Plan Builder' : `Step ${step + 1} of 5`}
                     </span>
                 </div>
 

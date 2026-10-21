@@ -106,7 +106,7 @@ export default function HeartRateZonesSection({
                 onClick={() => setShowHeartRate(!showHeartRate)}
                 className="flex items-center justify-between w-full text-left py-2"
             >
-                <h3 className="text-sm font-semibold text-foreground-muted">Heart Rate & Zone Settings</h3>
+                <h3 className="text-sm font-semibold text-foreground-muted">Heart Rate &amp; Power Zones</h3>
                 {showHeartRate ? (
                     <ChevronUp className="w-4 h-4 text-foreground-muted" />
                 ) : (

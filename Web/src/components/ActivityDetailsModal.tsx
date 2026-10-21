@@ -17,6 +17,7 @@ import {
     calculateAerobicDecoupling,
     calculatePowerZoneTimes,
     calculateCogganPowerZones,
+    calculateCyclingVo2Max,
 } from '@/lib/metrics/power';
 import InteractiveStreamsChart from './InteractiveStreamsChart';
 import ReactMarkdown from 'react-markdown';
@@ -284,6 +285,13 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         const athleteWeight = cyclingSettings?.weightKg || null;
         const wPerKg: number | null = (avgWatts && athleteWeight && athleteWeight > 0) ? Number((avgWatts / athleteWeight).toFixed(2)) : null;
         const cogganDefinitions = calculateCogganPowerZones(ftp, athleteWeight);
+        const cyclingVo2max = calculateCyclingVo2Max({
+            ftpWatts: ftp,
+            rideWatts: npWatts ?? avgWatts,
+            weightKg: athleteWeight,
+            avgHr: activity.averageHr || det?.averageHr,
+            maxHr: userHrMax || activity.maxHr,
+        });
 
         const cogganZones = [
             { name: 'Z1', label: 'Active Recovery', color: 'bg-emerald-500', textColor: 'text-emerald-500', time: pz1 ?? 0, minW: cogganDefinitions[0]?.minWatts ?? 0, maxW: cogganDefinitions[0]?.maxWatts ?? null, pctRange: '<55% FTP' },
@@ -310,11 +318,12 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             efficiencyFactor,
             decouplingPct,
             wPerKg,
+            cyclingVo2max,
             cogganZones,
             totalPowerZoneSec,
             activePowerZones,
         };
-    }, [activity, detailedActivity, cyclingSettings, name]);
+    }, [activity, detailedActivity, cyclingSettings, name, userHrMax]);
 
     const powerStreamData = useMemo(() => {
         const streams = (detailedActivity as any)?.streams;
@@ -825,12 +834,20 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                     <span className="text-accent-purple font-medium font-mono tabular-nums">{activity.estimatedVdot ? (activity.estimatedVdot * vdotCorrectionFactor).toFixed(1) : '-'}</span>
                                 </div>
                             ) : isRide ? (
-                                <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
-                                    <span className="text-foreground-muted">Normalized Power</span>
-                                    <span className="text-accent-orange font-medium font-mono tabular-nums">
-                                        {powerMetrics?.npWatts ? `${powerMetrics.npWatts} W` : '-'}
-                                    </span>
-                                </div>
+                                <>
+                                    <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
+                                        <span className="text-foreground-muted">Normalized Power</span>
+                                        <span className="text-accent-orange font-medium font-mono tabular-nums">
+                                            {powerMetrics?.npWatts ? `${powerMetrics.npWatts} W` : '-'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-foreground-muted">Cycling VO2max</span>
+                                        <span className="text-accent-purple font-medium font-mono tabular-nums">
+                                            {powerMetrics?.cyclingVo2max ? `${powerMetrics.cyclingVo2max.toFixed(1)} mL/kg/min` : '-'}
+                                        </span>
+                                    </div>
+                                </>
                             ) : null}
                         </div>
 

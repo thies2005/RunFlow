@@ -19,6 +19,8 @@ interface UserMetrics {
      * NEVER feeds paces or planning.
      */
     aerobicVo2max: number;
+    cyclingVo2max: number;
+    activeFtpWatts: number;
     correctionFactor: number;
     ctl: number;
     atl: number;
@@ -111,6 +113,8 @@ export function UserMetricsProvider({ children, stats }: UserMetricsProviderProp
         // `aerobicVo2max` is the HR-based aerobic-fitness trend (display only).
         vdot: stats?.vdot || 0,
         aerobicVo2max: stats?.effectiveVO2max || 0,
+        cyclingVo2max: stats?.cyclingVo2max || 0,
+        activeFtpWatts: stats?.activeFtpWatts || 0,
         correctionFactor: stats?.vdotCorrectionFactor || 1.0,
         ctl,
         atl,

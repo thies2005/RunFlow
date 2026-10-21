@@ -1080,21 +1080,47 @@ function generateWeek(params: {
 
     const totalCardio = remainingRides + remainingSwims;
     const cardioFreeDays = getAvailableCrossTrainingDays(totalCardio, usedDays, protectedDays);
+    let ridesPlacedInRunWeek = 0;
 
     for (const d of cardioFreeDays) {
         usedDays.add(d);
         if (remainingRides > 0) {
             remainingRides--;
-            workouts.push({
-                dayOffset: d,
-                type: WorkoutType.RIDE,
-                description: 'Bike Ride: 60min (Zone 1-2)',
-                totalDistance: 0,
-                targetPace: 0,
-                targetDuration: 3600,
-                phase: phase as PlanPhase,
-                targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE),
-            });
+            ridesPlacedInRunWeek++;
+            if (ridesPlacedInRunWeek === 2 && ridesPerWeek >= 2 && phase !== 'TAPER') {
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.RIDE_INTERVALS,
+                    description: 'Bike Intervals: 60min (Tempo / Sweet Spot Z3-Z4)',
+                    totalDistance: 0,
+                    targetPace: 0,
+                    targetDuration: 3600,
+                    phase: phase as PlanPhase,
+                    targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE_INTERVALS),
+                });
+            } else if (ridesPlacedInRunWeek === 3 && ridesPerWeek >= 3 && phase !== 'TAPER') {
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.LONG_RIDE,
+                    description: 'Long Endurance Ride: 90min (Zone 2)',
+                    totalDistance: 0,
+                    targetPace: 0,
+                    targetDuration: 5400,
+                    phase: phase as PlanPhase,
+                    targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RIDE),
+                });
+            } else {
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.RIDE,
+                    description: 'Bike Endurance: 60min (Zone 1-2)',
+                    totalDistance: 0,
+                    targetPace: 0,
+                    targetDuration: 3600,
+                    phase: phase as PlanPhase,
+                    targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE),
+                });
+            }
         } else if (remainingSwims > 0) {
             remainingSwims--;
             const swimDetails = getSwimWorkout(phase, weekInPhase ?? 1);

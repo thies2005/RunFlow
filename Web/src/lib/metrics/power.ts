@@ -346,6 +346,62 @@ export function estimateBikeFtpFromVdot(vdot: number, weightKg: number = 70): nu
 }
 
 /**
+ * Calculates Cycling VO2max (mL/kg/min) using the ACSM / Storer / Hawley-Noakes
+ * metabolic equation for cycle ergometry:
+ *   VO2max (mL/kg/min) = (10.8 * MAP_watts) / weightKg + 7
+ *
+ * Maximal Aerobic Power (MAP, ~5-minute peak power) is resolved using:
+ * 1. Measured 5-minute (300s) peak power if >= FTP / 0.90.
+ * 2. FTP-derived MAP = ftpWatts / 0.833 (since FTP is ~83.3% of 5-min MAP, i.e. MAP = 120% FTP, top of Coggan Z5).
+ * 3. Single-ride submaximal HR + Power estimation (when rideWatts and avgHr >= 60% maxHr are provided).
+ */
+export function calculateCyclingVo2Max(params: {
+    ftpWatts?: number | null;
+    peak5MinWatts?: number | null;
+    weightKg?: number | null;
+    rideWatts?: number | null;
+    avgHr?: number | null;
+    maxHr?: number | null;
+}): number | null {
+    const weight = params.weightKg && params.weightKg > 0 ? params.weightKg : 75;
+    const ftp = params.ftpWatts && params.ftpWatts > 0 ? params.ftpWatts : null;
+    const peak5m = params.peak5MinWatts && params.peak5MinWatts > 0 ? params.peak5MinWatts : null;
+
+    let mapWatts: number | null = null;
+    if (peak5m && (!ftp || peak5m >= ftp * 1.05)) {
+        mapWatts = peak5m;
+    } else if (ftp) {
+        mapWatts = ftp / 0.833;
+    } else if (peak5m) {
+        mapWatts = peak5m;
+    } else if (params.rideWatts && params.rideWatts > 0) {
+        if (params.avgHr && params.maxHr && params.maxHr > 0) {
+            const hrRatio = params.avgHr / params.maxHr;
+            if (hrRatio >= 0.60) {
+                const pctVo2 = Math.min(1.0, Math.max(0.35, 1.45 * hrRatio - 0.45));
+                const rideVo2 = (10.8 * params.rideWatts) / weight + 7;
+                const est = rideVo2 / pctVo2;
+                return Math.min(90, Math.max(20, Number(est.toFixed(1))));
+            }
+        }
+        mapWatts = params.rideWatts / 0.833;
+    }
+
+    if (!mapWatts || mapWatts <= 0) return null;
+    const vo2max = (10.8 * mapWatts) / weight + 7;
+    return Math.min(90, Math.max(20, Number(vo2max.toFixed(1))));
+}
+
+export function classifyCyclingVo2Max(vo2max: number | null): string {
+    if (!vo2max || vo2max <= 0) return 'Unrated';
+    if (vo2max >= 70) return 'World Class / Pro';
+    if (vo2max >= 60) return 'Competitive / Cat 1-2';
+    if (vo2max >= 52) return 'Trained / Cat 3-4';
+    if (vo2max >= 44) return 'Fitness / Sportive';
+    return 'Developing';
+}
+
+/**
  * Calculates Aerobic Efficiency Factor (EF) = NP / Average HR.
  */
 export function calculateEfficiencyFactor(npWatts: number, avgHr: number): number | null {
@@ -450,6 +506,7 @@ export interface CyclingAnalyticsData {
     ftp: {
         ftpWatts: number | null;
         eFtpWatts: number | null;
+        cyclingVo2max?: number | null;
         autoEstimateFtp: boolean;
         weightKg: number | null;
         wPerKg: number | null;

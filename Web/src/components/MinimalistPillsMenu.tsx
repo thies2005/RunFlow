@@ -439,8 +439,8 @@ function getMenuItems(
         },
         {
             id: 'hr-zones',
-            label: 'Heart Rate Zones',
-            subtitle: 'LTHR & 7 training zones',
+            label: 'Heart Rate & Power Zones',
+            subtitle: 'Running HR, Cycling FTP & 7 zones',
             icon: Heart,
             iconColor: 'text-accent-pink',
             iconBg: 'bg-accent-pink/15',
@@ -534,6 +534,10 @@ function TrainingPlanSubPage({ onBack }: { onBack: () => void }) {
 
     useEffect(() => {
         setIsOpen(true);
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('runflow_hide_no_plan_prompt');
+            window.dispatchEvent(new Event('runflow-plan-reminder-change'));
+        }
     }, []);
 
     const handleClose = () => {

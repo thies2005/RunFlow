@@ -649,7 +649,13 @@ export default function AnalyticsPage() {
                                                     FTP {cyclingData?.ftp?.ftpWatts ?? cyclingData?.ftp?.eFtpWatts ?? '-'} W
                                                 </span>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+                                            <div className="grid grid-cols-3 gap-2.5 pt-2 text-xs">
+                                                <div className="p-3 bg-background-tertiary rounded-lg border border-line">
+                                                    <span className="text-foreground-muted block mb-1">Cycling VO2max</span>
+                                                    <span className="text-lg font-mono font-bold text-accent-purple">
+                                                        {cyclingData?.ftp?.cyclingVo2max ? cyclingData.ftp.cyclingVo2max.toFixed(1) : '-'}
+                                                    </span>
+                                                </div>
                                                 <div className="p-3 bg-background-tertiary rounded-lg border border-line">
                                                     <span className="text-foreground-muted block mb-1">Period Bike TSS</span>
                                                     <span className="text-lg font-mono font-bold text-foreground">

@@ -1,14 +1,789 @@
 [
   {
+    "id": "mw-plan-beginner-welcome",
+    "name": "MyWhoosh New Rider Welcome Plan",
+    "category": "Beginner",
+    "level": "Beginner",
+    "weeksCount": 4,
+    "ridesPerWeek": 3,
+    "description": "4-week introductory indoor cycling plan designed by Coach Kevin Poulton to build pedaling efficiency, cadence control, and aerobic base.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-recovery-spin-1",
+        "mw-endurance-1",
+        "mw-tempo-varied-1"
+      ],
+      "LATE_BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-tempo-varied-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1",
+        "mw-endurance-1"
+      ],
+      "BASE": [
+        "mw-recovery-spin-1",
+        "mw-endurance-1",
+        "mw-tempo-varied-1"
+      ],
+      "BUILD": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-tempo-cruise-2"
+      ],
+      "PEAK": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-beginner-endurance",
+    "name": "MyWhoosh Beginner Fitness & Endurance",
+    "category": "Beginner",
+    "level": "Beginner",
+    "weeksCount": 8,
+    "ridesPerWeek": 3,
+    "description": "Progressive 5-phase aerobic conditioning plan for riders building from 45-minute spins to sustained 90-minute Zone 2 & Tempo rides.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-recovery-spin-1",
+        "mw-endurance-1",
+        "mw-endurance-1"
+      ],
+      "LATE_BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-tempo-varied-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-endurance-1",
+        "mw-recovery-spin-1"
+      ],
+      "BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-endurance-long-2"
+      ],
+      "BUILD": [
+        "mw-tempo-cruise-2",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "PEAK": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-little-pebble-gravel",
+    "name": "MyWhoosh Little Pebble (Beginner Gravel)",
+    "category": "Beginner",
+    "level": "Beginner / Intermediate",
+    "weeksCount": 8,
+    "ridesPerWeek": 3,
+    "description": "Official MyWhoosh Little Pebble gravel preparation plan combining seated low-cadence gravel torque, varied tempo, and sustained endurance.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-endurance-1",
+        "mw-gravel-pebble-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-gravel-pebble-1",
+        "mw-tempo-varied-1",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-gravel-pebble-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-climb-torque-1",
+        "mw-gravel-pebble-1",
+        "mw-endurance-progressive-3"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-gravel-pebble-1",
+        "mw-recovery-spin-1"
+      ],
+      "BASE": [
+        "mw-endurance-1",
+        "mw-gravel-pebble-1",
+        "mw-endurance-long-2"
+      ],
+      "BUILD": [
+        "mw-gravel-pebble-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "PEAK": [
+        "mw-climb-torque-1",
+        "mw-gravel-pebble-1",
+        "mw-endurance-progressive-3"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-ftp-builder-beginner",
+    "name": "MyWhoosh Beginner FTP Builder",
+    "category": "Target FTP",
+    "level": "Beginner / Intermediate",
+    "weeksCount": 8,
+    "ridesPerWeek": 3,
+    "description": "Structured introduction to Tempo and Sweet Spot intervals designed to raise Functional Threshold Power without excessive anaerobic strain.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-ftp-ramp-test-1",
+        "mw-endurance-1",
+        "mw-tempo-varied-1"
+      ],
+      "LATE_BASE": [
+        "mw-tempo-varied-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-threshold-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1",
+        "mw-ftp-ramp-test-1"
+      ],
+      "BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-tempo-cruise-2"
+      ],
+      "BUILD": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "PEAK": [
+        "mw-threshold-1",
+        "mw-sweetspot-1",
+        "mw-ftp-ramp-test-1"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-ftp-ramp-test-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-ftp-builder",
+    "name": "MyWhoosh 8-Week FTP Builder / Booster",
+    "category": "Target FTP",
+    "level": "All Levels",
+    "weeksCount": 8,
+    "ridesPerWeek": 4,
+    "description": "Progressive 5-phase threshold and sweet-spot block targeting a measurable increase in 20-minute Functional Threshold Power.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-tempo-cruise-2",
+        "mw-sweetspot-1",
+        "mw-endurance-1",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-sweetspot-1",
+        "mw-threshold-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-vo2max-1",
+        "mw-threshold-overunder-2",
+        "mw-sweetspot-2",
+        "mw-endurance-long-2"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-threshold-1",
+        "mw-recovery-spin-1",
+        "mw-ftp-ramp-test-1"
+      ],
+      "BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-sweetspot-1"
+      ],
+      "BUILD": [
+        "mw-sweetspot-1",
+        "mw-threshold-1",
+        "mw-endurance-long-2"
+      ],
+      "PEAK": [
+        "mw-vo2max-1",
+        "mw-threshold-1",
+        "mw-sweetspot-2"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-ftp-advanced",
+    "name": "MyWhoosh Advanced FTP Development",
+    "category": "Target FTP",
+    "level": "Advanced",
+    "weeksCount": 12,
+    "ridesPerWeek": 4,
+    "description": "High-density threshold over-unders, 2x20m Sweet Spot, and VO2max ceiling boosters designed by Coach Kevin Poulton for experienced riders.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-tempo-cruise-2",
+        "mw-sweetspot-1",
+        "mw-endurance-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-sweetspot-1",
+        "mw-sweetspot-2",
+        "mw-tempo-cruise-2",
+        "mw-endurance-progressive-3"
+      ],
+      "EARLY_BUILD": [
+        "mw-threshold-1",
+        "mw-threshold-overunder-2",
+        "mw-sweetspot-2",
+        "mw-endurance-progressive-3"
+      ],
+      "LATE_BUILD": [
+        "mw-vo2max-1",
+        "mw-threshold-overunder-2",
+        "mw-vo2max-40-20",
+        "mw-endurance-progressive-3"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-threshold-1",
+        "mw-recovery-spin-1",
+        "mw-ftp-ramp-test-1"
+      ],
+      "BASE": [
+        "mw-sweetspot-1",
+        "mw-sweetspot-2",
+        "mw-endurance-progressive-3"
+      ],
+      "BUILD": [
+        "mw-threshold-1",
+        "mw-threshold-overunder-2",
+        "mw-endurance-progressive-3"
+      ],
+      "PEAK": [
+        "mw-vo2max-1",
+        "mw-threshold-overunder-2",
+        "mw-vo2max-40-20"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-ftp-ramp-test-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-gran-fondo",
+    "name": "MyWhoosh Gran Fondo Plan",
+    "category": "Specific Race Discipline",
+    "level": "Intermediate / Advanced",
+    "weeksCount": 12,
+    "ridesPerWeek": 4,
+    "description": "5-phase long-distance Gran Fondo preparation focusing on fatigue resistance, sustained climbing tempo, and 2+ hour endurance efficiency.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-gravel-pebble-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-tempo-cruise-2",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2",
+        "mw-endurance-progressive-3"
+      ],
+      "EARLY_BUILD": [
+        "mw-climb-torque-1",
+        "mw-sweetspot-2",
+        "mw-tempo-cruise-2",
+        "mw-endurance-progressive-3"
+      ],
+      "LATE_BUILD": [
+        "mw-threshold-1",
+        "mw-climb-torque-1",
+        "mw-sweetspot-2",
+        "mw-endurance-progressive-3"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-tempo-varied-1",
+        "mw-recovery-spin-1",
+        "mw-endurance-1"
+      ],
+      "BASE": [
+        "mw-tempo-cruise-2",
+        "mw-sweetspot-1",
+        "mw-endurance-progressive-3"
+      ],
+      "BUILD": [
+        "mw-climb-torque-1",
+        "mw-sweetspot-2",
+        "mw-endurance-progressive-3"
+      ],
+      "PEAK": [
+        "mw-threshold-1",
+        "mw-climb-torque-1",
+        "mw-endurance-progressive-3"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-road-race",
+    "name": "MyWhoosh Road Race Plan",
+    "category": "Specific Race Discipline",
+    "level": "Intermediate / Advanced",
+    "weeksCount": 12,
+    "ridesPerWeek": 4,
+    "description": "Prepares road racers for breakaway efforts, peloton surges, VO2max climbs, and late-race sprint finishes across 5 progressive 4-week phases.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-tempo-cruise-2",
+        "mw-sweetspot-1",
+        "mw-sprint-neuromuscular-1",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-threshold-overunder-2",
+        "mw-vo2max-1",
+        "mw-sweetspot-2",
+        "mw-endurance-progressive-3"
+      ],
+      "LATE_BUILD": [
+        "mw-crit-surge-1",
+        "mw-vo2max-40-20",
+        "mw-sprint-neuromuscular-1",
+        "mw-endurance-progressive-3"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-sprint-neuromuscular-1",
+        "mw-recovery-spin-1",
+        "mw-endurance-1"
+      ],
+      "BASE": [
+        "mw-tempo-cruise-2",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "BUILD": [
+        "mw-threshold-overunder-2",
+        "mw-vo2max-1",
+        "mw-endurance-progressive-3"
+      ],
+      "PEAK": [
+        "mw-crit-surge-1",
+        "mw-vo2max-40-20",
+        "mw-sprint-neuromuscular-1"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-tt-specialist",
+    "name": "MyWhoosh Time Trial & Aero Threshold Plan",
+    "category": "Specific Race Discipline",
+    "level": "Intermediate / Advanced",
+    "weeksCount": 8,
+    "ridesPerWeek": 3,
+    "description": "Focuses on sustained 90-103% FTP power output at high cadence for individual time trials (ITT) and non-drafting bike splits.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-endurance-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-sweetspot-2",
+        "mw-threshold-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-threshold-overunder-2",
+        "mw-vo2max-1",
+        "mw-sweetspot-2"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-threshold-1",
+        "mw-recovery-spin-1"
+      ],
+      "BASE": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "BUILD": [
+        "mw-sweetspot-2",
+        "mw-threshold-1",
+        "mw-endurance-long-2"
+      ],
+      "PEAK": [
+        "mw-threshold-overunder-2",
+        "mw-vo2max-1",
+        "mw-sweetspot-2"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-climbing",
+    "name": "MyWhoosh Climb & Mountain Specialist",
+    "category": "Specific Race Discipline",
+    "level": "Intermediate / Advanced",
+    "weeksCount": 8,
+    "ridesPerWeek": 4,
+    "description": "Targets W/kg climbing performance with low-cadence torque intervals, sustained threshold climbs, and out-of-the-saddle VO2max attacks.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-endurance-1",
+        "mw-climb-torque-1",
+        "mw-tempo-varied-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-climb-torque-1",
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-uae-tadej-1",
+        "mw-climb-torque-1",
+        "mw-threshold-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-uae-tadej-1",
+        "mw-threshold-overunder-2",
+        "mw-vo2max-1",
+        "mw-endurance-progressive-3"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-climb-torque-1",
+        "mw-recovery-spin-1",
+        "mw-endurance-1"
+      ],
+      "BASE": [
+        "mw-climb-torque-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "BUILD": [
+        "mw-uae-tadej-1",
+        "mw-climb-torque-1",
+        "mw-threshold-1"
+      ],
+      "PEAK": [
+        "mw-uae-tadej-1",
+        "mw-threshold-overunder-2",
+        "mw-vo2max-1"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-sprinting",
+    "name": "MyWhoosh Sprinting & Anaerobic Power",
+    "category": "Specific Race Discipline",
+    "level": "Intermediate / Advanced",
+    "weeksCount": 8,
+    "ridesPerWeek": 3,
+    "description": "Develops neuromuscular peak watts (Z7), anaerobic capacity (Z6), and high-cadence lead-out speed for bunch sprints.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-sprint-neuromuscular-1"
+      ],
+      "LATE_BASE": [
+        "mw-sprint-neuromuscular-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-sprint-neuromuscular-1",
+        "mw-under35-hiit-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-sprint-neuromuscular-1",
+        "mw-crit-surge-1",
+        "mw-vo2max-40-20"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-sprint-neuromuscular-1",
+        "mw-recovery-spin-1"
+      ],
+      "BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-sprint-neuromuscular-1"
+      ],
+      "BUILD": [
+        "mw-sprint-neuromuscular-1",
+        "mw-under35-hiit-1",
+        "mw-endurance-long-2"
+      ],
+      "PEAK": [
+        "mw-sprint-neuromuscular-1",
+        "mw-crit-surge-1",
+        "mw-vo2max-40-20"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
+    "id": "mw-plan-criterium",
+    "name": "MyWhoosh Criterium Race Plan",
+    "category": "Specific Race Discipline",
+    "level": "Advanced",
+    "weeksCount": 8,
+    "ridesPerWeek": 4,
+    "description": "High-intensity criterium repeatability plan featuring 30/30s corner accelerations, 40/20s micro-intervals, and lactacid clearance under load.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
+    "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-sweetspot-1",
+        "mw-under35-hiit-1",
+        "mw-sprint-neuromuscular-1",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-crit-surge-1",
+        "mw-threshold-overunder-2",
+        "mw-vo2max-40-20",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-crit-surge-1",
+        "mw-vo2max-40-20",
+        "mw-sprint-neuromuscular-1",
+        "mw-under35-hiit-1"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-crit-surge-1",
+        "mw-recovery-spin-1",
+        "mw-endurance-1"
+      ],
+      "BASE": [
+        "mw-tempo-varied-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "BUILD": [
+        "mw-crit-surge-1",
+        "mw-threshold-overunder-2",
+        "mw-vo2max-40-20"
+      ],
+      "PEAK": [
+        "mw-crit-surge-1",
+        "mw-vo2max-40-20",
+        "mw-sprint-neuromuscular-1"
+      ],
+      "TAPER": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ],
+      "RACE_WEEK": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1"
+      ]
+    }
+  },
+  {
     "id": "mw-plan-triathlon-base",
-    "name": "MyWhoosh Triathlon Base & Build",
-    "category": "Triathlon",
+    "name": "MyWhoosh Triathlon \u2014 Sprint & Olympic",
+    "category": "Specific Race Discipline",
     "level": "Intermediate",
     "weeksCount": 8,
     "ridesPerWeek": 3,
-    "description": "Structured 8-week MyWhoosh cycling progression designed for Sprint and Olympic distance triathletes (Aerobic Endurance, Varied Tempo, Sweet Spot, and Race Openers).",
-    "externalUrl": "https://mywhooshinfo.com/workouts/category/1000",
+    "description": "Structured 5-phase MyWhoosh cycling progression designed for Sprint and Olympic distance triathletes (Aerobic Endurance, Varied Tempo, Sweet Spot, and Race Openers).",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
     "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-endurance-1",
+        "mw-tempo-varied-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-tempo-cruise-2",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-sweetspot-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-threshold-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1",
+        "mw-endurance-1"
+      ],
       "BASE": [
         "mw-endurance-1",
         "mw-tempo-varied-1",
@@ -37,14 +812,39 @@
   },
   {
     "id": "mw-plan-triathlon-703",
-    "name": "MyWhoosh Middle & Long Distance Tri (70.3 / 140.6)",
-    "category": "Triathlon",
+    "name": "MyWhoosh Triathlon \u2014 70.3 & Ironman (140.6)",
+    "category": "Specific Race Discipline",
     "level": "Intermediate / Advanced",
     "weeksCount": 12,
     "ridesPerWeek": 3,
     "description": "Sustained aero-position power and low-decoupling endurance rides tailored for Half Ironman (70.3) and Full Ironman bike legs.",
-    "externalUrl": "https://mywhooshinfo.com/workouts/category/1000",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
     "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-endurance-1",
+        "mw-tempo-cruise-2",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-tempo-cruise-2",
+        "mw-sweetspot-1",
+        "mw-endurance-progressive-3"
+      ],
+      "EARLY_BUILD": [
+        "mw-sweetspot-1",
+        "mw-sweetspot-2",
+        "mw-endurance-progressive-3"
+      ],
+      "LATE_BUILD": [
+        "mw-threshold-1",
+        "mw-sweetspot-2",
+        "mw-endurance-progressive-3"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-endurance-1",
+        "mw-recovery-spin-1"
+      ],
       "BASE": [
         "mw-tempo-cruise-2",
         "mw-endurance-1",
@@ -72,50 +872,40 @@
     }
   },
   {
-    "id": "mw-plan-ftp-builder",
-    "name": "MyWhoosh 8-Week FTP Builder",
-    "category": "FTP Builder",
-    "level": "All Levels",
-    "weeksCount": 8,
-    "ridesPerWeek": 3,
-    "description": "Progressive 8-week threshold and sweet-spot block targeting a measurable increase in 20-minute Functional Threshold Power.",
-    "externalUrl": "https://mywhooshinfo.com/workouts/category/1000",
-    "workoutIdsByPhase": {
-      "BASE": [
-        "mw-endurance-1",
-        "mw-tempo-varied-1",
-        "mw-sweetspot-1"
-      ],
-      "BUILD": [
-        "mw-sweetspot-1",
-        "mw-threshold-1",
-        "mw-endurance-long-2"
-      ],
-      "PEAK": [
-        "mw-vo2max-1",
-        "mw-threshold-1",
-        "mw-sweetspot-2"
-      ],
-      "TAPER": [
-        "mw-taper-opener-1",
-        "mw-recovery-spin-1"
-      ],
-      "RACE_WEEK": [
-        "mw-taper-opener-1",
-        "mw-recovery-spin-1"
-      ]
-    }
-  },
-  {
     "id": "mw-plan-uae-pogacar",
     "name": "UAE Team Emirates \u2014 Train Like Tadej",
-    "category": "UAE Team Emirates",
+    "category": "UAE Team Emirates & Pro",
     "level": "Advanced",
     "weeksCount": 6,
     "ridesPerWeek": 3,
     "description": "Pro-tour climbing torque intervals, over-unders, and 40/20s VO2max sessions designed with UAE Team Emirates coaches.",
-    "externalUrl": "https://mywhooshinfo.com/workouts/category/1000",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
     "workoutIdsByPhase": {
+      "EARLY_BASE": [
+        "mw-uae-tadej-1",
+        "mw-sweetspot-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BASE": [
+        "mw-uae-tadej-1",
+        "mw-climb-torque-1",
+        "mw-endurance-long-2"
+      ],
+      "EARLY_BUILD": [
+        "mw-uae-tadej-1",
+        "mw-threshold-overunder-2",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-vo2max-40-20",
+        "mw-uae-tadej-1",
+        "mw-threshold-overunder-2"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-recovery-spin-1",
+        "mw-uae-tadej-1"
+      ],
       "BASE": [
         "mw-uae-tadej-1",
         "mw-sweetspot-1",
@@ -142,38 +932,64 @@
     }
   },
   {
-    "id": "mw-plan-tt-specialist",
-    "name": "MyWhoosh Time Trial & Aero Threshold Plan",
-    "category": "Time Trial",
-    "level": "Intermediate / Advanced",
-    "weeksCount": 8,
+    "id": "mw-plan-ftp-testing",
+    "name": "MyWhoosh FTP & Ramp Testing Block",
+    "category": "UAE Team Emirates & Pro",
+    "level": "All Levels",
+    "weeksCount": 4,
     "ridesPerWeek": 3,
-    "description": "Focuses on sustained 90-103% FTP power output at high cadence for non-drafting triathlon bike splits and ITT events.",
-    "externalUrl": "https://mywhooshinfo.com/workouts/category/1000",
+    "description": "4-week physiological testing and calibration block featuring openers, MyWhoosh 20-minute & Ramp FTP assessment, and threshold verification.",
+    "externalUrl": "https://mywhoosh.com/everything-you-need-to-know-about-mywhoosh-training-plans/",
     "workoutIdsByPhase": {
-      "BASE": [
+      "EARLY_BASE": [
+        "mw-taper-opener-1",
+        "mw-ftp-ramp-test-1",
+        "mw-recovery-spin-1"
+      ],
+      "LATE_BASE": [
+        "mw-endurance-1",
         "mw-sweetspot-1",
-        "mw-tempo-cruise-2",
         "mw-endurance-long-2"
       ],
+      "EARLY_BUILD": [
+        "mw-threshold-1",
+        "mw-tempo-varied-1",
+        "mw-endurance-long-2"
+      ],
+      "LATE_BUILD": [
+        "mw-vo2max-1",
+        "mw-threshold-1",
+        "mw-recovery-spin-1"
+      ],
+      "PREPARATION": [
+        "mw-taper-opener-1",
+        "mw-ftp-ramp-test-1",
+        "mw-recovery-spin-1"
+      ],
+      "BASE": [
+        "mw-taper-opener-1",
+        "mw-ftp-ramp-test-1",
+        "mw-endurance-1"
+      ],
       "BUILD": [
-        "mw-sweetspot-2",
+        "mw-sweetspot-1",
         "mw-threshold-1",
         "mw-endurance-long-2"
       ],
       "PEAK": [
-        "mw-threshold-overunder-2",
-        "mw-vo2max-1",
-        "mw-sweetspot-2"
+        "mw-taper-opener-1",
+        "mw-ftp-ramp-test-1",
+        "mw-recovery-spin-1"
       ],
       "TAPER": [
         "mw-taper-opener-1",
         "mw-recovery-spin-1"
       ],
       "RACE_WEEK": [
-        "mw-taper-opener-1",
+        "mw-ftp-ramp-test-1",
         "mw-recovery-spin-1"
       ]
     }
   }
 ]
+

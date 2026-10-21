@@ -31,6 +31,7 @@ interface PlanVolumeSectionProps {
     restDays: number[];
     setRestDays: (_val: number[]) => void;
     computedPlanWeeks?: number;
+    sport?: string;
 }
 
 export default function PlanVolumeSection({
@@ -63,7 +64,8 @@ export default function PlanVolumeSection({
     setSwimDay,
     restDays,
     setRestDays,
-    computedPlanWeeks
+    computedPlanWeeks,
+    sport = 'RUN',
 }: PlanVolumeSectionProps) {
     const LONG_RUN_CAPS: Record<string, number> = {
         FIVE_K: 21, TEN_K: 25, HALF_MARATHON: 27, MARATHON: 35,
@@ -248,74 +250,76 @@ export default function PlanVolumeSection({
                 )}
             </div>
 
-            {/* Training Phases */}
-            <div className="border-t border-glass-border pt-6">
-                <h3 className="text-sm font-semibold text-foreground-muted mb-4">Training Phases</h3>
+            {/* Training Phases (Hidden for MyWhoosh Cycling plans or 0-run plans since MyWhoosh has its own 5-phase selector) */}
+            {sport !== 'CYCLING' && runsPerWeek > 0 && (
+                <div className="border-t border-glass-border pt-6">
+                    <h3 className="text-sm font-semibold text-foreground-muted mb-4">Training Phases</h3>
 
-                <div className="grid grid-cols-3 gap-4">
-                    <div>
-                        <div className="flex justify-between mb-2">
-                            <label className="text-xs text-foreground-muted">Taper</label>
-                            <span className="text-workout-recovery font-bold font-mono tabular-nums">{taperWeeks}w</span>
+                    <div className="grid grid-cols-3 gap-4">
+                        <div>
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-foreground-muted">Taper</label>
+                                <span className="text-workout-recovery font-bold font-mono tabular-nums">{taperWeeks}w</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="4"
+                                value={taperWeeks}
+                                onChange={(e) => setTaperWeeks(parseInt(e.target.value))}
+                                aria-label="Taper weeks"
+                                aria-valuenow={taperWeeks}
+                                aria-valuemin={0}
+                                aria-valuemax={4}
+                                className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-accent-cyan"
+                            />
                         </div>
-                        <input
-                            type="range"
-                            min="0"
-                            max="4"
-                            value={taperWeeks}
-                            onChange={(e) => setTaperWeeks(parseInt(e.target.value))}
-                            aria-label="Taper weeks"
-                            aria-valuenow={taperWeeks}
-                            aria-valuemin={0}
-                            aria-valuemax={4}
-                            className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-accent-cyan"
-                        />
-                    </div>
-                    <div>
-                        <div className="flex justify-between mb-2">
-                            <label className="text-xs text-foreground-muted">Peak</label>
-                            <span className="text-workout-long-run font-bold font-mono tabular-nums">{peakWeeks}w</span>
+                        <div>
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-foreground-muted">Peak</label>
+                                <span className="text-workout-long-run font-bold font-mono tabular-nums">{peakWeeks}w</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="6"
+                                value={peakWeeks}
+                                onChange={(e) => setPeakWeeks(parseInt(e.target.value))}
+                                aria-label="Peak weeks"
+                                aria-valuenow={peakWeeks}
+                                aria-valuemin={0}
+                                aria-valuemax={6}
+                                className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-accent-purple"
+                            />
                         </div>
-                        <input
-                            type="range"
-                            min="0"
-                            max="6"
-                            value={peakWeeks}
-                            onChange={(e) => setPeakWeeks(parseInt(e.target.value))}
-                            aria-label="Peak weeks"
-                            aria-valuenow={peakWeeks}
-                            aria-valuemin={0}
-                            aria-valuemax={6}
-                            className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-accent-purple"
-                        />
-                    </div>
-                    <div>
-                        <div className="flex justify-between mb-2">
-                            <label className="text-xs text-foreground-muted">Build</label>
-                            <span className="text-workout-tempo font-bold font-mono tabular-nums">{buildWeeks}w</span>
+                        <div>
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-foreground-muted">Build</label>
+                                <span className="text-workout-tempo font-bold font-mono tabular-nums">{buildWeeks}w</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="10"
+                                value={buildWeeks}
+                                onChange={(e) => setBuildWeeks(parseInt(e.target.value))}
+                                aria-label="Build weeks"
+                                aria-valuenow={buildWeeks}
+                                aria-valuemin={0}
+                                aria-valuemax={10}
+                                className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-workout-tempo"
+                            />
                         </div>
-                        <input
-                            type="range"
-                            min="0"
-                            max="10"
-                            value={buildWeeks}
-                            onChange={(e) => setBuildWeeks(parseInt(e.target.value))}
-                            aria-label="Build weeks"
-                            aria-valuenow={buildWeeks}
-                            aria-valuemin={0}
-                            aria-valuemax={10}
-                            className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-workout-tempo"
-                        />
                     </div>
+                    {computedPlanWeeks ? (
+                        <span className="text-xs text-foreground-muted mt-2">
+                            {Math.max(0, computedPlanWeeks - taperWeeks - peakWeeks - buildWeeks)} weeks base phase (remaining)
+                        </span>
+                    ) : (
+                        <p className="text-xs text-foreground-muted mt-2">Remaining weeks will be Base phase.</p>
+                    )}
                 </div>
-                {computedPlanWeeks ? (
-                    <span className="text-xs text-foreground-muted mt-2">
-                        {Math.max(0, computedPlanWeeks - taperWeeks - peakWeeks - buildWeeks)} weeks base phase (remaining)
-                    </span>
-                ) : (
-                    <p className="text-xs text-foreground-muted mt-2">Remaining weeks will be Base phase.</p>
-                )}
-            </div>
+            )}
 
             {/* Workout Scheduling (Collapsible - Advanced) */}
             <div className="border-t border-glass-border pt-4">
@@ -334,40 +338,42 @@ export default function PlanVolumeSection({
 
                 {showSchedulingSettings && (
                     <div className="space-y-4 mt-4 animate-fade-in">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs text-foreground-muted mb-2">Long Run Day</label>
-                                <select
-                                    value={longRunDay}
-                                    onChange={e => setLongRunDay(parseInt(e.target.value))}
-                                    className="w-full bg-surface border border-glass-border rounded-md p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-orange outline-hidden"
-                                >
-                                    <option value={0}>Sunday</option>
-                                    <option value={1}>Monday</option>
-                                    <option value={2}>Tuesday</option>
-                                    <option value={3}>Wednesday</option>
-                                    <option value={4}>Thursday</option>
-                                    <option value={5}>Friday</option>
-                                    <option value={6}>Saturday</option>
-                                </select>
+                        {runsPerWeek > 0 && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-foreground-muted mb-2">Long Run Day</label>
+                                    <select
+                                        value={longRunDay}
+                                        onChange={e => setLongRunDay(parseInt(e.target.value))}
+                                        className="w-full bg-surface border border-glass-border rounded-md p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                    >
+                                        <option value={0}>Sunday</option>
+                                        <option value={1}>Monday</option>
+                                        <option value={2}>Tuesday</option>
+                                        <option value={3}>Wednesday</option>
+                                        <option value={4}>Thursday</option>
+                                        <option value={5}>Friday</option>
+                                        <option value={6}>Saturday</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-foreground-muted mb-2">Quality Day</label>
+                                    <select
+                                        value={qualityDay}
+                                        onChange={e => setQualityDay(parseInt(e.target.value))}
+                                        className="w-full bg-surface border border-glass-border rounded-md p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-orange outline-hidden"
+                                    >
+                                        <option value={0}>Sunday</option>
+                                        <option value={1}>Monday</option>
+                                        <option value={2}>Tuesday</option>
+                                        <option value={3}>Wednesday</option>
+                                        <option value={4}>Thursday</option>
+                                        <option value={5}>Friday</option>
+                                        <option value={6}>Saturday</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-xs text-foreground-muted mb-2">Quality Day</label>
-                                <select
-                                    value={qualityDay}
-                                    onChange={e => setQualityDay(parseInt(e.target.value))}
-                                    className="w-full bg-surface border border-glass-border rounded-md p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-orange outline-hidden"
-                                >
-                                    <option value={0}>Sunday</option>
-                                    <option value={1}>Monday</option>
-                                    <option value={2}>Tuesday</option>
-                                    <option value={3}>Wednesday</option>
-                                    <option value={4}>Thursday</option>
-                                    <option value={5}>Friday</option>
-                                    <option value={6}>Saturday</option>
-                                </select>
-                            </div>
-                        </div>
+                        )}
 
                         {swimsPerWeek > 0 && (
                             <div>

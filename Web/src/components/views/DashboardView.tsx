@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { RefreshCw, AlertCircle, BarChart3, Hand, Target } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Session } from 'next-auth';
 import { UseMutationResult } from '@tanstack/react-query';
 import { RaceCountdown, ActivityList, Footer, MinimalistPillsMenu, UserAvatar } from '@/components';
@@ -57,6 +57,22 @@ export function DashboardView({
     } | null>(null);
 
     const planTileGoal: Goal | null = activeGoal || incompleteGoal || null;
+    const [hideNoPlanReminder, setHideNoPlanReminder] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('runflow_hide_no_plan_prompt') === 'true';
+    });
+
+    useEffect(() => {
+        const syncNoPlanPref = () => {
+            setHideNoPlanReminder(localStorage.getItem('runflow_hide_no_plan_prompt') === 'true');
+        };
+        window.addEventListener('runflow-plan-reminder-change', syncNoPlanPref);
+        window.addEventListener('storage', syncNoPlanPref);
+        return () => {
+            window.removeEventListener('runflow-plan-reminder-change', syncNoPlanPref);
+            window.removeEventListener('storage', syncNoPlanPref);
+        };
+    }, []);
 
     return (
         <div className="min-h-screen bg-background">
@@ -131,68 +147,102 @@ export function DashboardView({
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-                        <div className="lg:col-span-1">
-                            <WorkoutScheduleCard
-                                weeklyWorkouts={weeklyWorkouts}
-                                today={new Date().toDateString()}
-                                onEditWorkout={(w) => onEditWorkout(w, false)}
-                                onCompleteWorkout={(w) => onEditWorkout(w, true)}
-                            />
-                        </div>
-                        <div className="lg:col-span-1">
-                            {isLoading ? (
-                                <div className="h-full flex flex-col items-center justify-center glass-card p-8 min-h-[300px]">
-                                    <div className="w-8 h-8 rounded-full border-4 border-accent-orange border-t-transparent animate-spin mb-4"></div>
-                                    <p className="text-foreground-muted text-sm">Loading plan...</p>
-                                </div>
-                            ) : activeGoal ? (
-                                <RaceCountdown
-                                    goal={activeGoal}
-                                    className="h-full"
-                                    onSelectRace={(goal, activity, mode) => {
-                                        setRaceResultModal({
-                                            goal,
-                                            suggestedActivity: activity,
-                                            mode,
-                                        });
-                                    }}
-                                />
-                            ) : planTileGoal ? (
-                                <RaceCountdown
-                                    goal={planTileGoal}
-                                    className="h-full"
-                                    isIncompleteArchived={!activeGoal && !!incompleteGoal}
-                                    onSelectRace={(goal, activity, mode) => {
-                                        setRaceResultModal({
-                                            goal,
-                                            suggestedActivity: activity,
-                                            mode,
-                                        });
-                                    }}
-                                />
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center glass-card p-8 text-center">
-                                    <div className="w-16 h-16 rounded-full bg-accent-orange/10 flex items-center justify-center mb-4">
-                                        <Target className="w-8 h-8 text-accent-orange" />
+                    {(() => {
+                        const showWorkoutsCard = weeklyWorkouts.length > 0;
+                        const showPlanCard = isLoading || Boolean(activeGoal) || Boolean(planTileGoal) || !hideNoPlanReminder;
+                        const visibleCount = (showWorkoutsCard ? 1 : 0) + (showPlanCard ? 1 : 0) + 1;
+                        const gridColsClass =
+                            visibleCount === 3
+                                ? 'md:grid-cols-2 lg:grid-cols-3'
+                                : visibleCount === 2
+                                ? 'md:grid-cols-2 lg:grid-cols-2'
+                                : 'grid-cols-1';
+
+                        return (
+                            <div className={`grid grid-cols-1 ${gridColsClass} gap-6 items-stretch`}>
+                                {showWorkoutsCard && (
+                                    <div className="lg:col-span-1">
+                                        <WorkoutScheduleCard
+                                            weeklyWorkouts={weeklyWorkouts}
+                                            today={new Date().toDateString()}
+                                            onEditWorkout={(w) => onEditWorkout(w, false)}
+                                            onCompleteWorkout={(w) => onEditWorkout(w, true)}
+                                        />
                                     </div>
-                                    <h3 className="text-xl font-semibold text-foreground mb-2">No Active Training Plan</h3>
-                                    <p className="text-foreground-muted mb-6 text-sm">
-                                        You don&apos;t have an active training plan yet. Create one when you&apos;re ready to start training!
-                                    </p>
-                                    <button
-                                        onClick={() => router.push('/onboarding?step=4')}
-                                        className="btn-primary py-2 px-6"
-                                    >
-                                        Create Training Plan
-                                    </button>
+                                )}
+                                {showPlanCard && (
+                                    <div className="lg:col-span-1">
+                                        {isLoading ? (
+                                            <div className="h-full flex flex-col items-center justify-center glass-card p-8 min-h-[300px]">
+                                                <div className="w-8 h-8 rounded-full border-4 border-accent-orange border-t-transparent animate-spin mb-4"></div>
+                                                <p className="text-foreground-muted text-sm">Loading plan...</p>
+                                            </div>
+                                        ) : activeGoal ? (
+                                            <RaceCountdown
+                                                goal={activeGoal}
+                                                className="h-full"
+                                                onSelectRace={(goal, activity, mode) => {
+                                                    setRaceResultModal({
+                                                        goal,
+                                                        suggestedActivity: activity,
+                                                        mode,
+                                                    });
+                                                }}
+                                            />
+                                        ) : planTileGoal ? (
+                                            <RaceCountdown
+                                                goal={planTileGoal}
+                                                className="h-full"
+                                                isIncompleteArchived={!activeGoal && !!incompleteGoal}
+                                                onSelectRace={(goal, activity, mode) => {
+                                                    setRaceResultModal({
+                                                        goal,
+                                                        suggestedActivity: activity,
+                                                        mode,
+                                                    });
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="h-full flex flex-col items-center justify-center glass-card p-8 text-center">
+                                                <div className="w-16 h-16 rounded-full bg-accent-orange/10 flex items-center justify-center mb-4">
+                                                    <Target className="w-8 h-8 text-accent-orange" />
+                                                </div>
+                                                <h3 className="text-xl font-semibold text-foreground mb-2">No Active Training Plan</h3>
+                                                <p className="text-foreground-muted mb-6 text-sm">
+                                                    You don&apos;t have an active training plan yet. Create one when you&apos;re ready to start training!
+                                                </p>
+                                                <div className="flex flex-wrap items-center justify-center gap-3">
+                                                    <button
+                                                        onClick={() => router.push('/onboarding?step=4')}
+                                                        className="btn-primary py-2 px-6"
+                                                    >
+                                                        Create Training Plan
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            localStorage.setItem('runflow_hide_no_plan_prompt', 'true');
+                                                            setHideNoPlanReminder(true);
+                                                            window.dispatchEvent(new Event('runflow-plan-reminder-change'));
+                                                        }}
+                                                        className="px-4 py-2 rounded-md text-xs font-medium border border-line text-foreground-muted hover:text-foreground hover:bg-surface-hover transition-colors"
+                                                    >
+                                                        Hide Reminder
+                                                    </button>
+                                                </div>
+                                                <p className="text-[11px] text-foreground-muted mt-3">
+                                                    You can always create or reopen a plan from your Profile menu → Training Plan.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                <div className="lg:col-span-1 h-full flex flex-col">
+                                    <TrainingStatusCard />
                                 </div>
-                            )}
-                        </div>
-                        <div className="lg:col-span-1 h-full flex flex-col">
-                            <TrainingStatusCard />
-                        </div>
-                    </div>
+                            </div>
+                        );
+                    })()}
 
                     <div className="mt-8">
                         <div className="flex items-center justify-between mb-4">

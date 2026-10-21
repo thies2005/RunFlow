@@ -13,12 +13,14 @@ import {
     calculateEfficiencyFactor,
     calculateAerobicDecoupling,
     calculatePowerZoneTimes,
+    calculateCyclingVo2Max,
 } from '@/lib/metrics/power';
 
 export interface CyclingAnalyticsData {
     ftp: {
         ftpWatts: number | null;
         eFtpWatts: number | null;
+        cyclingVo2max: number | null;
         autoEstimateFtp: boolean;
         weightKg: number | null;
         wPerKg: number | null;
@@ -233,8 +235,13 @@ export async function getCyclingAnalytics(
     for (const r of allRides) {
         const streams = parseStreams(r.streams);
         let eftp: number | null = null;
+        const titleMatch = (r.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
+        const parsedTitleW = titleMatch ? parseInt(titleMatch[1], 10) : null;
+        const validTitleW = parsedTitleW && parsedTitleW >= 40 && parsedTitleW <= 1500 ? parsedTitleW : null;
 
-        if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
+        if (/\bftp\s*test\b/i.test(r.name || '') && validTitleW) {
+            eftp = validTitleW;
+        } else if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
             const curve = calculatePowerCurve(streams.watts, streams.time);
             curve.forEach(pt => {
                 const durIdx = STANDARD_POWER_DURATIONS.indexOf(pt.durationSec);
@@ -242,14 +249,16 @@ export async function getCyclingAnalytics(
                     allTimePeakWatts[durIdx] = pt.peakWatts;
                 }
             });
-            eftp = estimateFtpFromPowerCurve(curve, r.weightedAverageWatts ?? r.averageWatts);
+            eftp = estimateFtpFromPowerCurve(curve, r.weightedAverageWatts ?? r.averageWatts ?? validTitleW);
         } else {
-            if (r.weightedAverageWatts || r.averageWatts) {
-                eftp = estimateFtpFromPowerCurve([], r.weightedAverageWatts ?? r.averageWatts);
+            const fallbackW = r.weightedAverageWatts ?? r.averageWatts ?? validTitleW;
+            if (fallbackW) {
+                eftp = estimateFtpFromPowerCurve([], fallbackW);
             }
-            // No watts stream: estimate MMP points from summary watts so the
-            // all-time curve is populated for rides without raw streams.
-            applyEstimatedMmpPoints(allTimePeakWatts, r);
+            applyEstimatedMmpPoints(allTimePeakWatts, {
+                ...r,
+                averageWatts: r.averageWatts ?? validTitleW,
+            });
         }
 
         if (eftp && (allTimeEftp === null || eftp > allTimeEftp)) {
@@ -282,10 +291,19 @@ export async function getCyclingAnalytics(
         return Number((watts / weightKg).toFixed(2));
     });
 
-    // Resolve FTP
+    // Resolve FTP & Cycling VO2max
     const resolvedFtp = user?.ftpWatts ?? allTimeEftp ?? 200;
     const wPerKg = (resolvedFtp && weightKg) ? Number((resolvedFtp / weightKg).toFixed(2)) : null;
     const zones = calculateCogganPowerZones(resolvedFtp, weightKg);
+    const dur300Idx = STANDARD_POWER_DURATIONS.indexOf(300);
+    const peak5MinWatts = dur300Idx !== -1 ? Math.max(rangePeakWatts[dur300Idx] || 0, allTimePeakWatts[dur300Idx] || 0) : 0;
+    const cyclingVo2max = (user?.ftpWatts || allTimeEftp || allRides.length > 0)
+        ? calculateCyclingVo2Max({
+              ftpWatts: resolvedFtp,
+              peak5MinWatts: peak5MinWatts > 0 ? peak5MinWatts : null,
+              weightKg,
+          })
+        : null;
 
     // Map over rangeRides so any ride missing stored metrics computes them on the fly
     const enrichedRides = rangeRides.map(r => {
@@ -500,6 +518,7 @@ export async function getCyclingAnalytics(
         ftp: {
             ftpWatts: user?.ftpWatts ?? null,
             eFtpWatts: allTimeEftp,
+            cyclingVo2max,
             autoEstimateFtp: user?.autoEstimateFtp ?? true,
             weightKg,
             wPerKg,

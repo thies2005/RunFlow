@@ -826,5 +826,321 @@
     ],
     "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
     "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-ftp-ramp-test-1",
+    "name": "MyWhoosh Ramp & 20min FTP Assessment",
+    "category": "Testing",
+    "description": "Official MyWhoosh FTP Test session (10m progressive warmup, 3x1m openers, 20m maximal sustained threshold test @ 100-105% FTP, 10m cooldown)",
+    "durationSeconds": 2700,
+    "tss": 64.0,
+    "intensityFactor": 0.92,
+    "zoneSeconds": {
+      "z1": 600,
+      "z2": 600,
+      "z3": 300,
+      "ss": 0,
+      "z4": 1020,
+      "z5": 180,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 3x1m Openers, 20m All-Out FTP Test @ ~102% FTP, 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.75,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "interval",
+        "repeatCount": 3,
+        "durationSeconds": 60,
+        "powerLowPct": 1.1,
+        "powerHighPct": 1.1,
+        "offDurationSeconds": 60,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 100
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 1200,
+        "powerLowPct": 1.02,
+        "powerHighPct": 1.02,
+        "cadenceRpm": 92
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 540,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.6,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-ftp-testing",
+      "mw-plan-ftp-builder",
+      "mw-plan-ftp-advanced"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-climb-torque-1",
+    "name": "Alpe Climbing Low-Cadence Torque 4x8m",
+    "category": "Climbing",
+    "description": "Official MyWhoosh Climbing session (10m Warmup, 4x8m @ 92% FTP at 65-72rpm climbing torque (4m @ 55% FTP), 10m Cooldown)",
+    "durationSeconds": 3840,
+    "tss": 74.2,
+    "intensityFactor": 0.83,
+    "zoneSeconds": {
+      "z1": 960,
+      "z2": 960,
+      "z3": 0,
+      "ss": 960,
+      "z4": 960,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 4x8m @ 92% FTP (68rpm torque, 4m recovery), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.75,
+        "cadenceRpm": 88
+      },
+      {
+        "type": "interval",
+        "repeatCount": 4,
+        "durationSeconds": 480,
+        "powerLowPct": 0.92,
+        "powerHighPct": 0.92,
+        "offDurationSeconds": 240,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 68
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 720,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.65,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-climbing",
+      "mw-plan-gran-fondo",
+      "mw-plan-uae-pogacar"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-sprint-neuromuscular-1",
+    "name": "Sprint & Anaerobic Power 2x6x15s",
+    "category": "Sprint",
+    "description": "Official MyWhoosh Sprint session (12m Warmup, 2 sets of 6x (15s Max Sprint @ 165% FTP, 105s Z1 spin), 10m Endurance Z2, 8m Cooldown)",
+    "durationSeconds": 3240,
+    "tss": 66.8,
+    "intensityFactor": 0.86,
+    "zoneSeconds": {
+      "z1": 1260,
+      "z2": 1800,
+      "z3": 0,
+      "ss": 0,
+      "z4": 0,
+      "z5": 0,
+      "z6": 180
+    },
+    "stepsSummary": "12m Warmup, 12x (15s @ 165% FTP / 1m45s @ 52% FTP), 10m @ 68% FTP, 8m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 720,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.75,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "interval",
+        "repeatCount": 6,
+        "durationSeconds": 15,
+        "powerLowPct": 1.65,
+        "powerHighPct": 1.65,
+        "offDurationSeconds": 105,
+        "offPowerPct": 0.52,
+        "cadenceRpm": 110
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 600,
+        "powerLowPct": 0.68,
+        "powerHighPct": 0.68,
+        "cadenceRpm": 90
+      },
+      {
+        "type": "interval",
+        "repeatCount": 6,
+        "durationSeconds": 15,
+        "powerLowPct": 1.65,
+        "powerHighPct": 1.65,
+        "offDurationSeconds": 105,
+        "offPowerPct": 0.52,
+        "cadenceRpm": 110
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 480,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.6,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-sprinting",
+      "mw-plan-criterium",
+      "mw-plan-road-race"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-crit-surge-1",
+    "name": "Criterium Race Surges & Over-Unders",
+    "category": "Criterium",
+    "description": "Official MyWhoosh Criterium session (10m Warmup, 3 sets of 8x (30s @ 130% FTP corner acceleration / 30s @ 82% FTP pack float), 10m Cooldown)",
+    "durationSeconds": 3120,
+    "tss": 71.5,
+    "intensityFactor": 0.91,
+    "zoneSeconds": {
+      "z1": 600,
+      "z2": 1080,
+      "z3": 720,
+      "ss": 0,
+      "z4": 0,
+      "z5": 360,
+      "z6": 360
+    },
+    "stepsSummary": "10m Warmup, 3x8m (30s @ 130% FTP / 30s @ 82% FTP), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.78,
+        "cadenceRpm": 92
+      },
+      {
+        "type": "interval",
+        "repeatCount": 8,
+        "durationSeconds": 30,
+        "powerLowPct": 1.3,
+        "powerHighPct": 1.3,
+        "offDurationSeconds": 30,
+        "offPowerPct": 0.82,
+        "cadenceRpm": 102
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 240,
+        "powerLowPct": 0.55,
+        "powerHighPct": 0.55,
+        "cadenceRpm": 88
+      },
+      {
+        "type": "interval",
+        "repeatCount": 8,
+        "durationSeconds": 30,
+        "powerLowPct": 1.3,
+        "powerHighPct": 1.3,
+        "offDurationSeconds": 30,
+        "offPowerPct": 0.82,
+        "cadenceRpm": 102
+      },
+      {
+        "type": "steadystate",
+        "durationSeconds": 240,
+        "powerLowPct": 0.55,
+        "powerHighPct": 0.55,
+        "cadenceRpm": 88
+      },
+      {
+        "type": "interval",
+        "repeatCount": 8,
+        "durationSeconds": 30,
+        "powerLowPct": 1.3,
+        "powerHighPct": 1.3,
+        "offDurationSeconds": 30,
+        "offPowerPct": 0.82,
+        "cadenceRpm": 102
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.62,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-criterium",
+      "mw-plan-road-race"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
+  },
+  {
+    "id": "mw-gravel-pebble-1",
+    "name": "Little Pebble Gravel Variable Tempo",
+    "category": "Gravel",
+    "description": "Official MyWhoosh Little Pebble Gravel session (10m Warmup, 3x10m Gravel Tempo @ 84% FTP with 78rpm seated torque surges, 10m Cooldown)",
+    "durationSeconds": 3600,
+    "tss": 59.0,
+    "intensityFactor": 0.77,
+    "zoneSeconds": {
+      "z1": 600,
+      "z2": 1200,
+      "z3": 1800,
+      "ss": 0,
+      "z4": 0,
+      "z5": 0,
+      "z6": 0
+    },
+    "stepsSummary": "10m Warmup, 3x10m @ 84% FTP (78rpm gravel cadence, 3m20s recovery), 10m Cooldown",
+    "steps": [
+      {
+        "type": "warmup",
+        "durationSeconds": 600,
+        "powerLowPct": 0.5,
+        "powerHighPct": 0.72,
+        "cadenceRpm": 88
+      },
+      {
+        "type": "interval",
+        "repeatCount": 3,
+        "durationSeconds": 600,
+        "powerLowPct": 0.84,
+        "powerHighPct": 0.84,
+        "offDurationSeconds": 200,
+        "offPowerPct": 0.55,
+        "cadenceRpm": 78
+      },
+      {
+        "type": "cooldown",
+        "durationSeconds": 600,
+        "powerLowPct": 0.45,
+        "powerHighPct": 0.62,
+        "cadenceRpm": 85
+      }
+    ],
+    "planIds": [
+      "mw-plan-little-pebble-gravel",
+      "mw-plan-gran-fondo"
+    ],
+    "mywhooshWebLibraryUrl": "https://workout.mywhoosh.com/workouts-library",
+    "externalDetailUrl": "https://mywhooshinfo.com/workouts/"
   }
 ]

@@ -337,6 +337,11 @@ export function MobileLayout() {
         if (shouldRedirectToLogin) {
             router.push('/login');
         } else if (shouldRedirectToOnboarding) {
+            try {
+                localStorage.setItem('runflow_onboarding_dismissed', 'true');
+            } catch {
+                // ignore storage errors
+            }
             router.push('/onboarding?step=4');
         }
     }, [router, shouldRedirectToLogin, shouldRedirectToOnboarding]);

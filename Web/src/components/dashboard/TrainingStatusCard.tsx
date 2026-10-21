@@ -6,7 +6,9 @@ import { useState } from 'react';
 export default function TrainingStatusCard() {
     const {
         marathonShape,
+        vdot,
         aerobicVo2max,
+        cyclingVo2max,
         correctionFactor,
         ctl,
         atl,
@@ -37,7 +39,7 @@ export default function TrainingStatusCard() {
     const markerPos = Math.min(100, (workloadRatio / 2) * 100);
 
     // Check for empty data
-    const hasData = ctl > 0 || atl > 0 || aerobicVo2max > 0;
+    const hasData = ctl > 0 || atl > 0 || aerobicVo2max > 0 || cyclingVo2max > 0;
 
     if (!hasData) {
         return (
@@ -72,20 +74,28 @@ export default function TrainingStatusCard() {
                     </div>
                 </div>
 
-                {/* Aerobic Fitness (VO2max) — HR-based trend indicator */}
+                {/* Aerobic Fitness (VO2max) — Running HR-based + Cycling Power-based */}
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-md bg-accent-cyan/15 flex items-center justify-center shrink-0">
                         <Activity className="w-5 h-5 text-accent-cyan" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                         <p className="text-xs text-foreground-muted font-semibold leading-tight">Aerobic Fitness (VO2max)</p>
-                        <div className="flex items-baseline justify-between">
+                        <div className="flex items-baseline justify-between gap-1">
                             <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
-                                {aerobicVo2max > 0 ? aerobicVo2max.toFixed(1) : '-'}
+                                {aerobicVo2max > 0 ? aerobicVo2max.toFixed(1) : cyclingVo2max > 0 ? cyclingVo2max.toFixed(1) : '-'}
                             </p>
                             {correctionFactor !== 1.0 && (
                                 <span className="text-xs font-mono tabular-nums text-accent-cyan font-semibold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
                                     {correctionFactor.toFixed(1)}x
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5 text-[10px] font-mono text-foreground-muted">
+                            {vdot > 0 && <span>Run VDOT: {vdot.toFixed(1)}</span>}
+                            {cyclingVo2max > 0 && (
+                                <span className="text-accent-orange font-semibold">
+                                    {vdot > 0 ? '· ' : ''}Bike VO2: {cyclingVo2max.toFixed(1)}
                                 </span>
                             )}
                         </div>

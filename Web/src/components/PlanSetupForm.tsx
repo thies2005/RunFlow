@@ -19,7 +19,7 @@ import PlanVolumeSection from './setup/PlanVolumeSection';
 import HeartRateZonesSection from './setup/HeartRateZonesSection';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { getRaceDefaults, adjustDefaultsForVdot, getScaledPhaseDefaults } from '@/lib/plans/defaults';
-import { MYWHOOSH_PLANS } from '@/lib/plans/mywhooshMatcher';
+import { MYWHOOSH_PLANS, MYWHOOSH_PHASES, splitMyWhooshPlanAndPhase, encodeMyWhooshPlanAndPhase, type MyWhooshPhaseOption } from '@/lib/plans/mywhooshMatcher';
 
 
 interface RaceActivity {
@@ -788,7 +788,7 @@ export default function PlanSetupForm({
     const updateSettingsMutation = useMutation({
         mutationFn: async () => {
             const rawTimeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
-            const timeSeconds = rawTimeSeconds > 0 ? rawTimeSeconds : (sport === 'CYCLING' ? 1500 : 0);
+            const timeSeconds = rawTimeSeconds > 0 ? rawTimeSeconds : ((sport === 'CYCLING' || runsPerWeek === 0) ? 1500 : 0);
 
             if (timeSeconds === 0) throw new Error('Time cannot be zero');
 
@@ -856,9 +856,12 @@ export default function PlanSetupForm({
         }
     });
 
+    const activeGoalId: string | undefined = goalsData?.goals?.find((g: { isActive: boolean }) => g.isActive)?.id;
+    const isCreatingPlan = mode === 'onboarding' || mode === 'advanced' || mode === 'modal' || !activeGoalId;
+
     const handleSubmit = () => {
         const errors: Record<string, string> = {};
-        if (mode === 'onboarding' || mode === 'advanced' || mode === 'modal') {
+        if (isCreatingPlan) {
             if (!goalName.trim()) errors.goalName = "Goal name is required";
             if (sport !== 'NO_RACE' && sport !== 'CYCLING' && !raceDate) errors.raceDate = "Race date is required";
             if (!planStartDate) errors.planStartDate = "Plan start date is required";
@@ -873,7 +876,7 @@ export default function PlanSetupForm({
         setFormErrors({});
         setMessage('');
 
-        if (mode === 'onboarding' || mode === 'advanced' || mode === 'modal') {
+        if (isCreatingPlan) {
             createGoalMutation.mutate();
         } else {
             updateSettingsMutation.mutate();
@@ -883,8 +886,6 @@ export default function PlanSetupForm({
     const isLoading = createGoalMutation.isPending || updateSettingsMutation.isPending;
 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-    const activeGoalId: string | undefined = goalsData?.goals?.find((g: { isActive: boolean }) => g.isActive)?.id;
 
     // Delete plan mutation (soft-delete via the advanced plan endpoint: snapshots + cleans sub-goals)
     const deletePlanMutation = useMutation({
@@ -964,25 +965,28 @@ export default function PlanSetupForm({
                 setDurationWeeks={setDurationWeeks}
                 experienceLevel={experienceLevel}
                 setExperienceLevel={adjustDefaultsForExperience}
+                showGoalNameInSettings={!activeGoalId}
             />
 
-            <CalibrationSection
-                calibrationMode={calibrationMode}
-                setCalibrationMode={setCalibrationMode}
-                selectedActivityId={selectedActivityId}
-                setSelectedActivityId={setSelectedActivityId}
-                calibrationDistance={calibrationDistance}
-                setCalibrationDistance={setCalibrationDistance}
-                hours={hours}
-                setHours={setHours}
-                minutes={minutes}
-                setMinutes={setMinutes}
-                seconds={seconds}
-                setSeconds={setSeconds}
-                setCalibrationFactor={setCalibrationFactor}
-                currentVdot={currentVdot}
-                raceActivities={raceActivities}
-            />
+            {runsPerWeek > 0 && (
+                <CalibrationSection
+                    calibrationMode={calibrationMode}
+                    setCalibrationMode={setCalibrationMode}
+                    selectedActivityId={selectedActivityId}
+                    setSelectedActivityId={setSelectedActivityId}
+                    calibrationDistance={calibrationDistance}
+                    setCalibrationDistance={setCalibrationDistance}
+                    hours={hours}
+                    setHours={setHours}
+                    minutes={minutes}
+                    setMinutes={setMinutes}
+                    seconds={seconds}
+                    setSeconds={setSeconds}
+                    setCalibrationFactor={setCalibrationFactor}
+                    currentVdot={currentVdot}
+                    raceActivities={raceActivities}
+                />
+            )}
 
             {TRIATHLON_RACE_TYPES.has(raceType) && (
                 <TriathlonGoalTimeRenderer
@@ -1071,72 +1075,160 @@ export default function PlanSetupForm({
                 />
             )}
 
-            {/* MyWhoosh Training Plan Selector (always visible and preselected when sport === 'CYCLING') */}
-            {(sport === 'CYCLING' || ridesPerWeek > 0 || TRIATHLON_RACE_TYPES.has(raceType) || sport === 'TRIATHLON') && (
-                <div className="border-t border-glass-border pt-6 space-y-3">
-                    {sport !== 'CYCLING' && (
-                        <div className="flex items-center justify-between p-3 rounded-md bg-surface border border-glass-border">
-                            <div className="pr-3">
-                                <p className="text-sm text-foreground">Match Cycling Workouts to MyWhoosh</p>
-                                <p className="text-xs text-foreground-muted">Populate planned rides with official MyWhoosh workout steps (%FTP, intervals, cadence) and enable .zwo export</p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setMatchToMyWhoosh(!matchToMyWhoosh)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${matchToMyWhoosh ? 'bg-accent-cyan' : 'bg-glass-border'}`}
-                            >
-                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
-                            </button>
-                        </div>
-                    )}
+            {/* MyWhoosh Two-Stage Selector (General Plan -> Phase of Plan) */}
+            {(sport === 'CYCLING' || ridesPerWeek > 0 || TRIATHLON_RACE_TYPES.has(raceType) || sport === 'TRIATHLON') && (() => {
+                const { planId: selectedBasePlanId, phaseKey: selectedPhaseKey } = splitMyWhooshPlanAndPhase(
+                    mywhooshPlanId || (sport === 'CYCLING' ? (MYWHOOSH_PLANS[0]?.id ?? 'mw-plan-ftp-builder') : '')
+                );
+                const activeMwPlan = MYWHOOSH_PLANS.find((p) => p.id === selectedBasePlanId) || (sport === 'CYCLING' ? MYWHOOSH_PLANS[0] : undefined);
+                const activePhaseMeta = MYWHOOSH_PHASES.find((ph) => ph.id === selectedPhaseKey) || MYWHOOSH_PHASES[0];
+                const categories = Array.from(new Set(MYWHOOSH_PLANS.map((p) => p.category)));
 
-                    {(sport === 'CYCLING' || matchToMyWhoosh) && (
-                        <div className="p-3.5 rounded-md bg-surface border border-accent-cyan/40 space-y-2">
-                            <label className="block text-xs font-semibold text-accent-cyan">
-                                {sport === 'CYCLING' ? 'Select MyWhoosh Cycling Training Plan' : 'MyWhoosh Training Plan / Workout Selector'}
-                            </label>
-                            <select
-                                value={mywhooshPlanId || (sport === 'CYCLING' ? (MYWHOOSH_PLANS[0]?.id ?? '') : '')}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    setMywhooshPlanId(val);
-                                    const selectedPlan = MYWHOOSH_PLANS.find((p) => p.id === val);
-                                    if (sport === 'CYCLING' && selectedPlan) {
-                                        setDurationWeeks(String(selectedPlan.weeksCount));
-                                        if (
-                                            goalName === 'My First Race' ||
-                                            goalName === 'My Race' ||
-                                            MYWHOOSH_PLANS.some((p) => p.name === goalName)
-                                        ) {
-                                            setGoalName(selectedPlan.name);
-                                        }
-                                    }
-                                }}
-                                className="bg-background-secondary border border-glass-border rounded-md p-2.5 text-xs text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-cyan"
-                            >
-                                {sport !== 'CYCLING' && (
-                                    <option value="">Auto-Match Closest MyWhoosh Workout by Phase &amp; Duration</option>
+                return (
+                    <div className="border-t border-glass-border pt-6 space-y-3">
+                        {sport !== 'CYCLING' && (
+                            <div className="space-y-2">
+                                <label className="block text-xs font-semibold text-foreground-muted">
+                                    Cycling Workout Mode ({ridesPerWeek} {ridesPerWeek === 1 ? 'Ride' : 'Rides'} / Week)
+                                </label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => setMatchToMyWhoosh(true)}
+                                        className={`p-3 rounded-md border text-left transition-all ${
+                                            matchToMyWhoosh
+                                                ? 'border-accent-cyan bg-accent-cyan/10 text-foreground'
+                                                : 'border-glass-border bg-surface text-foreground-muted hover:border-foreground-muted'
+                                        }`}
+                                    >
+                                        <span className="text-xs font-semibold block text-accent-cyan">MyWhoosh Virtual Workouts</span>
+                                        <span className="text-[11px] text-foreground-muted mt-0.5 block">
+                                            Match rides to MyWhoosh plans (%FTP intervals, cadence &amp; .zwo export)
+                                        </span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setMatchToMyWhoosh(false)}
+                                        className={`p-3 rounded-md border text-left transition-all ${
+                                            !matchToMyWhoosh
+                                                ? 'border-accent-orange bg-accent-orange/10 text-foreground'
+                                                : 'border-glass-border bg-surface text-foreground-muted hover:border-foreground-muted'
+                                        }`}
+                                    >
+                                        <span className="text-xs font-semibold block text-foreground">Offline / Outdoor Cycling</span>
+                                        <span className="text-[11px] text-foreground-muted mt-0.5 block">
+                                            Standard outdoor/offline rides (Zone 2 Endurance, Tempo &amp; Intervals)
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {(sport === 'CYCLING' || matchToMyWhoosh) && (
+                            <div className="p-4 rounded-md bg-surface border border-accent-cyan/40 space-y-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-accent-cyan mb-1">
+                                            1. MyWhoosh General Training Plan
+                                        </label>
+                                        <select
+                                            value={selectedBasePlanId}
+                                            onChange={(e) => {
+                                                const newBaseId = e.target.value;
+                                                const nextComposite = encodeMyWhooshPlanAndPhase(newBaseId, selectedPhaseKey);
+                                                setMywhooshPlanId(nextComposite);
+                                                const foundPlan = MYWHOOSH_PLANS.find((p) => p.id === newBaseId);
+                                                if (sport === 'CYCLING' && foundPlan) {
+                                                    const nextWeeks = activePhaseMeta.weeks ?? foundPlan.weeksCount;
+                                                    setDurationWeeks(String(nextWeeks));
+                                                    setRidesPerWeek(foundPlan.ridesPerWeek || 4);
+                                                    if (
+                                                        goalName === 'My First Race' ||
+                                                        goalName === 'My Race' ||
+                                                        MYWHOOSH_PLANS.some((p) => goalName.startsWith(p.name))
+                                                    ) {
+                                                        setGoalName(
+                                                            selectedPhaseKey !== 'ALL'
+                                                                ? `${foundPlan.name} (${activePhaseMeta.shortLabel})`
+                                                                : foundPlan.name
+                                                        );
+                                                    }
+                                                }
+                                            }}
+                                            className="bg-background-secondary border border-glass-border rounded-md p-2.5 text-xs text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-cyan"
+                                        >
+                                            {sport !== 'CYCLING' && (
+                                                <option value="">Auto-Match Closest MyWhoosh Workout by Phase &amp; Duration</option>
+                                            )}
+                                            {categories.map((cat) => (
+                                                <optgroup key={cat} label={cat}>
+                                                    {MYWHOOSH_PLANS.filter((p) => p.category === cat).map((plan) => (
+                                                        <option key={plan.id} value={plan.id}>
+                                                            {plan.name} ({plan.level} · {plan.weeksCount}w)
+                                                        </option>
+                                                    ))}
+                                                </optgroup>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-accent-cyan mb-1">
+                                            2. Phase of Plan (MyWhoosh 5-Phase System)
+                                        </label>
+                                        <select
+                                            value={selectedPhaseKey}
+                                            disabled={!selectedBasePlanId}
+                                            onChange={(e) => {
+                                                const nextPhase = e.target.value as MyWhooshPhaseOption['id'];
+                                                const baseId = selectedBasePlanId || MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder';
+                                                setMywhooshPlanId(encodeMyWhooshPlanAndPhase(baseId, nextPhase));
+                                                const phaseObj = MYWHOOSH_PHASES.find((ph) => ph.id === nextPhase);
+                                                const foundPlan = MYWHOOSH_PLANS.find((p) => p.id === baseId);
+                                                if (sport === 'CYCLING' && foundPlan) {
+                                                    const nextWeeks = phaseObj?.weeks ?? foundPlan.weeksCount;
+                                                    setDurationWeeks(String(nextWeeks));
+                                                    if (
+                                                        goalName === 'My First Race' ||
+                                                        goalName === 'My Race' ||
+                                                        MYWHOOSH_PLANS.some((p) => goalName.startsWith(p.name))
+                                                    ) {
+                                                        setGoalName(
+                                                            nextPhase !== 'ALL' && phaseObj
+                                                                ? `${foundPlan.name} (${phaseObj.shortLabel})`
+                                                                : foundPlan.name
+                                                        );
+                                                    }
+                                                }
+                                            }}
+                                            className="bg-background-secondary border border-glass-border rounded-md p-2.5 text-xs text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-cyan disabled:opacity-50"
+                                        >
+                                            {MYWHOOSH_PHASES.map((ph) => (
+                                                <option key={ph.id} value={ph.id}>
+                                                    {ph.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {activeMwPlan && (
+                                    <div className="rounded bg-background-secondary/70 border border-line p-2.5 space-y-1">
+                                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                                            <span className="font-semibold text-foreground">{activeMwPlan.name}</span>
+                                            <span className="font-mono text-[11px] text-accent-cyan">
+                                                {activePhaseMeta.weeks ?? activeMwPlan.weeksCount} Weeks · {activeMwPlan.level} · {activePhaseMeta.shortLabel}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-foreground-muted">{activeMwPlan.description}</p>
+                                        <p className="text-[11px] text-accent-cyan/90">{activePhaseMeta.description}</p>
+                                    </div>
                                 )}
-                                {MYWHOOSH_PLANS.map((plan) => (
-                                    <option key={plan.id} value={plan.id}>
-                                        {plan.name} ({plan.category} · {plan.level} · {plan.weeksCount}w)
-                                    </option>
-                                ))}
-                            </select>
-                            {(mywhooshPlanId || sport === 'CYCLING') && (
-                                <p className="text-[11px] text-foreground-muted">
-                                    {MYWHOOSH_PLANS.find((p) => p.id === (mywhooshPlanId || MYWHOOSH_PLANS[0]?.id))?.description}
-                                </p>
-                            )}
-                            {sport === 'CYCLING' && (
-                                <p className="text-[11px] text-accent-cyan">
-                                    Pure cycling plan preselected from MyWhoosh. Use the sliders below to add optional Runs, Swims, or Strength/Gym sessions per week.
-                                </p>
-                            )}
-                        </div>
-                    )}
-                </div>
-            )}
+                            </div>
+                        )}
+                    </div>
+                );
+            })()}
 
             <PlanVolumeSection
                 runsPerWeek={runsPerWeek}
@@ -1179,6 +1271,7 @@ export default function PlanSetupForm({
                 restDays={restDays}
                 setRestDays={setRestDays}
                 computedPlanWeeks={computedPlanWeeks}
+                sport={sport}
             />
 
             <HeartRateZonesSection
@@ -1211,32 +1304,34 @@ export default function PlanSetupForm({
                 setZone6Max={setZone6Max}
             />
 
-            {/* Start Weekly Mileage */}
-            <div className="border-t border-glass-border pt-6">
-                <div className="flex justify-between mb-2">
-                    <label className="text-xs text-foreground-muted">Start Weekly Mileage</label>
-                    <span className="text-positive font-bold">{startWeeklyMileage} km</span>
+            {/* Start Weekly Mileage (only when running is part of the plan) */}
+            {runsPerWeek > 0 && (
+                <div className="border-t border-glass-border pt-6">
+                    <div className="flex justify-between mb-2">
+                        <label className="text-xs text-foreground-muted">Start Weekly Mileage</label>
+                        <span className="text-positive font-bold">{startWeeklyMileage} km</span>
+                    </div>
+                    <input
+                        type="range"
+                        min={0}
+                        max={Math.round(weeklyMileage)}
+                        step="5"
+                        value={startWeeklyMileage}
+                        onChange={(e) => setStartWeeklyMileage(parseInt(e.target.value))}
+                        className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-positive"
+                    />
+                    <div className="flex justify-between text-xs text-foreground-muted mt-1">
+                        <span>0km</span>
+                        <span>{Math.round(weeklyMileage / 2)}km</span>
+                        <span>{Math.round(weeklyMileage)}km</span>
+                    </div>
+                    <p className="text-xs text-foreground-muted mt-1">
+                        {internalStatsData?.avgWeeklyKmLast4Weeks > 0
+                            ? `Based on your last 4 weeks avg (${internalStatsData.avgWeeklyKmLast4Weeks} km/wk). Adjust if needed.`
+                            : 'Your current weekly mileage at the start of the plan.'}
+                    </p>
                 </div>
-                <input
-                    type="range"
-                    min={0}
-                    max={Math.round(weeklyMileage)}
-                    step="5"
-                    value={startWeeklyMileage}
-                    onChange={(e) => setStartWeeklyMileage(parseInt(e.target.value))}
-                    className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-positive"
-                />
-                <div className="flex justify-between text-xs text-foreground-muted mt-1">
-                    <span>0km</span>
-                    <span>{Math.round(weeklyMileage / 2)}km</span>
-                    <span>{Math.round(weeklyMileage)}km</span>
-                </div>
-                <p className="text-xs text-foreground-muted mt-1">
-                    {internalStatsData?.avgWeeklyKmLast4Weeks > 0
-                        ? `Based on your last 4 weeks avg (${internalStatsData.avgWeeklyKmLast4Weeks} km/wk). Adjust if needed.`
-                        : 'Your current weekly mileage at the start of the plan.'}
-                </p>
-            </div>
+            )}
 
             {/* Sub-Goals (advanced mode only) */}
             {mode === 'advanced' && (
@@ -1382,12 +1477,12 @@ export default function PlanSetupForm({
                 {isLoading ? (
                     <>
                         <Save className="animate-spin w-5 h-5" />
-                        {mode === 'onboarding' ? 'Generating Plan...' : 'Updating...'}
+                        {isCreatingPlan ? 'Generating Plan...' : 'Updating...'}
                     </>
                 ) : (
                     <>
                         <Check className="w-5 h-5" />
-                        {mode === 'onboarding' ? 'Generate Training Plan' : 'Save & Regenerate Plan'}
+                        {isCreatingPlan ? 'Generate Training Plan' : 'Save & Regenerate Plan'}
                     </>
                 )}
             </button>

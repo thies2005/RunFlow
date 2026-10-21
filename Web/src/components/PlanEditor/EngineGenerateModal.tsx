@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { MYWHOOSH_PLANS } from '@/lib/plans/mywhooshMatcher';
+import { MYWHOOSH_PLANS, MYWHOOSH_PHASES, splitMyWhooshPlanAndPhase, encodeMyWhooshPlanAndPhase, type MyWhooshPhaseOption } from '@/lib/plans/mywhooshMatcher';
 
 interface EngineGenerateModalProps {
     isOpen: boolean;
@@ -109,7 +109,9 @@ export function EngineGenerateModal({
         const effectiveMyWhooshPlanId = (isCycling || matchToMyWhoosh)
             ? (mywhooshPlanId || MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder')
             : null;
-        const selectedMwPlan = MYWHOOSH_PLANS.find((p) => p.id === effectiveMyWhooshPlanId);
+        const { planId: cleanMwPlanId, phaseKey: selectedMwPhaseKey } = splitMyWhooshPlanAndPhase(effectiveMyWhooshPlanId);
+        const selectedMwPlan = MYWHOOSH_PLANS.find((p) => p.id === cleanMwPlanId);
+        const selectedMwPhase = MYWHOOSH_PHASES.find((ph) => ph.id === selectedMwPhaseKey);
 
         try {
             if (goalId) {
@@ -160,12 +162,16 @@ export function EngineGenerateModal({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name: isCycling
-                            ? (selectedMwPlan?.name || 'MyWhoosh Cycling Plan')
+                            ? (selectedMwPlan
+                                ? (selectedMwPhaseKey !== 'ALL' && selectedMwPhase
+                                    ? `${selectedMwPlan.name} (${selectedMwPhase.shortLabel})`
+                                    : selectedMwPlan.name)
+                                : 'MyWhoosh Cycling Plan')
                             : `${raceType.replace(/_/g, ' ')} Plan`,
                         sport: isCycling ? 'CYCLING' : sport,
                         raceType: isCycling ? null : raceType,
                         raceDate: isCycling ? null : new Date(raceDate).toISOString(),
-                        durationWeeks: isCycling ? (selectedMwPlan?.weeksCount || 8) : undefined,
+                        durationWeeks: isCycling ? (selectedMwPhase?.weeks ?? selectedMwPlan?.weeksCount ?? 8) : undefined,
                         currentVdot,
                         ftpWatts,
                         swimCssSecPer100m,
@@ -407,101 +413,134 @@ export function EngineGenerateModal({
                         </div>
                     </div>
 
-                    {/* Weekly Target Volume & Phase Weeks */}
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
-                        <div>
-                            <label className="block text-[10px] text-foreground-muted mb-1">Peak Weekly Km</label>
-                            <input
-                                type="number"
-                                min={10}
-                                max={250}
-                                value={weeklyMileageGoal}
-                                onChange={(e) => setWeeklyMileageGoal(parseInt(e.target.value, 10) || 40)}
-                                className="w-full bg-background-tertiary border border-glass-border rounded px-2 py-1 font-mono text-xs text-foreground focus:outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] text-foreground-muted mb-1">Build Weeks</label>
-                            <input
-                                type="number"
-                                min={1}
-                                max={24}
-                                value={buildWeeks}
-                                onChange={(e) => setBuildWeeks(parseInt(e.target.value, 10) || 4)}
-                                className="w-full bg-background-tertiary border border-glass-border rounded px-2 py-1 font-mono text-xs text-foreground focus:outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] text-foreground-muted mb-1">Peak Weeks</label>
-                            <input
-                                type="number"
-                                min={1}
-                                max={8}
-                                value={peakWeeks}
-                                onChange={(e) => setPeakWeeks(parseInt(e.target.value, 10) || 3)}
-                                className="w-full bg-background-tertiary border border-glass-border rounded px-2 py-1 font-mono text-xs text-foreground focus:outline-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] text-foreground-muted mb-1">Taper Weeks</label>
-                            <input
-                                type="number"
-                                min={1}
-                                max={4}
-                                value={taperWeeks}
-                                onChange={(e) => setTaperWeeks(parseInt(e.target.value, 10) || 3)}
-                                className="w-full bg-background-tertiary border border-glass-border rounded px-2 py-1 font-mono text-xs text-foreground focus:outline-none"
-                            />
-                        </div>
-                    </div>
-
-                    {/* MyWhoosh Training Plan Selector */}
-                    {(sport === 'CYCLING' || sport === 'TRIATHLON' || ridesPerWeek > 0) && (
-                        <div className="p-3 bg-background-tertiary/30 rounded-md border border-glass-border space-y-2">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <span className="text-[11px] font-semibold text-accent-cyan uppercase tracking-wider block">
-                                        Match Cycling to MyWhoosh
-                                    </span>
-                                    <p className="text-[10px] text-foreground-muted">
-                                        Populate bike rides with structured MyWhoosh training workouts
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setMatchToMyWhoosh(!matchToMyWhoosh)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${matchToMyWhoosh ? 'bg-accent-cyan' : 'bg-glass-border'}`}
-                                >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
-                                </button>
+                    {/* Volume & Phase Weeks (hidden on pure MyWhoosh Cycling plans with 0 runs) */}
+                    {sport !== 'CYCLING' && runsPerWeek > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            <div>
+                                <label className="block text-[10px] text-foreground-muted mb-1">Peak Run (km/wk)</label>
+                                <input
+                                    type="number"
+                                    min={10}
+                                    max={250}
+                                    value={weeklyMileageGoal}
+                                    onChange={(e) => setWeeklyMileageGoal(parseInt(e.target.value, 10) || 40)}
+                                    className="w-full bg-background-tertiary border border-glass-border rounded px-2 py-1 font-mono text-xs text-foreground focus:outline-none"
+                                />
                             </div>
-
-                            {matchToMyWhoosh && (
-                                <div className="pt-1 space-y-1.5">
-                                    <label className="block text-[10px] font-medium text-foreground-secondary">
-                                        MyWhoosh Training Plan
-                                    </label>
-                                    <select
-                                        value={mywhooshPlanId}
-                                        onChange={(e) => setMywhooshPlanId(e.target.value)}
-                                        className="w-full bg-background-tertiary border border-glass-border rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none"
-                                    >
-                                        <option value="">Auto-Match Closest MyWhoosh Workout</option>
-                                        {MYWHOOSH_PLANS.map((plan) => (
-                                            <option key={plan.id} value={plan.id}>
-                                                {plan.name} ({plan.category} · {plan.level} · {plan.weeksCount}w)
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {mywhooshPlanId && (
-                                        <p className="text-[10px] text-foreground-muted">
-                                            {MYWHOOSH_PLANS.find((p) => p.id === mywhooshPlanId)?.description}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
+                            <div>
+                                <label className="block text-[10px] text-foreground-muted mb-1">Build Weeks</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={24}
+                                    value={buildWeeks}
+                                    onChange={(e) => setBuildWeeks(parseInt(e.target.value, 10) || 4)}
+                                    className="w-full bg-background-tertiary border border-glass-border rounded px-2 py-1 font-mono text-xs text-foreground focus:outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] text-foreground-muted mb-1">Peak Weeks</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={8}
+                                    value={peakWeeks}
+                                    onChange={(e) => setPeakWeeks(parseInt(e.target.value, 10) || 3)}
+                                    className="w-full bg-background-tertiary border border-glass-border rounded px-2 py-1 font-mono text-xs text-foreground focus:outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] text-foreground-muted mb-1">Taper Weeks</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={4}
+                                    value={taperWeeks}
+                                    onChange={(e) => setTaperWeeks(parseInt(e.target.value, 10) || 3)}
+                                    className="w-full bg-background-tertiary border border-glass-border rounded px-2 py-1 font-mono text-xs text-foreground focus:outline-none"
+                                />
+                            </div>
                         </div>
                     )}
+
+                    {/* MyWhoosh Training Plan & Phase Selector */}
+                    {(sport === 'CYCLING' || sport === 'TRIATHLON' || ridesPerWeek > 0) && (() => {
+                        const { planId: basePlanId, phaseKey } = splitMyWhooshPlanAndPhase(mywhooshPlanId);
+                        const categories = Array.from(new Set(MYWHOOSH_PLANS.map((p) => p.category)));
+                        return (
+                            <div className="p-3 bg-background-tertiary/30 rounded-md border border-glass-border space-y-2.5">
+                                {sport !== 'CYCLING' && (
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <span className="text-[11px] font-semibold text-accent-cyan uppercase tracking-wider block">
+                                                Cycling Mode: {matchToMyWhoosh ? 'MyWhoosh Virtual Workouts' : 'Offline / Outdoor Rides'}
+                                            </span>
+                                            <p className="text-[10px] text-foreground-muted">
+                                                Toggle ON for MyWhoosh structured workouts (.zwo) or OFF for standard outdoor rides
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setMatchToMyWhoosh(!matchToMyWhoosh)}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${matchToMyWhoosh ? 'bg-accent-cyan' : 'bg-glass-border'}`}
+                                        >
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
+                                )}
+
+                                {(sport === 'CYCLING' || matchToMyWhoosh) && (
+                                    <div className="pt-1 space-y-2">
+                                        <div>
+                                            <label className="block text-[10px] font-semibold text-accent-cyan mb-1">
+                                                1. MyWhoosh General Plan
+                                            </label>
+                                            <select
+                                                value={basePlanId}
+                                                onChange={(e) => setMywhooshPlanId(encodeMyWhooshPlanAndPhase(e.target.value, phaseKey))}
+                                                className="w-full bg-background-tertiary border border-glass-border rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none"
+                                            >
+                                                {sport !== 'CYCLING' && (
+                                                    <option value="">Auto-Match Closest MyWhoosh Workout</option>
+                                                )}
+                                                {categories.map((cat) => (
+                                                    <optgroup key={cat} label={cat}>
+                                                        {MYWHOOSH_PLANS.filter((p) => p.category === cat).map((plan) => (
+                                                            <option key={plan.id} value={plan.id}>
+                                                                {plan.name} ({plan.level} · {plan.weeksCount}w)
+                                                            </option>
+                                                        ))}
+                                                    </optgroup>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-semibold text-accent-cyan mb-1">
+                                                2. Phase of Plan
+                                            </label>
+                                            <select
+                                                value={phaseKey}
+                                                disabled={!basePlanId}
+                                                onChange={(e) => setMywhooshPlanId(encodeMyWhooshPlanAndPhase(basePlanId || 'mw-plan-ftp-builder', e.target.value as MyWhooshPhaseOption['id']))}
+                                                className="w-full bg-background-tertiary border border-glass-border rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none disabled:opacity-50"
+                                            >
+                                                {MYWHOOSH_PHASES.map((ph) => (
+                                                    <option key={ph.id} value={ph.id}>
+                                                        {ph.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        {basePlanId && (
+                                            <p className="text-[10px] text-foreground-muted">
+                                                {MYWHOOSH_PLANS.find((p) => p.id === basePlanId)?.description}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 {/* Footer */}

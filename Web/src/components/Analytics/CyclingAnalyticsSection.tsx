@@ -42,6 +42,7 @@ interface CyclingApiResponse {
     ftp: {
         ftpWatts: number | null;
         eFtpWatts: number | null;
+        cyclingVo2max?: number | null;
         autoEstimateFtp: boolean;
         weightKg: number | null;
         wPerKg: number | null;
@@ -305,22 +306,21 @@ export default function CyclingAnalyticsSection({
                     </div>
                 </div>
 
-                {/* eFTP Badge */}
+                {/* Cycling VO2max & eFTP Card */}
                 <div className="glass-card p-4 flex flex-col justify-between">
                     <div className="text-xs text-foreground-muted mb-1 flex items-center gap-1 font-medium">
-                        <Sparkles className="w-3.5 h-3.5 text-accent-purple" /> Estimated FTP
+                        <Sparkles className="w-3.5 h-3.5 text-accent-purple" /> Cycling VO2max
                     </div>
                     <div>
                         <div className="flex items-baseline gap-1.5">
-                            <span className="text-2xl font-mono font-bold text-foreground tabular-nums">
-                                {data.ftp.eFtpWatts ? `${data.ftp.eFtpWatts}` : '-'}
+                            <span className="text-2xl font-mono font-bold text-accent-purple tabular-nums">
+                                {data.ftp.cyclingVo2max ? data.ftp.cyclingVo2max.toFixed(1) : '-'}
                             </span>
-                            <span className="text-xs text-foreground-muted font-medium">W</span>
+                            <span className="text-xs text-foreground-muted font-medium">mL/kg/min</span>
                         </div>
-                        <div className="text-xs text-foreground-muted mt-0.5">
-                            {data.ftp.eFtpWatts
-                                ? '95% of 20m peak or 5m curve'
-                                : 'Needs 5m+ hard effort'}
+                        <div className="text-xs text-foreground-muted mt-0.5 flex items-center justify-between">
+                            <span>eFTP: {data.ftp.eFtpWatts ? `${data.ftp.eFtpWatts} W` : '-'}</span>
+                            <span className="text-[10px] text-accent-purple/90 font-mono">ACSM MAP</span>
                         </div>
                     </div>
                 </div>

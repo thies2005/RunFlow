@@ -55,6 +55,11 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
     });
     const matchToMyWhooshEnabled = cyclingSettings?.matchToMyWhoosh === true;
 
+    // Hide "This Week's Workouts" card completely when no workouts are scheduled
+    if (!weeklyWorkouts || weeklyWorkouts.length === 0) {
+        return null;
+    }
+
     // Find interesting workouts logic moved here
     const firstUncompletedIndex = weeklyWorkouts.findIndex((w: Workout) => !w.isCompleted);
 

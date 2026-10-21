@@ -17,6 +17,7 @@ interface TargetRaceSectionProps {
     setDurationWeeks?: (_val: string) => void;
     experienceLevel?: string;
     setExperienceLevel?: (_val: string) => void;
+    showGoalNameInSettings?: boolean;
 }
 
 const SPORT_OPTIONS = [
@@ -43,6 +44,7 @@ export default function TargetRaceSection({
     setDurationWeeks,
     experienceLevel = 'INTERMEDIATE',
     setExperienceLevel,
+    showGoalNameInSettings = false,
 }: TargetRaceSectionProps) {
     const inputClass = "bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
@@ -50,18 +52,18 @@ export default function TargetRaceSection({
         <div className="space-y-4">
             <div className="flex items-center gap-2 text-accent-orange mb-2">
                 <Target className="w-5 h-5" />
-                <h3 className="text-sm font-semibold">Target Race</h3>
+                <h3 className="text-sm font-semibold">{sport === 'CYCLING' ? 'Cycling Training Plan' : 'Target Race'}</h3>
             </div>
 
-            {(mode === 'onboarding' || mode === 'advanced') && (
+            {(mode === 'onboarding' || mode === 'advanced' || showGoalNameInSettings) && (
                 <div>
-                    <label className="block text-xs text-foreground-muted mb-1">Goal Name</label>
+                    <label className="block text-xs text-foreground-muted mb-1">Goal / Plan Name</label>
                     <input
                         type="text"
                         value={goalName}
                         onChange={(e) => setGoalName(e.target.value)}
                         className={`${inputClass} ${formErrors.goalName ? 'border-negative focus:ring-negative' : ''}`}
-                        placeholder="e.g., Berlin Marathon 2026"
+                        placeholder={sport === 'CYCLING' ? 'e.g., MyWhoosh FTP Builder' : 'e.g., Berlin Marathon 2026'}
                     />
                     {formErrors.goalName && <p className="text-negative text-xs mt-1">{formErrors.goalName}</p>}
                 </div>
@@ -94,7 +96,7 @@ export default function TargetRaceSection({
                 </div>
             )}
 
-            {(mode === 'onboarding' || mode === 'advanced') && setExperienceLevel && (
+            {(mode === 'onboarding' || mode === 'advanced') && setExperienceLevel && sport !== 'CYCLING' && (
                 <div>
                     <label className="block text-xs text-foreground-muted mb-2">Experience Level</label>
                     <div className="grid grid-cols-3 gap-2">
@@ -175,7 +177,7 @@ export default function TargetRaceSection({
                 </div>
             )}
 
-            {(sport === 'NO_RACE' || sport === 'CYCLING') && setDurationWeeks && (
+            {sport === 'NO_RACE' && setDurationWeeks && (
                 <div>
                     <label className="block text-xs text-foreground-muted mb-1">Plan Duration (weeks)</label>
                     <input
@@ -184,14 +186,9 @@ export default function TargetRaceSection({
                         onChange={(e) => setDurationWeeks(e.target.value)}
                         min={4}
                         max={52}
-                        placeholder="8"
+                        placeholder="12"
                         className={inputClass}
                     />
-                    {sport === 'CYCLING' && (
-                        <p className="text-[11px] text-accent-cyan mt-1">
-                            Automatically matched to your selected MyWhoosh Training Plan duration (adjustable).
-                        </p>
-                    )}
                 </div>
             )}
 

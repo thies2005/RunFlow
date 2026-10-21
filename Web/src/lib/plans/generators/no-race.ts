@@ -131,11 +131,23 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
                 w.type === WorkoutType.LONG_RIDE ||
                 w.type === WorkoutType.RIDE_INTERVALS
             ) {
+                const weekIndex = Math.max(0, Math.floor((w.date.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+                const progressPct = totalWeeks > 1 ? weekIndex / totalWeeks : 0;
+                const fivePhaseName =
+                    progressPct < 0.25
+                        ? 'EARLY_BASE'
+                        : progressPct < 0.50
+                        ? 'LATE_BASE'
+                        : progressPct < 0.75
+                        ? 'EARLY_BUILD'
+                        : progressPct < 0.90
+                        ? 'LATE_BUILD'
+                        : 'PREPARATION';
                 const match = findClosestMyWhooshWorkout({
                     workoutType: w.type,
                     targetDurationSeconds: w.targetDuration || 3600,
                     description: w.description,
-                    phase: w.phase,
+                    phase: fivePhaseName,
                     mywhooshPlanId: config.mywhooshPlanId,
                     rideIndexInWeek: rideCounter % Math.max(1, ridesPerWeek),
                 });

@@ -46,8 +46,8 @@ export function EngineGenerateModal({
     initialVdot = 45,
     onSuccess,
 }: EngineGenerateModalProps) {
-    const [sport, setSport] = useState<'RUN' | 'TRIATHLON'>(
-        initialSport === 'TRIATHLON' ? 'TRIATHLON' : 'RUN'
+    const [sport, setSport] = useState<'RUN' | 'CYCLING' | 'TRIATHLON'>(
+        initialSport === 'TRIATHLON' ? 'TRIATHLON' : initialSport === 'CYCLING' ? 'CYCLING' : 'RUN'
     );
     const [raceType, setRaceType] = useState(initialRaceType || 'MARATHON');
     const [raceDate, setRaceDate] = useState(
@@ -58,8 +58,8 @@ export function EngineGenerateModal({
     const [currentVdot, setCurrentVdot] = useState(initialVdot || 45);
     const [ftpWatts, setFtpWatts] = useState(220);
     const [swimCssSecPer100m, setSwimCssSecPer100m] = useState(115); // 1:55 / 100m
-    const [runsPerWeek, setRunsPerWeek] = useState(4);
-    const [ridesPerWeek, setRidesPerWeek] = useState(sport === 'TRIATHLON' ? 3 : 0);
+    const [runsPerWeek, setRunsPerWeek] = useState(initialSport === 'CYCLING' ? 0 : 4);
+    const [ridesPerWeek, setRidesPerWeek] = useState(sport === 'TRIATHLON' ? 3 : sport === 'CYCLING' ? 4 : 0);
     const [swimsPerWeek, setSwimsPerWeek] = useState(sport === 'TRIATHLON' ? 2 : 0);
     const [strengthPerWeek, setStrengthPerWeek] = useState(1);
     const [weeklyMileageGoal, setWeeklyMileageGoal] = useState(50);
@@ -71,31 +71,46 @@ export function EngineGenerateModal({
 
     // MyWhoosh
     const [matchToMyWhoosh, setMatchToMyWhoosh] = useState(true);
-    const [mywhooshPlanId, setMywhooshPlanId] = useState<string>('mw-plan-triathlon-base');
+    const [mywhooshPlanId, setMywhooshPlanId] = useState<string>('mw-plan-ftp-builder');
 
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     if (!isOpen) return null;
 
-    const handleSportChange = (s: 'RUN' | 'TRIATHLON') => {
+    const handleSportChange = (s: 'RUN' | 'CYCLING' | 'TRIATHLON') => {
         setSport(s);
-        if (s === 'TRIATHLON') {
+        if (s === 'CYCLING') {
+            setMatchToMyWhoosh(true);
+            if (!mywhooshPlanId) setMywhooshPlanId(MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder');
+            setRunsPerWeek(0);
+            setRidesPerWeek(4);
+            setSwimsPerWeek(0);
+            setStrengthPerWeek(1);
+        } else if (s === 'TRIATHLON') {
             if (!raceType.includes('TRI') && !raceType.includes('IRONMAN')) {
                 setRaceType('HALF_IRONMAN');
             }
+            if (runsPerWeek === 0) setRunsPerWeek(3);
             if (ridesPerWeek === 0) setRidesPerWeek(3);
             if (swimsPerWeek === 0) setSwimsPerWeek(2);
         } else {
             if (raceType.includes('TRI') || raceType.includes('IRONMAN')) {
                 setRaceType('MARATHON');
             }
+            if (runsPerWeek === 0) setRunsPerWeek(4);
         }
     };
 
     const handleGenerate = async () => {
         setIsGenerating(true);
         setError(null);
+        const isCycling = sport === 'CYCLING';
+        const effectiveMyWhooshPlanId = (isCycling || matchToMyWhoosh)
+            ? (mywhooshPlanId || MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder')
+            : null;
+        const selectedMwPlan = MYWHOOSH_PLANS.find((p) => p.id === effectiveMyWhooshPlanId);
+
         try {
             if (goalId) {
                 // 1. Snapshot first
@@ -113,22 +128,22 @@ export function EngineGenerateModal({
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        sport,
-                        raceType,
+                        sport: isCycling ? 'TRIATHLON' : sport,
+                        raceType: isCycling ? 'OLYMPIC_TRI' : raceType,
                         raceDate,
                         currentVdot,
                         ftpWatts,
                         swimCssSecPer100m,
                         runsPerWeek,
-                        ridesPerWeek,
+                        ridesPerWeek: isCycling ? Math.max(1, ridesPerWeek) : ridesPerWeek,
                         swimsPerWeek,
                         strengthPerWeek,
                         weeklyMileageGoal,
                         buildWeeks,
                         peakWeeks,
                         taperWeeks,
-                        matchToMyWhoosh,
-                        mywhooshPlanId: matchToMyWhoosh ? mywhooshPlanId : null,
+                        matchToMyWhoosh: isCycling ? true : matchToMyWhoosh,
+                        mywhooshPlanId: effectiveMyWhooshPlanId,
                     }),
                 });
 
@@ -144,10 +159,13 @@ export function EngineGenerateModal({
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        name: `${raceType.replace(/_/g, ' ')} Plan`,
-                        sport,
-                        raceType,
-                        raceDate: new Date(raceDate).toISOString(),
+                        name: isCycling
+                            ? (selectedMwPlan?.name || 'MyWhoosh Cycling Plan')
+                            : `${raceType.replace(/_/g, ' ')} Plan`,
+                        sport: isCycling ? 'CYCLING' : sport,
+                        raceType: isCycling ? null : raceType,
+                        raceDate: isCycling ? null : new Date(raceDate).toISOString(),
+                        durationWeeks: isCycling ? (selectedMwPlan?.weeksCount || 8) : undefined,
                         currentVdot,
                         ftpWatts,
                         swimCssSecPer100m,
@@ -224,28 +242,39 @@ export function EngineGenerateModal({
                         <label className="block text-[11px] font-semibold text-foreground mb-1.5 uppercase tracking-wider">
                             Primary Sport
                         </label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                             <button
                                 type="button"
                                 onClick={() => handleSportChange('RUN')}
-                                className={`py-2 px-3 rounded-md border text-xs font-medium transition-all ${
+                                className={`py-2 px-2.5 rounded-md border text-xs font-medium transition-all ${
                                     sport === 'RUN'
                                         ? 'bg-accent-blue/15 border-accent-blue text-accent-blue font-semibold'
                                         : 'bg-background-tertiary border-glass-border text-foreground-secondary hover:text-foreground'
                                 }`}
                             >
-                                Running (Road / Trail / Ultra)
+                                Running
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleSportChange('CYCLING')}
+                                className={`py-2 px-2.5 rounded-md border text-xs font-medium transition-all ${
+                                    sport === 'CYCLING'
+                                        ? 'bg-accent-cyan/15 border-accent-cyan text-accent-cyan font-semibold'
+                                        : 'bg-background-tertiary border-glass-border text-foreground-secondary hover:text-foreground'
+                                }`}
+                            >
+                                Cycling (MyWhoosh)
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleSportChange('TRIATHLON')}
-                                className={`py-2 px-3 rounded-md border text-xs font-medium transition-all ${
+                                className={`py-2 px-2.5 rounded-md border text-xs font-medium transition-all ${
                                     sport === 'TRIATHLON'
                                         ? 'bg-workout-tempo/15 border-workout-tempo text-workout-tempo font-semibold'
                                         : 'bg-background-tertiary border-glass-border text-foreground-secondary hover:text-foreground'
                                 }`}
                             >
-                                Triathlon (Swim / Bike / Run)
+                                Triathlon
                             </button>
                         </div>
                     </div>
@@ -333,10 +362,13 @@ export function EngineGenerateModal({
                             <label className="block text-[10px] text-foreground-muted mb-1">Runs / week</label>
                             <input
                                 type="number"
-                                min={1}
+                                min={0}
                                 max={7}
                                 value={runsPerWeek}
-                                onChange={(e) => setRunsPerWeek(parseInt(e.target.value, 10) || 3)}
+                                onChange={(e) => {
+                                    const parsed = parseInt(e.target.value, 10);
+                                    setRunsPerWeek(Number.isNaN(parsed) ? 0 : Math.max(0, Math.min(7, parsed)));
+                                }}
                                 className="w-full bg-background-tertiary border border-glass-border rounded px-2 py-1 font-mono text-xs text-foreground focus:outline-none"
                             />
                         </div>
@@ -424,7 +456,7 @@ export function EngineGenerateModal({
                     </div>
 
                     {/* MyWhoosh Training Plan Selector */}
-                    {(sport === 'TRIATHLON' || ridesPerWeek > 0) && (
+                    {(sport === 'CYCLING' || sport === 'TRIATHLON' || ridesPerWeek > 0) && (
                         <div className="p-3 bg-background-tertiary/30 rounded-md border border-glass-border space-y-2">
                             <div className="flex items-center justify-between">
                                 <div>

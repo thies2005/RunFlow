@@ -179,18 +179,25 @@ function DayRow({
                 {/* completed activities */}
                 {activities.map((a) => {
                     const c = colorsFor(a.type);
-                    const isBike = a.type === 'RIDE' || a.sport === 'BIKE';
+                    const isBike = a.type === 'RIDE' || (a.type as string) === 'VIRTUAL_RIDE' || a.sport === 'BIKE';
                     const isSwim = a.type === 'SWIM' || a.sport === 'SWIM';
+                    const isRun = (a.type as string) === 'RUN' || a.sport === 'RUN';
 
                     let effortMetric: string | null = null;
                     if (isBike) {
-                        const watts = a.npWatts ?? a.averageWatts;
-                        if (watts && watts > 0) effortMetric = `${Math.round(watts)}W`;
+                        const titleWattsMatch = (a.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
+                        const titleWatts = titleWattsMatch ? parseInt(titleWattsMatch[1], 10) : null;
+                        const watts = a.npWatts ?? a.averageWatts ?? (titleWatts && titleWatts >= 40 && titleWatts <= 1500 ? titleWatts : null);
+                        if (watts && watts > 0) {
+                            effortMetric = `${Math.round(watts)}W`;
+                        } else if (a.duration > 0 && a.distance > 0) {
+                            effortMetric = `${((a.distance / 1000) / (a.duration / 3600)).toFixed(1)} km/h`;
+                        }
                     } else if (isSwim) {
                         if (a.duration > 0 && a.distance > 0) {
                             effortMetric = fmtPace(a.duration / (a.distance / 100), '100m');
                         }
-                    } else {
+                    } else if (isRun) {
                         if (a.duration > 0 && a.distance > 0) {
                             effortMetric = fmtPace(a.duration / (a.distance / 1000), 'km');
                         }

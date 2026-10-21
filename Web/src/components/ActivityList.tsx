@@ -57,11 +57,64 @@ function isCrossTraining(type: string): boolean {
     return type === 'VIRTUAL_RIDE' || type === 'RIDE';
 }
 
+function extractWattsFromTitle(title: string | null | undefined): number | null {
+    if (!title) return null;
+    const match = title.match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
+    if (!match) return null;
+    const val = parseInt(match[1], 10);
+    return val >= 40 && val <= 1500 ? val : null;
+}
+
+function getCyclingClassificationBadge(activity: ActivityListItem): { label: string; className: string } {
+    const title = activity.name || '';
+    const ifVal = (activity as any).intensityFactor as number | null | undefined;
+    const tType = activity.trainingType;
+
+    if (/\bftp\s*test\b|\bramp\s*test\b/i.test(title)) {
+        return { label: 'FTP Test', className: 'bg-workout-race/15 text-workout-race border-workout-race/30' };
+    }
+    if (tType === 'RACE' || /\brace\b/i.test(title)) {
+        return { label: 'Bike Race', className: 'bg-workout-race/15 text-workout-race border-workout-race/30' };
+    }
+    if (
+        tType === 'INTERVALS' ||
+        tType === 'RIDE_INTERVALS' ||
+        /\binterval|\bvo2|\banaerobic|\bsprint|\bhiit\b/i.test(title) ||
+        (typeof ifVal === 'number' && ifVal >= 0.88)
+    ) {
+        return { label: 'Bike Intervals', className: 'bg-workout-interval/15 text-workout-interval border-workout-interval/30' };
+    }
+    if (
+        tType === 'TEMPO' ||
+        /\btempo|\bsweet\s*spot|\bthreshold|\bsst\b/i.test(title) ||
+        (typeof ifVal === 'number' && ifVal >= 0.78)
+    ) {
+        return { label: 'Tempo / Threshold', className: 'bg-workout-tempo/15 text-workout-tempo border-workout-tempo/30' };
+    }
+    if (
+        tType === 'LONG_RIDE' ||
+        tType === 'LONG_RUN' ||
+        (activity.movingTime && activity.movingTime >= 7200)
+    ) {
+        return { label: 'Long Ride', className: 'bg-workout-long-run/15 text-workout-long-run border-workout-long-run/30' };
+    }
+    if (
+        tType === 'RECOVERY' ||
+        /\brecovery\b|\beasy\s*spin\b/i.test(title) ||
+        (typeof ifVal === 'number' && ifVal > 0 && ifVal < 0.60)
+    ) {
+        return { label: 'Recovery Spin', className: 'bg-workout-recovery/15 text-workout-recovery border-workout-recovery/30' };
+    }
+    return { label: 'Cycling', className: 'bg-accent-cyan/15 text-accent-cyan border-accent-cyan/30' };
+}
+
 const getWorkoutTypeStyle = (type: WorkoutType) => {
     switch (type) {
-        case 'LONG_RUN': return 'bg-workout-long-run/10 text-workout-long-run border-workout-long-run/20';
+        case 'LONG_RUN':
+        case 'LONG_RIDE': return 'bg-workout-long-run/10 text-workout-long-run border-workout-long-run/20';
         case 'TEMPO': return 'bg-workout-tempo/10 text-workout-tempo border-workout-tempo/20';
-        case 'INTERVALS': return 'bg-workout-interval/10 text-workout-interval border-workout-interval/20';
+        case 'INTERVALS':
+        case 'RIDE_INTERVALS': return 'bg-workout-interval/10 text-workout-interval border-workout-interval/20';
         case 'FARTLEK': return 'bg-accent-orange/10 text-accent-orange border-accent-orange/20';
         case 'RACE': return 'bg-workout-race/10 text-workout-race border-workout-race/20';
         case 'RECOVERY': return 'bg-workout-recovery/10 text-workout-recovery border-workout-recovery/20';
@@ -73,13 +126,15 @@ const getWorkoutTypeStyle = (type: WorkoutType) => {
 // Bolt: Wrapped in memo to prevent unnecessary re-renders during list updates
 const ActivityCard = memo(function ActivityCard({ activity }: { activity: ActivityListItem }) {
     const crossTraining = isCrossTraining(activity.type);
-    const showTag = activity.trainingType && activity.trainingType !== 'EASY' && activity.trainingType !== 'OTHER';
+    const cyclingBadge = crossTraining ? getCyclingClassificationBadge(activity) : null;
+    const showTag = !crossTraining && activity.trainingType && activity.trainingType !== 'EASY' && activity.trainingType !== 'OTHER';
+    const rideWatts = crossTraining
+        ? ((activity as any).npWatts ?? (activity as any).averageWatts ?? extractWattsFromTitle(activity.name))
+        : null;
+    const bikeTss = crossTraining ? ((activity as any).bikeTss as number | null | undefined) : null;
 
     return (
-        <div
-            className={`w-full text-left glass-card glass-card-hover p-4 transition-all duration-200 ${crossTraining ? 'recovery-border' : ''
-                }`}
-        >
+        <div className="w-full text-left glass-card glass-card-hover p-4 transition-all duration-200">
             <div className="flex items-start gap-4">
                 {/* Activity type icon */}
                 <div className={`w-12 h-12 rounded-md flex items-center justify-center shrink-0 ${crossTraining
@@ -93,8 +148,10 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                         <h4 className="text-foreground font-semibold truncate">{activity.name}</h4>
-                        {crossTraining && (
-                            <span className="badge badge-recovery text-xs">Recovery</span>
+                        {cyclingBadge && (
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${cyclingBadge.className}`}>
+                                {cyclingBadge.label}
+                            </span>
                         )}
                         {showTag && (
                             <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${getWorkoutTypeStyle(activity.trainingType!)}`}>
@@ -136,10 +193,21 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                             </span>
                         </div>
 
-                        {/* Pace (for runs) */}
+                        {/* Pace (for runs) or Speed & Power (for rides) */}
                         {activity.type === 'RUN' && activity.averageSpeed && (
                             <div className="text-foreground-muted font-mono tabular-nums">
                                 {formatPace(activity.averageSpeed)}
+                            </div>
+                        )}
+                        {crossTraining && activity.averageSpeed && activity.averageSpeed > 0 && (
+                            <div className="text-foreground-muted font-mono tabular-nums">
+                                {(activity.averageSpeed * 3.6).toFixed(1)} km/h
+                            </div>
+                        )}
+                        {crossTraining && rideWatts && rideWatts > 0 && (
+                            <div className="flex items-center gap-1 text-accent-orange font-mono font-semibold tabular-nums">
+                                <Zap className="w-3.5 h-3.5" />
+                                <span>{Math.round(rideWatts)} W</span>
                             </div>
                         )}
 
@@ -161,16 +229,21 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                     </div>
 
                     {/* TRIMP / TSS if available */}
-                    {(activity.trimp || activity.runningTss) && (
+                    {(activity.trimp || (!crossTraining && activity.runningTss) || (crossTraining && bikeTss)) && (
                         <div className="flex items-center gap-4 mt-2">
                             {activity.trimp && (
                                 <span className="text-xs text-foreground-muted">
                                     TRIMP: <span className="text-accent-cyan font-mono tabular-nums">{activity.trimp.toFixed(0)}</span>
                                 </span>
                             )}
-                            {activity.runningTss && (
+                            {!crossTraining && activity.runningTss && (
                                 <span className="text-xs text-foreground-muted">
                                     rTSS: <span className="text-accent-orange font-mono tabular-nums">{activity.runningTss.toFixed(0)}</span>
+                                </span>
+                            )}
+                            {crossTraining && bikeTss && (
+                                <span className="text-xs text-foreground-muted">
+                                    Bike TSS: <span className="text-accent-orange font-mono tabular-nums">{Math.round(bikeTss)}</span>
                                 </span>
                             )}
                         </div>

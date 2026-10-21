@@ -384,12 +384,12 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
         return workouts;
     };
 
-    if (config.sport === 'TRIATHLON' || (config.raceType && TRIATHLON_RACE_TYPES.includes(config.raceType))) {
-        return enrichTargets(generateTriathlonPlan({ ...config, raceType: config.raceType as RaceType }));
-    }
-
     if (config.raceType === null) {
         return enrichTargets(generateNoRacePlan(config));
+    }
+
+    if (config.sport === 'TRIATHLON' || (config.raceType && TRIATHLON_RACE_TYPES.includes(config.raceType))) {
+        return enrichTargets(generateTriathlonPlan({ ...config, raceType: config.raceType as RaceType }));
     }
 
     if (config.raceType && ULTRA_RACE_TYPES.includes(config.raceType)) {

@@ -3,6 +3,8 @@ import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
 import { enrichWorkoutsWithDescriptions } from '../descriptions';
+import { estimateBikeFtpFromVdot } from '../bike-zones';
+import { findClosestMyWhooshWorkout, mywhooshWorkoutToStructuredV2 } from '../mywhooshMatcher';
 
 type NoRacePhase = 'BASE' | 'BUILD' | 'MAINTAIN';
 
@@ -12,7 +14,7 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
     const { vdot } = config;
     const requestedStartDate = config.startDate || new Date();
     const startDate = requestedStartDate;
-    const runsPerWeek = Math.max(1, config.runsPerWeek ?? 4);
+    const runsPerWeek = Math.max(0, config.runsPerWeek ?? 4);
     const ridesPerWeek = Math.max(0, config.ridesPerWeek || 0);
     const strengthPerWeek = Math.max(0, config.strengthPerWeek || 0);
     const swimsPerWeek = Math.max(0, config.swimsPerWeek || 0);
@@ -119,6 +121,38 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
 
     const result = fixBackToBackSameType(workouts, { restDays: config.restDays });
     enrichWorkoutsWithDescriptions(result);
+
+    if (config.matchToMyWhoosh || config.mywhooshPlanId) {
+        const bikeFtp = config.ftpWatts && config.ftpWatts > 0 ? config.ftpWatts : estimateBikeFtpFromVdot(vdot);
+        let rideCounter = 0;
+        for (const w of result) {
+            if (
+                w.type === WorkoutType.RIDE ||
+                w.type === WorkoutType.LONG_RIDE ||
+                w.type === WorkoutType.RIDE_INTERVALS
+            ) {
+                const match = findClosestMyWhooshWorkout({
+                    workoutType: w.type,
+                    targetDurationSeconds: w.targetDuration || 3600,
+                    description: w.description,
+                    phase: w.phase,
+                    mywhooshPlanId: config.mywhooshPlanId,
+                    rideIndexInWeek: rideCounter % Math.max(1, ridesPerWeek),
+                });
+                rideCounter++;
+                if (match) {
+                    w.displayDescription = `MyWhoosh: ${match.name}`;
+                    w.description = `${w.description} | MyWhoosh: ${match.name} (${Math.round(match.durationSeconds / 60)}m · TSS ${match.tss} · ${match.stepsSummary})`;
+                    w.targetDuration = match.durationSeconds;
+                    w.plannedTss = match.tss;
+                    w.targetFtpPercent = Math.round(match.intensityFactor * 100);
+                    w.targetPowerWatts = Math.round(bikeFtp * match.intensityFactor);
+                    w.structuredSteps = mywhooshWorkoutToStructuredV2(match, bikeFtp);
+                }
+            }
+        }
+    }
+
     return result;
 }
 
@@ -195,18 +229,20 @@ function generateNoRaceWeek(params: {
         return preferred;
     };
 
-    const longRunDay = getAvailableDay(preferredLongRunDay, []);
-    usedDays.add(longRunDay);
-    hardSessionDays.push(longRunDay);
+    if (runsPerWeek >= 1) {
+        const longRunDay = getAvailableDay(preferredLongRunDay, []);
+        usedDays.add(longRunDay);
+        hardSessionDays.push(longRunDay);
 
-    workouts.push({
-        dayOffset: longRunDay,
-        type: WorkoutType.LONG_RUN,
-        description: `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`,
-        totalDistance: longRunDist,
-        targetPace: easyPace,
-        targetDuration: 0,
-    });
+        workouts.push({
+            dayOffset: longRunDay,
+            type: WorkoutType.LONG_RUN,
+            description: `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`,
+            totalDistance: longRunDist,
+            targetPace: easyPace,
+            targetDuration: 0,
+        });
+    }
 
     if (hasQuality) {
         const qualityDay = getAvailableDay(preferredWorkoutDay, hardSessionDays);
@@ -317,9 +353,9 @@ function generateNoRaceWeek(params: {
     const qualityDistance = workouts
         .filter(w => w.type !== WorkoutType.LONG_RUN && isRunType(w.type))
         .reduce((sum, w) => sum + w.totalDistance, 0);
-    const keyRunCount = hasQuality ? 2 : 1;
+    const keyRunCount = runsPerWeek >= 1 ? (hasQuality ? 2 : 1) : 0;
     const easyRunsCount = Math.max(0, runsPerWeek - keyRunCount);
-    const remainingVol = Math.max(0, weeklyVolume - longRunDist - qualityDistance);
+    const remainingVol = Math.max(0, weeklyVolume - (runsPerWeek >= 1 ? longRunDist : 0) - qualityDistance);
     const easyDist = easyRunsCount > 0
         ? Math.max(PLAN_CONSTANTS.EASY_RUN_MIN, Math.min(PLAN_CONSTANTS.EASY_RUN_MAX, Math.round(remainingVol / easyRunsCount / 100) * 100))
         : 0;
@@ -357,6 +393,7 @@ function generateNoRaceWeek(params: {
 
     let remainingRides = ridesPerWeek;
     let remainingSwims = swimsPerWeek;
+    let ridesPlaced = 0;
 
     if (preferredSwimDay !== undefined && remainingSwims > 0 && !usedDays.has(preferredSwimDay)) {
         usedDays.add(preferredSwimDay);
@@ -371,25 +408,51 @@ function generateNoRaceWeek(params: {
         });
     }
 
-    const totalCardio = remainingRides + remainingSwims;
-    const freeDaysForCT: number[] = [];
+    const candidateDays: number[] = [];
     for (let d = 0; d < 7; d++) {
-        if (!usedDays.has(d)) freeDaysForCT.push(d);
+        if (!usedDays.has(d)) candidateDays.push(d);
+    }
+    // Allow double-day placement if the athlete requested more total sessions than free days
+    for (let d = 0; d < 7; d++) {
+        if (!(restDays ?? []).includes(d) && !candidateDays.includes(d)) {
+            candidateDays.push(d);
+        }
     }
 
-    for (const d of freeDaysForCT) {
+    for (const d of candidateDays) {
         if (remainingRides <= 0 && remainingSwims <= 0) break;
         usedDays.add(d);
         if (remainingRides > 0) {
             remainingRides--;
-            workouts.push({
-                dayOffset: d,
-                type: WorkoutType.RIDE,
-                description: 'Bike: 60min (Zone 1-2)',
-                totalDistance: 0,
-                targetPace: 0,
-                targetDuration: 3600,
-            });
+            ridesPlaced++;
+            if (ridesPlaced === 1 && ridesPerWeek >= 2 && !isRecoveryWeek) {
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.LONG_RIDE,
+                    description: 'Long Ride: 90min (Zone 2)',
+                    totalDistance: 0,
+                    targetPace: 0,
+                    targetDuration: 5400,
+                });
+            } else if (ridesPlaced === 2 && !isRecoveryWeek) {
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.RIDE_INTERVALS,
+                    description: 'Bike Intervals: 60min (Threshold / Vo2max)',
+                    totalDistance: 0,
+                    targetPace: 0,
+                    targetDuration: 3600,
+                });
+            } else {
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.RIDE,
+                    description: 'Bike: 60min (Zone 1-2)',
+                    totalDistance: 0,
+                    targetPace: 0,
+                    targetDuration: 3600,
+                });
+            }
         } else if (remainingSwims > 0) {
             remainingSwims--;
             workouts.push({
@@ -404,17 +467,22 @@ function generateNoRaceWeek(params: {
     }
 
     let remainingStrength = strengthPerWeek;
-    const strengthFreeDays: number[] = [];
+    const strengthCandidateDays: number[] = [];
     for (let d = 0; d < 7; d++) {
-        if (!usedDays.has(d)) strengthFreeDays.push(d);
+        if (!usedDays.has(d)) strengthCandidateDays.push(d);
     }
-    for (const d of strengthFreeDays) {
+    for (let d = 0; d < 7; d++) {
+        if (!(restDays ?? []).includes(d) && !strengthCandidateDays.includes(d)) {
+            strengthCandidateDays.push(d);
+        }
+    }
+    for (const d of strengthCandidateDays) {
         if (remainingStrength <= 0) break;
         usedDays.add(d);
         workouts.push({
             dayOffset: d,
             type: WorkoutType.STRENGTH,
-            description: 'Strength: 45min',
+            description: 'Strength & Gym: 45min',
             totalDistance: 0,
             targetPace: 0,
             targetDuration: 2700,

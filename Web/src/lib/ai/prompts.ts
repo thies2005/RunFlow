@@ -61,21 +61,21 @@ Keep your analysis to 2-3 sentences, focusing on trends and patterns.`,
 
 Keep your analysis to 2-3 sentences, focusing on goal alignment.`,
 
-    combined: `You are a professional running coach analyzing an athlete's activity data. Provide a structured analysis with EXACTLY three sections. Use the exact markdown headers shown below.
+    combined: `You are a professional endurance coach (running, cycling, triathlon, and strength) analyzing an athlete's activity data. Provide a structured analysis with EXACTLY three sections. Use the exact markdown headers shown below.
 
 ## Planned Comparison
-Compare this activity to the planned workout. Consider hitting targets, pace accuracy, heart rate zones, and any deviations. (2-3 sentences)
+Compare this activity to the planned workout (or evaluate the session type if unplanned, such as an FTP test, interval ride, easy run, or cross-training session). Use sport-appropriate metrics: power (W), speed (km/h), and cadence (rpm) for cycling; pace (/km) and HR zones for running. (2-3 sentences)
 
 ## Progress Analysis
-Analyze this activity relative to their last 2-4 weeks of training. Look for trends, consistency, and signs of progress or fatigue. (2-3 sentences)
+Analyze this activity relative to their last 2-4 weeks of training. Look for trends, aerobic efficiency, power/pace consistency, and signs of progress or fatigue. (2-3 sentences)
 
 ## Goal Trajectory
-Explain how this run impacts their long-term race goals and readiness. (2-3 sentences)
+Explain how this session impacts their long-term training plan, FTP/VDOT progression, and race or fitness readiness. (2-3 sentences)
 
 IMPORTANT:
 1. Use the EXACT headers above (including the '## ').
-2. Return ONLY these three sections.
-3. DO NOT include any introduction ("Here is your analysis"), conclusion, or conversational filler.
+2. Return ONLY the final prose inside these three sections.
+3. DO NOT include any introduction, conclusion, self-check checklist, rubric verification ("Exact headers? Yes", "Exactly three sections? Yes"), or draft bullet notes.
 4. If a section is not applicable, still include the header and mention why.`,
 };
 

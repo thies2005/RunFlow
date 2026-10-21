@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Zone {
@@ -34,6 +35,8 @@ interface HeartRateZonesSectionProps {
     setZone5Max: (_val: number) => void;
     zone6Max: number;
     setZone6Max: (_val: number) => void;
+    ftpWatts?: number;
+    setFtpWatts?: (_val: number) => void;
 }
 
 export default function HeartRateZonesSection({
@@ -63,8 +66,37 @@ export default function HeartRateZonesSection({
     zone5Max,
     setZone5Max,
     zone6Max,
-    setZone6Max
+    setZone6Max,
+    ftpWatts = 250,
+    setFtpWatts,
 }: HeartRateZonesSectionProps) {
+    const [zoneSportTab, setZoneSportTab] = useState<'running' | 'cycling'>('running');
+    const [localFtp, setLocalFtp] = useState<number>(ftpWatts || 250);
+    const activeFtp = setFtpWatts ? ftpWatts : localFtp;
+    const updateFtp = (val: number) => {
+        setLocalFtp(val);
+        setFtpWatts?.(val);
+    };
+    const runLthr = parseInt(thresholdHR, 10) || Math.round(maxHeartRate * 0.9);
+    const bikeLthr = Math.max(100, runLthr - 8);
+    const cogganZones = [
+        { label: 'Z1 Active Recovery (<55%)', min: 0, max: Math.round(activeFtp * 0.55), color: 'text-emerald-400' },
+        { label: 'Z2 Endurance (56–75%)', min: Math.round(activeFtp * 0.56), max: Math.round(activeFtp * 0.75), color: 'text-blue-400' },
+        { label: 'Z3 Tempo (76–90%)', min: Math.round(activeFtp * 0.76), max: Math.round(activeFtp * 0.90), color: 'text-cyan-400' },
+        { label: 'Z4 Threshold (91–105%)', min: Math.round(activeFtp * 0.91), max: Math.round(activeFtp * 1.05), color: 'text-amber-400' },
+        { label: 'Z5 VO2max (106–120%)', min: Math.round(activeFtp * 1.06), max: Math.round(activeFtp * 1.20), color: 'text-orange-400' },
+        { label: 'Z6 Anaerobic (121–150%)', min: Math.round(activeFtp * 1.21), max: Math.round(activeFtp * 1.50), color: 'text-purple-400' },
+        { label: 'Z7 Neuromuscular (>150%)', min: Math.round(activeFtp * 1.51), max: 9999, color: 'text-rose-400' },
+    ];
+    const bikeHrZones = [
+        { label: 'Z1 Recovery', min: 0, max: Math.round(bikeLthr * 0.75) },
+        { label: 'Z2 Endurance', min: Math.round(bikeLthr * 0.75) + 1, max: Math.round(bikeLthr * 0.87) },
+        { label: 'Z3 Tempo', min: Math.round(bikeLthr * 0.87) + 1, max: Math.round(bikeLthr * 0.94) },
+        { label: 'Z4 Threshold', min: Math.round(bikeLthr * 0.94) + 1, max: bikeLthr },
+        { label: 'Z5 VO2max', min: bikeLthr + 1, max: Math.round(bikeLthr * 1.05) },
+        { label: 'Z6 Anaerobic', min: Math.round(bikeLthr * 1.05) + 1, max: Math.round(bikeLthr * 1.10) },
+        { label: 'Z7 Neuromuscular', min: Math.round(bikeLthr * 1.10) + 1, max: 999 },
+    ];
     const inputClass = "bg-surface border border-glass-border rounded-md p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
@@ -170,25 +202,93 @@ export default function HeartRateZonesSection({
                         </div>
                     </div>
 
-                    {/* Calculated 7 Zones Display */}
-                    {calculatedZones.length > 0 && (
-                        <div className="bg-background-tertiary rounded-md p-4 border border-line">
-                            <h4 className="text-xs font-semibold text-foreground-muted mb-3">Calculated HR Zones (7-Zone Model)</h4>
-                            <div className="space-y-1">
-                                {calculatedZones.map((zone, i) => {
-                                    const colors = ['text-zone-1', 'text-zone-2', 'text-zone-3', 'text-zone-4', 'text-zone-5', 'text-workout-strength', 'text-workout-long-run'];
-                                    return (
-                                        <div key={i} className="flex justify-between items-center text-sm p-2 hover:bg-surface-hover rounded">
-                                            <span className={`${colors[i]} font-medium`}>{zone.label}</span>
-                                            <span className="text-foreground font-mono tabular-nums">
-                                                {zone.min} - {zone.max === 999 ? '∞' : zone.max} <span className="text-foreground-muted text-xs">bpm</span>
-                                            </span>
-                                        </div>
-                                    );
-                                })}
+                    {/* Sport Switcher for Running vs Cycling Zones */}
+                    <div className="bg-background-tertiary rounded-md p-4 border border-line space-y-4">
+                        <div className="flex items-center justify-between gap-2">
+                            <h4 className="text-xs font-semibold text-foreground-muted">Sport-Specific Zones (Running vs Cycling)</h4>
+                            <div className="flex gap-1 bg-surface p-1 rounded border border-glass-border">
+                                <button
+                                    type="button"
+                                    onClick={() => setZoneSportTab('running')}
+                                    className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                                        zoneSportTab === 'running' ? 'bg-accent-orange text-white' : 'text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    Running HR
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setZoneSportTab('cycling')}
+                                    className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                                        zoneSportTab === 'cycling' ? 'bg-accent-cyan text-white' : 'text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    Cycling Power & HR
+                                </button>
                             </div>
                         </div>
-                    )}
+
+                        {zoneSportTab === 'running' ? (
+                            calculatedZones.length > 0 && (
+                                <div className="space-y-1">
+                                    {calculatedZones.map((zone, i) => {
+                                        const colors = ['text-zone-1', 'text-zone-2', 'text-zone-3', 'text-zone-4', 'text-zone-5', 'text-workout-strength', 'text-workout-long-run'];
+                                        return (
+                                            <div key={i} className="flex justify-between items-center text-sm p-2 hover:bg-surface-hover rounded">
+                                                <span className={`${colors[i]} font-medium`}>{zone.label}</span>
+                                                <span className="text-foreground font-mono tabular-nums">
+                                                    {zone.min} - {zone.max === 999 ? '∞' : zone.max} <span className="text-foreground-muted text-xs">bpm</span>
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )
+                        ) : (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs text-foreground-muted mb-1">Cycling FTP (Watts)</label>
+                                    <input
+                                        type="number"
+                                        min={50}
+                                        max={600}
+                                        value={activeFtp}
+                                        onChange={e => updateFtp(parseInt(e.target.value, 10) || 200)}
+                                        className={inputClass}
+                                    />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-accent-cyan mb-2">Cycling Power Zones (Coggan 7-Zone)</p>
+                                    <div className="space-y-1">
+                                        {cogganZones.map((z, i) => (
+                                            <div key={i} className="flex justify-between items-center text-xs p-1.5 hover:bg-surface-hover rounded">
+                                                <span className={`${z.color} font-medium`}>{z.label}</span>
+                                                <span className="text-foreground font-mono tabular-nums">
+                                                    {z.min} - {z.max === 9999 ? '∞' : z.max} <span className="text-foreground-muted">W</span>
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-accent-orange mb-2">Cycling Heart Rate Zones (Cycling LTHR ~{bikeLthr} bpm)</p>
+                                    <div className="space-y-1">
+                                        {bikeHrZones.map((zone, i) => {
+                                            const colors = ['text-zone-1', 'text-zone-2', 'text-zone-3', 'text-zone-4', 'text-zone-5', 'text-workout-strength', 'text-workout-long-run'];
+                                            return (
+                                                <div key={i} className="flex justify-between items-center text-xs p-1.5 hover:bg-surface-hover rounded">
+                                                    <span className={`${colors[i]} font-medium`}>{zone.label}</span>
+                                                    <span className="text-foreground font-mono tabular-nums">
+                                                        {zone.min} - {zone.max === 999 ? '∞' : zone.max} <span className="text-foreground-muted">bpm</span>
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Manual Zone Overrides (BPM) */}
                     <div>

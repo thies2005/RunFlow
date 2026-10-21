@@ -16,6 +16,7 @@ import {
     calculateEfficiencyFactor,
     calculateAerobicDecoupling,
     calculatePowerZoneTimes,
+    calculateCogganPowerZones,
 } from '@/lib/metrics/power';
 import InteractiveStreamsChart from './InteractiveStreamsChart';
 import ReactMarkdown from 'react-markdown';
@@ -210,14 +211,18 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         const det = detailedActivity as any;
         const act = activity as any;
 
-        let npWatts: number | null = det?.npWatts ?? act?.npWatts ?? det?.weightedAverageWatts ?? act?.weightedAverageWatts ?? null;
-        let avgWatts: number | null = det?.averageWatts ?? act?.averageWatts ?? null;
+        const titleMatch = (name || activity.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
+        const titleWatts = titleMatch ? parseInt(titleMatch[1], 10) : null;
+        const validTitleWatts = titleWatts && titleWatts >= 40 && titleWatts <= 1500 ? titleWatts : null;
+
+        let npWatts: number | null = det?.npWatts ?? act?.npWatts ?? det?.weightedAverageWatts ?? act?.weightedAverageWatts ?? validTitleWatts ?? null;
+        let avgWatts: number | null = det?.averageWatts ?? act?.averageWatts ?? validTitleWatts ?? null;
         const maxWatts: number | null = det?.maxWatts ?? act?.maxWatts ?? null;
         let intensityFactor: number | null = det?.intensityFactor ?? act?.intensityFactor ?? null;
         let variabilityIndex: number | null = det?.variabilityIndex ?? act?.variabilityIndex ?? (npWatts && avgWatts && avgWatts > 0 ? Number((npWatts / avgWatts).toFixed(2)) : null);
         let bikeTss: number | null = det?.bikeTss ?? act?.bikeTss ?? null;
-        const kilojoules: number | null = det?.kilojoules ?? act?.kilojoules ?? null;
-        const deviceWatts: boolean = Boolean(det?.deviceWatts ?? act?.deviceWatts);
+        let kilojoules: number | null = det?.kilojoules ?? act?.kilojoules ?? null;
+        const deviceWatts: boolean = Boolean(det?.deviceWatts ?? act?.deviceWatts ?? validTitleWatts);
         let efficiencyFactor: number | null = det?.efficiencyFactor ?? act?.efficiencyFactor ?? (npWatts && (activity.averageHr || det?.averageHr) ? Number((npWatts / (activity.averageHr || det?.averageHr)).toFixed(2)) : null);
         let decouplingPct: number | null = det?.aerobicDecoupling ?? act?.aerobicDecoupling ?? null;
 
@@ -229,7 +234,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         let pz6 = det?.powerZone6Time ?? act?.powerZone6Time ?? null;
         let pz7 = det?.powerZone7Time ?? act?.powerZone7Time ?? null;
 
-        const ftp = cyclingSettings?.ftpWatts || 200;
+        const ftp = cyclingSettings?.ftpWatts || validTitleWatts || 220;
         let streamsObj: any = det?.streams;
         if (typeof streamsObj === 'string') {
             try { streamsObj = JSON.parse(streamsObj); } catch { streamsObj = null; }
@@ -243,23 +248,6 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                 const computedNp = calculateNormalizedPower(wattsStream);
                 if (computedNp != null) npWatts = computedNp;
             }
-            if (intensityFactor == null && npWatts != null) {
-                intensityFactor = calculateIntensityFactor(npWatts, ftp);
-            }
-            if (bikeTss == null && npWatts != null) {
-                const movingTime = det?.movingTime ?? act?.movingTime ?? (timeStream ? timeStream[timeStream.length - 1] - timeStream[0] : 0);
-                const ifFactor = intensityFactor ?? (npWatts / ftp);
-                bikeTss = calculateBikeTss(movingTime, npWatts, ifFactor, ftp);
-            }
-            if (variabilityIndex == null && npWatts != null && avgWatts && avgWatts > 0) {
-                variabilityIndex = calculateVariabilityIndex(npWatts, avgWatts);
-            }
-            if (efficiencyFactor == null && npWatts != null && (activity.averageHr || det?.averageHr)) {
-                efficiencyFactor = calculateEfficiencyFactor(npWatts, activity.averageHr || det?.averageHr);
-            }
-            if (decouplingPct == null && hrStream && hrStream.length > 0) {
-                decouplingPct = calculateAerobicDecoupling(wattsStream, hrStream, timeStream);
-            }
             if (pz1 == null || det?.powerZone1Time == null) {
                 const computedZones = calculatePowerZoneTimes(wattsStream, timeStream, ftp);
                 pz1 = computedZones[0] ?? 0;
@@ -270,24 +258,47 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                 pz6 = computedZones[5] ?? 0;
                 pz7 = computedZones[6] ?? 0;
             }
+            if (decouplingPct == null && hrStream && hrStream.length > 0) {
+                decouplingPct = calculateAerobicDecoupling(wattsStream, hrStream, timeStream);
+            }
+        }
+
+        const movingTime = det?.movingTime ?? act?.movingTime ?? (timeStream ? timeStream[timeStream.length - 1] - timeStream[0] : 0);
+        if (intensityFactor == null && npWatts != null && ftp > 0) {
+            intensityFactor = calculateIntensityFactor(npWatts, ftp);
+        }
+        if (bikeTss == null && npWatts != null && ftp > 0 && movingTime > 0) {
+            const ifFactor = intensityFactor ?? (npWatts / ftp);
+            bikeTss = calculateBikeTss(movingTime, npWatts, ifFactor, ftp);
+        }
+        if (kilojoules == null && avgWatts != null && movingTime > 0) {
+            kilojoules = Math.round((avgWatts * movingTime) / 1000);
+        }
+        if (variabilityIndex == null && npWatts != null && avgWatts && avgWatts > 0) {
+            variabilityIndex = calculateVariabilityIndex(npWatts, avgWatts);
+        }
+        if (efficiencyFactor == null && npWatts != null && (activity.averageHr || det?.averageHr)) {
+            efficiencyFactor = calculateEfficiencyFactor(npWatts, activity.averageHr || det?.averageHr);
         }
 
         const athleteWeight = cyclingSettings?.weightKg || null;
         const wPerKg: number | null = (avgWatts && athleteWeight && athleteWeight > 0) ? Number((avgWatts / athleteWeight).toFixed(2)) : null;
+        const cogganDefinitions = calculateCogganPowerZones(ftp, athleteWeight);
 
         const cogganZones = [
-            { name: 'Z1', label: 'Active Recovery', color: 'bg-emerald-500', textColor: 'text-emerald-500', time: pz1 ?? 0 },
-            { name: 'Z2', label: 'Endurance', color: 'bg-blue-500', textColor: 'text-blue-500', time: pz2 ?? 0 },
-            { name: 'Z3', label: 'Tempo', color: 'bg-cyan-500', textColor: 'text-cyan-500', time: pz3 ?? 0 },
-            { name: 'Z4', label: 'Threshold', color: 'bg-amber-500', textColor: 'text-amber-500', time: pz4 ?? 0 },
-            { name: 'Z5', label: 'VO2max', color: 'bg-orange-500', textColor: 'text-orange-500', time: pz5 ?? 0 },
-            { name: 'Z6', label: 'Anaerobic', color: 'bg-purple-500', textColor: 'text-purple-500', time: pz6 ?? 0 },
-            { name: 'Z7', label: 'Neuromuscular', color: 'bg-rose-500', textColor: 'text-rose-500', time: pz7 ?? 0 },
+            { name: 'Z1', label: 'Active Recovery', color: 'bg-emerald-500', textColor: 'text-emerald-500', time: pz1 ?? 0, minW: cogganDefinitions[0]?.minWatts ?? 0, maxW: cogganDefinitions[0]?.maxWatts ?? null, pctRange: '<55% FTP' },
+            { name: 'Z2', label: 'Endurance', color: 'bg-blue-500', textColor: 'text-blue-500', time: pz2 ?? 0, minW: cogganDefinitions[1]?.minWatts ?? 0, maxW: cogganDefinitions[1]?.maxWatts ?? null, pctRange: '56–75% FTP' },
+            { name: 'Z3', label: 'Tempo', color: 'bg-cyan-500', textColor: 'text-cyan-500', time: pz3 ?? 0, minW: cogganDefinitions[2]?.minWatts ?? 0, maxW: cogganDefinitions[2]?.maxWatts ?? null, pctRange: '76–90% FTP' },
+            { name: 'Z4', label: 'Threshold', color: 'bg-amber-500', textColor: 'text-amber-500', time: pz4 ?? 0, minW: cogganDefinitions[3]?.minWatts ?? 0, maxW: cogganDefinitions[3]?.maxWatts ?? null, pctRange: '91–105% FTP' },
+            { name: 'Z5', label: 'VO2max', color: 'bg-orange-500', textColor: 'text-orange-500', time: pz5 ?? 0, minW: cogganDefinitions[4]?.minWatts ?? 0, maxW: cogganDefinitions[4]?.maxWatts ?? null, pctRange: '106–120% FTP' },
+            { name: 'Z6', label: 'Anaerobic', color: 'bg-purple-500', textColor: 'text-purple-500', time: pz6 ?? 0, minW: cogganDefinitions[5]?.minWatts ?? 0, maxW: cogganDefinitions[5]?.maxWatts ?? null, pctRange: '121–150% FTP' },
+            { name: 'Z7', label: 'Neuromuscular', color: 'bg-rose-500', textColor: 'text-rose-500', time: pz7 ?? 0, minW: cogganDefinitions[6]?.minWatts ?? 0, maxW: cogganDefinitions[6]?.maxWatts ?? null, pctRange: '>150% FTP' },
         ];
         const totalPowerZoneSec = cogganZones.reduce((sum, z) => sum + z.time, 0);
         const activePowerZones = cogganZones.filter(z => z.time > 0);
 
         return {
+            ftp,
             npWatts,
             avgWatts,
             maxWatts,
@@ -303,7 +314,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             totalPowerZoneSec,
             activePowerZones,
         };
-    }, [activity, detailedActivity, cyclingSettings]);
+    }, [activity, detailedActivity, cyclingSettings, name]);
 
     const powerStreamData = useMemo(() => {
         const streams = (detailedActivity as any)?.streams;
@@ -514,7 +525,11 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             <div className="text-foreground-muted text-xs mb-1 flex items-center justify-center gap-1">
                                 <Zap className="w-3 h-3" /> Cadence
                             </div>
-                            <div className="text-2xl font-mono tabular-nums font-semibold text-foreground">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'}</div>
+                            <div className="text-2xl font-mono tabular-nums font-semibold text-foreground">
+                                {activity.averageCadence
+                                    ? Math.round(isRide && activity.averageCadence > 130 ? activity.averageCadence / 2 : activity.averageCadence)
+                                    : '-'}
+                            </div>
                             <div className="text-xs text-foreground-muted">{isRide ? 'rpm' : 'spm'}</div>
                         </div>
                     </div>
@@ -624,12 +639,18 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             </div>
 
                             {/* 7-Zone Coggan Power Breakdown */}
-                            {powerMetrics.totalPowerZoneSec > 0 && (
-                                <div className="pt-2">
-                                    <h4 className="text-xs font-semibold text-foreground-muted border-b border-line pb-2 mb-3">
-                                        Coggan Power Zones (Time in Zone)
+                            <div className="pt-2">
+                                <div className="flex items-center justify-between border-b border-line pb-2 mb-3">
+                                    <h4 className="text-xs font-semibold text-foreground-muted">
+                                        Cycling Power Zones (Coggan 7-Zone · FTP {powerMetrics.ftp}W)
                                     </h4>
-                                    {/* Stacked Horizontal Bar */}
+                                    {powerMetrics.totalPowerZoneSec > 0 && (
+                                        <span className="text-[11px] text-foreground-muted font-mono">
+                                            Time in Zone
+                                        </span>
+                                    )}
+                                </div>
+                                {powerMetrics.totalPowerZoneSec > 0 && (
                                     <div className="w-full h-8 rounded-lg overflow-hidden flex bg-background-secondary mb-3">
                                         {powerMetrics.activePowerZones.map((z, idx) => {
                                             const pct = (z.time / powerMetrics.totalPowerZoneSec) * 100;
@@ -649,28 +670,35 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             );
                                         })}
                                     </div>
+                                )}
 
-                                    {/* Zone Breakdown List */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                                        {powerMetrics.activePowerZones.map((z, idx) => {
-                                            const pct = (z.time / powerMetrics.totalPowerZoneSec) * 100;
-                                            return (
-                                                <div key={idx} className="flex items-center justify-between py-1 px-2 rounded-md bg-background-secondary/60 text-xs">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={`w-2.5 h-2.5 rounded-xs ${z.color}`} />
-                                                        <span className={`font-semibold ${z.textColor}`}>{z.name}</span>
-                                                        <span className="text-foreground-muted text-[11px]">{z.label}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-mono text-foreground font-medium">{formatDuration(z.time)}</span>
-                                                        <span className="font-mono text-foreground-muted w-9 text-right">{pct.toFixed(0)}%</span>
-                                                    </div>
+                                {/* Zone Breakdown List (always shows watt targets; includes time in zone when stream exists) */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                    {powerMetrics.cogganZones.map((z, idx) => {
+                                        const pct = powerMetrics.totalPowerZoneSec > 0 ? (z.time / powerMetrics.totalPowerZoneSec) * 100 : 0;
+                                        return (
+                                            <div key={idx} className="flex items-center justify-between py-1.5 px-2.5 rounded-md bg-background-secondary/60 text-xs">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`w-2.5 h-2.5 rounded-xs ${z.color}`} />
+                                                    <span className={`font-semibold ${z.textColor}`}>{z.name}</span>
+                                                    <span className="text-foreground-muted text-[11px]">{z.label}</span>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-mono text-[11px] text-foreground-muted">
+                                                        {z.minW}–{z.maxW ?? '∞'}W
+                                                    </span>
+                                                    {powerMetrics.totalPowerZoneSec > 0 && (
+                                                        <>
+                                                            <span className="font-mono text-foreground font-medium">{formatDuration(z.time)}</span>
+                                                            <span className="font-mono text-foreground-muted w-8 text-right">{pct.toFixed(0)}%</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            )}
+                            </div>
 
                             {/* Power Stream Line Chart (if watts stream exists) */}
                             {powerStreamData.length > 0 && (
@@ -748,10 +776,19 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 <span className="text-foreground-muted">Low Point</span>
                                 <span className="text-foreground font-medium font-mono tabular-nums">{activity.elevLow ? Math.round(activity.elevLow) : '-'} m</span>
                             </div>
-                            <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
-                                <span className="text-foreground-muted">GAP</span>
-                                <span className="text-accent-cyan font-medium font-mono tabular-nums">{formatPace(activity.gradeAdjustedSpeed)}</span>
-                            </div>
+                            {activity.type === 'RUN' ? (
+                                <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
+                                    <span className="text-foreground-muted">GAP</span>
+                                    <span className="text-accent-cyan font-medium font-mono tabular-nums">{formatPace(activity.gradeAdjustedSpeed)}</span>
+                                </div>
+                            ) : isRide ? (
+                                <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
+                                    <span className="text-foreground-muted">Avg Speed</span>
+                                    <span className="text-accent-cyan font-medium font-mono tabular-nums">
+                                        {activity.averageSpeed ? `${(activity.averageSpeed * 3.6).toFixed(1)} km/h` : '-'}
+                                    </span>
+                                </div>
+                            ) : null}
                         </div>
 
                         {/* Training Load */}
@@ -761,10 +798,19 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 <span className="text-foreground-muted">TRIMP</span>
                                 <span className="text-accent-cyan font-medium font-mono tabular-nums">{activity.trimp ? activity.trimp.toFixed(0) : '-'}</span>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-foreground-muted">rTSS</span>
-                                <span className="text-accent-orange font-medium font-mono tabular-nums">{activity.runningTss ? activity.runningTss.toFixed(0) : '-'}</span>
-                            </div>
+                            {isRide ? (
+                                <div className="flex justify-between items-center">
+                                    <span className="text-foreground-muted">Bike TSS</span>
+                                    <span className="text-accent-orange font-medium font-mono tabular-nums">
+                                        {powerMetrics?.bikeTss ? Math.round(powerMetrics.bikeTss) : '-'}
+                                    </span>
+                                </div>
+                            ) : activity.type === 'RUN' ? (
+                                <div className="flex justify-between items-center">
+                                    <span className="text-foreground-muted">rTSS</span>
+                                    <span className="text-accent-orange font-medium font-mono tabular-nums">{activity.runningTss ? activity.runningTss.toFixed(0) : '-'}</span>
+                                </div>
+                            ) : null}
                             <div className="flex justify-between items-center">
                                 <span className="text-foreground-muted">Intensity</span>
                                 <span className="text-foreground font-medium font-mono tabular-nums">
@@ -773,10 +819,19 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                         : '-'}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
-                                <span className="text-foreground-muted">Aerobic Fitness (VO2max)</span>
-                                <span className="text-accent-purple font-medium font-mono tabular-nums">{activity.estimatedVdot ? (activity.estimatedVdot * vdotCorrectionFactor).toFixed(1) : '-'}</span>
-                            </div>
+                            {activity.type === 'RUN' ? (
+                                <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
+                                    <span className="text-foreground-muted">Aerobic Fitness (VO2max)</span>
+                                    <span className="text-accent-purple font-medium font-mono tabular-nums">{activity.estimatedVdot ? (activity.estimatedVdot * vdotCorrectionFactor).toFixed(1) : '-'}</span>
+                                </div>
+                            ) : isRide ? (
+                                <div className="flex justify-between items-center border-t border-line pt-2 mt-2">
+                                    <span className="text-foreground-muted">Normalized Power</span>
+                                    <span className="text-accent-orange font-medium font-mono tabular-nums">
+                                        {powerMetrics?.npWatts ? `${powerMetrics.npWatts} W` : '-'}
+                                    </span>
+                                </div>
+                            ) : null}
                         </div>
 
                         {/* Device / Other */}
@@ -788,7 +843,11 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-foreground-muted">Cadence</span>
-                                <span className="text-foreground font-medium font-mono tabular-nums">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'} spm</span>
+                                <span className="text-foreground font-medium font-mono tabular-nums">
+                                    {activity.averageCadence
+                                        ? `${Math.round(isRide && activity.averageCadence > 130 ? activity.averageCadence / 2 : activity.averageCadence)} ${isRide ? 'rpm' : 'spm'}`
+                                        : `- ${isRide ? 'rpm' : 'spm'}`}
+                                </span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-foreground-muted">Device</span>
@@ -819,7 +878,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
 
                         return (
                             <div className="mt-6 mb-8">
-                                <h3 className="text-sm font-semibold text-foreground-muted border-b border-line pb-2 mb-4">Heart Rate Zones</h3>
+                                <h3 className="text-sm font-semibold text-foreground-muted border-b border-line pb-2 mb-4">
+                                    {isRide ? 'Cycling Heart Rate Zones' : 'Running Heart Rate Zones'}
+                                </h3>
 
                                 {/* Horizontal Bar Chart */}
                                 <div className="flex h-10 rounded-md overflow-hidden w-full bg-background-tertiary">
@@ -877,7 +938,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 <div className="text-foreground-muted">Loading detailed analysis...</div>
                             </div>
                         ) : detailedActivity?.streams ? (
-                            <InteractiveStreamsChart streams={detailedActivity.streams} />
+                            <InteractiveStreamsChart streams={detailedActivity.streams} activityType={activity.type} />
                         ) : (
                             <div className="h-32 flex items-center justify-center bg-background-tertiary rounded-md border border-line">
                                 <div className="text-foreground-muted italic">Detailed analysis data not available</div>

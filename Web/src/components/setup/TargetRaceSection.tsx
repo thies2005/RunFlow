@@ -1,4 +1,4 @@
-import { Target, Zap, Waves, Clock } from 'lucide-react';
+import { Target, Zap, Waves, Clock, Bike } from 'lucide-react';
 
 interface TargetRaceSectionProps {
     mode: 'onboarding' | 'advanced' | 'modal' | 'settings';
@@ -21,6 +21,7 @@ interface TargetRaceSectionProps {
 
 const SPORT_OPTIONS = [
     { value: 'RUN', label: 'Running', Icon: Zap },
+    { value: 'CYCLING', label: 'Cycling (MyWhoosh)', Icon: Bike },
     { value: 'TRIATHLON', label: 'Triathlon', Icon: Waves },
     { value: 'NO_RACE', label: 'No Race', Icon: Clock },
 ];
@@ -69,7 +70,7 @@ export default function TargetRaceSection({
             {setSport && (
                 <div>
                     <label className="block text-xs text-foreground-muted mb-2">Sport</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {SPORT_OPTIONS.map(({ value, label, Icon }) => (
                             <button
                                 key={value}
@@ -115,7 +116,7 @@ export default function TargetRaceSection({
                 </div>
             )}
 
-            {sport !== 'NO_RACE' && (
+            {sport !== 'NO_RACE' && sport !== 'CYCLING' && (
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs text-foreground-muted mb-1">Distance</label>
@@ -174,7 +175,7 @@ export default function TargetRaceSection({
                 </div>
             )}
 
-            {sport === 'NO_RACE' && setDurationWeeks && (
+            {(sport === 'NO_RACE' || sport === 'CYCLING') && setDurationWeeks && (
                 <div>
                     <label className="block text-xs text-foreground-muted mb-1">Plan Duration (weeks)</label>
                     <input
@@ -183,9 +184,14 @@ export default function TargetRaceSection({
                         onChange={(e) => setDurationWeeks(e.target.value)}
                         min={4}
                         max={52}
-                        placeholder="12"
+                        placeholder="8"
                         className={inputClass}
                     />
+                    {sport === 'CYCLING' && (
+                        <p className="text-[11px] text-accent-cyan mt-1">
+                            Automatically matched to your selected MyWhoosh Training Plan duration (adjustable).
+                        </p>
+                    )}
                 </div>
             )}
 

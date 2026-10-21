@@ -41,7 +41,7 @@ const boundedRaceDateSchema = dateStringSchema.refine(
 
 export const SubGoalSchema = z.object({
     name: z.string().min(1).max(255),
-    sport: z.enum(['RUN', 'TRIATHLON', 'NO_RACE']).optional(),
+    sport: z.enum(['RUN', 'TRIATHLON', 'CYCLING', 'NO_RACE']).optional(),
     raceType: z.nativeEnum(RaceType).nullable().optional(),
     raceDate: boundedRaceDateSchema.nullable().optional(),
     priority: z.enum(['SECONDARY', 'TUNE_UP', 'MILESTONE']).optional(),
@@ -53,7 +53,7 @@ export const PlanCreateInputSchema = z.object({
     name: z.string().min(1).max(255),
 
     // Sport / race configuration
-    sport: z.enum(['RUN', 'TRIATHLON', 'NO_RACE']).optional(),
+    sport: z.enum(['RUN', 'TRIATHLON', 'CYCLING', 'NO_RACE']).optional(),
     raceType: z.nativeEnum(RaceType).nullable().optional(),
     raceDate: boundedRaceDateSchema.nullable().optional(),
     planStartDate: dateStringSchema.nullable().optional(),
@@ -151,10 +151,11 @@ export function normalizePlanInput(
     } = raw;
 
     // Resolve sport: default to RUN
-    const resolvedSport: 'RUN' | 'TRIATHLON' | 'NO_RACE' = sport ?? 'RUN';
-    const isNoRace = resolvedSport === 'NO_RACE';
+    const resolvedSport: 'RUN' | 'TRIATHLON' | 'CYCLING' | 'NO_RACE' = sport ?? 'RUN';
+    const isCyclingOnly = resolvedSport === 'CYCLING';
+    const isNoRace = resolvedSport === 'NO_RACE' || (isCyclingOnly && !raceType);
 
-    // Resolve race type / date for NO_RACE
+    // Resolve race type / date for NO_RACE or CYCLING
     const resolvedRaceType: RaceType | null = isNoRace ? null : (raceType ?? null);
     const resolvedRaceDate: string | null = isNoRace ? null : (raceDate ?? null);
 
@@ -175,7 +176,7 @@ export function normalizePlanInput(
         resolvedPlanWeeks = weeks;
     }
     if (!resolvedPlanWeeks) {
-        resolvedPlanWeeks = 12;
+        resolvedPlanWeeks = isCyclingOnly ? 8 : 12;
     }
 
     // Unit guard: weeklyMileageGoal < 200 → likely km, convert to meters
@@ -193,9 +194,9 @@ export function normalizePlanInput(
     const raceTypeKey = resolvedRaceType ?? 'MARATHON';
     const defaults = getRaceDefaults(raceTypeKey);
 
-    const resolvedRunsPerWeek = runsPerWeek ?? defaults.runsPerWeek;
-    const resolvedRidesPerWeek = ridesPerWeek ?? defaults.ridesPerWeek;
-    const resolvedSwimsPerWeek = swimsPerWeek ?? defaults.swimsPerWeek;
+    const resolvedRunsPerWeek = runsPerWeek ?? (isCyclingOnly ? 0 : defaults.runsPerWeek);
+    const resolvedRidesPerWeek = ridesPerWeek ?? (isCyclingOnly ? 4 : defaults.ridesPerWeek);
+    const resolvedSwimsPerWeek = swimsPerWeek ?? (isCyclingOnly ? 0 : defaults.swimsPerWeek);
     const resolvedStrengthPerWeek = strengthPerWeek ?? defaults.strengthPerWeek;
 
     // Clean sub-goals
@@ -231,10 +232,10 @@ export function normalizePlanInput(
         calibrationTime: calibrationTime ?? null,
         calibrationDistance: calibrationDistance ?? null,
         calibrationFactor: calibrationFactor ?? null,
-        matchToMyWhoosh: matchToMyWhoosh ?? false,
-        mywhooshPlanId: mywhooshPlanId ?? null,
+        matchToMyWhoosh: isCyclingOnly ? true : (matchToMyWhoosh ?? false),
+        mywhooshPlanId: mywhooshPlanId ?? (isCyclingOnly ? 'mw-plan-ftp-builder' : null),
         deactivateExisting: planSource !== 'advanced',
-        sport: resolvedSport === 'NO_RACE' ? 'RUN' : resolvedSport,
+        sport: resolvedSport === 'NO_RACE' ? 'RUN' : (resolvedSport === 'CYCLING' ? 'TRIATHLON' : resolvedSport),
         planSource: planSource ?? undefined,
         creationMode: creationMode ?? undefined,
         backyardLoopDistM: backyardLoopDistM ?? null,
@@ -704,7 +705,7 @@ export async function resolveStartWeeklyMileage(
 
 export interface SubGoalInput {
     name: string;
-    sport?: 'RUN' | 'TRIATHLON' | 'NO_RACE';
+    sport?: 'RUN' | 'TRIATHLON' | 'CYCLING' | 'NO_RACE';
     raceType?: RaceType | null;
     raceDate?: string | null;
     priority?: 'SECONDARY' | 'TUNE_UP' | 'MILESTONE';
@@ -775,13 +776,15 @@ const TRIATHLON_RACE_TYPES = new Set<RaceType>([
     'SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'FULL_IRONMAN', 'CUSTOM_TRI',
 ]);
 
-function resolveDbSport(sport: 'RUN' | 'TRIATHLON' | 'NO_RACE'): PlanSport {
-    return sport === 'NO_RACE' ? 'RUN' : sport;
+function resolveDbSport(sport: 'RUN' | 'TRIATHLON' | 'CYCLING' | 'NO_RACE'): PlanSport {
+    if (sport === 'NO_RACE') return 'RUN';
+    if (sport === 'CYCLING') return 'TRIATHLON';
+    return sport;
 }
 
 function resolveSubGoalSport(
-    parentSport: 'RUN' | 'TRIATHLON' | 'NO_RACE',
-    subGoalSport?: 'RUN' | 'TRIATHLON' | 'NO_RACE',
+    parentSport: 'RUN' | 'TRIATHLON' | 'CYCLING' | 'NO_RACE',
+    subGoalSport?: 'RUN' | 'TRIATHLON' | 'CYCLING' | 'NO_RACE',
     raceType?: RaceType | null,
 ): PlanSport {
     if (subGoalSport) return resolveDbSport(subGoalSport);

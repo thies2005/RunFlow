@@ -113,9 +113,9 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
 
     const startDate = requestedStartDate > raceDate ? new Date(raceDate) : requestedStartDate;
 
-    const runsPerWeek = Math.max(2, config.runsPerWeek ?? 3);
-    const ridesPerWeek = Math.max(2, config.ridesPerWeek ?? 3);
-    const swimsPerWeek = Math.max(2, config.swimsPerWeek ?? 3);
+    const runsPerWeek = Math.max(0, config.runsPerWeek ?? 3);
+    const ridesPerWeek = Math.max(1, config.ridesPerWeek ?? 3);
+    const swimsPerWeek = Math.max(0, config.swimsPerWeek ?? 3);
     const strengthPerWeek = Math.max(0, config.strengthPerWeek ?? 1);
     const longRunDay = config.longRunDay !== undefined ? config.longRunDay : 0;
     const swimDay = config.swimDay !== undefined ? config.swimDay : 1;
@@ -421,9 +421,9 @@ function generateTriWeek(params: {
     );
     const remainingRunVol = Math.max(0, runVolume - longRunDist);
 
-    const hasBrick = phase === 'BUILD' || phase === 'PEAK' || (isTaper && taperIdx === 0);
-    const hasOpenWater = phase === 'PEAK' || (isTaper && taperIdx <= 1);
-    const hasTransition = phase === 'PEAK' || (isTaper && taperIdx === 0);
+    const hasBrick = runsPerWeek >= 1 && (phase === 'BUILD' || phase === 'PEAK' || (isTaper && taperIdx === 0));
+    const hasOpenWater = swimsPerWeek >= 2 && (phase === 'PEAK' || (isTaper && taperIdx <= 1));
+    const hasTransition = runsPerWeek >= 1 && swimsPerWeek >= 1 && (phase === 'PEAK' || (isTaper && taperIdx === 0));
 
     const getAvailableDay = (preferred: number, gapFrom: number[]): number => {
         const candidates: number[] = [];
@@ -451,39 +451,41 @@ function generateTriWeek(params: {
     };
 
     const longRunDay = getAvailableDay(preferredLongRunDay, []);
-    usedDays.add(longRunDay);
-    hardSessionDays.push(longRunDay);
+    if (runsPerWeek >= 1) {
+        usedDays.add(longRunDay);
+        hardSessionDays.push(longRunDay);
 
-    if (isTaper) {
-        const taperFactor = taperIdx === 0 ? 0.5 : taperIdx === 1 ? 0.65 : 0.80;
-        const taperedDist = Math.round(longRunDist * taperFactor);
-        workouts.push({
-            dayOffset: longRunDay,
-            type: WorkoutType.LONG_RUN,
-            description: `Long Run: ${(taperedDist / 1000).toFixed(1)}km @ Easy`,
-            totalDistance: taperedDist,
-            targetPace: easyPace,
-            targetDuration: 0,
-        });
-    } else {
-        let longRunDesc = `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`;
-        if (phase === 'PEAK') {
-            const raceRunDist = customRunDist ?? TRI_RACE_RUN_DIST[raceType] ?? 10000;
-            const mpDist = Math.min(Math.round(longRunDist * 0.3 / 100) * 100, raceRunDist * 0.3);
-            const easyPart = longRunDist - mpDist;
-            longRunDesc = `Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(mpDist / 1000).toFixed(1)}km @ Race Pace`;
+        if (isTaper) {
+            const taperFactor = taperIdx === 0 ? 0.5 : taperIdx === 1 ? 0.65 : 0.80;
+            const taperedDist = Math.round(longRunDist * taperFactor);
+            workouts.push({
+                dayOffset: longRunDay,
+                type: WorkoutType.LONG_RUN,
+                description: `Long Run: ${(taperedDist / 1000).toFixed(1)}km @ Easy`,
+                totalDistance: taperedDist,
+                targetPace: easyPace,
+                targetDuration: 0,
+            });
+        } else {
+            let longRunDesc = `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`;
+            if (phase === 'PEAK') {
+                const raceRunDist = customRunDist ?? TRI_RACE_RUN_DIST[raceType] ?? 10000;
+                const mpDist = Math.min(Math.round(longRunDist * 0.3 / 100) * 100, raceRunDist * 0.3);
+                const easyPart = longRunDist - mpDist;
+                longRunDesc = `Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(mpDist / 1000).toFixed(1)}km @ Race Pace`;
+            }
+            workouts.push({
+                dayOffset: longRunDay,
+                type: WorkoutType.LONG_RUN,
+                description: longRunDesc,
+                totalDistance: longRunDist,
+                targetPace: easyPace,
+                targetDuration: 0,
+            });
         }
-        workouts.push({
-            dayOffset: longRunDay,
-            type: WorkoutType.LONG_RUN,
-            description: longRunDesc,
-            totalDistance: longRunDist,
-            targetPace: easyPace,
-            targetDuration: 0,
-        });
     }
 
-    if (!isRecoveryWeek && phase !== 'TAPER') {
+    if (runsPerWeek >= 2 && !isRecoveryWeek && phase !== 'TAPER') {
         const qualityDay = getAvailableDay(preferredWorkoutDay, hardSessionDays);
         usedDays.add(qualityDay);
         hardSessionDays.push(qualityDay);
@@ -556,7 +558,7 @@ function generateTriWeek(params: {
                 targetDuration: 0,
             });
         }
-    } else if (phase === 'BASE') {
+    } else if (phase === 'BASE' && swimsPerWeek >= 1) {
         const drillDay = getAvailableDay(preferredSwimDay, hardSessionDays);
         if (!usedDays.has(drillDay)) {
             usedDays.add(drillDay);

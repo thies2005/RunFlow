@@ -16,15 +16,26 @@ interface ClientAnalysisProps {
 
 export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
     const streams = activity.streams;
+    const isRide = activity.type === 'RIDE' || (activity as any).type === 'VIRTUAL_RIDE' || (activity as any).sportType?.toLowerCase().includes('ride');
+    const titleWattsMatch = (activity.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
+    const parsedTitleWatts = titleWattsMatch ? parseInt(titleWattsMatch[1], 10) : null;
+    const rideWatts = (activity as any).npWatts ?? (activity as any).averageWatts ?? (parsedTitleWatts && parsedTitleWatts >= 40 && parsedTitleWatts <= 1500 ? parsedTitleWatts : null);
+
+    const badgeLabel = useMemo(() => {
+        if (isRide) {
+            if (/\bftp\s*test\b|\bramp\s*test\b/i.test(activity.name)) return 'FTP TEST';
+            if (activity.trainingType && activity.trainingType !== 'EASY') return activity.trainingType.replace('_', ' ');
+            return 'CYCLING';
+        }
+        return activity.trainingType?.replace('_', ' ') || 'RUN';
+    }, [activity.name, activity.trainingType, isRide]);
 
     // Memoize chart data transformation to avoid recalculation on re-render
     const chartData = useMemo(() => {
         if (!streams?.time) return [];
 
         return streams.time.map((t: number, i: number) => {
-            // Determine max pace based on activity type
             const trainingType = activity.trainingType || 'RUN';
-            // 15 min/km for running, 20 min/km for others (like hiking/walking)
             const maxPace = (trainingType === 'RUN' || trainingType === 'EASY' || trainingType.includes('RUN')) ? 15 : 20;
 
             return {
@@ -32,13 +43,13 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                 distance: streams.distance ? streams.distance[i] : 0,
                 hr: streams.heartrate ? streams.heartrate[i] : null,
                 pace: (streams.velocity_smooth && streams.velocity_smooth[i] > 0.5)
-                    ? Math.min(maxPace, (1000 / streams.velocity_smooth[i]) / 60)
+                    ? (isRide ? Number((streams.velocity_smooth[i] * 3.6).toFixed(1)) : Math.min(maxPace, (1000 / streams.velocity_smooth[i]) / 60))
                     : null,
                 altitude: streams.altitude ? streams.altitude[i] : null,
-                cadence: streams.cadence ? streams.cadence[i] * 2 : null,
+                cadence: streams.cadence ? (isRide ? streams.cadence[i] : streams.cadence[i] * 2) : null,
             };
         }).filter((d: any) => d.hr !== null || d.pace !== null);
-    }, [streams, activity.trainingType]);
+    }, [streams, activity.trainingType, isRide]);
 
     // Memoize formatXAxis to avoid recreating on every render
     const formatXAxis = useCallback((tickItem: string | number) => {
@@ -48,6 +59,9 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
     }, []);
 
     const avgHr = activity.averageHr || 0;
+    const displayCadence = activity.averageCadence
+        ? Math.round(isRide && activity.averageCadence > 130 ? activity.averageCadence / 2 : activity.averageCadence)
+        : null;
 
     return (
         <div className="min-h-screen bg-background text-foreground p-6">
@@ -62,7 +76,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                         <Calendar className="w-4 h-4" />
                         <span>{format(new Date(activity.startDate), 'PPP p')}</span>
                         <span className="px-2 py-0.5 rounded-full bg-accent-purple/20 text-accent-purple text-xs border border-accent-purple/50">
-                            {activity.trainingType?.replace('_', ' ') || 'RUN'}
+                            {badgeLabel}
                         </span>
                     </div>
                 </div>
@@ -84,11 +98,31 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                 </div>
                 <div className="glass-card p-4">
                     <div className="flex items-center gap-2 text-foreground-muted text-xs uppercase mb-1">
-                        <Zap className="w-3 h-3" /> Avg Pace
+                        <Zap className="w-3 h-3" /> {isRide ? (rideWatts ? 'Power / Speed' : 'Avg Speed') : 'Avg Pace'}
                     </div>
                     <div className="text-2xl font-bold">
-                        {activity.averageSpeed ? Math.floor(16.6667 / activity.averageSpeed) + ':' + Math.round((16.6667 / activity.averageSpeed % 1) * 60).toString().padStart(2, '0') : '-'}
-                        <span className="text-sm font-normal text-foreground-muted"> /km</span>
+                        {isRide ? (
+                            rideWatts ? (
+                                <>
+                                    {Math.round(rideWatts)} <span className="text-sm font-normal text-accent-orange">W</span>
+                                    {activity.averageSpeed ? (
+                                        <span className="text-xs font-normal text-foreground-muted ml-2">
+                                            ({(activity.averageSpeed * 3.6).toFixed(1)} km/h)
+                                        </span>
+                                    ) : null}
+                                </>
+                            ) : (
+                                <>
+                                    {activity.averageSpeed ? (activity.averageSpeed * 3.6).toFixed(1) : '-'}
+                                    <span className="text-sm font-normal text-foreground-muted"> km/h</span>
+                                </>
+                            )
+                        ) : (
+                            <>
+                                {activity.averageSpeed ? Math.floor(16.6667 / activity.averageSpeed) + ':' + Math.round((16.6667 / activity.averageSpeed % 1) * 60).toString().padStart(2, '0') : '-'}
+                                <span className="text-sm font-normal text-foreground-muted"> /km</span>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div className="glass-card p-4 text-center">
@@ -101,7 +135,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                     <div className="flex items-center justify-center gap-2 text-foreground-muted text-xs uppercase mb-1">
                         <Zap className="w-3 h-3" /> Avg Cadence
                     </div>
-                    <div className="text-2xl font-bold">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'} <span className="text-sm font-normal text-foreground-muted">spm</span></div>
+                    <div className="text-2xl font-bold">{displayCadence ?? '-'} <span className="text-sm font-normal text-foreground-muted">{isRide ? 'rpm' : 'spm'}</span></div>
                 </div>
             </div>
 
@@ -190,7 +224,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
             {/* Combined Interactive Chart */}
             <div className="glass-card p-6 mb-8">
                 <h3 className="text-lg font-semibold mb-4">Detailed Analysis</h3>
-                <InteractiveStreamsChart streams={streams} />
+                <InteractiveStreamsChart streams={streams} activityType={activity.type} />
             </div>
 
             {/* Graphs */}
@@ -221,10 +255,10 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                     </div>
                 </div>
 
-                {/* Pace Graph */}
+                {/* Pace / Speed Graph */}
                 <div className="glass-card p-6">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-blue-500" /> Pace (min/km)
+                        <Zap className="w-4 h-4 text-blue-500" /> {isRide ? 'Speed (km/h)' : 'Pace (min/km)'}
                     </h3>
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -236,12 +270,17 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                     </linearGradient>
                                 </defs>
                                 <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
-                                <YAxis domain={['dataMax', 'dataMin']} stroke="#6b7280" ticks={[0, 3, 6, 9, 12, 15]} />
+                                <YAxis
+                                    domain={isRide ? ['auto', 'auto'] : ['dataMax', 'dataMin']}
+                                    stroke="#6b7280"
+                                    ticks={isRide ? undefined : [0, 3, 6, 9, 12, 15]}
+                                />
                                 <Tooltip
                                     content={<ChartTooltip
                                         labelFormatter={formatXAxis}
                                         formatter={(value: string | number) => {
                                             const numVal = typeof value === 'number' ? value : parseFloat(value);
+                                            if (isRide) return [`${numVal.toFixed(1)} km/h`, 'Speed'];
                                             const mins = Math.floor(numVal);
                                             const secs = Math.round((numVal % 1) * 60).toString().padStart(2, '0');
                                             return [`${mins}:${secs}`, 'Pace'];
@@ -287,7 +326,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                 {chartData.some((d: any) => d.cadence) && (
                     <div className="glass-card p-6">
                         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                            <Zap className="w-4 h-4 text-accent-purple" /> Cadence (spm)
+                            <Zap className="w-4 h-4 text-accent-purple" /> Cadence ({isRide ? 'rpm' : 'spm'})
                         </h3>
                         <div className="h-[200px] w-full">
                             <ResponsiveContainer width="100%" height="100%">

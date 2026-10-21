@@ -146,13 +146,25 @@ function determineWorkoutType(activity: StravaActivity): WorkoutType {
     if (activity.workout_type === 2) return 'LONG_RUN';
     if (activity.workout_type === 3) return 'INTERVALS';
 
-    if (activity.type === 'Run' || activity.type === 'VirtualRun') {
+    if (activity.type === 'Run' || activity.type === 'VirtualRun' || activity.type === 'TrailRun') {
         const distKm = activity.distance / 1000;
         if (distKm >= 15) return 'LONG_RUN';
         return 'EASY';
     }
 
-    if (activity.type === 'Ride' || activity.type === 'VirtualRide') return 'RIDE';
+    if (
+        activity.type === 'Ride' ||
+        activity.type === 'VirtualRide' ||
+        activity.type === 'GravelRide' ||
+        activity.type === 'MountainBikeRide'
+    ) {
+        const name = activity.name || '';
+        if (/\bftp\s*test\b|\bramp\s*test\b|\brace\b/i.test(name)) return 'RACE';
+        if (/\binterval|\bvo2|\banaerobic|\bhiit|\bthreshold|\bsweet\s*spot|\btempo\b/i.test(name)) return 'RIDE_INTERVALS';
+        if (/\brecovery\b|\beasy\s*spin\b/i.test(name)) return 'RECOVERY';
+        if ((activity.moving_time ?? 0) >= 7200) return 'LONG_RIDE';
+        return 'RIDE';
+    }
     if (activity.type === 'Swim') return 'SWIM';
     if (activity.type === 'WeightTraining') return 'STRENGTH';
 
@@ -290,17 +302,21 @@ export function enrichActivityMetrics(input: MetricsInput): {
     let powerZoneTimes: number[] | null = null;
 
     const isCycling = mappedType === ActivityType.RIDE || mappedType === ActivityType.VIRTUAL_RIDE;
-    const hasWattsData = isCycling || Boolean(activity.average_watts || activity.device_watts || streams?.watts);
+    const titleWattsMatch = isCycling ? (activity.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i) : null;
+    const parsedTitleWatts = titleWattsMatch ? parseInt(titleWattsMatch[1], 10) : null;
+    const fallbackTitleWatts = parsedTitleWatts && parsedTitleWatts >= 40 && parsedTitleWatts <= 1500 ? parsedTitleWatts : undefined;
+    const effectiveAvgWatts = activity.average_watts ?? fallbackTitleWatts;
+    const hasWattsData = isCycling || Boolean(effectiveAvgWatts || activity.device_watts || streams?.watts);
 
     if (hasWattsData) {
-        const ftpWatts = user.ftpWatts ?? null;
+        const ftpWatts = user.ftpWatts ?? fallbackTitleWatts ?? null;
 
         if (streams?.watts && streams.watts.length > 0) {
             npWatts = calculateNormalizedPower(
                 streams.watts,
                 streams.time,
                 activity.weighted_average_watts,
-                activity.average_watts
+                effectiveAvgWatts
             );
 
             if (ftpWatts && ftpWatts > 0) {
@@ -315,11 +331,11 @@ export function enrichActivityMetrics(input: MetricsInput): {
                 null,
                 null,
                 activity.weighted_average_watts,
-                activity.average_watts
+                effectiveAvgWatts
             );
         }
 
-        const avgWatts = activity.average_watts ?? null;
+        const avgWatts = effectiveAvgWatts ?? null;
 
         if (npWatts && ftpWatts && ftpWatts > 0) {
             intensityFactor = calculateIntensityFactor(npWatts, ftpWatts);
@@ -357,10 +373,17 @@ export function transformActivityData(
     activity: StravaActivity,
     metrics: ReturnType<typeof enrichActivityMetrics>
 ): ActivityData {
+    const mappedType = mapActivityType(activity.type);
+    const isFootSport = mappedType === ActivityType.RUN || mappedType === ActivityType.WALK || mappedType === ActivityType.HIKE;
+    const isCycling = mappedType === ActivityType.RIDE || mappedType === ActivityType.VIRTUAL_RIDE;
+    const titleWattsMatch = isCycling ? (activity.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i) : null;
+    const parsedTitleWatts = titleWattsMatch ? parseInt(titleWattsMatch[1], 10) : null;
+    const fallbackWatts = parsedTitleWatts && parsedTitleWatts >= 40 && parsedTitleWatts <= 1500 ? parsedTitleWatts : null;
+
     return {
         name: activity.name,
         description: activity.description ?? null,
-        type: mapActivityType(activity.type),
+        type: mappedType,
         sportType: activity.sport_type,
         startDate: new Date(activity.start_date),
         timezone: activity.timezone,
@@ -372,7 +395,7 @@ export function transformActivityData(
         gradeAdjustedSpeed: activity.average_grade_adjusted_speed ?? null,
         averageHr: activity.average_heartrate ?? null,
         maxHr: activity.max_heartrate ?? null,
-        averageCadence: activity.average_cadence ? (activity.average_cadence * 2) : null,
+        averageCadence: activity.average_cadence ? (isFootSport ? activity.average_cadence * 2 : activity.average_cadence) : null,
         hasHeartrate: activity.has_heartrate,
         totalElevation: activity.total_elevation_gain,
         elevHigh: activity.elev_high ?? null,
@@ -391,7 +414,7 @@ export function transformActivityData(
         rawJson: activity as unknown as Prisma.InputJsonValue,
         streams: Prisma.JsonNull,
         trainingType: determineWorkoutType(activity),
-        averageWatts: activity.average_watts ?? null,
+        averageWatts: activity.average_watts ?? fallbackWatts,
         weightedAverageWatts: activity.weighted_average_watts ?? null,
         deviceWatts: activity.device_watts ?? false,
         maxWatts: activity.max_watts ?? null,

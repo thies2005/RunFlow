@@ -404,8 +404,8 @@ export default function PlanSetupForm({
     }, [thresholdHR]);
 
     const msPerWeek: number = 1000 * 60 * 60 * 24 * 7;
-    const computedPlanWeeks: number = sport === 'NO_RACE'
-        ? (parseInt(durationWeeks) || 12)
+    const computedPlanWeeks: number = (sport === 'NO_RACE' || sport === 'CYCLING')
+        ? (parseInt(durationWeeks) || 8)
         : Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / msPerWeek));
 
     // Track whether the user has explicitly changed raceType after settings loaded
@@ -516,10 +516,13 @@ export default function PlanSetupForm({
         if (goalsData?.goals?.length > 0) {
             const activeGoal = goalsData.goals.find((g: any) => g.isActive);
             if (activeGoal) {
-
+                const isCyclingGoal = !activeGoal.raceType && activeGoal.ridesPerWeek > 0 && activeGoal.runsPerWeek === 0;
                 setGoalName(activeGoal.name || 'My Race');
                 setRaceType(activeGoal.raceType || 'MARATHON');
-                setSport(activeGoal.sport || (TRIATHLON_RACE_TYPES.has(activeGoal.raceType) ? 'TRIATHLON' : 'RUN'));
+                setSport(isCyclingGoal ? 'CYCLING' : (activeGoal.sport || (TRIATHLON_RACE_TYPES.has(activeGoal.raceType) ? 'TRIATHLON' : 'RUN')));
+                if (activeGoal.planWeeks) {
+                    setDurationWeeks(String(activeGoal.planWeeks));
+                }
                 if (activeGoal.raceDate) {
                     setRaceDate(new Date(activeGoal.raceDate).toISOString().split('T')[0]);
                 }
@@ -651,15 +654,19 @@ export default function PlanSetupForm({
         mutationFn: async () => {
             const timeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
 
+            const isCycling = sport === 'CYCLING';
             const isTriathlon = TRIATHLON_RACE_TYPES.has(raceType) || sport === 'TRIATHLON';
-            const effectiveSport = sport === 'NO_RACE' ? 'NO_RACE' : (isTriathlon ? 'TRIATHLON' : 'RUN');
+            const effectiveSport = isCycling ? 'CYCLING' : sport === 'NO_RACE' ? 'NO_RACE' : (isTriathlon ? 'TRIATHLON' : 'RUN');
+            const isDurationBased = effectiveSport === 'NO_RACE' || effectiveSport === 'CYCLING';
 
             let computedTargetTime: number | null = goalTimeSeconds;
             if (isTriathlon) {
                 computedTargetTime = triGoalTimeSeconds;
+            } else if (isDurationBased) {
+                computedTargetTime = null;
             }
 
-            if (!computedTargetTime && currentVdot > 0) {
+            if (!computedTargetTime && !isDurationBased && currentVdot > 0) {
                 const raceDistanceMap: Record<string, RaceDistance> = {
                     'FIVE_K': '5K',
                     'TEN_K': '10K',
@@ -670,7 +677,7 @@ export default function PlanSetupForm({
                 const calibratedVO2max = currentVdot * calibrationFactor;
                 const planSettings: PlanSettings = {
                     durationWeeks: computedPlanWeeks,
-                    runsPerWeek: runsPerWeek,
+                    runsPerWeek: Math.max(1, runsPerWeek),
                     weeklyMileageGoal: weeklyMileage,
                     raceDistance: mappedDistance,
                     taperWeeks: taperWeeks,
@@ -681,16 +688,20 @@ export default function PlanSetupForm({
                 computedTargetTime = projection.projectedTime;
             }
 
+            const resolvedMyWhooshPlanId = (isCycling || matchToMyWhoosh)
+                ? (mywhooshPlanId || MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder')
+                : undefined;
+
             const body: Record<string, unknown> = {
                 name: goalName,
-                raceType: effectiveSport === 'NO_RACE' ? null : raceType,
-                raceDate: effectiveSport === 'NO_RACE' ? null : new Date(raceDate).toISOString(),
+                raceType: isDurationBased ? null : raceType,
+                raceDate: isDurationBased ? null : new Date(raceDate).toISOString(),
                 planStartDate: new Date(planStartDate).toISOString(),
-                planWeeks: effectiveSport === 'NO_RACE'
-                    ? (parseInt(durationWeeks) || 12)
+                planWeeks: isDurationBased
+                    ? (parseInt(durationWeeks) || 8)
                     : Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / (1000 * 60 * 60 * 24 * 7))),
                 runsPerWeek,
-                ridesPerWeek,
+                ridesPerWeek: isCycling ? Math.max(1, ridesPerWeek) : ridesPerWeek,
                 swimsPerWeek,
                 strengthPerWeek,
                 taperWeeks,
@@ -704,8 +715,8 @@ export default function PlanSetupForm({
                 swimDay,
                 restDays,
                 sport: effectiveSport,
-                matchToMyWhoosh,
-                mywhooshPlanId: matchToMyWhoosh && mywhooshPlanId ? mywhooshPlanId : undefined,
+                matchToMyWhoosh: isCycling ? true : matchToMyWhoosh,
+                mywhooshPlanId: resolvedMyWhooshPlanId,
                 maxHeartRate,
                 restingHeartRate,
                 hrZoneMethod: 'CUSTOM',
@@ -776,9 +787,15 @@ export default function PlanSetupForm({
     // Settings mutation (update settings)
     const updateSettingsMutation = useMutation({
         mutationFn: async () => {
-            const timeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
+            const rawTimeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
+            const timeSeconds = rawTimeSeconds > 0 ? rawTimeSeconds : (sport === 'CYCLING' ? 1500 : 0);
 
             if (timeSeconds === 0) throw new Error('Time cannot be zero');
+
+            const isCycling = sport === 'CYCLING';
+            const effectiveMyWhooshPlanId = (isCycling || matchToMyWhoosh)
+                ? (mywhooshPlanId || MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder')
+                : undefined;
 
             const res = await fetch('/api/settings/update-vdot', {
                 method: 'POST',
@@ -786,7 +803,7 @@ export default function PlanSetupForm({
                     timeSeconds,
                     raceDistance: calibrationDistance,
                     runsPerWeek,
-                    ridesPerWeek,
+                    ridesPerWeek: isCycling ? Math.max(1, ridesPerWeek) : ridesPerWeek,
                     swimsPerWeek,
                     strengthPerWeek,
                     weeklyMileageGoal: weeklyMileage * 1000,
@@ -808,12 +825,12 @@ export default function PlanSetupForm({
                     buildWeeks,
                     maxLongRunKm,
                     calibrationFactor,
-                    matchToMyWhoosh,
-                    mywhooshPlanId: matchToMyWhoosh && mywhooshPlanId ? mywhooshPlanId : undefined,
-                    raceType,
+                    matchToMyWhoosh: isCycling ? true : matchToMyWhoosh,
+                    mywhooshPlanId: effectiveMyWhooshPlanId,
+                    raceType: isCycling ? null : raceType,
                     raceDate,
                     planStartDate,
-                    sport: TRIATHLON_RACE_TYPES.has(raceType) ? 'TRIATHLON' : sport,
+                    sport: isCycling ? 'TRIATHLON' : (TRIATHLON_RACE_TYPES.has(raceType) ? 'TRIATHLON' : sport),
                     longRunDay,
                     qualityDay,
                     restDays,
@@ -843,7 +860,7 @@ export default function PlanSetupForm({
         const errors: Record<string, string> = {};
         if (mode === 'onboarding' || mode === 'advanced' || mode === 'modal') {
             if (!goalName.trim()) errors.goalName = "Goal name is required";
-            if (sport !== 'NO_RACE' && !raceDate) errors.raceDate = "Race date is required";
+            if (sport !== 'NO_RACE' && sport !== 'CYCLING' && !raceDate) errors.raceDate = "Race date is required";
             if (!planStartDate) errors.planStartDate = "Plan start date is required";
         }
 
@@ -921,7 +938,28 @@ export default function PlanSetupForm({
                 setPlanStartDate={setPlanStartDate}
                 formErrors={formErrors}
                 sport={sport}
-                setSport={setSport}
+                setSport={(nextSport: string) => {
+                    setSport(nextSport);
+                    if (nextSport === 'CYCLING') {
+                        setMatchToMyWhoosh(true);
+                        const defaultPlan = MYWHOOSH_PLANS.find((p) => p.id === mywhooshPlanId) || MYWHOOSH_PLANS[0];
+                        if (!mywhooshPlanId && defaultPlan) {
+                            setMywhooshPlanId(defaultPlan.id);
+                        }
+                        if (defaultPlan) {
+                            setDurationWeeks(String(defaultPlan.weeksCount));
+                            if (goalName === 'My First Race' || goalName === 'My Race') {
+                                setGoalName(defaultPlan.name);
+                            }
+                        }
+                        setRunsPerWeek(0);
+                        setRidesPerWeek(4);
+                        setSwimsPerWeek(0);
+                        setStrengthPerWeek(1);
+                    } else if (nextSport === 'RUN' && runsPerWeek === 0) {
+                        setRunsPerWeek(4);
+                    }
+                }}
                 durationWeeks={durationWeeks}
                 setDurationWeeks={setDurationWeeks}
                 experienceLevel={experienceLevel}
@@ -1006,7 +1044,7 @@ export default function PlanSetupForm({
                 </div>
             )}
 
-            {!TRIATHLON_RACE_TYPES.has(raceType) && raceType !== 'BACKYARD_ULTRA' && !['TWELVE_HOUR', 'TWENTY_FOUR_HOUR'].includes(raceType) && (
+            {sport !== 'CYCLING' && runsPerWeek > 0 && !TRIATHLON_RACE_TYPES.has(raceType) && raceType !== 'BACKYARD_ULTRA' && !['TWELVE_HOUR', 'TWENTY_FOUR_HOUR'].includes(raceType) && (
                 <GoalTimeRenderer
                     mode={mode}
                     currentVdot={currentVdot}
@@ -1031,6 +1069,73 @@ export default function PlanSetupForm({
                     setIsEditingGoalTime={setIsEditingGoalTime}
                     distanceOverrideM={ULTRA_DISTANCE_MAP[raceType]}
                 />
+            )}
+
+            {/* MyWhoosh Training Plan Selector (always visible and preselected when sport === 'CYCLING') */}
+            {(sport === 'CYCLING' || ridesPerWeek > 0 || TRIATHLON_RACE_TYPES.has(raceType) || sport === 'TRIATHLON') && (
+                <div className="border-t border-glass-border pt-6 space-y-3">
+                    {sport !== 'CYCLING' && (
+                        <div className="flex items-center justify-between p-3 rounded-md bg-surface border border-glass-border">
+                            <div className="pr-3">
+                                <p className="text-sm text-foreground">Match Cycling Workouts to MyWhoosh</p>
+                                <p className="text-xs text-foreground-muted">Populate planned rides with official MyWhoosh workout steps (%FTP, intervals, cadence) and enable .zwo export</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setMatchToMyWhoosh(!matchToMyWhoosh)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${matchToMyWhoosh ? 'bg-accent-cyan' : 'bg-glass-border'}`}
+                            >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+                    )}
+
+                    {(sport === 'CYCLING' || matchToMyWhoosh) && (
+                        <div className="p-3.5 rounded-md bg-surface border border-accent-cyan/40 space-y-2">
+                            <label className="block text-xs font-semibold text-accent-cyan">
+                                {sport === 'CYCLING' ? 'Select MyWhoosh Cycling Training Plan' : 'MyWhoosh Training Plan / Workout Selector'}
+                            </label>
+                            <select
+                                value={mywhooshPlanId || (sport === 'CYCLING' ? (MYWHOOSH_PLANS[0]?.id ?? '') : '')}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setMywhooshPlanId(val);
+                                    const selectedPlan = MYWHOOSH_PLANS.find((p) => p.id === val);
+                                    if (sport === 'CYCLING' && selectedPlan) {
+                                        setDurationWeeks(String(selectedPlan.weeksCount));
+                                        if (
+                                            goalName === 'My First Race' ||
+                                            goalName === 'My Race' ||
+                                            MYWHOOSH_PLANS.some((p) => p.name === goalName)
+                                        ) {
+                                            setGoalName(selectedPlan.name);
+                                        }
+                                    }
+                                }}
+                                className="bg-background-secondary border border-glass-border rounded-md p-2.5 text-xs text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-cyan"
+                            >
+                                {sport !== 'CYCLING' && (
+                                    <option value="">Auto-Match Closest MyWhoosh Workout by Phase &amp; Duration</option>
+                                )}
+                                {MYWHOOSH_PLANS.map((plan) => (
+                                    <option key={plan.id} value={plan.id}>
+                                        {plan.name} ({plan.category} · {plan.level} · {plan.weeksCount}w)
+                                    </option>
+                                ))}
+                            </select>
+                            {(mywhooshPlanId || sport === 'CYCLING') && (
+                                <p className="text-[11px] text-foreground-muted">
+                                    {MYWHOOSH_PLANS.find((p) => p.id === (mywhooshPlanId || MYWHOOSH_PLANS[0]?.id))?.description}
+                                </p>
+                            )}
+                            {sport === 'CYCLING' && (
+                                <p className="text-[11px] text-accent-cyan">
+                                    Pure cycling plan preselected from MyWhoosh. Use the sliders below to add optional Runs, Swims, or Strength/Gym sessions per week.
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </div>
             )}
 
             <PlanVolumeSection
@@ -1075,50 +1180,6 @@ export default function PlanSetupForm({
                 setRestDays={setRestDays}
                 computedPlanWeeks={computedPlanWeeks}
             />
-
-            {/* MyWhoosh (visible when cycling rides or triathlon are part of the plan) */}
-            {(ridesPerWeek > 0 || TRIATHLON_RACE_TYPES.has(raceType) || sport === 'TRIATHLON') && (
-                <div className="border-t border-glass-border pt-6 space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-md bg-surface border border-glass-border">
-                        <div className="pr-3">
-                            <p className="text-sm text-foreground">Match Cycling Workouts to MyWhoosh</p>
-                            <p className="text-xs text-foreground-muted">Populate planned rides with official MyWhoosh workout steps (%FTP, intervals, cadence) and enable .zwo export</p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => setMatchToMyWhoosh(!matchToMyWhoosh)}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${matchToMyWhoosh ? 'bg-accent-cyan' : 'bg-glass-border'}`}
-                        >
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
-                        </button>
-                    </div>
-
-                    {matchToMyWhoosh && (
-                        <div className="p-3 rounded-md bg-surface border border-glass-border space-y-2">
-                            <label className="block text-xs font-semibold text-accent-cyan">
-                                MyWhoosh Training Plan / Workout Selector
-                            </label>
-                            <select
-                                value={mywhooshPlanId}
-                                onChange={(e) => setMywhooshPlanId(e.target.value)}
-                                className="bg-background-secondary border border-glass-border rounded-md p-2.5 text-xs text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-cyan"
-                            >
-                                <option value="">Auto-Match Closest MyWhoosh Workout by Phase & Duration</option>
-                                {MYWHOOSH_PLANS.map((plan) => (
-                                    <option key={plan.id} value={plan.id}>
-                                        {plan.name} ({plan.category} · {plan.level} · {plan.weeksCount}w)
-                                    </option>
-                                ))}
-                            </select>
-                            {mywhooshPlanId && (
-                                <p className="text-[11px] text-foreground-muted">
-                                    {MYWHOOSH_PLANS.find((p) => p.id === mywhooshPlanId)?.description}
-                                </p>
-                            )}
-                        </div>
-                    )}
-                </div>
-            )}
 
             <HeartRateZonesSection
                 showHeartRate={showHeartRate}

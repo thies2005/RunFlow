@@ -27,6 +27,28 @@ export function normalizeLatexSectionHeaders(raw: string): string {
         });
 }
 
+/**
+ * Strip leaked chain-of-thought self-check rubrics or draft bullets that some
+ * reasoning models append at the end of a section (e.g. "* *Planned Comparison:* ...",
+ * "* Exact headers? Yes.", "* Exactly three sections? Yes.", "* No intro/outro? Yes.").
+ */
+export function stripTrailingReasoningNoise(sectionText: string): string {
+    const lines = sectionText.split('\n');
+    const cleanedLines: string[] = [];
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (
+            /^(?:[-*•]|\d+\.)\s*\*?(?:planned\s+comparison|progress\s+analysis|goal\s+trajectory)\*?\s*:/i.test(trimmed) ||
+            /^(?:[-*•]|\d+\.)?\s*(?:exact\s+headers\??|exactly\s+three\s+sections\??|no\s+intro\s*\/?\s*outro\??|2-3\s+sentences\s+per\s+section\??)\s*(?:yes|no|check|✓)?\.?$/i.test(trimmed) ||
+            /^(?:self-check|self-correction|checklist|rubric\s+check|drafting\s+the\s+content|review\s+against\s+constraints)\s*:/i.test(trimmed)
+        ) {
+            continue;
+        }
+        cleanedLines.push(line);
+    }
+    return cleanedLines.join('\n').trim();
+}
+
 async function canAutoGenerateFeedback(userId: string): Promise<boolean> {
     const aiSettings = await prisma.userAiSettings.findUnique({
         where: { userId }
@@ -159,12 +181,23 @@ export async function enqueueFeedbackJobsForUser(userId: string, afterDate?: Dat
  */
 export function formatActivityForAi(ctx: NonNullable<Awaited<ReturnType<typeof buildActivityContext>>>): string {
     const a = ctx.activity;
+    const isRide = a.type === 'RIDE' || a.type === 'VIRTUAL_RIDE';
+    const titleWattsMatch = isRide ? (a.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i) : null;
+    const titleWatts = titleWattsMatch ? parseInt(titleWattsMatch[1], 10) : null;
+
     let str = `Activity: ${fenceUntrusted(a.name)}\n`;
     str += `Date: ${a.date}\n`;
     str += `Type: ${a.type}\n`;
     str += `Distance: ${(a.distance / 1000).toFixed(2)}km\n`;
     str += `Duration: ${Math.floor(a.duration / 60)}:${(a.duration % 60).toString().padStart(2, '0')}\n`;
-    str += `Pace: ${Math.floor(a.pace / 60)}:${Math.floor(a.pace % 60).toString().padStart(2, '0')}/km\n`;
+    if (isRide) {
+        const speedKmh = a.duration > 0 ? ((a.distance / 1000) / (a.duration / 3600)).toFixed(1) : '0.0';
+        str += `Avg Speed: ${speedKmh} km/h\n`;
+        const watts = (a as any).averageWatts ?? titleWatts;
+        if (watts) str += `Power: ${Math.round(watts)} W\n`;
+    } else {
+        str += `Pace: ${Math.floor(a.pace / 60)}:${Math.floor(a.pace % 60).toString().padStart(2, '0')}/km\n`;
+    }
 
     if (a.avgHr) str += `Avg HR: ${a.avgHr.toFixed(0)} bpm\n`;
     if (a.maxHr) str += `Max HR: ${a.maxHr} bpm\n`;
@@ -388,9 +421,9 @@ export async function generateAndSaveActivityFeedback(
         }
 
         // Fallback: If no sections were parsed, or they are all empty, put the entire cleaned response in progressAnalysis
-        let plannedComparison = sections.plannedComparison || '';
-        let progressAnalysis = sections.progressAnalysis || '';
-        let goalTrajectory = sections.goalTrajectory || '';
+        let plannedComparison = stripTrailingReasoningNoise(sections.plannedComparison || '');
+        let progressAnalysis = stripTrailingReasoningNoise(sections.progressAnalysis || '');
+        let goalTrajectory = stripTrailingReasoningNoise(sections.goalTrajectory || '');
 
         if (!plannedComparison && !progressAnalysis && !goalTrajectory && cleaned.trim()) {
             progressAnalysis = cleaned.trim();

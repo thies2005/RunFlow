@@ -90,17 +90,18 @@ export default function PlanVolumeSection({
                     </div>
                     <input
                         type="range"
-                        min="2"
+                        min="0"
                         max="6"
                         value={runsPerWeek}
                         onChange={(e) => setRunsPerWeek(parseInt(e.target.value))}
                         aria-label="Runs per week"
                         aria-valuenow={runsPerWeek}
-                        aria-valuemin={2}
+                        aria-valuemin={0}
                         aria-valuemax={6}
                         className="w-full h-2 bg-background-tertiary rounded-md appearance-none cursor-pointer accent-accent-orange"
                     />
                     <div className="flex justify-between text-xs text-foreground-muted mt-1">
+                        <span>0</span>
                         <span>2</span>
                         <span>4</span>
                         <span>6</span>
@@ -118,20 +119,20 @@ export default function PlanVolumeSection({
                     <input
                         type="range"
                         min="0"
-                        max="3"
+                        max="6"
                         value={ridesPerWeek}
                         onChange={(e) => setRidesPerWeek(parseInt(e.target.value))}
                         aria-label="Rides per week"
                         aria-valuenow={ridesPerWeek}
                         aria-valuemin={0}
-                        aria-valuemax={3}
+                        aria-valuemax={6}
                         className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-accent-cyan"
                     />
                     <div className="flex justify-between text-xs text-foreground-muted mt-1">
                         <span>0</span>
-                        <span>1</span>
                         <span>2</span>
-                        <span>3</span>
+                        <span>4</span>
+                        <span>6</span>
                     </div>
                 </div>
 
@@ -163,11 +164,11 @@ export default function PlanVolumeSection({
                     </div>
                 </div>
 
-                {/* Strength Per Week */}
+                {/* Strength / Gym Per Week */}
                 <div className="mb-6">
                     <div className="flex justify-between mb-2">
                         <label className="text-xs text-foreground-muted flex items-center gap-1">
-                            <Dumbbell className="w-4 h-4" /> Strength / Week
+                            <Dumbbell className="w-4 h-4" /> Strength &amp; Gym / Week
                         </label>
                         <span className="text-workout-strength font-bold font-mono tabular-nums">{strengthPerWeek}</span>
                     </div>
@@ -190,57 +191,61 @@ export default function PlanVolumeSection({
                     </div>
                 </div>
 
-                {/* Peak Mileage */}
-                <div className="mb-4">
-                    <div className="flex justify-between mb-2">
-                        <label className="text-xs text-foreground-muted flex items-center gap-1">
-                            <Move className="w-3 h-3" /> Peak Mileage Goal
-                        </label>
-                        <span className="text-positive font-bold font-mono tabular-nums">{weeklyMileage} km</span>
-                    </div>
-                    <input
-                        type="range"
-                        min="20"
-                        max="100"
-                        step="5"
-                        value={weeklyMileage}
-                        onChange={(e) => setWeeklyMileage(parseInt(e.target.value))}
-                        aria-label="Peak weekly mileage goal in kilometers"
-                        aria-valuenow={weeklyMileage}
-                        aria-valuemin={20}
-                        aria-valuemax={100}
-                        className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-positive"
-                    />
-                    <div className="flex justify-between text-xs text-foreground-muted mt-1">
-                        <span>20km</span>
-                        <span>60km</span>
-                        <span>100km</span>
-                    </div>
-                </div>
+                {/* Peak Mileage & Longest Long Run (only when runsPerWeek > 0) */}
+                {runsPerWeek > 0 && (
+                    <>
+                        <div className="mb-4">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-foreground-muted flex items-center gap-1">
+                                    <Move className="w-3 h-3" /> Peak Mileage Goal
+                                </label>
+                                <span className="text-positive font-bold font-mono tabular-nums">{weeklyMileage} km</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="20"
+                                max="100"
+                                step="5"
+                                value={weeklyMileage}
+                                onChange={(e) => setWeeklyMileage(parseInt(e.target.value))}
+                                aria-label="Peak weekly mileage goal in kilometers"
+                                aria-valuenow={weeklyMileage}
+                                aria-valuemin={20}
+                                aria-valuemax={100}
+                                className="w-full h-2 bg-glass-border rounded-md appearance-none cursor-pointer accent-positive"
+                            />
+                            <div className="flex justify-between text-xs text-foreground-muted mt-1">
+                                <span>20km</span>
+                                <span>60km</span>
+                                <span>100km</span>
+                            </div>
+                        </div>
 
-                <div className="mb-4">
-                    <div className="flex justify-between mb-2">
-                        <label className="text-xs text-foreground-muted flex items-center gap-1">
-                            <Move className="w-3 h-3" /> Longest Long Run
-                        </label>
-                        <span className="text-positive font-bold font-mono tabular-nums">{maxLongRunKm} km</span>
-                    </div>
-                    <input
-                        type="number"
-                        min="6"
-                        max={maxLongRunKmCap}
-                        value={maxLongRunKm}
-                        onChange={(e) => {
-                            const parsed = parseInt(e.target.value, 10);
-                            if (Number.isNaN(parsed)) return;
-                            setMaxLongRunKm(Math.max(6, Math.min(parsed, maxLongRunKmCap)));
-                        }}
-                        className="w-full bg-surface border border-glass-border rounded-md p-2.5 text-foreground text-sm focus:ring-2 focus:ring-positive outline-hidden"
-                    />
-                    <p className="text-xs text-foreground-muted mt-1">
-                        Peak long run before taper. Default is calculated from your weekly distance goal.
-                    </p>
-                </div>
+                        <div className="mb-4">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-foreground-muted flex items-center gap-1">
+                                    <Move className="w-3 h-3" /> Longest Long Run
+                                </label>
+                                <span className="text-positive font-bold font-mono tabular-nums">{maxLongRunKm} km</span>
+                            </div>
+                            <input
+                                type="number"
+                                min="6"
+                                max={maxLongRunKmCap}
+                                value={maxLongRunKm}
+                                onChange={(e) => {
+                                    const parsed = parseInt(e.target.value, 10);
+                                    if (Number.isNaN(parsed)) return;
+                                    setMaxLongRunKm(Math.max(6, Math.min(parsed, maxLongRunKmCap)));
+                                }}
+                                className="w-full bg-surface border border-glass-border rounded-md p-2.5 text-foreground text-sm focus:ring-2 focus:ring-positive outline-hidden"
+                            />
+                            <p className="text-xs text-foreground-muted mt-1">
+                                Peak long run before taper. Default is calculated from your weekly distance goal.
+                            </p>
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Training Phases */}

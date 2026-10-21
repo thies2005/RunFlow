@@ -16,6 +16,7 @@ async function getHighestEstimatedFtp(userId: string): Promise<number | null> {
             type: { in: ['RIDE', 'VIRTUAL_RIDE'] },
         },
         select: {
+            name: true,
             averageWatts: true,
             weightedAverageWatts: true,
             streams: true,
@@ -29,12 +30,17 @@ async function getHighestEstimatedFtp(userId: string): Promise<number | null> {
     for (const r of rides) {
         let eftp: number | null = null;
         const streams = r.streams as { watts?: number[]; time?: number[] } | null;
+        const titleMatch = (r.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
+        const titleWatts = titleMatch ? parseInt(titleMatch[1], 10) : null;
+        const validTitleWatts = titleWatts && titleWatts >= 40 && titleWatts <= 1500 ? titleWatts : null;
 
-        if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
+        if (/\bftp\s*test\b/i.test(r.name || '') && validTitleWatts) {
+            eftp = validTitleWatts;
+        } else if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
             const curve = calculatePowerCurve(streams.watts, streams.time);
-            eftp = estimateFtpFromPowerCurve(curve, r.weightedAverageWatts ?? r.averageWatts);
-        } else if (r.weightedAverageWatts || r.averageWatts) {
-            eftp = estimateFtpFromPowerCurve([], r.weightedAverageWatts ?? r.averageWatts);
+            eftp = estimateFtpFromPowerCurve(curve, r.weightedAverageWatts ?? r.averageWatts ?? validTitleWatts);
+        } else if (r.weightedAverageWatts || r.averageWatts || validTitleWatts) {
+            eftp = estimateFtpFromPowerCurve([], r.weightedAverageWatts ?? r.averageWatts ?? validTitleWatts);
         }
 
         if (eftp && (highestEftp === null || eftp > highestEftp)) {

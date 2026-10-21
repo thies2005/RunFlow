@@ -24,6 +24,7 @@ interface Streams {
 
 interface InteractiveStreamsChartProps {
     streams: Streams | null;
+    activityType?: string;
 }
 
 const formatPaceTooltip = (val: number) => {
@@ -36,11 +37,14 @@ const formatPaceTooltip = (val: number) => {
 
 import { ChartErrorBoundary } from '@/components/ErrorBoundary';
 
-function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps) {
+function InteractiveStreamsChartInner({ streams, activityType }: InteractiveStreamsChartProps) {
+    const isRide = activityType === 'RIDE' || activityType === 'VIRTUAL_RIDE';
+    const isRun = !activityType || activityType === 'RUN';
+
     const [enabledMetrics, setEnabledMetrics] = useState({
         heartrate: true,
         pace: true,
-        gap: true, // Grade Adjusted Pace
+        gap: isRun, // Grade Adjusted Pace only applies to running
         elevation: true,
         cadence: false
     });
@@ -64,48 +68,40 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                 point.heartrate = streams.heartrate[i];
             }
 
-            // Pace: velocity (m/s) -> min/km
+            // Pace (min/km for runs) or Speed (km/h for rides)
             if (streams.velocity_smooth && streams.velocity_smooth[i] !== undefined) {
                 const mPerS = streams.velocity_smooth[i];
-                if (mPerS > 0.1) {
+                if (isRide) {
+                    point.pace = mPerS > 0.1 ? Number((mPerS * 3.6).toFixed(1)) : null;
+                } else if (mPerS > 0.1) {
                     const minPerKm = (1000 / mPerS) / 60;
-                    // Cap outlier paces to null (not 0) to avoid false data points
                     point.pace = minPerKm > 20 ? null : minPerKm;
                 } else {
                     point.pace = null;
                 }
             }
 
-            // GAP: Grade Adjusted Pace (Runalyze/Minetti approach)
-            // Calculate grade from altitude change and use metabolic cost ratio
-            if (streams.velocity_smooth && streams.altitude && streams.velocity_smooth[i] !== undefined) {
+            // GAP: Grade Adjusted Pace (only valid for running)
+            if (isRun && streams.velocity_smooth && streams.altitude && streams.velocity_smooth[i] !== undefined) {
                 const mPerS = streams.velocity_smooth[i];
                 if (mPerS > 0.5 && i >= step && streams.altitude[i] !== undefined && streams.altitude[i - step] !== undefined) {
-                    // Calculate grade (vertical / horizontal distance)
                     const timeDelta = streams.time[i] - streams.time[i - step];
                     const elevDelta = streams.altitude[i] - streams.altitude[i - step];
                     const horizDist = mPerS * timeDelta;
-                    const grade = horizDist > 0 ? (elevDelta / horizDist) * 100 : 0; // as percentage
+                    const grade = horizDist > 0 ? (elevDelta / horizDist) * 100 : 0;
 
-                    // Minetti metabolic cost formula (simplified)
-                    // Cost ratio relative to flat running
-                    // Uphill: more effort -> GAP faster than actual
-                    // Downhill: less effort (to a point) -> GAP slower than actual
                     let costRatio = 1.0;
                     if (grade > 0) {
-                        // Uphill: ~2.5-3% more cost per 1% grade
                         costRatio = 1 + (grade * 0.03);
                     } else if (grade < 0) {
-                        // Downhill: optimal around -10%, less cost
                         const absGrade = Math.abs(grade);
                         if (absGrade < 10) {
-                            costRatio = 1 - (absGrade * 0.015); // Slight benefit
+                            costRatio = 1 - (absGrade * 0.015);
                         } else {
-                            costRatio = 0.85 + ((absGrade - 10) * 0.02); // Steeper = harder
+                            costRatio = 0.85 + ((absGrade - 10) * 0.02);
                         }
                     }
 
-                    // GAP = actual pace / cost ratio (faster if harder effort)
                     const actualPace = (1000 / mPerS) / 60;
                     const gapPace = actualPace / costRatio;
                     point.gap = gapPace > 20 || gapPace < 2 ? null : gapPace;
@@ -119,9 +115,9 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                 point.elevation = streams.altitude[i];
             }
 
-            // Cadence - multiply by 2 for runs (Strava returns rpm, we show spm)
+            // Cadence - multiply by 2 only for runs (Strava returns rpm; cycling uses raw rpm)
             if (streams.cadence && streams.cadence[i] !== undefined) {
-                point.cadence = streams.cadence[i] * 2;
+                point.cadence = isRide ? streams.cadence[i] : streams.cadence[i] * 2;
             }
 
             processed.push(point);
@@ -133,13 +129,15 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
         streams?.heartrate,
         streams?.velocity_smooth,
         streams?.altitude,
-        streams?.cadence
+        streams?.cadence,
+        isRide,
+        isRun,
     ]);
 
     // Determine which streams are available
     const hasHeartrate = Boolean(streams?.heartrate?.length);
     const hasPace = Boolean(streams?.velocity_smooth?.length);
-    const hasGap = Boolean(streams?.velocity_smooth?.length && streams?.altitude?.length);
+    const hasGap = Boolean(isRun && streams?.velocity_smooth?.length && streams?.altitude?.length);
     const hasElevation = Boolean(streams?.altitude?.length);
     const hasCadence = Boolean(streams?.cadence?.length);
 
@@ -187,7 +185,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                             : 'bg-transparent text-foreground-muted border-foreground/20 hover:text-foreground-muted'
                             }`}
                     >
-                        <TrendingUp className="w-3 h-3" /> Pace
+                        <TrendingUp className="w-3 h-3" /> {isRide ? 'Speed' : 'Pace'}
                     </button>
                 )}
                 {hasGap && (
@@ -241,10 +239,11 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                         <Tooltip content={<ChartTooltip
                             labelFormatter={(label: any) => `${Math.floor(label / 60)}m ${label % 60 > 0 ? `${label % 60}s` : ''}`}
                             formatter={(value: any, name: string) => {
+                                if (name === 'Speed') return [`${Number(value).toFixed(1)} km/h`, name];
                                 if (name === 'Pace' || name === 'GAP') return [formatPaceTooltip(value) + '/km', name];
                                 if (name === 'Heart Rate') return [Math.round(value) + ' bpm', name];
                                 if (name === 'Elevation') return [Math.round(value) + ' m', name];
-                                if (name === 'Cadence') return [Math.round(value) + ' spm', name];
+                                if (name === 'Cadence') return [Math.round(value) + (isRide ? ' rpm' : ' spm'), name];
                                 return value;
                             }}
                         />} />
@@ -256,10 +255,9 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                         {enabledMetrics.pace && hasPace && (
                             <YAxis
                                 yAxisId="pace"
-                                domain={[3, 15]}
-                                reversed
+                                domain={isRide ? ['dataMin - 2', 'dataMax + 2'] : [3, 15]}
+                                reversed={!isRide}
                                 hide
-                                ticks={[0, 3, 6, 9, 12, 15]}
                             />
                         )}
                         {enabledMetrics.gap && hasGap && (
@@ -275,7 +273,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                             <YAxis yAxisId="elev" domain={['dataMin', 'dataMax']} hide />
                         )}
                         {enabledMetrics.cadence && hasCadence && (
-                            <YAxis yAxisId="cad" domain={[120, 220]} hide />
+                            <YAxis yAxisId="cad" domain={isRide ? [40, 130] : [120, 220]} hide />
                         )}
 
                         {enabledMetrics.heartrate && hasHeartrate && (
@@ -297,7 +295,7 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                                 yAxisId="pace"
                                 type="monotone"
                                 dataKey="pace"
-                                name="Pace"
+                                name={isRide ? 'Speed' : 'Pace'}
                                 stroke="var(--accent-blue)"
                                 strokeWidth={2}
                                 dot={false}

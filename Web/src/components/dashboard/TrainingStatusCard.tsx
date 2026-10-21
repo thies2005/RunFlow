@@ -1,7 +1,117 @@
-import { TrendingUp, Activity, Gauge } from 'lucide-react';
+import { TrendingUp, Activity, Gauge, SlidersHorizontal, Bike, Zap, Check, Columns2, Layers } from 'lucide-react';
 import { useUserMetrics } from '../providers/UserMetricsProvider';
 import { interpretTsb } from '@/lib/metrics/fitness';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+export type DashboardStatusLayoutMode =
+    | 'DUAL_BOXES'      // 2 Boxes just like now: 1 for Running + 1 for Cycling
+    | 'COMBINED_STRIP'  // Sample A: Combined Card + Customizable Cycling Strip
+    | 'CYCLING_HERO'    // Sample C: Cycling Hero Cockpit Card
+    | 'CLASSIC_RUN';    // Just Like Now: Classic Single Running Status Card
+
+export type CyclingDashboardMetricId =
+    | 'cyclingVo2max'
+    | 'activeFtp'
+    | 'wPerKg'
+    | 'weeklyBikeTss'
+    | 'weeklyBikeKm'
+    | 'ctlBike'
+    | 'tsbBike'
+    | 'avgEf';
+
+export type RunningDashboardMetricId =
+    | 'vdot'
+    | 'weeklyRunKm'
+    | 'avg3MoRunKm'
+    | 'easyTrimp';
+
+export interface DashboardMetricOption<T extends string> {
+    id: T;
+    label: string;
+    shortLabel: string;
+    unit: string;
+    colorClass: string;
+}
+
+export const DASHBOARD_LAYOUT_MODE_OPTIONS: {
+    id: DashboardStatusLayoutMode;
+    title: string;
+    badge: string;
+    description: string;
+}[] = [
+    {
+        id: 'DUAL_BOXES',
+        title: '2 Boxes (Running Card + Cycling Card)',
+        badge: '2 Boxes',
+        description: 'Two full-size status boxes side-by-side: one dedicated to Running and one dedicated to Cycling.',
+    },
+    {
+        id: 'COMBINED_STRIP',
+        title: 'Sample A (Combined Card + Cycling Strip)',
+        badge: 'Sample A',
+        description: 'Single Training Status card with Running Shape/VO2max on top and a customizable Cycling Metrics grid strip.',
+    },
+    {
+        id: 'CYCLING_HERO',
+        title: 'Sample C (Cycling Hero Cockpit)',
+        badge: 'Sample C',
+        description: 'Single Cycling-first card with Active FTP (W/kg) & Cycling VO2max hero metrics and Bike CTL/ATL/TSB bars.',
+    },
+    {
+        id: 'CLASSIC_RUN',
+        title: 'Classic Running Card (Just Like Now)',
+        badge: 'Classic',
+        description: 'Original single Training Status card focused on Running Shape, VO2max, and Running CTL/ATL/TSB.',
+    },
+];
+
+export const CYCLING_METRIC_OPTIONS: DashboardMetricOption<CyclingDashboardMetricId>[] = [
+    { id: 'cyclingVo2max', label: 'Cycling VO2max (ACSM MAP)', shortLabel: 'Bike VO2max', unit: 'mL/kg', colorClass: 'text-accent-purple' },
+    { id: 'activeFtp', label: 'Active / Estimated FTP', shortLabel: 'Active FTP', unit: 'W', colorClass: 'text-accent-orange' },
+    { id: 'wPerKg', label: 'Power-to-Weight Ratio', shortLabel: 'Power / Weight', unit: 'W/kg', colorClass: 'text-accent-cyan' },
+    { id: 'weeklyBikeTss', label: 'Weekly Cycling Load (TSS)', shortLabel: 'Weekly Bike TSS', unit: 'TSS', colorClass: 'text-workout-tempo' },
+    { id: 'weeklyBikeKm', label: 'Weekly Cycling Distance', shortLabel: 'Weekly Bike Km', unit: 'km', colorClass: 'text-positive' },
+    { id: 'ctlBike', label: 'Cycling Chronic Load (Bike CTL)', shortLabel: 'Bike Fitness (CTL)', unit: 'CTL', colorClass: 'text-accent-blue' },
+    { id: 'tsbBike', label: 'Cycling Stress Balance (Bike TSB)', shortLabel: 'Bike Form (TSB)', unit: 'TSB', colorClass: 'text-positive' },
+    { id: 'avgEf', label: 'Aerobic Efficiency Factor (NP/HR)', shortLabel: 'Aerobic EF', unit: 'W/bpm', colorClass: 'text-accent-cyan' },
+];
+
+export const RUNNING_METRIC_OPTIONS: DashboardMetricOption<RunningDashboardMetricId>[] = [
+    { id: 'vdot', label: 'Jack Daniels Performance VDOT', shortLabel: 'Run VDOT', unit: 'VDOT', colorClass: 'text-accent-cyan' },
+    { id: 'weeklyRunKm', label: 'Current Week Running Distance', shortLabel: 'Weekly Run Km', unit: 'km', colorClass: 'text-positive' },
+    { id: 'avg3MoRunKm', label: '3-Month Avg Weekly Run Distance', shortLabel: '3-Mo Avg Km', unit: 'km/wk', colorClass: 'text-workout-long-run' },
+    { id: 'easyTrimp', label: 'Weekly Easy Aerobic TRIMP', shortLabel: 'Easy TRIMP', unit: 'TRIMP', colorClass: 'text-accent-blue' },
+];
+
+export const DEFAULT_CYCLING_METRICS: CyclingDashboardMetricId[] = [
+    'cyclingVo2max',
+    'activeFtp',
+    'wPerKg',
+    'weeklyBikeTss',
+];
+
+export const DEFAULT_RUNNING_METRICS: RunningDashboardMetricId[] = [
+    'vdot',
+    'weeklyRunKm',
+];
+
+export const STORAGE_KEY_LAYOUT_MODE = 'runflow_dashboard_layout_mode_v1';
+export const STORAGE_KEY_CYCLING_METRICS = 'runflow_dashboard_cycling_metrics_v1';
+export const STORAGE_KEY_RUNNING_METRICS = 'runflow_dashboard_running_metrics_v1';
+export const EVENT_DASHBOARD_LAYOUT_CHANGE = 'runflow-dashboard-layout-change';
+
+export function readDashboardLayoutMode(): DashboardStatusLayoutMode {
+    if (typeof window === 'undefined') return 'COMBINED_STRIP';
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_LAYOUT_MODE);
+        if (raw === 'DUAL_BOXES' || raw === 'COMBINED_STRIP' || raw === 'CYCLING_HERO' || raw === 'CLASSIC_RUN') {
+            return raw;
+        }
+    } catch {
+        // ignore
+    }
+    return 'COMBINED_STRIP';
+}
 
 export default function TrainingStatusCard() {
     const {
@@ -9,6 +119,16 @@ export default function TrainingStatusCard() {
         vdot,
         aerobicVo2max,
         cyclingVo2max,
+        activeFtpWatts,
+        wPerKg,
+        weeklyBikeTss,
+        weeklyBikeKm,
+        ctlBike,
+        atlBike,
+        tsbBike,
+        avgEfficiencyFactor,
+        currentWeekMileage,
+        avgWeeklyKmLast3Months,
         correctionFactor,
         ctl,
         atl,
@@ -23,6 +143,107 @@ export default function TrainingStatusCard() {
 
     const [showAbsoluteAtl, setShowAbsoluteAtl] = useState(false);
     const [showAbsoluteCtl, setShowAbsoluteCtl] = useState(false);
+    const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+    const [layoutMode, setLayoutMode] = useState<DashboardStatusLayoutMode>('COMBINED_STRIP');
+    const [selectedCyclingMetrics, setSelectedCyclingMetrics] = useState<CyclingDashboardMetricId[]>(DEFAULT_CYCLING_METRICS);
+    const [selectedRunningMetrics, setSelectedRunningMetrics] = useState<RunningDashboardMetricId[]>(DEFAULT_RUNNING_METRICS);
+
+    useEffect(() => {
+        const loadPrefs = () => {
+            try {
+                setLayoutMode(readDashboardLayoutMode());
+                const savedBike = localStorage.getItem(STORAGE_KEY_CYCLING_METRICS);
+                if (savedBike) {
+                    const parsed = JSON.parse(savedBike);
+                    if (Array.isArray(parsed)) setSelectedCyclingMetrics(parsed);
+                }
+                const savedRun = localStorage.getItem(STORAGE_KEY_RUNNING_METRICS);
+                if (savedRun) {
+                    const parsed = JSON.parse(savedRun);
+                    if (Array.isArray(parsed)) setSelectedRunningMetrics(parsed);
+                }
+            } catch {
+                // ignore storage errors
+            }
+        };
+        loadPrefs();
+        window.addEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, loadPrefs);
+        window.addEventListener('storage', loadPrefs);
+        return () => {
+            window.removeEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, loadPrefs);
+            window.removeEventListener('storage', loadPrefs);
+        };
+    }, []);
+
+    const updateLayoutMode = (mode: DashboardStatusLayoutMode) => {
+        setLayoutMode(mode);
+        try {
+            localStorage.setItem(STORAGE_KEY_LAYOUT_MODE, mode);
+            window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+        } catch {
+            // ignore
+        }
+    };
+
+    const toggleCyclingMetric = (id: CyclingDashboardMetricId) => {
+        setSelectedCyclingMetrics((prev) => {
+            const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id];
+            try {
+                localStorage.setItem(STORAGE_KEY_CYCLING_METRICS, JSON.stringify(next));
+                window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    };
+
+    const toggleRunningMetric = (id: RunningDashboardMetricId) => {
+        setSelectedRunningMetrics((prev) => {
+            const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id];
+            try {
+                localStorage.setItem(STORAGE_KEY_RUNNING_METRICS, JSON.stringify(next));
+                window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    };
+
+    const formatCyclingMetricValue = (id: CyclingDashboardMetricId): string => {
+        switch (id) {
+            case 'cyclingVo2max':
+                return cyclingVo2max > 0 ? cyclingVo2max.toFixed(1) : '-';
+            case 'activeFtp':
+                return activeFtpWatts > 0 ? `${activeFtpWatts}` : '-';
+            case 'wPerKg':
+                return wPerKg > 0 ? wPerKg.toFixed(2) : '-';
+            case 'weeklyBikeTss':
+                return weeklyBikeTss > 0 ? `${weeklyBikeTss}` : '0';
+            case 'weeklyBikeKm':
+                return weeklyBikeKm > 0 ? `${weeklyBikeKm}` : '0';
+            case 'ctlBike':
+                return ctlBike > 0 ? `${ctlBike}` : '0';
+            case 'tsbBike':
+                return tsbBike > 0 ? `+${tsbBike}` : `${tsbBike}`;
+            case 'avgEf':
+                return avgEfficiencyFactor > 0 ? avgEfficiencyFactor.toFixed(2) : '-';
+        }
+    };
+
+    const formatRunningMetricValue = (id: RunningDashboardMetricId): string => {
+        switch (id) {
+            case 'vdot':
+                return vdot > 0 ? vdot.toFixed(1) : '-';
+            case 'weeklyRunKm':
+                return currentWeekMileage > 0 ? `${Math.round(currentWeekMileage * 10) / 10}` : '0';
+            case 'avg3MoRunKm':
+                return avgWeeklyKmLast3Months > 0 ? `${Math.round(avgWeeklyKmLast3Months * 10) / 10}` : '0';
+            case 'easyTrimp':
+                return `${easyTrimp}`;
+        }
+    };
 
     const shapePercent = marathonShape?.shape || 0;
 
@@ -34,12 +255,7 @@ export default function TrainingStatusCard() {
         return { label: 'Overload', color: 'text-negative', bg: 'bg-negative' };
     };
 
-    const status = workloadStatus(workloadRatio);
-    // Linear mapping: 0.0 -> 0%, 2.0 -> 100%
-    const markerPos = Math.min(100, (workloadRatio / 2) * 100);
-
-    // Check for empty data
-    const hasData = ctl > 0 || atl > 0 || aerobicVo2max > 0 || cyclingVo2max > 0;
+    const hasData = ctl > 0 || atl > 0 || aerobicVo2max > 0 || cyclingVo2max > 0 || activeFtpWatts > 0 || ctlBike > 0;
 
     if (!hasData) {
         return (
@@ -56,150 +272,596 @@ export default function TrainingStatusCard() {
     }
 
     const tsbStatus = interpretTsb(tsb);
+    const bikeTsbStatus = interpretTsb(tsbBike);
+    const bikeWorkloadRatio = ctlBike > 0 ? Number((atlBike / ctlBike).toFixed(2)) : 0;
+    const activeCyclingOptions = CYCLING_METRIC_OPTIONS.filter((opt) => selectedCyclingMetrics.includes(opt.id));
+    const activeRunningOptions = RUNNING_METRIC_OPTIONS.filter((opt) => selectedRunningMetrics.includes(opt.id));
 
-    return (
-        <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px]">
-            <h2 className="text-lg font-semibold text-foreground-muted mb-6 shrink-0">Training Status</h2>
-
-            {/* Top Metrics Grid */}
-            <div className="grid grid-cols-2 gap-4 mb-8 shrink-0">
-                {/* Marathon Shape */}
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-workout-recovery/15 flex items-center justify-center shrink-0">
-                        <TrendingUp className="w-5 h-5 text-workout-recovery" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-foreground-muted font-semibold leading-tight">Shape</p>
-                        <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">{shapePercent}%</p>
-                    </div>
-                </div>
-
-                {/* Aerobic Fitness (VO2max) — Running HR-based + Cycling Power-based */}
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-accent-cyan/15 flex items-center justify-center shrink-0">
-                        <Activity className="w-5 h-5 text-accent-cyan" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-xs text-foreground-muted font-semibold leading-tight">Aerobic Fitness (VO2max)</p>
-                        <div className="flex items-baseline justify-between gap-1">
-                            <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
-                                {aerobicVo2max > 0 ? aerobicVo2max.toFixed(1) : cyclingVo2max > 0 ? cyclingVo2max.toFixed(1) : '-'}
-                            </p>
-                            {correctionFactor !== 1.0 && (
-                                <span className="text-xs font-mono tabular-nums text-accent-cyan font-semibold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
-                                    {correctionFactor.toFixed(1)}x
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5 text-[10px] font-mono text-foreground-muted">
-                            {vdot > 0 && <span>Run VDOT: {vdot.toFixed(1)}</span>}
-                            {cyclingVo2max > 0 && (
-                                <span className="text-accent-orange font-semibold">
-                                    {vdot > 0 ? '· ' : ''}Bike VO2: {cyclingVo2max.toFixed(1)}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Workload Balance Diagram */}
-            <div className="bg-background-tertiary rounded-md p-4 mb-8 border border-line relative overflow-hidden shrink-0">
+    const renderWorkloadDiagram = (ratio: number, title = 'Workload Balance') => {
+        const st = workloadStatus(ratio);
+        const pos = Math.min(100, (ratio / 2) * 100);
+        return (
+            <div className="bg-background-tertiary rounded-md p-4 mb-6 border border-line relative overflow-hidden shrink-0">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <Gauge className={`w-3.5 h-3.5 ${status.color}`} />
-                        <span className="text-xs text-foreground-muted font-semibold">Workload Balance</span>
+                        <Gauge className={`w-3.5 h-3.5 ${st.color}`} />
+                        <span className="text-xs text-foreground-muted font-semibold">{title}</span>
                     </div>
-                    <span className={`text-xs font-semibold ${status.color} px-2 py-0.5 rounded-full bg-background-secondary border border-line`}>
-                        {status.label}
+                    <span className={`text-xs font-semibold ${st.color} px-2 py-0.5 rounded-full bg-background-secondary border border-line`}>
+                        {st.label}
                     </span>
                 </div>
 
                 <div className="relative h-2 w-full bg-background-secondary rounded-full mb-3">
-                    {/* Zones (Scale 0 - 2.0) */}
                     <div className="absolute left-0 w-[40%] h-full bg-background-secondary rounded-l-full border-r border-line" />
                     <div className="absolute left-[40%] w-[25%] h-full bg-positive/20" />
                     <div className="absolute left-[65%] w-[10%] h-full bg-workout-tempo/20" />
                     <div className="absolute left-[75%] w-[25%] h-full bg-negative/20 rounded-r-full border-l border-line" />
-
-                    {/* Sweet Spot Guide */}
                     <div className="absolute left-[40%] -top-1 w-[25%] h-4 border-x border-line pointer-events-none" />
-
-                    {/* Marker */}
                     <div
-                        className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-background-secondary rounded-full border-2 ${status.bg} z-20 transition-all duration-1000`}
-                        style={{ left: `calc(${markerPos}% - 8px)` }}
+                        className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-background-secondary rounded-full border-2 ${st.bg} z-20 transition-all duration-1000`}
+                        style={{ left: `calc(${pos}% - 8px)` }}
                     />
                 </div>
 
                 <div className="flex justify-between text-xs text-foreground-muted font-semibold px-1">
                     <span>Low</span>
                     <span className="text-positive/70 font-semibold absolute left-[35%] -translate-x-1/2">Sweet Spot (0.8 - 1.3)</span>
-                    <span className="font-mono tabular-nums">{workloadRatio > 2 ? workloadRatio.toFixed(2) : '2.0+'}</span>
+                    <span className="font-mono tabular-nums">{ratio > 2 ? ratio.toFixed(2) : '2.0+'}</span>
+                </div>
+            </div>
+        );
+    };
+
+    const renderCustomizerDrawer = () =>
+        isCustomizeOpen && (
+            <div className="mb-5 p-3.5 rounded-md bg-background-secondary border border-accent-cyan/40 space-y-3 animate-fade-in">
+                <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-accent-cyan flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5" />
+                        Dashboard Layout &amp; Metric Fields
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => setIsCustomizeOpen(false)}
+                        className="text-[11px] text-foreground-muted hover:text-foreground"
+                    >
+                        Done
+                    </button>
+                </div>
+
+                {/* 4 Layout Presets */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {DASHBOARD_LAYOUT_MODE_OPTIONS.map((opt) => {
+                        const active = layoutMode === opt.id;
+                        return (
+                            <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => updateLayoutMode(opt.id)}
+                                className={`p-2 rounded text-left border transition-colors ${
+                                    active
+                                        ? 'bg-accent-cyan/15 border-accent-cyan text-foreground'
+                                        : 'bg-background-tertiary/60 border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[11px] font-semibold truncate">{opt.badge}</span>
+                                    {active && <Check className="w-3 h-3 text-accent-cyan shrink-0" />}
+                                </div>
+                                <span className="block text-[10px] text-foreground-muted mt-0.5 line-clamp-1">{opt.title}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Cycling Fields */}
+                <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-accent-cyan mb-1.5">
+                        Cycling Metric Fields
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {CYCLING_METRIC_OPTIONS.map((opt) => {
+                            const checked = selectedCyclingMetrics.includes(opt.id);
+                            return (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => toggleCyclingMetric(opt.id)}
+                                    className={`flex items-center justify-between px-2 py-1 rounded text-left text-[10px] border transition-colors ${
+                                        checked
+                                            ? 'bg-accent-cyan/10 border-accent-cyan/40 text-foreground font-medium'
+                                            : 'bg-background-tertiary/60 border-line text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <span className="truncate pr-1">{opt.shortLabel}</span>
+                                    <span className={`w-3 h-3 rounded flex items-center justify-center shrink-0 ${checked ? 'bg-accent-cyan text-background' : 'border border-line-strong'}`}>
+                                        {checked && <Check className="w-2 h-2" />}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Running Extra Fields (shown in 2-Box mode) */}
+                <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-workout-recovery mb-1.5">
+                        Running Box Metric Fields
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {RUNNING_METRIC_OPTIONS.map((opt) => {
+                            const checked = selectedRunningMetrics.includes(opt.id);
+                            return (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => toggleRunningMetric(opt.id)}
+                                    className={`flex items-center justify-between px-2 py-1 rounded text-left text-[10px] border transition-colors ${
+                                        checked
+                                            ? 'bg-workout-recovery/10 border-workout-recovery/40 text-foreground font-medium'
+                                            : 'bg-background-tertiary/60 border-line text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <span className="truncate pr-1">{opt.shortLabel}</span>
+                                    <span className={`w-3 h-3 rounded flex items-center justify-center shrink-0 ${checked ? 'bg-workout-recovery text-background' : 'border border-line-strong'}`}>
+                                        {checked && <Check className="w-2 h-2" />}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+        );
+
+    const renderRunningProgressBars = () => (
+        <div className="space-y-5 flex-1 flex flex-col justify-center border-t border-line pt-6">
+            {/* Fatigue (ATL) */}
+            <div
+                className="flex items-center gap-3 cursor-pointer group"
+                title={`${Math.round(atlPercent)}% (Abs: ${atl} / Max: ${maxAtl})`}
+                onClick={() => setShowAbsoluteAtl(!showAbsoluteAtl)}
+            >
+                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Fatigue (ATL)</div>
+                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                    <div className="h-full bg-negative transition-all duration-500" style={{ width: `${Math.min(100, atlPercent)}%` }} />
+                </div>
+                <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-negative">
+                    {atl > 0 ? (showAbsoluteAtl ? atl : `${Math.round(atlPercent)}%`) : '-'}
                 </div>
             </div>
 
-            {/* Metrics List (Runalyze Style) */}
-            <div className="space-y-5 flex-1 flex flex-col justify-center border-t border-line pt-6">
-                {/* Fatigue (ATL) */}
-                <div
-                    className="flex items-center gap-3 cursor-pointer group"
-                    title={`${Math.round(atlPercent)}% (Abs: ${atl} / Max: ${maxAtl})`}
-                    onClick={() => setShowAbsoluteAtl(!showAbsoluteAtl)}
-                >
-                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Fatigue (ATL)</div>
-                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
-                        <div className="h-full bg-negative transition-all duration-500" style={{ width: `${Math.min(100, atlPercent)}%` }} />
+            {/* Fitness (CTL) */}
+            <div
+                className="flex items-center gap-3 cursor-pointer group"
+                title={`${Math.round(ctlPercent)}% (Abs: ${ctl} / Max: ${maxCtl})`}
+                onClick={() => setShowAbsoluteCtl(!showAbsoluteCtl)}
+            >
+                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Fitness (CTL)</div>
+                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                    <div className="h-full bg-accent-blue transition-all duration-500" style={{ width: `${Math.min(100, ctlPercent)}%` }} />
+                </div>
+                <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-blue">
+                    {ctl > 0 ? (showAbsoluteCtl ? ctl : `${Math.round(ctlPercent)}%`) : '-'}
+                </div>
+            </div>
+
+            {/* Stress Balance (TSB) */}
+            <div className="flex items-center gap-3">
+                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Stress Balance</div>
+                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden relative">
+                    <div className="absolute left-1/2 w-[1px] h-full bg-line" />
+                    <div
+                        className={`h-full ${tsb >= 0 ? 'bg-positive' : 'bg-workout-tempo'} absolute transition-all duration-500`}
+                        style={{
+                            width: `${Math.min(50, Math.abs(tsb))}%`,
+                            left: tsb >= 0 ? '50%' : `${50 - Math.min(50, Math.abs(tsb))}%`
+                        }}
+                    />
+                </div>
+                <div className={`w-14 text-right text-sm font-mono tabular-nums font-semibold ${tsbStatus.color}`}>
+                    {tsb >= 0 ? `+${tsb}` : tsb}
+                </div>
+            </div>
+
+            {/* Weekly TRIMP */}
+            <div className="flex items-center gap-3">
+                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Weekly TRIMP</div>
+                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                    <div className="h-full bg-workout-long-run transition-all duration-500" style={{ width: `${Math.min(100, easyTrimp / 5)}%` }} />
+                </div>
+                <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-workout-long-run underline decoration-workout-long-run/30 underline-offset-2">
+                    {easyTrimp > 0 ? easyTrimp : '-'}
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderCyclingProgressBars = () => (
+        <div className="space-y-5 flex-1 flex flex-col justify-center border-t border-line pt-6">
+            {/* Bike Fatigue (ATL) */}
+            <div className="flex items-center gap-3">
+                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Bike Fatigue (ATL)</div>
+                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                    <div className="h-full bg-negative transition-all duration-500" style={{ width: `${Math.min(100, atlBike)}%` }} />
+                </div>
+                <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-negative">
+                    {atlBike > 0 ? atlBike : '0'}
+                </div>
+            </div>
+
+            {/* Bike Fitness (CTL) */}
+            <div className="flex items-center gap-3">
+                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Bike Fitness (CTL)</div>
+                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                    <div className="h-full bg-accent-blue transition-all duration-500" style={{ width: `${Math.min(100, ctlBike)}%` }} />
+                </div>
+                <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-blue">
+                    {ctlBike > 0 ? ctlBike : '0'}
+                </div>
+            </div>
+
+            {/* Bike Stress Balance (TSB) */}
+            <div className="flex items-center gap-3">
+                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Bike Stress Bal.</div>
+                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden relative">
+                    <div className="absolute left-1/2 w-[1px] h-full bg-line" />
+                    <div
+                        className={`h-full ${tsbBike >= 0 ? 'bg-positive' : 'bg-workout-tempo'} absolute transition-all duration-500`}
+                        style={{
+                            width: `${Math.min(50, Math.abs(tsbBike))}%`,
+                            left: tsbBike >= 0 ? '50%' : `${50 - Math.min(50, Math.abs(tsbBike))}%`
+                        }}
+                    />
+                </div>
+                <div className={`w-14 text-right text-sm font-mono tabular-nums font-semibold ${bikeTsbStatus.color}`}>
+                    {tsbBike >= 0 ? `+${tsbBike}` : tsbBike}
+                </div>
+            </div>
+
+            {/* Weekly Bike TSS */}
+            <div className="flex items-center gap-3">
+                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Weekly Bike TSS</div>
+                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                    <div className="h-full bg-accent-purple transition-all duration-500" style={{ width: `${Math.min(100, (weeklyBikeTss / 400) * 100)}%` }} />
+                </div>
+                <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-purple underline decoration-accent-purple/30 underline-offset-2">
+                    {weeklyBikeTss > 0 ? weeklyBikeTss : '0'}
+                </div>
+            </div>
+        </div>
+    );
+
+    // ─── MODE 1: DUAL_BOXES (2 Boxes Just Like Now — 1 for Running + 1 for Cycling) ───
+    if (layoutMode === 'DUAL_BOXES') {
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                {/* BOX 1: RUNNING TRAINING STATUS */}
+                <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px]">
+                    <div className="flex items-center justify-between gap-2 mb-5 shrink-0">
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-foreground-muted">Running Status</h2>
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-workout-recovery/15 text-workout-recovery border border-workout-recovery/30">
+                                Run Box
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setIsCustomizeOpen(!isCustomizeOpen)}
+                            className={`p-1.5 rounded-md border transition-colors ${
+                                isCustomizeOpen
+                                    ? 'bg-accent-cyan/15 border-accent-cyan/40 text-accent-cyan'
+                                    : 'bg-background-tertiary border-line text-foreground-muted hover:text-foreground'
+                            }`}
+                            title="Customize Dashboard Boxes & Metrics"
+                        >
+                            <SlidersHorizontal className="w-3.5 h-3.5" />
+                        </button>
                     </div>
-                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-negative">
-                        {atl > 0 ? (showAbsoluteAtl ? atl : `${Math.round(atlPercent)}%`) : '-'}
+
+                    {renderCustomizerDrawer()}
+
+                    <div className="grid grid-cols-2 gap-4 mb-5 shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-md bg-workout-recovery/15 flex items-center justify-center shrink-0">
+                                <TrendingUp className="w-5 h-5 text-workout-recovery" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-foreground-muted font-semibold leading-tight">Shape</p>
+                                <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">{shapePercent}%</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-md bg-accent-cyan/15 flex items-center justify-center shrink-0">
+                                <Activity className="w-5 h-5 text-accent-cyan" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs text-foreground-muted font-semibold leading-tight">Running VO2max</p>
+                                <div className="flex items-baseline justify-between gap-1">
+                                    <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
+                                        {aerobicVo2max > 0 ? aerobicVo2max.toFixed(1) : '-'}
+                                    </p>
+                                    {correctionFactor !== 1.0 && (
+                                        <span className="text-xs font-mono tabular-nums text-accent-cyan font-semibold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
+                                            {correctionFactor.toFixed(1)}x
+                                        </span>
+                                    )}
+                                </div>
+                                {vdot > 0 && (
+                                    <p className="text-[10px] font-mono text-foreground-muted mt-0.5">
+                                        Run VDOT: {vdot.toFixed(1)}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
                     </div>
+
+                    {activeRunningOptions.length > 0 && (
+                        <div className="mb-5 p-2.5 rounded-md bg-background-tertiary/70 border border-line grid grid-cols-2 gap-2 shrink-0">
+                            {activeRunningOptions.map((opt) => (
+                                <div key={opt.id} className="p-2 rounded bg-background-secondary border border-line/70">
+                                    <span className="block text-[10px] text-foreground-muted truncate">{opt.shortLabel}</span>
+                                    <div className="flex items-baseline gap-1 mt-0.5">
+                                        <span className={`text-sm font-mono font-bold tabular-nums ${opt.colorClass}`}>
+                                            {formatRunningMetricValue(opt.id)}
+                                        </span>
+                                        <span className="text-[9px] text-foreground-muted font-mono">{opt.unit}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {renderWorkloadDiagram(workloadRatio, 'Running Workload Balance')}
+                    {renderRunningProgressBars()}
                 </div>
 
-                {/* Fitness (CTL) */}
-                <div
-                    className="flex items-center gap-3 cursor-pointer group"
-                    title={`${Math.round(ctlPercent)}% (Abs: ${ctl} / Max: ${maxCtl})`}
-                    onClick={() => setShowAbsoluteCtl(!showAbsoluteCtl)}
-                >
-                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Fitness (CTL)</div>
-                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
-                        <div className="h-full bg-accent-blue transition-all duration-500" style={{ width: `${Math.min(100, ctlPercent)}%` }} />
+                {/* BOX 2: CYCLING TRAINING STATUS */}
+                <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px]">
+                    <div className="flex items-center justify-between gap-2 mb-5 shrink-0">
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-foreground-muted">Cycling Status</h2>
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30">
+                                Bike Box
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setIsCustomizeOpen(!isCustomizeOpen)}
+                            className="p-1.5 rounded-md border bg-background-tertiary border-line text-foreground-muted hover:text-foreground transition-colors"
+                            title="Customize Dashboard Boxes & Metrics"
+                        >
+                            <SlidersHorizontal className="w-3.5 h-3.5" />
+                        </button>
                     </div>
-                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-blue">
-                        {ctl > 0 ? (showAbsoluteCtl ? ctl : `${Math.round(ctlPercent)}%`) : '-'}
-                    </div>
-                </div>
 
-                {/* Stress Balance (TSB) */}
+                    <div className="grid grid-cols-2 gap-4 mb-5 shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-md bg-accent-orange/15 flex items-center justify-center shrink-0">
+                                <Zap className="w-5 h-5 text-accent-orange" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-foreground-muted font-semibold leading-tight">Active FTP</p>
+                                <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
+                                    {activeFtpWatts > 0 ? `${activeFtpWatts}W` : '-'}
+                                </p>
+                                {wPerKg > 0 && (
+                                    <p className="text-[10px] font-mono text-accent-cyan mt-0.5">{wPerKg.toFixed(2)} W/kg</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-md bg-accent-purple/15 flex items-center justify-center shrink-0">
+                                <Bike className="w-5 h-5 text-accent-purple" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs text-foreground-muted font-semibold leading-tight">Cycling VO2max</p>
+                                <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
+                                    {cyclingVo2max > 0 ? cyclingVo2max.toFixed(1) : '-'}
+                                </p>
+                                <p className="text-[10px] font-mono text-foreground-muted mt-0.5">
+                                    ACSM Power Formula
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {activeCyclingOptions.length > 0 && (
+                        <div className="mb-5 p-2.5 rounded-md bg-background-tertiary/70 border border-line grid grid-cols-2 gap-2 shrink-0">
+                            {activeCyclingOptions.map((opt) => (
+                                <div key={opt.id} className="p-2 rounded bg-background-secondary border border-line/70">
+                                    <span className="block text-[10px] text-foreground-muted truncate">{opt.shortLabel}</span>
+                                    <div className="flex items-baseline gap-1 mt-0.5">
+                                        <span className={`text-sm font-mono font-bold tabular-nums ${opt.colorClass}`}>
+                                            {formatCyclingMetricValue(opt.id)}
+                                        </span>
+                                        <span className="text-[9px] text-foreground-muted font-mono">{opt.unit}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {renderWorkloadDiagram(bikeWorkloadRatio, 'Cycling Workload Balance')}
+                    {renderCyclingProgressBars()}
+                </div>
+            </div>
+        );
+    }
+
+    // ─── MODES 2, 3, 4: SINGLE CARD (COMBINED_STRIP / CYCLING_HERO / CLASSIC_RUN) ───
+    return (
+        <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px] relative">
+            <div className="flex items-center justify-between gap-2 mb-5 shrink-0">
+                <h2 className="text-lg font-semibold text-foreground-muted">
+                    {layoutMode === 'CYCLING_HERO' ? 'Cycling Status' : 'Training Status'}
+                </h2>
+                <div className="flex items-center gap-1.5">
+                    <div className="inline-flex rounded-md bg-background-tertiary p-0.5 border border-line text-[10px]">
+                        <button
+                            type="button"
+                            onClick={() => updateLayoutMode('DUAL_BOXES')}
+                            className="px-2 py-0.5 rounded font-medium text-foreground-muted hover:text-foreground inline-flex items-center gap-1"
+                            title="Switch to 2 Boxes (Running + Cycling)"
+                        >
+                            <Columns2 className="w-3 h-3" />
+                            2 Boxes
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => updateLayoutMode('COMBINED_STRIP')}
+                            className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                                layoutMode === 'COMBINED_STRIP'
+                                    ? 'bg-surface text-foreground border border-line/60'
+                                    : 'text-foreground-muted hover:text-foreground'
+                            }`}
+                        >
+                            Sample A
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => updateLayoutMode('CYCLING_HERO')}
+                            className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                                layoutMode === 'CYCLING_HERO'
+                                    ? 'bg-surface text-foreground border border-line/60'
+                                    : 'text-foreground-muted hover:text-foreground'
+                            }`}
+                        >
+                            Sample C
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => updateLayoutMode('CLASSIC_RUN')}
+                            className={`px-2 py-0.5 rounded font-medium transition-colors ${
+                                layoutMode === 'CLASSIC_RUN'
+                                    ? 'bg-surface text-foreground border border-line/60'
+                                    : 'text-foreground-muted hover:text-foreground'
+                            }`}
+                        >
+                            Classic
+                        </button>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setIsCustomizeOpen(!isCustomizeOpen)}
+                        className={`p-1.5 rounded-md border transition-colors ${
+                            isCustomizeOpen
+                                ? 'bg-accent-cyan/15 border-accent-cyan/40 text-accent-cyan'
+                                : 'bg-background-tertiary border-line text-foreground-muted hover:text-foreground'
+                        }`}
+                        title="Customize Dashboard Layout & Metrics"
+                    >
+                        <SlidersHorizontal className="w-3.5 h-3.5" />
+                    </button>
+                </div>
+            </div>
+
+            {renderCustomizerDrawer()}
+
+            {/* Top Metrics Grid */}
+            <div className="grid grid-cols-2 gap-4 mb-5 shrink-0">
+                {layoutMode === 'CYCLING_HERO' ? (
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-md bg-accent-orange/15 flex items-center justify-center shrink-0">
+                            <Zap className="w-5 h-5 text-accent-orange" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-foreground-muted font-semibold leading-tight">Active FTP</p>
+                            <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
+                                {activeFtpWatts > 0 ? `${activeFtpWatts}W` : '-'}
+                            </p>
+                            {wPerKg > 0 && (
+                                <p className="text-[10px] font-mono text-accent-cyan mt-0.5">{wPerKg.toFixed(2)} W/kg</p>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-md bg-workout-recovery/15 flex items-center justify-center shrink-0">
+                            <TrendingUp className="w-5 h-5 text-workout-recovery" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-foreground-muted font-semibold leading-tight">Shape</p>
+                            <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">{shapePercent}%</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Aerobic Fitness (VO2max) */}
                 <div className="flex items-center gap-3">
-                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Stress Balance</div>
-                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden relative">
-                        <div className="absolute left-1/2 w-[1px] h-full bg-line" />
-                        <div
-                            className={`h-full ${tsb >= 0 ? 'bg-positive' : 'bg-workout-tempo'} absolute transition-all duration-500`}
-                            style={{
-                                width: `${Math.min(50, Math.abs(tsb))}%`,
-                                left: tsb >= 0 ? '50%' : `${50 - Math.min(50, Math.abs(tsb))}%`
-                            }}
-                        />
+                    <div className="w-10 h-10 rounded-md bg-accent-cyan/15 flex items-center justify-center shrink-0">
+                        <Activity className="w-5 h-5 text-accent-cyan" />
                     </div>
-                    <div className={`w-14 text-right text-sm font-mono tabular-nums font-semibold ${tsbStatus.color}`}>
-                        {tsb >= 0 ? `+${tsb}` : tsb}
-                    </div>
-                </div>
-
-                {/* Weekly TRIMP */}
-                <div className="flex items-center gap-3">
-                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Weekly TRIMP</div>
-                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
-                        <div className="h-full bg-workout-long-run transition-all duration-500" style={{ width: `${Math.min(100, easyTrimp / 5)}%` }} />
-                    </div>
-                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-workout-long-run underline decoration-workout-long-run/30 underline-offset-2">
-                        {easyTrimp > 0 ? easyTrimp : '-'}
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs text-foreground-muted font-semibold leading-tight">
+                            {layoutMode === 'CYCLING_HERO' ? 'Cycling VO2max' : 'Aerobic Fitness (VO2max)'}
+                        </p>
+                        <div className="flex items-baseline justify-between gap-1">
+                            <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
+                                {layoutMode === 'CYCLING_HERO'
+                                    ? (cyclingVo2max > 0 ? cyclingVo2max.toFixed(1) : '-')
+                                    : (aerobicVo2max > 0 ? aerobicVo2max.toFixed(1) : cyclingVo2max > 0 ? cyclingVo2max.toFixed(1) : '-')}
+                            </p>
+                            {layoutMode !== 'CYCLING_HERO' && correctionFactor !== 1.0 && (
+                                <span className="text-xs font-mono tabular-nums text-accent-cyan font-semibold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
+                                    {correctionFactor.toFixed(1)}x
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-0.5 text-[10px] font-mono text-foreground-muted">
+                            {vdot > 0 && layoutMode !== 'CYCLING_HERO' && <span>Run VDOT: {vdot.toFixed(1)}</span>}
+                            {cyclingVo2max > 0 && layoutMode !== 'CLASSIC_RUN' && (
+                                <span className="text-accent-orange font-semibold">
+                                    {vdot > 0 && layoutMode !== 'CYCLING_HERO' ? '· ' : ''}Bike VO2: {cyclingVo2max.toFixed(1)}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Customizable Cycling Metrics Strip (Shown in Sample A & Sample C) */}
+            {(layoutMode === 'COMBINED_STRIP' || layoutMode === 'CYCLING_HERO') && activeCyclingOptions.length > 0 && (
+                <div className="mb-5 p-3 rounded-md bg-background-tertiary/70 border border-line space-y-2 shrink-0">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-accent-cyan flex items-center gap-1">
+                            <Bike className="w-3 h-3" />
+                            Cycling Metrics
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => setIsCustomizeOpen(true)}
+                            className="text-[10px] text-foreground-muted hover:text-foreground underline"
+                        >
+                            Edit Fields
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-2">
+                        {activeCyclingOptions.map((opt) => (
+                            <div key={opt.id} className="p-2 rounded bg-background-secondary border border-line/70">
+                                <span className="block text-[10px] text-foreground-muted truncate" title={opt.label}>
+                                    {opt.shortLabel}
+                                </span>
+                                <div className="flex items-baseline gap-1 mt-0.5">
+                                    <span className={`text-sm font-mono font-bold tabular-nums ${opt.colorClass}`}>
+                                        {formatCyclingMetricValue(opt.id)}
+                                    </span>
+                                    <span className="text-[9px] text-foreground-muted font-mono">{opt.unit}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {layoutMode === 'CYCLING_HERO'
+                ? renderWorkloadDiagram(bikeWorkloadRatio, 'Cycling Workload Balance')
+                : renderWorkloadDiagram(workloadRatio, 'Workload Balance')}
+
+            {layoutMode === 'CYCLING_HERO' ? renderCyclingProgressBars() : renderRunningProgressBars()}
         </div>
     );
 }

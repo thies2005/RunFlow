@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
+import { calculateCyclingVo2Max, calculateBikeTss, calculateIntensityFactor } from '@/lib/metrics/power';
 import { startOfWeek, endOfWeek, subDays } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
@@ -87,7 +88,7 @@ export async function GET(req: NextRequest) {
         // 1. User Settings & Active Goals
         const userPromise = prisma.user.findUnique({
             where: { id: userId },
-            select: { hrMax: true, vdotCorrectionFactor: true, effectiveVo2maxCorrectionFactor: true, includeCrossTraining: true, healthTrackingEnabled: true, vdotReferenceRaceDate: true, autoRevolvingVo2max: true }
+            select: { hrMax: true, weight: true, ftpWatts: true, vdotCorrectionFactor: true, effectiveVo2maxCorrectionFactor: true, includeCrossTraining: true, healthTrackingEnabled: true, vdotReferenceRaceDate: true, autoRevolvingVo2max: true }
         });
 
         const activeGoalsPromise = prisma.goal.findMany({
@@ -170,6 +171,13 @@ export async function GET(req: NextRequest) {
                 hrZone5Time: true,
                 hrZone6Time: true,
                 hrZone7Time: true,
+                averageWatts: true,
+                weightedAverageWatts: true,
+                npWatts: true,
+                maxWatts: true,
+                bikeTss: true,
+                intensityFactor: true,
+                efficiencyFactor: true,
             }
         });
 
@@ -182,6 +190,7 @@ export async function GET(req: NextRequest) {
                 startDate: { gte: sixMonthsAgo },
             },
             select: {
+                name: true,
                 type: true,
                 startDate: true,
                 distance: true,
@@ -189,6 +198,11 @@ export async function GET(req: NextRequest) {
                 trimp: true, // M-01: Include stored TRIMP for fitness calculations
                 averageHr: true,
                 hasHeartrate: true,
+                averageWatts: true,
+                weightedAverageWatts: true,
+                npWatts: true,
+                bikeTss: true,
+                efficiencyFactor: true,
                 hrZone1Time: true,
                 hrZone2Time: true,
                 hrZone3Time: true,
@@ -310,11 +324,76 @@ export async function GET(req: NextRequest) {
 
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
+        // Compute Cycling Dashboard Metrics
+        const weightKg = user?.weight && user.weight > 0 ? user.weight : 75;
+        let bestRideFtp = user?.ftpWatts ?? null;
+        const weekStart = startOfWeek(validRefDate, { weekStartsOn: 1 });
+        let weeklyBikeMeters = 0;
+        let weeklyBikeTss = 0;
+        let efSum = 0;
+        let efCount = 0;
+
+        for (const ca of crossTrainingActivities) {
+            if (ca.type === 'RIDE' || ca.type === 'VIRTUAL_RIDE') {
+                const titleMatch = (ca.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
+                const titleW = titleMatch ? parseInt(titleMatch[1], 10) : null;
+                const validTitleW = titleW && titleW >= 40 && titleW <= 1500 ? titleW : null;
+                const rideSustained = ca.npWatts ?? ca.weightedAverageWatts ?? ca.averageWatts ?? validTitleW;
+                if (rideSustained && rideSustained > 0) {
+                    const estFtp = /\bftp\s*test\b/i.test(ca.name || '') && validTitleW
+                        ? validTitleW
+                        : Math.round(rideSustained * 0.95);
+                    if (!bestRideFtp || estFtp > bestRideFtp) {
+                        bestRideFtp = estFtp;
+                    }
+                }
+            }
+        }
+
+        const resolvedFtp = bestRideFtp || 200;
+        for (const ca of crossTrainingActivities) {
+            if (ca.type === 'RIDE' || ca.type === 'VIRTUAL_RIDE') {
+                const rideDate = new Date(ca.startDate);
+                const np = ca.npWatts ?? ca.weightedAverageWatts ?? ca.averageWatts ?? null;
+                const tss = ca.bikeTss ?? (np && ca.movingTime > 0
+                    ? calculateBikeTss(ca.movingTime, np, calculateIntensityFactor(np, resolvedFtp) || 0, resolvedFtp)
+                    : Math.round((ca.movingTime / 3600) * 50));
+                if (rideDate >= weekStart) {
+                    weeklyBikeMeters += ca.distance || 0;
+                    weeklyBikeTss += tss || 0;
+                }
+                const ef = ca.efficiencyFactor ?? (np && ca.averageHr && ca.averageHr > 0 ? Number((np / ca.averageHr).toFixed(2)) : null);
+                if (ef && ef > 0) {
+                    efSum += ef;
+                    efCount++;
+                }
+            }
+        }
+
+        const cyclingVo2max = bestRideFtp
+            ? calculateCyclingVo2Max({ ftpWatts: bestRideFtp, weightKg })
+            : null;
+        const wPerKg = bestRideFtp ? Number((bestRideFtp / weightKg).toFixed(2)) : null;
+        const weeklyBikeKm = Math.round((weeklyBikeMeters / 1000) * 10) / 10;
+        const avgEfficiencyFactor = efCount > 0 ? Number((efSum / efCount).toFixed(2)) : null;
+        const ctlBike = Math.round((currentFitness as { ctlBike?: number } | null)?.ctlBike || 0);
+        const atlBike = Math.round((currentFitness as { atlBike?: number } | null)?.atlBike || 0);
+        const tsbBike = Math.round((currentFitness as { tsbBike?: number } | null)?.tsbBike ?? (ctlBike - atlBike));
+
         const stats = {
             currentWeekMileage,
             vdot,
             effectiveVO2max,
             rawVO2max,
+            cyclingVo2max,
+            activeFtpWatts: bestRideFtp,
+            wPerKg,
+            weeklyBikeTss: Math.round(weeklyBikeTss),
+            weeklyBikeKm,
+            ctlBike,
+            atlBike,
+            tsbBike,
+            avgEfficiencyFactor,
             vdotCorrectionFactor,
             effectiveVo2maxCorrectionFactor,
             autoRevolvingVo2max,

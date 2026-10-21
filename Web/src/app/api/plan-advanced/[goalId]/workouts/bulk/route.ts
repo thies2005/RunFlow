@@ -45,6 +45,9 @@ export async function PATCH(req: Request, ctx: RouteContext) {
         if (!Array.isArray(workoutIds) || workoutIds.length === 0) {
             return NextResponse.json({ error: 'workoutIds must be a non-empty array' }, { status: 400 });
         }
+        if (workoutIds.length > 500 || !workoutIds.every((id) => typeof id === 'string' && id.length <= 64)) {
+            return NextResponse.json({ error: 'workoutIds must contain at most 500 valid string IDs' }, { status: 400 });
+        }
 
         const workouts = await prisma.workout.findMany({
             where: { id: { in: workoutIds }, goalId },
@@ -114,20 +117,23 @@ export async function PATCH(req: Request, ctx: RouteContext) {
 
                 case 'SCALE': {
                     const { volumeFactor, intensityFactor } = params || {};
-                    if (typeof volumeFactor !== 'number' || volumeFactor <= 0) {
-                        throw new Error('params.volumeFactor must be a positive number for SCALE');
+                    if (typeof volumeFactor !== 'number' || !Number.isFinite(volumeFactor) || volumeFactor < 0.1 || volumeFactor > 5.0) {
+                        throw new Error('params.volumeFactor must be a finite number between 0.1 and 5.0 for SCALE');
+                    }
+                    if (intensityFactor !== undefined && (typeof intensityFactor !== 'number' || !Number.isFinite(intensityFactor) || intensityFactor < 0.5 || intensityFactor > 2.0)) {
+                        throw new Error('params.intensityFactor must be between 0.5 and 2.0');
                     }
                     const updated = await Promise.all(
                         workouts.map(w => {
                             const updateData: Record<string, unknown> = {};
                             if (w.targetDistance != null) {
-                                updateData.targetDistance = w.targetDistance * volumeFactor;
+                                updateData.targetDistance = Math.min(300000, w.targetDistance * volumeFactor);
                             }
                             if (typeof intensityFactor === 'number' && w.targetPace != null) {
                                 updateData.targetPace = w.targetPace / intensityFactor;
                             }
                             if (w.targetDuration != null) {
-                                updateData.targetDuration = Math.round(w.targetDuration * Math.sqrt(volumeFactor));
+                                updateData.targetDuration = Math.min(86400, Math.round(w.targetDuration * Math.sqrt(volumeFactor)));
                             }
                             return tx.workout.update({
                                 where: { id: w.id },
@@ -140,8 +146,8 @@ export async function PATCH(req: Request, ctx: RouteContext) {
 
                 case 'SHIFT': {
                     const { days } = params || {};
-                    if (typeof days !== 'number') {
-                        throw new Error('params.days is required for SHIFT');
+                    if (typeof days !== 'number' || !Number.isInteger(days) || days < -365 || days > 365) {
+                        throw new Error('params.days must be an integer between -365 and 365 for SHIFT');
                     }
                     const updated = await Promise.all(
                         workouts.map(w => {

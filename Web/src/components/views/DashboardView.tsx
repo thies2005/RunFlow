@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { Session } from 'next-auth';
 import { UseMutationResult } from '@tanstack/react-query';
 import { RaceCountdown, ActivityList, Footer, MinimalistPillsMenu, UserAvatar } from '@/components';
-import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
+import TrainingStatusCard, { readDashboardLayoutMode, EVENT_DASHBOARD_LAYOUT_CHANGE, type DashboardStatusLayoutMode } from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
 import type { Workout, Goal, ActivityListItem, AnalyticsStats, SuggestedRaceActivity } from '@/lib/types';
@@ -61,15 +61,20 @@ export function DashboardView({
         if (typeof window === 'undefined') return false;
         return localStorage.getItem('runflow_hide_no_plan_prompt') === 'true';
     });
+    const [dashboardLayoutMode, setDashboardLayoutMode] = useState<DashboardStatusLayoutMode>('COMBINED_STRIP');
 
     useEffect(() => {
+        setDashboardLayoutMode(readDashboardLayoutMode());
         const syncNoPlanPref = () => {
             setHideNoPlanReminder(localStorage.getItem('runflow_hide_no_plan_prompt') === 'true');
+            setDashboardLayoutMode(readDashboardLayoutMode());
         };
         window.addEventListener('runflow-plan-reminder-change', syncNoPlanPref);
+        window.addEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncNoPlanPref);
         window.addEventListener('storage', syncNoPlanPref);
         return () => {
             window.removeEventListener('runflow-plan-reminder-change', syncNoPlanPref);
+            window.removeEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncNoPlanPref);
             window.removeEventListener('storage', syncNoPlanPref);
         };
     }, []);
@@ -150,9 +155,12 @@ export function DashboardView({
                     {(() => {
                         const showWorkoutsCard = weeklyWorkouts.length > 0;
                         const showPlanCard = isLoading || Boolean(activeGoal) || Boolean(planTileGoal) || !hideNoPlanReminder;
-                        const visibleCount = (showWorkoutsCard ? 1 : 0) + (showPlanCard ? 1 : 0) + 1;
+                        const isDualBoxes = dashboardLayoutMode === 'DUAL_BOXES';
+                        const visibleCount = (showWorkoutsCard ? 1 : 0) + (showPlanCard ? 1 : 0) + (isDualBoxes ? 2 : 1);
                         const gridColsClass =
-                            visibleCount === 3
+                            visibleCount >= 4
+                                ? 'md:grid-cols-2 xl:grid-cols-4'
+                                : visibleCount === 3
                                 ? 'md:grid-cols-2 lg:grid-cols-3'
                                 : visibleCount === 2
                                 ? 'md:grid-cols-2 lg:grid-cols-2'
@@ -237,7 +245,7 @@ export function DashboardView({
                                         )}
                                     </div>
                                 )}
-                                <div className="lg:col-span-1 h-full flex flex-col">
+                                <div className={`${isDualBoxes ? 'md:col-span-2 lg:col-span-2' : 'lg:col-span-1'} h-full flex flex-col`}>
                                     <TrainingStatusCard />
                                 </div>
                             </div>

@@ -22,7 +22,7 @@ interface TargetRaceSectionProps {
 
 const SPORT_OPTIONS = [
     { value: 'RUN', label: 'Running', Icon: Zap },
-    { value: 'CYCLING', label: 'Cycling (MyWhoosh)', Icon: Bike },
+    { value: 'CYCLING', label: 'Cycling', Icon: Bike },
     { value: 'TRIATHLON', label: 'Triathlon', Icon: Waves },
     { value: 'NO_RACE', label: 'No Race', Icon: Clock },
 ];
@@ -63,7 +63,7 @@ export default function TargetRaceSection({
                         value={goalName}
                         onChange={(e) => setGoalName(e.target.value)}
                         className={`${inputClass} ${formErrors.goalName ? 'border-negative focus:ring-negative' : ''}`}
-                        placeholder={sport === 'CYCLING' ? 'e.g., MyWhoosh FTP Builder' : 'e.g., Berlin Marathon 2026'}
+                        placeholder={sport === 'CYCLING' ? 'e.g., 8-Week Cycling FTP Block' : 'e.g., Berlin Marathon 2026'}
                     />
                     {formErrors.goalName && <p className="text-negative text-xs mt-1">{formErrors.goalName}</p>}
                 </div>
@@ -177,7 +177,7 @@ export default function TargetRaceSection({
                 </div>
             )}
 
-            {sport === 'NO_RACE' && setDurationWeeks && (
+            {(sport === 'NO_RACE' || sport === 'CYCLING') && setDurationWeeks && (
                 <div>
                     <label className="block text-xs text-foreground-muted mb-1">Plan Duration (weeks)</label>
                     <input
@@ -186,7 +186,7 @@ export default function TargetRaceSection({
                         onChange={(e) => setDurationWeeks(e.target.value)}
                         min={4}
                         max={52}
-                        placeholder="12"
+                        placeholder="8"
                         className={inputClass}
                     />
                 </div>

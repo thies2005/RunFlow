@@ -557,69 +557,17 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                             </div>
                         </div>
 
-                        {/* MyWhoosh Workout Selector (shows exact same workout steps in RunFlow) */}
+                        {/* Export Workout to MyWhoosh (.zwo) */}
                         <div className="pt-2 border-t border-glass-border space-y-1.5">
-                            <label className="block text-[10px] font-semibold text-accent-cyan uppercase tracking-wider">
-                                Load Official MyWhoosh Workout
-                            </label>
-                            <select
-                                value=""
-                                onChange={(e) => {
-                                    const mw = MYWHOOSH_WORKOUTS.find((w) => w.id === e.target.value);
-                                    if (!mw) return;
-                                    const v2 = mywhooshWorkoutToStructuredV2(mw, ftpWatts);
-                                    const avgWatts = Math.round(ftpWatts * mw.intensityFactor);
-                                    isDirtyRef.current = true;
-                                    setForm((prev) => ({
-                                        ...prev,
-                                        customName: `MyWhoosh: ${mw.name}`,
-                                        description: `${mw.name} (${mw.category}) — ${mw.stepsSummary}`,
-                                        targetDuration: mw.durationSeconds,
-                                        plannedTss: Math.round(mw.tss),
-                                        targetFtpPercent: Math.round(mw.intensityFactor * 100),
-                                        targetPowerWatts: avgWatts,
-                                        structuredSteps: v2,
-                                    }));
-                                }}
-                                className="w-full bg-background-tertiary border border-glass-border rounded px-2 py-1.5 text-xs text-foreground focus:outline-none"
-                            >
-                                <option value="">-- Choose a MyWhoosh workout to load steps --</option>
-                                {MYWHOOSH_PLANS.map((plan) => (
-                                    <optgroup key={plan.id} label={`Plan: ${plan.name}`}>
-                                        {Array.from(new Set(Object.values(plan.workoutIdsByPhase).flat()))
-                                            .map((wid) => MYWHOOSH_WORKOUTS.find((w) => w.id === wid))
-                                            .filter((w): w is MyWhooshWorkout => Boolean(w))
-                                            .map((mw) => (
-                                                <option key={`${plan.id}-${mw.id}`} value={mw.id}>
-                                                    {mw.name} ({Math.round(mw.durationSeconds / 60)}m · TSS {mw.tss} · IF {mw.intensityFactor})
-                                                </option>
-                                            ))}
-                                    </optgroup>
-                                ))}
-                                <optgroup label="All MyWhoosh Workouts">
-                                    {MYWHOOSH_WORKOUTS.map((mw) => (
-                                        <option key={mw.id} value={mw.id}>
-                                            [{mw.category}] {mw.name} ({Math.round(mw.durationSeconds / 60)}m · TSS {mw.tss})
-                                        </option>
-                                    ))}
-                                </optgroup>
-                            </select>
-
                             <button
                                 type="button"
                                 onClick={() => {
-                                    const explicitMatch = MYWHOOSH_WORKOUTS.find(
-                                        (w) =>
-                                            form.customName === `MyWhoosh: ${w.name}` ||
-                                            (form.description && form.description.includes(w.name))
-                                    ) ?? null;
                                     const xml = generateMyWhooshZwoXml({
                                         name: form.customName || form.description || 'RunFlow Bike Workout',
                                         description: form.description || '',
                                         workoutType: form.workoutType,
                                         targetDurationSeconds: form.targetDuration || 3600,
                                         phase: form.phase,
-                                        matchedWorkout: explicitMatch,
                                         structuredSteps: form.structuredSteps,
                                     });
                                     const blob = new Blob([xml], { type: 'application/octet-stream' });
@@ -632,10 +580,13 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                                     URL.revokeObjectURL(url);
                                     document.body.removeChild(a);
                                 }}
-                                className="w-full mt-1 py-1.5 px-2.5 rounded border border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 text-[11px] font-medium transition-colors"
+                                className="w-full py-1.5 px-2.5 rounded border border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan hover:bg-accent-cyan/20 text-[11px] font-medium transition-colors"
                             >
-                                Export Workout as MyWhoosh / Zwift (.zwo)
+                                Export Workout to MyWhoosh (.zwo)
                             </button>
+                            <p className="text-[10px] text-foreground-muted">
+                                Upload the exported <code>.zwo</code> file to <strong>workout.mywhoosh.com</strong> to ride it in MyWhoosh.
+                            </p>
                         </div>
                     </div>
                 )}

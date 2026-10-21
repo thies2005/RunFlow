@@ -463,84 +463,17 @@ export function EngineGenerateModal({
                         </div>
                     )}
 
-                    {/* MyWhoosh Training Plan & Phase Selector */}
-                    {(sport === 'CYCLING' || sport === 'TRIATHLON' || ridesPerWeek > 0) && (() => {
-                        const { planId: basePlanId, phaseKey } = splitMyWhooshPlanAndPhase(mywhooshPlanId);
-                        const categories = Array.from(new Set(MYWHOOSH_PLANS.map((p) => p.category)));
-                        return (
-                            <div className="p-3 bg-background-tertiary/30 rounded-md border border-glass-border space-y-2.5">
-                                {sport !== 'CYCLING' && (
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <span className="text-[11px] font-semibold text-accent-cyan uppercase tracking-wider block">
-                                                Cycling Mode: {matchToMyWhoosh ? 'MyWhoosh Virtual Workouts' : 'Offline / Outdoor Rides'}
-                                            </span>
-                                            <p className="text-[10px] text-foreground-muted">
-                                                Toggle ON for MyWhoosh structured workouts (.zwo) or OFF for standard outdoor rides
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setMatchToMyWhoosh(!matchToMyWhoosh)}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${matchToMyWhoosh ? 'bg-accent-cyan' : 'bg-glass-border'}`}
-                                        >
-                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
-                                        </button>
-                                    </div>
-                                )}
-
-                                {(sport === 'CYCLING' || matchToMyWhoosh) && (
-                                    <div className="pt-1 space-y-2">
-                                        <div>
-                                            <label className="block text-[10px] font-semibold text-accent-cyan mb-1">
-                                                1. MyWhoosh General Plan
-                                            </label>
-                                            <select
-                                                value={basePlanId}
-                                                onChange={(e) => setMywhooshPlanId(encodeMyWhooshPlanAndPhase(e.target.value, phaseKey))}
-                                                className="w-full bg-background-tertiary border border-glass-border rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none"
-                                            >
-                                                {sport !== 'CYCLING' && (
-                                                    <option value="">Auto-Match Closest MyWhoosh Workout</option>
-                                                )}
-                                                {categories.map((cat) => (
-                                                    <optgroup key={cat} label={cat}>
-                                                        {MYWHOOSH_PLANS.filter((p) => p.category === cat).map((plan) => (
-                                                            <option key={plan.id} value={plan.id}>
-                                                                {plan.name} ({plan.level} · {plan.weeksCount}w)
-                                                            </option>
-                                                        ))}
-                                                    </optgroup>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-semibold text-accent-cyan mb-1">
-                                                2. Phase of Plan
-                                            </label>
-                                            <select
-                                                value={phaseKey}
-                                                disabled={!basePlanId}
-                                                onChange={(e) => setMywhooshPlanId(encodeMyWhooshPlanAndPhase(basePlanId || 'mw-plan-ftp-builder', e.target.value as MyWhooshPhaseOption['id']))}
-                                                className="w-full bg-background-tertiary border border-glass-border rounded px-2.5 py-1.5 text-xs text-foreground focus:outline-none disabled:opacity-50"
-                                            >
-                                                {MYWHOOSH_PHASES.map((ph) => (
-                                                    <option key={ph.id} value={ph.id}>
-                                                        {ph.label}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        {basePlanId && (
-                                            <p className="text-[10px] text-foreground-muted">
-                                                {MYWHOOSH_PLANS.find((p) => p.id === basePlanId)?.description}
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })()}
+                    {/* Cycling .zwo Export & Import Info */}
+                    {(sport === 'CYCLING' || sport === 'TRIATHLON' || ridesPerWeek > 0) && (
+                        <div className="p-3 bg-background-tertiary/30 rounded-md border border-glass-border space-y-1">
+                            <span className="text-[11px] font-semibold text-accent-cyan uppercase tracking-wider block">
+                                MyWhoosh .zwo Workout Export &amp; Plan Import
+                            </span>
+                            <p className="text-[10px] text-foreground-muted leading-relaxed">
+                                Planned rides include structured %FTP intervals that can be exported as <strong>.zwo</strong> files for MyWhoosh. To import a specific plan schedule, use <strong>Import CSV</strong>, <strong>AI Chat Calendar Picture Import</strong>, or <strong>MCP</strong>.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}

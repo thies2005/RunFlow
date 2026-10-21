@@ -16,8 +16,10 @@ import {
 } from '@/lib/plans';
 import { mapWorkoutsForDb, computePlanWeeklyVolumeGoals } from '@/lib/services/plan-creation';
 import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
+import { createSnapshot } from '@/lib/plan/snapshot';
 
 type RouteContext = { params: Promise<{ goalId: string }> };
+const MAX_REGENERATE_WEEKS = 104;
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -160,7 +162,13 @@ export async function POST(req: Request, ctx: RouteContext) {
                     ? new Date(body.raceDate)
                     : goal.raceDate || new Date(Date.now() + 12 * WEEK_MS);
             const startDate = goal.planStartDate || new Date();
-            const totalWeeks = Math.max(4, Math.ceil((nextRaceDate.getTime() - startDate.getTime()) / WEEK_MS));
+            if (isNaN(nextRaceDate.getTime())) {
+                return NextResponse.json({ error: 'Invalid raceDate' }, { status: 400 });
+            }
+            const totalWeeks = Math.min(
+                MAX_REGENERATE_WEEKS,
+                Math.max(4, Math.ceil((nextRaceDate.getTime() - startDate.getTime()) / WEEK_MS)),
+            );
 
             const nextVdot = typeof body.currentVdot === 'number' && body.currentVdot > 0 ? body.currentVdot : (goal.currentVdot || 45);
             const nextFtp = typeof body.ftpWatts === 'number' && body.ftpWatts > 0 ? body.ftpWatts : (goal.ftpAtCreation || 220);
@@ -227,6 +235,8 @@ export async function POST(req: Request, ctx: RouteContext) {
             const workoutsToInsert = lastCompletedWorkout?.scheduledDate
                 ? generated.filter((w) => new Date(w.date).getTime() > new Date(lastCompletedWorkout.scheduledDate).getTime())
                 : generated;
+
+            await createSnapshot(goalId, 'Before plan regeneration', 'engine_regenerate');
 
             await prisma.$transaction(async (tx) => {
                 await tx.workout.deleteMany({

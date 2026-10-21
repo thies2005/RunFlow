@@ -3,9 +3,10 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { X, CheckCircle2, Circle, ArrowUpRight, Flame, Target as TargetIcon, Clock, MapPin } from 'lucide-react';
+import { X, CheckCircle2, Circle, ArrowUpRight, Flame, Target as TargetIcon, Clock, MapPin, Download } from 'lucide-react';
 import { colorsFor } from '@/app/calendar-preview/components/workoutColors';
 import { parseStructuredWorkout, type StructuredWorkoutV2, type StepNode, type StructuredStep } from '@/lib/plans/structured';
+import { generateMyWhooshZwoXml } from '@/lib/plans/zwoExporter';
 import { fmtDuration, fmtKm, fmtPace } from '@/app/calendar-preview/components/metrics';
 import type { MockWorkout } from '@/app/calendar-preview/components/mockData';
 
@@ -194,8 +195,36 @@ export function CalendarWorkoutDetailDrawer({
                 </div>
 
                 {/* Footer */}
-                {goalId && (
-                    <div className="p-4 border-t border-line bg-background-tertiary">
+                <div className="p-4 border-t border-line bg-background-tertiary space-y-2">
+                    {isBike && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const xml = generateMyWhooshZwoXml({
+                                    name: workout.name || 'RunFlow Cycling Workout',
+                                    description: workout.name || '',
+                                    workoutType: workout.type,
+                                    targetDurationSeconds: workout.targetDuration || 3600,
+                                    phase: workout.phase,
+                                    structuredSteps: parsedV2,
+                                });
+                                const blob = new Blob([xml], { type: 'application/octet-stream' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `${(workout.name || workout.type).replace(/[^a-z0-9-_]+/gi, '_')}.zwo`;
+                                document.body.appendChild(a);
+                                a.click();
+                                URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                            }}
+                            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md border border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan font-semibold text-xs hover:bg-accent-cyan/20 transition-colors"
+                        >
+                            <Download className="w-4 h-4" />
+                            Export Workout to MyWhoosh (.zwo)
+                        </button>
+                    )}
+                    {goalId && (
                         <Link
                             href={`/plan-advanced/${goalId}?workoutId=${workout.id}`}
                             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-md bg-accent-orange text-white font-semibold text-sm hover:bg-accent-orange/90 transition-colors shadow-sm"
@@ -203,8 +232,8 @@ export function CalendarWorkoutDetailDrawer({
                             Open in Advanced Plan Studio
                             <ArrowUpRight className="w-4 h-4" />
                         </Link>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

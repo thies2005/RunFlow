@@ -715,8 +715,8 @@ export default function PlanSetupForm({
                 swimDay,
                 restDays,
                 sport: effectiveSport,
-                matchToMyWhoosh: isCycling ? true : matchToMyWhoosh,
-                mywhooshPlanId: resolvedMyWhooshPlanId,
+                matchToMyWhoosh: false,
+                mywhooshPlanId: null,
                 maxHeartRate,
                 restingHeartRate,
                 hrZoneMethod: 'CUSTOM',
@@ -1075,160 +1075,30 @@ export default function PlanSetupForm({
                 />
             )}
 
-            {/* MyWhoosh Two-Stage Selector (General Plan -> Phase of Plan) */}
-            {(sport === 'CYCLING' || ridesPerWeek > 0 || TRIATHLON_RACE_TYPES.has(raceType) || sport === 'TRIATHLON') && (() => {
-                const { planId: selectedBasePlanId, phaseKey: selectedPhaseKey } = splitMyWhooshPlanAndPhase(
-                    mywhooshPlanId || (sport === 'CYCLING' ? (MYWHOOSH_PLANS[0]?.id ?? 'mw-plan-ftp-builder') : '')
-                );
-                const activeMwPlan = MYWHOOSH_PLANS.find((p) => p.id === selectedBasePlanId) || (sport === 'CYCLING' ? MYWHOOSH_PLANS[0] : undefined);
-                const activePhaseMeta = MYWHOOSH_PHASES.find((ph) => ph.id === selectedPhaseKey) || MYWHOOSH_PHASES[0];
-                const categories = Array.from(new Set(MYWHOOSH_PLANS.map((p) => p.category)));
-
-                return (
-                    <div className="border-t border-glass-border pt-6 space-y-3">
-                        {sport !== 'CYCLING' && (
-                            <div className="space-y-2">
-                                <label className="block text-xs font-semibold text-foreground-muted">
-                                    Cycling Workout Mode ({ridesPerWeek} {ridesPerWeek === 1 ? 'Ride' : 'Rides'} / Week)
-                                </label>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                    <button
-                                        type="button"
-                                        onClick={() => setMatchToMyWhoosh(true)}
-                                        className={`p-3 rounded-md border text-left transition-all ${
-                                            matchToMyWhoosh
-                                                ? 'border-accent-cyan bg-accent-cyan/10 text-foreground'
-                                                : 'border-glass-border bg-surface text-foreground-muted hover:border-foreground-muted'
-                                        }`}
-                                    >
-                                        <span className="text-xs font-semibold block text-accent-cyan">MyWhoosh Virtual Workouts</span>
-                                        <span className="text-[11px] text-foreground-muted mt-0.5 block">
-                                            Match rides to MyWhoosh plans (%FTP intervals, cadence &amp; .zwo export)
-                                        </span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setMatchToMyWhoosh(false)}
-                                        className={`p-3 rounded-md border text-left transition-all ${
-                                            !matchToMyWhoosh
-                                                ? 'border-accent-orange bg-accent-orange/10 text-foreground'
-                                                : 'border-glass-border bg-surface text-foreground-muted hover:border-foreground-muted'
-                                        }`}
-                                    >
-                                        <span className="text-xs font-semibold block text-foreground">Offline / Outdoor Cycling</span>
-                                        <span className="text-[11px] text-foreground-muted mt-0.5 block">
-                                            Standard outdoor/offline rides (Zone 2 Endurance, Tempo &amp; Intervals)
-                                        </span>
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {(sport === 'CYCLING' || matchToMyWhoosh) && (
-                            <div className="p-4 rounded-md bg-surface border border-accent-cyan/40 space-y-3">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-accent-cyan mb-1">
-                                            1. MyWhoosh General Training Plan
-                                        </label>
-                                        <select
-                                            value={selectedBasePlanId}
-                                            onChange={(e) => {
-                                                const newBaseId = e.target.value;
-                                                const nextComposite = encodeMyWhooshPlanAndPhase(newBaseId, selectedPhaseKey);
-                                                setMywhooshPlanId(nextComposite);
-                                                const foundPlan = MYWHOOSH_PLANS.find((p) => p.id === newBaseId);
-                                                if (sport === 'CYCLING' && foundPlan) {
-                                                    const nextWeeks = activePhaseMeta.weeks ?? foundPlan.weeksCount;
-                                                    setDurationWeeks(String(nextWeeks));
-                                                    setRidesPerWeek(foundPlan.ridesPerWeek || 4);
-                                                    if (
-                                                        goalName === 'My First Race' ||
-                                                        goalName === 'My Race' ||
-                                                        MYWHOOSH_PLANS.some((p) => goalName.startsWith(p.name))
-                                                    ) {
-                                                        setGoalName(
-                                                            selectedPhaseKey !== 'ALL'
-                                                                ? `${foundPlan.name} (${activePhaseMeta.shortLabel})`
-                                                                : foundPlan.name
-                                                        );
-                                                    }
-                                                }
-                                            }}
-                                            className="bg-background-secondary border border-glass-border rounded-md p-2.5 text-xs text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-cyan"
-                                        >
-                                            {sport !== 'CYCLING' && (
-                                                <option value="">Auto-Match Closest MyWhoosh Workout by Phase &amp; Duration</option>
-                                            )}
-                                            {categories.map((cat) => (
-                                                <optgroup key={cat} label={cat}>
-                                                    {MYWHOOSH_PLANS.filter((p) => p.category === cat).map((plan) => (
-                                                        <option key={plan.id} value={plan.id}>
-                                                            {plan.name} ({plan.level} · {plan.weeksCount}w)
-                                                        </option>
-                                                    ))}
-                                                </optgroup>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-semibold text-accent-cyan mb-1">
-                                            2. Phase of Plan (MyWhoosh 5-Phase System)
-                                        </label>
-                                        <select
-                                            value={selectedPhaseKey}
-                                            disabled={!selectedBasePlanId}
-                                            onChange={(e) => {
-                                                const nextPhase = e.target.value as MyWhooshPhaseOption['id'];
-                                                const baseId = selectedBasePlanId || MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder';
-                                                setMywhooshPlanId(encodeMyWhooshPlanAndPhase(baseId, nextPhase));
-                                                const phaseObj = MYWHOOSH_PHASES.find((ph) => ph.id === nextPhase);
-                                                const foundPlan = MYWHOOSH_PLANS.find((p) => p.id === baseId);
-                                                if (sport === 'CYCLING' && foundPlan) {
-                                                    const nextWeeks = phaseObj?.weeks ?? foundPlan.weeksCount;
-                                                    setDurationWeeks(String(nextWeeks));
-                                                    if (
-                                                        goalName === 'My First Race' ||
-                                                        goalName === 'My Race' ||
-                                                        MYWHOOSH_PLANS.some((p) => goalName.startsWith(p.name))
-                                                    ) {
-                                                        setGoalName(
-                                                            nextPhase !== 'ALL' && phaseObj
-                                                                ? `${foundPlan.name} (${phaseObj.shortLabel})`
-                                                                : foundPlan.name
-                                                        );
-                                                    }
-                                                }
-                                            }}
-                                            className="bg-background-secondary border border-glass-border rounded-md p-2.5 text-xs text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-cyan disabled:opacity-50"
-                                        >
-                                            {MYWHOOSH_PHASES.map((ph) => (
-                                                <option key={ph.id} value={ph.id}>
-                                                    {ph.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {activeMwPlan && (
-                                    <div className="rounded bg-background-secondary/70 border border-line p-2.5 space-y-1">
-                                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                                            <span className="font-semibold text-foreground">{activeMwPlan.name}</span>
-                                            <span className="font-mono text-[11px] text-accent-cyan">
-                                                {activePhaseMeta.weeks ?? activeMwPlan.weeksCount} Weeks · {activeMwPlan.level} · {activePhaseMeta.shortLabel}
-                                            </span>
-                                        </div>
-                                        <p className="text-[11px] text-foreground-muted">{activeMwPlan.description}</p>
-                                        <p className="text-[11px] text-accent-cyan/90">{activePhaseMeta.description}</p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+            {/* Cycling Workout Export (.zwo) & External Plan Import (CSV / AI Calendar Screenshot / MCP) */}
+            {(sport === 'CYCLING' || ridesPerWeek > 0 || TRIATHLON_RACE_TYPES.has(raceType) || sport === 'TRIATHLON') && (
+                <div className="border-t border-glass-border pt-6">
+                    <div className="p-4 rounded-md bg-surface border border-accent-cyan/40 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-semibold text-accent-cyan">
+                                MyWhoosh Workout Export (.zwo) &amp; External Plan Import
+                            </span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30">
+                                Export-Only · No Fake Plan Sync
+                            </span>
+                        </div>
+                        <p className="text-[11px] text-foreground-muted leading-relaxed">
+                            Every generated or custom cycling workout in RunFlow can be exported as a <strong>.zwo workout file</strong> for direct upload to{' '}
+                            <a href="https://workout.mywhoosh.com" target="_blank" rel="noopener noreferrer" className="text-accent-cyan underline">
+                                workout.mywhoosh.com
+                            </a>.
+                        </p>
+                        <p className="text-[11px] text-foreground-muted leading-relaxed">
+                            Have an existing training plan from a <strong>MyWhoosh Calendar screenshot</strong>, <strong>CSV file</strong>, or <strong>MCP AI chat</strong>? Once your plan is created, open the <strong>Advanced Plan Studio</strong> to import workouts from a <strong>Calendar Picture</strong> in AI Chat, upload a <strong>.csv</strong> or <strong>.zwo</strong> file, or push workouts via <strong>MCP</strong>.
+                        </p>
                     </div>
-                );
-            })()}
+                </div>
+            )}
 
             <PlanVolumeSection
                 runsPerWeek={runsPerWeek}

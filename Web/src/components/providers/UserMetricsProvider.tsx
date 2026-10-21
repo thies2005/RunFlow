@@ -21,13 +21,21 @@ interface UserMetrics {
     aerobicVo2max: number;
     cyclingVo2max: number;
     activeFtpWatts: number;
+    wPerKg: number;
+    weeklyBikeTss: number;
+    weeklyBikeKm: number;
+    ctlBike: number;
+    atlBike: number;
+    tsbBike: number;
+    avgEfficiencyFactor: number;
+    currentWeekMileage: number;
+    avgWeeklyKmLast3Months: number;
     correctionFactor: number;
     ctl: number;
     atl: number;
     tsb: number;
     workloadRatio: number;
     easyTrimp: number;
-    currentWeekMileage: number;
     userHrMax: number;
     // New fields for percentage display
     maxCtl: number;
@@ -115,13 +123,21 @@ export function UserMetricsProvider({ children, stats }: UserMetricsProviderProp
         aerobicVo2max: stats?.effectiveVO2max || 0,
         cyclingVo2max: stats?.cyclingVo2max || 0,
         activeFtpWatts: stats?.activeFtpWatts || 0,
+        wPerKg: stats?.wPerKg || 0,
+        weeklyBikeTss: stats?.weeklyBikeTss || 0,
+        weeklyBikeKm: stats?.weeklyBikeKm || 0,
+        ctlBike: stats?.ctlBike || 0,
+        atlBike: stats?.atlBike || 0,
+        tsbBike: stats?.tsbBike || 0,
+        avgEfficiencyFactor: stats?.avgEfficiencyFactor || 0,
+        currentWeekMileage: stats?.currentWeekMileage || 0,
+        avgWeeklyKmLast3Months: stats?.avgWeeklyKmLast3Months || 0,
         correctionFactor: stats?.vdotCorrectionFactor || 1.0,
         ctl,
         atl,
         tsb: stats?.tsb || 0,
         workloadRatio: stats?.workloadRatio || 0,
         easyTrimp: stats?.easyTrimp || 0,
-        currentWeekMileage: stats?.currentWeekMileage || 0,
         userHrMax: stats?.hrMax || 185,
 
         maxCtl: effectiveMaxCtl,

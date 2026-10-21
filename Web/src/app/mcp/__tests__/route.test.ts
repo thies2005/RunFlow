@@ -816,7 +816,7 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(res.status).toBe(200);
             const data = await res.json();
             expect(data.result.tools).toBeDefined();
-            expect(data.result.tools.length).toBe(16);
+            expect(data.result.tools.length).toBe(17);
         });
 
         it('authenticates via personal API Key (rf_...)', async () => {

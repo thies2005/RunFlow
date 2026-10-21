@@ -2,6 +2,21 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession, signOut, signIn } from 'next-auth/react';
+import {
+    DASHBOARD_LAYOUT_MODE_OPTIONS,
+    CYCLING_METRIC_OPTIONS,
+    RUNNING_METRIC_OPTIONS,
+    DEFAULT_CYCLING_METRICS,
+    DEFAULT_RUNNING_METRICS,
+    STORAGE_KEY_LAYOUT_MODE,
+    STORAGE_KEY_CYCLING_METRICS,
+    STORAGE_KEY_RUNNING_METRICS,
+    EVENT_DASHBOARD_LAYOUT_CHANGE,
+    readDashboardLayoutMode,
+    type DashboardStatusLayoutMode,
+    type CyclingDashboardMetricId,
+    type RunningDashboardMetricId,
+} from '@/components/dashboard/TrainingStatusCard';
 import { evictAuthBoundCaches } from '@/lib/pwa/authCacheEviction';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useTheme } from 'next-themes';
@@ -896,11 +911,69 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
         }
     }, [settingsData]);
 
+    const [dashboardLayoutMode, setDashboardLayoutMode] = useState<DashboardStatusLayoutMode>('COMBINED_STRIP');
+    const [selectedCyclingMetrics, setSelectedCyclingMetrics] = useState<CyclingDashboardMetricId[]>(DEFAULT_CYCLING_METRICS);
+    const [selectedRunningMetrics, setSelectedRunningMetrics] = useState<RunningDashboardMetricId[]>(DEFAULT_RUNNING_METRICS);
+
     useEffect(() => {
         if (typeof cyclingData?.matchToMyWhoosh === 'boolean') {
             setMatchToMyWhoosh(cyclingData.matchToMyWhoosh);
         }
     }, [cyclingData]);
+
+    useEffect(() => {
+        try {
+            setDashboardLayoutMode(readDashboardLayoutMode());
+            const savedBike = localStorage.getItem(STORAGE_KEY_CYCLING_METRICS);
+            if (savedBike) {
+                const parsed = JSON.parse(savedBike);
+                if (Array.isArray(parsed)) setSelectedCyclingMetrics(parsed);
+            }
+            const savedRun = localStorage.getItem(STORAGE_KEY_RUNNING_METRICS);
+            if (savedRun) {
+                const parsed = JSON.parse(savedRun);
+                if (Array.isArray(parsed)) setSelectedRunningMetrics(parsed);
+            }
+        } catch {
+            // ignore
+        }
+    }, []);
+
+    const handleSelectDashboardLayoutMode = (mode: DashboardStatusLayoutMode) => {
+        setDashboardLayoutMode(mode);
+        try {
+            localStorage.setItem(STORAGE_KEY_LAYOUT_MODE, mode);
+            window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+        } catch {
+            // ignore
+        }
+    };
+
+    const handleToggleDashboardCyclingMetric = (id: CyclingDashboardMetricId) => {
+        setSelectedCyclingMetrics((prev) => {
+            const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id];
+            try {
+                localStorage.setItem(STORAGE_KEY_CYCLING_METRICS, JSON.stringify(next));
+                window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    };
+
+    const handleToggleDashboardRunningMetric = (id: RunningDashboardMetricId) => {
+        setSelectedRunningMetrics((prev) => {
+            const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id];
+            try {
+                localStorage.setItem(STORAGE_KEY_RUNNING_METRICS, JSON.stringify(next));
+                window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    };
 
     const saveMutation = useMutation({
         mutationFn: async () => {
@@ -1111,20 +1184,193 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             </div>
 
             <div className="space-y-3 pt-2 border-t border-line">
-                <h4 className="text-xs text-accent-cyan font-semibold">Cycling</h4>
-                <div className="flex items-center justify-between p-3 rounded-md bg-surface border border-line">
-                    <div>
-                        <p className="text-sm text-foreground">Match Cycling Workouts to MyWhoosh</p>
-                        <p className="text-[10px] text-foreground-muted">Match planned rides to the closest official MyWhoosh workout & enable custom .zwo workout import</p>
+                <div className="flex items-center justify-between">
+                    <h4 className="text-xs text-accent-cyan font-semibold">Dashboard Status Layout &amp; Cycling / Running Metrics</h4>
+                    <span className="text-[10px] font-mono text-accent-cyan bg-accent-cyan/10 px-2 py-0.5 rounded border border-accent-cyan/30">
+                        Live Preview
+                    </span>
+                </div>
+
+                {/* 4 Layout Options */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {DASHBOARD_LAYOUT_MODE_OPTIONS.map((opt) => {
+                        const active = dashboardLayoutMode === opt.id;
+                        return (
+                            <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => handleSelectDashboardLayoutMode(opt.id)}
+                                className={`p-2.5 rounded-md border text-left transition-all ${
+                                    active
+                                        ? 'border-accent-cyan bg-accent-cyan/10 text-foreground'
+                                        : 'border-line bg-surface text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-xs font-semibold text-foreground">{opt.badge}</span>
+                                    {active && <span className="text-[10px] font-mono text-accent-cyan">Active</span>}
+                                </div>
+                                <p className="text-[11px] font-medium text-foreground mt-0.5">{opt.title}</p>
+                                <p className="text-[10px] text-foreground-muted mt-0.5 leading-snug">{opt.description}</p>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Metric Toggles */}
+                <div className="p-3 rounded-md bg-surface border border-line space-y-2.5">
+                    <p className="text-[11px] font-semibold text-accent-cyan">Cycling Metrics to Show</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {CYCLING_METRIC_OPTIONS.map((opt) => {
+                            const checked = selectedCyclingMetrics.includes(opt.id);
+                            return (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => handleToggleDashboardCyclingMetric(opt.id)}
+                                    className={`flex items-center justify-between px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
+                                        checked
+                                            ? 'bg-accent-cyan/10 border-accent-cyan/40 text-foreground font-medium'
+                                            : 'bg-background-tertiary border-line text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <span className="truncate pr-1">{opt.shortLabel} ({opt.unit})</span>
+                                    <span className={`text-[10px] font-mono ${checked ? 'text-accent-cyan' : 'text-foreground-muted'}`}>
+                                        {checked ? 'ON' : 'OFF'}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => mywhooshToggleMutation.mutate(!matchToMyWhoosh)}
-                        disabled={mywhooshToggleMutation.isPending}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${matchToMyWhoosh ? 'bg-accent-cyan' : 'bg-line-strong'} ${mywhooshToggleMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${matchToMyWhoosh ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
+
+                    <p className="text-[11px] font-semibold text-workout-recovery pt-1">Running Box Extra Metrics (2-Box Mode)</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {RUNNING_METRIC_OPTIONS.map((opt) => {
+                            const checked = selectedRunningMetrics.includes(opt.id);
+                            return (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => handleToggleDashboardRunningMetric(opt.id)}
+                                    className={`flex items-center justify-between px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
+                                        checked
+                                            ? 'bg-workout-recovery/10 border-workout-recovery/40 text-foreground font-medium'
+                                            : 'bg-background-tertiary border-line text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <span className="truncate pr-1">{opt.shortLabel} ({opt.unit})</span>
+                                    <span className={`text-[10px] font-mono ${checked ? 'text-workout-recovery' : 'text-foreground-muted'}`}>
+                                        {checked ? 'ON' : 'OFF'}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Live Interactive Preview inside App Settings */}
+                <div className="p-3 rounded-md bg-background-tertiary/80 border border-accent-cyan/30 space-y-2">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-accent-cyan">
+                            Live Preview — {DASHBOARD_LAYOUT_MODE_OPTIONS.find((m) => m.id === dashboardLayoutMode)?.title}
+                        </span>
+                    </div>
+
+                    {dashboardLayoutMode === 'DUAL_BOXES' ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            {/* Preview Box 1: Running */}
+                            <div className="p-3 rounded-md bg-surface border border-line space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-semibold text-foreground">Running Status</span>
+                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-workout-recovery/15 text-workout-recovery">Run Box</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="p-1.5 rounded bg-background-secondary">
+                                        <span className="block text-[9px] text-foreground-muted">Shape</span>
+                                        <span className="text-xs font-mono font-bold text-foreground">84%</span>
+                                    </div>
+                                    <div className="p-1.5 rounded bg-background-secondary">
+                                        <span className="block text-[9px] text-foreground-muted">Running VO2max</span>
+                                        <span className="text-xs font-mono font-bold text-accent-cyan">53.2</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                    {RUNNING_METRIC_OPTIONS.filter((o) => selectedRunningMetrics.includes(o.id)).map((o) => (
+                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-foreground-muted">
+                                            {o.shortLabel}
+                                        </span>
+                                    ))}
+                                </div>
+                                <div className="text-[9px] font-mono text-foreground-muted pt-1 border-t border-line/60">
+                                    Run ATL · Run CTL · Run TSB · Weekly TRIMP
+                                </div>
+                            </div>
+
+                            {/* Preview Box 2: Cycling */}
+                            <div className="p-3 rounded-md bg-surface border border-line space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-semibold text-foreground">Cycling Status</span>
+                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan">Bike Box</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="p-1.5 rounded bg-background-secondary">
+                                        <span className="block text-[9px] text-foreground-muted">Active FTP</span>
+                                        <span className="text-xs font-mono font-bold text-accent-orange">255W (3.40 W/kg)</span>
+                                    </div>
+                                    <div className="p-1.5 rounded bg-background-secondary">
+                                        <span className="block text-[9px] text-foreground-muted">Cycling VO2max</span>
+                                        <span className="text-xs font-mono font-bold text-accent-purple">52.1</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                    {CYCLING_METRIC_OPTIONS.filter((o) => selectedCyclingMetrics.includes(o.id)).map((o) => (
+                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-accent-cyan">
+                                            {o.shortLabel}
+                                        </span>
+                                    ))}
+                                </div>
+                                <div className="text-[9px] font-mono text-foreground-muted pt-1 border-t border-line/60">
+                                    Bike ATL · Bike CTL · Bike TSB · Weekly Bike TSS
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="p-3 rounded-md bg-surface border border-line space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-foreground">
+                                    {dashboardLayoutMode === 'CYCLING_HERO' ? 'Cycling Status (Sample C)' : dashboardLayoutMode === 'COMBINED_STRIP' ? 'Training Status (Sample A)' : 'Training Status (Classic)'}
+                                </span>
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan">1 Box</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="p-1.5 rounded bg-background-secondary">
+                                    <span className="block text-[9px] text-foreground-muted">
+                                        {dashboardLayoutMode === 'CYCLING_HERO' ? 'Active FTP' : 'Shape'}
+                                    </span>
+                                    <span className="text-xs font-mono font-bold text-foreground">
+                                        {dashboardLayoutMode === 'CYCLING_HERO' ? '255W · 3.40 W/kg' : '84%'}
+                                    </span>
+                                </div>
+                                <div className="p-1.5 rounded bg-background-secondary">
+                                    <span className="block text-[9px] text-foreground-muted">
+                                        {dashboardLayoutMode === 'CYCLING_HERO' ? 'Cycling VO2max' : 'Aerobic Fitness (VO2max)'}
+                                    </span>
+                                    <span className="text-xs font-mono font-bold text-accent-cyan">
+                                        {dashboardLayoutMode === 'CYCLING_HERO' ? '52.1 mL/kg' : '53.2 (Run VDOT · Bike VO2)'}
+                                    </span>
+                                </div>
+                            </div>
+                            {dashboardLayoutMode !== 'CLASSIC_RUN' && (
+                                <div className="flex flex-wrap gap-1 pt-1">
+                                    {CYCLING_METRIC_OPTIONS.filter((o) => selectedCyclingMetrics.includes(o.id)).map((o) => (
+                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-accent-cyan">
+                                            {o.shortLabel} ({o.unit})
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 

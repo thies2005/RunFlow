@@ -204,8 +204,32 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                                     or click to browse
                                 </p>
                                 <p className="text-[10px] text-foreground-muted mt-2">
-                                    Supports .csv files from TrainingPeaks, FinalSurge, or RunFlow
+                                    Supports .csv files from MyWhoosh/Custom schedules, TrainingPeaks, FinalSurge, or RunFlow
                                 </p>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const sampleCsv = [
+                                            'date,workout_type,phase,name,description,distance_m,duration_s,pace_s_km,hr_zone',
+                                            '2026-10-26,RIDE_INTERVALS,BASE,Sweet Spot 3x10m,10m Warmup + 3x10m @ 90% FTP + 10m Cooldown,,3600,,3',
+                                            '2026-10-28,EASY,BASE,Easy Aerobic Run,Easy Zone 2 run,8000,2640,330,2',
+                                            '2026-10-31,LONG_RIDE,BASE,Endurance Ride 90m,Zone 2 sustained indoor/outdoor ride,,5400,,2',
+                                        ].join('\n');
+                                        const blob = new Blob([sampleCsv], { type: 'text/csv;charset=utf-8;' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = 'runflow_plan_template.csv';
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                        document.body.removeChild(a);
+                                    }}
+                                    className="mt-3 inline-flex items-center gap-1 px-2.5 py-1 rounded border border-accent-cyan/40 bg-accent-cyan/10 text-accent-cyan text-[11px] font-medium hover:bg-accent-cyan/20"
+                                >
+                                    Download Sample CSV Template
+                                </button>
                                 <input
                                     ref={fileInputRef}
                                     type="file"

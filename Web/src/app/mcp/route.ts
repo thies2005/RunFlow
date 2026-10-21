@@ -1475,6 +1475,150 @@ const recalibrateThresholdsTool: McpTool = {
     },
 };
 
+const importPlanWorkoutsBatchTool: McpTool = {
+    name: 'import_plan_workouts_batch',
+    description: 'Batch-import multiple workouts (e.g., extracted from a MyWhoosh/TrainingPeaks calendar screenshot or CSV table in AI chat) into the active training plan in a single atomic operation with an undo snapshot.',
+    annotations: { readOnlyHint: false, idempotentHint: false, destructiveHint: false },
+    inputSchema: {
+        type: 'object',
+        properties: {
+            goalId: { type: 'string', description: 'Optional goalId. Defaults to the active plan.' },
+            replaceExistingUncompleted: {
+                type: 'boolean',
+                description: 'If true, clears existing uncompleted workouts in the date range before inserting.',
+            },
+            workouts: {
+                type: 'array',
+                description: 'Array of workouts extracted from the calendar screenshot or schedule (max 200).',
+                items: {
+                    type: 'object',
+                    properties: {
+                        scheduledDate: { type: 'string', description: 'ISO date YYYY-MM-DD' },
+                        workoutType: {
+                            type: 'string',
+                            description: 'RIDE, RIDE_INTERVALS, LONG_RIDE, EASY, LONG_RUN, TEMPO, INTERVALS, FARTLEK, RECOVERY, SWIM, STRENGTH, REST, OTHER',
+                        },
+                        customName: { type: 'string', description: 'Workout title (e.g. Sweet Spot 3x10m)' },
+                        description: { type: 'string', description: 'Workout structure / interval summary' },
+                        targetDurationMinutes: { type: 'number', description: 'Planned duration in minutes' },
+                        targetDistanceMeters: { type: 'number', description: 'Planned distance in meters (optional)' },
+                        targetFtpPercent: { type: 'number', description: 'Target %FTP for cycling workouts (e.g. 88)' },
+                        plannedTss: { type: 'number', description: 'Planned TSS if shown on calendar' },
+                        phase: { type: 'string', description: 'BASE, BUILD, PEAK, TAPER, RACE_WEEK, RECOVERY' },
+                    },
+                    required: ['scheduledDate', 'workoutType'],
+                },
+            },
+        },
+        required: ['workouts'],
+    },
+    handler: async (params: any, context?: any) => {
+        const userId = context?.userId;
+        if (!Array.isArray(params.workouts) || params.workouts.length === 0) {
+            throw new Error('workouts must be a non-empty array');
+        }
+        if (params.workouts.length > 200) {
+            throw new Error('Maximum 200 workouts per batch import call');
+        }
+
+        const goal = params.goalId
+            ? await prisma.goal.findFirst({ where: { id: String(params.goalId), userId, deletedAt: null } })
+            : await prisma.goal.findFirst({ where: { userId, isActive: true, deletedAt: null } });
+
+        if (!goal) {
+            throw new Error('No active training plan found. Call create_training_plan first.');
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { ftpWatts: true },
+        });
+        const ftpWatts = user?.ftpWatts || goal.ftpAtCreation || 200;
+        const vdot = goal.currentVdot || 45;
+
+        await createSnapshot(goal.id, 'Before MCP batch calendar import', 'mcp_batch_import');
+
+        const validTypes = new Set<string>(Object.values(WorkoutType));
+        const validPhases = new Set<string>(Object.values(PlanPhase));
+
+        const rows = params.workouts.map((raw: any, idx: number) => {
+            const d = new Date(raw.scheduledDate);
+            if (isNaN(d.getTime())) {
+                throw new Error(`Invalid scheduledDate at index ${idx}: ${raw.scheduledDate}`);
+            }
+            const wt = validTypes.has(String(raw.workoutType).toUpperCase())
+                ? (String(raw.workoutType).toUpperCase() as WorkoutType)
+                : WorkoutType.RIDE;
+            const phase = validPhases.has(String(raw.phase || '').toUpperCase())
+                ? (String(raw.phase).toUpperCase() as PlanPhase)
+                : PlanPhase.BASE;
+            const durationSec = typeof raw.targetDurationMinutes === 'number' && raw.targetDurationMinutes > 0
+                ? Math.min(86400, Math.round(raw.targetDurationMinutes * 60))
+                : null;
+            const distM = typeof raw.targetDistanceMeters === 'number' && raw.targetDistanceMeters > 0
+                ? Math.min(300000, Math.round(raw.targetDistanceMeters))
+                : null;
+            const ftpPct = typeof raw.targetFtpPercent === 'number' && raw.targetFtpPercent > 0
+                ? Math.min(250, Math.max(20, Math.round(raw.targetFtpPercent)))
+                : null;
+            const isBike = wt === 'RIDE' || wt === 'LONG_RIDE' || wt === 'RIDE_INTERVALS' || wt === 'BRICK';
+            const sport = isBike ? 'BIKE' : wt === 'SWIM' || wt === 'OPEN_WATER_SWIM' ? 'SWIM' : 'RUN';
+            const desc = String(raw.description || raw.customName || wt).slice(0, 1000);
+            const structuredSteps = buildStructuredStepsForWorkout(
+                {
+                    type: wt,
+                    description: desc,
+                    totalDistance: distM ?? 0,
+                    targetDuration: durationSec ?? 3600,
+                    targetPace: null,
+                    targetHrZone: null,
+                } as any,
+                { vdot, ftpWatts },
+            );
+            return {
+                goalId: goal.id,
+                scheduledDate: d,
+                workoutType: wt,
+                sport,
+                phase,
+                customName: raw.customName ? String(raw.customName).slice(0, 160) : null,
+                description: desc,
+                targetDuration: durationSec,
+                targetDistance: distM,
+                targetFtpPercent: ftpPct,
+                targetPowerWatts: ftpPct ? Math.round((ftpWatts * ftpPct) / 100) : null,
+                plannedTss: typeof raw.plannedTss === 'number' ? raw.plannedTss : null,
+                structuredSteps: structuredSteps as any,
+                order: idx,
+            };
+        });
+
+        await prisma.$transaction(async (tx) => {
+            if (params.replaceExistingUncompleted) {
+                const dates = rows.map((r: { scheduledDate: Date }) => r.scheduledDate.getTime());
+                const minDate = new Date(Math.min(...dates));
+                const maxDate = new Date(Math.max(...dates));
+                await tx.workout.deleteMany({
+                    where: {
+                        goalId: goal.id,
+                        isCompleted: false,
+                        scheduledDate: { gte: minDate, lte: maxDate },
+                    },
+                });
+            }
+            await tx.workout.createMany({ data: rows });
+        });
+
+        return {
+            success: true,
+            goalId: goal.id,
+            importedCount: rows.length,
+            firstDate: rows[0]?.scheduledDate.toISOString().split('T')[0],
+            lastDate: rows[rows.length - 1]?.scheduledDate.toISOString().split('T')[0],
+        };
+    },
+};
+
 const saveWeeklyCoachingSummaryTool: McpTool = {
     name: 'save_weekly_coaching_summary',
     description: 'Save a weekly coaching advice summary with action items into plan snapshots (rendered on calendar and plan header).',
@@ -1545,6 +1689,7 @@ const paidMcpServer = new McpServer({
         deleteWorkoutTool,
         markWorkoutStatusTool,
         recalibrateThresholdsTool,
+        importPlanWorkoutsBatchTool,
         saveWeeklyCoachingSummaryTool,
     ],
 });

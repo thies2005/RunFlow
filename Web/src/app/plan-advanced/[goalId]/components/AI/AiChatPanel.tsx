@@ -4,28 +4,37 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
     X, Send, Loader2, MessageSquare, Plus, ChevronDown,
-    Dumbbell, Trash2, Check, AlertTriangle, Sparkles,
+    Dumbbell, Trash2, Check, AlertTriangle, Sparkles, ImagePlus, CheckCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import { WORKOUT_COLORS } from '../Shared/WorkoutTypeColors';
 
 interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
+    imagePreviewName?: string;
 }
 
-interface WorkoutAction {
-    action: 'add' | 'modify' | 'delete';
-    workoutId?: string;
-    scheduledDate?: string;
-    workoutType?: string;
-    customName?: string;
-    description?: string;
-    targetDistance?: number | null;
-    targetDuration?: number | null;
-    phase?: string;
-    notes?: string;
-}
+const aiWorkoutActionSchema = z.object({
+    action: z.enum(['add', 'modify', 'delete']).default('add'),
+    workoutId: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/).optional(),
+    scheduledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional(),
+    workoutType: z.enum([
+        'EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'REPETITIONS',
+        'RECOVERY', 'RACE', 'REST', 'CROSS_TRAIN', 'RIDE', 'LONG_RIDE',
+        'RIDE_INTERVALS', 'SWIM', 'STRENGTH', 'BRICK', 'OTHER',
+    ]).optional().default('RIDE'),
+    customName: z.string().max(160).nullable().optional(),
+    description: z.string().max(1000).nullable().optional(),
+    targetDistance: z.number().finite().min(0).max(300000).nullable().optional(),
+    targetDuration: z.number().finite().min(0).max(86400).nullable().optional(),
+    targetFtpPercent: z.number().finite().min(20).max(250).nullable().optional(),
+    phase: z.enum(['BASE', 'BUILD', 'PEAK', 'TAPER', 'RACE_WEEK', 'RECOVERY', 'MAINTAIN', 'OFF']).optional(),
+    notes: z.string().max(1000).nullable().optional(),
+});
+
+type WorkoutAction = z.infer<typeof aiWorkoutActionSchema>;
 
 interface AiChatPanelProps {
     goalId: string;
@@ -34,13 +43,17 @@ interface AiChatPanelProps {
     workouts?: any[];
 }
 
-/** Parse ```workout JSON blocks from AI text */
+/** Parse and validate ```workout JSON blocks from AI text (SEC-01) */
 function parseWorkoutBlocks(text: string): { cleanText: string; workouts: WorkoutAction[] } {
     const workouts: WorkoutAction[] = [];
     const cleanText = text.replace(/```workout\s*\n([\s\S]*?)```/g, (_, json) => {
         try {
-            const parsed = JSON.parse(json.trim());
-            workouts.push(parsed);
+            const raw = JSON.parse(json.trim());
+            const validated = aiWorkoutActionSchema.safeParse(raw);
+            if (!validated.success) {
+                return `\`\`\`\n${json}\`\`\``;
+            }
+            workouts.push(validated.data);
             return `%%WORKOUT_CARD_${workouts.length - 1}%%`;
         } catch {
             return `\`\`\`\n${json}\`\`\``;
@@ -61,24 +74,27 @@ function WorkoutCard({ workout, goalId, onApplied }: { workout: WorkoutAction; g
     const handleApply = async () => {
         setApplying(true);
         try {
+            const safeGoalId = encodeURIComponent(goalId);
             if (workout.action === 'add') {
-                const res = await fetch(`/api/plan-advanced/${goalId}/workouts`, {
+                const res = await fetch(`/api/plan-advanced/${safeGoalId}/workouts`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         scheduledDate: workout.scheduledDate,
-                        workoutType: workout.workoutType || 'EASY',
+                        workoutType: workout.workoutType || 'RIDE',
                         customName: workout.customName || null,
-                        description: workout.description || 'AI-suggested workout',
-                        phase: workout.phase || 'BASE',
+                        description: workout.description || 'AI-imported workout',
+                        phase: workout.phase === 'OFF' ? 'RECOVERY' : (workout.phase || 'BASE'),
                         targetDistance: workout.targetDistance ?? null,
                         targetDuration: workout.targetDuration ?? null,
+                        targetFtpPercent: workout.targetFtpPercent ?? null,
                         notes: workout.notes || null,
                     }),
                 });
                 if (!res.ok) throw new Error('Failed to add workout');
             } else if (workout.action === 'modify' && workout.workoutId) {
-                const res = await fetch(`/api/plan-advanced/${goalId}/workouts/${workout.workoutId}`, {
+                const safeWorkoutId = encodeURIComponent(workout.workoutId);
+                const res = await fetch(`/api/plan-advanced/${safeGoalId}/workouts/${safeWorkoutId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -86,15 +102,17 @@ function WorkoutCard({ workout, goalId, onApplied }: { workout: WorkoutAction; g
                         ...(workout.workoutType && { workoutType: workout.workoutType }),
                         ...(workout.customName !== undefined && { customName: workout.customName }),
                         ...(workout.description && { description: workout.description }),
-                        ...(workout.phase && { phase: workout.phase }),
+                        ...(workout.phase && { phase: workout.phase === 'OFF' ? 'RECOVERY' : workout.phase }),
                         ...(workout.targetDistance !== undefined && { targetDistance: workout.targetDistance }),
                         ...(workout.targetDuration !== undefined && { targetDuration: workout.targetDuration }),
+                        ...(workout.targetFtpPercent !== undefined && { targetFtpPercent: workout.targetFtpPercent }),
                         ...(workout.notes !== undefined && { notes: workout.notes }),
                     }),
                 });
                 if (!res.ok) throw new Error('Failed to modify workout');
             } else if (workout.action === 'delete' && workout.workoutId) {
-                const res = await fetch(`/api/plan-advanced/${goalId}/workouts/${workout.workoutId}`, {
+                const safeWorkoutId = encodeURIComponent(workout.workoutId);
+                const res = await fetch(`/api/plan-advanced/${safeGoalId}/workouts/${safeWorkoutId}`, {
                     method: 'DELETE',
                 });
                 if (!res.ok) throw new Error('Failed to delete workout');
@@ -185,13 +203,66 @@ function WorkoutCard({ workout, goalId, onApplied }: { workout: WorkoutAction; g
     );
 }
 
-/** Render a message with workout cards inline */
+/** Render a message with workout cards inline + 1-click Batch Apply button when multiple workouts are extracted */
 function MessageContent({ content, goalId, onWorkoutApplied }: { content: string; goalId: string; onWorkoutApplied: () => void }) {
     const { cleanText, workouts } = parseWorkoutBlocks(content);
+    const [batchApplying, setBatchApplying] = useState(false);
+    const [batchApplied, setBatchApplied] = useState(false);
+
+    const addableWorkouts = workouts.filter((w) => w.action === 'add' && w.scheduledDate);
+
+    const handleBatchApplyAll = async () => {
+        if (addableWorkouts.length === 0 || batchApplying || batchApplied) return;
+        setBatchApplying(true);
+        try {
+            const safeGoalId = encodeURIComponent(goalId);
+            for (const workout of addableWorkouts) {
+                const res = await fetch(`/api/plan-advanced/${safeGoalId}/workouts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        scheduledDate: workout.scheduledDate,
+                        workoutType: workout.workoutType || 'RIDE',
+                        customName: workout.customName || null,
+                        description: workout.description || 'Imported from calendar screenshot',
+                        phase: workout.phase === 'OFF' ? 'RECOVERY' : (workout.phase || 'BASE'),
+                        targetDistance: workout.targetDistance ?? null,
+                        targetDuration: workout.targetDuration ?? null,
+                        targetFtpPercent: workout.targetFtpPercent ?? null,
+                        notes: workout.notes || null,
+                    }),
+                });
+                if (!res.ok) throw new Error('Failed to import one or more workouts');
+            }
+            setBatchApplied(true);
+            toast.success(`Imported all ${addableWorkouts.length} workouts to your plan!`);
+            onWorkoutApplied();
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Batch import failed');
+        } finally {
+            setBatchApplying(false);
+        }
+    };
 
     const parts = cleanText.split(/%%WORKOUT_CARD_(\d+)%%/);
     return (
         <div className="text-[12px] text-foreground-secondary leading-relaxed whitespace-pre-wrap">
+            {addableWorkouts.length > 1 && (
+                <div className="mb-2.5 p-2 rounded-md bg-accent-cyan/10 border border-accent-cyan/30 flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-semibold text-accent-cyan">
+                        {addableWorkouts.length} Workouts Extracted
+                    </span>
+                    <button
+                        type="button"
+                        onClick={handleBatchApplyAll}
+                        disabled={batchApplying || batchApplied}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-accent-cyan text-background font-semibold text-[10px] hover:opacity-90 disabled:opacity-50"
+                    >
+                        {batchApplying ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCheck className="w-3 h-3" />}
+                        {batchApplied ? 'All Imported' : `Apply All (${addableWorkouts.length})`}
+                    </button>
+                </div>
+            )}
             {parts.map((part, i) => {
                 // Even indices are text, odd indices are workout card indices
                 if (i % 2 === 0) {
@@ -217,6 +288,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
     const queryClient = useQueryClient();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
+    const [attachedImage, setAttachedImage] = useState<{ name: string; dataUrl: string } | null>(null);
     const [streaming, setStreaming] = useState(false);
     const [streamingContent, setStreamingContent] = useState('');
     const [mentionOpen, setMentionOpen] = useState(false);
@@ -224,6 +296,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
     const [mentionIndex, setMentionIndex] = useState(0);
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
     const abortRef = useRef<AbortController | null>(null);
 
     const MENTION_OPTIONS = [
@@ -286,26 +359,50 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
         queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId] });
     }, [goalId, queryClient]);
 
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 8 * 1024 * 1024) {
+            toast.error('Image exceeds 8MB limit');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result === 'string') {
+                setAttachedImage({ name: file.name, dataUrl: reader.result });
+            }
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    };
+
     const sendMessage = useCallback(async () => {
         const trimmed = input.trim();
-        if (!trimmed || streaming) return;
+        if ((!trimmed && !attachedImage) || streaming) return;
 
-        const userMsg: ChatMessage = { role: 'user', content: trimmed };
+        const displayContent = attachedImage
+            ? `${trimmed || 'Import workouts from calendar screenshot'} [📷 ${attachedImage.name}]`
+            : trimmed;
+        const imagePayload = attachedImage?.dataUrl || null;
+
+        const userMsg: ChatMessage = { role: 'user', content: displayContent, imagePreviewName: attachedImage?.name };
         const newMessages = [...messages, userMsg];
         setMessages(newMessages);
         setInput('');
+        setAttachedImage(null);
         setStreaming(true);
         setStreamingContent('');
 
         abortRef.current = new AbortController();
 
         try {
-            const res = await fetch(`/api/plan-advanced/${goalId}/ai-chat`, {
+            const res = await fetch(`/api/plan-advanced/${encodeURIComponent(goalId)}/ai-chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: trimmed,
-                    history: newMessages.slice(0, -1), // send history without the current message
+                    message: trimmed || 'Extract all workouts from this training calendar screenshot and generate workout blocks.',
+                    imageDataUrl: imagePayload,
+                    history: newMessages.slice(0, -1),
                 }),
                 signal: abortRef.current.signal,
             });
@@ -364,7 +461,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
             setStreamingContent('');
             abortRef.current = null;
         }
-    }, [input, streaming, messages, goalId]);
+    }, [input, attachedImage, streaming, messages, goalId]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (mentionOpen) {
@@ -555,13 +652,41 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                         ))}
                     </div>
                 )}
+                {attachedImage && (
+                    <div className="mb-1.5 px-2 py-1 rounded bg-accent-cyan/10 border border-accent-cyan/30 flex items-center justify-between text-[10px] text-accent-cyan">
+                        <span className="truncate">📷 Calendar Picture: {attachedImage.name}</span>
+                        <button
+                            type="button"
+                            onClick={() => setAttachedImage(null)}
+                            className="ml-2 text-foreground-muted hover:text-foreground"
+                        >
+                            <X className="w-3 h-3" />
+                        </button>
+                    </div>
+                )}
+                <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleImageSelect}
+                />
                 <div className="flex items-end gap-1.5">
+                    <button
+                        type="button"
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={streaming}
+                        className="p-1.5 rounded-md bg-background-secondary border border-foreground/20 text-accent-cyan hover:bg-accent-cyan/10 transition-colors shrink-0"
+                        title="Upload Calendar Screenshot / Plan Image"
+                    >
+                        <ImagePlus className="w-3.5 h-3.5" />
+                    </button>
                     <textarea
                         ref={inputRef}
                         value={input}
                         onChange={handleInput}
                         onKeyDown={handleKeyDown}
-                        placeholder="Ask about your plan (type @ to reference weeks)..."
+                        placeholder="Ask or upload a calendar screenshot (📷)..."
                         rows={1}
                         className="flex-1 bg-background-secondary border border-foreground/20 rounded-md px-2.5 py-1.5 text-[12px] text-foreground placeholder-foreground-muted focus:outline-none focus:ring-1 focus:ring-workout-long-run/50 resize-none min-h-[32px] max-h-[120px]"
                         style={{ height: 'auto' }}
@@ -584,7 +709,7 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                         <button
                             type="button"
                             onClick={sendMessage}
-                            disabled={!input.trim()}
+                            disabled={!input.trim() && !attachedImage}
                             className="p-1.5 rounded-md bg-workout-long-run/20 text-workout-long-run hover:bg-workout-long-run/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
                         >
                             <Send className="w-3.5 h-3.5" />

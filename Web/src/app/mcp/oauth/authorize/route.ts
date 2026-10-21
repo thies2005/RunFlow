@@ -77,9 +77,13 @@ export async function POST(request: NextRequest) {
                 if (process.env.NEXT_PUBLIC_APP_URL) appUrlOrigin = new URL(process.env.NEXT_PUBLIC_APP_URL).origin;
             } catch {}
 
-            // Reverse-proxy deployments: also accept the origin derived from the
-            // forwarded proto/host headers so consent posts do not 403 behind a proxy
-            const forwardedOrigin = `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('x-forwarded-host') || request.headers.get('host')}`;
+            const canonicalConfigured = Boolean(
+                (nextAuthOrigin && !nextAuthOrigin.includes('0.0.0.0')) ||
+                (appUrlOrigin && !appUrlOrigin.includes('0.0.0.0'))
+            );
+            const forwardedOrigin = canonicalConfigured
+                ? ''
+                : `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('x-forwarded-host') || request.headers.get('host')}`;
 
             const allowedOrigins = new Set(
                 [request.nextUrl.origin, getPublicOrigin(request), forwardedOrigin, nextAuthOrigin, appUrlOrigin].filter(Boolean)

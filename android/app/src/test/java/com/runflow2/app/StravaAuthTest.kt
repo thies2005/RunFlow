@@ -133,7 +133,7 @@ class StravaAuthTest {
             com.runflow2.app.data.net.Api.normalizeServerUrl("runflow.schuelken.uk/"),
         )
         assertEquals(
-            "http://staging.local:8080",
+            "https://staging.local:8080",
             com.runflow2.app.data.net.Api.normalizeServerUrl("http://staging.local:8080/api"),
         )
         assertEquals(

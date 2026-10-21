@@ -32,7 +32,7 @@ class NetworkClient(
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) {
     @Volatile
-    var previousBaseUrl: String? = null
+    var previousBaseUrl: String? = Api.normalizeServerUrl(initialBaseUrl)
         internal set
 
     @Volatile
@@ -67,14 +67,16 @@ class NetworkClient(
 
     fun observeServerUrl(serverUrlFlow: Flow<String>, scope: CoroutineScope): Job {
         return scope.launch {
+            var isFirstEmission = true
             serverUrlFlow.collect { rawUrl ->
                 val normalized = Api.normalizeServerUrl(rawUrl)
                 val prev = previousBaseUrl
-                if (prev != null && prev != normalized) {
+                if (!isFirstEmission && prev != null && prev != normalized) {
                     AppLog.i("Net", "Server origin changed from $prev to $normalized — clearing session")
                     runCatching { authStore?.clear() }
                     onOriginSwitched?.invoke()
                 }
+                isFirstEmission = false
                 previousBaseUrl = normalized
                 if (baseUrl != normalized) {
                     baseUrl = normalized

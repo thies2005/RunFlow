@@ -155,6 +155,7 @@ export function EngineGenerateModal({
                         ridesPerWeek,
                         swimsPerWeek,
                         strengthPerWeek,
+                        weeklyMileageGoal: weeklyMileageGoal * 1000,
                         targetVolume: weeklyMileageGoal * 1000,
                         buildWeeks,
                         peakWeeks,

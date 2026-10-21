@@ -219,6 +219,15 @@ export async function POST(req: Request, ctx: RouteContext) {
             const phaseBlocks = buildPlanPhaseBlocks(planConfig, generated);
             const weeklyGoals = computePlanWeeklyVolumeGoals(planConfig, generated);
 
+            const lastCompletedWorkout = await prisma.workout.findFirst({
+                where: { goalId, isCompleted: true },
+                orderBy: { scheduledDate: 'desc' },
+                select: { scheduledDate: true },
+            });
+            const workoutsToInsert = lastCompletedWorkout?.scheduledDate
+                ? generated.filter((w) => new Date(w.date).getTime() > new Date(lastCompletedWorkout.scheduledDate).getTime())
+                : generated;
+
             await prisma.$transaction(async (tx) => {
                 await tx.workout.deleteMany({
                     where: { goalId, isCompleted: false },
@@ -247,16 +256,16 @@ export async function POST(req: Request, ctx: RouteContext) {
                         ...(phaseBlocks.length > 0 && { phaseBlocks: phaseBlocks as unknown as Prisma.InputJsonValue }),
                     },
                 });
-                if (generated.length > 0) {
+                if (workoutsToInsert.length > 0) {
                     await tx.workout.createMany({
-                        data: mapWorkoutsForDb(generated, { goalId, ftpWatts: nextFtp }),
+                        data: mapWorkoutsForDb(workoutsToInsert, { goalId, ftpWatts: nextFtp }),
                     });
                 }
             });
 
             return NextResponse.json({
                 success: true,
-                regeneratedWorkouts: generated.length,
+                regeneratedWorkouts: workoutsToInsert.length,
                 sport: nextSport,
                 raceType: nextRaceType,
                 totalWeeks,

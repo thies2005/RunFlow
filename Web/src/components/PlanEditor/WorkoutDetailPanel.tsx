@@ -608,12 +608,19 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                             <button
                                 type="button"
                                 onClick={() => {
+                                    const explicitMatch = MYWHOOSH_WORKOUTS.find(
+                                        (w) =>
+                                            form.customName === `MyWhoosh: ${w.name}` ||
+                                            (form.description && form.description.includes(w.name))
+                                    ) ?? null;
                                     const xml = generateMyWhooshZwoXml({
                                         name: form.customName || form.description || 'RunFlow Bike Workout',
                                         description: form.description || '',
                                         workoutType: form.workoutType,
                                         targetDurationSeconds: form.targetDuration || 3600,
                                         phase: form.phase,
+                                        matchedWorkout: explicitMatch,
+                                        structuredSteps: form.structuredSteps,
                                     });
                                     const blob = new Blob([xml], { type: 'application/octet-stream' });
                                     const url = URL.createObjectURL(blob);

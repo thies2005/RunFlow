@@ -254,13 +254,14 @@ export async function POST(req: NextRequest) {
             userUpdateData.thresholdPace = Math.round(thresholdPace);
         }
 
-        // Fetch current user profile for HR zone fallback values
+        // Fetch current user profile for HR zone fallback values and MyWhoosh preference
         const currentUser = await prisma.user.findUnique({
             where: { id: session.user.id },
             select: {
                 hrMax: true, hrRest: true, thresholdHeartRate: true,
                 hrZone1Max: true, hrZone2Max: true, hrZone3Max: true,
                 hrZone4Max: true, hrZone5Max: true, hrZone6Max: true,
+                matchToMyWhoosh: true,
             },
         });
 
@@ -335,6 +336,7 @@ export async function POST(req: NextRequest) {
             const ridesChanged = typeof ridesPerWeek === 'number' && ridesPerWeek !== activeGoal.ridesPerWeek;
             const swimsChanged = typeof swimsPerWeek === 'number' && swimsPerWeek !== activeGoal.swimsPerWeek;
             const runsChanged = typeof runsPerWeek === 'number' && runsPerWeek !== activeGoal.runsPerWeek;
+            const mywhooshChanged = typeof matchToMyWhoosh === 'boolean' && matchToMyWhoosh !== Boolean(currentUser?.matchToMyWhoosh);
             const mywhooshProvided = Boolean(mywhooshPlanId);
 
             const shouldRegenerate =
@@ -344,6 +346,7 @@ export async function POST(req: NextRequest) {
                 ridesChanged ||
                 swimsChanged ||
                 runsChanged ||
+                mywhooshChanged ||
                 mywhooshProvided;
 
             if (shouldRegenerate) {
@@ -424,6 +427,18 @@ export async function POST(req: NextRequest) {
                 const phaseBlocks = buildPlanPhaseBlocks(planConfig, generated);
                 const weeklyGoals = computePlanWeeklyVolumeGoals(planConfig, generated);
 
+                const lastCompletedWorkout = prisma.workout?.findFirst
+                    ? await prisma.workout.findFirst({
+                          where: { goalId: activeGoal.id, isCompleted: true },
+                          orderBy: { scheduledDate: 'desc' },
+                          select: { scheduledDate: true },
+                      })
+                    : null;
+                const workoutsToInsert =
+                    lastCompletedWorkout?.scheduledDate && lastCompletedWorkout.scheduledDate !== firstPendingWorkout?.scheduledDate
+                        ? generated.filter((w) => new Date(w.date).getTime() > new Date(lastCompletedWorkout.scheduledDate).getTime())
+                        : generated;
+
                 await prisma.$transaction(async (tx) => {
                     await tx.workout.deleteMany({
                         where: { goalId: activeGoal.id, isCompleted: false },
@@ -457,9 +472,9 @@ export async function POST(req: NextRequest) {
                             ...(phaseBlocks.length > 0 && { phaseBlocks: phaseBlocks as unknown as Prisma.InputJsonValue }),
                         },
                     });
-                    if (generated.length > 0) {
+                    if (workoutsToInsert.length > 0) {
                         await tx.workout.createMany({
-                            data: mapWorkoutsForDb(generated, { goalId: activeGoal.id, ftpWatts: nextFtp }),
+                            data: mapWorkoutsForDb(workoutsToInsert, { goalId: activeGoal.id, ftpWatts: nextFtp }),
                         });
                     }
                 });

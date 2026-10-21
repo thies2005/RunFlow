@@ -211,7 +211,20 @@ export async function adminRateLimit(
         const tokenHash = createHash('sha256').update(adminToken).digest('hex').slice(0, 16);
         effectiveBucketId = rawIp === 'unknown' ? `auth-admin:${tokenHash}` : `${rawIp}:auth-admin:${tokenHash}`;
     } else if (rawIp === 'unknown') {
-        effectiveBucketId = `anon-login:${operation}`;
+        const cfIp = request.headers.get('cf-connecting-ip')?.trim();
+        const realIp = request.headers.get('x-real-ip')?.trim();
+        const lastForwardedIp = request.headers.get('x-forwarded-for')?.split(',').pop()?.trim();
+        const ua = request.headers.get('user-agent')?.trim();
+        // Only partition when a proxy/client context signal is present; bare requests
+        // with only a single spoofed XFF/X-Real-IP header and no User-Agent stay in a
+        // shared bucket so header-rotation attacks cannot mint unlimited buckets.
+        if (cfIp || (ua && (realIp || lastForwardedIp))) {
+            const fallbackSignal = `${cfIp || realIp || lastForwardedIp || 'no-ip'}|${ua || 'no-ua'}`;
+            const fallbackHash = createHash('sha256').update(fallbackSignal).digest('hex').slice(0, 16);
+            effectiveBucketId = `anon-login:${operation}:${fallbackHash}`;
+        } else {
+            effectiveBucketId = `anon-login:${operation}`;
+        }
     } else {
         effectiveBucketId = rawIp;
     }

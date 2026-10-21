@@ -284,5 +284,28 @@ describe('Rate Limiting - Admin API', () => {
       }
       expect(results).toEqual([true, true, true, false]);
     });
+
+    it('isolates distinct proxy-forwarded callers when TRUSTED_PROXY_COUNT=0 so one attacker cannot lock out other admins (RF-004)', async () => {
+      for (let i = 0; i < 4; i++) {
+        const attackerReq = new Request('http://localhost', {
+          headers: {
+            'x-forwarded-for': `1.1.1.${i}, 198.51.100.99`,
+            'user-agent': 'AttackerBot/1.0',
+          },
+        });
+        const res = await adminRateLimit(attackerReq, 'sensitive');
+        if (i < 3) expect(res.success).toBe(true);
+        else expect(res.success).toBe(false);
+      }
+
+      const legitAdminReq = new Request('http://localhost', {
+        headers: {
+          'x-forwarded-for': '203.0.113.42',
+          'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0)',
+        },
+      });
+      const legitRes = await adminRateLimit(legitAdminReq, 'sensitive');
+      expect(legitRes.success).toBe(true);
+    });
   });
 });

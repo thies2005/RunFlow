@@ -77,7 +77,7 @@ object Api {
             val uri = java.net.URI(withScheme)
             val host = uri.host?.lowercase() ?: error("Missing host")
             val isLoopback = host == "10.0.2.2" || host == "localhost" || host == "127.0.0.1" ||
-                host == "::1" || host == "[::1]" || host == "staging.local" || host.endsWith(".local")
+                host == "::1" || host == "[::1]"
             val scheme = if (isLoopback && uri.scheme?.equals("http", ignoreCase = true) == true) "http" else "https"
             val port = if (uri.port > 0 && !(scheme == "https" && uri.port == 443) && !(scheme == "http" && uri.port == 80)) ":${uri.port}" else ""
             "$scheme://$host$port"

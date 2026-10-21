@@ -51,31 +51,32 @@ export async function POST(request: NextRequest) {
 
         const passwordHash = await hashPassword(password);
 
-        const user = await prisma.user.update({
-            where: { email },
-            data: {
-                passwordHash,
-                // Bump tokenVersion to invalidate all existing mobile refresh+access
-                // tokens AND all outstanding web sessions (the NextAuth session JWT
-                // carries the version and is revoked on mismatch in the session
-                // callback)
-                tokenVersion: { increment: 1 },
-                // Also verify email if not already verified, as they proved ownership via email code
-                emailVerified: new Date()
+        const runReset = async (tx: typeof prisma) => {
+            const updatedUser = await tx.user.update({
+                where: { email },
+                data: {
+                    passwordHash,
+                    tokenVersion: { increment: 1 },
+                    emailVerified: new Date(),
+                },
+            });
+            if (tx.mcpOAuthToken?.updateMany) {
+                await tx.mcpOAuthToken.updateMany({
+                    where: { userId: updatedUser.id, revokedAt: null },
+                    data: { revokedAt: new Date() },
+                });
             }
-        });
+            if (tx.mcpOAuthCode?.deleteMany) {
+                await tx.mcpOAuthCode.deleteMany({
+                    where: { userId: updatedUser.id },
+                });
+            }
+        };
 
-        if (prisma.mcpOAuthToken?.updateMany) {
-            await prisma.mcpOAuthToken.updateMany({
-                where: { userId: user.id, revokedAt: null },
-                data: { revokedAt: new Date() },
-            });
-        }
-
-        if (prisma.mcpOAuthCode?.deleteMany) {
-            await prisma.mcpOAuthCode.deleteMany({
-                where: { userId: user.id },
-            });
+        if (typeof prisma.$transaction === 'function') {
+            await prisma.$transaction(async (tx) => runReset(tx as typeof prisma));
+        } else {
+            await runReset(prisma);
         }
 
         return NextResponse.json({ success: true });

@@ -1161,7 +1161,10 @@ export async function testAiConfig(
     options?: { statusOnly?: boolean; allowedUrls?: string[] }
 ): Promise<{ success: boolean; error?: string; model?: string }> {
     try {
-        const allowedUrls = options?.allowedUrls ?? (config.allowedUrls ?? [config.baseUrl]);
+        const allowedUrls =
+            options && 'allowedUrls' in options
+                ? options.allowedUrls
+                : (config.allowedUrls ?? [config.baseUrl]);
         const statusOnly = options?.statusOnly ?? config.statusOnly ?? false;
 
         if (config.provider === 'google') {

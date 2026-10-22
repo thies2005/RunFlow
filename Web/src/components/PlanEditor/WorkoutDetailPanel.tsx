@@ -9,12 +9,6 @@ import { StructuredWorkoutEditor } from '@/components/Editor/StructuredWorkoutEd
 import { PaceZoneSlider, formatPaceShort } from '@/app/plan-advanced/[goalId]/components/Editor/PaceZoneSlider';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { resolveWorkoutSport, type StructuredWorkoutV2 } from '@/lib/plans/structured';
-import {
-    MYWHOOSH_WORKOUTS,
-    MYWHOOSH_PLANS,
-    mywhooshWorkoutToStructuredV2,
-    type MyWhooshWorkout,
-} from '@/lib/plans/mywhooshMatcher';
 import { generateMyWhooshZwoXml } from '@/lib/plans/zwoExporter';
 
 export type WorkoutType =

@@ -107,6 +107,18 @@ function EditorContent({
     );
 
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const importParam = new URLSearchParams(window.location.search).get('import');
+            if (importParam === 'ai-image') {
+                setChatOpen(true);
+                return;
+            }
+            if (importParam === 'csv') {
+                setCsvImportOpen(true);
+            } else if (importParam === 'zwo') {
+                setZwoImportOpen(true);
+            }
+        }
         setChatOpen(isPremium && mode === 'AI_ASSISTED');
     }, [mode, isPremium]);
 

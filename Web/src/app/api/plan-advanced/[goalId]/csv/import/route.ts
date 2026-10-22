@@ -7,6 +7,9 @@ import { createSnapshot } from '@/lib/plan/snapshot';
 import { WorkoutType, PlanPhase } from '@/generated/prisma/client';
 import { parseCsv, type ParsedCsvWorkout } from '@/lib/plans/csv-parser';
 import { storePreview, getPreview, deletePreview } from '@/lib/plans/csv-preview-cache';
+import { buildStructuredStepsForWorkout } from '@/lib/plans';
+import { resolveWorkoutSport } from '@/lib/plans/structured';
+import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
 import { randomUUID } from 'crypto';
 
 type RouteContext = { params: Promise<{ goalId: string }> };
@@ -128,26 +131,61 @@ export async function POST(req: Request, ctx: RouteContext) {
 
             await createSnapshot(goalId, 'Before CSV import', 'csv_import');
 
+            const userRecord = prisma.user
+                ? await prisma.user.findUnique({
+                    where: { id: session.user.id },
+                    select: { ftpWatts: true },
+                })
+                : null;
+            const ftpWatts = userRecord?.ftpWatts || goal.ftpAtCreation || 200;
+            const vdot = goal.currentVdot || 45;
+
             let createdCount = 0;
             await prisma.$transaction(async (tx) => {
                 for (const w of previewData.workouts) {
                     const scheduledDate = new Date(w.date);
                     if (isNaN(scheduledDate.getTime())) continue;
 
+                    const wt = w.workoutType as WorkoutType;
+                    const resolvedSport = resolveWorkoutSport(wt);
+                    const desc = w.description || w.name || wt;
+                    const finalSteps = w.structuredSteps ?? buildStructuredStepsForWorkout(
+                        {
+                            type: wt,
+                            description: desc,
+                            totalDistance: w.distanceM ?? 0,
+                            targetDuration: w.durationS ?? (resolvedSport === 'BIKE' ? 3600 : null),
+                            targetPace: w.paceSKm ?? null,
+                            targetHrZone: w.hrZone ?? null,
+                        } as any,
+                        { vdot, ftpWatts },
+                    );
+                    const plannedTss = calculateWorkoutPlannedTss({
+                        workoutType: wt,
+                        sport: resolvedSport,
+                        targetDistance: w.distanceM || 0,
+                        targetDuration: w.durationS || null,
+                        targetPace: w.paceSKm || null,
+                        structuredSteps: finalSteps,
+                        ftpWatts,
+                    });
+
                     await tx.workout.create({
                         data: {
                             goalId,
                             scheduledDate,
-                            workoutType: w.workoutType as WorkoutType,
-                            description: w.description || w.name,
+                            workoutType: wt,
+                            sport: resolvedSport,
+                            description: desc,
                             phase: (w.phase as PlanPhase) || PlanPhase.BASE,
                             order: 0,
                             targetDistance: w.distanceM,
                             targetDuration: w.durationS,
                             targetPace: w.paceSKm,
                             targetHrZone: w.hrZone,
+                            plannedTss,
                             customName: w.name || null,
-                            structuredSteps: w.structuredSteps,
+                            structuredSteps: (finalSteps as any) ?? undefined,
                         },
                     });
                     createdCount++;

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    AlertCircle, Save, Check, Trash2, Target, Plus, Upload, X, Zap, Waves, Clock
+    AlertCircle, Save, Check, Trash2, Target, Plus, Upload, X, Zap, Waves, Clock, Download, ImagePlus
 } from 'lucide-react';
 import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { calculateVdot, calculateTrainingPaces, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
@@ -19,7 +19,6 @@ import PlanVolumeSection from './setup/PlanVolumeSection';
 import HeartRateZonesSection from './setup/HeartRateZonesSection';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { getRaceDefaults, adjustDefaultsForVdot, getScaledPhaseDefaults } from '@/lib/plans/defaults';
-import { MYWHOOSH_PLANS, MYWHOOSH_PHASES, splitMyWhooshPlanAndPhase, encodeMyWhooshPlanAndPhase, type MyWhooshPhaseOption } from '@/lib/plans/mywhooshMatcher';
 
 
 interface RaceActivity {
@@ -211,6 +210,8 @@ export default function PlanSetupForm({
 
     const [message, setMessage] = useState('');
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [isImportingSetupPlan, setIsImportingSetupPlan] = useState(false);
+    const setupCsvInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         if (initialExperienceLevel) {
@@ -688,10 +689,6 @@ export default function PlanSetupForm({
                 computedTargetTime = projection.projectedTime;
             }
 
-            const resolvedMyWhooshPlanId = (isCycling || matchToMyWhoosh)
-                ? (mywhooshPlanId || MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder')
-                : undefined;
-
             const body: Record<string, unknown> = {
                 name: goalName,
                 raceType: isDurationBased ? null : raceType,
@@ -793,9 +790,6 @@ export default function PlanSetupForm({
             if (timeSeconds === 0) throw new Error('Time cannot be zero');
 
             const isCycling = sport === 'CYCLING';
-            const effectiveMyWhooshPlanId = (isCycling || matchToMyWhoosh)
-                ? (mywhooshPlanId || MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder')
-                : undefined;
 
             const res = await fetch('/api/settings/update-vdot', {
                 method: 'POST',
@@ -825,8 +819,8 @@ export default function PlanSetupForm({
                     buildWeeks,
                     maxLongRunKm,
                     calibrationFactor,
-                    matchToMyWhoosh: isCycling ? true : matchToMyWhoosh,
-                    mywhooshPlanId: effectiveMyWhooshPlanId,
+                    matchToMyWhoosh: false,
+                    mywhooshPlanId: null,
                     raceType: isCycling ? null : raceType,
                     raceDate,
                     planStartDate,
@@ -942,16 +936,11 @@ export default function PlanSetupForm({
                 setSport={(nextSport: string) => {
                     setSport(nextSport);
                     if (nextSport === 'CYCLING') {
-                        setMatchToMyWhoosh(true);
-                        const defaultPlan = MYWHOOSH_PLANS.find((p) => p.id === mywhooshPlanId) || MYWHOOSH_PLANS[0];
-                        if (!mywhooshPlanId && defaultPlan) {
-                            setMywhooshPlanId(defaultPlan.id);
-                        }
-                        if (defaultPlan) {
-                            setDurationWeeks(String(defaultPlan.weeksCount));
-                            if (goalName === 'My First Race' || goalName === 'My Race') {
-                                setGoalName(defaultPlan.name);
-                            }
+                        setMatchToMyWhoosh(false);
+                        setMywhooshPlanId('');
+                        setDurationWeeks('8');
+                        if (goalName === 'My First Race' || goalName === 'My Race') {
+                            setGoalName('8-Week Cycling FTP Block');
                         }
                         setRunsPerWeek(0);
                         setRidesPerWeek(4);
@@ -1075,30 +1064,182 @@ export default function PlanSetupForm({
                 />
             )}
 
-            {/* Cycling Workout Export (.zwo) & External Plan Import (CSV / AI Calendar Screenshot / MCP) */}
-            {(sport === 'CYCLING' || ridesPerWeek > 0 || TRIATHLON_RACE_TYPES.has(raceType) || sport === 'TRIATHLON') && (
-                <div className="border-t border-glass-border pt-6">
-                    <div className="p-4 rounded-md bg-surface border border-accent-cyan/40 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-semibold text-accent-cyan">
-                                MyWhoosh Workout Export (.zwo) &amp; External Plan Import
-                            </span>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30">
-                                Export-Only · No Fake Plan Sync
-                            </span>
-                        </div>
-                        <p className="text-[11px] text-foreground-muted leading-relaxed">
-                            Every generated or custom cycling workout in RunFlow can be exported as a <strong>.zwo workout file</strong> for direct upload to{' '}
-                            <a href="https://workout.mywhoosh.com" target="_blank" rel="noopener noreferrer" className="text-accent-cyan underline">
-                                workout.mywhoosh.com
-                            </a>.
-                        </p>
-                        <p className="text-[11px] text-foreground-muted leading-relaxed">
-                            Have an existing training plan from a <strong>MyWhoosh Calendar screenshot</strong>, <strong>CSV file</strong>, or <strong>MCP AI chat</strong>? Once your plan is created, open the <strong>Advanced Plan Studio</strong> to import workouts from a <strong>Calendar Picture</strong> in AI Chat, upload a <strong>.csv</strong> or <strong>.zwo</strong> file, or push workouts via <strong>MCP</strong>.
-                        </p>
+            {/* Direct Plan Import in Plan Setup Phase (CSV / Calendar Screenshot AI / .zwo) */}
+            <div className="border-t border-glass-border pt-6">
+                <div className="p-4 rounded-md bg-surface border border-accent-cyan/40 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-accent-cyan">
+                            Import Existing Training Plan Directly (CSV / Calendar Picture / .zwo)
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30">
+                            Direct Setup Import
+                        </span>
+                    </div>
+                    <p className="text-[11px] text-foreground-muted leading-relaxed">
+                        Already have a schedule from a <strong>CSV file</strong>, a <strong>MyWhoosh / Coach Calendar screenshot</strong>, or a <strong>.zwo workout</strong>? Import it directly right here instead of generating from scratch. All cycling workouts can also be exported as <strong>.zwo</strong> files for{' '}
+                        <a href="https://workout.mywhoosh.com" target="_blank" rel="noopener noreferrer" className="text-accent-cyan underline">
+                            workout.mywhoosh.com
+                        </a>.
+                    </p>
+
+                    <input
+                        ref={setupCsvInputRef}
+                        type="file"
+                        accept=".csv"
+                        className="hidden"
+                        onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            e.target.value = '';
+                            if (!file) return;
+                            setIsImportingSetupPlan(true);
+                            setMessage('');
+                            try {
+                                let targetGoalId = activeGoalId;
+                                if (!targetGoalId) {
+                                    const isDurationBased = sport === 'NO_RACE' || sport === 'CYCLING';
+                                    const effectiveSport = sport === 'CYCLING' ? 'CYCLING' : TRIATHLON_RACE_TYPES.has(raceType) ? 'TRIATHLON' : sport;
+                                    const createRes = await fetch('/api/plans', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            name: goalName && goalName !== 'My First Race' ? goalName : file.name.replace(/\.csv$/i, '') || 'Imported Plan',
+                                            sport: effectiveSport,
+                                            raceType: isDurationBased ? null : raceType,
+                                            raceDate: isDurationBased ? null : (raceDate ? new Date(raceDate).toISOString() : null),
+                                            planStartDate: planStartDate ? new Date(planStartDate).toISOString() : new Date().toISOString(),
+                                            durationWeeks: parseInt(durationWeeks) || 8,
+                                            planSource: 'advanced',
+                                            creationMode: 'EXPERT_MANUAL',
+                                            matchToMyWhoosh: false,
+                                            mywhooshPlanId: null,
+                                        }),
+                                    });
+                                    if (!createRes.ok) throw new Error('Failed to initialize plan for CSV import');
+                                    const createData = await createRes.json();
+                                    targetGoalId = createData.plan?.id ?? createData.goal?.id;
+                                }
+                                if (!targetGoalId) throw new Error('Could not resolve plan ID');
+
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                formData.append('formatHint', 'runflow');
+                                const previewRes = await fetch(`/api/plan-advanced/${encodeURIComponent(targetGoalId)}/csv/import`, {
+                                    method: 'POST',
+                                    body: formData,
+                                });
+                                const previewData = await previewRes.json().catch(() => ({}));
+                                if (!previewRes.ok || !previewData.previewId) {
+                                    throw new Error(previewData.error || 'Failed to parse CSV file');
+                                }
+
+                                const confirmRes = await fetch(`/api/plan-advanced/${encodeURIComponent(targetGoalId)}/csv/import`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ previewId: previewData.previewId, confirm: true }),
+                                });
+                                const confirmData = await confirmRes.json().catch(() => ({}));
+                                if (!confirmRes.ok) {
+                                    throw new Error(confirmData.error || 'Failed to confirm CSV import');
+                                }
+
+                                if (typeof window !== 'undefined') {
+                                    localStorage.removeItem('runflow_onboarding_dismissed');
+                                }
+                                queryClient.invalidateQueries({ queryKey: ['goals'] });
+                                queryClient.invalidateQueries({ queryKey: ['plan'] });
+                                queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+                                setMessage(`Imported ${confirmData.created ?? previewData.validRows ?? 0} workouts from ${file.name}!`);
+                                window.location.href = `/plan-advanced/${encodeURIComponent(targetGoalId)}`;
+                            } catch (err) {
+                                setMessage(`Error: ${err instanceof Error ? err.message : 'CSV import failed'}`);
+                            } finally {
+                                setIsImportingSetupPlan(false);
+                            }
+                        }}
+                    />
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <button
+                            type="button"
+                            disabled={isImportingSetupPlan || isLoading}
+                            onClick={() => setupCsvInputRef.current?.click()}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-accent-cyan/15 border border-accent-cyan/40 text-accent-cyan text-xs font-semibold hover:bg-accent-cyan/25 transition-colors disabled:opacity-50"
+                        >
+                            <Upload className="w-3.5 h-3.5" />
+                            {isImportingSetupPlan ? 'Importing CSV...' : 'Upload & Import CSV (.csv)'}
+                        </button>
+
+                        <button
+                            type="button"
+                            disabled={isImportingSetupPlan || isLoading}
+                            onClick={async () => {
+                                setIsImportingSetupPlan(true);
+                                setMessage('');
+                                try {
+                                    let targetGoalId = activeGoalId;
+                                    if (!targetGoalId) {
+                                        const isDurationBased = sport === 'NO_RACE' || sport === 'CYCLING';
+                                        const effectiveSport = sport === 'CYCLING' ? 'CYCLING' : TRIATHLON_RACE_TYPES.has(raceType) ? 'TRIATHLON' : sport;
+                                        const createRes = await fetch('/api/plans', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                name: goalName && goalName !== 'My First Race' ? goalName : 'Imported Calendar Plan',
+                                                sport: effectiveSport,
+                                                raceType: isDurationBased ? null : raceType,
+                                                raceDate: isDurationBased ? null : (raceDate ? new Date(raceDate).toISOString() : null),
+                                                planStartDate: planStartDate ? new Date(planStartDate).toISOString() : new Date().toISOString(),
+                                                durationWeeks: parseInt(durationWeeks) || 8,
+                                                planSource: 'advanced',
+                                                creationMode: 'EXPERT_MANUAL',
+                                                matchToMyWhoosh: false,
+                                                mywhooshPlanId: null,
+                                            }),
+                                        });
+                                        if (!createRes.ok) throw new Error('Failed to create plan for AI Calendar import');
+                                        const createData = await createRes.json();
+                                        targetGoalId = createData.plan?.id ?? createData.goal?.id;
+                                    }
+                                    if (!targetGoalId) throw new Error('Could not resolve plan ID');
+                                    window.location.href = `/plan-advanced/${encodeURIComponent(targetGoalId)}?import=ai-image`;
+                                } catch (err) {
+                                    setMessage(`Error: ${err instanceof Error ? err.message : 'Failed to open Calendar Picture importer'}`);
+                                    setIsImportingSetupPlan(false);
+                                }
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-surface-hover border border-glass-border text-foreground text-xs font-medium hover:border-accent-cyan/50 transition-colors disabled:opacity-50"
+                        >
+                            <ImagePlus className="w-3.5 h-3.5 text-accent-cyan" />
+                            Import from Calendar Picture (AI)
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const sampleCsv = [
+                                    'date,workout_type,phase,name,description,distance_m,duration_s,pace_s_km,hr_zone',
+                                    '2026-10-26,RIDE_INTERVALS,BASE,Sweet Spot 3x10m,10m Warmup + 3x10m @ 90% FTP + 10m Cooldown,,3600,,3',
+                                    '2026-10-28,EASY,BASE,Easy Aerobic Run,Easy Zone 2 run,8000,2640,330,2',
+                                    '2026-10-31,LONG_RIDE,BASE,Endurance Ride 90m,Zone 2 sustained indoor/outdoor ride,,5400,,2',
+                                ].join('\n');
+                                const blob = new Blob([sampleCsv], { type: 'text/csv;charset=utf-8;' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = 'runflow_plan_template.csv';
+                                document.body.appendChild(a);
+                                a.click();
+                                URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-2 rounded-md border border-glass-border text-foreground-muted hover:text-foreground text-xs transition-colors"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            Sample CSV Template
+                        </button>
                     </div>
                 </div>
-            )}
+            </div>
 
             <PlanVolumeSection
                 runsPerWeek={runsPerWeek}
@@ -1279,36 +1420,7 @@ export default function PlanSetupForm({
                 </div>
             )}
 
-            {/* CSV Import (advanced mode only) */}
-            {mode === 'advanced' && (
-                <div className="pt-2">
-                    <button
-                        type="button"
-                        onClick={async () => {
-                            const res = await fetch('/api/plans', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    name: 'Imported Plan',
-                                    sport: 'NO_RACE',
-                                    raceType: null,
-                                    raceDate: null,
-                                    durationWeeks: 12,
-                                    planSource: 'advanced',
-                                }),
-                            });
-                            if (res.ok) {
-                                const data = await res.json();
-                                window.location.href = `/plan/${data.plan?.id ?? data.goal?.id}`;
-                            }
-                        }}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-md border border-glass-border text-foreground-muted hover:text-foreground hover:border-foreground-muted text-sm transition-colors"
-                    >
-                        <Upload className="w-4 h-4" />
-                        Import CSV
-                    </button>
-                </div>
-            )}
+            {/* Direct Plan Import is available above across all setup modes */}
 
             {/* Message */}
             {

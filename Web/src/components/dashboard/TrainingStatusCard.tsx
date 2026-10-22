@@ -1,13 +1,13 @@
-import { TrendingUp, Activity, Gauge, SlidersHorizontal, Bike, Zap, Check, Columns2, Layers } from 'lucide-react';
+import { TrendingUp, Activity, Gauge, Bike, Zap } from 'lucide-react';
 import { useUserMetrics } from '../providers/UserMetricsProvider';
 import { interpretTsb } from '@/lib/metrics/fitness';
 import { useState, useEffect } from 'react';
 
 export type DashboardStatusLayoutMode =
-    | 'DUAL_BOXES'      // 2 Boxes just like now: 1 for Running + 1 for Cycling
-    | 'COMBINED_STRIP'  // Sample A: Combined Card + Customizable Cycling Strip
-    | 'CYCLING_HERO'    // Sample C: Cycling Hero Cockpit Card
-    | 'CLASSIC_RUN';    // Just Like Now: Classic Single Running Status Card
+    | 'DUAL_BOXES'      // Dual Sport Cards: Running Card + Cycling Card
+    | 'COMBINED_STRIP'  // Hybrid Overview: Combined Card + Cycling Strip
+    | 'CYCLING_HERO'    // Cycling Cockpit: Power & FTP Focus Card
+    | 'CLASSIC_RUN';    // Classic Running: Running Metrics Only Card
 
 export type CyclingDashboardMetricId =
     | 'cyclingVo2max'
@@ -41,27 +41,27 @@ export const DASHBOARD_LAYOUT_MODE_OPTIONS: {
 }[] = [
     {
         id: 'DUAL_BOXES',
-        title: '2 Boxes (Running Card + Cycling Card)',
-        badge: '2 Boxes',
-        description: 'Two full-size status boxes side-by-side: one dedicated to Running and one dedicated to Cycling.',
+        title: 'Dual Sport Cards (Running + Cycling)',
+        badge: 'Dual Cards',
+        description: 'Two full-size status cards side-by-side: one dedicated to Running and one dedicated to Cycling.',
     },
     {
         id: 'COMBINED_STRIP',
-        title: 'Sample A (Combined Card + Cycling Strip)',
-        badge: 'Sample A',
-        description: 'Single Training Status card with Running Shape/VO2max on top and a customizable Cycling Metrics grid strip.',
+        title: 'Hybrid Overview (Combined + Cycling Strip)',
+        badge: 'Hybrid',
+        description: 'Unified Training Status card with Running Shape & VO2max on top plus a customizable Cycling Metrics grid.',
     },
     {
         id: 'CYCLING_HERO',
-        title: 'Sample C (Cycling Hero Cockpit)',
-        badge: 'Sample C',
-        description: 'Single Cycling-first card with Active FTP (W/kg) & Cycling VO2max hero metrics and Bike CTL/ATL/TSB bars.',
+        title: 'Cycling Cockpit (Power & FTP Focus)',
+        badge: 'Cycling',
+        description: 'Cycling-first card featuring Active FTP (W/kg), Cycling VO2max, and Bike CTL/ATL/TSB load bars.',
     },
     {
         id: 'CLASSIC_RUN',
-        title: 'Classic Running Card (Just Like Now)',
-        badge: 'Classic',
-        description: 'Original single Training Status card focused on Running Shape, VO2max, and Running CTL/ATL/TSB.',
+        title: 'Classic Running (Run Metrics Only)',
+        badge: 'Running',
+        description: 'Focused single Training Status card with Running Shape, VO2max, and Running CTL/ATL/TSB.',
     },
 ];
 
@@ -100,6 +100,9 @@ export const STORAGE_KEY_CYCLING_METRICS = 'runflow_dashboard_cycling_metrics_v1
 export const STORAGE_KEY_RUNNING_METRICS = 'runflow_dashboard_running_metrics_v1';
 export const EVENT_DASHBOARD_LAYOUT_CHANGE = 'runflow-dashboard-layout-change';
 
+const VALID_CYCLING_METRIC_SET = new Set<string>(CYCLING_METRIC_OPTIONS.map((o) => o.id));
+const VALID_RUNNING_METRIC_SET = new Set<string>(RUNNING_METRIC_OPTIONS.map((o) => o.id));
+
 export function readDashboardLayoutMode(): DashboardStatusLayoutMode {
     if (typeof window === 'undefined') return 'COMBINED_STRIP';
     try {
@@ -111,6 +114,38 @@ export function readDashboardLayoutMode(): DashboardStatusLayoutMode {
         // ignore
     }
     return 'COMBINED_STRIP';
+}
+
+export function readDashboardCyclingMetrics(): CyclingDashboardMetricId[] {
+    if (typeof window === 'undefined') return DEFAULT_CYCLING_METRICS;
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_CYCLING_METRICS);
+        if (!raw) return DEFAULT_CYCLING_METRICS;
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return DEFAULT_CYCLING_METRICS;
+        const filtered = Array.from(
+            new Set(parsed.filter((item): item is CyclingDashboardMetricId => typeof item === 'string' && VALID_CYCLING_METRIC_SET.has(item)))
+        );
+        return filtered;
+    } catch {
+        return DEFAULT_CYCLING_METRICS;
+    }
+}
+
+export function readDashboardRunningMetrics(): RunningDashboardMetricId[] {
+    if (typeof window === 'undefined') return DEFAULT_RUNNING_METRICS;
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_RUNNING_METRICS);
+        if (!raw) return DEFAULT_RUNNING_METRICS;
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return DEFAULT_RUNNING_METRICS;
+        const filtered = Array.from(
+            new Set(parsed.filter((item): item is RunningDashboardMetricId => typeof item === 'string' && VALID_RUNNING_METRIC_SET.has(item)))
+        );
+        return filtered;
+    } catch {
+        return DEFAULT_RUNNING_METRICS;
+    }
 }
 
 export default function TrainingStatusCard() {
@@ -143,28 +178,15 @@ export default function TrainingStatusCard() {
 
     const [showAbsoluteAtl, setShowAbsoluteAtl] = useState(false);
     const [showAbsoluteCtl, setShowAbsoluteCtl] = useState(false);
-    const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
     const [layoutMode, setLayoutMode] = useState<DashboardStatusLayoutMode>('COMBINED_STRIP');
     const [selectedCyclingMetrics, setSelectedCyclingMetrics] = useState<CyclingDashboardMetricId[]>(DEFAULT_CYCLING_METRICS);
     const [selectedRunningMetrics, setSelectedRunningMetrics] = useState<RunningDashboardMetricId[]>(DEFAULT_RUNNING_METRICS);
 
     useEffect(() => {
         const loadPrefs = () => {
-            try {
-                setLayoutMode(readDashboardLayoutMode());
-                const savedBike = localStorage.getItem(STORAGE_KEY_CYCLING_METRICS);
-                if (savedBike) {
-                    const parsed = JSON.parse(savedBike);
-                    if (Array.isArray(parsed)) setSelectedCyclingMetrics(parsed);
-                }
-                const savedRun = localStorage.getItem(STORAGE_KEY_RUNNING_METRICS);
-                if (savedRun) {
-                    const parsed = JSON.parse(savedRun);
-                    if (Array.isArray(parsed)) setSelectedRunningMetrics(parsed);
-                }
-            } catch {
-                // ignore storage errors
-            }
+            setLayoutMode(readDashboardLayoutMode());
+            setSelectedCyclingMetrics(readDashboardCyclingMetrics());
+            setSelectedRunningMetrics(readDashboardRunningMetrics());
         };
         loadPrefs();
         window.addEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, loadPrefs);
@@ -174,42 +196,6 @@ export default function TrainingStatusCard() {
             window.removeEventListener('storage', loadPrefs);
         };
     }, []);
-
-    const updateLayoutMode = (mode: DashboardStatusLayoutMode) => {
-        setLayoutMode(mode);
-        try {
-            localStorage.setItem(STORAGE_KEY_LAYOUT_MODE, mode);
-            window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
-        } catch {
-            // ignore
-        }
-    };
-
-    const toggleCyclingMetric = (id: CyclingDashboardMetricId) => {
-        setSelectedCyclingMetrics((prev) => {
-            const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id];
-            try {
-                localStorage.setItem(STORAGE_KEY_CYCLING_METRICS, JSON.stringify(next));
-                window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
-            } catch {
-                // ignore
-            }
-            return next;
-        });
-    };
-
-    const toggleRunningMetric = (id: RunningDashboardMetricId) => {
-        setSelectedRunningMetrics((prev) => {
-            const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id];
-            try {
-                localStorage.setItem(STORAGE_KEY_RUNNING_METRICS, JSON.stringify(next));
-                window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
-            } catch {
-                // ignore
-            }
-            return next;
-        });
-    };
 
     const formatCyclingMetricValue = (id: CyclingDashboardMetricId): string => {
         switch (id) {
@@ -312,108 +298,6 @@ export default function TrainingStatusCard() {
             </div>
         );
     };
-
-    const renderCustomizerDrawer = () =>
-        isCustomizeOpen && (
-            <div className="mb-5 p-3.5 rounded-md bg-background-secondary border border-accent-cyan/40 space-y-3 animate-fade-in">
-                <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-accent-cyan flex items-center gap-1.5">
-                        <Layers className="w-3.5 h-3.5" />
-                        Dashboard Layout &amp; Metric Fields
-                    </span>
-                    <button
-                        type="button"
-                        onClick={() => setIsCustomizeOpen(false)}
-                        className="text-[11px] text-foreground-muted hover:text-foreground"
-                    >
-                        Done
-                    </button>
-                </div>
-
-                {/* 4 Layout Presets */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                    {DASHBOARD_LAYOUT_MODE_OPTIONS.map((opt) => {
-                        const active = layoutMode === opt.id;
-                        return (
-                            <button
-                                key={opt.id}
-                                type="button"
-                                onClick={() => updateLayoutMode(opt.id)}
-                                className={`p-2 rounded text-left border transition-colors ${
-                                    active
-                                        ? 'bg-accent-cyan/15 border-accent-cyan text-foreground'
-                                        : 'bg-background-tertiary/60 border-line text-foreground-muted hover:text-foreground'
-                                }`}
-                            >
-                                <div className="flex items-center justify-between gap-1">
-                                    <span className="text-[11px] font-semibold truncate">{opt.badge}</span>
-                                    {active && <Check className="w-3 h-3 text-accent-cyan shrink-0" />}
-                                </div>
-                                <span className="block text-[10px] text-foreground-muted mt-0.5 line-clamp-1">{opt.title}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Cycling Fields */}
-                <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-accent-cyan mb-1.5">
-                        Cycling Metric Fields
-                    </p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        {CYCLING_METRIC_OPTIONS.map((opt) => {
-                            const checked = selectedCyclingMetrics.includes(opt.id);
-                            return (
-                                <button
-                                    key={opt.id}
-                                    type="button"
-                                    onClick={() => toggleCyclingMetric(opt.id)}
-                                    className={`flex items-center justify-between px-2 py-1 rounded text-left text-[10px] border transition-colors ${
-                                        checked
-                                            ? 'bg-accent-cyan/10 border-accent-cyan/40 text-foreground font-medium'
-                                            : 'bg-background-tertiary/60 border-line text-foreground-muted hover:text-foreground'
-                                    }`}
-                                >
-                                    <span className="truncate pr-1">{opt.shortLabel}</span>
-                                    <span className={`w-3 h-3 rounded flex items-center justify-center shrink-0 ${checked ? 'bg-accent-cyan text-background' : 'border border-line-strong'}`}>
-                                        {checked && <Check className="w-2 h-2" />}
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Running Extra Fields (shown in 2-Box mode) */}
-                <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-workout-recovery mb-1.5">
-                        Running Box Metric Fields
-                    </p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                        {RUNNING_METRIC_OPTIONS.map((opt) => {
-                            const checked = selectedRunningMetrics.includes(opt.id);
-                            return (
-                                <button
-                                    key={opt.id}
-                                    type="button"
-                                    onClick={() => toggleRunningMetric(opt.id)}
-                                    className={`flex items-center justify-between px-2 py-1 rounded text-left text-[10px] border transition-colors ${
-                                        checked
-                                            ? 'bg-workout-recovery/10 border-workout-recovery/40 text-foreground font-medium'
-                                            : 'bg-background-tertiary/60 border-line text-foreground-muted hover:text-foreground'
-                                    }`}
-                                >
-                                    <span className="truncate pr-1">{opt.shortLabel}</span>
-                                    <span className={`w-3 h-3 rounded flex items-center justify-center shrink-0 ${checked ? 'bg-workout-recovery text-background' : 'border border-line-strong'}`}>
-                                        {checked && <Check className="w-2 h-2" />}
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        );
 
     const renderRunningProgressBars = () => (
         <div className="space-y-5 flex-1 flex flex-col justify-center border-t border-line pt-6">
@@ -533,34 +417,13 @@ export default function TrainingStatusCard() {
         </div>
     );
 
-    // ─── MODE 1: DUAL_BOXES (2 Boxes Just Like Now — 1 for Running + 1 for Cycling) ───
+    // ─── MODE 1: DUAL_BOXES (Dual Sport Cards — Running Status + Cycling Status) ───
     if (layoutMode === 'DUAL_BOXES') {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
                 {/* BOX 1: RUNNING TRAINING STATUS */}
                 <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px]">
-                    <div className="flex items-center justify-between gap-2 mb-5 shrink-0">
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-lg font-semibold text-foreground-muted">Running Status</h2>
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-workout-recovery/15 text-workout-recovery border border-workout-recovery/30">
-                                Run Box
-                            </span>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => setIsCustomizeOpen(!isCustomizeOpen)}
-                            className={`p-1.5 rounded-md border transition-colors ${
-                                isCustomizeOpen
-                                    ? 'bg-accent-cyan/15 border-accent-cyan/40 text-accent-cyan'
-                                    : 'bg-background-tertiary border-line text-foreground-muted hover:text-foreground'
-                            }`}
-                            title="Customize Dashboard Boxes & Metrics"
-                        >
-                            <SlidersHorizontal className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
-
-                    {renderCustomizerDrawer()}
+                    <h2 className="text-lg font-semibold text-foreground-muted mb-5 shrink-0">Running Status</h2>
 
                     <div className="grid grid-cols-2 gap-4 mb-5 shrink-0">
                         <div className="flex items-center gap-3">
@@ -620,22 +483,7 @@ export default function TrainingStatusCard() {
 
                 {/* BOX 2: CYCLING TRAINING STATUS */}
                 <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px]">
-                    <div className="flex items-center justify-between gap-2 mb-5 shrink-0">
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-lg font-semibold text-foreground-muted">Cycling Status</h2>
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30">
-                                Bike Box
-                            </span>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => setIsCustomizeOpen(!isCustomizeOpen)}
-                            className="p-1.5 rounded-md border bg-background-tertiary border-line text-foreground-muted hover:text-foreground transition-colors"
-                            title="Customize Dashboard Boxes & Metrics"
-                        >
-                            <SlidersHorizontal className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
+                    <h2 className="text-lg font-semibold text-foreground-muted mb-5 shrink-0">Cycling Status</h2>
 
                     <div className="grid grid-cols-2 gap-4 mb-5 shrink-0">
                         <div className="flex items-center gap-3">
@@ -695,71 +543,9 @@ export default function TrainingStatusCard() {
     // ─── MODES 2, 3, 4: SINGLE CARD (COMBINED_STRIP / CYCLING_HERO / CLASSIC_RUN) ───
     return (
         <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px] relative">
-            <div className="flex items-center justify-between gap-2 mb-5 shrink-0">
-                <h2 className="text-lg font-semibold text-foreground-muted">
-                    {layoutMode === 'CYCLING_HERO' ? 'Cycling Status' : 'Training Status'}
-                </h2>
-                <div className="flex items-center gap-1.5">
-                    <div className="inline-flex rounded-md bg-background-tertiary p-0.5 border border-line text-[10px]">
-                        <button
-                            type="button"
-                            onClick={() => updateLayoutMode('DUAL_BOXES')}
-                            className="px-2 py-0.5 rounded font-medium text-foreground-muted hover:text-foreground inline-flex items-center gap-1"
-                            title="Switch to 2 Boxes (Running + Cycling)"
-                        >
-                            <Columns2 className="w-3 h-3" />
-                            2 Boxes
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => updateLayoutMode('COMBINED_STRIP')}
-                            className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                                layoutMode === 'COMBINED_STRIP'
-                                    ? 'bg-surface text-foreground border border-line/60'
-                                    : 'text-foreground-muted hover:text-foreground'
-                            }`}
-                        >
-                            Sample A
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => updateLayoutMode('CYCLING_HERO')}
-                            className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                                layoutMode === 'CYCLING_HERO'
-                                    ? 'bg-surface text-foreground border border-line/60'
-                                    : 'text-foreground-muted hover:text-foreground'
-                            }`}
-                        >
-                            Sample C
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => updateLayoutMode('CLASSIC_RUN')}
-                            className={`px-2 py-0.5 rounded font-medium transition-colors ${
-                                layoutMode === 'CLASSIC_RUN'
-                                    ? 'bg-surface text-foreground border border-line/60'
-                                    : 'text-foreground-muted hover:text-foreground'
-                            }`}
-                        >
-                            Classic
-                        </button>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => setIsCustomizeOpen(!isCustomizeOpen)}
-                        className={`p-1.5 rounded-md border transition-colors ${
-                            isCustomizeOpen
-                                ? 'bg-accent-cyan/15 border-accent-cyan/40 text-accent-cyan'
-                                : 'bg-background-tertiary border-line text-foreground-muted hover:text-foreground'
-                        }`}
-                        title="Customize Dashboard Layout & Metrics"
-                    >
-                        <SlidersHorizontal className="w-3.5 h-3.5" />
-                    </button>
-                </div>
-            </div>
-
-            {renderCustomizerDrawer()}
+            <h2 className="text-lg font-semibold text-foreground-muted mb-5 shrink-0">
+                {layoutMode === 'CYCLING_HERO' ? 'Cycling Status' : 'Training Status'}
+            </h2>
 
             {/* Top Metrics Grid */}
             <div className="grid grid-cols-2 gap-4 mb-5 shrink-0">
@@ -823,7 +609,7 @@ export default function TrainingStatusCard() {
                 </div>
             </div>
 
-            {/* Customizable Cycling Metrics Strip (Shown in Sample A & Sample C) */}
+            {/* Customizable Cycling Metrics Strip (Configured in App Settings) */}
             {(layoutMode === 'COMBINED_STRIP' || layoutMode === 'CYCLING_HERO') && activeCyclingOptions.length > 0 && (
                 <div className="mb-5 p-3 rounded-md bg-background-tertiary/70 border border-line space-y-2 shrink-0">
                     <div className="flex items-center justify-between">
@@ -831,13 +617,6 @@ export default function TrainingStatusCard() {
                             <Bike className="w-3 h-3" />
                             Cycling Metrics
                         </span>
-                        <button
-                            type="button"
-                            onClick={() => setIsCustomizeOpen(true)}
-                            className="text-[10px] text-foreground-muted hover:text-foreground underline"
-                        >
-                            Edit Fields
-                        </button>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-2">
                         {activeCyclingOptions.map((opt) => (

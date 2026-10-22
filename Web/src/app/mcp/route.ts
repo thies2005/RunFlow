@@ -1587,7 +1587,16 @@ const importPlanWorkoutsBatchTool: McpTool = {
                 targetDistance: distM,
                 targetFtpPercent: ftpPct,
                 targetPowerWatts: ftpPct ? Math.round((ftpWatts * ftpPct) / 100) : null,
-                plannedTss: typeof raw.plannedTss === 'number' ? raw.plannedTss : null,
+                plannedTss: typeof raw.plannedTss === 'number' && Number.isFinite(raw.plannedTss) && raw.plannedTss >= 0
+                    ? Math.min(1000, Math.round(raw.plannedTss))
+                    : calculateWorkoutPlannedTss({
+                        workoutType: wt,
+                        sport,
+                        targetDistance: distM || 0,
+                        targetDuration: durationSec || null,
+                        structuredSteps: structuredSteps as any,
+                        ftpWatts,
+                    }),
                 structuredSteps: structuredSteps as any,
                 order: idx,
             };

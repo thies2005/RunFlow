@@ -363,18 +363,27 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         }
 
         let finalUserContent = effectiveMessage;
+        let visionExtraTokens = 0;
         if (validatedImage) {
             const planStartHint = goal.planStartDate instanceof Date
                 ? goal.planStartDate.toISOString().split('T')[0]
                 : new Date().toISOString().split('T')[0];
-            const extractedSchedule = await extractCalendarImageSummary(
-                builderConfig.config,
-                validatedImage.mimeType,
-                validatedImage.cleanBase64,
-                planStartHint,
-                req.signal,
-            );
-            finalUserContent = `${effectiveMessage}\n\n<untrusted_calendar_image_ocr>\n${fenceUntrusted(extractedSchedule)}\n</untrusted_calendar_image_ocr>\n\nConvert every workout from the extracted calendar above into individual \`\`\`workout JSON blocks so the user can import them.`;
+            try {
+                const extractedSchedule = await extractCalendarImageSummary(
+                    builderConfig.config,
+                    validatedImage.mimeType,
+                    validatedImage.cleanBase64,
+                    planStartHint,
+                    req.signal,
+                );
+                visionExtraTokens = 1200 + countTokens(extractedSchedule, builderConfig.config.model);
+                finalUserContent = `${effectiveMessage}\n\n<untrusted_calendar_image_ocr>\n${fenceUntrusted(extractedSchedule)}\n</untrusted_calendar_image_ocr>\n\nConvert every workout from the extracted calendar above into individual \`\`\`workout JSON blocks so the user can import them.`;
+            } catch (visionErr) {
+                if (reservation.claimed) {
+                    await releaseUsageReservation(session.user.id).catch(() => undefined);
+                }
+                throw visionErr;
+            }
         }
 
         messages.push({ role: 'user', content: finalUserContent });
@@ -406,7 +415,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
                     controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
                     controller.close();
 
-                    const inputTokens = messages.reduce(
+                    const inputTokens = visionExtraTokens + messages.reduce(
                         (acc, m) => acc + countTokens(m.content, builderConfig.config.model),
                         0
                     );

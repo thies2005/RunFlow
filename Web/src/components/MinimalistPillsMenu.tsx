@@ -13,6 +13,8 @@ import {
     STORAGE_KEY_RUNNING_METRICS,
     EVENT_DASHBOARD_LAYOUT_CHANGE,
     readDashboardLayoutMode,
+    readDashboardCyclingMetrics,
+    readDashboardRunningMetrics,
     type DashboardStatusLayoutMode,
     type CyclingDashboardMetricId,
     type RunningDashboardMetricId,
@@ -922,21 +924,18 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
     }, [cyclingData]);
 
     useEffect(() => {
-        try {
+        const syncDashboardPrefs = () => {
             setDashboardLayoutMode(readDashboardLayoutMode());
-            const savedBike = localStorage.getItem(STORAGE_KEY_CYCLING_METRICS);
-            if (savedBike) {
-                const parsed = JSON.parse(savedBike);
-                if (Array.isArray(parsed)) setSelectedCyclingMetrics(parsed);
-            }
-            const savedRun = localStorage.getItem(STORAGE_KEY_RUNNING_METRICS);
-            if (savedRun) {
-                const parsed = JSON.parse(savedRun);
-                if (Array.isArray(parsed)) setSelectedRunningMetrics(parsed);
-            }
-        } catch {
-            // ignore
-        }
+            setSelectedCyclingMetrics(readDashboardCyclingMetrics());
+            setSelectedRunningMetrics(readDashboardRunningMetrics());
+        };
+        syncDashboardPrefs();
+        window.addEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncDashboardPrefs);
+        window.addEventListener('storage', syncDashboardPrefs);
+        return () => {
+            window.removeEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncDashboardPrefs);
+            window.removeEventListener('storage', syncDashboardPrefs);
+        };
     }, []);
 
     const handleSelectDashboardLayoutMode = (mode: DashboardStatusLayoutMode) => {
@@ -1243,7 +1242,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                         })}
                     </div>
 
-                    <p className="text-[11px] font-semibold text-workout-recovery pt-1">Running Box Extra Metrics (2-Box Mode)</p>
+                    <p className="text-[11px] font-semibold text-workout-recovery pt-1">Running Card Extra Metrics (Dual Sport Cards Mode)</p>
                     <div className="grid grid-cols-2 gap-1.5">
                         {RUNNING_METRIC_OPTIONS.map((opt) => {
                             const checked = selectedRunningMetrics.includes(opt.id);
@@ -1268,7 +1267,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                     </div>
                 </div>
 
-                {/* Live Interactive Preview inside App Settings */}
+                {/* Live Interactive Preview inside Settings */}
                 <div className="p-3 rounded-md bg-background-tertiary/80 border border-accent-cyan/30 space-y-2">
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-accent-cyan">
@@ -1278,11 +1277,11 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
 
                     {dashboardLayoutMode === 'DUAL_BOXES' ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            {/* Preview Box 1: Running */}
+                            {/* Preview Card 1: Running */}
                             <div className="p-3 rounded-md bg-surface border border-line space-y-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-semibold text-foreground">Running Status</span>
-                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-workout-recovery/15 text-workout-recovery">Run Box</span>
+                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-workout-recovery/15 text-workout-recovery">Running Card</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="p-1.5 rounded bg-background-secondary">
@@ -1306,11 +1305,11 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 </div>
                             </div>
 
-                            {/* Preview Box 2: Cycling */}
+                            {/* Preview Card 2: Cycling */}
                             <div className="p-3 rounded-md bg-surface border border-line space-y-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-semibold text-foreground">Cycling Status</span>
-                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan">Bike Box</span>
+                                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan">Cycling Card</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="p-1.5 rounded bg-background-secondary">
@@ -1338,9 +1337,13 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                         <div className="p-3 rounded-md bg-surface border border-line space-y-2">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold text-foreground">
-                                    {dashboardLayoutMode === 'CYCLING_HERO' ? 'Cycling Status (Sample C)' : dashboardLayoutMode === 'COMBINED_STRIP' ? 'Training Status (Sample A)' : 'Training Status (Classic)'}
+                                    {dashboardLayoutMode === 'CYCLING_HERO'
+                                        ? 'Cycling Status — Cycling Cockpit'
+                                        : dashboardLayoutMode === 'COMBINED_STRIP'
+                                        ? 'Training Status — Hybrid Overview'
+                                        : 'Training Status — Classic Running'}
                                 </span>
-                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan">1 Box</span>
+                                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan">Single Card</span>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="p-1.5 rounded bg-background-secondary">
@@ -1779,6 +1782,9 @@ function RemindersSubPage({ onBack }: { onBack: () => void }) {
 function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
     const [section, setSection] = useState<'main' | 'api' | 'privacy' | 'danger'>('main');
     const [healthTrackingEnabled, setHealthTrackingEnabled] = useState(false);
+    const [dashboardLayoutMode, setDashboardLayoutMode] = useState<DashboardStatusLayoutMode>('COMBINED_STRIP');
+    const [selectedCyclingMetrics, setSelectedCyclingMetrics] = useState<CyclingDashboardMetricId[]>(DEFAULT_CYCLING_METRICS);
+    const [selectedRunningMetrics, setSelectedRunningMetrics] = useState<RunningDashboardMetricId[]>(DEFAULT_RUNNING_METRICS);
 
     const { data: settingsData } = useQuery({
         queryKey: ['user-settings'],
@@ -1796,6 +1802,57 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
         }
     }, [settingsData]);
 
+    useEffect(() => {
+        const syncDashboardPrefs = () => {
+            setDashboardLayoutMode(readDashboardLayoutMode());
+            setSelectedCyclingMetrics(readDashboardCyclingMetrics());
+            setSelectedRunningMetrics(readDashboardRunningMetrics());
+        };
+        syncDashboardPrefs();
+        window.addEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncDashboardPrefs);
+        window.addEventListener('storage', syncDashboardPrefs);
+        return () => {
+            window.removeEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncDashboardPrefs);
+            window.removeEventListener('storage', syncDashboardPrefs);
+        };
+    }, []);
+
+    const handleSelectDashboardLayoutMode = (mode: DashboardStatusLayoutMode) => {
+        setDashboardLayoutMode(mode);
+        try {
+            localStorage.setItem(STORAGE_KEY_LAYOUT_MODE, mode);
+            window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+        } catch {
+            // ignore
+        }
+    };
+
+    const handleToggleDashboardCyclingMetric = (id: CyclingDashboardMetricId) => {
+        setSelectedCyclingMetrics((prev) => {
+            const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id];
+            try {
+                localStorage.setItem(STORAGE_KEY_CYCLING_METRICS, JSON.stringify(next));
+                window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    };
+
+    const handleToggleDashboardRunningMetric = (id: RunningDashboardMetricId) => {
+        setSelectedRunningMetrics((prev) => {
+            const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id];
+            try {
+                localStorage.setItem(STORAGE_KEY_RUNNING_METRICS, JSON.stringify(next));
+                window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    };
+
     if (section === 'api') return <ApiSection onBack={() => setSection('main')} />;
     if (section === 'privacy') return <PrivacySection healthTrackingEnabled={healthTrackingEnabled} onBack={() => setSection('main')} />;
     if (section === 'danger') return <DangerSection onBack={() => setSection('main')} />;
@@ -1803,6 +1860,150 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
     return (
         <div className="p-5 space-y-5">
             <h3 className="text-lg font-bold text-foreground">App Settings</h3>
+
+            {/* Home Dashboard Layout & Metrics Customizer */}
+            <div className="space-y-3 p-3.5 rounded-md bg-surface border border-line">
+                <div className="flex items-center justify-between">
+                    <h4 className="text-xs text-accent-cyan font-semibold">Home Dashboard Status Layout &amp; Metrics</h4>
+                    <span className="text-[10px] font-mono text-accent-cyan bg-accent-cyan/10 px-2 py-0.5 rounded border border-accent-cyan/30">
+                        Live Preview
+                    </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {DASHBOARD_LAYOUT_MODE_OPTIONS.map((opt) => {
+                        const active = dashboardLayoutMode === opt.id;
+                        return (
+                            <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => handleSelectDashboardLayoutMode(opt.id)}
+                                className={`p-2.5 rounded-md border text-left transition-all ${
+                                    active
+                                        ? 'border-accent-cyan bg-accent-cyan/10 text-foreground'
+                                        : 'border-line bg-background-secondary text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="text-xs font-semibold text-foreground">{opt.badge}</span>
+                                    {active && <span className="text-[10px] font-mono text-accent-cyan">Active</span>}
+                                </div>
+                                <p className="text-[11px] font-medium text-foreground mt-0.5">{opt.title}</p>
+                                <p className="text-[10px] text-foreground-muted mt-0.5 leading-snug">{opt.description}</p>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <div className="p-2.5 rounded-md bg-background-secondary border border-line space-y-2">
+                    <p className="text-[11px] font-semibold text-accent-cyan">Cycling Metrics to Show</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {CYCLING_METRIC_OPTIONS.map((opt) => {
+                            const checked = selectedCyclingMetrics.includes(opt.id);
+                            return (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => handleToggleDashboardCyclingMetric(opt.id)}
+                                    className={`flex items-center justify-between px-2 py-1 rounded text-left text-[10px] border transition-colors ${
+                                        checked
+                                            ? 'bg-accent-cyan/10 border-accent-cyan/40 text-foreground font-medium'
+                                            : 'bg-background-tertiary border-line text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <span className="truncate pr-1">{opt.shortLabel} ({opt.unit})</span>
+                                    <span className={`text-[9px] font-mono ${checked ? 'text-accent-cyan' : 'text-foreground-muted'}`}>
+                                        {checked ? 'ON' : 'OFF'}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <p className="text-[11px] font-semibold text-workout-recovery pt-1">Running Card Extra Metrics (Dual Sport Cards Mode)</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                        {RUNNING_METRIC_OPTIONS.map((opt) => {
+                            const checked = selectedRunningMetrics.includes(opt.id);
+                            return (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => handleToggleDashboardRunningMetric(opt.id)}
+                                    className={`flex items-center justify-between px-2 py-1 rounded text-left text-[10px] border transition-colors ${
+                                        checked
+                                            ? 'bg-workout-recovery/10 border-workout-recovery/40 text-foreground font-medium'
+                                            : 'bg-background-tertiary border-line text-foreground-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <span className="truncate pr-1">{opt.shortLabel} ({opt.unit})</span>
+                                    <span className={`text-[9px] font-mono ${checked ? 'text-workout-recovery' : 'text-foreground-muted'}`}>
+                                        {checked ? 'ON' : 'OFF'}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Live Interactive Preview */}
+                <div className="p-2.5 rounded-md bg-background-tertiary/80 border border-accent-cyan/30 space-y-2">
+                    <span className="block text-[10px] font-semibold uppercase tracking-wider text-accent-cyan">
+                        Live Preview — {DASHBOARD_LAYOUT_MODE_OPTIONS.find((m) => m.id === dashboardLayoutMode)?.title}
+                    </span>
+                    {dashboardLayoutMode === 'DUAL_BOXES' ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="p-2.5 rounded bg-surface border border-line space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-semibold text-foreground">Running Status</span>
+                                    <span className="text-[9px] font-mono text-workout-recovery">Running Card</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                    {RUNNING_METRIC_OPTIONS.filter((o) => selectedRunningMetrics.includes(o.id)).map((o) => (
+                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-foreground-muted">
+                                            {o.shortLabel}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="p-2.5 rounded bg-surface border border-line space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-semibold text-foreground">Cycling Status</span>
+                                    <span className="text-[9px] font-mono text-accent-cyan">Cycling Card</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                    {CYCLING_METRIC_OPTIONS.filter((o) => selectedCyclingMetrics.includes(o.id)).map((o) => (
+                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-accent-cyan">
+                                            {o.shortLabel}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="p-2.5 rounded bg-surface border border-line space-y-1.5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-semibold text-foreground">
+                                    {dashboardLayoutMode === 'CYCLING_HERO'
+                                        ? 'Cycling Status — Cycling Cockpit'
+                                        : dashboardLayoutMode === 'COMBINED_STRIP'
+                                        ? 'Training Status — Hybrid Overview'
+                                        : 'Training Status — Classic Running'}
+                                </span>
+                                <span className="text-[9px] font-mono text-accent-cyan">Single Card</span>
+                            </div>
+                            {dashboardLayoutMode !== 'CLASSIC_RUN' && (
+                                <div className="flex flex-wrap gap-1">
+                                    {CYCLING_METRIC_OPTIONS.filter((o) => selectedCyclingMetrics.includes(o.id)).map((o) => (
+                                        <span key={o.id} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-background-secondary border border-line/60 text-accent-cyan">
+                                            {o.shortLabel} ({o.unit})
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
 
             <div className="space-y-1.5">
                 <button

@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { MYWHOOSH_PLANS, MYWHOOSH_PHASES, splitMyWhooshPlanAndPhase, encodeMyWhooshPlanAndPhase, type MyWhooshPhaseOption } from '@/lib/plans/mywhooshMatcher';
 
 interface EngineGenerateModalProps {
     isOpen: boolean;
@@ -69,10 +68,6 @@ export function EngineGenerateModal({
     const [peakWeeks, setPeakWeeks] = useState(3);
     const [taperWeeks, setTaperWeeks] = useState(3);
 
-    // MyWhoosh
-    const [matchToMyWhoosh, setMatchToMyWhoosh] = useState(true);
-    const [mywhooshPlanId, setMywhooshPlanId] = useState<string>('mw-plan-ftp-builder');
-
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -81,8 +76,6 @@ export function EngineGenerateModal({
     const handleSportChange = (s: 'RUN' | 'CYCLING' | 'TRIATHLON') => {
         setSport(s);
         if (s === 'CYCLING') {
-            setMatchToMyWhoosh(true);
-            if (!mywhooshPlanId) setMywhooshPlanId(MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder');
             setRunsPerWeek(0);
             setRidesPerWeek(4);
             setSwimsPerWeek(0);
@@ -106,12 +99,6 @@ export function EngineGenerateModal({
         setIsGenerating(true);
         setError(null);
         const isCycling = sport === 'CYCLING';
-        const effectiveMyWhooshPlanId = (isCycling || matchToMyWhoosh)
-            ? (mywhooshPlanId || MYWHOOSH_PLANS[0]?.id || 'mw-plan-ftp-builder')
-            : null;
-        const { planId: cleanMwPlanId, phaseKey: selectedMwPhaseKey } = splitMyWhooshPlanAndPhase(effectiveMyWhooshPlanId);
-        const selectedMwPlan = MYWHOOSH_PLANS.find((p) => p.id === cleanMwPlanId);
-        const selectedMwPhase = MYWHOOSH_PHASES.find((ph) => ph.id === selectedMwPhaseKey);
 
         try {
             if (goalId) {
@@ -144,8 +131,8 @@ export function EngineGenerateModal({
                         buildWeeks,
                         peakWeeks,
                         taperWeeks,
-                        matchToMyWhoosh: isCycling ? true : matchToMyWhoosh,
-                        mywhooshPlanId: effectiveMyWhooshPlanId,
+                        matchToMyWhoosh: false,
+                        mywhooshPlanId: null,
                     }),
                 });
 
@@ -162,16 +149,12 @@ export function EngineGenerateModal({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name: isCycling
-                            ? (selectedMwPlan
-                                ? (selectedMwPhaseKey !== 'ALL' && selectedMwPhase
-                                    ? `${selectedMwPlan.name} (${selectedMwPhase.shortLabel})`
-                                    : selectedMwPlan.name)
-                                : 'MyWhoosh Cycling Plan')
+                            ? '8-Week Cycling FTP Block'
                             : `${raceType.replace(/_/g, ' ')} Plan`,
                         sport: isCycling ? 'CYCLING' : sport,
                         raceType: isCycling ? null : raceType,
                         raceDate: isCycling ? null : new Date(raceDate).toISOString(),
-                        durationWeeks: isCycling ? (selectedMwPhase?.weeks ?? selectedMwPlan?.weeksCount ?? 8) : undefined,
+                        durationWeeks: isCycling ? 8 : undefined,
                         currentVdot,
                         ftpWatts,
                         swimCssSecPer100m,
@@ -185,8 +168,8 @@ export function EngineGenerateModal({
                         peakWeeks,
                         taperWeeks,
                         planSource: 'advanced',
-                        matchToMyWhoosh,
-                        mywhooshPlanId: matchToMyWhoosh ? mywhooshPlanId : null,
+                        matchToMyWhoosh: false,
+                        mywhooshPlanId: null,
                     }),
                 });
 

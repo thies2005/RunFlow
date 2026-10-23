@@ -1,6 +1,7 @@
 import { WorkoutType, RaceType, PlanSport, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '../metrics/vdot';
 import { getZoneTarget, resolveHrZones, type HrZoneDefinition } from '../metrics/hr-zones';
+import { calculateWorkoutPlannedTss } from '../metrics/plannedTss';
 import { generateUltraPlan } from './generators/run-ultra';
 import { generateTriathlonPlan } from './generators/triathlon';
 import { generateNoRacePlan } from './generators/no-race';
@@ -97,7 +98,11 @@ export function classifyCustomRunDistance(customDistanceM: number): RaceType {
     if (customDistanceM <= 6000) return 'FIVE_K';
     if (customDistanceM <= 15000) return 'TEN_K';
     if (customDistanceM <= 30000) return 'HALF_MARATHON';
-    return 'MARATHON';
+    if (customDistanceM <= 45000) return 'MARATHON';
+    if (customDistanceM <= 65000) return 'FIFTY_K';
+    if (customDistanceM <= 90000) return 'FIFTY_MILE';
+    if (customDistanceM <= 125000) return 'HUNDRED_K';
+    return 'HUNDRED_MILE';
 }
 
 /**
@@ -149,10 +154,13 @@ export function resolvePhaseBudget(
     const resolvedTotal = Math.max(1, totalWeeks);
     const availableWeeks = Math.max(0, resolvedTotal - 1);
 
+    const maxTaperAllowed = resolvedTotal >= 8
+        ? Math.min(4, Math.max(1, Math.floor(availableWeeks * 0.25)))
+        : availableWeeks;
     let taper = config.taperWeeks !== undefined && config.taperWeeks !== null
         ? config.taperWeeks
         : (defaultTaper ?? 2);
-    taper = Math.max(0, Math.min(taper, availableWeeks));
+    taper = Math.max(0, Math.min(taper, maxTaperAllowed));
 
     let remaining = availableWeeks - taper;
 
@@ -221,9 +229,10 @@ export function resolvePhaseBudget(
             baseWeeks: base,
         };
     } else {
-        const reserveBaseWeeks = config.peakWeeks === undefined && config.buildWeeks === undefined
-            ? (resolvedTotal >= 10 ? 4 : resolvedTotal >= 8 ? 3 : resolvedTotal >= 6 ? 2 : 0)
-            : 0;
+        const explicitZeroBuildAndPeak = config.peakWeeks === 0 && config.buildWeeks === 0;
+        const reserveBaseWeeks = explicitZeroBuildAndPeak
+            ? 0
+            : (resolvedTotal >= 10 ? 4 : resolvedTotal >= 8 ? 3 : resolvedTotal >= 6 ? 2 : 0);
         const phaseBudget = Math.max(0, remaining - reserveBaseWeeks);
 
         let peak = config.peakWeeks !== undefined && config.peakWeeks !== null
@@ -359,6 +368,9 @@ type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
 
 export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const paces = calculateTrainingPaces(config.vdot);
+    const resolvedFtp = config.ftpWatts && config.ftpWatts > 0
+        ? config.ftpWatts
+        : estimateBikeFtpFromVdot(config.vdot);
 
     const enrichTargets = (workouts: GeneratedWorkout[], options?: { usePhaseVdot?: boolean }) => {
         for (const w of workouts) {
@@ -380,6 +392,19 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
                     swimCssSecPer100m: config.swimCssSecPer100m ?? undefined,
                 });
             }
+            if (w.plannedTss == null) {
+                w.plannedTss = calculateWorkoutPlannedTss({
+                    workoutType: w.type,
+                    sport: w.sport ?? null,
+                    targetDistance: w.totalDistance,
+                    targetDuration: w.targetDuration ?? null,
+                    targetPace: w.targetPace ?? null,
+                    targetPowerWatts: w.targetPowerWatts ?? null,
+                    targetFtpPercent: w.targetFtpPercent ?? null,
+                    ftpWatts: resolvedFtp,
+                    structuredSteps: w.structuredSteps ?? null,
+                });
+            }
         }
         return workouts;
     };
@@ -392,12 +417,24 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
         return enrichTargets(generateTriathlonPlan({ ...config, raceType: config.raceType as RaceType }));
     }
 
+    if (config.raceType === 'CUSTOM_DISTANCE' && config.customDistanceM && config.customDistanceM > 45000) {
+        const ultraClass = classifyCustomRunDistance(config.customDistanceM);
+        return enrichTargets(generateUltraPlan({ ...config, raceType: ultraClass }));
+    }
+
     if (config.raceType && ULTRA_RACE_TYPES.includes(config.raceType)) {
         return enrichTargets(generateUltraPlan(config));
     }
 
     return enrichTargets(generateStandardPlan(config), { usePhaseVdot: true });
 }
+
+const MAX_STANDARD_PEAK_VOLUME: Partial<Record<RaceType, number>> = {
+    FIVE_K: 65000,
+    TEN_K: 75000,
+    HALF_MARATHON: 85000,
+    MARATHON: 95000,
+};
 
 function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     const { vdot, raceDate, customDistanceM, targetTime } = config;
@@ -417,8 +454,11 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
 
     let peakVolume = config.weeklyMileageGoal || 40000;
-    const minPeak = PLAN_CONSTANTS.MIN_PEAK_VOLUME[effectiveRaceType] || 20000;
+    const isVeryShortCustom = raceType === 'CUSTOM_DISTANCE' && customDistanceM && customDistanceM > 0 && customDistanceM < 3000;
+    const minPeak = isVeryShortCustom ? 15000 : (PLAN_CONSTANTS.MIN_PEAK_VOLUME[effectiveRaceType] || 20000);
+    const maxPeak = isVeryShortCustom ? 35000 : (MAX_STANDARD_PEAK_VOLUME[effectiveRaceType] || 95000);
     if (peakVolume < minPeak) peakVolume = minPeak;
+    if (peakVolume > maxPeak) peakVolume = maxPeak;
 
     let currentDate = new Date(startDate);
     currentDate.setDate(currentDate.getDate() - currentDate.getDay());
@@ -504,18 +544,18 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
                 targetRacePace,
                 targetRaceDuration: targetTime ?? null,
             });
+            let clampedToStartDateCount = 0;
             raceWeekWorkouts.forEach(w => {
                 const specificDate = new Date(raceDate);
                 if (w.type !== WorkoutType.RACE) {
                     specificDate.setDate(specificDate.getDate() + w.dayOffset);
                 }
-                // B6: a very short plan can start inside race week, which used
-                // to drop every pre-race shakeout/stride (specificDate < startDate).
-                // Clamp to the plan start instead so the athlete still gets a
-                // shakeout. The RACE itself is always on or after startDate
-                // (it is the plan terminus), so it is unaffected.
                 if (specificDate < startDate) {
+                    if (w.type !== WorkoutType.RACE && (clampedToStartDateCount >= 1 || startDate.getTime() >= raceDate.getTime())) {
+                        return;
+                    }
                     specificDate.setTime(startDate.getTime());
+                    clampedToStartDateCount++;
                 }
                 workouts.push({
                     date: specificDate,
@@ -545,7 +585,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
             isRecoveryWeek = baseBuildCounter % PLAN_CONSTANTS.STEP_LOADING_CYCLE === 0;
 
             if (isRecoveryWeek) {
-                weekVolumeCap = Math.round(lastNonRecoveryVolume * weeklyGrowthRate * PLAN_CONSTANTS.RECOVERY_WEEK_FACTOR);
+                weekVolumeCap = Math.round(lastNonRecoveryVolume * PLAN_CONSTANTS.RECOVERY_WEEK_FACTOR);
             } else {
                 effectiveWeekIndex++;
                 weekVolumeCap = Math.round(startVolume * Math.pow(weeklyGrowthRate, effectiveWeekIndex));
@@ -1261,6 +1301,13 @@ function generateWeek(params: {
     return workouts;
 }
 
+const MAX_TIME_ON_FEET_BY_RACE: Partial<Record<RaceType, number>> = {
+    FIVE_K: 5400,         // 90 min max long run for 5K
+    TEN_K: 6900,          // 115 min max long run for 10K
+    HALF_MARATHON: 9600,  // 160 min max long run for Half Marathon
+    MARATHON: PLAN_CONSTANTS.MAX_TIME_ON_FEET_SECONDS, // 210 min (3.5h)
+};
+
 function getLongRunDistance(
     raceType: RaceType,
     weeklyVolume: number,
@@ -1287,7 +1334,8 @@ function getLongRunDistance(
     if (dist > dynamicCap) dist = dynamicCap;
 
     const safeEasyMax = Math.max(120, paces.easy.max);
-    const maxDistForTime = Math.round((PLAN_CONSTANTS.MAX_TIME_ON_FEET_SECONDS / safeEasyMax) * 1000);
+    const maxTimeSec = MAX_TIME_ON_FEET_BY_RACE[raceType] ?? PLAN_CONSTANTS.MAX_TIME_ON_FEET_SECONDS;
+    const maxDistForTime = Math.round((maxTimeSec / safeEasyMax) * 1000);
     if (dist > maxDistForTime) dist = maxDistForTime;
 
     if (dist < PLAN_CONSTANTS.MIN_LONG_RUN) dist = PLAN_CONSTANTS.MIN_LONG_RUN;
@@ -1303,10 +1351,17 @@ function getQualitySession(
     weekInPhase: number,
     targetRacePace?: number | null,
 ): { type: WorkoutType; description: string; totalDistance: number; targetPace: number } {
-    const scale = (session: { type: WorkoutType; description: string; totalDistance: number; targetPace: number }) => ({
-        ...session,
-        totalDistance: scaleQualitySessionDistance(session.type, session.totalDistance, weeklyVolume, raceType),
-    });
+    const scale = (session: { type: WorkoutType; description: string; totalDistance: number; targetPace: number }) => {
+        const totalDistance = scaleQualitySessionDistance(session.type, session.totalDistance, weeklyVolume, raceType);
+        const description = session.description.includes('Fartlek:')
+            ? session.description.replace(/^Fartlek:\s*[\d.]+km/, `Fartlek: ${(totalDistance / 1000).toFixed(1).replace(/\.0$/, '')}km`)
+            : session.description;
+        return {
+            ...session,
+            totalDistance,
+            description,
+        };
+    };
 
     if (raceType === 'FIVE_K') {
         return scale(get5KQualitySession(paces, phase, weekInPhase));
@@ -1662,6 +1717,33 @@ function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: numbe
             const newDist = roundDownTo100(w.totalDistance * scalingFactor);
             const finalDist = Math.max(newDist, 0);
             return withScaledDistance(w, finalDist, preserveSpecialDescription(w, finalDist));
+        });
+    }
+
+    // If remainingCap cannot fit all fill runs at EASY_RUN_MIN (4km), keep as many 4km fill runs as fit
+    // (trimming priority runs by up to 15% if needed) rather than zeroing ALL fill runs at once.
+    if (fillWorkouts.length > 0 && remainingCap < fillWorkouts.length * PLAN_CONSTANTS.EASY_RUN_MIN) {
+        const maxPriorityTrim = Math.round(priorityDist * 0.15 / 100) * 100;
+        const neededExtra = fillWorkouts.length * PLAN_CONSTANTS.EASY_RUN_MIN - remainingCap;
+        const actualTrim = Math.min(maxPriorityTrim, Math.max(0, neededExtra));
+        const boostedRemaining = remainingCap + actualTrim;
+        const affordableFillCount = Math.min(fillWorkouts.length, Math.floor(boostedRemaining / PLAN_CONSTANTS.EASY_RUN_MIN));
+        const priorityScale = priorityDist > 0 ? (priorityDist - actualTrim) / priorityDist : 1;
+        const perFillDist = affordableFillCount > 0
+            ? Math.max(PLAN_CONSTANTS.EASY_RUN_MIN, roundDownTo100(boostedRemaining / affordableFillCount))
+            : 0;
+        let keptFill = 0;
+        return weekSchedule.map(w => {
+            if (!isRun(w.type)) return w;
+            if (isPriority(w)) {
+                const newPrioDist = Math.max(PLAN_CONSTANTS.MIN_LONG_RUN, roundDownTo100(w.totalDistance * priorityScale));
+                return withScaledDistance(w, newPrioDist, preserveSpecialDescription(w, newPrioDist));
+            }
+            if (keptFill < affordableFillCount && perFillDist >= PLAN_CONSTANTS.EASY_RUN_MIN) {
+                keptFill++;
+                return withScaledDistance(w, perFillDist, preserveSpecialDescription(w, perFillDist));
+            }
+            return { ...w, totalDistance: 0, targetDuration: 0, description: 'Rest (Volume Cap)' };
         });
     }
 
@@ -2200,21 +2282,31 @@ export function buildStructuredStepsForWorkout(
         // supplied an explicit sec/100m targetPace, center the main-set window
         // on it (±3%) so step targets agree with the workout-level pace.
         const easyWindow = swimPaces.easy;
-        const warmupPaceTarget: Target = targetPace
+        const useExplicitTargetPace = context.swimCssSecPer100m == null && targetPace != null;
+        const warmupPaceTarget: Target = useExplicitTargetPace
             ? {
                 type: 'pace', unit: 'sec_per_100m',
-                min: Math.round(targetPace * 1.02), max: Math.round(targetPace * 1.08),
+                min: Math.round(targetPace! * 1.02), max: Math.round(targetPace! * 1.08),
                 zoneLabel: easyWindow.label,
             }
             : { type: 'pace', unit: 'sec_per_100m', min: easyWindow.min, max: easyWindow.max, zoneLabel: easyWindow.label };
-        const mainWindow = swimPaces.steady;
-        const mainPaceTarget: Target = targetPace
+        const isCssThreshold = workout.description?.includes('Threshold') || workout.description?.includes('CSS');
+        const mainWindow = type === WorkoutType.SWIM_DRILL
+            ? swimPaces.easy
+            : isCssThreshold
+                ? swimPaces.threshold
+                : swimPaces.steady;
+        const mainPaceTarget: Target = useExplicitTargetPace
             ? {
                 type: 'pace', unit: 'sec_per_100m',
-                min: Math.round(targetPace * 0.97), max: Math.round(targetPace * 1.03),
+                min: Math.round(targetPace! * 0.97), max: Math.round(targetPace! * 1.03),
                 zoneLabel: type === WorkoutType.SWIM_DRILL ? 'Swim Drill' : mainWindow.label,
             }
-            : { type: 'pace', unit: 'sec_per_100m', min: mainWindow.min, max: mainWindow.max, zoneLabel: mainWindow.label };
+            : {
+                type: 'pace', unit: 'sec_per_100m',
+                min: mainWindow.min, max: mainWindow.max,
+                zoneLabel: type === WorkoutType.SWIM_DRILL ? 'Swim Drill' : mainWindow.label,
+            };
 
         const repDistance = type === WorkoutType.SWIM_DRILL ? 50 : 100;
         const steps: StepNode[] = [
@@ -2396,7 +2488,10 @@ export function buildStructuredStepsForWorkout(
         const cooldownSeconds = 600;
         const totalSecs = workout.targetDuration || Math.round((workout.totalDistance / 1000) * (targetPace || 300));
         const mainSecs = Math.max(cycleSeconds, totalSecs - warmupSeconds - cooldownSeconds);
-        const reps = Math.max(1, Math.floor(mainSecs / cycleSeconds));
+        // Ensure faster (high-VDOT) athletes never invert to fewer cycles than slower athletes:
+        // minimum cycles scales with session distance (e.g. 6km -> 3, 8km -> 4, 10km -> 4, 12km -> 5)
+        const minCyclesByDist = workout.totalDistance >= 11000 ? 5 : workout.totalDistance >= 7500 ? 4 : 3;
+        const reps = Math.max(workout.targetDuration ? 1 : minCyclesByDist, Math.max(minCyclesByDist, Math.floor(mainSecs / cycleSeconds)));
 
         const workStep = timeStep('work', 'Fartlek Hard', hardMin * 60, { hrZone });
         if (targetPace) workStep.target = exactPaceTarget(targetPace);
@@ -2415,6 +2510,22 @@ export function buildStructuredStepsForWorkout(
                 timeStep('cooldown', 'Cool down', cooldownSeconds, { hrZone: 1, target: easyPaceWindowTarget }),
             ],
         };
+    }
+
+    // 7b. RACE DAY — single race execution step (no artificial 1.5km warmup + 1km cooldown carved out of race distance).
+    if (type === WorkoutType.RACE) {
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, null, null);
+        const isTimedRace = workout.description?.includes('12h') || workout.description?.includes('24h') || workout.description?.includes('Backyard Ultra');
+        const raceStep: StructuredStep = isTimedRace && workout.targetDuration && workout.targetDuration > 0
+            ? timeStep('work', 'Race Day', workout.targetDuration, {
+                hrZone: hrZone ?? 2,
+                ...(targetPace ? { target: exactPaceTarget(targetPace) } : {}),
+            })
+            : distanceStep('work', 'Race Day', Math.max(100, workout.totalDistance), {
+                hrZone: hrZone ?? 3,
+                ...(targetPace ? { target: exactPaceTarget(targetPace) } : {}),
+            });
+        return { version: 2, source: 'engine', steps: [raceStep] };
     }
 
     // 8. Generic fallback — warmup + work + cooldown around the main body.
@@ -2529,7 +2640,11 @@ export function buildPlanPhaseBlocks(config: PlanConfig, workouts: GeneratedWork
             acc = { phase: null, runMeters: 0, bikeTss: 0, bikeCount: 0, swimMeters: 0, swimCount: 0, tss: 0, tssCount: 0 };
             weeks.set(weekIndex, acc);
         }
-        if (w.phase && acc.phase === null) acc.phase = w.phase;
+        if (w.type === WorkoutType.RACE || w.phase === 'RACE_WEEK') {
+            acc.phase = 'RACE_WEEK' as PlanPhase;
+        } else if (w.phase && acc.phase === null) {
+            acc.phase = w.phase;
+        }
         if (w.plannedTss != null && w.plannedTss > 0) {
             acc.tss += w.plannedTss;
             acc.tssCount += 1;
@@ -2652,7 +2767,7 @@ export function assignWorkoutTargets(
 function enrichWorkoutsWithTargets(
     workouts: GeneratedWorkout[],
     paces: TrainingPaces,
-    config: Pick<PlanConfig, 'vdot' | 'targetVdot' | 'thresholdHeartRate' | 'hrZoneMethod' | 'hrZone1Max' | 'hrZone2Max' | 'hrZone3Max' | 'hrZone4Max' | 'hrZone5Max' | 'hrZone6Max' | 'hrMax' | 'hrRest'> & { usePhaseVdot?: boolean },
+    config: Pick<PlanConfig, 'vdot' | 'targetVdot' | 'ftpWatts' | 'thresholdHeartRate' | 'hrZoneMethod' | 'hrZone1Max' | 'hrZone2Max' | 'hrZone3Max' | 'hrZone4Max' | 'hrZone5Max' | 'hrZone6Max' | 'hrMax' | 'hrRest'> & { usePhaseVdot?: boolean },
 ): void {
     const hrZones = resolveHrZones({
         thresholdHeartRate: config.thresholdHeartRate ?? null,
@@ -2666,7 +2781,9 @@ function enrichWorkoutsWithTargets(
         hrRest: config.hrRest ?? null,
     }).zones;
 
-    const bikeFtp = estimateBikeFtpFromVdot(config.vdot);
+    const bikeFtp = config.ftpWatts && config.ftpWatts > 0
+        ? Math.round(config.ftpWatts)
+        : estimateBikeFtpFromVdot(config.vdot);
     const bikeZones = calculateBikeZones(bikeFtp);
     const usePhaseVdot = config.usePhaseVdot ?? false;
     const phasePacesByVdot = new Map<number, TrainingPaces>();

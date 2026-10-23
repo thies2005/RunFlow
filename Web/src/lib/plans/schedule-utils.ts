@@ -54,13 +54,25 @@ export function fixBackToBackSameType(
 
         let changed = false;
 
+        const sameSundayWeek = (a: Date, b: Date): boolean => {
+            const sunA = new Date(a);
+            sunA.setDate(sunA.getDate() - sunA.getDay());
+            sunA.setHours(0, 0, 0, 0);
+            const sunB = new Date(b);
+            sunB.setDate(sunB.getDate() - sunB.getDay());
+            sunB.setHours(0, 0, 0, 0);
+            return sunA.getTime() === sunB.getTime();
+        };
+
         for (let offset = 2; offset <= 3 && !changed; offset++) {
             const candidate = sorted[i + offset];
             if (!candidate || protectedTypes.has(candidate.type)) continue;
             if (candidate.type === curr.type || candidate.type === prev.type) continue;
+            if (candidate.phase && curr.phase && candidate.phase !== curr.phase) continue;
 
             const candidateDate = new Date(candidate.date);
             const currDate = new Date(curr.date);
+            if (!sameSundayWeek(currDate, candidateDate)) continue;
             if (restDays.has(dayOfWeek(candidateDate)) || restDays.has(dayOfWeek(currDate))) continue;
             if (options.raceDate && candidateDate >= options.raceDate) continue;
 
@@ -76,8 +88,9 @@ export function fixBackToBackSameType(
             const next = sorted[i + 1];
             const overlapsNext = next && (sameCalendarDay(shifted, next.date) || shifted > next.date);
             const crossesRace = options.raceDate && shifted >= options.raceDate;
+            const crossesWeek = !sameSundayWeek(curr.date, shifted);
 
-            if (!overlapsNext && !crossesRace) {
+            if (!overlapsNext && !crossesRace && !crossesWeek) {
                 curr.date = shifted;
                 changed = true;
             }

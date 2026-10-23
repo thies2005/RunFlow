@@ -264,7 +264,13 @@ export async function GET(request: NextRequest) {
         }
 
         const raceDateObj = new Date(raceDate);
-        if (isNaN(raceDateObj.getTime())) {
+        const ymdMatch = raceDate.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/);
+        const isRolloverDate = ymdMatch && (
+            raceDateObj.getUTCFullYear() !== Number(ymdMatch[1]) ||
+            raceDateObj.getUTCMonth() + 1 !== Number(ymdMatch[2]) ||
+            raceDateObj.getUTCDate() !== Number(ymdMatch[3])
+        );
+        if (isNaN(raceDateObj.getTime()) || isRolloverDate) {
             return NextResponse.json(
                 { error: 'Invalid race date' },
                 { status: 400, headers }

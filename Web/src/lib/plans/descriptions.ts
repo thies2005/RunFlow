@@ -63,6 +63,7 @@ export function getRacePace(raceType: string, paces: { marathon: number; thresho
 
 function isGoalPace(workout: WorkoutInput, racePace?: number): boolean {
   if (workout.isGoalPaceWorkout) return true;
+  if (workout.description?.startsWith('Steady State:')) return false;
   if (!racePace || workout.targetPace === undefined || workout.targetPace === 0) return false;
   if (workout.phase !== 'PEAK') return false;
   if (workout.type !== WorkoutType.TEMPO && workout.type !== WorkoutType.INTERVALS) return false;

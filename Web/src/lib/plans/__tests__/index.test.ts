@@ -140,6 +140,7 @@ describe('Training Plan Generation', () => {
 
         it('Half Marathon BUILD intervals progress rep structure over the phase', () => {
             const config = makeConfig({
+                startDate: new Date('2026-03-15'),
                 raceType: 'HALF_MARATHON',
                 weeklyMileageGoal: 50000,
                 taperWeeks: 2,
@@ -708,7 +709,7 @@ describe('Training Plan Generation', () => {
 
         it('10K final weeks show taper progression (peak > taper > race week)', () => {
             const raceDate = new Date('2025-05-24'); // Saturday
-            const startDate = new Date('2025-03-30');
+            const startDate = new Date('2025-03-16');
             const config = makeConfig({
                 raceType: 'TEN_K',
                 raceDate,

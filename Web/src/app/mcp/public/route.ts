@@ -72,6 +72,54 @@ function formatPaceMile(secPerKm: number): string {
     return `${mins}:${secs.toString().padStart(2, '0')}/mi`;
 }
 
+const TRI_RACE_TYPE_SET = new Set<string>([
+    'SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'FULL_IRONMAN', 'CUSTOM_TRI',
+]);
+const ULTRA_RACE_TYPE_SET = new Set<string>([
+    'FIFTY_K', 'FIFTY_MILE', 'HUNDRED_K', 'HUNDRED_MILE',
+    'TWELVE_HOUR', 'TWENTY_FOUR_HOUR', 'BACKYARD_ULTRA',
+]);
+
+function parseStrictRaceDate(raceDate: unknown): Date {
+    if (typeof raceDate !== 'string' || !raceDate.trim()) {
+        throw new Error('Invalid raceDate. Must be a valid date string (e.g. YYYY-MM-DD).');
+    }
+    const trimmed = raceDate.trim();
+    const ymdMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/);
+    const raceDateObj = new Date(trimmed);
+    if (isNaN(raceDateObj.getTime())) {
+        throw new Error('Invalid raceDate. Must be a valid date string (e.g. YYYY-MM-DD).');
+    }
+    if (ymdMatch) {
+        const year = Number(ymdMatch[1]);
+        const month = Number(ymdMatch[2]);
+        const day = Number(ymdMatch[3]);
+        if (
+            raceDateObj.getUTCFullYear() !== year ||
+            raceDateObj.getUTCMonth() + 1 !== month ||
+            raceDateObj.getUTCDate() !== day
+        ) {
+            throw new Error(`Invalid raceDate "${trimmed}". Calendar date does not exist.`);
+        }
+    }
+    return raceDateObj;
+}
+
+function sanitizePublicOrigin(rawOrigin: string): string {
+    try {
+        const parsed = new URL(rawOrigin);
+        if (parsed.hostname === '0.0.0.0' || parsed.hostname === '::' || parsed.hostname === '[::]') {
+            parsed.hostname = 'localhost';
+            if (!process.env.NEXTAUTH_URL && !process.env.NEXT_PUBLIC_APP_URL) {
+                parsed.protocol = 'http:';
+            }
+        }
+        return parsed.origin;
+    } catch {
+        return 'https://runflow.schuelken.uk';
+    }
+}
+
 const generateRunningPlanTool: McpTool = {
     name: 'generate_running_plan',
     description: 'Generate a personalized running, ultra-marathon, or triathlon training plan with canonical structured steps, phase blocks, and training zones.',
@@ -94,6 +142,8 @@ const generateRunningPlanTool: McpTool = {
             },
             vdot: {
                 type: 'number',
+                minimum: 30,
+                maximum: 85,
                 description: 'Jack Daniels VDOT fitness score (30 to 85). If omitted, can be derived from raceDistance and raceTimeSeconds.',
             },
             raceDistance: {
@@ -130,7 +180,9 @@ const generateRunningPlanTool: McpTool = {
             },
             weeklyVolumeKm: {
                 type: 'number',
-                description: 'Peak weekly running volume goal in kilometers.',
+                minimum: 10,
+                maximum: 200,
+                description: 'Peak weekly running volume goal in kilometers (10 to 200).',
             },
             ftpWatts: {
                 type: 'number',
@@ -142,7 +194,27 @@ const generateRunningPlanTool: McpTool = {
             },
             customDistanceM: {
                 type: 'number',
-                description: 'Custom race distance in meters (when raceType is CUSTOM_DISTANCE).',
+                minimum: 400,
+                maximum: 300000,
+                description: 'Custom race distance in meters (when raceType is CUSTOM_DISTANCE or CUSTOM_TRI).',
+            },
+            customSwimDistM: {
+                type: 'number',
+                minimum: 100,
+                maximum: 20000,
+                description: 'Custom swim leg distance in meters (when raceType is CUSTOM_TRI).',
+            },
+            customBikeDistM: {
+                type: 'number',
+                minimum: 1000,
+                maximum: 300000,
+                description: 'Custom bike leg distance in meters (when raceType is CUSTOM_TRI).',
+            },
+            customRunDistM: {
+                type: 'number',
+                minimum: 400,
+                maximum: 100000,
+                description: 'Custom run leg distance in meters (when raceType is CUSTOM_TRI).',
             },
             taperWeeks: {
                 type: 'integer',
@@ -183,10 +255,7 @@ const generateRunningPlanTool: McpTool = {
             throw new Error(`Invalid raceType. Supported race types: ${ALL_17_RACE_TYPES.join(', ')}`);
         }
 
-        const raceDateObj = new Date(raceDate);
-        if (isNaN(raceDateObj.getTime())) {
-            throw new Error('Invalid raceDate. Must be a valid date string (e.g. YYYY-MM-DD).');
-        }
+        const raceDateObj = parseStrictRaceDate(raceDate);
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -199,15 +268,63 @@ const generateRunningPlanTool: McpTool = {
             throw new Error('raceDate is too far in the future. Plans are limited to 104 weeks.');
         }
 
-        let vdot = typeof args.vdot === 'number' && args.vdot > 0 ? args.vdot : 0;
+        const warnings: string[] = [];
+        const isTri = TRI_RACE_TYPE_SET.has(raceType);
+        const isUltra = ULTRA_RACE_TYPE_SET.has(raceType);
+
+        if (args.vdot !== undefined && args.vdot !== null) {
+            if (typeof args.vdot !== 'number' || !Number.isFinite(args.vdot) || args.vdot < 30 || args.vdot > 85) {
+                throw new Error('Invalid vdot. VDOT must be between 30 and 85.');
+            }
+        }
+
+        if (raceType === 'CUSTOM_DISTANCE') {
+            if (typeof args.customDistanceM !== 'number' || !Number.isFinite(args.customDistanceM) || args.customDistanceM <= 0) {
+                throw new Error('customDistanceM is required and must be a positive number (in meters) when raceType is CUSTOM_DISTANCE.');
+            }
+            if (args.customDistanceM < 400 || args.customDistanceM > 250000) {
+                throw new Error('customDistanceM must be between 400m and 250,000m (250km).');
+            }
+        }
+
+        if (isTri) {
+            if (
+                (args.ridesPerWeek !== undefined && args.ridesPerWeek !== null && args.ridesPerWeek <= 0) ||
+                (args.swimsPerWeek !== undefined && args.swimsPerWeek !== null && args.swimsPerWeek <= 0) ||
+                (args.runsPerWeek !== undefined && args.runsPerWeek !== null && args.runsPerWeek <= 0)
+            ) {
+                throw new Error('Triathlon plans require at least 1 run, 1 ride, and 1 swim per week (ridesPerWeek >= 1, swimsPerWeek >= 1, runsPerWeek >= 1).');
+            }
+        }
+
+        if (args.runsPerWeek !== undefined && args.runsPerWeek !== null) {
+            if (typeof args.runsPerWeek !== 'number' || args.runsPerWeek < 2 || args.runsPerWeek > 7) {
+                throw new Error('runsPerWeek must be an integer between 2 and 7.');
+            }
+            if (isUltra && args.runsPerWeek < 3) {
+                warnings.push(`Ultra training requires at least 3 runs/week; runsPerWeek was raised from ${args.runsPerWeek} to 3.`);
+            }
+        }
+
+        let vdot = typeof args.vdot === 'number' ? args.vdot : 0;
         if (!vdot) {
             if (args.raceDistance && args.raceTimeSeconds && args.raceTimeSeconds > 0) {
                 const distM = !isNaN(Number(args.raceDistance)) ? Number(args.raceDistance) : args.raceDistance;
-                vdot = calculateVdot({ distance: distM as any, timeSeconds: Number(args.raceTimeSeconds) });
+                const derived = calculateVdot({ distance: distM as any, timeSeconds: Number(args.raceTimeSeconds) });
+                if (derived < 30 || derived > 85) {
+                    const clamped = Math.max(30, Math.min(85, derived));
+                    warnings.push(`Derived VDOT ${derived} was clamped to supported range [30, 85] (${clamped}).`);
+                    vdot = clamped;
+                } else {
+                    vdot = derived;
+                }
             }
+        } else if (args.raceDistance && args.raceTimeSeconds && args.raceTimeSeconds > 0) {
+            warnings.push(`Both explicit vdot (${vdot}) and raceDistance/raceTimeSeconds were provided; using explicit vdot.`);
         }
         if (!vdot || vdot <= 0) {
             vdot = 40;
+            warnings.push('No vdot or recent race result provided; defaulted to VDOT 40.');
         }
 
         const ftpWatts = typeof args.ftpWatts === 'number' && args.ftpWatts > 0
@@ -218,14 +335,25 @@ const generateRunningPlanTool: McpTool = {
             ? args.swimCssSecPer100m
             : estimateSwimPaceFromVdot(vdot);
 
+        let requestedVolumeKm = args.weeklyVolumeKm;
+        if (requestedVolumeKm !== undefined && requestedVolumeKm !== null) {
+            if (typeof requestedVolumeKm !== 'number' || !Number.isFinite(requestedVolumeKm) || requestedVolumeKm <= 0) {
+                throw new Error('weeklyVolumeKm must be a positive number.');
+            }
+            if (requestedVolumeKm > 200) {
+                warnings.push(`Requested weeklyVolumeKm (${requestedVolumeKm}km) exceeds the 200km ceiling and was clamped.`);
+                requestedVolumeKm = 200;
+            }
+        }
+
         const defaults = applyPlanDefaults({
             raceType,
             vdot,
-            runsPerWeek: args.runsPerWeek,
+            runsPerWeek: isUltra && typeof args.runsPerWeek === 'number' ? Math.max(3, args.runsPerWeek) : args.runsPerWeek,
             ridesPerWeek: args.ridesPerWeek,
             swimsPerWeek: args.swimsPerWeek,
             strengthPerWeek: args.strengthPerWeek,
-            weeklyVolumeKm: args.weeklyVolumeKm,
+            weeklyVolumeKm: requestedVolumeKm,
             taperWeeks: args.taperWeeks,
             peakWeeks: args.peakWeeks,
             buildWeeks: args.buildWeeks,
@@ -233,6 +361,12 @@ const generateRunningPlanTool: McpTool = {
             workoutDay: args.workoutDay,
             swimDay: args.swimDay,
         });
+
+        let resolvedWorkoutDay = defaults.workoutDay;
+        if (defaults.longRunDay === resolvedWorkoutDay) {
+            resolvedWorkoutDay = (defaults.longRunDay + 3) % 7;
+            warnings.push(`workoutDay (${defaults.workoutDay}) collided with longRunDay (${defaults.longRunDay}); shifted quality workout day to ${resolvedWorkoutDay}.`);
+        }
 
         const config: PlanConfig = {
             vdot,
@@ -247,11 +381,14 @@ const generateRunningPlanTool: McpTool = {
             peakWeeks: defaults.peakWeeks,
             buildWeeks: defaults.buildWeeks,
             longRunDay: defaults.longRunDay,
-            workoutDay: defaults.workoutDay,
+            workoutDay: resolvedWorkoutDay,
             swimDay: defaults.swimDay,
             ftpWatts,
             swimCssSecPer100m,
             customDistanceM: args.customDistanceM,
+            customSwimDistM: args.customSwimDistM,
+            customBikeDistM: args.customBikeDistM,
+            customRunDistM: args.customRunDistM,
         };
 
         const workouts = generateTrainingPlan(config);
@@ -261,7 +398,26 @@ const generateRunningPlanTool: McpTool = {
         const bikeZones = calculateBikeZones(ftpWatts);
         const swimPaces = calculateSwimPaces(swimCssSecPer100m);
 
-        const totalMeters = workouts.reduce((s, w) => s + (w.totalDistance || 0), 0);
+        const SWIM_WORKOUT_SET = new Set(['SWIM', 'SWIM_DRILL', 'OPEN_WATER_SWIM']);
+        const runMeters = workouts
+            .filter(w => !SWIM_WORKOUT_SET.has(w.type))
+            .reduce((s, w) => s + (w.totalDistance || 0), 0);
+        const swimMeters = workouts
+            .filter(w => SWIM_WORKOUT_SET.has(w.type))
+            .reduce((s, w) => s + (w.totalDistance || 0), 0);
+
+        const nonRacePhasePeaks = phaseBlocks
+            .filter(b => b.phase !== 'RACE_WEEK')
+            .map(b => b.weeklyRunKmTarget);
+        const deliveredPeakKm = nonRacePhasePeaks.length > 0 ? Math.max(...nonRacePhasePeaks) : 0;
+        if (
+            args.weeklyVolumeKm !== undefined &&
+            args.weeklyVolumeKm !== null &&
+            deliveredPeakKm > 0 &&
+            Math.abs(deliveredPeakKm - args.weeklyVolumeKm) / Math.max(1, args.weeklyVolumeKm) > 0.20
+        ) {
+            warnings.push(`Requested weeklyVolumeKm (${args.weeklyVolumeKm}km) was adjusted to a safe race-specific peak of ~${deliveredPeakKm.toFixed(1)}km/week.`);
+        }
 
         return {
             plan: {
@@ -269,12 +425,14 @@ const generateRunningPlanTool: McpTool = {
                 raceDate: raceDateObj.toISOString().split('T')[0],
                 vdot,
                 totalWorkouts: workouts.length,
-                totalDistanceKm: (totalMeters / 1000).toFixed(1),
+                totalDistanceKm: (runMeters / 1000).toFixed(1),
+                totalSwimMeters: Math.round(swimMeters),
                 runsPerWeek: config.runsPerWeek,
                 ridesPerWeek: config.ridesPerWeek,
                 swimsPerWeek: config.swimsPerWeek,
                 strengthPerWeek: config.strengthPerWeek,
             },
+            warnings,
             phaseBlocks,
             trainingZones: {
                 run: {
@@ -377,7 +535,12 @@ const calculateVdotPacesTool: McpTool = {
         },
     },
     handler: async (args: any) => {
-        let vdot = typeof args.vdot === 'number' && args.vdot > 0 ? args.vdot : 0;
+        if (args.vdot !== undefined && args.vdot !== null) {
+            if (typeof args.vdot !== 'number' || !Number.isFinite(args.vdot) || args.vdot < 30 || args.vdot > 85) {
+                throw new Error('Invalid vdot. VDOT must be between 30 and 85.');
+            }
+        }
+        let vdot = typeof args.vdot === 'number' && args.vdot >= 30 && args.vdot <= 85 ? args.vdot : 0;
 
         if (!vdot && args.raceDistance && args.raceTimeSeconds && args.raceTimeSeconds > 0) {
             const distM = !isNaN(Number(args.raceDistance)) ? Number(args.raceDistance) : args.raceDistance;
@@ -390,10 +553,10 @@ const calculateVdotPacesTool: McpTool = {
         }
 
         if (!vdot || vdot <= 0) {
-            throw new Error('Please provide either a valid vdot, or raceDistance and raceTimeSeconds, or targetDistance and targetTimeSeconds.');
+            throw new Error('Please provide either a valid vdot (30 to 85), or raceDistance and raceTimeSeconds, or targetDistance and targetTimeSeconds.');
         }
 
-        vdot = Math.round(vdot * 10) / 10;
+        vdot = Math.max(30, Math.min(85, Math.round(vdot * 10) / 10));
 
         const distances: RaceDistance[] = ['5K', '10K', 'HALF', 'MARATHON'];
         const predictions: Record<string, { seconds: number; formattedTime: string }> = {};
@@ -533,14 +696,16 @@ const exportPlanUrlTool: McpTool = {
             try { origin = new URL(process.env.NEXT_PUBLIC_APP_URL).origin; } catch {}
         }
         if (!origin) {
-            const host = context?.request?.headers?.get('x-forwarded-host')?.split(',')[0]?.trim()
+            const rawHost = context?.request?.headers?.get('x-forwarded-host')?.split(',')[0]?.trim()
                 || context?.request?.headers?.get('host')?.split(',')[0]?.trim();
-            if (host) {
+            if (rawHost) {
+                const normalizedHost = rawHost.replace(/^(0\.0\.0\.0|\[::\]|::)(?=:|$)/, 'localhost');
+                const isLocal = normalizedHost.startsWith('localhost') || normalizedHost.startsWith('127.0.0.1');
                 const proto = context?.request?.headers?.get('x-forwarded-proto')?.split(',')[0]?.trim()
-                    || (host.includes('localhost') ? 'http' : 'https');
-                origin = `${proto}://${host}`;
+                    || (isLocal ? 'http' : 'https');
+                origin = sanitizePublicOrigin(`${proto}://${normalizedHost}`);
             } else if (context?.request?.nextUrl?.origin) {
-                origin = context.request.nextUrl.origin;
+                origin = sanitizePublicOrigin(context.request.nextUrl.origin);
             } else {
                 origin = 'https://runflow.schuelken.uk';
             }

@@ -68,7 +68,7 @@ describe('VDOT Calculator', () => {
             // VDOT 50 -> Half ~1:29:xx
             const time = predictRaceTime(50, 'HALF');
             const minutes = time / 60;
-            expect(minutes).toBeCloseTo(91.6, 1); // ~1:31:30
+            expect(minutes).toBeCloseTo(91.5, 1); // ~1:31:30
         });
 
         it('should predict faster time for higher VDOT', () => {

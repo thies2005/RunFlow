@@ -341,7 +341,7 @@ Every race type has tuned defaults that the generator uses when the caller omits
 | Half Ironman | `HALF_IRONMAN` | 3R+3B+2S | 35 | 22 km | 2 | 3 | 4 | Triathlon |
 | Full Ironman | `FULL_IRONMAN` | 3R+3B+2S | 40 | 30 km | 3 | 4 | 4 | Triathlon |
 
-VDOT adjustment: When `fitnessLevel=beginner` (VDOT 30), volume is scaled by 0.85x and runsPerWeek is reduced by 1 (min 3). When `fitnessLevel=advanced` (VDOT 50), volume is scaled by 1.15x.
+VDOT adjustment: When `vdot < 30`, volume is scaled by 0.85x and runsPerWeek is reduced by 1 (min 3); for VDOT 30–39 (`fitnessLevel=beginner`), volume factor is 1.0x; for VDOT 40–49 (`fitnessLevel=intermediate`), volume is scaled by 1.10x; and for VDOT 50+ (`fitnessLevel=advanced`), volume is scaled by 1.15x.
 
 ## 3. Workout Types
 

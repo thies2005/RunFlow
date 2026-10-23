@@ -513,11 +513,60 @@ describe('SOTA Audit Implementation Tests', () => {
     });
 
     describe('Custom Run Distance Classification', () => {
-        it('classifies custom run distances to correct effective road models', () => {
+        it('classifies custom run distances to correct effective road and ultra models', () => {
             expect(classifyCustomRunDistance(3000)).toBe('FIVE_K');
             expect(classifyCustomRunDistance(8000)).toBe('TEN_K');
             expect(classifyCustomRunDistance(21100)).toBe('HALF_MARATHON');
             expect(classifyCustomRunDistance(42200)).toBe('MARATHON');
+            expect(classifyCustomRunDistance(50000)).toBe('FIFTY_K');
+            expect(classifyCustomRunDistance(100000)).toBe('HUNDRED_K');
+            expect(classifyCustomRunDistance(160934)).toBe('HUNDRED_MILE');
+        });
+    });
+
+    describe('MCP Plan Audit Remediation Regressions', () => {
+        it('uses explicit ftpWatts for targetPaceZoneLabel on bike workouts and populates plannedTss', () => {
+            const workouts = generateTrainingPlan({
+                vdot: 50,
+                raceType: 'OLYMPIC_TRI' as RaceType,
+                raceDate: new Date('2026-07-19'),
+                startDate: new Date('2026-04-05'),
+                weeklyMileageGoal: 40000,
+                runsPerWeek: 3,
+                ridesPerWeek: 3,
+                swimsPerWeek: 2,
+                ftpWatts: 200,
+                swimCssSecPer100m: 100,
+            });
+            const z2Ride = workouts.find(w => w.type === WorkoutType.RIDE || w.type === WorkoutType.LONG_RIDE);
+            expect(z2Ride).toBeDefined();
+            expect(z2Ride!.targetPaceZoneLabel).toBe('Power Z2: 112-150W');
+            expect(z2Ride!.plannedTss).toBeGreaterThan(0);
+
+            const swim = workouts.find(w => w.type === WorkoutType.SWIM);
+            expect(swim).toBeDefined();
+            expect(swim!.targetPace).toBe(103); // css 100 + 3 steady endurance
+        });
+
+        it('delivers requested ridesPerWeek in high-frequency triathlon mixes without zero-bike weeks', () => {
+            const workouts = generateTrainingPlan({
+                vdot: 50,
+                raceType: 'FULL_IRONMAN' as RaceType,
+                raceDate: new Date('2026-07-19'),
+                startDate: new Date('2026-04-05'),
+                weeklyMileageGoal: 70000,
+                runsPerWeek: 5,
+                ridesPerWeek: 4,
+                swimsPerWeek: 3,
+                strengthPerWeek: 2,
+            });
+            const rides = workouts.filter(w =>
+                w.type === WorkoutType.RIDE ||
+                w.type === WorkoutType.LONG_RIDE ||
+                w.type === WorkoutType.RIDE_INTERVALS ||
+                w.type === WorkoutType.BRICK
+            );
+            expect(rides.length).toBeGreaterThanOrEqual(45);
         });
     });
 });

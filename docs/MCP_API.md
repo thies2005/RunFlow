@@ -96,35 +96,50 @@ In any MCP-capable client:
 
 ---
 
-## 3. Tool Suite Reference (Personal MCP `/mcp`)
+## 3. Tool Suite Reference (Personal MCP `/mcp` — v3.0, 31 Tools)
 
-### Read / Inspection Tools
-
-| Tool | Purpose | Annotations |
-| :--- | :--- | :--- |
-| `get_athlete_profile` | Returns VDOT, effective VDOT, run training paces (min/km & min/mi), Bike FTP, Coggan zones, Swim CSS & paces, HR zones (Z1-Z6 bpm), and unit preferences. | `readOnlyHint: true` |
-| `get_fitness_metrics` | Returns current and series PMC metrics (CTL, ATL, TSB), Running PMC, Cycling PMC, weekly ramp rate, and overtraining risk classification. | `readOnlyHint: true` |
-| `get_cycling_analytics` | Returns the athlete's Mean Maximal Power (MMP) curve (5s..60m in Watts & W/kg), eFTP, NP/IF/VI/bikeTss trends, Coggan distribution, and Aerobic Efficiency (EF & decoupling) trends. | `readOnlyHint: true` |
-| `get_training_plan` | Pulls the active or specified training plan, structured phase blocks, threshold snapshots, weekly volume/TSS targets, coaching summaries, and workouts in window. | `readOnlyHint: true` |
-| `get_recent_activities` | Returns activities in a date window with strict Strava API compliance applied. | `readOnlyHint: true` |
-| `get_readiness_and_health` | Returns latest DailyReadinessRecord (composite readiness score, sleep, HRV, RHR) and recent DailyHealthLog records. | `readOnlyHint: true` |
-
-### Write / Mutation Tools
-
-Every plan mutation runs inside a database transaction, calls `createSnapshot(goalId, description, 'ai_mcp_mutation')` before mutating, and evaluates safety rules via `evaluatePlanSafety(goalId)`.
+### Read / Inspection Tools (10 Tools — Auto-Approved, Zero User Prompts)
 
 | Tool | Purpose | Annotations |
 | :--- | :--- | :--- |
-| `create_training_plan` | Creates and persists a new Goal and structured workouts schedule using the RunFlow plan engine. | `readOnlyHint: false` |
-| `update_training_plan_phases` | Updates Goal phase blocks, weekly volume & TSS targets, race date, or target time. | `readOnlyHint: false` |
-| `create_structured_workout` | Inserts a new workout on scheduledDate with validated v2 canonical structured steps and auto-computed planned TSS. | `readOnlyHint: false` |
-| `modify_workout` | Updates description, structured steps, or targets on an existing workout and recalculates planned TSS. | `readOnlyHint: false` |
-| `reschedule_workout` | Moves a planned workout to a new date and optional order. | `readOnlyHint: false` |
-| `swap_workouts` | Swaps scheduled dates and orders between two planned workouts. | `readOnlyHint: false` |
-| `delete_workout` | Deletes a planned workout after snapshotting. | `destructiveHint: true` |
-| `mark_workout_status` | Sets `isCompleted` / `completedAt`, optionally links an activity, and triggers adaptive plan recalibration. | `readOnlyHint: false` |
-| `recalibrate_thresholds` | Updates athlete's VDOT, FTP, Swim CSS, or HR zones, updates workout targets across active plan, and updates fitness cache. | `readOnlyHint: false` |
-| `save_weekly_coaching_summary` | Writes a weekly coaching advice snapshot with action items (rendered on web calendar and plan headers). | `readOnlyHint: false` |
+| `get_athlete_profile` | Returns VDOT, effective VDOT, run training paces (min/km & min/mi), Bike FTP, Coggan zones (with W/kg bounds), contiguous `planBikeZones`, Swim CSS & paces, HR zones (Z1–Z6 bpm), and unit preferences. | `readOnlyHint: true` |
+| `get_fitness_metrics` | Returns current and series PMC metrics (`ctl`, `atl`, `tsb`, `workloadRatio`), complete Running PMC (`ctlRunning`, `atlRunning`, `tsbRunning`), Cycling PMC (`ctlBike`, `atlBike`, `tsbBike`), weekly ramp rate, and overtraining risk classification. | `readOnlyHint: true` |
+| `get_cycling_analytics` | Returns Mean Maximal Power (MMP) curve (5s..60m in Watts & W/kg with monotonic `allTimePeakWatts`), eFTP, normalized NP/IF/VI/bikeTss trends, Coggan distribution, and Strava-scrubbed `ridesSeries`. | `readOnlyHint: true` |
+| `get_running_analytics` | Returns running volume summary, effective VDOT, training paces, HR zone distribution, and Strava-scrubbed `runsSeries`. | `readOnlyHint: true` |
+| `get_swimming_analytics` | Returns swimming volume summary, CSS (`sec/100m`), swim pace zones, and Strava-scrubbed `swimsSeries`. | `readOnlyHint: true` |
+| `get_training_plan` | Pulls the active or specified training plan, `phaseBlocks`, volume/TSS targets, coaching summaries, and workouts. Supports `includeStructuredSteps: false` (default when `includeAllWorkouts: true`), `summaryOnly`, and `sport` filter. | `readOnlyHint: true` |
+| `list_training_plans` | Lists all athlete training plans (`active`, `completed`, or `archived`) with workout and snapshot counts. | `readOnlyHint: true` |
+| `list_plan_snapshots` | Lists available undo snapshots for a training plan with timestamp, operation, and workout counts. | `readOnlyHint: true` |
+| `get_recent_activities` | Returns `{ count, activities }` in a date window with strict Strava API compliance scrubbing and normalized cycling IF/TSS. | `readOnlyHint: true` |
+| `get_readiness_and_health` | Returns latest `DailyReadinessRecord` (reconciled with multi-sport `DailyFitness` CTL/ATL/TSB load), compact `readinessHistory`, `healthLogs`, and `baseline`. | `readOnlyHint: true` |
+
+### Atomic Batch & Lifecycle Write Tools (21 Tools — Single-Turn, Snapshot-Protected)
+
+Every plan mutation runs inside a database transaction, calls `createSnapshot(goalId, description, operation)` before mutating, and evaluates modality-aware safety rules via `evaluatePlanSafety(goalId)`. Connected AI agents MUST prefer the `*_batch`, `shift_plan_dates`, and `create_custom_training_plan` tools when mutating 2+ workouts to avoid N+1 user confirmation prompts.
+
+| Tool | Purpose | Annotations |
+| :--- | :--- | :--- |
+| `create_custom_training_plan` | Creates a custom `Goal` (`creationMode: AI_ASSISTED`) with custom `phaseBlocks`, multi-sport volume/TSS targets, `strengthPerWeek`, and up to 200 canonical v2 workouts in 1 atomic transaction. | `readOnlyHint: false` |
+| `create_training_plan` | Generates a standard template-based training plan using the internal `STANDARD_BUILDER` engine. | `readOnlyHint: false` |
+| `update_training_plan_phases` | Updates Goal metadata (`name`, `planStartDate`, `raceDate`, `sport`, `raceType`, `trainingFocus`), frequencies, `restDays`, `phaseBlocks`, and volume/TSS targets. | `readOnlyHint: false` |
+| `set_active_training_plan` | Atomically switches `isActive: true` to the specified `goalId` and deactivates other plans. | `readOnlyHint: false` |
+| `delete_training_plan` | Soft-archives or permanently deletes a training plan by `goalId` and activates the next most recent plan. | `destructiveHint: true` |
+| `import_plan_workouts_batch` | Batch-imports 1..200 workouts with full v2 `structuredSteps`, `sport` (`RUN`, `BIKE`, `SWIM`, `STRENGTH`), `order`, `notes`, targets, `lockPlannedTss`, selective `replaceFilter`, and returns `importedWorkoutIds`. | `readOnlyHint: false` |
+| `modify_workouts_batch` | Atomically updates fields, targets, `sport`, `scheduledDate`, `order`, `plannedTss`, or `structuredSteps` across 1..200 existing workouts by `workoutId`. | `readOnlyHint: false` |
+| `reschedule_workouts_batch` | Atomically moves 1..200 workouts to new dates and/or intra-day orders in a single transaction. | `readOnlyHint: false` |
+| `shift_plan_dates` | Shifts all workouts in a plan or date window forward/backward by `deltaDays` (`+/- N` days) in 1 atomic transaction. | `readOnlyHint: false` |
+| `delete_workouts_batch` | Atomically deletes multiple workouts by `workoutIds` array or date/sport filter after taking an auto-snapshot. | `destructiveHint: true` |
+| `mark_workouts_status_batch` | Atomically marks 1..200 workouts completed/uncompleted with optional `linkedActivityId` and runs adaptive recalibration once. | `readOnlyHint: false` |
+| `restore_plan_snapshot` | Atomically rolls back a training plan to a specified `snapshotId` (or latest undo snapshot) with a pre-restore safety backup. | `readOnlyHint: false` |
+| `create_structured_workout` | Inserts a single workout with canonical v2 steps and auto-computed TSS (never fabricates running distance on `BIKE`/`STRENGTH`). | `readOnlyHint: false` |
+| `modify_workout` | Updates fields, targets, date/order, or v2 steps on a single workout. | `readOnlyHint: false` |
+| `reschedule_workout` | Moves a single planned workout to a new date and optional order. | `readOnlyHint: false` |
+| `swap_workouts` | Atomically swaps scheduled dates and orders between two planned workouts. | `readOnlyHint: false` |
+| `delete_workout` | Deletes a single planned workout after taking an auto-snapshot. | `destructiveHint: true` |
+| `mark_workout_status` | Marks a single workout completed/uncompleted, links an activity, and returns `adaptationResult`. | `readOnlyHint: false` |
+| `recalibrate_thresholds` | Updates VDOT, FTP, Swim CSS, or HR zones and recalculates future paces while preserving explicit/locked `plannedTss` (`preserveCustomWorkoutTss: true`). | `readOnlyHint: false` |
+| `save_weekly_coaching_summary` | Creates, updates, or deletes a weekly coaching summary snapshot (`up to 1,000 chars`). | `readOnlyHint: false` |
+| `log_daily_health` | Upserts `DailyHealthLog` (`weightKg`, `steps`, `waterIntakeMl`, `activeCalories`) and `DailyReadinessRecord.subjectiveJson` (`soreness`, `fatigue`, `sleepQuality`, `stress`, `mood`). | `readOnlyHint: false` |
 
 ---
 

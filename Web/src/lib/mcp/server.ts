@@ -243,7 +243,10 @@ export class McpServer {
 
                     try {
                         const toolArgs = params.arguments || {};
-                        const toolResult = await tool.handler(toolArgs, context);
+                        const rawResult = await tool.handler(toolArgs, context);
+                        const toolResult = Array.isArray(rawResult)
+                            ? { count: rawResult.length, items: rawResult }
+                            : rawResult;
                         const callResult = {
                             content: [{
                                 type: 'text',

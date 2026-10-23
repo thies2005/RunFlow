@@ -51,7 +51,8 @@ export interface CyclingAnalyticsData {
     ridesSeries: Array<{
         id: string;
         date: string;
-        name: string;
+        name?: string;
+        stravaComplianceNotice?: string;
         distanceM: number;
         movingTimeSec: number;
         avgWatts: number | null;
@@ -151,7 +152,8 @@ function cogganZoneIndexForWatts(watts: number, ftp: number): number {
 
 export async function getCyclingAnalytics(
     userId: string,
-    range: string = '90d'
+    range: string = '90d',
+    options?: { scrubStrava?: boolean }
 ): Promise<CyclingAnalyticsData> {
     const now = new Date();
     let cutoff: Date;
@@ -199,6 +201,7 @@ export async function getCyclingAnalytics(
         take: 1000,
         select: {
             id: true,
+            stravaId: true,
             startDate: true,
             name: true,
             distance: true,
@@ -239,9 +242,7 @@ export async function getCyclingAnalytics(
         const parsedTitleW = titleMatch ? parseInt(titleMatch[1], 10) : null;
         const validTitleW = parsedTitleW && parsedTitleW >= 40 && parsedTitleW <= 1500 ? parsedTitleW : null;
 
-        if (/\bftp\s*test\b/i.test(r.name || '') && validTitleW) {
-            eftp = validTitleW;
-        } else if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
+        if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
             const curve = calculatePowerCurve(streams.watts, streams.time);
             curve.forEach(pt => {
                 const durIdx = STANDARD_POWER_DURATIONS.indexOf(pt.durationSec);
@@ -261,6 +262,10 @@ export async function getCyclingAnalytics(
             });
         }
 
+        if (/\bftp\s*test\b/i.test(r.name || '') && validTitleW) {
+            eftp = eftp ? Math.max(eftp, validTitleW) : validTitleW;
+        }
+
         if (eftp && (allTimeEftp === null || eftp > allTimeEftp)) {
             allTimeEftp = eftp;
         }
@@ -273,6 +278,10 @@ export async function getCyclingAnalytics(
     const rangePeakWatts = STANDARD_POWER_DURATIONS.map(() => 0);
     for (const r of rangeRides) {
         const streams = parseStreams(r.streams);
+        const titleMatch = (r.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
+        const parsedTitleW = titleMatch ? parseInt(titleMatch[1], 10) : null;
+        const validTitleW = parsedTitleW && parsedTitleW >= 40 && parsedTitleW <= 1500 ? parsedTitleW : null;
+
         if (streams?.watts && Array.isArray(streams.watts) && streams.watts.length > 0) {
             const curve = calculatePowerCurve(streams.watts, streams.time);
             curve.forEach(pt => {
@@ -282,7 +291,17 @@ export async function getCyclingAnalytics(
                 }
             });
         } else {
-            applyEstimatedMmpPoints(rangePeakWatts, r);
+            applyEstimatedMmpPoints(rangePeakWatts, {
+                ...r,
+                averageWatts: r.averageWatts ?? validTitleW,
+            });
+        }
+    }
+
+    // Guarantee mathematical monotonicity: allTimePeakWatts >= rangePeakWatts at every duration
+    for (let i = 0; i < STANDARD_POWER_DURATIONS.length; i++) {
+        if (rangePeakWatts[i] > allTimePeakWatts[i]) {
+            allTimePeakWatts[i] = rangePeakWatts[i];
         }
     }
 
@@ -326,17 +345,20 @@ export async function getCyclingAnalytics(
         let powerZone6Time = r.powerZone6Time;
         let powerZone7Time = r.powerZone7Time;
 
+        const expectedIf = (npWatts != null && resolvedFtp > 0) ? calculateIntensityFactor(npWatts, resolvedFtp) : null;
+        const hasStaleIf = intensityFactor != null && expectedIf != null && Math.abs(intensityFactor - expectedIf) > 0.08;
+
         if (wattsStream && wattsStream.length > 0) {
             if (npWatts == null) {
                 npWatts = calculateNormalizedPower(wattsStream, timeStream, r.weightedAverageWatts, r.averageWatts);
             }
-            if (intensityFactor == null && npWatts != null) {
+            if ((intensityFactor == null || hasStaleIf) && npWatts != null) {
                 intensityFactor = calculateIntensityFactor(npWatts, resolvedFtp);
             }
             if (variabilityIndex == null && npWatts != null && r.averageWatts) {
                 variabilityIndex = calculateVariabilityIndex(npWatts, r.averageWatts);
             }
-            if (bikeTss == null && npWatts != null && intensityFactor != null) {
+            if ((bikeTss == null || hasStaleIf) && npWatts != null && intensityFactor != null) {
                 bikeTss = calculateBikeTss(r.movingTime, npWatts, intensityFactor, resolvedFtp);
             }
             if (efficiencyFactor == null && npWatts != null) {
@@ -364,10 +386,12 @@ export async function getCyclingAnalytics(
             if (npWatts == null && np != null) {
                 npWatts = np;
             }
-            if (intensityFactor == null && npWatts != null) {
-                intensityFactor = calculateIntensityFactor(npWatts, resolvedFtp);
+            const recomputedIf = (npWatts != null && resolvedFtp > 0) ? calculateIntensityFactor(npWatts, resolvedFtp) : null;
+            const staleNoStreamIf = intensityFactor != null && recomputedIf != null && Math.abs(intensityFactor - recomputedIf) > 0.08;
+            if ((intensityFactor == null || staleNoStreamIf) && npWatts != null) {
+                intensityFactor = recomputedIf;
             }
-            if (bikeTss == null && npWatts != null) {
+            if ((bikeTss == null || staleNoStreamIf) && npWatts != null) {
                 const ifFactor = intensityFactor ?? (npWatts / resolvedFtp);
                 bikeTss = calculateBikeTss(r.movingTime, npWatts, ifFactor, resolvedFtp);
             }
@@ -463,23 +487,32 @@ export async function getCyclingAnalytics(
         enrichedRides.reduce((s, r) => s + (r.powerZone7Time ?? 0), 0),
     ];
 
-    // Chronological rides series
-    const ridesSeries = enrichedRides.map(r => ({
-        id: r.id,
-        date: r.startDate.toISOString(),
-        name: r.name,
-        distanceM: r.distance,
-        movingTimeSec: r.movingTime,
-        avgWatts: r.averageWatts ?? null,
-        npWatts: r.npWatts ?? null,
-        maxWatts: r.maxWatts ?? null,
-        if: r.intensityFactor ?? null,
-        vi: r.variabilityIndex ?? null,
-        bikeTss: r.bikeTss ?? null,
-        ef: r.efficiencyFactor ?? null,
-        decouplingPct: r.aerobicDecoupling ?? null,
-        deviceWatts: r.deviceWatts,
-    }));
+    // Chronological rides series (scrub Strava titles when requested by MCP)
+    const ridesSeries = enrichedRides.map(r => {
+        const isStrava = (r as any).stravaId !== null && (r as any).stravaId !== undefined;
+        const shouldScrub = Boolean(options?.scrubStrava && isStrava);
+        return {
+            id: r.id,
+            date: r.startDate.toISOString(),
+            ...(shouldScrub
+                ? {
+                      stravaComplianceNotice:
+                          'Activity title, description, and raw GPS/sensor streams are omitted for Strava-synced activities per Strava API terms.',
+                  }
+                : { name: r.name }),
+            distanceM: r.distance,
+            movingTimeSec: r.movingTime,
+            avgWatts: r.averageWatts ?? null,
+            npWatts: r.npWatts ?? null,
+            maxWatts: r.maxWatts ?? null,
+            if: r.intensityFactor ?? null,
+            vi: r.variabilityIndex ?? null,
+            bikeTss: r.bikeTss ?? null,
+            ef: r.efficiencyFactor ?? null,
+            decouplingPct: r.aerobicDecoupling ?? null,
+            deviceWatts: r.deviceWatts,
+        };
+    });
 
     // Daily fitness series (PMC)
     await ensureFitnessCacheUpToDate(userId);

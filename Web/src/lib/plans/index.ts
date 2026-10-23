@@ -1976,6 +1976,7 @@ export type StructuredStepsWorkout = Partial<Pick<
     sport?: string;
     vdot?: number;
     ftpWatts?: number;
+    plannedTss?: number | null;
 };
 
 const clampInt = (value: number, min: number, max: number): number =>
@@ -2221,47 +2222,180 @@ export function buildStructuredStepsForWorkout(
     // 3. BIKE RIDES (Steady & Intervals) — power targets + cadence.
     if (type === WorkoutType.RIDE || type === WorkoutType.LONG_RIDE) {
         const durationSec = workout.targetDuration && workout.targetDuration > 0 ? workout.targetDuration : 3600;
-        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, 2, 90);
+        const explicitFtpPct = typeof workout.targetFtpPercent === 'number' && workout.targetFtpPercent > 0 ? workout.targetFtpPercent : null;
+        const isFreeOrRecoveryRide =
+            (workout.plannedTss !== undefined && workout.plannedTss !== null && workout.plannedTss <= 15) ||
+            /\b(free\s*day|recovery\s*spin|easy\s*spin)\b/i.test(workout.description || '');
+
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, isFreeOrRecoveryRide ? 1 : 2, 90);
+
+        let steadyTarget: Target;
+        if (isFreeOrRecoveryRide && !explicitFtpPct) {
+            steadyTarget = powerTarget(bikeZones.recovery, 'Z1 Recovery', bikeFtp);
+        } else if (explicitFtpPct) {
+            const centerW = Math.round((bikeFtp * explicitFtpPct) / 100);
+            const minW = Math.max(0, Math.round(centerW * 0.95));
+            const maxW = Math.round(centerW * 1.05);
+            steadyTarget = {
+                type: 'power',
+                minWatts: minW,
+                maxWatts: maxW,
+                ftpPercent: explicitFtpPct,
+                zoneLabel: `${explicitFtpPct}% FTP`,
+            };
+        } else {
+            steadyTarget = powerTarget(bikeZones.endurance, 'Z2 Endurance', bikeFtp);
+        }
+
         return {
             version: 2,
             source: 'engine',
+            sport: 'BIKE',
+            ...(typeof workout.plannedTss === 'number' && workout.plannedTss >= 0 ? { lockedPlannedTss: workout.plannedTss } : {}),
             steps: [timeStep('steady', type === WorkoutType.LONG_RIDE ? 'Long Ride' : 'Easy Ride', durationSec, {
-                target: powerTarget(bikeZones.endurance, 'Z2 Endurance', bikeFtp),
-                cadenceRpm: 90,
-                hrZone: hrZone ?? 2,
+                target: steadyTarget,
+                cadenceRpm: workout.targetCadenceRpm ?? 90,
+                hrZone: hrZone ?? (isFreeOrRecoveryRide ? 1 : 2),
             })],
         };
     }
 
     if (type === WorkoutType.RIDE_INTERVALS) {
-        const match = workout.description.match(/(\d+)x(\d+)\s*min/i);
-        const reps = match ? parseInt(match[1]) : 4;
-        const repMinutes = match ? parseInt(match[2]) : 5;
+        const desc = workout.description || '';
+        const overUnderMatch = desc.match(
+            /(\d+)\s*x\s*(\d+)\s*m(?:in)?\s*(?:over-?unders?)?\s*\(\s*(\d+)\s*m(?:in)?\s*@\s*(\d+)%\s*FTP\s*\/\s*(\d+)\s*m(?:in)?\s*@\s*(\d+)%\s*FTP\s*\)(?:.*?(\d+)\s*m(?:in)?\s*(?:recovery|rest))?/i
+        );
+
+        const explicitFtpPct =
+            typeof workout.targetFtpPercent === 'number' && workout.targetFtpPercent > 0
+                ? workout.targetFtpPercent
+                : (() => {
+                      const pctMatch = desc.match(/@\s*(\d{2,3})%\s*FTP/i);
+                      return pctMatch ? parseInt(pctMatch[1], 10) : null;
+                  })();
+
+        const cadenceTarget = workout.targetCadenceRpm ?? 95;
+        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, 4, cadenceTarget);
+
+        if (overUnderMatch) {
+            const sets = Math.max(1, Math.min(20, parseInt(overUnderMatch[1], 10)));
+            const blockMinutes = Math.max(1, parseInt(overUnderMatch[2], 10));
+            const underMin = Math.max(1, parseInt(overUnderMatch[3], 10));
+            const underPct = parseInt(overUnderMatch[4], 10);
+            const overMin = Math.max(1, parseInt(overUnderMatch[5], 10));
+            const overPct = parseInt(overUnderMatch[6], 10);
+            const setRestMinutes = overUnderMatch[7] ? parseInt(overUnderMatch[7], 10) : 4;
+
+            const innerCycles = Math.max(1, Math.round(blockMinutes / (underMin + overMin)));
+            const warmupSeconds = 600;
+            const setRestSeconds = setRestMinutes * 60;
+            const blockSeconds = innerCycles * (underMin + overMin) * 60;
+            const fixedSeconds = warmupSeconds + sets * blockSeconds + (sets - 1) * setRestSeconds;
+            const cooldownSeconds = Math.max(180, (workout.targetDuration || fixedSeconds + 300) - fixedSeconds);
+
+            const underWatts = Math.round((bikeFtp * underPct) / 100);
+            const overWatts = Math.round((bikeFtp * overPct) / 100);
+
+            return {
+                version: 2,
+                source: 'engine',
+                sport: 'BIKE',
+                ...(typeof workout.plannedTss === 'number' && workout.plannedTss >= 0 ? { lockedPlannedTss: workout.plannedTss } : {}),
+                steps: [
+                    timeStep('warmup', 'Warm up spin', warmupSeconds, {
+                        target: powerTarget(bikeZones.recovery, 'Z1 Recovery', bikeFtp),
+                        cadenceRpm: 85,
+                        hrZone: 1,
+                    }),
+                    repeatGroup(
+                        sets,
+                        { type: 'time', seconds: setRestSeconds },
+                        [
+                            repeatGroup(
+                                innerCycles,
+                                undefined,
+                                [
+                                    timeStep('work', `Under (${underPct}% FTP)`, underMin * 60, {
+                                        target: {
+                                            type: 'power',
+                                            minWatts: Math.round(underWatts * 0.97),
+                                            maxWatts: Math.round(underWatts * 1.03),
+                                            ftpPercent: underPct,
+                                            zoneLabel: `${underPct}% FTP`,
+                                        },
+                                        cadenceRpm: cadenceTarget,
+                                        hrZone: hrZone ?? 4,
+                                    }),
+                                    timeStep('work', `Over (${overPct}% FTP)`, overMin * 60, {
+                                        target: {
+                                            type: 'power',
+                                            minWatts: Math.round(overWatts * 0.97),
+                                            maxWatts: Math.round(overWatts * 1.03),
+                                            ftpPercent: overPct,
+                                            zoneLabel: `${overPct}% FTP`,
+                                        },
+                                        cadenceRpm: cadenceTarget,
+                                        hrZone: hrZone ?? 4,
+                                    }),
+                                ],
+                                `${blockMinutes}min Over-Under`
+                            ),
+                        ],
+                        `${sets}×${blockMinutes}min Over-Unders`
+                    ),
+                    timeStep('cooldown', 'Cool down spin', cooldownSeconds, {
+                        target: powerTarget(bikeZones.recovery, 'Z1 Recovery', bikeFtp),
+                        cadenceRpm: 85,
+                        hrZone: 1,
+                    }),
+                ],
+            };
+        }
+
+        const match = desc.match(/(\d+)\s*x\s*(\d+)\s*m(?:in)?/i);
+        const reps = match ? parseInt(match[1], 10) : 4;
+        const repMinutes = match ? parseInt(match[2], 10) : 5;
+        const restMatch = desc.match(/(\d+)\s*m(?:in)?\s*(?:recovery|rest)/i);
+        const recoverySeconds = restMatch ? parseInt(restMatch[1], 10) * 60 : 180;
 
         const warmupSeconds = 600;
         const repSeconds = repMinutes * 60;
-        const recoverySeconds = 180;
-        const fixedSeconds = warmupSeconds + (reps * repSeconds) + ((reps - 1) * recoverySeconds);
-        const cooldownSeconds = Math.max(300, (workout.targetDuration || 0) - fixedSeconds);
+        const fixedSeconds = warmupSeconds + reps * repSeconds + (reps - 1) * recoverySeconds;
+        const cooldownSeconds = Math.max(180, (workout.targetDuration || 0) - fixedSeconds);
 
-        populateStructuredTargets(workout, paces, context.hrZones ?? null, bikeZones, bikeFtp, 4, 95);
+        const workPowerTarget: Target = explicitFtpPct
+            ? {
+                  type: 'power',
+                  minWatts: Math.round((bikeFtp * (explicitFtpPct - 3)) / 100),
+                  maxWatts: Math.round((bikeFtp * (explicitFtpPct + 3)) / 100),
+                  ftpPercent: explicitFtpPct,
+                  zoneLabel: `${explicitFtpPct}% FTP`,
+              }
+            : powerTarget(bikeZones.threshold, 'Z4 Threshold', bikeFtp);
 
         return {
             version: 2,
             source: 'engine',
+            sport: 'BIKE',
+            ...(typeof workout.plannedTss === 'number' && workout.plannedTss >= 0 ? { lockedPlannedTss: workout.plannedTss } : {}),
             steps: [
                 timeStep('warmup', 'Warm up spin', warmupSeconds, {
                     target: powerTarget(bikeZones.recovery, 'Z1 Recovery', bikeFtp),
                     cadenceRpm: 85,
                     hrZone: 1,
                 }),
-                repeatGroup(reps, { type: 'time', seconds: recoverySeconds }, [
-                    timeStep('work', 'Interval', repSeconds, {
-                        target: powerTarget(bikeZones.threshold, 'Z4 Threshold', bikeFtp),
-                        cadenceRpm: 95,
-                        hrZone: hrZone ?? 4,
-                    }),
-                ], `${reps}×${repMinutes}min`),
+                repeatGroup(
+                    reps,
+                    { type: 'time', seconds: recoverySeconds },
+                    [
+                        timeStep('work', 'Interval', repSeconds, {
+                            target: workPowerTarget,
+                            cadenceRpm: cadenceTarget,
+                            hrZone: hrZone ?? 4,
+                        }),
+                    ],
+                    `${reps}×${repMinutes}min`
+                ),
                 timeStep('cooldown', 'Cool down spin', cooldownSeconds, {
                     target: powerTarget(bikeZones.recovery, 'Z1 Recovery', bikeFtp),
                     cadenceRpm: 85,

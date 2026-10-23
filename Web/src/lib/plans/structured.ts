@@ -7,6 +7,8 @@ export const MAX_REPEAT_DEPTH = 3;
 export interface StructuredWorkoutV2 {
     version: 2;
     source: 'engine' | 'builder' | 'editor' | 'progression' | 'template' | 'mcp';
+    sport?: 'RUN' | 'BIKE' | 'SWIM' | 'STRENGTH';
+    lockedPlannedTss?: number;
     steps: StepNode[];
 }
 
@@ -189,6 +191,8 @@ export const structuredWorkoutV2Schema: z.ZodType<StructuredWorkoutV2> = z
     .object({
         version: z.literal(2),
         source: z.enum(['engine', 'builder', 'editor', 'progression', 'template', 'mcp']),
+        sport: z.enum(['RUN', 'BIKE', 'SWIM', 'STRENGTH']).optional(),
+        lockedPlannedTss: z.number().min(0).max(1000).optional(),
         steps: z.array(stepNodeSchema),
     })
     .refine((val) => calculateMaxNestingDepth(val.steps) <= 3, {
@@ -206,13 +210,25 @@ export function resolveWorkoutSport(
     workoutType?: string | null,
     sport?: string | null
 ): 'RUN' | 'BIKE' | 'SWIM' | 'STRENGTH' {
-    const wt = workoutType?.toUpperCase();
-    if (wt === 'SWIM' || wt === 'SWIM_DRILL' || wt === 'OPEN_WATER_SWIM') return 'SWIM';
-    if (wt === 'RIDE' || wt === 'LONG_RIDE' || wt === 'RIDE_INTERVALS' || wt === 'BRICK') return 'BIKE';
-    if (wt === 'STRENGTH' || wt === 'CORE') return 'STRENGTH';
+    const sp = sport?.trim().toUpperCase();
+    if (sp === 'SWIM' || sp === 'BIKE' || sp === 'STRENGTH' || sp === 'RUN') {
+        const wtCheck = workoutType?.trim().toUpperCase();
+        // If workoutType explicitly specifies STRENGTH/BIKE/SWIM while sport was left at default RUN, honor workoutType
+        if (sp === 'RUN' && wtCheck) {
+            if (wtCheck === 'STRENGTH' || wtCheck === 'CORE' || wtCheck === 'GYM') return 'STRENGTH';
+            if (wtCheck === 'RIDE' || wtCheck === 'LONG_RIDE' || wtCheck === 'RIDE_INTERVALS' || wtCheck === 'BRICK' || wtCheck === 'VIRTUAL_RIDE') return 'BIKE';
+            if (wtCheck === 'SWIM' || wtCheck === 'SWIM_DRILL' || wtCheck === 'OPEN_WATER_SWIM') return 'SWIM';
+        }
+        return sp;
+    }
+    if (sp === 'RIDE' || sp === 'CYCLING' || sp === 'VIRTUAL_RIDE') return 'BIKE';
+    if (sp === 'GYM' || sp === 'CORE') return 'STRENGTH';
 
-    const sp = sport?.toUpperCase();
-    if (sp === 'SWIM' || sp === 'BIKE' || sp === 'STRENGTH') return sp;
+    const wt = workoutType?.trim().toUpperCase();
+    if (wt === 'SWIM' || wt === 'SWIM_DRILL' || wt === 'OPEN_WATER_SWIM') return 'SWIM';
+    if (wt === 'RIDE' || wt === 'LONG_RIDE' || wt === 'RIDE_INTERVALS' || wt === 'BRICK' || wt === 'VIRTUAL_RIDE') return 'BIKE';
+    if (wt === 'STRENGTH' || wt === 'CORE' || wt === 'GYM') return 'STRENGTH';
+
     return 'RUN';
 }
 
@@ -607,12 +623,17 @@ export function flattenStructuredWorkout(workout: StructuredWorkoutV2): Flattene
 export function summarizeStructuredWorkout(
     workout: StructuredWorkoutV2,
     fallbackPaceSec?: number | null,
-    ftpWatts?: number | null
+    ftpWatts?: number | null,
+    sport?: string | null
 ): { totalDistanceMeters: number; totalDurationSeconds: number; estimatedTss: number; summaryText: string } {
     const flat = flattenStructuredWorkout(workout);
     let totalDistanceMeters = 0;
     let totalDurationSeconds = 0;
     let accumulatedTss = 0;
+
+    const resolvedSport = resolveWorkoutSport(sport || workout.sport, sport || workout.sport);
+    const hasPowerOrRpeOnlySteps = flat.length > 0 && flat.every(s => s.target?.type === 'power' || s.target?.type === 'rpe');
+    const isRunOrPaceSport = resolvedSport === 'RUN' && !hasPowerOrRpeOnlySteps;
 
     const defaultPace = fallbackPaceSec && fallbackPaceSec > 0 ? fallbackPaceSec : 300; // 5:00/km default
     const ftp = ftpWatts && ftpWatts > 0 ? ftpWatts : 200;
@@ -637,15 +658,19 @@ export function summarizeStructuredWorkout(
             stepSeconds = step.duration.seconds;
             totalDurationSeconds += stepSeconds;
 
-            let paceSec = defaultPace;
             if (step.target?.type === 'pace') {
                 const p = step.target;
                 const avgPace = p.min && p.max ? (p.min + p.max) / 2 : p.min || p.max || defaultPace;
-                paceSec = p.unit === 'sec_per_100m' ? avgPace * 10 : avgPace;
-            }
-            if (paceSec > 0) {
-                stepMeters = Math.round((stepSeconds / paceSec) * 1000);
-                totalDistanceMeters += stepMeters;
+                const paceSec = p.unit === 'sec_per_100m' ? avgPace * 10 : avgPace;
+                if (paceSec > 0) {
+                    stepMeters = Math.round((stepSeconds / paceSec) * 1000);
+                    totalDistanceMeters += stepMeters;
+                }
+            } else if (isRunOrPaceSport && step.target?.type !== 'power' && step.target?.type !== 'rpe') {
+                if (defaultPace > 0) {
+                    stepMeters = Math.round((stepSeconds / defaultPace) * 1000);
+                    totalDistanceMeters += stepMeters;
+                }
             }
         }
 

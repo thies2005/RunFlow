@@ -10,13 +10,28 @@ export type BikeZones = {
 
 export function calculateBikeZones(ftpWatts: number): BikeZones {
     const ftp = Math.max(0, ftpWatts);
+    if (ftp === 0) {
+        return {
+            recovery: { min: 0, max: 0 },
+            endurance: { min: 0, max: 0 },
+            tempo: { min: 0, max: 0 },
+            threshold: { min: 0, max: 0 },
+            vo2max: { min: 0, max: 0 },
+        };
+    }
+
+    const z1Max = Math.round(ftp * 0.55);
+    const z2Max = Math.round(ftp * 0.75);
+    const z3Max = Math.round(ftp * 0.90);
+    const z4Max = Math.round(ftp * 1.05);
+    const z5Max = Math.round(ftp * 1.20);
 
     return {
-        recovery: { min: 0, max: Math.round(ftp * 0.55) },
-        endurance: { min: Math.round(ftp * 0.56), max: Math.round(ftp * 0.75) },
-        tempo: { min: Math.round(ftp * 0.76), max: Math.round(ftp * 0.90) },
-        threshold: { min: Math.round(ftp * 0.91), max: Math.round(ftp * 1.05) },
-        vo2max: { min: Math.round(ftp * 1.06), max: Math.round(ftp * 1.20) },
+        recovery: { min: 0, max: z1Max },
+        endurance: { min: z1Max + 1, max: z2Max },
+        tempo: { min: z2Max + 1, max: z3Max },
+        threshold: { min: z3Max + 1, max: z4Max },
+        vo2max: { min: z4Max + 1, max: z5Max },
     };
 }
 

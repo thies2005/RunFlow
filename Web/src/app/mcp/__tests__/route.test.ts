@@ -53,15 +53,21 @@ jest.mock('@/lib/db', () => {
         goal: {
             findFirst: jest.fn(),
             findUnique: jest.fn(),
+            findMany: jest.fn(),
             create: jest.fn(),
             update: jest.fn(),
+            updateMany: jest.fn(),
+            delete: jest.fn(),
         },
         workout: {
             findMany: jest.fn(),
             findUnique: jest.fn(),
             create: jest.fn(),
+            createMany: jest.fn().mockResolvedValue({ count: 0 }),
             update: jest.fn(),
+            updateMany: jest.fn(),
             delete: jest.fn(),
+            deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
         },
         activity: {
             findMany: jest.fn(),
@@ -73,16 +79,21 @@ jest.mock('@/lib/db', () => {
         },
         dailyReadinessRecord: {
             findMany: jest.fn(),
+            findFirst: jest.fn(),
+            update: jest.fn(),
         },
         dailyHealthLog: {
             findMany: jest.fn(),
+            upsert: jest.fn(),
         },
         readinessBaseline: {
             findFirst: jest.fn(),
         },
         planSnapshot: {
             create: jest.fn(),
+            findFirst: jest.fn(),
             findMany: jest.fn(),
+            update: jest.fn(),
             count: jest.fn().mockResolvedValue(0),
             deleteMany: jest.fn(),
         },
@@ -816,7 +827,7 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(res.status).toBe(200);
             const data = await res.json();
             expect(data.result.tools).toBeDefined();
-            expect(data.result.tools.length).toBe(17);
+            expect(data.result.tools.length).toBe(31);
         });
 
         it('authenticates via personal API Key (rf_...)', async () => {
@@ -1020,11 +1031,17 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
                 { Authorization: 'Bearer rf_mcp_pro' }
             );
 
+            mockDb.user.findUnique.mockResolvedValue({ ftpWatts: 305 });
+
             const res = await mcpPost(req);
             expect(res.status).toBe(200);
             const data = await res.json();
-            const activities = data.result.structuredContent;
+            const payload = data.result.structuredContent;
 
+            expect(payload).toBeDefined();
+            expect(Array.isArray(payload)).toBe(false);
+            expect(payload.count).toBe(2);
+            const activities = payload.activities;
             expect(activities).toHaveLength(2);
 
             // Strava activity: name, description, rawJson, streams must be omitted
@@ -1044,6 +1061,89 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(manualAct.name).toBe('Treadmill Easy 5K');
             expect(manualAct.description).toBe('Indoor manual workout');
             expect(manualAct.stravaComplianceNotice).toBeUndefined();
+        });
+
+        it('does not fabricate running targetDistance on BIKE or STRENGTH workouts and preserves locked plannedTss on recalibrate_thresholds', async () => {
+            mockDb.mcpOAuthToken.findUnique.mockResolvedValue({
+                id: 'tok-1',
+                userId: 'user-paid-1',
+                expiresAt: new Date(Date.now() + 86400000),
+                revokedAt: null,
+                user: { id: 'user-paid-1', isAdmin: true, aiSettings: { usageTier: 'tier3' } },
+            });
+
+            mockDb.goal.findFirst.mockResolvedValue({
+                id: 'goal-bike-1',
+                userId: 'user-paid-1',
+                currentVdot: 42.5,
+                ftpAtCreation: 305,
+            });
+            mockDb.user.findUnique.mockResolvedValue({ ftpWatts: 305 });
+            mockDb.planSnapshot.create.mockResolvedValue({ id: 'snap-batch-1' });
+            mockDb.workout.create.mockImplementation(async ({ data }: any) => ({
+                id: `w-${data.sport.toLowerCase()}`,
+                ...data,
+            }));
+            mockDb.goal.findUnique.mockResolvedValue({
+                id: 'goal-bike-1',
+                userId: 'user-paid-1',
+                workouts: [],
+            });
+
+            const batchReq = makeRequest(
+                'https://runflow.schuelken.uk/mcp',
+                'POST',
+                {
+                    jsonrpc: '2.0',
+                    id: 210,
+                    method: 'tools/call',
+                    params: {
+                        name: 'import_plan_workouts_batch',
+                        arguments: {
+                            goalId: 'goal-bike-1',
+                            workouts: [
+                                {
+                                    scheduledDate: '2027-06-10',
+                                    workoutType: 'RIDE_INTERVALS',
+                                    sport: 'BIKE',
+                                    targetDurationMinutes: 60,
+                                    targetFtpPercent: 88,
+                                    plannedTss: 68,
+                                    description: '3x12m Over-Unders (2m @ 95% FTP / 1m @ 105% FTP) with 4m recovery',
+                                },
+                                {
+                                    scheduledDate: '2027-06-11',
+                                    workoutType: 'STRENGTH',
+                                    targetDurationMinutes: 45,
+                                    plannedTss: 40,
+                                    description: 'Lower Body Gym Strength',
+                                },
+                            ],
+                        },
+                    },
+                },
+                { Authorization: 'Bearer rf_mcp_pro' }
+            );
+
+            const batchRes = await mcpPost(batchReq);
+            const batchData = await batchRes.json();
+            const result = batchData.result.structuredContent;
+
+            expect(result.success).toBe(true);
+            expect(result.importedCount).toBe(2);
+            expect(result.importedWorkoutIds).toHaveLength(2);
+            expect(result.importedWorkoutIds[0].sport).toBe('BIKE');
+            expect(result.importedWorkoutIds[0].plannedTss).toBe(68);
+            expect(result.importedWorkoutIds[1].sport).toBe('STRENGTH');
+            expect(result.importedWorkoutIds[1].plannedTss).toBe(40);
+
+            // Verify targetDistance was NOT fabricated for BIKE or STRENGTH
+            const createdBikeArg = mockDb.workout.create.mock.calls[0][0].data;
+            const createdStrengthArg = mockDb.workout.create.mock.calls[1][0].data;
+            expect(createdBikeArg.targetDistance).toBeNull();
+            expect(createdStrengthArg.targetDistance).toBeNull();
+            expect(createdStrengthArg.sport).toBe('STRENGTH');
+            expect(createdBikeArg.structuredSteps.lockedPlannedTss).toBe(68);
         });
     });
 

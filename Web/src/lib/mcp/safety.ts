@@ -57,26 +57,40 @@ export async function evaluatePlanSafety(
     const workouts = goal.workouts;
 
     // ---------------------------------------------------------
-    // Rule 3: Consecutive hard days
+    // Rule 3: Consecutive hard days (Modality-Aware)
     // ---------------------------------------------------------
-    const hardDays = new Set<string>();
+    const hardDaySports = new Map<string, { sports: Set<string>; totalTss: number }>();
     for (const w of workouts) {
         const typeStr = String(w.workoutType || '').toUpperCase();
+        const sportStr = String(w.sport || (typeStr.startsWith('RIDE') ? 'BIKE' : typeStr === 'STRENGTH' ? 'STRENGTH' : 'RUN')).toUpperCase();
+        // Exclude gym/strength sessions from hard endurance day collisions unless TSS > 75
+        if (sportStr === 'STRENGTH' && Number(w.plannedTss || 0) <= 75) continue;
+
         if (HARD_WORKOUT_TYPES.has(typeStr)) {
-            hardDays.add(toDateKey(w.scheduledDate));
+            const key = toDateKey(w.scheduledDate);
+            const entry = hardDaySports.get(key) || { sports: new Set<string>(), totalTss: 0 };
+            entry.sports.add(sportStr);
+            entry.totalTss += Number(w.plannedTss || 0);
+            hardDaySports.set(key, entry);
         }
     }
 
-    const sortedHardDays = Array.from(hardDays).sort();
+    const sortedHardDays = Array.from(hardDaySports.keys()).sort();
     for (let i = 0; i < sortedHardDays.length - 1; i++) {
         const currentDay = sortedHardDays[i];
         const nextDay = sortedHardDays[i + 1];
         if (addDays(currentDay, 1) === nextDay) {
-            advisories.push({
-                level: 'critical',
-                rule: 'consecutive_hard_days',
-                message: `Consecutive hard workout days detected on ${currentDay} and ${nextDay}. Consider placing a recovery or rest day between hard sessions.`,
-            });
+            const cur = hardDaySports.get(currentDay)!;
+            const nxt = hardDaySports.get(nextDay)!;
+            const sameSportCollision = Array.from(cur.sports).some(s => nxt.sports.has(s));
+            const highCombinedLoad = cur.totalTss + nxt.totalTss >= 150;
+            if (sameSportCollision || highCombinedLoad) {
+                advisories.push({
+                    level: 'critical',
+                    rule: 'consecutive_hard_days',
+                    message: `Consecutive hard workout days detected on ${currentDay} and ${nextDay}. Consider placing a recovery or rest day between hard sessions.`,
+                });
+            }
         }
     }
 
@@ -172,14 +186,14 @@ export async function evaluatePlanSafety(
             priorWeeks.push(weeksMap.get(sortedWeekIndices[k])!);
         }
 
-        const avgPriorDistance = priorWeeks.reduce((acc, w) => acc + w.totalDistanceMeters, 0) / priorWeeks.length;
+        const avgPriorDistance = priorWeeks.reduce((acc, w) => acc + w.runningDistanceMeters, 0) / priorWeeks.length;
         const avgPriorTss = priorWeeks.reduce((acc, w) => acc + w.totalPlannedTss, 0) / priorWeeks.length;
 
         const distanceSpike =
-            prevWeek.totalDistanceMeters > 0 &&
+            prevWeek.runningDistanceMeters > 0 &&
             avgPriorDistance > 0 &&
-            currentWeek.totalDistanceMeters > prevWeek.totalDistanceMeters * 1.10 &&
-            currentWeek.totalDistanceMeters > avgPriorDistance * 1.10;
+            currentWeek.runningDistanceMeters > prevWeek.runningDistanceMeters * 1.10 &&
+            currentWeek.runningDistanceMeters > avgPriorDistance * 1.10;
 
         const tssSpike =
             prevWeek.totalPlannedTss > 0 &&

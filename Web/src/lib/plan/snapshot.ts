@@ -83,7 +83,7 @@ export async function createSnapshot(goalId: string, description?: string, opera
     return snapshot;
 }
 
-export async function restoreFromSnapshot(goalId: string, snapshotId?: string) {
+export async function restoreFromSnapshot(goalId: string, snapshotId?: string, takeBackupSnapshot = false) {
     const snapshot = await prisma.planSnapshot.findFirst({
         where: {
             goalId,
@@ -92,6 +92,10 @@ export async function restoreFromSnapshot(goalId: string, snapshotId?: string) {
         },
         orderBy: { createdAt: 'desc' },
     });
+
+    if (snapshot && takeBackupSnapshot) {
+        await createSnapshot(goalId, `Pre-restore backup before restoring snapshot ${snapshot.id}`, 'pre_restore_backup').catch(() => {});
+    }
 
     if (!snapshot) {
         throw new Error('No snapshot found');

@@ -363,7 +363,7 @@ export async function GET(request: NextRequest) {
             weeks,
         };
 
-        const raceTypeSlug = raceType.replace(/\s+/g, '-').toLowerCase();
+        const raceTypeSlug = raceType.replace(/[^a-zA-Z0-9_-]/g, '-').toLowerCase().slice(0, 40) || 'training';
 
         if (format === 'csv') {
             const csv = generateCsv(plan);
@@ -456,7 +456,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const raceTypeSlug = plan.raceType.replace(/\s+/g, '-').toLowerCase();
+        const raceTypeSlug = plan.raceType.replace(/[^a-zA-Z0-9_-]/g, '-').toLowerCase().slice(0, 40) || 'training';
 
         if (format === 'csv') {
             const csv = generateCsv(plan);

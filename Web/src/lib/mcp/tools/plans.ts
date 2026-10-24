@@ -177,7 +177,7 @@ export const getTrainingPlanTool: McpTool = {
                         ).summaryText;
                     }
                 }
-                return {
+                const rawWorkoutRow: Record<string, any> = {
                     id: w.id,
                     scheduledDate: w.scheduledDate,
                     workoutType: w.workoutType,
@@ -209,6 +209,12 @@ export const getTrainingPlanTool: McpTool = {
                     linkedActivityId: w.linkedActivityId,
                     ...(includeSteps ? { structuredSteps: w.structuredSteps } : { stepsSummary }),
                 };
+                if (params.includeAllWorkouts || !includeSteps) {
+                    return Object.fromEntries(
+                        Object.entries(rawWorkoutRow).filter(([_, val]) => val !== null && val !== undefined)
+                    );
+                }
+                return rawWorkoutRow;
             }),
         };
     },
@@ -417,6 +423,15 @@ export const createCustomTrainingPlanTool: McpTool = {
         }
         if (Array.isArray(params.workouts) && params.workouts.length > 200) {
             throw new Error('Maximum 200 initial workouts per create_custom_training_plan call');
+        }
+        if (params.parentGoalId) {
+            const ownedParent = await prisma.goal.findFirst({
+                where: { id: String(params.parentGoalId), userId, deletedAt: null },
+                select: { id: true },
+            });
+            if (!ownedParent) {
+                throw new Error('parentGoalId not found or access denied');
+            }
         }
 
         const user = await prisma.user.findUnique({
@@ -1031,8 +1046,18 @@ export const saveWeeklyCoachingSummaryTool: McpTool = {
         }
 
         if (params.snapshotId) {
+            const existingSummary = await prisma.planSnapshot.findFirst({
+                where: {
+                    id: params.snapshotId,
+                    goalId: targetGoal.id,
+                    operation: 'coaching_summary',
+                },
+            });
+            if (!existingSummary) {
+                throw new Error('Coaching summary snapshot not found or access denied');
+            }
             const updated = await prisma.planSnapshot.update({
-                where: { id: params.snapshotId },
+                where: { id: existingSummary.id },
                 data: {
                     snapshot: {
                         weekNumber: params.weekNumber,

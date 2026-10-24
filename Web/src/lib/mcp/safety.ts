@@ -57,20 +57,38 @@ export async function evaluatePlanSafety(
     const workouts = goal.workouts;
 
     // ---------------------------------------------------------
-    // Rule 3: Consecutive hard days (Modality-Aware)
+    // Rule 3: Consecutive hard days (Strictly Cross-Modality Aware)
     // ---------------------------------------------------------
     const hardDaySports = new Map<string, { sports: Set<string>; totalTss: number }>();
     for (const w of workouts) {
         const typeStr = String(w.workoutType || '').toUpperCase();
-        const sportStr = String(w.sport || (typeStr.startsWith('RIDE') ? 'BIKE' : typeStr === 'STRENGTH' ? 'STRENGTH' : 'RUN')).toUpperCase();
-        // Exclude gym/strength sessions from hard endurance day collisions unless TSS > 75
-        if (sportStr === 'STRENGTH' && Number(w.plannedTss || 0) <= 75) continue;
+        const rawSport = String(w.sport || '').toUpperCase();
+        const descStr = `${w.customName || ''} ${w.description || ''}`;
+        const isGymOrStrength =
+            rawSport === 'STRENGTH' ||
+            typeStr === 'STRENGTH' ||
+            /(strength|gym|weight|core|mobility)/i.test(descStr);
+        const sportStr = isGymOrStrength
+            ? 'STRENGTH'
+            : rawSport === 'RIDE' || rawSport === 'BIKE' || typeStr.startsWith('RIDE') || typeStr === 'LONG_RIDE'
+            ? 'BIKE'
+            : rawSport === 'SWIM' || typeStr.startsWith('SWIM') || typeStr === 'OPEN_WATER_SWIM'
+            ? 'SWIM'
+            : 'RUN';
+
+        const tssVal = w.plannedTss != null ? Number(w.plannedTss) : null;
+
+        // Gym/strength sessions never collide with endurance sessions unless extreme (>80 TSS)
+        if (sportStr === 'STRENGTH' && (tssVal === null || tssVal <= 80)) continue;
+
+        // Low-TSS sessions (<55 TSS, e.g. easy/cadence spins or recovery rides tagged as RIDE_INTERVALS) are not hard days
+        if (typeStr !== 'RACE' && tssVal !== null && tssVal < 55) continue;
 
         if (HARD_WORKOUT_TYPES.has(typeStr)) {
             const key = toDateKey(w.scheduledDate);
             const entry = hardDaySports.get(key) || { sports: new Set<string>(), totalTss: 0 };
             entry.sports.add(sportStr);
-            entry.totalTss += Number(w.plannedTss || 0);
+            entry.totalTss += tssVal ?? 60;
             hardDaySports.set(key, entry);
         }
     }
@@ -82,9 +100,12 @@ export async function evaluatePlanSafety(
         if (addDays(currentDay, 1) === nextDay) {
             const cur = hardDaySports.get(currentDay)!;
             const nxt = hardDaySports.get(nextDay)!;
-            const sameSportCollision = Array.from(cur.sports).some(s => nxt.sports.has(s));
-            const highCombinedLoad = cur.totalTss + nxt.totalTss >= 150;
-            if (sameSportCollision || highCombinedLoad) {
+            const curEndurance = Array.from(cur.sports).filter(s => s !== 'STRENGTH');
+            const nxtEndurance = new Set(Array.from(nxt.sports).filter(s => s !== 'STRENGTH'));
+            const sameEnduranceModality = curEndurance.some(s => nxtEndurance.has(s));
+            const bothHaveEndurance = curEndurance.length > 0 && nxtEndurance.size > 0;
+            const highCombinedEnduranceLoad = bothHaveEndurance && cur.totalTss + nxt.totalTss >= 165;
+            if (sameEnduranceModality || highCombinedEnduranceLoad) {
                 advisories.push({
                     level: 'critical',
                     rule: 'consecutive_hard_days',

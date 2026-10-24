@@ -1522,5 +1522,113 @@ describe('Paid-Premium MCP Suite (/mcp)', () => {
             expect(data.result.content[0].text).toContain('Linked activity not found or access denied');
             expect(mockDb.workout.update).not.toHaveBeenCalled();
         });
+
+        it('strips null keys from workout objects when get_training_plan is called with includeAllWorkouts: true (Polish 1)', async () => {
+            mockDb.goal.findFirst.mockResolvedValue({
+                id: 'goal-compact-1',
+                userId: 'user-attacker',
+                name: 'MyWhoosh Plan',
+                sport: 'TRIATHLON',
+                currentVdot: 42.5,
+                ftpAtCreation: 305,
+                isActive: true,
+            });
+            mockDb.workout.findMany.mockResolvedValue([
+                {
+                    id: 'w-compact-1',
+                    scheduledDate: new Date('2026-10-23T00:00:00.000Z'),
+                    workoutType: 'RIDE_INTERVALS',
+                    sport: 'BIKE',
+                    phase: 'BASE',
+                    order: 0,
+                    description: 'Torque Changers #1',
+                    customName: 'Torque Changers #1',
+                    notes: null,
+                    targetDistance: null,
+                    targetDuration: 3600,
+                    targetPace: null,
+                    targetPaceMinSecondsPerKm: null,
+                    targetPaceMaxSecondsPerKm: null,
+                    targetPaceZoneLabel: null,
+                    targetPowerWatts: 270,
+                    targetPowerMinWatts: 250,
+                    targetPowerMaxWatts: 290,
+                    targetPowerZone: 4,
+                    targetFtpPercent: 88,
+                    targetCadenceRpm: 60,
+                    targetRpe: null,
+                    targetHrZone: null,
+                    targetHrMinBpm: null,
+                    targetHrMaxBpm: null,
+                    plannedTss: 68,
+                    isCompleted: false,
+                    completedAt: null,
+                    linkedActivityId: null,
+                    structuredSteps: null,
+                },
+            ]);
+            mockDb.planSnapshot.findMany.mockResolvedValue([]);
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp',
+                'POST',
+                {
+                    jsonrpc: '2.0',
+                    id: 105,
+                    method: 'tools/call',
+                    params: {
+                        name: 'get_training_plan',
+                        arguments: {
+                            includeAllWorkouts: true,
+                        },
+                    },
+                },
+                { Authorization: 'Bearer rf_mcp_attacker' }
+            );
+
+            const res = await mcpPost(req);
+            expect(res.status).toBe(200);
+            const data = await res.json();
+            const w = data.result.structuredContent.workouts[0];
+            expect(w.id).toBe('w-compact-1');
+            expect(w.plannedTss).toBe(68);
+            expect('targetPace' in w).toBe(false);
+            expect('targetDistance' in w).toBe(false);
+            expect('targetHrMinBpm' in w).toBe(false);
+            expect('notes' in w).toBe(false);
+        });
+
+        it('rejects save_weekly_coaching_summary update when snapshotId belongs to another goal (SEC-1)', async () => {
+            mockDb.goal.findFirst.mockResolvedValue({
+                id: 'goal-attacker',
+                userId: 'user-attacker',
+            });
+            mockDb.planSnapshot.findFirst.mockResolvedValue(null);
+
+            const req = makeRequest(
+                'https://runflow.schuelken.uk/mcp',
+                'POST',
+                {
+                    jsonrpc: '2.0',
+                    id: 106,
+                    method: 'tools/call',
+                    params: {
+                        name: 'save_weekly_coaching_summary',
+                        arguments: {
+                            snapshotId: 'snap-victim-other-goal',
+                            summary: 'Attempted overwrite',
+                        },
+                    },
+                },
+                { Authorization: 'Bearer rf_mcp_attacker' }
+            );
+
+            const res = await mcpPost(req);
+            expect(res.status).toBe(200);
+            const data = await res.json();
+            expect(data.result.isError).toBe(true);
+            expect(data.result.content[0].text).toContain('Coaching summary snapshot not found or access denied');
+            expect(mockDb.planSnapshot.update).not.toHaveBeenCalled();
+        });
     });
 });

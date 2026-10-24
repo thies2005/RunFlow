@@ -300,6 +300,16 @@ export class McpServer {
                     },
                 };
             }
+            if (body.length > 50) {
+                return {
+                    jsonrpc: '2.0',
+                    id: null,
+                    error: {
+                        code: JSON_RPC_ERRORS.INVALID_REQUEST,
+                        message: 'Invalid Request: JSON-RPC batch size exceeds maximum of 50 requests',
+                    },
+                };
+            }
             const results = await Promise.all(body.map(item => this.handleSingleRequest(item, context)));
             const nonNulls = results.filter((r): r is JsonRpcResponse => r !== null);
             return nonNulls.length > 0 ? nonNulls : null;

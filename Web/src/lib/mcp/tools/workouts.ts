@@ -679,6 +679,19 @@ export const modifyWorkoutsBatchTool: McpTool = {
             }
         }
 
+        const linkedActivityIds = params.updates
+            .map((u: any) => u.linkedActivityId)
+            .filter((id: any): id is string => Boolean(id));
+        if (linkedActivityIds.length > 0) {
+            const ownedActivities = await prisma.activity.findMany({
+                where: { id: { in: linkedActivityIds }, userId },
+                select: { id: true },
+            });
+            if (ownedActivities.length !== new Set(linkedActivityIds).size) {
+                throw new Error('One or more linked activities not found or access denied');
+            }
+        }
+
         const primaryGoalId = params.goalId || existingWorkouts[0].goalId;
         const snapshot = await createSnapshot(
             primaryGoalId,

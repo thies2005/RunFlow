@@ -17,6 +17,7 @@ jest.mock('@/lib/db', () => ({
 
 jest.mock('@/lib/rateLimit', () => ({
     checkRateLimit: jest.fn(),
+    resetRateLimit: jest.fn(),
 }));
 
 jest.mock('@/lib/logging/logger', () => ({
@@ -81,15 +82,18 @@ describe('tokens', () => {
         const code = 'ABC123';
         const type = AuthCodeType.VERIFY_EMAIL;
 
-        it('should return false if rate limit is exceeded', async () => {
+        it('should return false and log warning if rate limit is exceeded on invalid code', async () => {
             const checkRateLimitMock = checkRateLimit as jest.Mock;
             checkRateLimitMock.mockReturnValue({ allowed: false });
+
+            const findFirstMock = prisma.authCode.findFirst as jest.Mock;
+            findFirstMock.mockResolvedValue(null);
 
             const result = await verifyAuthCode(email, code, type);
 
             expect(result).toBe(false);
-            expect(logger.warn).toHaveBeenCalledWith('Rate limit exceeded for auth code verification', { email });
-            expect(prisma.authCode.findFirst).not.toHaveBeenCalled();
+            expect(logger.warn).toHaveBeenCalledWith('Rate limit exceeded for failed auth code verification attempts', { email });
+            expect(prisma.authCode.findFirst).toHaveBeenCalled();
         });
 
         it('should return false if record is not found', async () => {
@@ -110,16 +114,18 @@ describe('tokens', () => {
                     expiresAt: { gt: expect.any(Date) }
                 }
             });
-            expect(prisma.authCode.delete).not.toHaveBeenCalled();
+            expect(prisma.authCode.deleteMany).not.toHaveBeenCalled();
         });
 
-        it('should return true and delete record if valid', async () => {
+        it('should return true and atomically delete record if valid', async () => {
             const checkRateLimitMock = checkRateLimit as jest.Mock;
             checkRateLimitMock.mockReturnValue({ allowed: true });
 
             const findFirstMock = prisma.authCode.findFirst as jest.Mock;
+            const deleteManyMock = prisma.authCode.deleteMany as jest.Mock;
             const recordId = 'record-123';
             findFirstMock.mockResolvedValue({ id: recordId });
+            deleteManyMock.mockResolvedValue({ count: 1 });
 
             const result = await verifyAuthCode(email, code, type);
 
@@ -132,7 +138,7 @@ describe('tokens', () => {
                     expiresAt: { gt: expect.any(Date) }
                 }
             });
-            expect(prisma.authCode.delete).toHaveBeenCalledWith({
+            expect(prisma.authCode.deleteMany).toHaveBeenCalledWith({
                 where: { id: recordId }
             });
         });
@@ -142,8 +148,10 @@ describe('tokens', () => {
             checkRateLimitMock.mockReturnValue({ allowed: true });
 
             const findFirstMock = prisma.authCode.findFirst as jest.Mock;
+            const deleteManyMock = prisma.authCode.deleteMany as jest.Mock;
             const recordId = 'record-123';
             findFirstMock.mockResolvedValue({ id: recordId });
+            deleteManyMock.mockResolvedValue({ count: 1 });
 
             const lowerCaseCode = 'abc123';
             const result = await verifyAuthCode(email, lowerCaseCode, type);

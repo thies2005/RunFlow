@@ -25,6 +25,7 @@ const EXPECTED_HEALTH_TABLES = [
     'dailyReadinessRecord',
     'readinessBaseline',
     'adaptedWorkout',
+    'weeklyReconciliationRecord',
 ];
 
 jest.mock('@/lib/db', () => {
@@ -71,6 +72,7 @@ jest.mock('@/lib/db', () => {
         dailyReadinessRecord: recorder('dailyReadinessRecord'),
         readinessBaseline: recorder('readinessBaseline'),
         adaptedWorkout: recorder('adaptedWorkout'),
+        weeklyReconciliationRecord: recorder('weeklyReconciliationRecord'),
         $transaction: async (operations: Array<Promise<unknown>>) => Promise.all(operations),
     };
     return { prisma };

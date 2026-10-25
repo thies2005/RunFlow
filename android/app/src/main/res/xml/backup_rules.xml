@@ -11,4 +11,5 @@
      backups or device-to-device transfer. -->
 <full-backup-content>
     <exclude domain="file" path="datastore/runflow_auth.preferences_pb" />
+    <exclude domain="database" path="." />
 </full-backup-content>

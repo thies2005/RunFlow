@@ -67,7 +67,7 @@ function parseDatabaseUrl(): { host: string; port: string; user: string; pass: s
       port: parsed.port || '5432',
       user: decodeURIComponent(parsed.username),
       pass: decodeURIComponent(parsed.password),
-      name: parsed.pathname.slice(1)
+      name: decodeURIComponent(parsed.pathname.slice(1)).split('?')[0]
     }
   } catch (e) {
     logger.error('[Backup] Invalid DATABASE_URL format', { error: e instanceof Error ? e.message : String(e) })

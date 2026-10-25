@@ -13,8 +13,10 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="datastore/runflow_auth.preferences_pb" />
+        <exclude domain="database" path="." />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="datastore/runflow_auth.preferences_pb" />
+        <exclude domain="database" path="." />
     </device-transfer>
 </data-extraction-rules>

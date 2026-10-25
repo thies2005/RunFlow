@@ -11,7 +11,11 @@ interface CsrfTokenData {
 }
 
 function getCsrfSigningSecret(): string {
-    return process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || 'runflow-csrf-dev-secret';
+    const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+    if (!secret && process.env.NODE_ENV === 'production') {
+        throw new Error('CSRF signing secret (JWT_SECRET, NEXTAUTH_SECRET, or AUTH_SECRET) is required in production');
+    }
+    return secret || 'runflow-csrf-dev-secret';
 }
 
 function signCsrfNonce(nonce: string): string {
@@ -94,15 +98,20 @@ export function validateCsrfToken(request: NextRequest): boolean {
         return false;
     }
 
-    if (cookieToken.includes('.')) {
-        const [nonce, sig] = cookieToken.split('.');
-        if (!nonce || !sig) return false;
-        const expectedSig = signCsrfNonce(nonce);
-        const sigBuf = Buffer.from(sig, 'utf8');
-        const expBuf = Buffer.from(expectedSig, 'utf8');
-        if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
-            return false;
-        }
+    const parts = cookieToken.split('.');
+    if (parts.length !== 2) {
+        return false;
+    }
+    const [nonce, sig] = parts;
+    if (!nonce || !sig) {
+        return false;
+    }
+
+    const expectedSig = signCsrfNonce(nonce);
+    const sigBuf = Buffer.from(sig, 'utf8');
+    const expBuf = Buffer.from(expectedSig, 'utf8');
+    if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
+        return false;
     }
 
     return true;

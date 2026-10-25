@@ -116,17 +116,18 @@ export async function POST(request: NextRequest) {
             }
             let previewText = '';
             try {
-                previewText = zlib.gunzipSync(buffer, { maxOutputLength: 65536 }).toString('utf8');
-            } catch (err: unknown) {
-                const code = (err as { code?: string })?.code;
-                if (code !== 'Z_BUF_ERROR') {
-                    return NextResponse.json(
-                        { error: 'Invalid or corrupted gzip backup archive' },
-                        { status: 415 }
-                    );
-                }
+                const compressedPrefix = buffer.subarray(0, 65536);
+                previewText = zlib.gunzipSync(compressedPrefix, {
+                    finishFlush: zlib.constants.Z_SYNC_FLUSH,
+                    maxOutputLength: 10 * 1024 * 1024,
+                }).toString('utf8');
+            } catch {
+                return NextResponse.json(
+                    { error: 'Invalid or corrupted gzip backup archive' },
+                    { status: 415 }
+                );
             }
-            if (previewText && (!sqlHeaderPattern.test(previewText.slice(0, 2048)) || unsafePsqlPattern.test(previewText))) {
+            if (!previewText || !sqlHeaderPattern.test(previewText.slice(0, 2048)) || unsafePsqlPattern.test(previewText)) {
                 return NextResponse.json(
                     { error: 'Invalid or unsafe SQL content in compressed backup' },
                     { status: 415 }

@@ -23,6 +23,7 @@ jest.mock('fs', () => ({
   statSync: jest.fn(),
   readdirSync: jest.fn(),
   unlinkSync: jest.fn(),
+  readFileSync: jest.fn(() => '-- PostgreSQL database dump\nSELECT 1;\n'),
 }))
 
 // Mock logger to avoid cluttering output
@@ -59,6 +60,7 @@ describe('Backup Scheduler Security', () => {
       size: 1024,
       mtime: new Date(),
     })
+    ;(fs.readFileSync as jest.Mock).mockReturnValue('-- PostgreSQL database dump\nSELECT 1;\n')
   })
 
   afterEach(() => {
@@ -133,6 +135,8 @@ describe('Backup Scheduler Security', () => {
         '-p', '5432',
         '-U', 'user',
         '-d', 'dbname',
+        '--no-psqlrc',
+        '-v', 'ON_ERROR_STOP=1',
         '--single-transaction',
         '-f', path.join(expectedBackupDir, backupName)
       ],

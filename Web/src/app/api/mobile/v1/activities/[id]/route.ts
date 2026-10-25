@@ -11,6 +11,7 @@ import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 
 export async function GET(
     request: NextRequest,
@@ -218,16 +219,28 @@ export async function DELETE(
 
         const existing = await prisma.activity.findFirst({
             where: { id, userId: user.id },
-            select: { id: true },
+            select: { id: true, startDate: true },
         });
 
         if (!existing) {
             return errorResponses.notFound('Activity');
         }
 
+        await prisma.workout.updateMany({
+            where: {
+                linkedActivityId: id,
+                goal: { userId: user.id },
+            },
+            data: {
+                linkedActivityId: null,
+            },
+        });
+
         await prisma.activity.delete({
             where: { id },
         });
+
+        await updateFitnessCache(user.id, [{ startDate: existing.startDate }]);
 
         return NextResponse.json(
             { success: true },

@@ -80,9 +80,9 @@ describe('CSRF Protection', () => {
     });
   });
 
-  describe('constant-time comparison', () => {
+  describe('constant-time comparison and HMAC signature enforcement', () => {
     it('should use constant-time comparison to prevent timing attacks', () => {
-      const token = 'a'.repeat(64);
+      const token = generateCsrfToken();
       const request = new NextRequest('http://localhost', {
         headers: {
           'X-CSRF-Token': token,
@@ -95,9 +95,24 @@ describe('CSRF Protection', () => {
       });
       request.cookies.set('csrf_token', cookieValue);
       
-      // The implementation uses XOR comparison which is constant-time
-      // This is verified by reading the code at lines 69-72
       expect(validateCsrfToken(request)).toBe(true);
+    });
+
+    it('should reject unsigned tokens without an HMAC signature separator', () => {
+      const unsignedToken = 'a'.repeat(64);
+      const request = new NextRequest('http://localhost', {
+        headers: {
+          'X-CSRF-Token': unsignedToken,
+        },
+      });
+
+      const cookieValue = JSON.stringify({
+        token: unsignedToken,
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      });
+      request.cookies.set('csrf_token', cookieValue);
+
+      expect(validateCsrfToken(request)).toBe(false);
     });
   });
 });

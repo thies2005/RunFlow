@@ -1,6 +1,7 @@
 import { spawn } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
+import { Transform } from 'stream'
 import { pipeline } from 'stream/promises'
 import { createGunzip } from 'zlib'
 import { DAY_MS, RETENTION } from '@/lib/constants'
@@ -101,17 +102,68 @@ function spawnAsync(command: string, args: string[], env: NodeJS.ProcessEnv): Pr
   })
 }
 
+const MAX_RESTORE_UNCOMPRESSED_BYTES = 500 * 1024 * 1024 // 500 MB uncompressed ceiling
+const FORBIDDEN_PSQL_PATTERNS = [
+  /^\s*\\(?![.\r\n])/, // psql backslash meta-commands (\!, \copy, \i, \o, \gexec) except \. terminator
+  /\bCOPY\b[\s\S]{0,200}?\b(?:FROM|TO)\s+PROGRAM\b/i,
+]
+
+function assertSafeSqlRestoreFile(sqlFilePath: string): void {
+  const stats = fs.statSync(sqlFilePath)
+  if (stats.size > MAX_RESTORE_UNCOMPRESSED_BYTES) {
+    throw new Error('SQL backup exceeds maximum uncompressed restore size (500MB)')
+  }
+  const content = fs.readFileSync(sqlFilePath, 'utf8')
+  const header = content.slice(0, 2048)
+  const sqlHeaderPattern = /^(--|\/\*|CREATE|COPY|INSERT|SET|SELECT|PostgreSQL)/m
+  if (!sqlHeaderPattern.test(header)) {
+    throw new Error('Invalid SQL backup file header')
+  }
+  const lines = content.split(/\r?\n/)
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (FORBIDDEN_PSQL_PATTERNS[0].test(line)) {
+      throw new Error(`Rejected unsafe psql meta-command in backup at line ${i + 1}`)
+    }
+    if (/\b(?:FROM|TO)\s+PROGRAM\b/i.test(line)) {
+      throw new Error(`Rejected unsafe COPY PROGRAM clause in backup at line ${i + 1}`)
+    }
+  }
+}
+
 async function prepareRestoreFile(fullPath: string): Promise<{ restorePath: string; cleanupPath: string | null }> {
   if (!fullPath.endsWith('.gz')) {
+    assertSafeSqlRestoreFile(fullPath)
     return { restorePath: fullPath, cleanupPath: null }
   }
 
   const tempPath = path.join(BACKUP_DIR, `${path.basename(fullPath, '.gz')}.restore-${Date.now()}.sql`)
-  await pipeline(
-    fs.createReadStream(fullPath),
-    createGunzip(),
-    fs.createWriteStream(tempPath)
-  )
+  let decompressedBytes = 0
+  const byteLimiter = new Transform({
+    transform(chunk: Buffer, _encoding, callback) {
+      decompressedBytes += chunk.length
+      if (decompressedBytes > MAX_RESTORE_UNCOMPRESSED_BYTES) {
+        callback(new Error('Decompressed backup exceeds maximum allowed size (500MB)'))
+        return
+      }
+      callback(null, chunk)
+    }
+  })
+
+  try {
+    await pipeline(
+      fs.createReadStream(fullPath),
+      createGunzip(),
+      byteLimiter,
+      fs.createWriteStream(tempPath)
+    )
+    assertSafeSqlRestoreFile(tempPath)
+  } catch (err) {
+    if (fs.existsSync(tempPath)) {
+      fs.unlinkSync(tempPath)
+    }
+    throw err
+  }
 
   return { restorePath: tempPath, cleanupPath: tempPath }
 }
@@ -215,7 +267,7 @@ export async function restoreBackup(backupPath: string): Promise<void> {
 
       await spawnAsync(
         'psql',
-        ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '--single-transaction', '-f', prepared.restorePath],
+        ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '--no-psqlrc', '-v', 'ON_ERROR_STOP=1', '--single-transaction', '-f', prepared.restorePath],
         {
           ...process.env,
           PGPASSWORD: pass

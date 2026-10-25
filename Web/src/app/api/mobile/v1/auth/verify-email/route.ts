@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
         }
         const { email: rawEmail, code } = JSON.parse(rawBody);
-        const email = typeof rawEmail === 'string' ? rawEmail.toLowerCase() : rawEmail;
+        const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
 
-        if (!email || !code) {
+        if (!email || typeof code !== 'string' || !code.trim()) {
             return NextResponse.json({ error: 'Email and code are required' }, { status: 400 });
         }
 

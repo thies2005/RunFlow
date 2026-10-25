@@ -202,6 +202,35 @@ export function isSameProviderOrLoopback(uriA: string, uriB: string): boolean {
 /**
  * Generates an HMAC-SHA256 bound consent CSRF token for the OAuth 2.1 authorization step.
  */
+function getConsentCsrfSecret(): string {
+    const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+    if (!secret) {
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error('CRITICAL: NEXTAUTH_SECRET or AUTH_SECRET must be set in production for MCP OAuth consent CSRF signing.');
+        }
+        return 'runflow-mcp-consent-dev-secret';
+    }
+    return secret;
+}
+
+function buildConsentCsrfPayload(params: {
+    userId: string;
+    clientId: string;
+    redirectUri: string;
+    codeChallenge: string;
+    state: string;
+    expiresAtMs: number;
+}): string {
+    return JSON.stringify([
+        params.userId,
+        params.clientId,
+        params.redirectUri,
+        params.codeChallenge,
+        params.state,
+        params.expiresAtMs,
+    ]);
+}
+
 export function createConsentCsrfToken(params: {
     userId: string;
     clientId: string;
@@ -210,9 +239,9 @@ export function createConsentCsrfToken(params: {
     state: string;
     expiresAtMs?: number;
 }): string {
-    const secret = process.env.NEXTAUTH_SECRET || 'runflow-mcp-consent-dev-secret';
+    const secret = getConsentCsrfSecret();
     const expiresAtMs = params.expiresAtMs ?? (Date.now() + 10 * 60 * 1000); // 10 minutes default
-    const payload = `${params.userId}:${params.clientId}:${params.redirectUri}:${params.codeChallenge}:${params.state}:${expiresAtMs}`;
+    const payload = buildConsentCsrfPayload({ ...params, expiresAtMs });
     const hmac = createHmac('sha256', secret).update(payload).digest('hex');
     return `${expiresAtMs}.${hmac}`;
 }
@@ -237,8 +266,8 @@ export function verifyConsentCsrfToken(
     const expiresAtMs = parseInt(expiresAtMsStr, 10);
     if (isNaN(expiresAtMs) || Date.now() > expiresAtMs) return false;
 
-    const secret = process.env.NEXTAUTH_SECRET || 'runflow-mcp-consent-dev-secret';
-    const payload = `${params.userId}:${params.clientId}:${params.redirectUri}:${params.codeChallenge}:${params.state}:${expiresAtMs}`;
+    const secret = getConsentCsrfSecret();
+    const payload = buildConsentCsrfPayload({ ...params, expiresAtMs });
     const expectedHmac = createHmac('sha256', secret).update(payload).digest('hex');
 
     const hmacBuf = Buffer.from(hmacHex, 'hex');

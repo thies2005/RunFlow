@@ -104,8 +104,39 @@ export async function PUT(
         const body = await request.json();
         const { name, type, trainingType, averageWatts, maxWatts, npWatts, bikeTss } = body;
 
+        const VALID_ACTIVITY_TYPES = new Set(['RUN', 'VIRTUAL_RIDE', 'RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER']);
+        const VALID_WORKOUT_TYPES = new Set([
+            'EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'REPETITIONS', 'RECOVERY', 'RACE',
+            'REST', 'CROSS_TRAIN', 'RIDE', 'SWIM', 'STRENGTH', 'OTHER', 'BRICK', 'OPEN_WATER_SWIM',
+            'LONG_RIDE', 'RIDE_INTERVALS', 'SWIM_DRILL', 'TRANSITION_PRACTICE', 'DOUBLE_DAY'
+        ]);
+        const isValidBoundedNum = (v: unknown, max: number) =>
+            v === null || (typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= max);
+
+        if (name !== undefined && (typeof name !== 'string' || name.trim().length === 0 || name.length > 200)) {
+            return errorResponses.badRequest('Activity name must be a non-empty string up to 200 characters');
+        }
+        if (type !== undefined && (typeof type !== 'string' || !VALID_ACTIVITY_TYPES.has(type))) {
+            return errorResponses.badRequest('Invalid activity type');
+        }
+        if (trainingType !== undefined && trainingType !== null && (typeof trainingType !== 'string' || !VALID_WORKOUT_TYPES.has(trainingType))) {
+            return errorResponses.badRequest('Invalid trainingType');
+        }
+        if (averageWatts !== undefined && !isValidBoundedNum(averageWatts, 2500)) {
+            return errorResponses.badRequest('averageWatts must be between 0 and 2500');
+        }
+        if (maxWatts !== undefined && !isValidBoundedNum(maxWatts, 5000)) {
+            return errorResponses.badRequest('maxWatts must be between 0 and 5000');
+        }
+        if (npWatts !== undefined && !isValidBoundedNum(npWatts, 2500)) {
+            return errorResponses.badRequest('npWatts must be between 0 and 2500');
+        }
+        if (bikeTss !== undefined && !isValidBoundedNum(bikeTss, 2000)) {
+            return errorResponses.badRequest('bikeTss must be between 0 and 2000');
+        }
+
         const data: Record<string, unknown> = {};
-        if (name !== undefined) data.name = name;
+        if (name !== undefined) data.name = name.trim();
         if (type !== undefined) data.type = type;
         if (trainingType !== undefined) data.trainingType = trainingType;
         if (averageWatts !== undefined) data.averageWatts = averageWatts;

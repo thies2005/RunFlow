@@ -54,7 +54,46 @@ export async function GET() {
                         targetTime: true,
                         raceDate: true,
                         isActive: true,
+                        workouts: {
+                            select: {
+                                scheduledDate: true,
+                                workoutType: true,
+                                description: true,
+                                phase: true,
+                                targetDistance: true,
+                                targetDuration: true,
+                                targetPace: true,
+                                isCompleted: true,
+                                completedAt: true,
+                            },
+                            orderBy: { scheduledDate: 'asc' },
+                        },
                     }
+                },
+                weeklyReconciliationRecords: {
+                    select: {
+                        weekStartDate: true,
+                        plannedLoad: true,
+                        actualLoad: true,
+                        adaptedLoad: true,
+                        deficitPercent: true,
+                        surplusPercent: true,
+                        adjustmentDescription: true,
+                        isApplied: true,
+                        createdAt: true,
+                    },
+                    orderBy: { weekStartDate: 'desc' },
+                },
+                mcpOAuthTokens: {
+                    select: {
+                        clientId: true,
+                        scope: true,
+                        createdAt: true,
+                        expiresAt: true,
+                        lastUsedAt: true,
+                        revokedAt: true,
+                    },
+                    orderBy: { createdAt: 'desc' },
                 },
                 DailyFitness: {
                     select: {
@@ -304,19 +343,6 @@ export async function GET() {
                         isAccepted: true,
                     },
                     orderBy: { date: 'desc' },
-                },
-                weeklyReconciliationRecords: {
-                    select: {
-                        weekStartDate: true,
-                        plannedLoad: true,
-                        actualLoad: true,
-                        adaptedLoad: true,
-                        deficitPercent: true,
-                        surplusPercent: true,
-                        adjustmentDescription: true,
-                        isApplied: true,
-                    },
-                    orderBy: { weekStartDate: 'desc' },
                 },
                 apiKey: {
                     select: {

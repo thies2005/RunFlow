@@ -133,6 +133,36 @@ export async function PUT(request: NextRequest) {
             );
         }
 
+        if (sex !== undefined && sex !== null && !['MALE', 'FEMALE', 'OTHER'].includes(sex)) {
+            return errorResponses.validation('sex must be MALE, FEMALE, or OTHER', { field: 'sex' });
+        }
+        if (hrRest !== undefined && hrRest !== null && (typeof hrRest !== 'number' || !Number.isFinite(hrRest) || hrRest < 25 || hrRest > 150)) {
+            return errorResponses.validation('hrRest must be between 25 and 150', { field: 'hrRest', min: 25, max: 150 });
+        }
+        if (weight !== undefined && weight !== null && (typeof weight !== 'number' || !Number.isFinite(weight) || weight < 20 || weight > 300)) {
+            return errorResponses.validation('weight must be between 20 and 300 kg', { field: 'weight', min: 20, max: 300 });
+        }
+        if (height !== undefined && height !== null && (typeof height !== 'number' || !Number.isFinite(height) || height < 80 || height > 260)) {
+            return errorResponses.validation('height must be between 80 and 260 cm', { field: 'height', min: 80, max: 260 });
+        }
+        if (vdotCorrectionFactor !== undefined && vdotCorrectionFactor !== null && (typeof vdotCorrectionFactor !== 'number' || !Number.isFinite(vdotCorrectionFactor) || vdotCorrectionFactor < 0.5 || vdotCorrectionFactor > 1.5)) {
+            return errorResponses.validation('vdotCorrectionFactor must be between 0.5 and 1.5', { field: 'vdotCorrectionFactor', min: 0.5, max: 1.5 });
+        }
+        if (ftpWatts !== undefined && ftpWatts !== null && (typeof ftpWatts !== 'number' || !Number.isInteger(ftpWatts) || ftpWatts < 40 || ftpWatts > 1000)) {
+            return errorResponses.validation('ftpWatts must be an integer between 40 and 1000', { field: 'ftpWatts', min: 40, max: 1000 });
+        }
+        if (swimCssSecPer100m !== undefined && swimCssSecPer100m !== null && (typeof swimCssSecPer100m !== 'number' || !Number.isInteger(swimCssSecPer100m) || swimCssSecPer100m < 40 || swimCssSecPer100m > 600)) {
+            return errorResponses.validation('swimCssSecPer100m must be an integer between 40 and 600', { field: 'swimCssSecPer100m', min: 40, max: 600 });
+        }
+        for (const [zoneField, zoneVal] of [
+            ['hrZone1Max', hrZone1Max], ['hrZone2Max', hrZone2Max], ['hrZone3Max', hrZone3Max],
+            ['hrZone4Max', hrZone4Max], ['hrZone5Max', hrZone5Max], ['hrZone6Max', hrZone6Max]
+        ] as const) {
+            if (zoneVal !== undefined && zoneVal !== null && (typeof zoneVal !== 'number' || !Number.isInteger(zoneVal) || zoneVal < 40 || zoneVal > 250)) {
+                return errorResponses.validation(`${zoneField} must be between 40 and 250`, { field: zoneField, min: 40, max: 250 });
+            }
+        }
+
         const user = await prisma.user.update({
             where: { id: authUser.id },
             data: {

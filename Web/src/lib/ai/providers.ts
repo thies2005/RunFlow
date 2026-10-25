@@ -213,36 +213,65 @@ async function assertResolvesToPublicHost(hostname: string): Promise<void> {
 }
 
 export async function safeFetch(input: RequestInfo | URL, init?: RequestInit & { allowedUrls?: string[] }): Promise<Response> {
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    const initialUrl = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    const allowedList = init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS;
+    const MAX_REDIRECT_HOPS = 3;
 
-    // DNS-resolution guard: hostname-string checks do not stop a
-    // caller-controlled DNS name that resolves into private/link-local
-    // space (internal services on the docker bridge, cloud metadata). This
-    // runs for every safeFetch caller, including the self-granted-allowlist
-    // shape used by testAiConfig (/api/ai/test-key) and stored BYOK/admin
-    // provider base URLs.
-    await assertResolvesToPublicHost(new URL(url).hostname);
+    let currentUrl = initialUrl;
+    let currentInit: RequestInit = { ...init, redirect: 'manual' };
+    const initialOrigin = new URL(initialUrl).origin;
 
-    if (!validateUrl(url, init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS)) {
-        throw new Error(`SSRF Protection: Blocked request to disallowed URL: ${url}`);
-    }
+    for (let hop = 0; hop <= MAX_REDIRECT_HOPS; hop++) {
+        const parsedCurrent = new URL(currentUrl);
+        await assertResolvesToPublicHost(parsedCurrent.hostname);
 
-    const response = await fetch(input, init);
-
-    // Redirect re-check. fetch follows redirects by default, so response.url
-    // is the final URL; this is now checked for every status (not just OK)
-    // so a non-OK body fetched from a disallowed redirect target cannot flow
-    // back to the caller either.
-    const finalUrl = response.url;
-    if (finalUrl && finalUrl !== url) {
-        if (!validateUrl(finalUrl, init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS)) {
-            response.body?.cancel();
-            throw new Error(`SSRF Protection: Blocked redirect to disallowed URL: ${finalUrl}`);
+        if (!validateUrl(currentUrl, allowedList)) {
+            throw new Error(`SSRF Protection: Blocked request to disallowed URL: ${currentUrl}`);
         }
-        await assertResolvesToPublicHost(new URL(finalUrl).hostname);
+
+        const response = await fetch(hop === 0 ? input : currentUrl, currentInit);
+
+        if (response.status >= 300 && response.status < 400) {
+            const location = response.headers.get('location');
+            response.body?.cancel();
+            if (!location) {
+                return response;
+            }
+            if (hop === MAX_REDIRECT_HOPS) {
+                throw new Error('SSRF Protection: Too many redirects from AI provider endpoint');
+            }
+            const nextUrl = new URL(location, currentUrl).toString();
+            if (!validateUrl(nextUrl, allowedList)) {
+                throw new Error(`SSRF Protection: Blocked redirect to disallowed URL: ${nextUrl}`);
+            }
+            await assertResolvesToPublicHost(new URL(nextUrl).hostname);
+
+            if (new URL(nextUrl).origin !== initialOrigin && currentInit.headers) {
+                const sanitizedHeaders = new Headers(currentInit.headers);
+                sanitizedHeaders.delete('authorization');
+                sanitizedHeaders.delete('x-api-key');
+                currentInit = { ...currentInit, headers: sanitizedHeaders };
+            }
+            if (response.status === 301 || response.status === 302 || response.status === 303) {
+                currentInit = { ...currentInit, method: 'GET', body: undefined };
+            }
+            currentUrl = nextUrl;
+            continue;
+        }
+
+        const finalUrl = response.url;
+        if (finalUrl && finalUrl !== currentUrl) {
+            if (!validateUrl(finalUrl, allowedList)) {
+                response.body?.cancel();
+                throw new Error(`SSRF Protection: Blocked redirect to disallowed URL: ${finalUrl}`);
+            }
+            await assertResolvesToPublicHost(new URL(finalUrl).hostname);
+        }
+
+        return response;
     }
 
-    return response;
+    throw new Error('SSRF Protection: Redirect limit exceeded');
 }
 
 export function validateBaseUrl(baseUrl: string, extraAllowedUrls: string[] = []): boolean {

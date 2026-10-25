@@ -118,6 +118,7 @@ export async function POST(req: Request) {
                 operations.push(prisma.dailyReadinessRecord.deleteMany({ where: { userId: session.user.id } }));
                 operations.push(prisma.readinessBaseline.deleteMany({ where: { userId: session.user.id } }));
                 operations.push(prisma.adaptedWorkout.deleteMany({ where: { userId: session.user.id } }));
+                operations.push(prisma.weeklyReconciliationRecord.deleteMany({ where: { userId: session.user.id } }));
                 // Disable tracking
                 operations.push(prisma.user.update({
                     where: { id: session.user.id },

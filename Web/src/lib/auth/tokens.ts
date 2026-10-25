@@ -3,7 +3,7 @@
 import { randomBytes } from 'crypto';
 import { prisma } from '@/lib/db';
 import { AuthCodeType } from '@/generated/prisma/browser';
-import { checkRateLimit } from '@/lib/rateLimit';
+import { checkRateLimit, resetRateLimit } from '@/lib/rateLimit';
 import { MINUTE_MS, AUTH_TOKEN_DURATION } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
 
@@ -55,34 +55,46 @@ export async function createAuthCode(email: string, type: AuthCodeType): Promise
  * Rate limited to 10 attempts per 15 minutes per email to prevent brute-force attacks
  */
 export async function verifyAuthCode(email: string, code: string, type: AuthCodeType): Promise<boolean> {
-    const rateLimitResult = checkRateLimit(email, {
-        limit: 10,
-        windowSeconds: AUTH_TOKEN_DURATION,
-        prefix: 'auth_code_verify',
-    });
-
-    if (!rateLimitResult.allowed) {
-        logger.warn('Rate limit exceeded for auth code verification', { email });
+    if (typeof email !== 'string' || typeof code !== 'string' || !email.trim() || !code.trim()) {
         return false;
     }
+    const normalizedEmail = email.trim().toLowerCase();
 
     const record = await prisma.authCode.findFirst({
         where: {
-            email,
+            email: normalizedEmail,
             type,
-            code: code.toUpperCase(), // Case insensitive comparison
+            code: code.trim().toUpperCase(), // Case insensitive comparison
             expiresAt: { gt: new Date() }
         }
     });
 
     if (!record) {
+        const rateLimitResult = checkRateLimit(normalizedEmail, {
+            limit: 10,
+            windowSeconds: AUTH_TOKEN_DURATION,
+            prefix: 'auth_code_verify',
+        });
+        if (!rateLimitResult.allowed) {
+            logger.warn('Rate limit exceeded for failed auth code verification attempts', { email: normalizedEmail });
+        }
         return false;
     }
 
-    // Consume the code so it can't be reused
-    await prisma.authCode.delete({
-        where: { id: record.id }
-    });
+    // Consume the code atomically so concurrent requests cannot replay it
+    if (typeof prisma.authCode.deleteMany === 'function') {
+        const deleted = await prisma.authCode.deleteMany({
+            where: { id: record.id }
+        });
+        if (deleted && typeof deleted.count === 'number' && deleted.count !== 1) {
+            return false;
+        }
+    } else {
+        await prisma.authCode.delete({
+            where: { id: record.id }
+        });
+    }
 
+    await resetRateLimit(normalizedEmail, 'auth_code_verify');
     return true;
 }

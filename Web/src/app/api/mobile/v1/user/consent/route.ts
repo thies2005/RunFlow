@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
                 operations.push(prisma.dailyReadinessRecord.deleteMany({ where: { userId: user.id } }));
                 operations.push(prisma.readinessBaseline.deleteMany({ where: { userId: user.id } }));
                 operations.push(prisma.adaptedWorkout.deleteMany({ where: { userId: user.id } }));
+                operations.push(prisma.weeklyReconciliationRecord.deleteMany({ where: { userId: user.id } }));
                 operations.push(prisma.user.update({
                     where: { id: user.id },
                     data: { healthTrackingEnabled: false },

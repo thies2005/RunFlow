@@ -755,6 +755,38 @@ export async function POST(request: NextRequest) {
         );
     }
 
+    try {
+        const cloned = request.clone();
+        const body = await cloned.json();
+        if (Array.isArray(body)) {
+            if (body.length > 10) {
+                return NextResponse.json(
+                    {
+                        jsonrpc: '2.0',
+                        id: null,
+                        error: {
+                            code: -32600,
+                            message: 'Invalid Request: Public MCP batch size exceeds maximum of 10 requests',
+                        },
+                    },
+                    { status: 400 }
+                );
+            }
+            const toolCalls = body.filter((item: unknown) => Boolean(item && typeof item === 'object' && (item as { method?: string }).method === 'tools/call')).length;
+            for (let i = 1; i < toolCalls; i++) {
+                const extraLimit = await checkPublicMcpRateLimit(request);
+                if (extraLimit && !extraLimit.allowed) {
+                    return NextResponse.json(
+                        { error: 'Rate limit exceeded' },
+                        { status: 429, headers: rateLimitHeaders(extraLimit) }
+                    );
+                }
+            }
+        }
+    } catch {
+        // Malformed JSON is handled downstream by publicMcpServer.handleHttpRequest
+    }
+
     return publicMcpServer.handleHttpRequest(request, { request });
 }
 

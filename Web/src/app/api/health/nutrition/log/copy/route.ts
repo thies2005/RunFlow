@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
 import { subDays, format } from 'date-fns';
+import { healthDataConsentWithdrawn } from '@/lib/health/consent-gate';
+
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function POST(request: Request) {
     try {
@@ -11,12 +14,18 @@ export async function POST(request: Request) {
         }
         
         const userId = session.user.id;
+        if (await healthDataConsentWithdrawn(userId)) {
+            return NextResponse.json(
+                { error: 'Health data consent has been withdrawn. Re-grant HEALTH_DATA consent to copy meals.' },
+                { status: 403 }
+            );
+        }
+
         const body = await request.json();
-        
         const { targetDate, mealType } = body;
 
-        if (!targetDate || !mealType) {
-            return NextResponse.json({ error: 'Missing targetDate or mealType' }, { status: 400 });
+        if (typeof targetDate !== 'string' || !DATE_PATTERN.test(targetDate) || typeof mealType !== 'string' || !mealType.trim()) {
+            return NextResponse.json({ error: 'Missing or invalid targetDate or mealType' }, { status: 400 });
         }
 
         // Calculate yesterday's date based on targetDate

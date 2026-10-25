@@ -23,13 +23,18 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
         }
         const { email: rawEmail, code, password } = JSON.parse(rawBody);
-        const email = typeof rawEmail === 'string' ? rawEmail.toLowerCase() : rawEmail;
+        const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
 
-        if (!email || !code || !password) {
+        if (!email || typeof code !== 'string' || !code.trim() || typeof password !== 'string' || !password) {
             return NextResponse.json(
                 { error: 'Email, code, and new password are required' },
                 { status: 400 }
             );
+        }
+
+        const pairRateLimit = await checkRateLimitAsync(`${clientId}:${email}`, { limit: 5, windowSeconds: 900, prefix: 'reset_pw_pair' });
+        if (!pairRateLimit.allowed) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
         }
 
         const isValid = await verifyAuthCode(email, code, AuthCodeType.PASSWORD_RESET);

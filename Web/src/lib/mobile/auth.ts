@@ -359,21 +359,32 @@ export async function exchangeStravaCodeForTokens(
                 }
             });
         } else {
-            // Update existing user's tokens
-            await prisma.user.update({
-                where: { stravaId },
-                data: {
-                    stravaAccessToken: encryptToken(access_token),
-                    stravaRefreshToken: encryptToken(refresh_token),
-                    stravaTokenExpiry: new Date(expires_at * 1000),
-                    image: athlete.profile || undefined,
-                    // Always update name and email if provided by Strava (e.g. scope change)
-                    name: (`${athlete.firstname || ''} ${athlete.lastname || ''}`.trim()) || undefined,
-                    // Only update email if it's currently null or if Strava provides one
-                    // We use undefined to skip update if athlete.email is missing
-                    ...(athlete.email ? { email: athlete.email } : {})
+            // Update existing user's tokens; guard against P2002 if athlete.email collides with another account
+            const updateBaseData = {
+                stravaAccessToken: encryptToken(access_token),
+                stravaRefreshToken: encryptToken(refresh_token),
+                stravaTokenExpiry: new Date(expires_at * 1000),
+                image: athlete.profile || undefined,
+                name: (`${athlete.firstname || ''} ${athlete.lastname || ''}`.trim()) || undefined,
+            };
+            try {
+                await prisma.user.update({
+                    where: { stravaId },
+                    data: {
+                        ...updateBaseData,
+                        ...(!user.email && athlete.email ? { email: athlete.email } : {})
+                    }
+                });
+            } catch (e) {
+                if (e && typeof e === 'object' && 'code' in e && (e as { code?: string }).code === 'P2002') {
+                    await prisma.user.update({
+                        where: { stravaId },
+                        data: updateBaseData
+                    });
+                } else {
+                    throw e;
                 }
-            });
+            }
 
             // Update Account record
             await prisma.account.updateMany({

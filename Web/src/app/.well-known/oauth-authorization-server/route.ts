@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 function getOrigin(request: Request): string {
-    const proto = request.headers.get('x-forwarded-proto') || 'https';
-    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
-    if (host) {
-        return `${proto}://${host}`;
+    const configured = process.env.NEXTAUTH_URL || process.env.AUTH_URL;
+    if (configured) {
+        try {
+            return new URL(configured).origin;
+        } catch {
+            // Fall through to request.url origin
+        }
     }
     const url = new URL(request.url);
     return url.origin;

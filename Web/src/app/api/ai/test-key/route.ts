@@ -39,10 +39,9 @@ export async function POST(request: NextRequest) {
         }
 
         const effectiveBaseUrl = baseUrl || (provider === 'google' ? 'https://generativelanguage.googleapis.com' : 'https://api.openai.com/v1');
-        if (!isAdmin) {
-            if (!validateBaseUrl(effectiveBaseUrl)) {
-                return NextResponse.json({ valid: false, error: 'Base URL must be a supported HTTPS AI provider endpoint' }, { status: 400 });
-            }
+        const adminAllowedUrls = isAdmin && typeof baseUrl === 'string' && baseUrl.startsWith('https://') ? [baseUrl] : [];
+        if (!validateBaseUrl(effectiveBaseUrl, adminAllowedUrls)) {
+            return NextResponse.json({ valid: false, error: 'Base URL must be a valid HTTPS AI provider endpoint' }, { status: 400 });
         }
 
         const effectiveModel = model || 'gpt-4o-mini';

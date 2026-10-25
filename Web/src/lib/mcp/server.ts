@@ -241,6 +241,17 @@ export class McpServer {
                         return isNotification ? null : { jsonrpc: '2.0', id, result: callResult };
                     }
 
+                    if (context?.authType === 'api_key' && tool.annotations?.readOnlyHint !== true) {
+                        return isNotification ? null : {
+                            jsonrpc: '2.0',
+                            id,
+                            error: {
+                                code: -32003,
+                                message: 'External API keys (rf_*) are read-only; authorize via MCP OAuth 2.1 for write tools',
+                            },
+                        };
+                    }
+
                     try {
                         const toolArgs = params.arguments || {};
                         const rawResult = await tool.handler(toolArgs, context);

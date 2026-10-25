@@ -8,6 +8,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { hashPassword, validateEmail, validatePassword } from '@/lib/auth/auth-email';
+import { createAuthCode } from '@/lib/auth/tokens';
+import { sendWelcomeEmail as sendVerificationEmail } from '@/lib/email';
+import { AuthCodeType } from '@/generated/prisma/browser';
 import { generateTokenPair } from '@/lib/mobile/auth';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
 import { readBodyWithLimit } from '@/lib/api/bodyLimit';
@@ -89,6 +92,13 @@ export async function POST(request: NextRequest) {
                 tokenVersion: true
             }
         });
+
+        try {
+            const verificationCode = await createAuthCode(email.toLowerCase(), AuthCodeType.VERIFY_EMAIL);
+            await sendVerificationEmail(email.toLowerCase(), verificationCode);
+        } catch (emailErr) {
+            console.warn('[Mobile Auth] Failed to send verification email during registration:', emailErr);
+        }
 
         // Generate JWT tokens
         const tokens = await generateTokenPair(user.id, user.tokenVersion);

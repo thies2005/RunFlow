@@ -20,13 +20,18 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
         }
         const { email: rawEmail, code } = JSON.parse(rawBody);
-        const email = typeof rawEmail === 'string' ? rawEmail.toLowerCase() : rawEmail;
+        const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
 
-        if (!email || !code) {
+        if (!email || typeof code !== 'string' || !code.trim()) {
             return NextResponse.json(
                 { error: 'Email and code are required' },
                 { status: 400 }
             );
+        }
+
+        const pairRateLimit = await checkRateLimitAsync(`${clientId}:${email}`, { limit: 10, windowSeconds: 900, prefix: 'verify-email-pair' });
+        if (!pairRateLimit.allowed) {
+            return NextResponse.json({ error: 'Too many verification attempts. Please try again later.' }, { status: 429 });
         }
 
         const isValid = await verifyAuthCode(email, code, AuthCodeType.VERIFY_EMAIL);

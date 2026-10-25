@@ -189,6 +189,25 @@ export async function requireAdmin(request: NextRequest): Promise<{ admin: Admin
         };
     }
 
+    const envUsername = process.env.ADMIN_USERNAME;
+    if ((!envUsername || admin.username !== envUsername) && typeof prisma?.user?.findFirst === 'function') {
+        const dbAdmin = await prisma.user.findFirst({
+            where: {
+                email: { equals: admin.username, mode: 'insensitive' },
+                isAdmin: true,
+            },
+            select: { id: true },
+        });
+        if (!dbAdmin) {
+            return {
+                error: NextResponse.json(
+                    { error: 'Admin privileges revoked or invalid', code: 'INVALID_TOKEN' },
+                    { status: 401 }
+                )
+            };
+        }
+    }
+
     if (!isBearer && !['GET', 'HEAD', 'OPTIONS'].includes(request.method.toUpperCase())) {
         if (!validateCsrfToken(request)) {
             return { error: csrfErrorResponse() };

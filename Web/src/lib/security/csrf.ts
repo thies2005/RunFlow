@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { randomBytes } from 'crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { DAY_MS } from '@/lib/constants';
 
 const CSRF_COOKIE_NAME = 'csrf_token';
@@ -10,8 +10,18 @@ interface CsrfTokenData {
     expiresAt: number;
 }
 
+function getCsrfSigningSecret(): string {
+    return process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || 'runflow-csrf-dev-secret';
+}
+
+function signCsrfNonce(nonce: string): string {
+    return createHmac('sha256', getCsrfSigningSecret()).update(nonce).digest('hex');
+}
+
 export function generateCsrfToken(): string {
-    return randomBytes(32).toString('hex');
+    const nonce = randomBytes(32).toString('hex');
+    const sig = signCsrfNonce(nonce);
+    return `${nonce}.${sig}`;
 }
 
 export function setCsrfCookie(response: NextResponse): string {
@@ -78,12 +88,24 @@ export function validateCsrfToken(request: NextRequest): boolean {
         return false;
     }
 
-    let result = 0;
-    for (let i = 0; i < cookieToken.length; i++) {
-        result |= cookieToken.charCodeAt(i) ^ headerToken.charCodeAt(i);
+    const cookieBuf = Buffer.from(cookieToken, 'utf8');
+    const headerBuf = Buffer.from(headerToken, 'utf8');
+    if (cookieBuf.length !== headerBuf.length || !timingSafeEqual(cookieBuf, headerBuf)) {
+        return false;
     }
 
-    return result === 0;
+    if (cookieToken.includes('.')) {
+        const [nonce, sig] = cookieToken.split('.');
+        if (!nonce || !sig) return false;
+        const expectedSig = signCsrfNonce(nonce);
+        const sigBuf = Buffer.from(sig, 'utf8');
+        const expBuf = Buffer.from(expectedSig, 'utf8');
+        if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 export function csrfValidationErrorResponse(): NextResponse {

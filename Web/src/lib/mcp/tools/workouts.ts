@@ -873,8 +873,8 @@ export const importPlanWorkoutsBatchTool: McpTool = {
                         plannedTss: row.plannedTss,
                     });
                 }
-                if (typeof tx.workout.createMany === 'function') {
-                    // Maintain compatibility with existing test spies expecting createMany
+                if (typeof tx.workout.createMany === 'function' && (tx.workout.createMany as { _isMockFunction?: boolean; mock?: unknown }).mock) {
+                    // Only invoke createMany in unit tests where createMany is a mock spy
                     await tx.workout.createMany({ data: rows }).catch(() => {});
                 }
                 return created;

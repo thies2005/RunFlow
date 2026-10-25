@@ -14,6 +14,7 @@ import { logger } from '@/lib/logging/logger';
 import { logAdminAction } from '@/lib/admin/auditLog';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as zlib from 'zlib';
 
 const BACKUPS_DIR = process.env.BACKUP_DIR || path.join(process.cwd(), 'backups');
 
@@ -103,6 +104,8 @@ export async function POST(request: NextRequest) {
         // Validate actual content via magic bytes / header sniffing, not just the
         // file extension. .sql.gz must start with the gzip magic bytes; plain
         // .sql must start with typical SQL header text in the first 2KB.
+        const sqlHeaderPattern = /^(--|\/\*|CREATE|COPY|INSERT|SET|SELECT|PostgreSQL)/m;
+        const unsafePsqlPattern = /(?:^\s*\\(?![.\r\n])|\b(?:FROM|TO)\s+PROGRAM\b)/im;
         const isGz = sanitizedFilename.toLowerCase().endsWith('.sql.gz');
         if (isGz) {
             if (buffer.length < 2 || buffer[0] !== 0x1f || buffer[1] !== 0x8b) {
@@ -111,13 +114,31 @@ export async function POST(request: NextRequest) {
                     { status: 415 }
                 );
             }
+            let previewText = '';
+            try {
+                previewText = zlib.gunzipSync(buffer, { maxOutputLength: 65536 }).toString('utf8');
+            } catch (err: unknown) {
+                const code = (err as { code?: string })?.code;
+                if (code !== 'Z_BUF_ERROR') {
+                    return NextResponse.json(
+                        { error: 'Invalid or corrupted gzip backup archive' },
+                        { status: 415 }
+                    );
+                }
+            }
+            if (previewText && (!sqlHeaderPattern.test(previewText.slice(0, 2048)) || unsafePsqlPattern.test(previewText))) {
+                return NextResponse.json(
+                    { error: 'Invalid or unsafe SQL content in compressed backup' },
+                    { status: 415 }
+                );
+            }
         } else {
             // Plain .sql
-            const header = buffer.subarray(0, 2048).toString('utf8');
-            const sqlHeaderPattern = /^(--|\/\*|CREATE|COPY|INSERT|SET|SELECT|PostgreSQL)/m;
-            if (!sqlHeaderPattern.test(header)) {
+            const fullSqlText = buffer.toString('utf8');
+            const header = fullSqlText.slice(0, 2048);
+            if (!sqlHeaderPattern.test(header) || unsafePsqlPattern.test(fullSqlText)) {
                 return NextResponse.json(
-                    { error: 'Invalid backup file format' },
+                    { error: 'Invalid or unsafe backup file format' },
                     { status: 415 }
                 );
             }

@@ -71,7 +71,24 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             return response;
         }
 
-        if (linkedActivityId) {
+        if (targetDistance !== undefined && targetDistance !== null && (typeof targetDistance !== 'number' || !Number.isFinite(targetDistance) || targetDistance < 0 || targetDistance > 500000)) {
+            const response = NextResponse.json({ error: 'Invalid targetDistance' }, { status: 400 });
+            setApiVersionHeaders(response.headers);
+            return response;
+        }
+
+        if (targetDuration !== undefined && targetDuration !== null && (typeof targetDuration !== 'number' || !Number.isFinite(targetDuration) || targetDuration < 0 || targetDuration > 604800)) {
+            const response = NextResponse.json({ error: 'Invalid targetDuration' }, { status: 400 });
+            setApiVersionHeaders(response.headers);
+            return response;
+        }
+
+        if (linkedActivityId !== undefined && linkedActivityId !== null) {
+            if (typeof linkedActivityId !== 'string' || !linkedActivityId.trim()) {
+                const response = NextResponse.json({ error: 'Invalid linkedActivityId' }, { status: 400 });
+                setApiVersionHeaders(response.headers);
+                return response;
+            }
             const activity = await prisma.activity.findUnique({ where: { id: linkedActivityId } });
             if (!activity || activity.userId !== session.user.id) {
                 const response = NextResponse.json({ error: 'Activity not found' }, { status: 404 });
@@ -89,8 +106,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 targetDuration,
                 scheduledDate: scheduledDate ? new Date(scheduledDate) : undefined,
                 isCompleted,
-                completedAt: isCompleted ? new Date() : null,
-                linkedActivityId: linkedActivityId ?? null
+                ...(isCompleted !== undefined ? { completedAt: isCompleted ? (workout.completedAt ?? new Date()) : null } : {}),
+                ...(linkedActivityId !== undefined ? { linkedActivityId: linkedActivityId || null } : (isCompleted === false ? { linkedActivityId: null } : {}))
             }
         });
 

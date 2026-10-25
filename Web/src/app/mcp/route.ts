@@ -247,8 +247,10 @@ export async function POST(request: NextRequest) {
 
     if (body && typeof body === 'object') {
         const requests = Array.isArray(body) ? body : [body];
+        let toolCallCount = 0;
         for (const req of requests) {
             if (req && req.method === 'tools/call') {
+                toolCallCount++;
                 const toolName = req.params?.name;
                 if (auth.authType === 'api_key' && toolName && WRITE_MCP_TOOLS.has(toolName)) {
                     return NextResponse.json(
@@ -263,6 +265,32 @@ export async function POST(request: NextRequest) {
                         { status: 403, headers: CORS_HEADERS }
                     );
                 }
+            }
+        }
+        for (let i = 1; i < toolCallCount; i++) {
+            const extraLimit = await checkRateLimitAsync(auth.userId, {
+                limit: 60,
+                windowSeconds: 60,
+                prefix: 'mcp-paid',
+            });
+            if (!extraLimit.allowed) {
+                return NextResponse.json(
+                    {
+                        jsonrpc: '2.0',
+                        id: null,
+                        error: {
+                            code: -32000,
+                            message: 'Rate limit exceeded: batch tool calls exceed 60 requests per minute allowance.',
+                        },
+                    },
+                    {
+                        status: 429,
+                        headers: {
+                            ...CORS_HEADERS,
+                            ...rateLimitHeaders(extraLimit),
+                        },
+                    }
+                );
             }
         }
     }

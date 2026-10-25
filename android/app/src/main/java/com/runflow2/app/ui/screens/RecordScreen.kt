@@ -122,14 +122,24 @@ fun RecordScreen(
     }
 
     fun begin() {
-        val want = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        val want = mutableListOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+        )
+        if (Build.VERSION.SDK_INT >= 29) want.add(Manifest.permission.ACTIVITY_RECOGNITION)
         if (Build.VERSION.SDK_INT >= 33) want.add(Manifest.permission.POST_NOTIFICATIONS)
         val missing = want.filter {
             ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
         }
-        if (missing.any { it != Manifest.permission.POST_NOTIFICATIONS }) {
+        val missingLocation = missing.any {
+            it == Manifest.permission.ACCESS_FINE_LOCATION || it == Manifest.permission.ACCESS_COARSE_LOCATION
+        }
+        if (missingLocation) {
             permissionLauncher.launch(missing.toTypedArray())
         } else {
+            if (missing.isNotEmpty()) {
+                permissionLauncher.launch(missing.toTypedArray())
+            }
             val workoutId = container.recording.pendingWorkoutId
             RecordingService.start(context, workoutId, settings.autoPause, settings.voiceCoach)
         }

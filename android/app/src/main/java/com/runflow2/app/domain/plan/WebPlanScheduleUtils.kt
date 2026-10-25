@@ -58,8 +58,18 @@ object WebPlanScheduleUtils {
                     continue
                 }
 
+                if (candidate.phase != null && curr.phase != null && candidate.phase != curr.phase) {
+                    offset++
+                    continue
+                }
                 val candidateDate = candidate.date
                 val currDate = curr.date
+                val currSunday = currDate.minusDays(jsDay(currDate).toLong())
+                val candSunday = candidateDate.minusDays(jsDay(candidateDate).toLong())
+                if (currSunday != candSunday) {
+                    offset++
+                    continue
+                }
                 if (restDaySet.contains(jsDay(candidateDate)) || restDaySet.contains(jsDay(currDate))) {
                     offset++
                     continue

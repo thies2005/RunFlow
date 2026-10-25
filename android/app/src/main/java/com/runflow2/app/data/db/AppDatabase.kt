@@ -328,10 +328,15 @@ interface ActivityDao {
     @Query(
         "UPDATE activities SET " +
             "powerZone1Sec = :z1, powerZone2Sec = :z2, powerZone3Sec = :z3, " +
-            "powerZone4Sec = :z4, powerZone5Sec = :z5, powerZone6Sec = :z6, powerZone7Sec = :z7 " +
+            "powerZone4Sec = :z4, powerZone5Sec = :z5, powerZone6Sec = :z6, powerZone7Sec = :z7, " +
+            "updatedAt = :updatedAt " +
             "WHERE id = :id"
     )
-    suspend fun updatePowerZones(id: String, z1: Int, z2: Int, z3: Int, z4: Int, z5: Int, z6: Int, z7: Int)
+    suspend fun updatePowerZones(
+        id: String,
+        z1: Int, z2: Int, z3: Int, z4: Int, z5: Int, z6: Int, z7: Int,
+        updatedAt: Long = System.currentTimeMillis(),
+    )
 
     @Query("DELETE FROM activities WHERE id = :id")
     suspend fun delete(id: String)

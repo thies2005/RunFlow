@@ -609,7 +609,10 @@ private fun WorkoutActionSheet(
                 TextButton(
                     onClick = {
                         runCatching {
-                            val file = com.runflow2.app.core.export.PlanZwoExporter.exportToCache(context, workout)
+                            val activeFtp = workout.targetPowerWatts?.let { w ->
+                                workout.targetFtpPercent?.takeIf { it > 0 }?.let { pct -> (w * 100.0 / pct).toInt() }
+                            } ?: 200
+                            val file = com.runflow2.app.core.export.PlanZwoExporter.exportToCache(context, workout, activeFtp)
                             val uri = androidx.core.content.FileProvider.getUriForFile(
                                 context,
                                 "${context.packageName}.fileprovider",

@@ -178,6 +178,9 @@ data class CreateActivityRequest(
     val totalElevation: Double? = null,
     val hasHeartrate: Boolean? = null,
     val calories: Double? = null,
+    val averageWatts: Double? = null,
+    val npWatts: Double? = null,
+    val trainingType: String? = null,
     val notes: String? = null,
     val streams: ActivityStreamsDto? = null,
 )

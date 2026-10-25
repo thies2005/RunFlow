@@ -18,7 +18,7 @@ internal object WebPlanNoRaceGenerator {
         val vdot = config.vdot
         val requestedStartDate = config.startDate ?: LocalDate.now()
         val startDate = requestedStartDate
-        val runsPerWeek = maxOf(1, config.runsPerWeek ?: 4)
+        val runsPerWeek = maxOf(0, config.runsPerWeek ?: 4)
         val ridesPerWeek = maxOf(0, config.ridesPerWeek ?: 0)
         val strengthPerWeek = maxOf(0, config.strengthPerWeek ?: 0)
         val swimsPerWeek = maxOf(0, config.swimsPerWeek ?: 0)
@@ -201,20 +201,22 @@ internal object WebPlanNoRaceGenerator {
             return preferred
         }
 
-        val longRunDayResolved = getAvailableDay(preferredLongRunDay, emptyList())
-        usedDays.add(longRunDayResolved)
-        hardSessionDays.add(longRunDayResolved)
+        if (runsPerWeek >= 1) {
+            val longRunDayResolved = getAvailableDay(preferredLongRunDay, emptyList())
+            usedDays.add(longRunDayResolved)
+            hardSessionDays.add(longRunDayResolved)
 
-        workouts.add(
-            WebScheduledWorkout(
-                dayOffset = longRunDayResolved,
-                type = "LONG_RUN",
-                description = "Long Run: ${WebPlanEngine.toFixed1(longRunDist / 1000)}km @ Easy",
-                totalDistance = longRunDist,
-                targetPace = easyPace,
-                targetDuration = 0.0,
+            workouts.add(
+                WebScheduledWorkout(
+                    dayOffset = longRunDayResolved,
+                    type = "LONG_RUN",
+                    description = "Long Run: ${WebPlanEngine.toFixed1(longRunDist / 1000)}km @ Easy",
+                    totalDistance = longRunDist,
+                    targetPace = easyPace,
+                    targetDuration = 0.0,
+                )
             )
-        )
+        }
 
         if (hasQuality) {
             val qualityDay = getAvailableDay(preferredWorkoutDay, hardSessionDays)
@@ -319,9 +321,9 @@ internal object WebPlanNoRaceGenerator {
         val qualityDistance = workouts
             .filter { w -> w.type != "LONG_RUN" && isRunType(w.type) }
             .sumOf { it.totalDistance }
-        val keyRunCount = if (hasQuality) 2 else 1
+        val keyRunCount = if (runsPerWeek >= 1) (if (hasQuality) 2 else 1) else 0
         val easyRunsCount = maxOf(0, runsPerWeek - keyRunCount)
-        val remainingVol = maxOf(0.0, weeklyVolume - longRunDist - qualityDistance)
+        val remainingVol = maxOf(0.0, weeklyVolume - (if (runsPerWeek >= 1) longRunDist else 0.0) - qualityDistance)
         val easyDist = if (easyRunsCount > 0) {
             maxOf(
                 WebPlanEngine.PLAN_CONSTANTS.EASY_RUN_MIN,
@@ -363,6 +365,7 @@ internal object WebPlanNoRaceGenerator {
 
         var remainingRides = ridesPerWeek
         var remainingSwims = swimsPerWeek
+        var ridesPlaced = 0
 
         if (preferredSwimDay != null && remainingSwims > 0 && !usedDays.contains(preferredSwimDay)) {
             usedDays.add(preferredSwimDay)
@@ -380,19 +383,43 @@ internal object WebPlanNoRaceGenerator {
         for (d in 0 until 7) {
             if (!usedDays.contains(d)) freeDaysForCT.add(d)
         }
+        for (d in 0 until 7) {
+            if ((restDays == null || !restDays.contains(d)) && !freeDaysForCT.contains(d)) {
+                freeDaysForCT.add(d)
+            }
+        }
 
         for (d in freeDaysForCT) {
             if (remainingRides <= 0 && remainingSwims <= 0) break
             usedDays.add(d)
             if (remainingRides > 0) {
                 remainingRides--
-                workouts.add(
-                    WebScheduledWorkout(
-                        dayOffset = d, type = "RIDE",
-                        description = "Bike: 60min (Zone 1-2)",
-                        totalDistance = 0.0, targetPace = 0.0, targetDuration = 3600.0,
+                ridesPlaced++
+                if (ridesPlaced == 1 && ridesPerWeek >= 2 && !isRecoveryWeek && runsPerWeek == 0) {
+                    workouts.add(
+                        WebScheduledWorkout(
+                            dayOffset = d, type = "LONG_RIDE",
+                            description = "Long Ride: 90min (Zone 2)",
+                            totalDistance = 0.0, targetPace = 0.0, targetDuration = 5400.0,
+                        )
                     )
-                )
+                } else if (ridesPlaced == 2 && !isRecoveryWeek && runsPerWeek == 0) {
+                    workouts.add(
+                        WebScheduledWorkout(
+                            dayOffset = d, type = "RIDE_INTERVALS",
+                            description = "Bike Intervals: 60min (Threshold / Vo2max)",
+                            totalDistance = 0.0, targetPace = 0.0, targetDuration = 3600.0,
+                        )
+                    )
+                } else {
+                    workouts.add(
+                        WebScheduledWorkout(
+                            dayOffset = d, type = "RIDE",
+                            description = "Bike: 60min (Zone 1-2)",
+                            totalDistance = 0.0, targetPace = 0.0, targetDuration = 3600.0,
+                        )
+                    )
+                }
             } else if (remainingSwims > 0) {
                 remainingSwims--
                 workouts.add(

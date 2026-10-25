@@ -44,6 +44,17 @@ data class WorkoutSnapshotDto(
     val targetHrMaxBpm: Int? = null,
     val targetPaceMinSecPerKm: Double? = null,
     val targetPaceMaxSecPerKm: Double? = null,
+    val webWorkoutType: String? = null,
+    val webPhase: String? = null,
+    val targetPowerWatts: Int? = null,
+    val targetPowerMinWatts: Int? = null,
+    val targetPowerMaxWatts: Int? = null,
+    val targetPowerZone: Int? = null,
+    val targetFtpPercent: Int? = null,
+    val targetCadenceRpm: Int? = null,
+    val targetRpe: Int? = null,
+    val plannedTss: Double? = null,
+    val sport: String = "RUN",
 )
 
 fun WorkoutEntity.toSnapshotDto(): WorkoutSnapshotDto = WorkoutSnapshotDto(
@@ -68,6 +79,17 @@ fun WorkoutEntity.toSnapshotDto(): WorkoutSnapshotDto = WorkoutSnapshotDto(
     targetHrMaxBpm = targetHrMaxBpm,
     targetPaceMinSecPerKm = targetPaceMinSecPerKm,
     targetPaceMaxSecPerKm = targetPaceMaxSecPerKm,
+    webWorkoutType = webWorkoutType,
+    webPhase = webPhase,
+    targetPowerWatts = targetPowerWatts,
+    targetPowerMinWatts = targetPowerMinWatts,
+    targetPowerMaxWatts = targetPowerMaxWatts,
+    targetPowerZone = targetPowerZone,
+    targetFtpPercent = targetFtpPercent,
+    targetCadenceRpm = targetCadenceRpm,
+    targetRpe = targetRpe,
+    plannedTss = plannedTss,
+    sport = sport,
 )
 
 fun WorkoutSnapshotDto.toEntity(dirty: Boolean = false): WorkoutEntity = WorkoutEntity(
@@ -93,6 +115,17 @@ fun WorkoutSnapshotDto.toEntity(dirty: Boolean = false): WorkoutEntity = Workout
     targetHrMaxBpm = targetHrMaxBpm,
     targetPaceMinSecPerKm = targetPaceMinSecPerKm,
     targetPaceMaxSecPerKm = targetPaceMaxSecPerKm,
+    webWorkoutType = webWorkoutType,
+    webPhase = webPhase,
+    targetPowerWatts = targetPowerWatts,
+    targetPowerMinWatts = targetPowerMinWatts,
+    targetPowerMaxWatts = targetPowerMaxWatts,
+    targetPowerZone = targetPowerZone,
+    targetFtpPercent = targetFtpPercent,
+    targetCadenceRpm = targetCadenceRpm,
+    targetRpe = targetRpe,
+    plannedTss = plannedTss,
+    sport = sport,
 )
 
 fun List<WorkoutEntity>.toSnapshotJson(): String =

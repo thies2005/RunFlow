@@ -93,20 +93,50 @@ fun ActivityDetailScreen(
     val u = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
 
     var activity by remember { mutableStateOf<ActivityEntity?>(null) }
+    var loaded by remember { mutableStateOf(false) }
     LaunchedEffect(activityId) {
         activity = container.repository.activity(activityId)
+        loaded = true
     }
-    val a = activity ?: return
+    val a = activity
+    if (a == null) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(if (loaded) "Activity not found" else "Activity") },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                )
+            },
+        ) { padding ->
+            Column(
+                Modifier.fillMaxSize().padding(padding),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                if (!loaded) CircularProgressIndicator()
+            }
+        }
+        return
+    }
     var showDelete by remember { mutableStateOf(false) }
     var showRename by remember { mutableStateOf(false) }
 
     val route = remember(a.id, a.routeJson) { parseRoute(a.routeJson) }
     val laps = remember(a.id, a.lapsJson) { parseLaps(a.lapsJson) }
 
+    val isRideTypeFlag = remember(a.type, a.averageWatts, a.npWatts) {
+        Format.isRideType(a.type) || a.averageWatts != null || a.npWatts != null
+    }
     // ---- analysis streams: local cache first, server fetch once for synced rows ----
-    val series = remember(a.id, a.streamsJson) { a.streams()?.let { StreamMath.build(it) } }
-    val isRide = remember(a.type, a.averageWatts, a.npWatts, series) {
-        Format.isRideType(a.type) || a.averageWatts != null || a.npWatts != null || (series?.hasWatts == true)
+    val series = remember(a.id, a.streamsJson, isRideTypeFlag) {
+        a.streams()?.let { StreamMath.build(it, isRide = isRideTypeFlag) }
+    }
+    val isRide = remember(isRideTypeFlag, series) {
+        isRideTypeFlag || (series?.hasWatts == true)
     }
     var loadingStreams by remember(activityId) { mutableStateOf(false) }
     LaunchedEffect(a.id, a.serverId, a.streamsJson) {
@@ -268,7 +298,7 @@ fun ActivityDetailScreen(
                         Column(Modifier.padding(16.dp)) {
                             SectionTitle("Analysis")
                             Spacer(Modifier.height(12.dp))
-                            StreamsChart(series = series, unit = u, modifier = Modifier.fillMaxWidth())
+                            StreamsChart(series = series, unit = u, isRide = isRide, modifier = Modifier.fillMaxWidth())
                         }
                     }
                 }
@@ -381,13 +411,15 @@ fun ActivityDetailScreen(
     }
 
     if (showRename) {
-        RenameActivityDialog(
-            initial = a.name,
+        EditActivityDialog(
+            initialName = a.name,
+            initialType = a.type,
+            initialTrainingType = a.trainingType ?: "EASY",
             onDismiss = { showRename = false },
-            onConfirm = { name ->
+            onConfirm = { name, sportType, trainingType ->
                 showRename = false
                 scope.launch {
-                    container.repository.renameActivity(a.id, name)
+                    container.repository.updateActivityDetails(a.id, name, sportType, trainingType)
                     activity = container.repository.activity(activityId)
                 }
             },
@@ -396,26 +428,58 @@ fun ActivityDetailScreen(
 }
 
 @Composable
-private fun RenameActivityDialog(initial: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var name by remember { mutableStateOf(initial) }
+private fun EditActivityDialog(
+    initialName: String,
+    initialType: String,
+    initialTrainingType: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String, String) -> Unit,
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var sportType by remember { mutableStateOf(initialType) }
+    var trainingType by remember { mutableStateOf(initialTrainingType) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Rename activity") },
+        title = { Text("Edit activity") },
         text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it.take(200) },
-                singleLine = true,
-                isError = name.isBlank(),
-                supportingText = if (name.isBlank()) {
-                    { Text("Name can't be empty") }
-                } else null,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it.take(200) },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    isError = name.isBlank(),
+                    supportingText = if (name.isBlank()) {
+                        { Text("Name can't be empty") }
+                    } else null,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text("Sport", style = MaterialTheme.typography.labelMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("RUN" to "Run", "RIDE" to "Ride", "SWIM" to "Swim", "WALK" to "Walk", "WORKOUT" to "Gym").forEach { (code, label) ->
+                        androidx.compose.material3.FilterChip(
+                            selected = sportType == code,
+                            onClick = { sportType = code },
+                            label = { Text(label) },
+                        )
+                    }
+                }
+                Text("Session intensity", style = MaterialTheme.typography.labelMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("EASY" to "Easy", "TEMPO" to "Tempo", "INTERVALS" to "Intervals", "LONG_RUN" to "Long", "RACE" to "Race").forEach { (code, label) ->
+                        androidx.compose.material3.FilterChip(
+                            selected = trainingType == code,
+                            onClick = { trainingType = code },
+                            label = { Text(label) },
+                        )
+                    }
+                }
+            }
         },
         confirmButton = {
             TextButton(
-                onClick = { onConfirm(name) },
-                enabled = name.isNotBlank() && name.trim() != initial.trim(),
+                onClick = { onConfirm(name, sportType, trainingType) },
+                enabled = name.isNotBlank(),
             ) { Text("Save") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },

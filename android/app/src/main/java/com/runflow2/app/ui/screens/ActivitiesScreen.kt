@@ -15,21 +15,32 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.DirectionsBike
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.Pool
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.input.KeyboardType
+import com.runflow2.app.data.db.ActivityEntity
+import com.runflow2.app.data.repo.RunFlowRepository
+import java.util.UUID
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -58,13 +69,17 @@ fun ActivitiesScreen(
 ) {
     val settings by container.settings.settings.collectAsState(initial = AppSettings())
     val unit = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
+    val scope = rememberCoroutineScope()
     val activities by container.repository.activities.collectAsState(initial = emptyList())
     val syncStatus by container.syncManager.status.collectAsState()
-    var filter by remember { mutableStateOf("ALL") }
+    var filter by rememberSaveable { mutableStateOf("ALL") }
+    var showCreateManual by rememberSaveable { mutableStateOf(false) }
 
     val filtered = when (filter) {
         "RUN" -> activities.filter { it.type == "RUN" }
-        "RIDE" -> activities.filter { it.type == "RIDE" }
+        "RIDE" -> activities.filter { Format.isRideType(it.type) }
+        "SWIM" -> activities.filter { Format.isSwimType(it.type) }
+        "OTHER" -> activities.filter { it.type != "RUN" && !Format.isRideType(it.type) && !Format.isSwimType(it.type) }
         else -> activities
     }
 
@@ -87,6 +102,11 @@ fun ActivitiesScreen(
                             Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
                         }
                     },
+                    actions = {
+                        IconButton(onClick = { showCreateManual = true }) {
+                            Icon(Icons.Outlined.Add, contentDescription = "Log manual activity")
+                        }
+                    },
                 )
             },
         ) { padding ->
@@ -101,7 +121,13 @@ fun ActivitiesScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    listOf("ALL" to "All", "RUN" to "Runs", "RIDE" to "Rides").forEach { (key, label) ->
+                    listOf(
+                        "ALL" to "All",
+                        "RUN" to "Runs",
+                        "RIDE" to "Rides",
+                        "SWIM" to "Swims",
+                        "OTHER" to "Other",
+                    ).forEach { (key, label) ->
                         FilterChip(
                             selected = filter == key,
                             onClick = { filter = key },
@@ -163,6 +189,132 @@ fun ActivitiesScreen(
                 }
             }
         }
+    }
+
+    if (showCreateManual) {
+        var name by rememberSaveable { mutableStateOf("") }
+        var sport by rememberSaveable { mutableStateOf("RUN") }
+        var distanceText by rememberSaveable { mutableStateOf("") }
+        var durationMinText by rememberSaveable { mutableStateOf("45") }
+        var avgHrText by rememberSaveable { mutableStateOf("") }
+        var avgWattsText by rememberSaveable { mutableStateOf("") }
+
+        AlertDialog(
+            onDismissRequest = { showCreateManual = false },
+            title = { Text("Log manual activity") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("RUN" to "Run", "RIDE" to "Ride", "SWIM" to "Swim", "WORKOUT" to "Gym").forEach { (code, label) ->
+                            FilterChip(
+                                selected = sport == code,
+                                onClick = { sport = code },
+                                label = { Text(label) },
+                            )
+                        }
+                    }
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Activity name") },
+                        placeholder = { Text("e.g. Indoor Ride / Track Session") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = distanceText,
+                            onValueChange = { distanceText = it },
+                            label = { Text("Distance (km)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                        )
+                        OutlinedTextField(
+                            value = durationMinText,
+                            onValueChange = { durationMinText = it.filter(Char::isDigit) },
+                            label = { Text("Duration (min)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = avgHrText,
+                            onValueChange = { avgHrText = it.filter(Char::isDigit).take(3) },
+                            label = { Text("Avg HR (opt)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (sport == "RIDE") {
+                            OutlinedTextField(
+                                value = avgWattsText,
+                                onValueChange = { avgWattsText = it.filter(Char::isDigit).take(4) },
+                                label = { Text("Avg Watts (opt)") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = (durationMinText.toIntOrNull() ?: 0) > 0,
+                    onClick = {
+                        val movingSec = (durationMinText.toIntOrNull() ?: 30).coerceAtLeast(1) * 60
+                        val km = distanceText.toDoubleOrNull()?.coerceAtLeast(0.0) ?: 0.0
+                        val avgHr = avgHrText.toDoubleOrNull()
+                        val avgW = if (sport == "RIDE") avgWattsText.toDoubleOrNull() else null
+                        scope.launch {
+                            val profile = container.repository.profileOnce()
+                            val trimp = RunFlowRepository.computeTrimp(
+                                movingTimeSec = movingSec,
+                                avgHr = avgHr,
+                                zoneSeconds = List(7) { 0 },
+                                distanceKm = km,
+                                thresholdPaceSecPerKm = profile.thresholdPaceSecPerKm,
+                                hrMax = profile.hrMax,
+                                hrRest = profile.hrRest,
+                                isRun = sport == "RUN",
+                            )
+                            val kcal = com.runflow2.app.core.math.CalorieMath.estimate(
+                                movingSec, km * 1000.0, profile.weightKg, sport,
+                            )
+                            val entity = ActivityEntity(
+                                id = UUID.randomUUID().toString(),
+                                name = name.trim().ifBlank { "Manual ${Format.activityNoun(sport).replaceFirstChar { it.uppercase() }}" },
+                                type = sport,
+                                startDate = System.currentTimeMillis(),
+                                distanceMeters = km * 1000.0,
+                                movingTimeSec = movingSec,
+                                averageHr = avgHr,
+                                maxHr = null,
+                                averageCadence = null,
+                                totalElevation = 0.0,
+                                calories = kcal,
+                                trimp = trimp,
+                                trainingType = if (sport == "RUN") "EASY" else "OTHER",
+                                estimatedVdot = if (sport == "RUN") RunFlowRepository.estimateVdot(km, movingSec) else null,
+                                routeJson = null,
+                                lapsJson = null,
+                                averageWatts = avgW,
+                                npWatts = avgW,
+                                isDemo = false,
+                            )
+                            container.repository.saveActivity(entity)
+                            showCreateManual = false
+                        }
+                    },
+                ) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreateManual = false }) { Text("Cancel") }
+            },
+        )
     }
 }
 

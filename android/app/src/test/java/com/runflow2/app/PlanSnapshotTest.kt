@@ -62,6 +62,17 @@ private fun parseOk(json: String) = parseSnapshotJson(json)!!
                 activityId = "act-1",
                 sortIndex = 7,
                 isDemo = true,
+                webWorkoutType = "RIDE_INTERVALS",
+                webPhase = "PEAK",
+                targetPowerWatts = 245,
+                targetPowerMinWatts = 230,
+                targetPowerMaxWatts = 260,
+                targetPowerZone = 4,
+                targetFtpPercent = 98,
+                targetCadenceRpm = 92,
+                targetRpe = 8,
+                plannedTss = 74.5,
+                sport = "BIKE",
             ),
             workout("w2", desc = "Bare"), // defaults-heavy row
         )

@@ -70,6 +70,7 @@ class SyncManager(
         private const val TAG = "Sync"
         const val TYPE_ACTIVITY_CREATE = "activity_create"
         const val TYPE_ACTIVITY_UPDATE = "activity_update"
+        const val TYPE_ACTIVITY_DELETE = "activity_delete"
         const val TYPE_PROFILE_UPDATE = "profile_update"
         const val TYPE_WORKOUT_CREATE = "workout_create"
         const val TYPE_WORKOUT_UPDATE = "workout_update"
@@ -417,6 +418,12 @@ class SyncManager(
                     )
                     db.activityDao().byId(localId)?.let { db.activityDao().upsert(it.copy(dirty = false)) }
                 }
+            }
+            TYPE_ACTIVITY_DELETE -> {
+                val obj = runCatching { json.parseToJsonElement(payloadJson).jsonObject }.getOrNull()
+                val serverId = obj?.get("activityId")?.jsonPrimitive?.content ?: localId
+                val resp = api.deleteActivity(serverId)
+                if (!resp.isSuccessful && resp.code() != 404) throw HttpException(resp)
             }
             TYPE_PROFILE_UPDATE -> {
                 val req = json.decodeFromString(UpdateProfileRequest.serializer(), payloadJson)

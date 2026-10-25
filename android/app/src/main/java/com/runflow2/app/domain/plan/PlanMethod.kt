@@ -24,6 +24,7 @@ enum class EventCategory(val label: String) {
     RUN("Run"),
     ULTRA("Ultra"),
     TRIATHLON("Triathlon"),
+    CYCLING("Cycling"),
     GENERAL("General fitness"),
 }
 
@@ -31,14 +32,14 @@ object PlanMethodFlow {
 
     /**
      * Steps for a goal. The first screen always picks the event category
-     * (Run / Ultra / Triathlon / General); the second screen picks the
-     * specific race. A no-race goal (RaceType.NONE — general fitness) then
-     * skips the race, date, calibration and target-time steps; a plan length
-     * is picked on the volume step instead.
+     * (Run / Ultra / Triathlon / Cycling / General); the second screen picks
+     * the specific race (or MyWhoosh cycling plan). A no-race goal
+     * (RaceType.NONE — general fitness or pure cycling) skips the race date,
+     * run calibration, and run target-time steps.
      */
-    fun stepsFor(noRace: Boolean): List<WizardStep> = if (noRace) {
-        listOf(WizardStep.EVENT_TYPE, WizardStep.VOLUME, WizardStep.ADVANCED, WizardStep.SCHEDULE)
-    } else {
-        WizardStep.entries.toList()
+    fun stepsFor(noRace: Boolean, isCycling: Boolean = false): List<WizardStep> = when {
+        isCycling -> listOf(WizardStep.EVENT_TYPE, WizardStep.RACE, WizardStep.VOLUME, WizardStep.ADVANCED, WizardStep.SCHEDULE)
+        noRace -> listOf(WizardStep.EVENT_TYPE, WizardStep.VOLUME, WizardStep.ADVANCED, WizardStep.SCHEDULE)
+        else -> WizardStep.entries.toList()
     }
 }

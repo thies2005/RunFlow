@@ -110,6 +110,13 @@ fun ActivityDto.mergeInto(existing: ActivityEntity?, now: Long): ActivityEntity 
         bikeTss = this.bikeTss,
         efficiencyFactor = this.efficiencyFactor,
         aerobicDecoupling = this.aerobicDecoupling,
+        powerZone1Sec = if (this.powerZone1Time > 0) this.powerZone1Time else local.powerZone1Sec,
+        powerZone2Sec = if (this.powerZone2Time > 0) this.powerZone2Time else local.powerZone2Sec,
+        powerZone3Sec = if (this.powerZone3Time > 0) this.powerZone3Time else local.powerZone3Sec,
+        powerZone4Sec = if (this.powerZone4Time > 0) this.powerZone4Time else local.powerZone4Sec,
+        powerZone5Sec = if (this.powerZone5Time > 0) this.powerZone5Time else local.powerZone5Sec,
+        powerZone6Sec = if (this.powerZone6Time > 0) this.powerZone6Time else local.powerZone6Sec,
+        powerZone7Sec = if (this.powerZone7Time > 0) this.powerZone7Time else local.powerZone7Sec,
     )
 }
 

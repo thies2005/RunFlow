@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,9 +63,15 @@ object WorkoutVisuals {
         WorkoutType.OTHER -> Visual(Icons.Outlined.DirectionsRun, Color(0xFF9E9E9E), Color(0xFF262626))
     }
 
-    /** Softer container for light theme. */
+    /** Softer container for light theme; auto-detects dark surface when called from Compose. */
     fun containerFor(type: WorkoutType, dark: Boolean): Color =
         if (dark) forType(type).container else forType(type).color.copy(alpha = 0.14f)
+
+    @Composable
+    fun themeContainerFor(type: WorkoutType): Color {
+        val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+        return containerFor(type, isDark)
+    }
 }
 
 fun TsbStatus.color(): Color = when (this) {

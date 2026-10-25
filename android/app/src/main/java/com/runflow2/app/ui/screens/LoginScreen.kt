@@ -41,8 +41,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.runflow2.app.AppContainer
 import com.runflow2.app.data.net.EmailLoginRequest
+import com.runflow2.app.data.net.ForgotPasswordRequest
+import com.runflow2.app.data.net.RegisterRequest
 import com.runflow2.app.data.net.StravaAuth
 import com.runflow2.app.data.net.StravaLoginRequest
 import kotlinx.coroutines.launch
@@ -57,10 +65,14 @@ fun LoginScreen(
     onLoggedIn: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var isRegisterMode by rememberSaveable { mutableStateOf(false) }
+    var name by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var infoMessage by remember { mutableStateOf<String?>(null) }
+    var showForgotDialog by remember { mutableStateOf(false) }
 
     val oauthCode by container.authStore.pendingOAuthCode.collectAsState()
     val oauthError by container.authStore.pendingOAuthError.collectAsState()
@@ -183,6 +195,29 @@ fun LoginScreen(
                 HorizontalDivider(Modifier.weight(1f))
             }
 
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                SegmentedButton(
+                    selected = !isRegisterMode,
+                    onClick = { isRegisterMode = false; error = null; infoMessage = null },
+                    shape = SegmentedButtonDefaults.itemShape(0, 2),
+                ) { Text("Sign in") }
+                SegmentedButton(
+                    selected = isRegisterMode,
+                    onClick = { isRegisterMode = true; error = null; infoMessage = null },
+                    shape = SegmentedButtonDefaults.itemShape(1, 2),
+                ) { Text("Create account") }
+            }
+
+            if (isRegisterMode) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name (optional)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -194,12 +229,20 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text(if (isRegisterMode) "Password (min 8 chars)" else "Password") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth(),
             )
+
+            if (!isRegisterMode) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = { showForgotDialog = true }) {
+                        Text("Forgot password?")
+                    }
+                }
+            }
 
             if (error != null) {
                 Text(
@@ -208,34 +251,57 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.error,
                 )
             }
+            if (infoMessage != null) {
+                Text(
+                    infoMessage ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
 
             Button(
                 onClick = {
                     if (busy) return@Button
                     busy = true
                     error = null
+                    infoMessage = null
                     scope.launch {
                         try {
-                            val resp = container.network.api()
-                                .emailLogin(EmailLoginRequest(email.trim(), password))
+                            val resp = if (isRegisterMode) {
+                                container.network.api().register(
+                                    RegisterRequest(
+                                        email = email.trim(),
+                                        password = password,
+                                        name = name.trim().takeIf { it.isNotBlank() },
+                                    )
+                                )
+                            } else {
+                                container.network.api()
+                                    .emailLogin(EmailLoginRequest(email.trim(), password))
+                            }
                             completeSession(resp)
                         } catch (e: kotlinx.coroutines.CancellationException) {
                             throw e
                         } catch (e: HttpException) {
                             busy = false
-                            com.runflow2.app.core.util.AppLog.e("Login", "email sign-in failed: HTTP ${e.code()}", e)
+                            com.runflow2.app.core.util.AppLog.e("Login", "email auth failed: HTTP ${e.code()}", e)
                             error = when (e.code()) {
-                                401, 400 -> "Email or password is incorrect."
+                                401, 400 -> if (isRegisterMode) {
+                                    "Could not register — ensure email is valid and password has 8+ characters."
+                                } else {
+                                    "Email or password is incorrect."
+                                }
+                                429 -> "Too many attempts — please wait a minute and try again."
                                 else -> "Server error (${e.code()}). Try again."
                             }
                         } catch (e: IOException) {
                             busy = false
-                            com.runflow2.app.core.util.AppLog.w("Login", "email sign-in unreachable", e)
+                            com.runflow2.app.core.util.AppLog.w("Login", "email auth unreachable", e)
                             error = "No connection. You can still use the app offline and sign in later."
                         } catch (e: Exception) {
                             busy = false
-                            com.runflow2.app.core.util.AppLog.e("Login", "email sign-in failed", e)
-                            error = "Login failed: ${e.message ?: "unknown error"}"
+                            com.runflow2.app.core.util.AppLog.e("Login", "email auth failed", e)
+                            error = "Authentication failed: ${e.message ?: "unknown error"}"
                         }
                     }
                 },
@@ -250,7 +316,15 @@ fun LoginScreen(
                     )
                     Spacer(Modifier.height(8.dp))
                 }
-                Text(if (busy) "Signing in…" else "Sign in with email", fontWeight = FontWeight.SemiBold)
+                Text(
+                    when {
+                        busy && isRegisterMode -> "Creating account…"
+                        busy -> "Signing in…"
+                        isRegisterMode -> "Create account"
+                        else -> "Sign in with email"
+                    },
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
 
             Text(
@@ -259,5 +333,55 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+
+    if (showForgotDialog) {
+        var resetEmail by rememberSaveable { mutableStateOf(email) }
+        var sendingReset by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = { if (!sendingReset) showForgotDialog = false },
+            title = { Text("Reset password") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Enter your account email and we'll send a password reset code.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    OutlinedTextField(
+                        value = resetEmail,
+                        onValueChange = { resetEmail = it },
+                        label = { Text("Email") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !sendingReset && resetEmail.isNotBlank(),
+                    onClick = {
+                        sendingReset = true
+                        scope.launch {
+                            runCatching {
+                                container.network.api().forgotPassword(ForgotPasswordRequest(resetEmail.trim()))
+                            }.onSuccess { res ->
+                                infoMessage = res.message ?: "If an account exists, a reset code has been sent."
+                            }.onFailure {
+                                error = "Could not send reset email — check your connection."
+                            }
+                            sendingReset = false
+                            showForgotDialog = false
+                        }
+                    },
+                ) { Text(if (sendingReset) "Sending…" else "Send reset link") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showForgotDialog = false },
+                    enabled = !sendingReset,
+                ) { Text("Cancel") }
+            },
+        )
     }
 }

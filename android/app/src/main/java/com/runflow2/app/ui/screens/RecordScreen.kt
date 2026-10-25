@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.FilterChip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -204,6 +206,7 @@ private fun RecordIdle(
     val settings by container.settings.settings.collectAsState(initial = AppSettings())
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val pendingWorkout = container.recording.pendingWorkoutId
+    var selectedSport by remember { mutableStateOf(container.recording.selectedSportType) }
     var workout by remember { mutableStateOf<com.runflow2.app.data.db.WorkoutEntity?>(null) }
     LaunchedEffect(pendingWorkout) {
         workout = pendingWorkout?.let { container.repository.workout(it) }
@@ -250,6 +253,31 @@ private fun RecordIdle(
                             Text("GPS is required to record distance and pace.", style = MaterialTheme.typography.bodySmall)
                         }
                         TextButton(onClick = onRequestPermission) { Text("Grant") }
+                    }
+                }
+            }
+
+            if (workout == null) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    val sportChoices = listOf(
+                        "RUN" to "Run",
+                        "RIDE" to "Ride",
+                        "WALK" to "Walk",
+                        "SWIM" to "Swim",
+                        "WORKOUT" to "Strength",
+                    )
+                    items(sportChoices) { (code, label) ->
+                        FilterChip(
+                            selected = selectedSport == code,
+                            onClick = {
+                                selectedSport = code
+                                container.recording.selectedSportType = code
+                            },
+                            label = { Text(label) },
+                        )
                     }
                 }
             }
@@ -380,6 +408,7 @@ private fun RecordRunning(
     Column(
         Modifier
             .fillMaxSize()
+            .systemBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -441,10 +470,10 @@ private fun RecordRunning(
         }
 
         // route
-        if (rec.points.size > 3) {
+        if (rec.routePreview.size > 3) {
             Card(Modifier.fillMaxWidth()) {
                 RouteCanvas(
-                    points = rec.points.takeLast(2000).map { it.lat to it.lng },
+                    points = rec.routePreview,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(160.dp)

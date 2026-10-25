@@ -111,7 +111,35 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
     var pmcMode by rememberSaveable { mutableStateOf("combined") }
 
     val listState = rememberLazyListState()
-    val a = analytics ?: return Scaffold { }
+    val a = analytics
+    if (a == null) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text("Analytics")
+                            Text(
+                                "Fitness · fatigue · form",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                )
+            },
+        ) { padding ->
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center,
+            ) {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
+        }
+        return
+    }
 
     // Sport presence drives which header chips render: Combined always
     // exists (load/form + health data); Running/Cycling only appear when
@@ -1154,18 +1182,18 @@ private fun CyclingStatusCard(
                     value = ftpDisplay,
                     icon = Icons.Outlined.Bolt,
                     accent = Color(0xFFF97316),
+                    caption = cycling.wPerKg?.let { "$it W/kg" },
                     modifier = Modifier.weight(1f),
                 )
-                cycling.wPerKg?.let { wkg ->
-                    Spacer(Modifier.width(12.dp))
-                    StatTile(
-                        label = "Power-to-Weight",
-                        value = "$wkg W/kg",
-                        icon = Icons.Outlined.Speed,
-                        accent = Color(0xFF06B6D4),
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                Spacer(Modifier.width(12.dp))
+                StatTile(
+                    label = "Cycling VO2max",
+                    value = cycling.cyclingVo2max?.let { Format.oneDecimal(it) } ?: "—",
+                    icon = Icons.Outlined.MonitorHeart,
+                    accent = Color(0xFF06B6D4),
+                    caption = "ml/kg/min",
+                    modifier = Modifier.weight(1f),
+                )
             }
 
             // Cycling CTL / ATL / TSB metric bars
@@ -1469,7 +1497,13 @@ private fun MetricBarRow(
     showAbsolute: Boolean,
     onToggle: () -> Unit,
 ) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -1487,7 +1521,6 @@ private fun MetricBarRow(
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = color,
-                modifier = Modifier.clickable(onClick = onToggle),
             )
         }
         val fraction = if (max > 0.0) (value / max).toFloat().coerceIn(0f, 1f) else 0f
@@ -1577,7 +1610,7 @@ private suspend fun LazyListState.scrollToKeyedItem(key: Any) {
             // final placement can be shifted by later measure passes — settle
             var tries = 0
             while (firstVisibleItemIndex != target.index && tries++ < 5) {
-                scrollToItem(target.index)
+                scrollToItem(target.index, scrollOffset = -24)
                 withFrameNanos { }
             }
             return

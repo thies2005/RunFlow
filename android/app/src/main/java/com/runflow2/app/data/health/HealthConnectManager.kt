@@ -62,11 +62,21 @@ class HealthConnectManager(
         data object Unavailable : Availability
     }
 
-    /** Session types treated as a run. */
-    private val runningTypes = setOf(
+    /** Supported multi-sport ExerciseSession types mapped to RunFlow activity types. */
+    private fun mapExerciseType(exerciseType: Int): String? = when (exerciseType) {
         ExerciseSessionRecord.EXERCISE_TYPE_RUNNING,
-        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING_TREADMILL,
-    )
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING_TREADMILL -> "RUN"
+        ExerciseSessionRecord.EXERCISE_TYPE_BIKING,
+        ExerciseSessionRecord.EXERCISE_TYPE_BIKING_STATIONARY -> "RIDE"
+        ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_OPEN_WATER,
+        ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL -> "SWIM"
+        ExerciseSessionRecord.EXERCISE_TYPE_WALKING -> "WALK"
+        ExerciseSessionRecord.EXERCISE_TYPE_HIKING -> "HIKE"
+        ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING,
+        ExerciseSessionRecord.EXERCISE_TYPE_WEIGHTLIFTING,
+        ExerciseSessionRecord.EXERCISE_TYPE_HIGH_INTENSITY_INTERVAL_TRAINING -> "WORKOUT"
+        else -> null
+    }
 
     fun availability(): Availability =
         if (HealthConnectClient.getSdkStatus(appContext) == HealthConnectClient.SDK_AVAILABLE) {
@@ -227,7 +237,7 @@ class HealthConnectManager(
 
         val sessions = client.readRecords(ReadRecordsRequest(ExerciseSessionRecord::class, range))
             .records
-            .filter { it.exerciseType in runningTypes }
+            .filter { mapExerciseType(it.exerciseType) != null }
             .sortedBy { it.startTime }
         if (sessions.isEmpty()) return Triple(0, 0, "no new runs")
 
@@ -272,6 +282,7 @@ class HealthConnectManager(
                 .overlapping(start, end, { it.startTime }, { it.endTime })
                 .takeIf { it.isNotEmpty() }?.sumOf { it.energy.inKilocalories }?.toInt()
 
+            val mappedType = mapExerciseType(session.exerciseType) ?: "RUN"
             val snapshot = HcRunSnapshot(
                 recordId = session.metadata.id,
                 title = session.title,
@@ -283,6 +294,7 @@ class HealthConnectManager(
                 maxHr = maxHr,
                 elevationMeters = elevation,
                 caloriesKcal = kcal,
+                activityType = mappedType,
             )
             if (!HealthConnectMapping.isImportable(snapshot)) return@forEach
 

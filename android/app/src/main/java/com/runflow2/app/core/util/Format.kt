@@ -39,6 +39,27 @@ object Format {
         DistanceUnit.IMPERIAL -> "mi"
     }
 
+    fun weight(kg: Double?, unit: DistanceUnit = DistanceUnit.METRIC): String {
+        if (kg == null || !kg.isFinite() || kg <= 0.0) return "—"
+        return when (unit) {
+            DistanceUnit.METRIC -> String.format(Locale.ENGLISH, "%.1f kg", kg)
+            DistanceUnit.IMPERIAL -> String.format(Locale.ENGLISH, "%.1f lb", kg * 2.20462262)
+        }
+    }
+
+    fun height(cm: Double?, unit: DistanceUnit = DistanceUnit.METRIC): String {
+        if (cm == null || !cm.isFinite() || cm <= 0.0) return "—"
+        return when (unit) {
+            DistanceUnit.METRIC -> "${cm.roundToInt()} cm"
+            DistanceUnit.IMPERIAL -> {
+                val totalInches = (cm / 2.54).roundToInt()
+                val feet = totalInches / 12
+                val inches = totalInches % 12
+                "${feet}'${inches}\""
+            }
+        }
+    }
+
     /** Pace as m:ss /km (or /mi in imperial). Returns "—" for non-positive/non-finite input. */
     fun pace(secPerKm: Double?, unit: DistanceUnit = DistanceUnit.METRIC): String {
         if (secPerKm == null || !secPerKm.isFinite() || secPerKm <= 0.0) return "—"

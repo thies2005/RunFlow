@@ -480,7 +480,7 @@ private fun WorkoutCard(
             Box(
                 Modifier
                     .size(42.dp)
-                    .background(WorkoutVisuals.containerFor(type, true), CircleShape),
+                    .background(WorkoutVisuals.themeContainerFor(type), CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(visual.icon, type.label, tint = visual.color, modifier = Modifier.size(21.dp))
@@ -599,6 +599,34 @@ private fun WorkoutActionSheet(
                     Icon(Icons.Outlined.Timer, null)
                     Spacer(Modifier.width(6.dp))
                     Text("Edit intervals")
+                }
+            }
+            val canExportZwo = workout.structuredStepsJson != null ||
+                workout.sport.equals("BIKE", ignoreCase = true) ||
+                type in setOf(WorkoutType.RIDE, WorkoutType.CROSS_TRAIN, WorkoutType.INTERVALS, WorkoutType.TEMPO)
+            if (canExportZwo) {
+                val context = androidx.compose.ui.platform.LocalContext.current
+                TextButton(
+                    onClick = {
+                        runCatching {
+                            val file = com.runflow2.app.core.export.PlanZwoExporter.exportToCache(context, workout)
+                            val uri = androidx.core.content.FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                file,
+                            )
+                            val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                this.type = "application/octet-stream"
+                                putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                putExtra(android.content.Intent.EXTRA_SUBJECT, workout.customName ?: workout.description)
+                                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(android.content.Intent.createChooser(send, "Export .zwo workout"))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Export .zwo (MyWhoosh / Zwift)")
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

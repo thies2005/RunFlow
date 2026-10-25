@@ -28,6 +28,7 @@ data class HcRunSnapshot(
     val maxHr: Int?,
     val elevationMeters: Double?,
     val caloriesKcal: Int?,
+    val activityType: String = "RUN",
 )
 
 /**
@@ -93,8 +94,8 @@ object HealthConnectMapping {
         ((s.endEpochMs - s.startEpochMs) / 1000L).toInt().coerceAtLeast(1)
 
     fun isImportable(s: HcRunSnapshot): Boolean =
-        s.distanceMeters >= MIN_IMPORT_DISTANCE_M &&
-            movingTimeSec(s) >= MIN_IMPORT_DURATION_SEC
+        movingTimeSec(s) >= MIN_IMPORT_DURATION_SEC &&
+            (s.activityType != "RUN" || s.distanceMeters >= MIN_IMPORT_DISTANCE_M)
 
     /**
      * True when the session is already known: by Health Connect record id, or
@@ -115,7 +116,12 @@ object HealthConnectMapping {
 
     fun defaultName(s: HcRunSnapshot): String {
         val date = Instant.ofEpochMilli(s.startEpochMs).atZone(ZoneId.systemDefault()).toLocalDate()
-        return "Run ${Format.dateWithYear(date)} · ${Format.oneDecimal(s.distanceMeters / 1000.0)} km"
+        val label = Format.activityNoun(s.activityType).replaceFirstChar { it.uppercase() }
+        return if (s.distanceMeters > 0) {
+            "$label ${Format.dateWithYear(date)} · ${Format.oneDecimal(s.distanceMeters / 1000.0)} km"
+        } else {
+            "$label ${Format.dateWithYear(date)}"
+        }
     }
 
     fun toActivityEntity(s: HcRunSnapshot, id: String = UUID.randomUUID().toString(), weightKg: Double = 72.0): ActivityEntity {
@@ -124,7 +130,7 @@ object HealthConnectMapping {
         return ActivityEntity(
             id = id,
             name = s.title?.takeIf { it.isNotBlank() } ?: defaultName(s),
-            type = "RUN",
+            type = s.activityType,
             startDate = s.startEpochMs,
             distanceMeters = s.distanceMeters,
             movingTimeSec = moving,

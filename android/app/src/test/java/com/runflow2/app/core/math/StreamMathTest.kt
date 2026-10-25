@@ -115,17 +115,31 @@ class StreamMathTest {
     }
 
     @Test
-    fun `cadence is doubled to spm and standing pace is dropped`() {
-        val s = StreamMath.build(
+    fun `cadence is doubled to spm for runs and kept in rpm for rides`() {
+        val runSeries = StreamMath.build(
             ActivityStreamsDto(
                 time = listOf(0.0, 5.0, 10.0),
                 velocitySmooth = listOf(3.0, 0.0, 3.0),
                 cadence = listOf(88.0, 90.0, 91.0),
-            )
+            ),
+            isRide = false,
         )
-        assertEquals(listOf(176.0, 180.0, 182.0), s.cadence!!)
-        assertNull(s.pace[1]) // 0 m/s → standing
-        assertEquals((1000.0 / 3.0) / 60.0, s.pace[2]!!, 1e-9)
+        assertEquals(listOf(176.0, 180.0, 182.0), runSeries.cadence!!)
+        assertNull(runSeries.pace[1]) // 0 m/s → standing
+        assertEquals((1000.0 / 3.0) / 60.0, runSeries.pace[2]!!, 1e-9)
+
+        val rideSeries = StreamMath.build(
+            ActivityStreamsDto(
+                time = listOf(0.0, 5.0, 10.0),
+                velocitySmooth = listOf(9.5, 10.0, 10.2),
+                cadence = listOf(88.0, 90.0, 91.0),
+                watts = listOf(210.0, 225.0, 240.0),
+            ),
+            isRide = true,
+        )
+        assertEquals(listOf(88.0, 90.0, 91.0), rideSeries.cadence!!)
+        assertFalse(rideSeries.hasPace)
+        assertFalse(rideSeries.hasGap)
     }
 
     @Test

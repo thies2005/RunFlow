@@ -233,26 +233,64 @@ class RunFlowRepository(
             .onFailure { AppLog.w("Body", "auto-refresh after save failed (${it.message})") }
     }
 
-    suspend fun deleteActivity(id: String) = activityDao.delete(id)
+    suspend fun deleteActivity(id: String) {
+        val a = activityDao.byId(id) ?: return
+        if (authStore.state.value.loggedIn) {
+            val pendingCreates = syncQueueDao.pendingFor(SyncManager.TYPE_ACTIVITY_CREATE, id)
+            db.withTransaction {
+                pendingCreates.forEach { syncQueueDao.markCompleted(it.id) }
+                syncQueueDao.deletePendingFor(SyncManager.TYPE_ACTIVITY_UPDATE, id)
+                if (a.serverId != null) {
+                    val payload = buildJsonObject {
+                        put("activityId", a.serverId)
+                    }.toString()
+                    syncQueueDao.deletePendingFor(SyncManager.TYPE_ACTIVITY_DELETE, id)
+                    syncQueueDao.insert(
+                        SyncQueueEntity(
+                            entityType = SyncManager.TYPE_ACTIVITY_DELETE,
+                            localId = id,
+                            payloadJson = payload,
+                        )
+                    )
+                }
+                activityDao.delete(id)
+            }
+        } else {
+            activityDao.delete(id)
+        }
+        invalidateAnalyticsCache()
+    }
 
     /**
-     * Renames an activity. Synced rows flag dirty and queue an
-     * activity_update outbox item whose payload embeds the SERVER id under
-     * "activityId" (the drain handler addresses the PUT with it — the local
-     * row id is only meaningful on this device). Local-only rows just write
-     * to Room; their create will carry the new name.
+     * Updates an activity's name, sport type, and/or trainingType. Synced rows
+     * flag dirty and queue an activity_update outbox item with the server id.
      */
-    suspend fun renameActivity(id: String, newName: String) {
+    suspend fun updateActivityDetails(
+        id: String,
+        newName: String,
+        newType: String? = null,
+        newTrainingType: String? = null,
+    ) {
         val a = activityDao.byId(id) ?: return
-        val name = newName.trim().take(200)
-        if (name.isEmpty() || name == a.name) return
+        val name = newName.trim().take(200).ifEmpty { a.name }
+        val resolvedType = newType?.takeIf { it.isNotBlank() } ?: a.type
+        val resolvedTraining = newTrainingType?.takeIf { it.isNotBlank() } ?: a.trainingType
+        if (name == a.name && resolvedType == a.type && resolvedTraining == a.trainingType) return
+        val updated = a.copy(
+            name = name,
+            type = resolvedType,
+            trainingType = resolvedTraining,
+            updatedAt = System.currentTimeMillis(),
+        )
         if (authStore.state.value.loggedIn && a.serverId != null) {
             val payload = buildJsonObject {
                 put("activityId", a.serverId!!)
                 put("name", name)
+                put("type", com.runflow2.app.data.sync.serverTypeFromLocal(resolvedType))
+                if (resolvedTraining != null) put("trainingType", resolvedTraining)
             }.toString()
             db.withTransaction {
-                activityDao.upsert(a.copy(name = name, dirty = true, updatedAt = System.currentTimeMillis()))
+                activityDao.upsert(updated.copy(dirty = true))
                 syncQueueDao.deletePendingFor(SyncManager.TYPE_ACTIVITY_UPDATE, a.id)
                 syncQueueDao.insert(
                     SyncQueueEntity(
@@ -263,9 +301,13 @@ class RunFlowRepository(
                 )
             }
         } else {
-            activityDao.upsert(a.copy(name = name, updatedAt = System.currentTimeMillis()))
+            activityDao.upsert(updated)
         }
+        invalidateAnalyticsCache()
     }
+
+    suspend fun renameActivity(id: String, newName: String) =
+        updateActivityDetails(id = id, newName = newName)
 
     suspend fun clearActivities() = activityDao.clear()
 
@@ -284,6 +326,22 @@ class RunFlowRepository(
             val existing = activityDao.byId(activityId) ?: return@runCatching false
             if (existing.streamsJson != null) return@runCatching false
             activityDao.updateStreams(activityId, json)
+            // Compute and cache 7-zone Coggan power seconds when watts stream is present
+            if (!streams.watts.isNullOrEmpty() && existing.powerZoneSeconds.sum() == 0) {
+                val s = settings?.settingsOnce()
+                val profile = profileOnce()
+                val activeFtp = (s?.ftpWatts?.takeIf { it > 0 })
+                    ?: AnalyticsEngine.estimateBikeFtpFromVdot(existing.estimatedVdot ?: 45.0, profile.weightKg)
+                    ?: 200
+                val pZones = AnalyticsEngine.calculatePowerZoneTimes(streams.watts, streams.time, activeFtp)
+                if (pZones.size == 7 && pZones.sum() > 0) {
+                    activityDao.updatePowerZones(
+                        activityId,
+                        pZones[0], pZones[1], pZones[2], pZones[3], pZones[4], pZones[5], pZones[6],
+                    )
+                    invalidateAnalyticsCache()
+                }
+            }
             // The detail record also carries fields old list pulls missed —
             // pick up an energy value the local row lacks while we're here.
             if (existing.calories == null && detail.calories != null) {
@@ -961,15 +1019,25 @@ class RunFlowRepository(
         val all = dailyEntryDao.range("0001-01-01", "9999-12-31")
         if (all.isEmpty()) return
         val series = dailyLoadSeries()
+        val profile = profileOnce()
         all.forEach { entry ->
-            readinessCacheFor(entry, LocalDate.parse(entry.date), series)
-                .takeIf {
-                    it.score != entry.score ||
-                        it.state != entry.state ||
-                        it.confidence != entry.confidence ||
-                        it.componentScoresJson != entry.componentScoresJson
-                }
-                ?.let { dailyEntryDao.upsert(it.copy(dirty = true)) }
+            val date = runCatching { LocalDate.parse(entry.date) }.getOrNull() ?: return@forEach
+            val updated = ReadinessComposer.computedCache(
+                entry = entry,
+                rhrBaseline = ReadinessComposer.rhrBaselineOf(all, date),
+                hrvBaseline = ReadinessComposer.hrvBaselineOf(all, date),
+                load = ReadinessComposer.loadMetrics(series, date),
+                profileMaxHr = profile.hrMax,
+                profileRestingHr = profile.hrRest,
+            )
+            if (
+                updated.score != entry.score ||
+                updated.state != entry.state ||
+                updated.confidence != entry.confidence ||
+                updated.componentScoresJson != entry.componentScoresJson
+            ) {
+                dailyEntryDao.upsert(updated.copy(dirty = true))
+            }
         }
     }
 
@@ -1068,23 +1136,62 @@ class RunFlowRepository(
     }
 
     // ---------- analytics ----------
+    @Volatile
+    private var cachedAnalyticsKey: String? = null
+    @Volatile
+    private var cachedAnalyticsBundle: AnalyticsBundle? = null
+
+    fun invalidateAnalyticsCache() {
+        cachedAnalyticsKey = null
+        cachedAnalyticsBundle = null
+    }
+
     suspend fun analytics(rangeDays: Int = 365): AnalyticsBundle = withContext(Dispatchers.Default) {
         val profile = profileOnce()
         val s = settings?.settingsOnce()
-        val acts = activityDao.all().map { it.toInput() }
-        applyServerMetrics(
-            AnalyticsEngine.compute(
-                activities = acts,
-                today = LocalDate.now(),
-                vdotCorrection = profile.vdotCorrection,
-                rangeDays = rangeDays,
-                ftpWatts = s?.ftpWatts ?: 0,
-                weightKg = profile.weightKg,
-                includeCrossTraining = s?.includeCrossTraining ?: false,
-                effectiveVo2maxCorrection = s?.effectiveVo2maxCorrection ?: 1.0,
-                maxHr = profile.hrMax,
-            ),
+        val allRows = activityDao.all()
+        val today = LocalDate.now()
+        val maxUpdated = allRows.maxOfOrNull { it.updatedAt } ?: 0L
+        val key = "$rangeDays|${today}|${allRows.size}|$maxUpdated|${profile.vdotCorrection}|${profile.weightKg}|${profile.hrMax}|${s?.ftpWatts}|${s?.includeCrossTraining}|${s?.effectiveVo2maxCorrection}"
+        if (cachedAnalyticsKey == key) {
+            cachedAnalyticsBundle?.let { return@withContext applyServerMetrics(it) }
+        }
+        val acts = allRows.map { it.toInput() }
+        val computed = AnalyticsEngine.compute(
+            activities = acts,
+            today = today,
+            vdotCorrection = profile.vdotCorrection,
+            rangeDays = rangeDays,
+            ftpWatts = s?.ftpWatts ?: 0,
+            weightKg = profile.weightKg,
+            includeCrossTraining = s?.includeCrossTraining ?: false,
+            effectiveVo2maxCorrection = s?.effectiveVo2maxCorrection ?: 1.0,
+            maxHr = profile.hrMax,
         )
+        cachedAnalyticsKey = key
+        cachedAnalyticsBundle = computed
+        applyServerMetrics(computed)
+    }
+
+    /**
+     * Revokes the server session best-effort, clears local auth tokens, and
+     * purges user-scoped tables so signing into a different account never leaks
+     * the previous user's cached activities, plans, or AI chat history.
+     */
+    suspend fun signOutAndClearUserData() {
+        withContext(Dispatchers.IO) {
+            runCatching { network.api().logout() }
+            authStore.clear()
+            db.withTransaction {
+                activityDao.clear()
+                workoutDao.clear()
+                goalDao.clear()
+                db.chatDao().clear()
+                dailyEntryDao.clear()
+                syncQueueDao.clear()
+            }
+            invalidateAnalyticsCache()
+        }
     }
 
     /** Updates local cycling settings and syncs FTP/auto-estimate to the user profile on server. */
@@ -1206,6 +1313,7 @@ class RunFlowRepository(
         efficiencyFactor = efficiencyFactor,
         aerobicDecoupling = aerobicDecoupling,
         deviceWatts = deviceWatts,
+        powerZoneSeconds = powerZoneSeconds,
     )
 
     companion object {

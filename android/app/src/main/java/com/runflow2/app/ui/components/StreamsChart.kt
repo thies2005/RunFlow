@@ -65,8 +65,10 @@ fun StreamsChart(
     series: StreamMath.Series,
     modifier: Modifier = Modifier,
     unit: DistanceUnit = DistanceUnit.METRIC,
+    isRide: Boolean = false,
     height: Int = 220,
 ) {
+    val cadenceUnit = if (isRide || series.hasWatts) "rpm" else "spm"
     var showHr by remember { mutableStateOf(true) }
     var showPace by remember { mutableStateOf(true) }
     var showGap by remember { mutableStateOf(true) }
@@ -136,7 +138,7 @@ fun StreamsChart(
                         if (showPace) series.pace.getOrNull(idx)?.let { append("   Pace ${Format.pace(it * 60.0, unit)}") }
                         if (showGap) series.gap.getOrNull(idx)?.let { append("   GAP ${Format.pace(it * 60.0, unit)}") }
                         if (showElev) series.altitude?.getOrNull(idx)?.let { append("   ${it.roundToInt()} m") }
-                        if (showCadence) series.cadence?.getOrNull(idx)?.let { append("   ${it.roundToInt()} spm") }
+                        if (showCadence) series.cadence?.getOrNull(idx)?.let { append("   ${it.roundToInt()} $cadenceUnit") }
                     },
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Medium,
@@ -162,7 +164,10 @@ fun StreamsChart(
                     }
                 }
                 .pointerInput(n) {
-                    detectDragGestures { change, _ ->
+                    detectDragGestures(
+                        onDragEnd = { scrubIndex = null },
+                        onDragCancel = { scrubIndex = null },
+                    ) { change, _ ->
                         val frac = (change.position.x / size.width).coerceIn(0f, 1f)
                         scrubIndex = (frac * (n - 1)).roundToInt()
                         change.consume()

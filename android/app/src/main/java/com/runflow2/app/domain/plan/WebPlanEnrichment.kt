@@ -235,7 +235,7 @@ internal fun enrichWorkoutsWithTargets(
         ),
     ).zones
 
-    val bikeFtp = estimateBikeFtpFromVdot(config.vdot)
+    val bikeFtp = config.ftpWatts?.takeIf { it > 0 }?.toDouble() ?: estimateBikeFtpFromVdot(config.vdot)
     val bikeZones = calculateBikeZones(bikeFtp)
     val phasePacesByVdot = HashMap<Double, Personalization.PersonTrainingPaces>()
 

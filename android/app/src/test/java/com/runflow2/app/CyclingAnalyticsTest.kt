@@ -212,5 +212,10 @@ class CyclingAnalyticsTest {
         assertEquals(203, cycling.avgWatts) // (190 + 215) / 2 = 202.5 -> 203
         assertEquals(160, cycling.totalBikeTss30d) // 85 + 75 = 160
         assertEquals(7, cycling.powerZoneDistribution.size)
+        assertNotNull(cycling.cyclingVo2max)
+        assertTrue(cycling.cyclingVo2max!! > 50.0)
+        // Verify Coggan power zones bucket ride duration by power (or powerZoneSeconds)
+        // rather than summing empty HR zoneSeconds
+        assertTrue(cycling.powerZoneDistribution.sumOf { it.seconds } > 0)
     }
 }

@@ -133,11 +133,15 @@ fun DashboardScreen(
     // ---- recovery square input: today's entry ----
     val todayEntry by container.repository.dailyEntryFlow(today).collectAsState(initial = null)
 
+    var hidePlanReminder by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val weekStart = today.with(DayOfWeek.MONDAY)
-    val runsThisWeek = activities.count {
+    val weekActivities = activities.filter {
         val d = Format.localDate(it.startDate)
         !d.isBefore(weekStart) && !d.isAfter(today)
     }
+    val runsThisWeek = weekActivities.count { it.type == "RUN" }
+    val ridesThisWeek = weekActivities.count { Format.isRideType(it.type) }
+    val otherThisWeek = weekActivities.size - runsThisWeek - ridesThisWeek
 
     // Pull-to-refresh runs a full sync including the server-side Strava
     // import; the analytics produceState re-runs on its own once Room updates.
@@ -261,8 +265,10 @@ fun DashboardScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                             ) {
                                 StatTile(
-                                    label = "Workouts",
-                                    value = "$runsThisWeek",
+                                    label = if (ridesThisWeek > 0 || otherThisWeek > 0) "Runs · Rides" else "Runs",
+                                    value = if (ridesThisWeek > 0 || otherThisWeek > 0) {
+                                        "$runsThisWeek · $ridesThisWeek" + (if (otherThisWeek > 0) " (+$otherThisWeek)" else "")
+                                    } else "$runsThisWeek",
                                     icon = Icons.Outlined.DirectionsRun,
                                 )
                                 StatTile(
@@ -495,7 +501,7 @@ fun DashboardScreen(
                             }
                         }
                     }
-                } else {
+                } else if (!hidePlanReminder) {
                     item {
                         Card(
                             modifier = Modifier
@@ -512,6 +518,9 @@ fun DashboardScreen(
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
+                                }
+                                TextButton(onClick = { hidePlanReminder = true }) {
+                                    Text("Hide")
                                 }
                                 Icon(Icons.Outlined.Add, null, tint = MaterialTheme.colorScheme.primary)
                             }
@@ -538,7 +547,7 @@ fun DashboardScreen(
                                         Box(
                                             Modifier
                                                 .size(40.dp)
-                                                .background(WorkoutVisuals.containerFor(type, true), CircleShape),
+                                                .background(WorkoutVisuals.themeContainerFor(type), CircleShape),
                                             contentAlignment = Alignment.Center,
                                         ) {
                                             Icon(visual.icon, type.label, tint = visual.color)
@@ -614,7 +623,7 @@ fun DashboardScreen(
                             Box(
                                 Modifier
                                     .size(40.dp)
-                                    .background(WorkoutVisuals.containerFor(type, true), CircleShape),
+                                    .background(WorkoutVisuals.themeContainerFor(type), CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(visual.icon, null, tint = visual.color)

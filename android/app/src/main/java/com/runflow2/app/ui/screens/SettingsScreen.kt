@@ -715,15 +715,33 @@ fun SettingsScreen(
     }
 
     if (showLogoutDialog) {
+        var keepLocalCopy by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
             title = { Text("Sign out?") },
-            text = { Text("Your data stays on this device. Runs recorded while signed out are uploaded the next time you sign in.") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Signing out revokes this device's session token on the server.")
+                    SwitchRow(
+                        title = "Keep local copy of activities",
+                        subtitle = "Turn off when switching to a different account on this phone",
+                        checked = keepLocalCopy,
+                        onChecked = { keepLocalCopy = it },
+                    )
+                }
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
                         showLogoutDialog = false
-                        scope.launch { container.authStore.clear() }
+                        scope.launch {
+                            if (keepLocalCopy) {
+                                runCatching { container.network.api().logout() }
+                                container.authStore.clear()
+                            } else {
+                                container.repository.signOutAndClearUserData()
+                            }
+                        }
                     },
                 ) { Text("Sign out") }
             },

@@ -68,6 +68,7 @@ sealed interface VoiceEvent {
 
 data class RecordingState(
     val status: RecStatus = RecStatus.IDLE,
+    val sportType: String = "RUN",
     val countdownRemaining: Int = 3,
     val startedAtMillis: Long? = null,
     val elapsedMovingSec: Double = 0.0,
@@ -81,6 +82,7 @@ data class RecordingState(
     val gpsAccuracyM: Float? = null,
     val gpsFixed: Boolean = false,
     val points: List<GeoPt> = emptyList(),
+    val routePreview: List<Pair<Double, Double>> = emptyList(),
     val laps: List<Lap> = emptyList(),
     val autoPauseEnabled: Boolean = true,
     val voiceEnabled: Boolean = true,
@@ -147,6 +149,9 @@ class RecordingController(
     /** Set by the dashboard/plan when the user taps Start on a specific planned workout. */
     var pendingWorkoutId: String? = null
 
+    /** Selected sport on the Record screen ("RUN", "RIDE", "WALK", "SWIM", "WORKOUT"). */
+    var selectedSportType: String = "RUN"
+
     /** Id of the most recently saved recording, for post-run summary navigation. */
     var lastSavedActivityId: String? = null
 
@@ -161,6 +166,9 @@ class RecordingController(
     private val gpsFilter = LocationFilter()
 
     // engine internals
+    private val pointsBuffer = ArrayList<GeoPt>(2048)
+    private val previewBuffer = ArrayList<Pair<Double, Double>>(2048)
+    private val stepTimestampsMs = ArrayDeque<Long>()
     private var lastPt: GeoPt? = null
     private var lastLapDistM = 0.0
     private var lastLapMovingSec = 0.0
@@ -184,10 +192,28 @@ class RecordingController(
      * [resolvedSteps] lets a caller that has VDOT access inject the parsed
      * structuredSteps; without them the flat targets are synthesized as before.
      */
-    fun start(workout: WorkoutEntity?, countdownSec: Int = 3, resolvedSteps: List<StepRuntime>? = null) {
+    fun start(
+        workout: WorkoutEntity?,
+        countdownSec: Int = 3,
+        resolvedSteps: List<StepRuntime>? = null,
+        sportOverride: String? = null,
+    ) {
         val steps = resolvedSteps ?: buildSteps(workout)
+        val resolvedSport = sportOverride ?: workout?.let { w ->
+            when {
+                w.sport.equals("BIKE", ignoreCase = true) || w.sport.equals("RIDE", ignoreCase = true) ||
+                    w.workoutType in setOf("RIDE", "LONG_RIDE", "RIDE_INTERVALS", "CROSS_TRAIN") -> "RIDE"
+                w.sport.equals("SWIM", ignoreCase = true) || w.workoutType == "SWIM" -> "SWIM"
+                w.sport.equals("STRENGTH", ignoreCase = true) || w.workoutType == "STRENGTH" -> "WORKOUT"
+                else -> "RUN"
+            }
+        } ?: selectedSportType
+        pointsBuffer.clear()
+        previewBuffer.clear()
+        stepTimestampsMs.clear()
         _state.value = RecordingState(
             status = RecStatus.COUNTDOWN,
+            sportType = resolvedSport,
             countdownRemaining = countdownSec,
             autoPauseEnabled = _state.value.autoPauseEnabled,
             voiceEnabled = _state.value.voiceEnabled,
@@ -363,6 +389,9 @@ class RecordingController(
 
             val avgPace = if (dist > 20.0) 1000.0 / (dist / s.elapsedMovingSec.coerceAtLeast(1.0)) else null
 
+            pointsBuffer.add(pt)
+            if (previewBuffer.size >= 2000) previewBuffer.removeAt(0)
+            previewBuffer.add(pt.lat to pt.lng)
             var st = s.copy(
                 distanceM = dist,
                 elevationGainM = eleGain,
@@ -370,7 +399,8 @@ class RecordingController(
                 avgPaceSecPerKm = avgPace,
                 gpsAccuracyM = accuracy,
                 gpsFixed = true,
-                points = s.points + pt,
+                points = pointsBuffer.toList(),
+                routePreview = previewBuffer.toList(),
                 status = if (autoPaused) RecStatus.PAUSED else RecStatus.RUNNING,
             )
 
@@ -388,9 +418,32 @@ class RecordingController(
             }
             st
         } else {
-            s.copy(gpsAccuracyM = accuracy, gpsFixed = true, points = s.points + pt)
+            pointsBuffer.add(pt)
+            if (previewBuffer.size >= 2000) previewBuffer.removeAt(0)
+            previewBuffer.add(pt.lat to pt.lng)
+            s.copy(
+                gpsAccuracyM = accuracy,
+                gpsFixed = true,
+                points = pointsBuffer.toList(),
+                routePreview = previewBuffer.toList(),
+            )
         }
         _state.value = advanceSteps(ns)
+    }
+
+    /** Hardware step-detector callback: computes rolling 20s running cadence (spm). */
+    fun onStepDetected(nowMs: Long = System.currentTimeMillis()) {
+        val s = _state.value
+        if (s.status != RecStatus.RUNNING) return
+        stepTimestampsMs.addLast(nowMs)
+        while (stepTimestampsMs.isNotEmpty() && nowMs - stepTimestampsMs.first() > 20_000L) {
+            stepTimestampsMs.removeFirst()
+        }
+        if (stepTimestampsMs.size >= 6) {
+            val spanSec = ((nowMs - stepTimestampsMs.first()) / 1000.0).coerceAtLeast(3.0)
+            val spm = ((stepTimestampsMs.size - 1) * 60.0 / spanSec).toInt().coerceIn(80, 240)
+            _state.value = s.copy(cadence = spm)
+        }
     }
 
     private fun advanceSteps(s: RecordingState): RecordingState {
@@ -509,6 +562,9 @@ class RecordingController(
 
     fun reset() {
         gpsFilter.reset()
+        pointsBuffer.clear()
+        previewBuffer.clear()
+        stepTimestampsMs.clear()
         lastPt = null
         lastEle = null
         lastLapDistM = 0.0

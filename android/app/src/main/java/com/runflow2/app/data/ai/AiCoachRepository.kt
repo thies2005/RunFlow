@@ -166,9 +166,14 @@ class AiCoachRepository(
                 )
             )
             try {
+                var lastDbFlushMs = 0L
                 val sseError = streamReply(sessionId, message, activityId) { delta ->
                     assistantText += delta
-                    db.chatDao().updateContent(assistantId, assistantText)
+                    val now = System.currentTimeMillis()
+                    if (now - lastDbFlushMs >= 80L) {
+                        lastDbFlushMs = now
+                        db.chatDao().updateContent(assistantId, assistantText)
+                    }
                 }
                 when {
                     sseError != null -> {
@@ -180,6 +185,7 @@ class AiCoachRepository(
                         _error.value = sseError
                     }
                     assistantText.isBlank() -> db.chatDao().updateContent(assistantId, "(no response)")
+                    else -> db.chatDao().updateContent(assistantId, assistantText)
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 db.chatDao().updateContent(assistantId, assistantText.ifBlank { "(cancelled)" })

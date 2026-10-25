@@ -18,7 +18,10 @@ import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.WorkoutType
 import kotlinx.coroutines.flow.Flow
 
-@Entity(tableName = "activities", indices = [Index("serverId"), Index("hcRecordId")])
+@Entity(
+    tableName = "activities",
+    indices = [Index("serverId"), Index("hcRecordId"), Index("startDate")],
+)
 data class ActivityEntity(
     @PrimaryKey val id: String,
     val name: String,
@@ -69,10 +72,19 @@ data class ActivityEntity(
     val bikeTss: Double? = null,
     val efficiencyFactor: Double? = null,
     val aerobicDecoupling: Double? = null,
+    // ---- v15: Coggan 7-zone power durations (seconds) ----
+    @ColumnInfo(defaultValue = "0") val powerZone1Sec: Int = 0,
+    @ColumnInfo(defaultValue = "0") val powerZone2Sec: Int = 0,
+    @ColumnInfo(defaultValue = "0") val powerZone3Sec: Int = 0,
+    @ColumnInfo(defaultValue = "0") val powerZone4Sec: Int = 0,
+    @ColumnInfo(defaultValue = "0") val powerZone5Sec: Int = 0,
+    @ColumnInfo(defaultValue = "0") val powerZone6Sec: Int = 0,
+    @ColumnInfo(defaultValue = "0") val powerZone7Sec: Int = 0,
 ) {
     val distanceKm: Double get() = distanceMeters / 1000.0
     val paceSecPerKm: Double? get() = if (distanceMeters > 0) movingTimeSec / distanceKm else null
     val zoneSeconds: List<Int> get() = listOf(hrZone1Sec, hrZone2Sec, hrZone3Sec, hrZone4Sec, hrZone5Sec, hrZone6Sec, hrZone7Sec)
+    val powerZoneSeconds: List<Int> get() = listOf(powerZone1Sec, powerZone2Sec, powerZone3Sec, powerZone4Sec, powerZone5Sec, powerZone6Sec, powerZone7Sec)
 }
 
 @Entity(tableName = "goals")
@@ -113,7 +125,10 @@ data class GoalEntity(
     val phaseBlocksJson: String? = null,
 )
 
-@Entity(tableName = "workouts")
+@Entity(
+    tableName = "workouts",
+    indices = [Index("goalId"), Index("scheduledDate")],
+)
 data class WorkoutEntity(
     @PrimaryKey val id: String,
     val goalId: String,
@@ -194,7 +209,10 @@ data class ProfileEntity(
 )
 
 /** Outbox: durable queue of local mutations awaiting upload. */
-@Entity(tableName = "sync_queue")
+@Entity(
+    tableName = "sync_queue",
+    indices = [Index(value = ["entityType", "dead", "localId"])],
+)
 data class SyncQueueEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val entityType: String, // activity_create | activity_update | profile_update | workout_create | workout_update | workout_delete | goal_update | goal_delete
@@ -307,6 +325,14 @@ interface ActivityDao {
     @Query("UPDATE activities SET calories = :calories WHERE id = :id")
     suspend fun updateCalories(id: String, calories: Int)
 
+    @Query(
+        "UPDATE activities SET " +
+            "powerZone1Sec = :z1, powerZone2Sec = :z2, powerZone3Sec = :z3, " +
+            "powerZone4Sec = :z4, powerZone5Sec = :z5, powerZone6Sec = :z6, powerZone7Sec = :z7 " +
+            "WHERE id = :id"
+    )
+    suspend fun updatePowerZones(id: String, z1: Int, z2: Int, z3: Int, z4: Int, z5: Int, z6: Int, z7: Int)
+
     @Query("DELETE FROM activities WHERE id = :id")
     suspend fun delete(id: String)
 
@@ -349,6 +375,9 @@ interface GoalDao {
 
     @Query("DELETE FROM goals WHERE isDemo = 1")
     suspend fun deleteDemo()
+
+    @Query("DELETE FROM goals")
+    suspend fun clear()
 }
 
 @Dao
@@ -382,6 +411,9 @@ interface WorkoutDao {
 
     @Query("SELECT COUNT(*) FROM workouts")
     suspend fun count(): Int
+
+    @Query("DELETE FROM workouts")
+    suspend fun clear()
 }
 
 @Dao
@@ -521,6 +553,9 @@ interface DailyEntryDao {
     /** Clears the push flag after the server accepted the listed dates. */
     @Query("UPDATE daily_entries SET dirty = 0 WHERE date IN (:dates)")
     suspend fun markClean(dates: List<String>)
+
+    @Query("DELETE FROM daily_entries")
+    suspend fun clear()
 }
 
 @Database(
@@ -529,7 +564,7 @@ interface DailyEntryDao {
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
         DailyEntryEntity::class,
     ],
-    version = 14,
+    version = 15,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -769,6 +804,23 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_13_14: Migration = object : Migration(13, 14) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE profile ADD COLUMN effectiveVo2maxCorrection REAL NOT NULL DEFAULT 1.0")
+            }
+        }
+
+        /**
+         * v14 -> v15 adds Coggan 7-zone power duration columns to activities
+         * and creates query indices on activities(startDate), workouts(goalId),
+         * workouts(scheduledDate), and sync_queue(entityType, dead, localId).
+         */
+        val MIGRATION_14_15: Migration = object : Migration(14, 15) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                for (z in 1..7) {
+                    db.execSQL("ALTER TABLE activities ADD COLUMN powerZone${z}Sec INTEGER NOT NULL DEFAULT 0")
+                }
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_activities_startDate ON activities(startDate)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_workouts_goalId ON workouts(goalId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_workouts_scheduledDate ON workouts(scheduledDate)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_queue_entityType_dead_localId ON sync_queue(entityType, dead, localId)")
             }
         }
     }

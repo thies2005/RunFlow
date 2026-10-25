@@ -225,7 +225,7 @@ fun PlanSpec.toCreatePlanRequest(): CreatePlanRequest {
     val startMonday = startDate.with(DayOfWeek.MONDAY)
     return CreatePlanRequest(
         name = name,
-        sport = when {
+        sport = sport ?: when {
             noRace -> "NO_RACE"
             raceType.tri -> "TRIATHLON"
             else -> "RUN"
@@ -263,6 +263,8 @@ fun PlanSpec.toCreatePlanRequest(): CreatePlanRequest {
         restingHeartRate = restingHeartRate,
         thresholdHeartRate = thresholdHeartRate,
         thresholdPaceSecondsPerKm = thresholdPaceSecPerKm?.toDouble(),
+        matchToMyWhoosh = matchToMyWhoosh,
+        mywhooshPlanId = mywhooshPlanId,
         planSource = "mobile",
     )
 }

@@ -49,17 +49,30 @@ fun EditProfileScreen(
 ) {
     val scope = rememberCoroutineScope()
     val profile by container.repository.profile.collectAsState(initial = null)
-    val p = profile ?: return
+    val p = profile ?: return Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Edit profile") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
+                    }
+                },
+            )
+        },
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {}
+    }
 
-    var name by remember(p) { mutableStateOf(p.name) }
-    var sex by remember(p) { mutableStateOf(p.sex) }
-    var birthYear by remember(p) { mutableStateOf(p.birthYear.toString()) }
-    var weight by remember(p) { mutableStateOf(p.weightKg.toString()) }
-    var height by remember(p) { mutableStateOf(p.heightCm.toString()) }
-    var hrMax by remember(p) { mutableStateOf(p.hrMax.toString()) }
-    var hrRest by remember(p) { mutableStateOf(p.hrRest.toString()) }
-    var thresholdHr by remember(p) { mutableStateOf(p.thresholdHr.toString()) }
-    var thresholdPace by remember(p) { mutableStateOf(Format.pace(p.thresholdPaceSecPerKm.toDouble())) }
+    var name by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.name) }
+    var sex by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.sex) }
+    var birthYear by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.birthYear.toString()) }
+    var weight by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.weightKg.toString()) }
+    var height by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.heightCm.toString()) }
+    var hrMax by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.hrMax.toString()) }
+    var hrRest by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.hrRest.toString()) }
+    var thresholdHr by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.thresholdHr.toString()) }
+    var thresholdPace by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(Format.pace(p.thresholdPaceSecPerKm.toDouble())) }
 
     Scaffold(
         topBar = {

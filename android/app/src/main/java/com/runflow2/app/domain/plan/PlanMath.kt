@@ -44,6 +44,10 @@ data class PlanSpec(
     val restingHeartRate: Int? = null,
     val thresholdHeartRate: Int? = null,
     val thresholdPaceSecPerKm: Int? = null,
+    val sport: String? = null,
+    val ftpWatts: Int? = null,
+    val matchToMyWhoosh: Boolean = false,
+    val mywhooshPlanId: String? = null,
 )
 
 /** Shared plan date math (used by the wizard, seeder and both engine paths). */

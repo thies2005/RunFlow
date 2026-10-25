@@ -91,6 +91,22 @@ object Api {
 data class EmailLoginRequest(val email: String, val password: String)
 
 @Serializable
+data class RegisterRequest(
+    val email: String,
+    val password: String,
+    val name: String? = null,
+)
+
+@Serializable
+data class ForgotPasswordRequest(val email: String)
+
+@Serializable
+data class ForgotPasswordResponse(
+    val success: Boolean = false,
+    val message: String? = null,
+)
+
+@Serializable
 data class StravaLoginRequest(
     val code: String,
     val redirectUri: String? = null,
@@ -171,6 +187,7 @@ data class UpdateActivityRequest(
     val name: String? = null,
     val notes: String? = null,
     val type: String? = null,
+    val trainingType: String? = null,
 )
 
 @Serializable
@@ -211,6 +228,13 @@ data class ActivityDto(
     val bikeTss: Double? = null,
     val efficiencyFactor: Double? = null,
     val aerobicDecoupling: Double? = null,
+    @SerialName("powerZone1Time") val powerZone1Time: Int = 0,
+    @SerialName("powerZone2Time") val powerZone2Time: Int = 0,
+    @SerialName("powerZone3Time") val powerZone3Time: Int = 0,
+    @SerialName("powerZone4Time") val powerZone4Time: Int = 0,
+    @SerialName("powerZone5Time") val powerZone5Time: Int = 0,
+    @SerialName("powerZone6Time") val powerZone6Time: Int = 0,
+    @SerialName("powerZone7Time") val powerZone7Time: Int = 0,
     // Only present in the single-activity detail response (GET /activities/{id}).
     val streams: ActivityStreamsDto? = null,
 )
@@ -444,6 +468,8 @@ data class CreatePlanRequest(
     val restingHeartRate: Int? = null,
     val thresholdHeartRate: Int? = null,
     val thresholdPaceSecondsPerKm: Double? = null,
+    val matchToMyWhoosh: Boolean? = null,
+    val mywhooshPlanId: String? = null,
     val planSource: String? = null,
 )
 
@@ -759,6 +785,15 @@ interface RunFlowApi {
     @POST("/api/mobile/v1/auth/email-login")
     suspend fun emailLogin(@Body body: EmailLoginRequest): AuthResponse
 
+    @POST("/api/mobile/v1/auth/register")
+    suspend fun register(@Body body: RegisterRequest): AuthResponse
+
+    @POST("/api/mobile/v1/auth/forgot-password")
+    suspend fun forgotPassword(@Body body: ForgotPasswordRequest): ForgotPasswordResponse
+
+    @POST("/api/mobile/v1/auth/logout")
+    suspend fun logout(): retrofit2.Response<Unit>
+
     @POST("/api/mobile/v1/auth/login")
     suspend fun stravaLogin(@Body body: StravaLoginRequest): AuthResponse
 
@@ -777,6 +812,9 @@ interface RunFlowApi {
 
     @PUT("/api/mobile/v1/activities/{id}")
     suspend fun updateActivity(@Path("id") id: String, @Body body: UpdateActivityRequest): ActivityWrapper
+
+    @DELETE("/api/mobile/v1/activities/{id}")
+    suspend fun deleteActivity(@Path("id") id: String): retrofit2.Response<Unit>
 
     /** Full record including `streams` — the list endpoint deliberately omits them. */
     @GET("/api/mobile/v1/activities/{id}")

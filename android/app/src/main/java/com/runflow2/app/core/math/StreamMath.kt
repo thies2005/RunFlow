@@ -60,7 +60,7 @@ object StreamMath {
         return if (gap > 20.0 || gap < 2.0) null else gap
     }
 
-    fun build(streams: ActivityStreamsDto): Series {
+    fun build(streams: ActivityStreamsDto, isRide: Boolean = false): Series {
         val time = streams.time
         if (time.size < 2) return Series(emptyList(), null, emptyList(), emptyList(), null, null)
         val velocity = streams.velocitySmooth
@@ -68,6 +68,7 @@ object StreamMath {
         val heartrate = streams.heartrate
         val cadence = streams.cadence
         val watts = streams.watts
+        val treatAsRide = isRide || (watts != null && watts.any { !it.isNaN() && it > 0.0 })
 
         val step = if (time.size > MAX_POINTS) ceil(time.size / MAX_POINTS.toDouble()).toInt() else 1
 
@@ -89,10 +90,10 @@ object StreamMath {
             w?.add(watts!!.getOrElse(i) { Double.NaN })
 
             val mPerS = velocity?.getOrNull(i)
-            pace += mPerS?.let { minPerKm(it) }
+            pace += if (treatAsRide) null else mPerS?.let { minPerKm(it) }
 
             var gapHere: Double? = null
-            if (mPerS != null && mPerS > 0.5 && altitude != null && i >= step) {
+            if (!treatAsRide && mPerS != null && mPerS > 0.5 && altitude != null && i >= step) {
                 val prevAlt = altitude.getOrNull(i - step)
                 val prevT = time.getOrNull(i - step)
                 if (prevAlt != null && prevT != null) {
@@ -105,7 +106,8 @@ object StreamMath {
             }
             gap += gapHere
 
-            cad?.add(cadence!!.getOrElse(i) { Double.NaN } * 2)
+            val cadMultiplier = if (treatAsRide) 1.0 else 2.0
+            cad?.add(cadence!!.getOrElse(i) { Double.NaN } * cadMultiplier)
 
             i += step
         }

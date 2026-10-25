@@ -166,3 +166,45 @@ export async function PUT(
         });
     }
 }
+
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const { id } = await params;
+    try {
+        const clientId = getClientIdentifier(request);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.settings);
+
+        if (!rateLimitResult.allowed) {
+            return errorResponses.rateLimited(rateLimitResult.retryAfter);
+        }
+
+        const user = await getAuthenticatedUser(request);
+        if (!user) {
+            return errorResponses.unauthorized();
+        }
+
+        const existing = await prisma.activity.findFirst({
+            where: { id, userId: user.id },
+            select: { id: true },
+        });
+
+        if (!existing) {
+            return errorResponses.notFound('Activity');
+        }
+
+        await prisma.activity.delete({
+            where: { id },
+        });
+
+        return NextResponse.json(
+            { success: true },
+            { headers: rateLimitHeaders(rateLimitResult) }
+        );
+    } catch (error) {
+        return handleApiError(error, {
+            path: `/api/mobile/v1/activities/${id}`
+        });
+    }
+}

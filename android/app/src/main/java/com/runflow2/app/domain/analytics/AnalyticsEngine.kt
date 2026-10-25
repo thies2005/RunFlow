@@ -31,6 +31,7 @@ data class ActivityInput(
     val efficiencyFactor: Double? = null,
     val aerobicDecoupling: Double? = null,
     val deviceWatts: Boolean = false,
+    val powerZoneSeconds: List<Int> = emptyList(),
 )
 
 data class WeekVolume(val weekStart: LocalDate, val km: Double, val runs: Int)
@@ -68,6 +69,7 @@ data class CyclingAnalyticsSummary(
     val ftpWatts: Int,
     val eFtpWatts: Int?,
     val wPerKg: Double?,
+    val cyclingVo2max: Double? = null,
     val ctlBike: Double,
     val atlBike: Double,
     val tsbBike: Double,
@@ -303,22 +305,40 @@ object AnalyticsEngine {
             .sumOf { if ((it.bikeTss ?: 0.0) > 0.0) it.bikeTss!! else effectiveTrimp(it) }
             .roundToInt()
 
-        // 7-Zone Coggan power distribution
-        val cogganZones = calculateCogganZones(if (activeFtp > 0) activeFtp else 200, weightKg)
+        // 7-Zone Coggan power distribution: sum actual powerZoneSeconds when
+        // available; otherwise bucket each ride's movingTimeSec by its average/NP watts
+        // against the active Coggan zones (never sum HR zoneSeconds into power buckets!).
+        val effectiveFtpForZones = if (activeFtp > 0) activeFtp else 200
+        val cogganZones = calculateCogganZones(effectiveFtpForZones, weightKg)
         val powerZoneTotals = IntArray(7)
         rides.filter { !it.date.isBefore(rangeStart) }.forEach { r ->
-            r.zoneSeconds.forEachIndexed { idx, sec ->
-                if (idx in 0..6) powerZoneTotals[idx] += sec
+            if (r.powerZoneSeconds.size == 7 && r.powerZoneSeconds.sum() > 0) {
+                r.powerZoneSeconds.forEachIndexed { idx, sec ->
+                    powerZoneTotals[idx] += sec
+                }
+            } else {
+                val rideWatts = r.npWatts ?: r.averageWatts
+                if (rideWatts != null && rideWatts > 0.0 && r.movingTimeSec > 0) {
+                    val zoneIdx = cogganZones.indexOfFirst { rideWatts <= it.maxWatts }.let { if (it < 0) 6 else it }
+                    powerZoneTotals[zoneIdx] += r.movingTimeSec
+                }
             }
         }
         val powerZoneDistribution = cogganZones.mapIndexed { idx, zb ->
             zb.copy(seconds = powerZoneTotals[idx])
         }
 
+        val cyclingVo2max = calculateCyclingVo2Max(
+            ftpWatts = activeFtp,
+            peakRideNpWatts = rideMaxNp,
+            weightKg = weightKg,
+        )
+
         val cyclingSummary = CyclingAnalyticsSummary(
             ftpWatts = ftpWatts,
             eFtpWatts = eFtpWatts,
             wPerKg = wPerKg,
+            cyclingVo2max = cyclingVo2max,
             ctlBike = ctlBike,
             atlBike = atlBike,
             tsbBike = tsbBike,
@@ -417,6 +437,26 @@ object AnalyticsEngine {
     fun calculateBikeTss(movingTimeSec: Int, npWatts: Double, ifFactor: Double, ftpWatts: Int): Double {
         if (movingTimeSec <= 0 || npWatts <= 0.0 || ifFactor <= 0.0 || ftpWatts <= 0) return 0.0
         return ((movingTimeSec * npWatts * ifFactor) / (ftpWatts * 3600.0)) * 100.0
+    }
+
+    /**
+     * ACSM / Hawley-Noakes cycling VO2max estimate:
+     * VO2max (ml/kg/min) = (10.8 * MAP_watts) / weightKg + 7, where MAP ~= FTP / 0.75.
+     */
+    fun calculateCyclingVo2Max(
+        ftpWatts: Int,
+        peakRideNpWatts: Int? = null,
+        weightKg: Double? = null,
+    ): Double? {
+        val wKg = weightKg?.takeIf { it > 0.0 } ?: return null
+        val effectiveFtp = when {
+            ftpWatts > 0 -> ftpWatts.toDouble()
+            peakRideNpWatts != null && peakRideNpWatts > 0 -> peakRideNpWatts.toDouble()
+            else -> return null
+        }
+        val mapWatts = effectiveFtp / 0.75
+        val vo2 = (10.8 * mapWatts) / wKg + 7.0
+        return ((vo2 * 10.0).roundToInt() / 10.0).takeIf { it in 15.0..95.0 }
     }
 
     /** Estimate cycling FTP from running VDOT. */

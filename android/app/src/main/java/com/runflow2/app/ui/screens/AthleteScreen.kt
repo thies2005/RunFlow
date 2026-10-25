@@ -176,7 +176,7 @@ fun AthleteScreen(
                             )
                             StatTile(
                                 label = "Weight",
-                                value = p?.let { "${it.weightKg.toInt()} kg" } ?: "—",
+                                value = Format.weight(p?.weightKg, unit),
                                 icon = Icons.Outlined.MonitorHeart,
                                 accent = MaterialTheme.colorScheme.tertiary,
                             )
@@ -237,8 +237,8 @@ fun AthleteScreen(
                         MetricLine(Icons.Outlined.Favorite, "Max HR", p?.let { "${it.hrMax} bpm" } ?: "—")
                         MetricLine(Icons.Outlined.MonitorHeart, "Resting HR", p?.let { "${it.hrRest} bpm" } ?: "—")
                         MetricLine(Icons.Outlined.Speed, "Threshold pace", p?.let { Format.paceWithUnit(it.thresholdPaceSecPerKm.toDouble(), unit) } ?: "—")
-                        MetricLine(Icons.Outlined.Height, "Height", p?.let { "${it.heightCm.toInt()} cm" } ?: "—")
-                        MetricLine(Icons.Outlined.DirectionsWalk, "Weight", p?.let { "${it.weightKg} kg" } ?: "—")
+                        MetricLine(Icons.Outlined.Height, "Height", Format.height(p?.heightCm, unit))
+                        MetricLine(Icons.Outlined.DirectionsWalk, "Weight", Format.weight(p?.weightKg, unit))
                     }
                 }
             }
@@ -268,7 +268,7 @@ fun AthleteScreen(
                 Card(Modifier.fillMaxWidth()) {
                     Column {
                         MenuRow(Icons.Outlined.CalendarMonth, "All activities", "${activities.size} recorded", onActivities)
-                        MenuRow(Icons.Outlined.MonitorHeart, "HR zones", "7-zone model", onHrZones)
+                        MenuRow(Icons.Outlined.MonitorHeart, "Heart Rate & Power Zones", "7-zone HR & Coggan models", onHrZones)
                         MenuRow(Icons.Outlined.Settings, "Settings", "Units, theme, coaching", onSettings)
                         MenuRow(
                             Icons.AutoMirrored.Outlined.Chat,

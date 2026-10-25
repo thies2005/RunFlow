@@ -29,7 +29,7 @@ class NetworkClient(
     private val authStore: AuthStore?,
     initialBaseUrl: String = Api.DEFAULT_BASE_URL,
     settings: SettingsRepository? = null,
-    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) {
     @Volatile
     var previousBaseUrl: String? = Api.normalizeServerUrl(initialBaseUrl)
@@ -45,7 +45,7 @@ class NetworkClient(
             val prev = previousBaseUrl
             if (prev != null && prev != normalized) {
                 AppLog.i("Net", "Server origin changed from $prev to $normalized via baseUrl setter — clearing session")
-                runCatching { runBlocking { authStore?.clear() } }
+                scope.launch { runCatching { authStore?.clear() } }
                 onOriginSwitched?.invoke()
             }
             previousBaseUrl = normalized
@@ -90,7 +90,10 @@ class NetworkClient(
         val request = chain.request()
         val token = authStore?.accessToken()
         val skipAuth = request.url.encodedPath.let {
-            it.endsWith("/auth/refresh") || it.endsWith("/auth/email-login")
+            it.endsWith("/auth/refresh") ||
+                it.endsWith("/auth/email-login") ||
+                it.endsWith("/auth/register") ||
+                it.endsWith("/auth/forgot-password")
         }
         val authed = if (!skipAuth && !token.isNullOrEmpty()) {
             request.newBuilder().header("Authorization", "Bearer $token").build()

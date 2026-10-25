@@ -83,7 +83,10 @@ object WebPlanEngine {
 
             else -> enrichTargets(generateStandardPlan(config), config, paces, usePhaseVdot = true)
         }
-        return withTargets.map { it.copy(structuredSteps = buildStructuredStepsForWorkout(it)) }
+        val ctx = StructuredStepsContext(
+            ftpWatts = config.ftpWatts?.takeIf { it > 0 }?.toDouble(),
+        )
+        return withTargets.map { it.copy(structuredSteps = buildStructuredStepsForWorkout(it, ctx)) }
     }
 
     /** index.ts `enrichTargets` closure (L347-357). */
@@ -1634,7 +1637,7 @@ object WebPlanEngine {
             raceType = if (spec.raceType == RaceType.NONE) null else spec.raceType.name,
             raceDate = spec.raceDate,
             startDate = spec.startDate,
-            sport = if (isTriathlon) "TRIATHLON" else null,
+            sport = spec.sport ?: if (isTriathlon) "TRIATHLON" else null,
             runsPerWeek = spec.runsPerWeek,
             ridesPerWeek = spec.ridesPerWeek ?: if (isTriathlon) 2 else 0,
             swimsPerWeek = spec.swimsPerWeek ?: if (isTriathlon) 2 else 0,
@@ -1657,6 +1660,8 @@ object WebPlanEngine {
             thresholdHeartRate = spec.thresholdHeartRate,
             hrMax = spec.maxHeartRate,
             hrRest = spec.restingHeartRate,
+            ftpWatts = spec.ftpWatts,
+            matchToMyWhoosh = spec.matchToMyWhoosh,
         )
     }
 
@@ -1841,6 +1846,8 @@ data class WebPlanConfig(
     val customSwimDistM: Double? = null,
     val customBikeDistM: Double? = null,
     val customRunDistM: Double? = null,
+    val ftpWatts: Int? = null,
+    val matchToMyWhoosh: Boolean = false,
 )
 
 /** Mirror of the web `StructuredWorkoutStep` (index.ts L307-314). */

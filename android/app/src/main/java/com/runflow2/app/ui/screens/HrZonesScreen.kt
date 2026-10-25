@@ -46,14 +46,27 @@ fun HrZonesScreen(
 ) {
     val scope = rememberCoroutineScope()
     val profile by container.repository.profile.collectAsState(initial = null)
-    val p = profile ?: return
+    val p = profile ?: return Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Heart Rate & Power Zones") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
+                    }
+                },
+            )
+        },
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding)) {}
+    }
 
-    var z1 by remember(p) { mutableStateOf(p.hrZone1Max.toFloat()) }
-    var z2 by remember(p) { mutableStateOf(p.hrZone2Max.toFloat()) }
-    var z3 by remember(p) { mutableStateOf(p.hrZone3Max.toFloat()) }
-    var z4 by remember(p) { mutableStateOf(p.hrZone4Max.toFloat()) }
-    var z5 by remember(p) { mutableStateOf(p.hrZone5Max.toFloat()) }
-    var z6 by remember(p) { mutableStateOf(p.hrZone6Max.toFloat()) }
+    var z1 by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.hrZone1Max.toFloat()) }
+    var z2 by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.hrZone2Max.toFloat()) }
+    var z3 by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.hrZone3Max.toFloat()) }
+    var z4 by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.hrZone4Max.toFloat()) }
+    var z5 by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.hrZone5Max.toFloat()) }
+    var z6 by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.hrZone6Max.toFloat()) }
 
     // Auto mode follows the profile row; the local state keeps the switch
     // responsive while the save round-trips. The sliders remember(p), so
@@ -71,7 +84,7 @@ fun HrZonesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Heart-rate zones") },
+                title = { Text("Heart Rate & Power Zones") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")

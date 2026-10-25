@@ -14,3 +14,4 @@ keystore/
 
 # Built APKs (release artifacts, not source)
 *.apk
+.kotlin/

@@ -25,6 +25,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.DirectionsBike
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.Pool
 import androidx.compose.material.icons.outlined.SelfImprovement
@@ -117,8 +118,9 @@ private data class WizardData(
     val hrRestText: String = "",
     val lthrText: String = "",
     val thresholdPaceText: String = "", // m:ss per km
-    // MyWhoosh matching for cycling workouts (web-parity wizard option)
+    // MyWhoosh matching & plan preset for cycling workouts (web-parity wizard option)
     val matchToMyWhoosh: Boolean = false,
+    val mywhooshPlanId: String? = null,
     // schedule
     val longRunDay: DayOfWeek = DayOfWeek.SUNDAY,
     val workoutDay: DayOfWeek = DayOfWeek.THURSDAY,
@@ -126,12 +128,33 @@ private data class WizardData(
     val restDays: Set<DayOfWeek> = setOf(DayOfWeek.TUESDAY, DayOfWeek.FRIDAY),
 )
 
+private data class MyWhooshPlanPreset(
+    val id: String,
+    val name: String,
+    val category: String,
+    val weeks: Int,
+    val ridesPerWeek: Int,
+)
+
+private val MYWHOOSH_PRESETS = listOf(
+    MyWhooshPlanPreset("mw-plan-beginner-welcome", "New Rider Welcome", "Beginner", 4, 3),
+    MyWhooshPlanPreset("mw-plan-beginner-endurance", "Beginner Fitness & Endurance", "Beginner", 8, 3),
+    MyWhooshPlanPreset("mw-plan-ftp-builder", "Beginner FTP Builder", "Target FTP", 8, 4),
+    MyWhooshPlanPreset("mw-plan-ftp-booster", "8-Week FTP Booster", "Target FTP", 8, 4),
+    MyWhooshPlanPreset("mw-plan-advanced-ftp", "Advanced FTP Development", "Target FTP", 10, 5),
+    MyWhooshPlanPreset("mw-plan-gran-fondo", "Gran Fondo Preparation", "Race Discipline", 10, 4),
+    MyWhooshPlanPreset("mw-plan-time-trial", "Time Trial (ITT) Specialist", "Race Discipline", 8, 4),
+    MyWhooshPlanPreset("mw-plan-climb-mountain", "Climb & Mountain", "Race Discipline", 8, 4),
+    MyWhooshPlanPreset("mw-plan-triathlon-base", "Triathlon 70.3 / 140.6 Bike", "Race Discipline", 8, 3),
+    MyWhooshPlanPreset("mw-plan-tadej", "Train Like Tadej (UAE Pro)", "UAE Pro", 8, 5),
+)
+
 /** Races offered for each event category (wizard screen 2). */
 private fun racesFor(category: EventCategory): List<RaceType> = when (category) {
     EventCategory.RUN -> RaceDefaultsTable.runRaces
     EventCategory.ULTRA -> RaceDefaultsTable.ultraRaces
     EventCategory.TRIATHLON -> RaceDefaultsTable.triRaces
-    EventCategory.GENERAL -> listOf(RaceType.NONE)
+    EventCategory.CYCLING, EventCategory.GENERAL -> listOf(RaceType.NONE)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -151,7 +174,12 @@ fun PlanWizardScreen(
     var data by remember { mutableStateOf(WizardData()) }
     var creating by remember { mutableStateOf(false) }
 
-    val steps = remember(data.raceType) { PlanMethodFlow.stepsFor(data.raceType == RaceType.NONE) }
+    val steps = remember(data.raceType, data.category) {
+        PlanMethodFlow.stepsFor(
+            noRace = data.raceType == RaceType.NONE,
+            isCycling = data.category == EventCategory.CYCLING,
+        )
+    }
     val stepCount = steps.size
 
     // prefill volume + advanced defaults from the race type (mirrors the
@@ -280,10 +308,14 @@ fun PlanWizardScreen(
                                 // remember the wizard's MyWhoosh choice for the
                                 // settings screen and future plans
                                 container.settings.setMatchToMyWhoosh(data.matchToMyWhoosh)
-                                val noRace = data.raceType == RaceType.NONE
+                                val isCycling = data.category == EventCategory.CYCLING
+                                val noRace = data.raceType == RaceType.NONE || isCycling
+                                val activeFtp = settings.ftpWatts.takeIf { it > 0 } ?: analytics?.cycling?.eFtpWatts
                                 val spec = PlanSpec(
-                                    name = data.name.ifBlank { data.raceType.label },
-                                    raceType = data.raceType,
+                                    name = data.name.ifBlank {
+                                        if (isCycling) "Cycling Training Plan" else data.raceType.label
+                                    },
+                                    raceType = if (isCycling) RaceType.NONE else data.raceType,
                                     raceDate = if (noRace) LocalDate.now().plusWeeks(data.planLengthWeeks.toLong()) else data.raceDate,
                                     startDate = LocalDate.now(),
                                     targetTimeSec = data.targetTimeSec,
@@ -314,6 +346,10 @@ fun PlanWizardScreen(
                                     restingHeartRate = data.parseInt(data.hrRestText),
                                     thresholdHeartRate = data.parseInt(data.lthrText),
                                     thresholdPaceSecPerKm = parseDuration(data.thresholdPaceText),
+                                    sport = if (isCycling) "CYCLING" else null,
+                                    ftpWatts = activeFtp,
+                                    matchToMyWhoosh = data.matchToMyWhoosh,
+                                    mywhooshPlanId = data.mywhooshPlanId,
                                 )
 
                                 // The engine is picked automatically, never by the
@@ -418,6 +454,7 @@ private fun StepEventType(
         Triple(EventCategory.RUN, Icons.Outlined.DirectionsRun, "5K · 10K · Half · Marathon · Custom"),
         Triple(EventCategory.ULTRA, Icons.Outlined.Terrain, "50K to 100 miles · timed · backyard"),
         Triple(EventCategory.TRIATHLON, Icons.Outlined.Pool, "Sprint to long distance · custom"),
+        Triple(EventCategory.CYCLING, Icons.Outlined.DirectionsBike, "MyWhoosh & FTP cycling plans"),
         Triple(EventCategory.GENERAL, Icons.Outlined.SelfImprovement, "No race — build fitness"),
     )
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -433,7 +470,23 @@ private fun StepEventType(
                     ) {
                         if (data.category != category) {
                             val race = racesFor(category).first()
-                            update(data.copy(category = category, raceType = race))
+                            if (category == EventCategory.CYCLING) {
+                                val firstMw = MYWHOOSH_PRESETS.first()
+                                update(
+                                    data.copy(
+                                        category = category,
+                                        raceType = RaceType.NONE,
+                                        runsPerWeek = 0,
+                                        ridesPerWeek = firstMw.ridesPerWeek,
+                                        planLengthWeeks = firstMw.weeks,
+                                        matchToMyWhoosh = true,
+                                        mywhooshPlanId = firstMw.id,
+                                        name = if (data.name.isBlank()) firstMw.name else data.name,
+                                    )
+                                )
+                            } else {
+                                update(data.copy(category = category, raceType = race))
+                            }
                         }
                     }
                 }
@@ -484,6 +537,56 @@ private fun EventCard(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun StepRace(data: WizardData, update: (WizardData) -> Unit) {
+    if (data.category == EventCategory.CYCLING) {
+        StepHeader("MyWhoosh & Cycling Plan", "Select an official MyWhoosh structured plan or build a custom outdoor cycling block.")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = data.matchToMyWhoosh,
+                onClick = {
+                    val preset = MYWHOOSH_PRESETS.first()
+                    update(
+                        data.copy(
+                            matchToMyWhoosh = true,
+                            mywhooshPlanId = data.mywhooshPlanId ?: preset.id,
+                        )
+                    )
+                },
+                label = { Text("MyWhoosh Virtual (.zwo)") },
+            )
+            FilterChip(
+                selected = !data.matchToMyWhoosh,
+                onClick = { update(data.copy(matchToMyWhoosh = false, mywhooshPlanId = null)) },
+                label = { Text("Offline / Outdoor Cycling") },
+            )
+        }
+        if (data.matchToMyWhoosh) {
+            MYWHOOSH_PRESETS.groupBy { it.category }.forEach { (cat, presets) ->
+                Text(cat, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    presets.forEach { p ->
+                        FilterChip(
+                            selected = data.mywhooshPlanId == p.id,
+                            onClick = {
+                                update(
+                                    data.copy(
+                                        mywhooshPlanId = p.id,
+                                        planLengthWeeks = p.weeks,
+                                        ridesPerWeek = p.ridesPerWeek,
+                                        name = p.name,
+                                    )
+                                )
+                            },
+                            label = { Text("${p.name} (${p.weeks}w)") },
+                        )
+                    }
+                }
+            }
+        }
+        return
+    }
     if (data.category == EventCategory.GENERAL) {
         StepHeader("General fitness", "No goal race — a repeating base plan.")
         return
@@ -829,9 +932,14 @@ private fun StepVolume(data: WizardData, update: (WizardData) -> Unit) {
         }
     }
 
+    val isCycling = data.category == EventCategory.CYCLING
+    val minRuns = if (isCycling) 0 else 2
     Text("Runs per week: ${data.runsPerWeek}", style = MaterialTheme.typography.titleSmall)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        (2..7).forEach { n ->
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        (minRuns..7).forEach { n ->
             FilterChip(
                 selected = data.runsPerWeek == n,
                 onClick = { update(data.copy(runsPerWeek = n)) },
@@ -840,12 +948,15 @@ private fun StepVolume(data: WizardData, update: (WizardData) -> Unit) {
         }
     }
 
-    if (tri) {
+    if (tri || isCycling) {
         // For triathlon these are core plan inputs (the engine distributes
         // sessions per sport), so they live here — not under advanced options.
         Text("Rides per week: ${data.ridesPerWeek}", style = MaterialTheme.typography.titleSmall)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            (0..3).forEach { n ->
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            (0..6).forEach { n ->
                 FilterChip(
                     selected = data.ridesPerWeek == n,
                     onClick = { update(data.copy(ridesPerWeek = n)) },
@@ -928,8 +1039,11 @@ private fun StepAdvanced(
     if (!tri) {
         Text("Cross-training", style = MaterialTheme.typography.titleSmall)
         Text("Rides / week", style = MaterialTheme.typography.bodyMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            (0..3).forEach { n ->
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            (0..6).forEach { n ->
                 FilterChip(
                     selected = data.ridesPerWeek == n,
                     onClick = { update(data.copy(ridesPerWeek = n)) },

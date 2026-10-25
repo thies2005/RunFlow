@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.core.math.TrainingLoad
@@ -100,12 +102,21 @@ fun FitnessChart(
             }
         }
 
+        val latestLoad = daily.lastOrNull()
+        val chartSummary = if (latestLoad != null) {
+            "Fitness chart: latest CTL ${latestLoad.ctl.roundToInt()}, ATL ${latestLoad.atl.roundToInt()}, TSB ${latestLoad.tsb.roundToInt()}"
+        } else "Fitness chart"
+
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(height.dp)
+                .semantics { contentDescription = chartSummary }
                 .pointerInput(daily.size) {
-                    detectDragGestures { change, _ ->
+                    detectDragGestures(
+                        onDragEnd = { scrubIndex = null },
+                        onDragCancel = { scrubIndex = null },
+                    ) { change, _ ->
                         val x = change.position.x
                         val w = size.width.toFloat()
                         val frac = (x / w).coerceIn(0f, 1f)
@@ -225,7 +236,10 @@ fun WeeklyVolumeBars(
         Canvas(
             Modifier
                 .fillMaxWidth()
-                .height(120.dp),
+                .height(120.dp)
+                .semantics {
+                    contentDescription = "Weekly volume bar chart: latest ${weeks.lastOrNull()?.km?.roundToInt() ?: 0} $unitLabel, max ${maxKm.roundToInt()} $unitLabel"
+                },
         ) {
             val n = weeks.size.coerceAtLeast(1)
             val gap = 3.dp.toPx()

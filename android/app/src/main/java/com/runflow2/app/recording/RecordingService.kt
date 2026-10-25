@@ -10,15 +10,21 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.speech.tts.TextToSpeech
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import kotlinx.coroutines.withContext
 import com.runflow2.app.MainActivity
 import com.runflow2.app.R
 import com.runflow2.app.RunFlowApp
@@ -52,8 +58,19 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
     private val controller get() = container.recording
 
     private lateinit var locationManager: LocationManager
+    private var sensorManager: SensorManager? = null
+    private var wakeLock: PowerManager.WakeLock? = null
     private var tts: TextToSpeech? = null
     private var ttsReady = false
+
+    private val stepListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent?) {
+            if (event?.sensor?.type == Sensor.TYPE_STEP_DETECTOR) {
+                controller.onStepDetected()
+            }
+        }
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+    }
 
     /**
      * All [RecordingController] mutations must stay on the main thread: the GPS
@@ -77,6 +94,7 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
     override fun onCreate() {
         super.onCreate()
         locationManager = getSystemService(LocationManager::class.java)
+        sensorManager = getSystemService(SensorManager::class.java)
         tts = TextToSpeech(this, this)
         createChannel()
     }
@@ -94,17 +112,25 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
                 val workoutId = intent.getStringExtra(EXTRA_WORKOUT_ID)
                 val autoPause = intent.getBooleanExtra(EXTRA_AUTO_PAUSE, true)
                 val voice = intent.getBooleanExtra(EXTRA_VOICE, true)
-                val workout = workoutId?.let { runBlockingWorkout(it) }
-                // Kalman GPS smoothing is snapshotted once per session (DataStore read).
-                controller.gpsSmoothingEnabled = kotlinx.coroutines.runBlocking {
-                    container.settings.settingsOnce().gpsSmoothing
-                }
-                controller.configure(autoPause, voice)
-                controller.start(workout, resolvedSteps = structuredStepsFor(workout))
+                // Call startAsForeground() immediately on the main thread before
+                // any Room/DataStore I/O to prevent ForegroundServiceDidNotStartInTimeException.
                 startAsForeground()
-                startGps()
-                startTicker()
-                collectVoice()
+                acquireWakeLock()
+                controller.configure(autoPause, voice)
+                scope.launch {
+                    val (workout, smoothing, steps) = withContext(Dispatchers.IO) {
+                        val w = workoutId?.let { container.repository.workout(it) }
+                        val smooth = container.settings.settingsOnce().gpsSmoothing
+                        val parsedSteps = structuredStepsForSuspend(w)
+                        Triple(w, smooth, parsedSteps)
+                    }
+                    controller.gpsSmoothingEnabled = smoothing
+                    controller.start(workout, resolvedSteps = steps)
+                    startGps()
+                    startStepSensor()
+                    startTicker()
+                    collectVoice()
+                }
             }
             ACTION_PAUSE -> controller.pause()
             ACTION_RESUME -> controller.resume()
@@ -123,23 +149,16 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
         return START_STICKY
     }
 
-    private fun runBlockingWorkout(id: String) = kotlinx.coroutines.runBlocking {
-        container.repository.workout(id)
-    }
-
     /**
-     * Parses the workout's structuredSteps with a VDOT-derived pace table:
-     * the goal's VDOT at creation wins, falling back to one inverted from the
-     * profile's threshold pace. Empty/malformed JSON yields null so the
-     * controller falls back to the synthesized flat-target steps.
+     * Parses the workout's structuredSteps on Dispatchers.IO without blocking
+     * the main thread.
      */
-    private fun structuredStepsFor(workout: com.runflow2.app.data.db.WorkoutEntity?): List<StepRuntime>? {
+    private suspend fun structuredStepsForSuspend(workout: com.runflow2.app.data.db.WorkoutEntity?): List<StepRuntime>? {
         val raw = workout?.structuredStepsJson ?: return null
-        val vdot = kotlinx.coroutines.runBlocking {
-            container.repository.goal(workout.goalId)?.vdotAtCreation
-                ?: container.repository.profileOnce()
-                    .let { vdotFromThresholdPaceSecPerKm(it.thresholdPaceSecPerKm.toDouble()) }
-        } ?: 50.0
+        val vdot = container.repository.goal(workout.goalId)?.vdotAtCreation
+            ?: container.repository.profileOnce()
+                .let { vdotFromThresholdPaceSecPerKm(it.thresholdPaceSecPerKm.toDouble()) }
+            ?: 50.0
         return StructuredStepsParser.parse(raw, paceLetterTable(vdot)).takeIf { it.isNotEmpty() }
     }
 
@@ -152,23 +171,51 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
         }
     }
 
+    private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) return
+        val pm = getSystemService(PowerManager::class.java) ?: return
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "RunFlow::RecordingWakeLock").apply {
+            setReferenceCounted(false)
+            acquire(6 * 60 * 60 * 1000L) // 6-hour safety ceiling
+        }
+    }
+
+    private fun releaseWakeLock() {
+        runCatching {
+            if (wakeLock?.isHeld == true) wakeLock?.release()
+        }
+        wakeLock = null
+    }
+
+    private fun startStepSensor() {
+        val sm = sensorManager ?: return
+        val stepSensor = sm.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR) ?: return
+        runCatching {
+            sm.registerListener(stepListener, stepSensor, SensorManager.SENSOR_DELAY_UI)
+        }
+    }
+
+    private fun stopStepSensor() {
+        runCatching { sensorManager?.unregisterListener(stepListener) }
+    }
+
     private fun startGps() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED
         ) return
-        // Platform LocationManager: no Google Play Services dependency, works on
-        // emulators and de-Googled devices. Register every available provider.
-        val providers = buildList {
-            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) add(LocationManager.GPS_PROVIDER)
-            if (locationManager.isProviderEnabled(LocationManager.FUSED_PROVIDER)) add(LocationManager.FUSED_PROVIDER)
-            if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) add(LocationManager.NETWORK_PROVIDER)
-        }
+        // Single primary high-accuracy provider so coarse NETWORK_PROVIDER jumps
+        // never fight 1 Hz GPS fixes in LocationFilter.
+        val primaryProvider = when {
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                locationManager.isProviderEnabled(LocationManager.FUSED_PROVIDER) -> LocationManager.FUSED_PROVIDER
+            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
+            else -> null
+        } ?: return
         try {
-            providers.forEach { provider ->
-                locationManager.requestLocationUpdates(
-                    provider, 1000L, 1f, locationListener, Looper.getMainLooper(),
-                )
-            }
+            locationManager.requestLocationUpdates(
+                primaryProvider, 1000L, 1f, locationListener, Looper.getMainLooper(),
+            )
         } catch (_: SecurityException) {
         }
     }
@@ -258,6 +305,8 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
 
     private fun stopGps() {
         runCatching { locationManager.removeUpdates(locationListener) }
+        stopStepSensor()
+        releaseWakeLock()
     }
 
     private suspend fun saveAndStop() {
@@ -285,15 +334,24 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
         hrMax: Int,
         hrRest: Int,
     ): ActivityEntity {
+        val sportType = s.sportType.ifBlank { "RUN" }
+        val sportNoun = when (sportType) {
+            "RIDE" -> "Ride"
+            "SWIM" -> "Swim"
+            "WALK" -> "Walk"
+            "WORKOUT" -> "Workout"
+            else -> "Run"
+        }
         val now = LocalDateTime.now()
         val name = s.workoutName ?: when (now.toLocalTime()) {
-            in LocalTime.of(5, 0)..LocalTime.of(11, 0) -> "Morning Run"
-            in LocalTime.of(11, 0)..LocalTime.of(14, 0) -> "Midday Run"
-            in LocalTime.of(14, 0)..LocalTime.of(18, 0) -> "Afternoon Run"
-            else -> "Evening Run"
+            in LocalTime.of(5, 0)..LocalTime.of(11, 0) -> "Morning $sportNoun"
+            in LocalTime.of(11, 0)..LocalTime.of(14, 0) -> "Midday $sportNoun"
+            in LocalTime.of(14, 0)..LocalTime.of(18, 0) -> "Afternoon $sportNoun"
+            else -> "Evening $sportNoun"
         }
         val km = s.distanceM / 1000.0
         val moving = s.elapsedMovingSec.toInt()
+        val isRun = sportType == "RUN"
         val trimp = com.runflow2.app.data.repo.RunFlowRepository.computeTrimp(
             movingTimeSec = moving,
             avgHr = s.currentHr?.toDouble(),
@@ -302,6 +360,7 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
             thresholdPaceSecPerKm = thresholdPace,
             hrMax = hrMax,
             hrRest = hrRest,
+            isRun = isRun,
         )
         val route = s.points.take(MAX_ROUTE_POINTS).joinToString(",", "[", "]") {
             "[${"%.5f".format(Locale.ENGLISH, it.lat)},${"%.5f".format(Locale.ENGLISH, it.lng)}]"
@@ -311,13 +370,12 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
         }
         val streamsJson = StreamCapture.build(s.points)?.toJsonOrNull()
         val cadence = s.cadence
-        // MET estimate matching the web engine (Compendium METs × kg × hours);
-        // the old minute×kg×0.945 formula overshot real burn ~5×.
-        val calories = com.runflow2.app.core.math.CalorieMath.estimate(moving, s.distanceM, weightKg)
+        // MET estimate matching the web engine (Compendium METs × kg × hours)
+        val calories = com.runflow2.app.core.math.CalorieMath.estimate(moving, s.distanceM, weightKg, sportType)
         return ActivityEntity(
             id = UUID.randomUUID().toString(),
             name = name,
-            type = "RUN",
+            type = sportType,
             startDate = s.startedAtMillis ?: System.currentTimeMillis(),
             distanceMeters = s.distanceM,
             movingTimeSec = moving,

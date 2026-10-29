@@ -1,12 +1,26 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.runflow2.app.ui
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.filled.SpaceDashboard
 import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.RadioButtonChecked
+import androidx.compose.material.icons.outlined.SpaceDashboard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -14,22 +28,24 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.runtime.collectAsState
 import com.runflow2.app.AppContainer
 import com.runflow2.app.data.repo.AppSettings
+import com.runflow2.app.data.repo.ThemeMode
 import com.runflow2.app.recording.RecStatus
-import com.runflow2.app.ui.screens.ActivityDetailScreen
 import com.runflow2.app.ui.screens.ActivitiesScreen
+import com.runflow2.app.ui.screens.ActivityDetailScreen
 import com.runflow2.app.ui.screens.AiCoachScreen
 import com.runflow2.app.ui.screens.AnalyticsScreen
 import com.runflow2.app.ui.screens.AthleteScreen
@@ -70,15 +86,22 @@ object Routes {
     fun structuredEditor(workoutId: String) = "structured-editor/$workoutId"
 }
 
-private data class Tab(val route: String, val label: String, val icon: ImageVector)
+private data class Tab(
+    val route: String,
+    val label: String,
+    val unselectedIcon: ImageVector,
+    val selectedIcon: ImageVector,
+)
 
 private val tabs = listOf(
-    Tab(Routes.DASHBOARD, "Dashboard", Icons.Outlined.Insights),
-    Tab(Routes.PLAN, "Plan", Icons.Outlined.CalendarMonth),
-    Tab(Routes.RECORD, "Record", Icons.Outlined.RadioButtonChecked),
-    Tab(Routes.ANALYTICS, "Analytics", Icons.Outlined.DirectionsRun),
-    Tab(Routes.ATHLETE, "Athlete", Icons.Outlined.Person),
+    Tab(Routes.DASHBOARD, "Today", Icons.Outlined.SpaceDashboard, Icons.Filled.SpaceDashboard),
+    Tab(Routes.PLAN, "Plan", Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth),
+    Tab(Routes.RECORD, "Record", Icons.Outlined.RadioButtonChecked, Icons.Filled.RadioButtonChecked),
+    Tab(Routes.ANALYTICS, "Analytics", Icons.Outlined.Insights, Icons.Filled.Insights),
+    Tab(Routes.ATHLETE, "Athlete", Icons.Outlined.Person, Icons.Filled.Person),
 )
+
+private val tabRoutes = tabs.map { it.route }.toSet()
 
 @Composable
 fun RunFlowRoot(container: AppContainer) {
@@ -86,11 +109,12 @@ fun RunFlowRoot(container: AppContainer) {
 
     RunFlowTheme(
         darkTheme = when (settings.themeMode) {
-            com.runflow2.app.data.repo.ThemeMode.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
-            com.runflow2.app.data.repo.ThemeMode.LIGHT -> false
-            com.runflow2.app.data.repo.ThemeMode.DARK -> true
+            ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            ThemeMode.LIGHT -> false
+            ThemeMode.DARK -> true
         },
         dynamicColor = settings.dynamicColor,
+        amoledBlack = settings.amoledBlack,
     ) {
         val navController = rememberNavController()
         val backStack by navController.currentBackStackEntryAsState()
@@ -103,44 +127,48 @@ fun RunFlowRoot(container: AppContainer) {
         // A Strava OAuth deep link landed while not on the login screen —
         // take the user there so the code exchange can complete.
         val pendingOAuthCode by container.authStore.pendingOAuthCode.collectAsState()
-        androidx.compose.runtime.LaunchedEffect(pendingOAuthCode) {
+        LaunchedEffect(pendingOAuthCode) {
             if (pendingOAuthCode != null && currentRoute != Routes.LOGIN) {
                 navController.navigate(Routes.LOGIN) { launchSingleTop = true }
             }
         }
 
-        val showBottomBar = currentRoute in tabs.map { it.route } && !recording
+        val showBottomBar = currentRoute in tabRoutes && !recording
 
         // Each screen hosts its own Scaffold + TopAppBar, which apply the
         // status-bar inset themselves; the root must not pre-pad as well or
-        // the top inset is counted twice.
+        // the top inset is counted twice. Consuming `padding` ensures child
+        // Scaffolds do not re-apply the bottom system navigation bar inset.
         Scaffold(
-            contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 if (showBottomBar) {
-                    NavigationBar {
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ) {
                         tabs.forEach { tab ->
+                            val selected = currentRoute == tab.route
                             NavigationBarItem(
-                                selected = currentRoute == tab.route,
+                                selected = selected,
                                 onClick = {
-                                    // Already there: navigating would pop and
-                                    // re-push around the start destination and
-                                    // can strand the UI on the wrong screen.
                                     if (currentRoute == tab.route) return@NavigationBarItem
-                                    // No saveState/restoreState here: this
-                                    // graph's start destination is itself a
-                                    // tab, and the saved-state restoration
-                                    // misfires when the tab is re-entered over
-                                    // a screen that was pushed onto it (the
-                                    // dashboard's analytics cards) — the UI
-                                    // strands on the old screen or worse.
                                     navController.navigate(tab.route) {
                                         popUpTo(navController.graph.findStartDestination().id)
                                         launchSingleTop = true
                                     }
                                 },
-                                icon = { Icon(tab.icon, contentDescription = tab.label) },
-                                label = { Text(tab.label) },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (selected) tab.selectedIcon else tab.unselectedIcon,
+                                        contentDescription = tab.label,
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = tab.label,
+                                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                    )
+                                },
                             )
                         }
                     }
@@ -150,11 +178,47 @@ fun RunFlowRoot(container: AppContainer) {
             NavHost(
                 navController = navController,
                 startDestination = if (settings.onboardingDone) Routes.DASHBOARD else Routes.ONBOARDING,
-                modifier = Modifier.padding(padding),
+                modifier = Modifier
+                    .padding(padding)
+                    .consumeWindowInsets(padding),
+                enterTransition = {
+                    val isTabSwitch = initialState.destination.route in tabRoutes &&
+                        targetState.destination.route in tabRoutes
+                    if (isTabSwitch) {
+                        fadeIn(tween(200))
+                    } else {
+                        fadeIn(tween(220)) + slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = tween(260),
+                        )
+                    }
+                },
+                exitTransition = {
+                    val isTabSwitch = initialState.destination.route in tabRoutes &&
+                        targetState.destination.route in tabRoutes
+                    if (isTabSwitch) {
+                        fadeOut(tween(150))
+                    } else {
+                        fadeOut(tween(180)) + slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = tween(260),
+                        )
+                    }
+                },
+                popEnterTransition = {
+                    fadeIn(tween(220)) + slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.End,
+                        animationSpec = tween(260),
+                    )
+                },
+                popExitTransition = {
+                    fadeOut(tween(180)) + slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.End,
+                        animationSpec = tween(260),
+                    )
+                },
             ) {
                 composable(Routes.ONBOARDING) {
-                    // The carousel no longer finishes onboarding itself —
-                    // both exits lead to the data-source setup step.
                     OnboardingScreen(
                         onFinish = {
                             navController.navigate(Routes.DATA_SOURCE_SETUP) { launchSingleTop = true }
@@ -187,10 +251,6 @@ fun RunFlowRoot(container: AppContainer) {
                     DashboardScreen(
                         container = container,
                         onOpenActivity = { navController.navigate(Routes.activityDetail(it)) },
-                        // Cards deep-link to a specific analytics section.
-                        // launchSingleTop only: the stack shape stays exactly
-                        // [dashboard, analytics] so tab navigation behaves the
-                        // same as after a tab tap (see tab onClick).
                         onOpenAnalyticsSection = { section ->
                             container.analyticsTargetSection = section
                             navController.navigate(Routes.ANALYTICS) {
@@ -232,8 +292,6 @@ fun RunFlowRoot(container: AppContainer) {
                 }
 
                 composable(Routes.ANALYTICS) {
-                    // One-shot section target set by dashboard cards before
-                    // navigating; consumed (and cleared) exactly once.
                     val section = remember {
                         container.analyticsTargetSection.also { container.analyticsTargetSection = null }
                     }
@@ -279,11 +337,6 @@ fun RunFlowRoot(container: AppContainer) {
                 }
 
                 composable(Routes.LOGIN) {
-                    // Entered from the data-source setup, login is the only
-                    // back-stack entry — popping is impossible, so back and
-                    // logged-in both fall through to the dashboard instead
-                    // (onboardingDone is already set; the login nudge takes
-                    // over from there).
                     fun exitLogin() {
                         if (!navController.popBackStack()) {
                             navController.navigate(Routes.DASHBOARD) {

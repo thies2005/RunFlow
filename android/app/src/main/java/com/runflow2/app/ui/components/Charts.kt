@@ -37,9 +37,7 @@ import com.runflow2.app.core.math.TrainingLoad
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.DailyEntryEntity
 import com.runflow2.app.domain.analytics.WeekVolume
-import com.runflow2.app.ui.theme.ChartAtl
-import com.runflow2.app.ui.theme.ChartCtl
-import com.runflow2.app.ui.theme.ChartTsb
+import com.runflow2.app.ui.theme.semanticColors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
@@ -63,9 +61,10 @@ fun FitnessChart(
     var scrubIndex by remember { mutableStateOf<Int?>(null) }
     val lineColor = MaterialTheme.colorScheme.outlineVariant
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val ctlColor = ChartCtl
-    val atlColor = ChartAtl
-    val tsbColor = ChartTsb
+    val sem = MaterialTheme.semanticColors
+    val ctlColor = sem.ctl
+    val atlColor = sem.atl
+    val tsbColor = sem.tsb
     val scrubColor = MaterialTheme.colorScheme.primary
 
     val point = scrubIndex?.let { daily.getOrNull(it) }
@@ -278,9 +277,11 @@ fun WeeklyVolumeBars(
 fun ZoneDistribution(zonesSeconds: List<Int>, modifier: Modifier = Modifier) {
     val total = zonesSeconds.sum().coerceAtLeast(1)
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val zoneColors = MaterialTheme.semanticColors.zones
     Column(modifier, verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
         zonesSeconds.forEachIndexed { i, sec ->
             val frac = sec.toFloat() / total
+            val zc = zoneColors.getOrElse(i) { MaterialTheme.colorScheme.primary }
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Text(
                     "Z${i + 1}",
@@ -294,12 +295,12 @@ fun ZoneDistribution(zonesSeconds: List<Int>, modifier: Modifier = Modifier) {
                         .height(14.dp),
                 ) {
                     drawRoundRect(
-                        com.runflow2.app.ui.theme.ZoneColors[i].copy(alpha = 0.25f),
+                        zc.copy(alpha = 0.22f),
                         cornerRadius = androidx.compose.ui.geometry.CornerRadius(7.dp.toPx()),
                     )
                     if (frac > 0.005f) {
                         drawRoundRect(
-                            com.runflow2.app.ui.theme.ZoneColors[i],
+                            zc,
                             size = androidx.compose.ui.geometry.Size(size.width * frac, size.height),
                             cornerRadius = androidx.compose.ui.geometry.CornerRadius(7.dp.toPx()),
                         )
@@ -326,6 +327,8 @@ fun RouteCanvas(
     strokeColor: Color = MaterialTheme.colorScheme.primary,
     trailColor: Color = MaterialTheme.colorScheme.outlineVariant,
 ) {
+    val startDot = MaterialTheme.semanticColors.good
+    val endDot = MaterialTheme.colorScheme.error
     Canvas(modifier) {
         if (points.size < 2) return@Canvas
         val lats = points.map { it.first }
@@ -351,8 +354,8 @@ fun RouteCanvas(
         drawPath(path, trailColor, style = Stroke(width = 7.dp.toPx(), cap = StrokeCap.Round))
         drawPath(path, strokeColor, style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round))
         // start / finish markers
-        drawCircle(Color(0xFF4CAF50), 5.dp.toPx(), toOffset(points.first()))
-        drawCircle(Color(0xFFE53935), 5.dp.toPx(), toOffset(points.last()))
+        drawCircle(startDot, 5.dp.toPx(), toOffset(points.first()))
+        drawCircle(endDot, 5.dp.toPx(), toOffset(points.last()))
     }
 }
 
@@ -650,7 +653,7 @@ fun ReadinessScoreChart(
 ) {
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val gridColor = MaterialTheme.colorScheme.outlineVariant
-    val scoreColor = ChartTsb
+    val scoreColor = MaterialTheme.semanticColors.tsb
 
     val pts = entries.mapIndexedNotNull { i, e -> e.score?.let { i to it } }
 

@@ -109,9 +109,9 @@ fun MarkdownText(
                 is MdBlock.CodeBlock -> Column(
                     Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(color.copy(alpha = 0.08f))
-                        .padding(10.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f))
+                        .padding(12.dp)
                         .horizontalScroll(rememberScrollState()),
                 ) {
                     block.lines.forEach { line ->
@@ -127,9 +127,9 @@ fun MarkdownText(
                 is MdBlock.Table -> Column(
                     Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(color.copy(alpha = 0.08f))
-                        .padding(10.dp),
+                        .clip(MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f))
+                        .padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     if (block.header.isNotEmpty()) {

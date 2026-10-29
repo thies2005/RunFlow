@@ -509,10 +509,10 @@ private fun EventCard(
         modifier = modifier,
         onClick = onClick,
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
+            containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer
             else MaterialTheme.colorScheme.surfaceContainerLow,
         ),
-        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(
@@ -1231,9 +1231,11 @@ private fun StepSchedule(data: WizardData, update: (WizardData) -> Unit) {
         add(data.workoutDay)
         if (data.swimsPerWeek > 0) data.swimDay?.let { add(it) }
     }
-    Row(
-        Modifier.fillMaxWidth(),
+    @OptIn(ExperimentalLayoutApi::class)
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         DayOfWeek.entries.forEach { d ->
             val disabled = d in reserved

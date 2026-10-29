@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.ProfileEntity
+import com.runflow2.app.ui.components.PixelLoadingBox
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,7 +62,7 @@ fun EditProfileScreen(
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {}
+        PixelLoadingBox(Modifier.padding(padding), message = "Loading profile…")
     }
 
     var name by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.name) }

@@ -1,5 +1,7 @@
 package com.runflow2.app.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Chat
@@ -28,6 +32,7 @@ import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -65,6 +70,7 @@ import com.runflow2.app.ui.components.SectionTitle
 import com.runflow2.app.ui.components.StatTile
 import com.runflow2.app.ui.components.StreamsChart
 import com.runflow2.app.ui.components.ZoneDistribution
+import com.runflow2.app.ui.theme.semanticColors
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -205,7 +211,12 @@ fun ActivityDetailScreen(
         ) {
             // hero metrics
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                ) {
                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Column {
@@ -250,7 +261,12 @@ fun ActivityDetailScreen(
 
             // more metrics
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                ) {
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -294,7 +310,12 @@ fun ActivityDetailScreen(
                 (series.hasHr || series.hasPace || series.hasElevation || series.hasWatts)
             ) {
                 item {
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ),
+                    ) {
                         Column(Modifier.padding(16.dp)) {
                             SectionTitle("Analysis")
                             Spacer(Modifier.height(12.dp))
@@ -304,7 +325,12 @@ fun ActivityDetailScreen(
                 }
             } else if (loadingStreams) {
                 item {
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ),
+                    ) {
                         Row(
                             Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -324,7 +350,12 @@ fun ActivityDetailScreen(
             // route
             if (route.size > 2) {
                 item {
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ),
+                    ) {
                         Column(Modifier.padding(16.dp)) {
                             SectionTitle("Route")
                             Spacer(Modifier.height(10.dp))
@@ -341,35 +372,52 @@ fun ActivityDetailScreen(
 
             // laps
             if (laps.isNotEmpty()) {
-                item { SectionTitle("Splits") }
-                items(laps.size) { i ->
-                    val lap = laps[i]
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ),
                     ) {
-                        Text(
-                            "Km ${lap.first}",
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Text(
-                            Format.duration(lap.second),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            when {
-                                Format.isRideType(a.type) -> "${Format.speedKmh(lap.third)} km/h"
-                                // lap paces are sec/km like every activity row
-                                Format.isSwimType(a.type) -> Format.activityPaceLabel("SWIM", lap.third, u) ?: "—"
-                                else -> Format.paceWithUnit(lap.third, u)
-                            },
-                            Modifier.padding(start = 16.dp),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold,
-                        )
+                        Column(
+                            Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            SectionTitle("Splits")
+                            Spacer(Modifier.height(4.dp))
+                            laps.forEachIndexed { idx, lap ->
+                                val rowBg = if (idx % 2 == 1) MaterialTheme.colorScheme.surfaceContainer else Color.Transparent
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(rowBg, RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        "Km ${lap.first}",
+                                        Modifier.weight(1f),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                    )
+                                    Text(
+                                        Format.duration(lap.second),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Text(
+                                        when {
+                                            Format.isRideType(a.type) -> "${Format.speedKmh(lap.third)} km/h"
+                                            // lap paces are sec/km like every activity row
+                                            Format.isSwimType(a.type) -> Format.activityPaceLabel("SWIM", lap.third, u) ?: "—"
+                                            else -> Format.paceWithUnit(lap.third, u)
+                                        },
+                                        Modifier.padding(start = 16.dp),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -377,7 +425,12 @@ fun ActivityDetailScreen(
             // zones
             if (a.zoneSeconds.sum() > 0) {
                 item {
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ),
+                    ) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             SectionTitle("Heart-rate zones")
                             ZoneDistribution(zonesSeconds = a.zoneSeconds)
@@ -455,7 +508,12 @@ private fun EditActivityDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text("Sport", style = MaterialTheme.typography.labelMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     listOf("RUN" to "Run", "RIDE" to "Ride", "SWIM" to "Swim", "WALK" to "Walk", "WORKOUT" to "Gym").forEach { (code, label) ->
                         androidx.compose.material3.FilterChip(
                             selected = sportType == code,
@@ -465,7 +523,12 @@ private fun EditActivityDialog(
                     }
                 }
                 Text("Session intensity", style = MaterialTheme.typography.labelMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     listOf("EASY" to "Easy", "TEMPO" to "Tempo", "INTERVALS" to "Intervals", "LONG_RUN" to "Long", "RACE" to "Race").forEach { (code, label) ->
                         androidx.compose.material3.FilterChip(
                             selected = trainingType == code,
@@ -494,7 +557,12 @@ private fun AiOverviewCard(
     onDiscuss: () -> Unit = {},
     discussLabel: String = "Discuss this activity",
 ) {
-    Card(Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(
                 Modifier.fillMaxWidth(),
@@ -633,7 +701,12 @@ private fun CyclingPowerCard(
     val efVal = activity.efficiencyFactor ?: (if (npW != null && activity.averageHr != null && activity.averageHr > 0.0) AnalyticsEngine.calculateEfficiencyFactor(npW, activity.averageHr) else null)
     val decoupling = activity.aerobicDecoupling
 
-    Card(Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+    ) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(
                 Modifier.fillMaxWidth(),
@@ -647,7 +720,7 @@ private fun CyclingPowerCard(
                     Icon(
                         Icons.Outlined.Bolt,
                         contentDescription = null,
-                        tint = Color(0xFFF97316),
+                        tint = MaterialTheme.semanticColors.streamPower,
                     )
                     Text(
                         "Cycling Power",
@@ -687,7 +760,7 @@ private fun CyclingPowerCard(
                     "Avg Power",
                     avgW?.let { "${it.roundToInt()} W" } ?: "—",
                     Icons.Outlined.Bolt,
-                    accent = Color(0xFFF97316),
+                    accent = MaterialTheme.semanticColors.streamPower,
                 )
                 StatTile(
                     "Normalized (NP)",

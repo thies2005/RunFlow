@@ -2,6 +2,7 @@ package com.runflow2.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,11 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.DirectionsBike
 import androidx.compose.material.icons.outlined.DirectionsRun
@@ -25,16 +29,19 @@ import androidx.compose.material.icons.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.Pool
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.input.KeyboardType
@@ -58,6 +65,8 @@ import com.runflow2.app.core.util.DistanceUnit
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.domain.model.ActivityType
+import com.runflow2.app.ui.components.PixelEmptyState
+import com.runflow2.app.ui.theme.SegmentedCardShapes
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,6 +92,8 @@ fun ActivitiesScreen(
         else -> activities
     }
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     // Pull-to-refresh runs a full sync including the server-side Strava import
     // (forced past the 6h throttle) so new rides/runs appear on demand.
     PullToRefreshBox(
@@ -94,8 +105,9 @@ fun ActivitiesScreen(
         },
     ) {
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                TopAppBar(
+                MediumTopAppBar(
                     title = { Text("Activities") },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
@@ -107,6 +119,7 @@ fun ActivitiesScreen(
                             Icon(Icons.Outlined.Add, contentDescription = "Log manual activity")
                         }
                     },
+                    scrollBehavior = scrollBehavior,
                 )
             },
         ) { padding ->
@@ -118,6 +131,7 @@ fun ActivitiesScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
@@ -135,53 +149,72 @@ fun ActivitiesScreen(
                         )
                     }
                 }
-                LazyColumn(
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(filtered, key = { it.id }) { a ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onOpen(a.id) },
-                        ) {
-                            Row(
-                                Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                if (filtered.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        PixelEmptyState(
+                            icon = Icons.AutoMirrored.Outlined.DirectionsRun,
+                            title = "No activities yet",
+                            body = "Record a workout, sync Strava or Health Connect, or tap + to log a manual activity.",
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(SegmentedCardShapes.ItemGap),
+                    ) {
+                        itemsIndexed(filtered, key = { _, a -> a.id }) { idx, a ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onOpen(a.id) },
+                                shape = SegmentedCardShapes.shapeForIndex(idx, filtered.size),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                ),
                             ) {
-                                val type = runCatching { ActivityType.valueOf(a.type) }
-                                    .getOrDefault(ActivityType.RUN)
-                                val icon = activityIcon(type)
-                                Box(
-                                    Modifier
-                                        .size(40.dp)
-                                        .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-                                    contentAlignment = Alignment.Center,
+                                Row(
+                                    Modifier.padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 ) {
-                                    Icon(icon, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
-                                }
-                                Column(Modifier.weight(1f)) {
-                                    Text(a.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    Text(
-                                        "${Format.distance(a.distanceKm, unit)} · ${Format.duration(a.movingTimeSec)} · ${
-                                            Format.activityPaceLabel(a.type, a.paceSecPerKm, unit) ?: "—"
-                                        }",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        a.averageHr?.let { "${it.toInt()} bpm" } ?: "",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                    Text(
-                                        Format.date(Format.localDate(a.startDate)),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
+                                    val type = runCatching { ActivityType.valueOf(a.type) }
+                                        .getOrDefault(ActivityType.RUN)
+                                    val icon = activityIcon(type)
+                                    Box(
+                                        Modifier
+                                            .size(40.dp)
+                                            .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(icon, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                                    }
+                                    Column(Modifier.weight(1f)) {
+                                        Text(a.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(
+                                            "${Format.distance(a.distanceKm, unit)} · ${Format.duration(a.movingTimeSec)} · ${
+                                                Format.activityPaceLabel(a.type, a.paceSecPerKm, unit) ?: "—"
+                                            }",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(
+                                            a.averageHr?.let { "${it.toInt()} bpm" } ?: "",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Text(
+                                            Format.date(Format.localDate(a.startDate)),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
                                 }
                             }
                         }

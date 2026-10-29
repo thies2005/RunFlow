@@ -36,15 +36,8 @@ import androidx.compose.ui.unit.dp
 import com.runflow2.app.core.math.StreamMath
 import com.runflow2.app.core.util.DistanceUnit
 import com.runflow2.app.core.util.Format
+import com.runflow2.app.ui.theme.semanticColors
 import kotlin.math.roundToInt
-
-// Series colors match the web's InteractiveStreamsChart for parity.
-private val HrColor = Color(0xFFF87171)
-private val PaceColor = Color(0xFF60A5FA)
-private val GapColor = Color(0xFF22D3EE)
-private val ElevColor = Color(0xFF4ADE80)
-private val CadenceColor = Color(0xFFFB923C)
-private val PowerColor = Color(0xFFF97316)
 
 private class MetricToggle(
     val key: String,
@@ -68,6 +61,14 @@ fun StreamsChart(
     isRide: Boolean = false,
     height: Int = 220,
 ) {
+    val sem = MaterialTheme.semanticColors
+    val hrColor = sem.streamHr
+    val paceColor = sem.streamPace
+    val gapColor = sem.streamGap
+    val elevColor = sem.streamElev
+    val cadenceColor = sem.streamCadence
+    val powerColor = sem.streamPower
+
     val cadenceUnit = if (isRide || series.hasWatts) "rpm" else "spm"
     var showHr by remember { mutableStateOf(true) }
     var showPace by remember { mutableStateOf(true) }
@@ -78,12 +79,12 @@ fun StreamsChart(
     var scrubIndex by remember { mutableStateOf<Int?>(null) }
 
     val toggles = buildList {
-        if (series.hasWatts) add(MetricToggle("watts", "Power", PowerColor, showWatts))
-        if (series.hasHr) add(MetricToggle("hr", "HR", HrColor, showHr))
-        if (series.hasPace) add(MetricToggle("pace", "Pace", PaceColor, showPace))
-        if (series.hasGap) add(MetricToggle("gap", "GAP", GapColor, showGap))
-        if (series.hasElevation) add(MetricToggle("elev", "Elevation", ElevColor, showElev))
-        if (series.hasCadence) add(MetricToggle("cadence", "Cadence", CadenceColor, showCadence))
+        if (series.hasWatts) add(MetricToggle("watts", "Power", powerColor, showWatts))
+        if (series.hasHr) add(MetricToggle("hr", "HR", hrColor, showHr))
+        if (series.hasPace) add(MetricToggle("pace", "Pace", paceColor, showPace))
+        if (series.hasGap) add(MetricToggle("gap", "GAP", gapColor, showGap))
+        if (series.hasElevation) add(MetricToggle("elev", "Elevation", elevColor, showElev))
+        if (series.hasCadence) add(MetricToggle("cadence", "Cadence", cadenceColor, showCadence))
     }
 
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -243,12 +244,12 @@ fun StreamsChart(
             val wattsDom = if (showWatts) series.watts?.let { domainOf(it) } else null
 
             // z-order back to front, matching the web
-            elevDom?.let { drawValues(series.altitude!!, ElevColor, it, dashed = false) }
-            paceDom?.let { drawValues(series.pace, PaceColor, it, dashed = false) }
-            gapDom?.let { drawValues(series.gap, GapColor, it, dashed = true) }
-            cadDom?.let { drawValues(series.cadence!!, CadenceColor, it, dashed = true) }
-            hrDom?.let { drawValues(series.heartrate!!, HrColor, it, dashed = false) }
-            wattsDom?.let { drawValues(series.watts!!, PowerColor, it, dashed = false) }
+            elevDom?.let { drawValues(series.altitude!!, elevColor, it, dashed = false) }
+            paceDom?.let { drawValues(series.pace, paceColor, it, dashed = false) }
+            gapDom?.let { drawValues(series.gap, gapColor, it, dashed = true) }
+            cadDom?.let { drawValues(series.cadence!!, cadenceColor, it, dashed = true) }
+            hrDom?.let { drawValues(series.heartrate!!, hrColor, it, dashed = false) }
+            wattsDom?.let { drawValues(series.watts!!, powerColor, it, dashed = false) }
 
             // scrubber line + per-series dots
             idx?.let { i ->
@@ -263,12 +264,12 @@ fun StreamsChart(
                     if (dom == null || v == null || !v.isFinite()) return
                     drawCircle(color, radius = 5.dp.toPx(), center = Offset(x, py(v, dom)))
                 }
-                dot(series.altitude?.getOrNull(i), elevDom, ElevColor)
-                dot(series.pace.getOrNull(i), paceDom, PaceColor)
-                dot(series.gap.getOrNull(i), gapDom, GapColor)
-                dot(series.cadence?.getOrNull(i), cadDom, CadenceColor)
-                dot(series.heartrate?.getOrNull(i), hrDom, HrColor)
-                dot(series.watts?.getOrNull(i), wattsDom, PowerColor)
+                dot(series.altitude?.getOrNull(i), elevDom, elevColor)
+                dot(series.pace.getOrNull(i), paceDom, paceColor)
+                dot(series.gap.getOrNull(i), gapDom, gapColor)
+                dot(series.cadence?.getOrNull(i), cadDom, cadenceColor)
+                dot(series.heartrate?.getOrNull(i), hrDom, hrColor)
+                dot(series.watts?.getOrNull(i), wattsDom, powerColor)
             }
         }
 

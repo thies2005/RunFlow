@@ -37,10 +37,11 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -54,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -66,14 +68,14 @@ import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.analytics.AnalyticsBundle
 import com.runflow2.app.ui.components.DailyFormSheet
-import com.runflow2.app.ui.components.DeltaGood
 import com.runflow2.app.ui.components.InfoChip
 import com.runflow2.app.ui.components.ProgressRing
 import com.runflow2.app.ui.components.SectionTitle
 import com.runflow2.app.ui.components.StatTile
 import com.runflow2.app.ui.components.WeeklyVolumeBars
 import com.runflow2.app.ui.components.WorkoutVisuals
-import com.runflow2.app.ui.components.color
+import com.runflow2.app.ui.components.themedColor
+import com.runflow2.app.ui.theme.semanticColors
 import com.runflow2.app.domain.model.TsbStatus
 import com.runflow2.app.domain.model.WorkoutType
 import com.runflow2.app.domain.plan.TriathlonTimeEstimator
@@ -146,6 +148,7 @@ fun DashboardScreen(
     // Pull-to-refresh runs a full sync including the server-side Strava
     // import; the analytics produceState re-runs on its own once Room updates.
     val syncStatus by container.syncManager.status.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     PullToRefreshBox(
         isRefreshing = syncStatus.running,
         onRefresh = {
@@ -156,8 +159,9 @@ fun DashboardScreen(
         modifier = Modifier.fillMaxSize(),
     ) {
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                TopAppBar(
+                MediumTopAppBar(
                     title = {
                         Column {
                             Text("RunFlow")
@@ -168,6 +172,11 @@ fun DashboardScreen(
                             )
                         }
                     },
+                    colors = TopAppBarDefaults.mediumTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                    scrollBehavior = scrollBehavior,
                 )
             },
         ) { padding ->
@@ -241,9 +250,9 @@ fun DashboardScreen(
                             ) {
                                 Column(Modifier.weight(1f)) {
                                     Text(
-                                        "THIS WEEK",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        "This week",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.primary,
                                     )
                                     Text(
                                         Format.distance(a?.currentWeekKm ?: 0.0, unit),
@@ -383,7 +392,7 @@ fun DashboardScreen(
                                     Box(
                                         Modifier
                                             .size(10.dp)
-                                            .background(status.color(), CircleShape),
+                                            .background(status.themedColor(), CircleShape),
                                     )
                                     Text(
                                         "Form",
@@ -395,7 +404,7 @@ fun DashboardScreen(
                                     status.label,
                                     style = MaterialTheme.typography.headlineLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = status.color(),
+                                    color = status.themedColor(),
                                 )
                                 Text(
                                     "TSB ${if (a != null && a.tsb > 0) "+" else ""}${Format.intOrDash(a?.tsb)} · CTL ${Format.intOrDash(a?.ctl)} · ATL ${Format.intOrDash(a?.atl)}",
@@ -439,7 +448,13 @@ fun DashboardScreen(
                                 }
                             }
                         }
-                        Card(modifier = Modifier.fillMaxWidth()) {
+                        Card(
+                            shape = CardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Icon(
@@ -504,6 +519,10 @@ fun DashboardScreen(
                 } else if (!hidePlanReminder) {
                     item {
                         Card(
+                            shape = CardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { onCreatePlan() },
@@ -536,8 +555,12 @@ fun DashboardScreen(
                         Spacer(Modifier.height(8.dp))
                         todayWorkouts.forEach { w ->
                             val type = runCatching { WorkoutType.valueOf(w.workoutType) }.getOrDefault(WorkoutType.EASY)
-                            val visual = WorkoutVisuals.forType(type)
+                            val visual = WorkoutVisuals.themedForType(type)
                             Card(
+                                shape = CardShape,
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                                ),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 8.dp),
@@ -547,7 +570,7 @@ fun DashboardScreen(
                                         Box(
                                             Modifier
                                                 .size(40.dp)
-                                                .background(WorkoutVisuals.themeContainerFor(type), CircleShape),
+                                                .background(visual.container, CircleShape),
                                             contentAlignment = Alignment.Center,
                                         ) {
                                             Icon(visual.icon, type.label, tint = visual.color)
@@ -608,6 +631,10 @@ fun DashboardScreen(
                 val recent = activities.take(5)
                 items(recent, key = { it.id }) { a ->
                     Card(
+                        shape = CardShape,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onOpenActivity(a.id) },
@@ -619,11 +646,11 @@ fun DashboardScreen(
                         ) {
                             val type = runCatching { WorkoutType.valueOf(a.trainingType ?: "EASY") }
                                 .getOrDefault(WorkoutType.EASY)
-                            val visual = WorkoutVisuals.forType(type)
+                            val visual = WorkoutVisuals.themedForType(type)
                             Box(
                                 Modifier
                                     .size(40.dp)
-                                    .background(WorkoutVisuals.themeContainerFor(type), CircleShape),
+                                    .background(visual.container, CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(visual.icon, null, tint = visual.color)
@@ -654,7 +681,13 @@ fun DashboardScreen(
                 // ---- Weekly volume mini ----
                 item {
                     analytics?.let { a ->
-                        Card(Modifier.fillMaxWidth()) {
+                        Card(
+                            shape = CardShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
                             Column(Modifier.padding(16.dp)) {
                                 SectionTitle("Weekly volume")
                                 Spacer(Modifier.height(12.dp))
@@ -742,10 +775,13 @@ private fun readinessColor(state: String?): Color = when (state) {
     "excellent" -> MaterialTheme.colorScheme.primary
     "good" -> MaterialTheme.colorScheme.tertiary
     "moderate" -> MaterialTheme.colorScheme.secondary
-    "reduced" -> Color(0xFFFF9800)
+    "reduced" -> MaterialTheme.semanticColors.statusFatigued
     "rest" -> MaterialTheme.colorScheme.error
     else -> MaterialTheme.colorScheme.onSurfaceVariant
 }
+
+@Composable
+private fun readinessStateColor(state: String?): Color = readinessColor(state)
 
 /** Deltas under 0.5 count as stable (neutral tone). */
 private fun deltaTone(delta: Double, lowerIsBetter: Boolean): Boolean? = when {
@@ -802,7 +838,7 @@ private fun MetricDeltaTile(
                     caption,
                     style = MaterialTheme.typography.bodySmall,
                     color = when (captionGood) {
-                        true -> DeltaGood
+                        true -> MaterialTheme.semanticColors.good
                         false -> MaterialTheme.colorScheme.error
                         null -> MaterialTheme.colorScheme.onSurfaceVariant
                     },

@@ -1,3 +1,8 @@
+@file:OptIn(
+    androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class,
+    androidx.compose.material3.ExperimentalMaterial3Api::class,
+)
+
 package com.runflow2.app.ui.screens
 
 import android.Manifest
@@ -44,12 +49,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.toShape
+import com.runflow2.app.ui.components.PixelSwitch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -80,9 +87,7 @@ import com.runflow2.app.recording.StepRuntime
 import com.runflow2.app.ui.components.InfoChip
 import com.runflow2.app.ui.components.RouteCanvas
 import com.runflow2.app.ui.components.SectionTitle
-import com.runflow2.app.ui.theme.StatusFatigued
-import com.runflow2.app.ui.theme.StatusFresh
-import com.runflow2.app.ui.theme.StatusNeutral
+import com.runflow2.app.ui.theme.semanticColors
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -310,7 +315,7 @@ private fun RecordIdle(
             Spacer(Modifier.height(24.dp))
 
             // expressive cookie-shaped start button
-            val cookieShape = rememberCookieShape()
+            val cookieShape = MaterialShapes.Cookie12Sided.toShape()
             Box(
                 modifier = Modifier
                     .size(150.dp)
@@ -332,7 +337,11 @@ private fun RecordIdle(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+            ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(
                         Modifier.fillMaxWidth(),
@@ -348,7 +357,7 @@ private fun RecordIdle(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        Switch(
+                        PixelSwitch(
                             checked = settings.autoPause,
                             onCheckedChange = { on ->
                                 scope.launch { container.settings.setAutoPause(on) }
@@ -369,7 +378,7 @@ private fun RecordIdle(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        Switch(
+                        PixelSwitch(
                             checked = settings.voiceCoach,
                             onCheckedChange = { on ->
                                 scope.launch { container.settings.setVoiceCoach(on) }
@@ -388,7 +397,7 @@ private fun CountdownOverlay(seconds: Int) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.85f)),
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.82f)),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -396,12 +405,12 @@ private fun CountdownOverlay(seconds: Int) {
                 if (seconds > 0) "$seconds" else "GO!",
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.inverseOnSurface,
             )
             Text(
                 "Starting your run",
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.White.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.7f),
             )
         }
     }
@@ -466,7 +475,13 @@ private fun RecordRunning(
         PaceZoneIndicator(rec.paceZone, rec.targetPaceSecPerKm, unit)
 
         // metric grid
-        Card(Modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+        ) {
             androidx.compose.foundation.layout.Row(
                 Modifier
                     .fillMaxWidth()
@@ -481,7 +496,13 @@ private fun RecordRunning(
 
         // route
         if (rec.routePreview.size > 3) {
-            Card(Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+            ) {
                 RouteCanvas(
                     points = rec.routePreview,
                     modifier = Modifier
@@ -494,7 +515,13 @@ private fun RecordRunning(
 
         // structured steps
         if (rec.steps.isNotEmpty()) {
-            Card(Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+            ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     val active = rec.steps.getOrNull(rec.activeStepIndex)
                     if (active != null) {
@@ -710,12 +737,18 @@ private fun PaceZoneIndicator(
 ) {
     if (targetPace == null || status == PaceZoneStatus.NO_TARGET) return
     val (color, label) = when (status) {
-        PaceZoneStatus.TOO_FAST -> StatusFatigued to "Too fast — ease off"
-        PaceZoneStatus.IN_ZONE -> StatusFresh to "In target zone"
-        PaceZoneStatus.TOO_SLOW -> StatusNeutral to "Below target — push a bit"
+        PaceZoneStatus.TOO_FAST -> MaterialTheme.semanticColors.statusFatigued to "Too fast — ease off"
+        PaceZoneStatus.IN_ZONE -> MaterialTheme.semanticColors.statusFresh to "In target zone"
+        PaceZoneStatus.TOO_SLOW -> MaterialTheme.semanticColors.statusNeutral to "Below target — push a bit"
         PaceZoneStatus.NO_TARGET -> return
     }
-    Card(Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+    ) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -744,40 +777,5 @@ private fun PaceZoneIndicator(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-    }
-}
-
-/** 12-sided "cookie" scalloped shape for the expressive start button. */
-@Composable
-private fun rememberCookieShape(sides: Int = 12, bulge: Float = 1.16f): Shape {
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    return remember(sides, bulge, density) { cookieShape(sides, bulge) }
-}
-
-private fun cookieShape(sides: Int, bulge: Float): Shape = object : Shape {
-    override fun createOutline(
-        size: androidx.compose.ui.geometry.Size,
-        layoutDirection: androidx.compose.ui.unit.LayoutDirection,
-        density: androidx.compose.ui.unit.Density,
-    ): androidx.compose.ui.graphics.Outline {
-        val cx = size.width / 2f
-        val cy = size.height / 2f
-        val r = minOf(cx, cy) * 0.90f
-        val path = androidx.compose.ui.graphics.Path()
-        for (i in 0 until sides) {
-            val a0 = i * 2.0 * Math.PI / sides
-            val a1 = (i + 1) * 2.0 * Math.PI / sides
-            val am = (a0 + a1) / 2.0
-            val x0 = (cx + r * kotlin.math.cos(a0)).toFloat()
-            val y0 = (cy + r * kotlin.math.sin(a0)).toFloat()
-            val x1 = (cx + r * kotlin.math.cos(a1)).toFloat()
-            val y1 = (cy + r * kotlin.math.sin(a1)).toFloat()
-            val xm = (cx + r * bulge * kotlin.math.cos(am)).toFloat()
-            val ym = (cy + r * bulge * kotlin.math.sin(am)).toFloat()
-            if (i == 0) path.moveTo(x0, y0)
-            path.quadraticBezierTo(xm, ym, x1, y1)
-        }
-        path.close()
-        return androidx.compose.ui.graphics.Outline.Generic(path)
     }
 }

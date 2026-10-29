@@ -7,12 +7,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -66,84 +67,101 @@ fun DataSourceSetupScreen(
         finishOfflineSetup()
     }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .systemBarsPadding()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(Modifier.height(24.dp))
-        Text(
-            "Choose your data sources",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "RunFlow works fully offline, or signs in to sync with the web. You can change this any time in Settings → Data sources.",
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(24.dp))
+    Scaffold { padding ->
+        Column(
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(padding)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(Modifier.height(24.dp))
+            Text(
+                "Choose your data sources",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "RunFlow works fully offline, or signs in to sync with the web. You can change this any time in Settings → Data sources.",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(24.dp))
 
-        Card(Modifier.fillMaxWidth()) {
-            Column(
-                Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
             ) {
-                Text(
-                    "Offline with Health Connect",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    "Keep everything on this phone: activities and health metrics are read on-device from Health Connect — no account needed.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (hcUnavailable) {
+                Column(
+                    Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
                     Text(
-                        "Health Connect isn't available on this device — runs can still be recorded with RunFlow.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary,
+                        "Offline with Health Connect",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                     )
+                    Text(
+                        "Keep everything on this phone: activities and health metrics are read on-device from Health Connect — no account needed.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (hcUnavailable) {
+                        Text(
+                            "Health Connect isn't available on this device — runs can still be recorded with RunFlow.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            if (hcUnavailable) finishOfflineSetup() else permissionLauncher.launch(hc.permissions)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Set up offline") }
                 }
-                Button(
-                    onClick = {
-                        if (hcUnavailable) finishOfflineSetup() else permissionLauncher.launch(hc.permissions)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("Set up offline") }
             }
-        }
 
-        Card(Modifier.fillMaxWidth()) {
-            Column(
-                Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+            Spacer(Modifier.height(16.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
             ) {
-                Text(
-                    "Sign in · Strava & cloud",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    "Sync runs and health metrics through your RunFlow account, import activities from Strava, and get training plans and the AI coach on the server.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Button(
-                    onClick = onSignIn,
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("Sign in") }
+                Column(
+                    Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(
+                        "Sign in · Strava & cloud",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        "Sync runs and health metrics through your RunFlow account, import activities from Strava, and get training plans and the AI coach on the server.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Button(
+                        onClick = onSignIn,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Sign in") }
+                }
             }
-        }
 
-        TextButton(onClick = onDone) { Text("Decide later") }
-        Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(8.dp))
+            TextButton(onClick = onDone) { Text("Decide later") }
+            Spacer(Modifier.height(24.dp))
+        }
     }
 }

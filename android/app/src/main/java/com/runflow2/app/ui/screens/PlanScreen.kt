@@ -15,16 +15,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -38,16 +46,20 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -58,6 +70,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -112,10 +127,18 @@ fun PlanScreen(
     var showPlanMenu by remember { mutableStateOf(false) }
     var showDeletePlan by remember { mutableStateOf(false) }
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            MediumTopAppBar(
                 title = { Text("Training Plan") },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
+                scrollBehavior = scrollBehavior,
                 actions = {
                     if (goal != null) {
                         IconButton(onClick = onCreatePlan) {
@@ -372,6 +395,7 @@ private fun GoalHeaderCard(
     onRecordResult: () -> Unit,
 ) {
     Card(
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -465,9 +489,10 @@ private fun WorkoutCard(
     onClick: () -> Unit,
 ) {
     val type = runCatching { WorkoutType.valueOf(workout.workoutType) }.getOrDefault(WorkoutType.EASY)
-    val visual = WorkoutVisuals.forType(type)
+    val visual = WorkoutVisuals.themedForType(type)
     val date = Format.localDate(workout.scheduledDate)
     Card(
+        shape = RoundedCornerShape(20.dp),
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
@@ -480,7 +505,7 @@ private fun WorkoutCard(
             Box(
                 Modifier
                     .size(42.dp)
-                    .background(WorkoutVisuals.themeContainerFor(type), CircleShape),
+                    .background(visual.container, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(visual.icon, type.label, tint = visual.color, modifier = Modifier.size(21.dp))
@@ -545,7 +570,7 @@ private fun WorkoutActionSheet(
     onEditIntervals: () -> Unit,
 ) {
     val type = runCatching { WorkoutType.valueOf(workout.workoutType) }.getOrDefault(WorkoutType.EASY)
-    val visual = WorkoutVisuals.forType(type)
+    val visual = WorkoutVisuals.themedForType(type)
     var editMode by remember { mutableStateOf(false) }
 
     Column(
@@ -554,11 +579,24 @@ private fun WorkoutActionSheet(
             .padding(bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(visual.icon, null, tint = visual.color)
-            Spacer(Modifier.width(10.dp))
-            Column {
-                Text(type.label, style = MaterialTheme.typography.titleMedium)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(
+                Modifier
+                    .size(44.dp)
+                    .background(visual.container, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(visual.icon, null, tint = visual.color, modifier = Modifier.size(22.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text(
+                    workout.customName ?: type.label,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
                 Text(
                     Format.relativeDay(Format.localDate(workout.scheduledDate)),
                     style = MaterialTheme.typography.bodySmall,
@@ -568,7 +606,23 @@ private fun WorkoutActionSheet(
         }
         Text(workout.description, style = MaterialTheme.typography.bodyMedium)
 
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            workout.targetDistanceKm?.let {
+                InfoChip(Format.distance(it, unit), icon = Icons.Outlined.DirectionsRun)
+            }
+            Format.paceLabelFor(workout.workoutType, workout.targetPaceSecPerKm?.toDouble(), unit)?.let {
+                InfoChip(it, icon = Icons.Outlined.Speed)
+            }
+            workout.targetDurationSec?.let {
+                InfoChip(Format.duration(it), icon = Icons.Outlined.Timer)
+            }
+        }
+
         if (!editMode) {
+            Spacer(Modifier.height(4.dp))
             if (!workout.isCompleted && type != WorkoutType.REST) {
                 Button(onClick = onStart, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Outlined.PlayArrow, null)
@@ -576,80 +630,137 @@ private fun WorkoutActionSheet(
                     Text("Start this workout")
                 }
             }
-            if (!workout.isCompleted) {
-                TextButton(onClick = onComplete, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Outlined.Check, null)
-                    Spacer(Modifier.width(6.dp))
-                    Text("Mark complete")
-                }
-            } else {
-                TextButton(onClick = onUncomplete, modifier = Modifier.fillMaxWidth()) {
-                    Text("Mark as not done")
-                }
-            }
-            TextButton(onClick = { editMode = true }, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Outlined.Edit, null)
-                Spacer(Modifier.width(6.dp))
-                Text("Edit targets")
-            }
-            // Structured editor: only for quality workouts that can carry a
-            // warmup / main-set / cooldown definition.
+            ListItem(
+                headlineContent = {
+                    Text(if (!workout.isCompleted) "Mark complete" else "Mark incomplete")
+                },
+                leadingContent = {
+                    Icon(
+                        Icons.Outlined.CheckCircle,
+                        contentDescription = null,
+                        tint = if (workout.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable {
+                        if (!workout.isCompleted) onComplete() else onUncomplete()
+                    },
+            )
+            ListItem(
+                headlineContent = { Text("Edit targets (km, pace, type)") },
+                leadingContent = {
+                    Icon(
+                        Icons.Outlined.Edit,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { editMode = true },
+            )
             if (type in STRUCTURED_WORKOUT_TYPES) {
-                TextButton(onClick = onEditIntervals, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Outlined.Timer, null)
-                    Spacer(Modifier.width(6.dp))
-                    Text("Edit intervals")
-                }
+                ListItem(
+                    headlineContent = { Text("Edit intervals (structured)") },
+                    leadingContent = {
+                        Icon(
+                            Icons.Outlined.Tune,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onEditIntervals() },
+                )
             }
             val canExportZwo = workout.structuredStepsJson != null ||
                 workout.sport.equals("BIKE", ignoreCase = true) ||
                 type in setOf(WorkoutType.RIDE, WorkoutType.CROSS_TRAIN, WorkoutType.INTERVALS, WorkoutType.TEMPO)
             if (canExportZwo) {
                 val context = androidx.compose.ui.platform.LocalContext.current
-                TextButton(
-                    onClick = {
-                        runCatching {
-                            val activeFtp = workout.targetPowerWatts?.let { w ->
-                                workout.targetFtpPercent?.takeIf { it > 0 }?.let { pct -> (w * 100.0 / pct).toInt() }
-                            } ?: 200
-                            val file = com.runflow2.app.core.export.PlanZwoExporter.exportToCache(context, workout, activeFtp)
-                            val uri = androidx.core.content.FileProvider.getUriForFile(
-                                context,
-                                "${context.packageName}.fileprovider",
-                                file,
-                            )
-                            val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                this.type = "application/octet-stream"
-                                putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                                putExtra(android.content.Intent.EXTRA_SUBJECT, workout.customName ?: workout.description)
-                                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
-                            context.startActivity(android.content.Intent.createChooser(send, "Export .zwo workout"))
-                        }
+                ListItem(
+                    headlineContent = { Text("Export .zwo (Zwift / MyWhoosh)") },
+                    leadingContent = {
+                        Icon(
+                            Icons.Outlined.Share,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable {
+                            runCatching {
+                                val activeFtp = workout.targetPowerWatts?.let { w ->
+                                    workout.targetFtpPercent?.takeIf { it > 0 }?.let { pct -> (w * 100.0 / pct).toInt() }
+                                } ?: 200
+                                val file = com.runflow2.app.core.export.PlanZwoExporter.exportToCache(context, workout, activeFtp)
+                                val uri = androidx.core.content.FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    file,
+                                )
+                                val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                    this.type = "application/octet-stream"
+                                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                    putExtra(android.content.Intent.EXTRA_SUBJECT, workout.customName ?: workout.description)
+                                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(android.content.Intent.createChooser(send, "Export .zwo workout"))
+                            }
+                        },
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilledTonalButton(
+                    onClick = { onShift(-1) },
+                    modifier = Modifier.weight(1f),
                 ) {
-                    Text("Export .zwo (MyWhoosh / Zwift)")
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Day earlier")
+                }
+                FilledTonalButton(
+                    onClick = { onShift(1) },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("Day later")
+                    Spacer(Modifier.width(6.dp))
+                    Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = { onShift(-1) }, modifier = Modifier.weight(1f)) { Text("◀ Day earlier") }
-                TextButton(onClick = { onShift(1) }, modifier = Modifier.weight(1f)) { Text("Day later ▶") }
-            }
-            // Works for local-only and synced plans alike: synced deletes
-            // enqueue a workout_delete outbox item (server delete + pull
-            // confirm), local-only deletes just drop the row.
-            TextButton(
-                onClick = onDelete,
-                modifier = Modifier.fillMaxWidth(),
-                colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error,
-                ),
-            ) {
-                Icon(Icons.Outlined.Delete, null)
-                Spacer(Modifier.width(6.dp))
-                Text("Delete workout")
-            }
+            ListItem(
+                headlineContent = {
+                    Text("Delete workout", color = MaterialTheme.colorScheme.error)
+                },
+                leadingContent = {
+                    Icon(
+                        Icons.Outlined.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onDelete() },
+            )
         } else {
             EditWorkoutFields(workout = workout, onSave = onSaveEdit, onCancel = { editMode = false })
         }

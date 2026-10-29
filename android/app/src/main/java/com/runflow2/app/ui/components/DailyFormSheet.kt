@@ -63,14 +63,7 @@ fun DailyFormSheet(
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         if (!loaded) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(96.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
+            PixelLoadingBox(message = "Loading daily metrics…")
         } else {
             DailyFormContent(
                 base = base,
@@ -120,12 +113,12 @@ private fun DailyFormContent(
         Column {
             Text(
                 "Daily recovery",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
                 Format.relativeDay(today),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

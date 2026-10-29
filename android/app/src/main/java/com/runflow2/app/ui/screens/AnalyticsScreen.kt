@@ -22,13 +22,14 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.DirectionsBike
+import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.DarkMode
-import androidx.compose.material.icons.outlined.DirectionsBike
-import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material.icons.outlined.Speed
@@ -40,10 +41,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,6 +65,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
@@ -82,10 +88,8 @@ import com.runflow2.app.ui.components.Sparkline
 import com.runflow2.app.ui.components.StatTile
 import com.runflow2.app.ui.components.WeeklyVolumeBars
 import com.runflow2.app.ui.components.ZoneDistribution
-import com.runflow2.app.ui.components.color
-import com.runflow2.app.ui.theme.ChartAtl
-import com.runflow2.app.ui.theme.ChartCtl
-import com.runflow2.app.ui.theme.ChartTsb
+import com.runflow2.app.ui.components.themedColor
+import com.runflow2.app.ui.theme.semanticColors
 import java.time.LocalDate
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -111,11 +115,13 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
     var pmcMode by rememberSaveable { mutableStateOf("combined") }
 
     val listState = rememberLazyListState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val a = analytics
     if (a == null) {
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                TopAppBar(
+                LargeTopAppBar(
                     title = {
                         Column {
                             Text("Analytics")
@@ -126,6 +132,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                             )
                         }
                     },
+                    scrollBehavior = scrollBehavior,
                 )
             },
         ) { padding ->
@@ -173,8 +180,9 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            LargeTopAppBar(
                 title = {
                     Column {
                         Text("Analytics")
@@ -185,6 +193,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                         )
                     }
                 },
+                scrollBehavior = scrollBehavior,
             )
         },
     ) { padding ->
@@ -198,68 +207,48 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
         ) {
             // ---- Combined | Running | Cycling sport switcher ----
             item(key = "tab-selector") {
-                Row(
+                SingleChoiceSegmentedButtonRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    FilterChip(
+                    SegmentedButton(
                         selected = selectedTab == AnalyticsSportTab.COMBINED,
                         onClick = { selectedTab = AnalyticsSportTab.COMBINED },
-                        label = {
-                            Text(
-                                "Combined",
-                                fontWeight = if (selectedTab == AnalyticsSportTab.COMBINED) FontWeight.Bold else FontWeight.Normal,
-                            )
-                        },
-                        leadingIcon = {
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
+                        icon = {
                             Icon(
-                                Icons.Outlined.MonitorHeart,
+                                Icons.Outlined.Insights,
                                 contentDescription = null,
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
                             )
                         },
-                        modifier = Modifier.weight(1f),
+                        label = { Text("Combined") },
                     )
-                    if (hasRunActivities) {
-                        FilterChip(
-                            selected = selectedTab == AnalyticsSportTab.RUNNING,
-                            onClick = { selectedTab = AnalyticsSportTab.RUNNING },
-                            label = {
-                                Text(
-                                    "Running",
-                                    fontWeight = if (selectedTab == AnalyticsSportTab.RUNNING) FontWeight.Bold else FontWeight.Normal,
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Outlined.DirectionsRun,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                )
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                    if (hasCyclingActivities) {
-                        FilterChip(
-                            selected = selectedTab == AnalyticsSportTab.CYCLING,
-                            onClick = { selectedTab = AnalyticsSportTab.CYCLING },
-                            label = {
-                                Text(
-                                    "Cycling",
-                                    fontWeight = if (selectedTab == AnalyticsSportTab.CYCLING) FontWeight.Bold else FontWeight.Normal,
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Outlined.DirectionsBike,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                )
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
+                    SegmentedButton(
+                        selected = selectedTab == AnalyticsSportTab.RUNNING,
+                        onClick = { selectedTab = AnalyticsSportTab.RUNNING },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                        icon = {
+                            Icon(
+                                Icons.AutoMirrored.Outlined.DirectionsRun,
+                                contentDescription = null,
+                                modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
+                            )
+                        },
+                        label = { Text("Running") },
+                    )
+                    SegmentedButton(
+                        selected = selectedTab == AnalyticsSportTab.CYCLING,
+                        onClick = { selectedTab = AnalyticsSportTab.CYCLING },
+                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                        icon = {
+                            Icon(
+                                Icons.AutoMirrored.Outlined.DirectionsBike,
+                                contentDescription = null,
+                                modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
+                            )
+                        },
+                        label = { Text("Cycling") },
+                    )
                 }
             }
 
@@ -285,7 +274,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                     "ATL ${Format.roundedIntOrDash(a.atl)} · TSB " +
                                         (if (a.tsb > 0) "+" else "") + Format.roundedIntOrDash(a.tsb),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = a.tsbStatus.color(),
+                                    color = a.tsbStatus.themedColor(),
                                 )
                             }
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -354,7 +343,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         MetricBarRow(
                             label = "Fitness · CTL",
-                            color = ChartCtl,
+                            color = MaterialTheme.semanticColors.ctl,
                             value = a.ctl,
                             max = a.maxCtl,
                             showAbsolute = showAbsoluteCtl,
@@ -362,7 +351,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                         )
                         MetricBarRow(
                             label = "Fatigue · ATL",
-                            color = ChartAtl,
+                            color = MaterialTheme.semanticColors.atl,
                             value = a.atl,
                             max = a.maxAtl,
                             showAbsolute = showAbsoluteAtl,
@@ -392,18 +381,18 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                     Box(
                                         Modifier
                                             .size(10.dp)
-                                            .background(a.tsbStatus.color(), CircleShape),
+                                            .background(a.tsbStatus.themedColor(), CircleShape),
                                     )
                                     Text(
                                         a.tsbStatus.label,
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = a.tsbStatus.color(),
+                                        color = a.tsbStatus.themedColor(),
                                     )
                                     Text(
                                         (if (a.tsb > 0) "+" else "") + Format.roundedIntOrDash(a.tsb),
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = a.tsbStatus.color(),
+                                        color = a.tsbStatus.themedColor(),
                                     )
                                 }
                             }
@@ -458,7 +447,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                     onClick = { showCtl = !showCtl },
                                     label = { Text("CTL") },
                                     leadingIcon = {
-                                        Box(Modifier.size(8.dp).background(ChartCtl, CircleShape))
+                                        Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.ctl, CircleShape))
                                     },
                                 )
                                 FilterChip(
@@ -466,7 +455,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                     onClick = { showAtl = !showAtl },
                                     label = { Text("ATL") },
                                     leadingIcon = {
-                                        Box(Modifier.size(8.dp).background(ChartAtl, CircleShape))
+                                        Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.atl, CircleShape))
                                     },
                                 )
                                 FilterChip(
@@ -474,7 +463,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                     onClick = { showTsb = !showTsb },
                                     label = { Text("TSB") },
                                     leadingIcon = {
-                                        Box(Modifier.size(8.dp).background(ChartTsb, CircleShape))
+                                        Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.tsb, CircleShape))
                                     },
                                 )
                             }
@@ -652,14 +641,14 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                             progress = (a.marathonShape / 100.0)
                                                 .coerceIn(0.0, 1.0).toFloat(),
                                             modifier = Modifier.fillMaxSize(),
-                                            color = ChartCtl,
+                                            color = MaterialTheme.semanticColors.ctl,
                                             strokeWidth = 6f,
                                         )
                                         Text(
                                             "${a.marathonShape.roundToInt()}",
                                             style = MaterialTheme.typography.labelMedium,
                                             fontWeight = FontWeight.Bold,
-                                            color = ChartCtl,
+                                            color = MaterialTheme.semanticColors.ctl,
                                         )
                                     }
                                 }
@@ -773,9 +762,9 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                                 .size(10.dp)
                                                 .background(
                                                     when (zone) {
-                                                        PaceZone.EASY -> ChartCtl
-                                                        PaceZone.MARATHON -> ChartTsb
-                                                        PaceZone.THRESHOLD -> ChartAtl
+                                                        PaceZone.EASY -> MaterialTheme.semanticColors.ctl
+                                                        PaceZone.MARATHON -> MaterialTheme.semanticColors.tsb
+                                                        PaceZone.THRESHOLD -> MaterialTheme.semanticColors.atl
                                                         PaceZone.INTERVAL -> MaterialTheme.colorScheme.error
                                                         PaceZone.REPETITION -> MaterialTheme.colorScheme.tertiary
                                                     },
@@ -954,7 +943,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                     label = "Readiness",
                                     value = Format.roundedIntOrDash(scoreValues.lastOrNull()),
                                     icon = Icons.Outlined.Speed,
-                                    accent = ChartTsb,
+                                    accent = MaterialTheme.semanticColors.tsb,
                                     caption = if (scoreValues.size >= 2) {
                                         "avg ${scoreValues.average().roundToInt()}"
                                     } else null,
@@ -1135,7 +1124,7 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 Icon(
-                                    Icons.Outlined.DirectionsBike,
+                                    Icons.AutoMirrored.Outlined.DirectionsBike,
                                     contentDescription = null,
                                     modifier = Modifier.size(48.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1181,7 +1170,7 @@ private fun CyclingStatusCard(
                     label = "Cycling FTP",
                     value = ftpDisplay,
                     icon = Icons.Outlined.Bolt,
-                    accent = Color(0xFFF97316),
+                    accent = MaterialTheme.semanticColors.streamPower,
                     caption = cycling.wPerKg?.let { "$it W/kg" },
                     modifier = Modifier.weight(1f),
                 )
@@ -1190,7 +1179,7 @@ private fun CyclingStatusCard(
                     label = "Cycling VO2max",
                     value = cycling.cyclingVo2max?.let { Format.oneDecimal(it) } ?: "—",
                     icon = Icons.Outlined.MonitorHeart,
-                    accent = Color(0xFF06B6D4),
+                    accent = MaterialTheme.semanticColors.tsb,
                     caption = "ml/kg/min",
                     modifier = Modifier.weight(1f),
                 )
@@ -1206,7 +1195,7 @@ private fun CyclingStatusCard(
                 val maxLoad = maxOf(cycling.ctlBike, cycling.atlBike, 1.0)
                 MetricBarRow(
                     label = "Fitness (CTL Bike)",
-                    color = ChartCtl,
+                    color = MaterialTheme.semanticColors.ctl,
                     value = cycling.ctlBike,
                     max = maxLoad,
                     showAbsolute = true,
@@ -1214,7 +1203,7 @@ private fun CyclingStatusCard(
                 )
                 MetricBarRow(
                     label = "Fatigue (ATL Bike)",
-                    color = ChartAtl,
+                    color = MaterialTheme.semanticColors.atl,
                     value = cycling.atlBike,
                     max = maxLoad,
                     showAbsolute = true,
@@ -1234,7 +1223,7 @@ private fun CyclingStatusCard(
                         "${if (cycling.tsbBike >= 0) "+" else ""}${cycling.tsbBike.roundToInt()}",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = ChartTsb,
+                        color = MaterialTheme.semanticColors.tsb,
                     )
                 }
                 TsbBar(tsb = cycling.tsbBike)
@@ -1276,7 +1265,7 @@ private fun CyclingPmcCard(
                     onClick = { showCtl = !showCtl },
                     label = { Text("CTL") },
                     leadingIcon = {
-                        Box(Modifier.size(8.dp).background(ChartCtl, CircleShape))
+                        Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.ctl, CircleShape))
                     },
                 )
                 FilterChip(
@@ -1284,7 +1273,7 @@ private fun CyclingPmcCard(
                     onClick = { showAtl = !showAtl },
                     label = { Text("ATL") },
                     leadingIcon = {
-                        Box(Modifier.size(8.dp).background(ChartAtl, CircleShape))
+                        Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.atl, CircleShape))
                     },
                 )
                 FilterChip(
@@ -1292,7 +1281,7 @@ private fun CyclingPmcCard(
                     onClick = { showTsb = !showTsb },
                     label = { Text("TSB") },
                     leadingIcon = {
-                        Box(Modifier.size(8.dp).background(ChartTsb, CircleShape))
+                        Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.tsb, CircleShape))
                     },
                 )
             }
@@ -1356,7 +1345,7 @@ private fun CyclingVolumeCard(
                 }
             }
             val unitLabel = if (showTss) "TSS" else (if (unit == DistanceUnit.IMPERIAL) "mi" else "km")
-            val barColor = if (showTss) Color(0xFFF97316) else MaterialTheme.colorScheme.primary
+            val barColor = if (showTss) MaterialTheme.semanticColors.streamPower else MaterialTheme.colorScheme.primary
 
             WeeklyVolumeBars(
                 weeks = bars,
@@ -1393,7 +1382,7 @@ private fun CyclingPowerZoneDistributionCard(
                             modifier = Modifier
                                 .weight(frac)
                                 .fillMaxSize()
-                                .background(com.runflow2.app.ui.theme.ZoneColors[i]),
+                                .background(MaterialTheme.semanticColors.zones[i]),
                         )
                     }
                 }
@@ -1408,7 +1397,7 @@ private fun CyclingPowerZoneDistributionCard(
                     Box(
                         Modifier
                             .size(10.dp)
-                            .background(com.runflow2.app.ui.theme.ZoneColors[i], CircleShape),
+                            .background(MaterialTheme.semanticColors.zones[i], CircleShape),
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
@@ -1457,7 +1446,7 @@ private fun RecentRidesPowerCard(
                     label = "Avg NP",
                     value = cycling.avgNpWatts?.let { "$it W" } ?: "—",
                     icon = Icons.Outlined.Bolt,
-                    accent = Color(0xFFF97316),
+                    accent = MaterialTheme.semanticColors.streamPower,
                 )
                 StatTile(
                     label = "30d Bike TSS",
@@ -1479,7 +1468,7 @@ private fun RecentRidesPowerCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
-                        color = Color(0xFFF97316),
+                        color = MaterialTheme.semanticColors.streamPower,
                     )
                 }
             }
@@ -1543,7 +1532,7 @@ private fun MetricBarRow(
 /** Diverging TSB bar: center tick, bar grows right (fresh) or left (fatigued); ±50 TSB = full half. */
 @Composable
 private fun TsbBar(tsb: Double) {
-    val color = com.runflow2.app.domain.model.TsbStatus.from(tsb).color()
+    val color = com.runflow2.app.domain.model.TsbStatus.from(tsb).themedColor()
     val half = (abs(tsb) / 50.0).coerceIn(0.0, 1.0).toFloat()
     Canvas(
         Modifier

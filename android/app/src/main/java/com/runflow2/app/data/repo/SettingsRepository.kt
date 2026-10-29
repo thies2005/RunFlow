@@ -21,7 +21,8 @@ data class AppSettings(
     val onboardingDone: Boolean = false,
     val seeded: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val dynamicColor: Boolean = false,
+    val dynamicColor: Boolean = true,
+    val amoledBlack: Boolean = false,
     val useImperial: Boolean = false,
     val voiceCoach: Boolean = true,
     val autoPause: Boolean = true,
@@ -78,6 +79,7 @@ class SettingsRepository(private val context: Context) {
         val SEEDED = booleanPreferencesKey("seeded")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
+        val AMOLED_BLACK = booleanPreferencesKey("amoled_black")
         val USE_IMPERIAL = booleanPreferencesKey("use_imperial")
         val VOICE_COACH = booleanPreferencesKey("voice_coach")
         val AUTO_PAUSE = booleanPreferencesKey("auto_pause")
@@ -120,7 +122,8 @@ class SettingsRepository(private val context: Context) {
             seeded = p[Keys.SEEDED] ?: false,
             themeMode = p[Keys.THEME_MODE]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
                 ?: ThemeMode.SYSTEM,
-            dynamicColor = p[Keys.DYNAMIC_COLOR] ?: false,
+            dynamicColor = p[Keys.DYNAMIC_COLOR] ?: true,
+            amoledBlack = p[Keys.AMOLED_BLACK] ?: false,
             useImperial = p[Keys.USE_IMPERIAL] ?: false,
             voiceCoach = p[Keys.VOICE_COACH] ?: true,
             autoPause = p[Keys.AUTO_PAUSE] ?: true,
@@ -161,6 +164,9 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setDynamicColor(enabled: Boolean) =
         context.dataStore.edit { it[Keys.DYNAMIC_COLOR] = enabled }
+
+    suspend fun setAmoledBlack(enabled: Boolean) =
+        context.dataStore.edit { it[Keys.AMOLED_BLACK] = enabled }
 
     suspend fun setUseImperial(enabled: Boolean) =
         context.dataStore.edit { it[Keys.USE_IMPERIAL] = enabled }

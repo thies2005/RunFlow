@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,13 +23,15 @@ import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -42,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import com.runflow2.app.AppContainer
@@ -182,8 +185,7 @@ fun AiCoachScreen(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .imePadding()
-                .navigationBarsPadding(),
+                .imePadding(),
         ) {
             Box(Modifier.weight(1f)) {
                 when {
@@ -242,14 +244,20 @@ fun AiCoachScreen(
                 }
             }
 
-            Surface(tonalElevation = 2.dp) {
+            Surface(
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+            ) {
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    OutlinedTextField(
+                    TextField(
                         value = input,
                         onValueChange = { input = it },
                         placeholder = {
@@ -259,23 +267,34 @@ fun AiCoachScreen(
                         maxLines = 4,
                         keyboardOptions = KeyboardOptions.Default,
                         enabled = !streaming,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                        ),
                     )
-                    Spacer(Modifier.width(8.dp))
-                    IconButton(
+                    Spacer(Modifier.width(4.dp))
+                    FilledIconButton(
                         onClick = {
-                            val id = sessionId ?: return@IconButton
+                            val id = sessionId ?: return@FilledIconButton
                             container.aiCoach.send(id, input, target?.serverId)
                             input = ""
                         },
                         enabled = !streaming && input.isNotBlank() && sessionId != null,
                     ) {
                         if (streaming) {
-                            CircularProgressIndicator(Modifier.width(22.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
                         } else {
                             Icon(
                                 Icons.AutoMirrored.Outlined.Send,
                                 contentDescription = "Send",
-                                tint = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
@@ -295,7 +314,7 @@ private fun MessageBubble(m: ChatMessageEntity) {
         val shown = m.content.ifBlank { "…" }
         Box(
             Modifier
-                .widthIn(max = 300.dp)
+                .widthIn(max = 340.dp)
                 .clip(
                     RoundedCornerShape(
                         topStart = 16.dp,
@@ -306,7 +325,7 @@ private fun MessageBubble(m: ChatMessageEntity) {
                 )
                 .background(
                     if (isUser) MaterialTheme.colorScheme.primaryContainer
-                    else MaterialTheme.colorScheme.surfaceVariant
+                    else MaterialTheme.colorScheme.surfaceContainerLow
                 )
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
@@ -321,7 +340,7 @@ private fun MessageBubble(m: ChatMessageEntity) {
                 // content with react-markdown) — headings, lists, bold, code
                 com.runflow2.app.ui.components.MarkdownText(
                     markdown = shown,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }

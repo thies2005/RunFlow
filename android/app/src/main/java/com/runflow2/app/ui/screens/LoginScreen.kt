@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -195,136 +197,151 @@ fun LoginScreen(
                 HorizontalDivider(Modifier.weight(1f))
             }
 
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                SegmentedButton(
-                    selected = !isRegisterMode,
-                    onClick = { isRegisterMode = false; error = null; infoMessage = null },
-                    shape = SegmentedButtonDefaults.itemShape(0, 2),
-                ) { Text("Sign in") }
-                SegmentedButton(
-                    selected = isRegisterMode,
-                    onClick = { isRegisterMode = true; error = null; infoMessage = null },
-                    shape = SegmentedButtonDefaults.itemShape(1, 2),
-                ) { Text("Create account") }
-            }
-
-            if (isRegisterMode) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name (optional)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth(),
-            )
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text(if (isRegisterMode) "Password (min 8 chars)" else "Password") },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            if (!isRegisterMode) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = { showForgotDialog = true }) {
-                        Text("Forgot password?")
-                    }
-                }
-            }
-
-            if (error != null) {
-                Text(
-                    error ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-            if (infoMessage != null) {
-                Text(
-                    infoMessage ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-
-            Button(
-                onClick = {
-                    if (busy) return@Button
-                    busy = true
-                    error = null
-                    infoMessage = null
-                    scope.launch {
-                        try {
-                            val resp = if (isRegisterMode) {
-                                container.network.api().register(
-                                    RegisterRequest(
-                                        email = email.trim(),
-                                        password = password,
-                                        name = name.trim().takeIf { it.isNotBlank() },
-                                    )
-                                )
-                            } else {
-                                container.network.api()
-                                    .emailLogin(EmailLoginRequest(email.trim(), password))
-                            }
-                            completeSession(resp)
-                        } catch (e: kotlinx.coroutines.CancellationException) {
-                            throw e
-                        } catch (e: HttpException) {
-                            busy = false
-                            com.runflow2.app.core.util.AppLog.e("Login", "email auth failed: HTTP ${e.code()}", e)
-                            error = when (e.code()) {
-                                401, 400 -> if (isRegisterMode) {
-                                    "Could not register — ensure email is valid and password has 8+ characters."
-                                } else {
-                                    "Email or password is incorrect."
-                                }
-                                429 -> "Too many attempts — please wait a minute and try again."
-                                else -> "Server error (${e.code()}). Try again."
-                            }
-                        } catch (e: IOException) {
-                            busy = false
-                            com.runflow2.app.core.util.AppLog.w("Login", "email auth unreachable", e)
-                            error = "No connection. You can still use the app offline and sign in later."
-                        } catch (e: Exception) {
-                            busy = false
-                            com.runflow2.app.core.util.AppLog.e("Login", "email auth failed", e)
-                            error = "Authentication failed: ${e.message ?: "unknown error"}"
-                        }
-                    }
-                },
-                enabled = !busy && email.isNotBlank() && password.isNotBlank(),
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+                shape = MaterialTheme.shapes.large,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                if (busy) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.height(20.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary,
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        SegmentedButton(
+                            selected = !isRegisterMode,
+                            onClick = { isRegisterMode = false; error = null; infoMessage = null },
+                            shape = SegmentedButtonDefaults.itemShape(0, 2),
+                        ) { Text("Sign in") }
+                        SegmentedButton(
+                            selected = isRegisterMode,
+                            onClick = { isRegisterMode = true; error = null; infoMessage = null },
+                            shape = SegmentedButtonDefaults.itemShape(1, 2),
+                        ) { Text("Create account") }
+                    }
+
+                    if (isRegisterMode) {
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text("Name (optional)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        modifier = Modifier.fillMaxWidth(),
                     )
-                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text(if (isRegisterMode) "Password (min 8 chars)" else "Password") },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    if (!isRegisterMode) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TextButton(onClick = { showForgotDialog = true }) {
+                                Text("Forgot password?")
+                            }
+                        }
+                    }
+
+                    if (error != null) {
+                        Text(
+                            error ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    if (infoMessage != null) {
+                        Text(
+                            infoMessage ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            if (busy) return@Button
+                            busy = true
+                            error = null
+                            infoMessage = null
+                            scope.launch {
+                                try {
+                                    val resp = if (isRegisterMode) {
+                                        container.network.api().register(
+                                            RegisterRequest(
+                                                email = email.trim(),
+                                                password = password,
+                                                name = name.trim().takeIf { it.isNotBlank() },
+                                            )
+                                        )
+                                    } else {
+                                        container.network.api()
+                                            .emailLogin(EmailLoginRequest(email.trim(), password))
+                                    }
+                                    completeSession(resp)
+                                } catch (e: kotlinx.coroutines.CancellationException) {
+                                    throw e
+                                } catch (e: HttpException) {
+                                    busy = false
+                                    com.runflow2.app.core.util.AppLog.e("Login", "email auth failed: HTTP ${e.code()}", e)
+                                    error = when (e.code()) {
+                                        401, 400 -> if (isRegisterMode) {
+                                            "Could not register — ensure email is valid and password has 8+ characters."
+                                        } else {
+                                            "Email or password is incorrect."
+                                        }
+                                        429 -> "Too many attempts — please wait a minute and try again."
+                                        else -> "Server error (${e.code()}). Try again."
+                                    }
+                                } catch (e: IOException) {
+                                    busy = false
+                                    com.runflow2.app.core.util.AppLog.w("Login", "email auth unreachable", e)
+                                    error = "No connection. You can still use the app offline and sign in later."
+                                } catch (e: Exception) {
+                                    busy = false
+                                    com.runflow2.app.core.util.AppLog.e("Login", "email auth failed", e)
+                                    error = "Authentication failed: ${e.message ?: "unknown error"}"
+                                }
+                            }
+                        },
+                        enabled = !busy && email.isNotBlank() && password.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        if (busy) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.height(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
+                        Text(
+                            when {
+                                busy && isRegisterMode -> "Creating account…"
+                                busy -> "Signing in…"
+                                isRegisterMode -> "Create account"
+                                else -> "Sign in with email"
+                            },
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                 }
-                Text(
-                    when {
-                        busy && isRegisterMode -> "Creating account…"
-                        busy -> "Signing in…"
-                        isRegisterMode -> "Create account"
-                        else -> "Sign in with email"
-                    },
-                    fontWeight = FontWeight.SemiBold,
-                )
             }
 
             Text(

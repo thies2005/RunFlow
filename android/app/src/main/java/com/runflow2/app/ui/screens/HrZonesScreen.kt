@@ -35,7 +35,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
 import com.runflow2.app.domain.person.Personalization
-import com.runflow2.app.ui.theme.ZoneColors
+import com.runflow2.app.ui.components.PixelLoadingBox
+import com.runflow2.app.ui.theme.semanticColors
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,7 +59,7 @@ fun HrZonesScreen(
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {}
+        PixelLoadingBox(Modifier.padding(padding), message = "Loading heart rate zones…")
     }
 
     var z1 by androidx.compose.runtime.saveable.rememberSaveable(p.id) { mutableStateOf(p.hrZone1Max.toFloat()) }
@@ -178,7 +179,7 @@ fun HrZonesScreen(
                     { v -> z4 = v }, { v -> z5 = v }, { v -> z6 = v },
                 )
                 labels.forEachIndexed { i, (label, min) ->
-                    val color = ZoneColors[i]
+                    val color = MaterialTheme.semanticColors.zones[i]
                     val value = bounds[i]
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -252,25 +253,27 @@ private fun ZonePreview(
     ends: List<Float>,
     hrMax: Int,
 ) {
+    val zones = MaterialTheme.semanticColors.zones
     starts.zip(ends).forEachIndexed { i, (s, e) ->
+        val zoneColor = zones[i]
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Z${i + 1}", Modifier.padding(end = 4.dp), color = ZoneColors[i])
+            Text("Z${i + 1}", Modifier.padding(end = 4.dp), color = zoneColor)
             androidx.compose.foundation.Canvas(
                 Modifier
                     .weight(1f)
                     .height(16.dp),
             ) {
                 drawRoundRect(
-                    ZoneColors[i].copy(alpha = 0.3f),
+                    zoneColor.copy(alpha = 0.3f),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx()),
                 )
                 val frac = ((e - s) / hrMax).coerceIn(0.02f, 1f)
                 drawRoundRect(
-                    ZoneColors[i],
+                    zoneColor,
                     size = androidx.compose.ui.geometry.Size(size.width * frac, size.height),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx()),
                 )

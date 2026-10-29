@@ -62,11 +62,10 @@ import com.runflow2.app.domain.plan.StructuredWorkoutBuilder
 import com.runflow2.app.domain.plan.StructuredWorkoutBuilder.PACE_LETTERS
 import com.runflow2.app.domain.plan.StructuredWorkoutDraft
 import com.runflow2.app.domain.plan.formatTotalDistance
+import androidx.compose.ui.graphics.luminance
 import com.runflow2.app.domain.plan.toDraft
 import com.runflow2.app.domain.plan.vdotFromThresholdPaceSecPerKm
-import com.runflow2.app.ui.theme.ChartAtl
-import com.runflow2.app.ui.theme.ChartCtl
-import com.runflow2.app.ui.theme.ChartTsb
+import com.runflow2.app.ui.theme.semanticColors
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -414,7 +413,11 @@ private fun PaceZoneSlider(
                     Text(
                         l.name,
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (selected) Color(0xFF101010) else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (selected) {
+                            if (c.luminance() > 0.45f) Color(0xFF111316) else Color.White
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                         fontWeight = if (selected) FontWeight.Bold else null,
                     )
                 }
@@ -426,9 +429,9 @@ private fun PaceZoneSlider(
 /** Zone colors exactly as the analytics "Training paces" card paints them. */
 @Composable
 private fun paceZoneColor(letter: PaceLetter): Color = when (letter) {
-    PaceLetter.E -> ChartCtl
-    PaceLetter.M -> ChartTsb
-    PaceLetter.T -> ChartAtl
+    PaceLetter.E -> MaterialTheme.semanticColors.ctl
+    PaceLetter.M -> MaterialTheme.semanticColors.tsb
+    PaceLetter.T -> MaterialTheme.semanticColors.atl
     PaceLetter.I -> MaterialTheme.colorScheme.error
     PaceLetter.R -> MaterialTheme.colorScheme.tertiary
 }

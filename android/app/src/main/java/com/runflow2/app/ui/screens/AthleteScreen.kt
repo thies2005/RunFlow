@@ -39,12 +39,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,10 +69,11 @@ import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.domain.analytics.AnalyticsBundle
 import com.runflow2.app.domain.analytics.AnalyticsEngine
+import com.runflow2.app.ui.components.PixelSwitch
 import com.runflow2.app.ui.components.SectionTitle
 import com.runflow2.app.ui.components.StatTile
-import com.runflow2.app.ui.theme.Vo2Accent
-import com.runflow2.app.ui.theme.ZoneColors
+import com.runflow2.app.ui.theme.SegmentedCardShapes
+import com.runflow2.app.ui.theme.semanticColors
 import kotlinx.coroutines.launch
 
 /** Repository shown by the About dialog (Custom Tab / browser). */
@@ -109,10 +111,14 @@ fun AthleteScreen(
         ?: auth.name?.takeIf { it.isNotBlank() }
         ?: "Local athlete profile"
 
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            MediumTopAppBar(
                 title = { Text("Athlete") },
+                scrollBehavior = scrollBehavior,
             )
         },
     ) { padding ->
@@ -125,7 +131,12 @@ fun AthleteScreen(
         ) {
             // ---- profile header ----
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                ) {
                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
@@ -162,7 +173,7 @@ fun AthleteScreen(
                             label = "VDOT (Training Paces)",
                             value = Format.oneDecimal(analytics?.effectiveVdot),
                             icon = Icons.Outlined.MonitorHeart,
-                            accent = Vo2Accent,
+                            accent = MaterialTheme.semanticColors.vo2,
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Row(
@@ -232,7 +243,12 @@ fun AthleteScreen(
                 SectionTitle("Body & thresholds")
             }
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                ) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         MetricLine(Icons.Outlined.Favorite, "Max HR", p?.let { "${it.hrMax} bpm" } ?: "—")
                         MetricLine(Icons.Outlined.MonitorHeart, "Resting HR", p?.let { "${it.hrRest} bpm" } ?: "—")
@@ -265,7 +281,12 @@ fun AthleteScreen(
                 SectionTitle("More")
             }
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                ) {
                     Column {
                         MenuRow(Icons.Outlined.CalendarMonth, "All activities", "${activities.size} recorded", onActivities)
                         MenuRow(Icons.Outlined.MonitorHeart, "Heart Rate & Power Zones", "7-zone HR & Coggan models", onHrZones)
@@ -283,7 +304,12 @@ fun AthleteScreen(
 
             // ---- recent PRs style quick stats ----
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                ) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SectionTitle("Latest activity")
                         activities.firstOrNull()?.let { latest ->
@@ -423,7 +449,12 @@ private fun CyclingFtpCard(
     val wPerKg = if (activeFtp > 0 && weightKg > 0.0) activeFtp / weightKg else 0.0
     val cogganZones = remember(activeFtp) { AnalyticsEngine.calculateCogganZones(activeFtp) }
 
-    Card(Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+    ) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             // Header stats: FTP and W/kg
             Row(
@@ -434,7 +465,7 @@ private fun CyclingFtpCard(
                     label = if (settings.ftpWatts > 0) "Manual FTP" else "Active FTP (eFTP)",
                     value = if (activeFtp > 0) "$activeFtp W" else "—",
                     icon = Icons.Outlined.Bolt,
-                    accent = Color(0xFFF97316),
+                    accent = MaterialTheme.semanticColors.streamPower,
                 )
                 StatTile(
                     label = "Power / Weight",
@@ -462,7 +493,7 @@ private fun CyclingFtpCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Switch(
+                PixelSwitch(
                     checked = settings.autoEstimateFtp,
                     onCheckedChange = { checked ->
                         onUpdateFtp(settings.ftpWatts, checked)
@@ -518,7 +549,7 @@ private fun CyclingFtpCard(
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 cogganZones.forEachIndexed { i, zb ->
-                    val color = ZoneColors.getOrElse(i) { MaterialTheme.colorScheme.primary }
+                    val color = MaterialTheme.semanticColors.zones.getOrElse(i) { MaterialTheme.colorScheme.primary }
                     val (name, pct) = zoneNames[i]
                     val rangeStr = when (zb.zone) {
                         1 -> "< ${zb.maxWatts} W"

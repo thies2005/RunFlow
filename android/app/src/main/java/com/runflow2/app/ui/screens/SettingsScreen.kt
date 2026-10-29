@@ -16,9 +16,11 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -27,10 +29,9 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,12 +42,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
 import com.runflow2.app.BuildConfig
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.ThemeMode
+import com.runflow2.app.ui.components.PixelSwitch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -65,16 +68,19 @@ fun SettingsScreen(
     val pending by container.syncManager.pendingCount.collectAsState(initial = 0)
     var showResetDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            LargeTopAppBar(
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
                     }
                 },
+                scrollBehavior = scrollBehavior,
             )
         },
     ) { padding ->
@@ -141,7 +147,10 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Card(Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                ) {
                     Column(
                         Modifier
                             .heightIn(max = 260.dp)
@@ -338,6 +347,12 @@ fun SettingsScreen(
                     subtitle = "Use Material You wallpaper colors (Android 12+)",
                     checked = settings.dynamicColor,
                     onChecked = { scope.launch { container.settings.setDynamicColor(it) } },
+                )
+                SwitchRow(
+                    title = "AMOLED pure black",
+                    subtitle = "Pitch-black background in dark mode while keeping tonal card tints",
+                    checked = settings.amoledBlack,
+                    onCheckedChange = { scope.launch { container.settings.setAmoledBlack(it) } },
                 )
             }
 
@@ -781,9 +796,20 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingSection(title: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        content()
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                content()
+            }
+        }
     }
 }
 
@@ -792,9 +818,11 @@ private fun SwitchRow(
     title: String,
     subtitle: String,
     checked: Boolean,
-    onChecked: (Boolean) -> Unit,
+    onCheckedChange: ((Boolean) -> Unit)? = null,
+    onChecked: ((Boolean) -> Unit)? = null,
     enabled: Boolean = true,
 ) {
+    val handler = onCheckedChange ?: onChecked ?: {}
     Row(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -803,6 +831,6 @@ private fun SwitchRow(
             Text(title, style = MaterialTheme.typography.bodyLarge)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(checked = checked, onCheckedChange = onChecked, enabled = enabled)
+        PixelSwitch(checked = checked, onCheckedChange = handler, enabled = enabled)
     }
 }

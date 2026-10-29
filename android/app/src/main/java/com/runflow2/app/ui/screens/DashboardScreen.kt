@@ -37,10 +37,10 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -148,7 +148,7 @@ fun DashboardScreen(
     // Pull-to-refresh runs a full sync including the server-side Strava
     // import; the analytics produceState re-runs on its own once Room updates.
     val syncStatus by container.syncManager.status.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     PullToRefreshBox(
         isRefreshing = syncStatus.running,
         onRefresh = {
@@ -161,10 +161,10 @@ fun DashboardScreen(
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                MediumTopAppBar(
+                TopAppBar(
                     title = {
                         Column {
-                            Text("RunFlow")
+                            Text("RunFlow", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                             Text(
                                 Format.dateWithYear(today),
                                 style = MaterialTheme.typography.labelMedium,
@@ -172,7 +172,7 @@ fun DashboardScreen(
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.background,
                         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),

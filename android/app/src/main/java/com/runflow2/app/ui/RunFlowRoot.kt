@@ -23,9 +23,9 @@ import androidx.compose.material.icons.outlined.RadioButtonChecked
 import androidx.compose.material.icons.outlined.SpaceDashboard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -143,15 +143,15 @@ fun RunFlowRoot(container: AppContainer) {
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 if (showBottomBar) {
-                    NavigationBar(
+                    ShortNavigationBar(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ) {
                         tabs.forEach { tab ->
                             val selected = currentRoute == tab.route
-                            NavigationBarItem(
+                            ShortNavigationBarItem(
                                 selected = selected,
                                 onClick = {
-                                    if (currentRoute == tab.route) return@NavigationBarItem
+                                    if (currentRoute == tab.route) return@ShortNavigationBarItem
                                     navController.navigate(tab.route) {
                                         popUpTo(navController.graph.findStartDestination().id)
                                         launchSingleTop = true

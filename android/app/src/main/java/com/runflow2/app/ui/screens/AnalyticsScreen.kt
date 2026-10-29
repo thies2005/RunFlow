@@ -41,13 +41,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -115,16 +115,16 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
     var pmcMode by rememberSaveable { mutableStateOf("combined") }
 
     val listState = rememberLazyListState()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val a = analytics
     if (a == null) {
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                LargeTopAppBar(
+                TopAppBar(
                     title = {
                         Column {
-                            Text("Analytics")
+                            Text("Analytics", fontWeight = FontWeight.SemiBold)
                             Text(
                                 "Fitness · fatigue · form",
                                 style = MaterialTheme.typography.labelMedium,
@@ -132,6 +132,10 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                             )
                         }
                     },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
                     scrollBehavior = scrollBehavior,
                 )
             },
@@ -182,10 +186,10 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = {
                     Column {
-                        Text("Analytics")
+                        Text("Analytics", fontWeight = FontWeight.SemiBold)
                         Text(
                             "Fitness · fatigue · form",
                             style = MaterialTheme.typography.labelMedium,
@@ -193,6 +197,10 @@ fun AnalyticsScreen(container: AppContainer, targetSection: String? = null) {
                         )
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
                 scrollBehavior = scrollBehavior,
             )
         },

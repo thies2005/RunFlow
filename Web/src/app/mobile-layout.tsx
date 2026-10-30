@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, startOfWeek, endOfWeek } from 'date-fns';
 import {
     useSensor,
     useSensors,
@@ -272,7 +272,14 @@ export function MobileLayout() {
     const goalsList = dashboardData?.goals?.goals || [];
     const activeGoal: Goal | undefined = goalsList.find((g: Goal) => g.isActive);
     const incompleteGoal: Goal | null = dashboardData?.incompleteGoal || null;
-    const weeklyWorkouts: Workout[] = activeGoal?.workouts || [];
+    const now = new Date();
+    const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 });
+    const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 });
+    const allGoalWorkouts: Workout[] = activeGoal?.workouts || [];
+    const weeklyWorkouts: Workout[] = allGoalWorkouts.filter((w) => {
+        const d = new Date(w.scheduledDate);
+        return d >= currentWeekStart && d <= currentWeekEnd;
+    });
     const syncStatus = dashboardData?.syncStatus;
 
     // Auto-sync with Strava when the app opens and the last sync is stale.

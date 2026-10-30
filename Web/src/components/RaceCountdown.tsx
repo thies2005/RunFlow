@@ -1,6 +1,7 @@
 import { Activity, Calendar, Target, Trophy, CheckCircle, Loader2, Trash2, Info } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { differenceInDays, differenceInWeeks, format } from 'date-fns';
+import { differenceInDays, differenceInWeeks, format, startOfWeek, endOfWeek, subDays, addDays } from 'date-fns';
+import { detectEffectivePlanSport, getEffectiveSportLabel, estimateFallbackWorkoutTss } from '@/lib/plan/sportDetection';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -224,25 +225,80 @@ export function RaceCountdown({
     let fallbackWeeklyActualDuration = 0;
     if (weeklyWorkouts && weeklyWorkouts.length > 0) {
         for (const w of weeklyWorkouts) {
-            const pTss = (w as any).plannedTss || 40;
+            const pTss = estimateFallbackWorkoutTss(w as any);
             fallbackWeeklyPlannedTss += pTss;
             fallbackWeeklyPlannedDuration += w.targetDuration || 3000;
             if (w.isCompleted) {
-                fallbackWeeklyActualTss += (w as any).actualTss || pTss;
+                fallbackWeeklyActualTss += (w as any).actualTss ?? pTss;
                 fallbackWeeklyActualDuration += w.targetDuration || 3000;
             }
         }
     }
 
-    const weeklyPlannedTss = statsData?.weeklyPlannedTss ?? fallbackWeeklyPlannedTss;
-    const weeklyActualTss = statsData?.weeklyActualTss ?? fallbackWeeklyActualTss;
-    const weeklyPlannedDurationSec = statsData?.weeklyPlannedDurationSec ?? fallbackWeeklyPlannedDuration;
-    const weeklyActualDurationSec = statsData?.weeklyActualDurationSec ?? fallbackWeeklyActualDuration;
+    const weeklyActualTss = Math.max(statsData?.weeklyActualTss ?? 0, fallbackWeeklyActualTss);
+    const weeklyActualDurationSec = Math.max(statsData?.weeklyActualDurationSec ?? 0, fallbackWeeklyActualDuration);
+    const weeklyPlannedTss = (statsData?.weeklyPlannedTss && statsData.weeklyPlannedTss > 0)
+        ? statsData.weeklyPlannedTss
+        : fallbackWeeklyPlannedTss;
+    const weeklyPlannedDurationSec = (statsData?.weeklyPlannedDurationSec && statsData.weeklyPlannedDurationSec > 0)
+        ? statsData.weeklyPlannedDurationSec
+        : fallbackWeeklyPlannedDuration;
     const weeklyPlannedTrimp = statsData?.weeklyPlannedTrimp ?? Math.round(weeklyPlannedTss * 1.15);
     const weeklyActualTrimp = statsData?.weeklyActualTrimp ?? Math.round(weeklyActualTss * 1.15);
 
-    const monthlyPlannedTss = statsData?.monthlyPlannedTss ?? (weeklyPlannedTss > 0 ? weeklyPlannedTss * 4 : 800);
-    const monthlyActualTss = statsData?.monthlyActualTss ?? weeklyActualTss;
+    // 4-Week Block (Monthly) breakdown & totals
+    const rawBreakdown = statsData?.blockWeeksBreakdown || statsData?.monthlyWeeksBreakdown;
+    const hasValidBreakdown = rawBreakdown && rawBreakdown.length > 0 && rawBreakdown.some((w: any) => ((w.plannedTss ?? 0) > 0 || (w.actualTss ?? 0) > 0));
+
+    const now = new Date();
+    const currentWeekMon = startOfWeek(now, { weekStartsOn: 1 });
+    const mesoWeeksFallback = [
+        { label: 'W1', start: subDays(currentWeekMon, 7), end: endOfWeek(subDays(currentWeekMon, 7), { weekStartsOn: 1 }), isCurrent: false },
+        { label: 'W2', start: currentWeekMon, end: endOfWeek(currentWeekMon, { weekStartsOn: 1 }), isCurrent: true },
+        { label: 'W3', start: addDays(currentWeekMon, 7), end: endOfWeek(addDays(currentWeekMon, 7), { weekStartsOn: 1 }), isCurrent: false },
+        { label: 'W4', start: addDays(currentWeekMon, 14), end: endOfWeek(addDays(currentWeekMon, 14), { weekStartsOn: 1 }), isCurrent: false },
+    ];
+
+    const fallbackBlockBreakdown = mesoWeeksFallback.map((mw) => {
+        const wWorkouts = (goal.workouts || []).filter((w: any) => {
+            const d = new Date(w.scheduledDate);
+            return d >= mw.start && d <= mw.end;
+        });
+        let plannedTss = 0;
+        let actualTss = 0;
+        for (const w of wWorkouts) {
+            const tss = estimateFallbackWorkoutTss(w as any);
+            plannedTss += tss;
+            if (w.isCompleted) {
+                actualTss += (w as any).actualTss ?? tss;
+            }
+        }
+        return {
+            label: mw.label,
+            plannedTss: Math.round(plannedTss),
+            actualTss: Math.round(actualTss),
+            isCurrentWeek: mw.isCurrent,
+        };
+    });
+
+    const blockWeeks = hasValidBreakdown
+        ? rawBreakdown.slice(0, 4)
+        : ((goal.workouts && goal.workouts.length > 0)
+            ? fallbackBlockBreakdown
+            : [
+                { label: 'W1', plannedTss: Math.round(weeklyPlannedTss || 200), actualTss: weeklyActualTss, isCurrentWeek: true },
+                { label: 'W2', plannedTss: Math.round(weeklyPlannedTss || 200), actualTss: 0, isCurrentWeek: false },
+                { label: 'W3', plannedTss: Math.round(weeklyPlannedTss || 200), actualTss: 0, isCurrentWeek: false },
+                { label: 'W4', plannedTss: Math.round(weeklyPlannedTss || 200), actualTss: 0, isCurrentWeek: false },
+            ]);
+
+    const sumBlockPlannedTss = blockWeeks.reduce((acc: number, w: any) => acc + (w.plannedTss || 0), 0);
+    const sumBlockActualTss = blockWeeks.reduce((acc: number, w: any) => acc + (w.actualTss || 0), 0);
+
+    const monthlyPlannedTss = (statsData?.monthlyPlannedTss && statsData.monthlyPlannedTss > 0)
+        ? statsData.monthlyPlannedTss
+        : (sumBlockPlannedTss > 0 ? sumBlockPlannedTss : (weeklyPlannedTss > 0 ? weeklyPlannedTss * 4 : 800));
+    const monthlyActualTss = Math.max(statsData?.monthlyActualTss ?? 0, sumBlockActualTss, weeklyActualTss);
 
     const weeklyPct = weeklyPlannedTss > 0 ? Math.round((weeklyActualTss / weeklyPlannedTss) * 100) : 0;
     const monthlyPct = monthlyPlannedTss > 0 ? Math.round((monthlyActualTss / monthlyPlannedTss) * 100) : 0;
@@ -291,7 +347,20 @@ export function RaceCountdown({
                     >
                         {isMobile ? 'View Full Plan →' : 'View Calendar →'}
                     </button>
-                    <span className="badge badge-run">{raceLabels[goal.raceType] ?? goal.raceType}</span>
+                    {(() => {
+                        const effectiveSport = getEffectiveSportLabel(goal, weeklyWorkouts || goal.workouts);
+                        const badgeStyle =
+                            effectiveSport.badgeClass === 'badge-bike'
+                                ? 'badge-bike bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30'
+                                : effectiveSport.badgeClass === 'badge-tri'
+                                ? 'badge-tri bg-accent-blue/10 text-accent-blue border border-accent-blue/30'
+                                : 'badge-run';
+                        return (
+                            <span className={`badge ${badgeStyle}`}>
+                                {effectiveSport.label}
+                            </span>
+                        );
+                    })()}
                     <button
                         onClick={() => setIsDeleteConfirmOpen(true)}
                         disabled={deletePlanMutation.isPending}
@@ -418,15 +487,7 @@ export function RaceCountdown({
 
                             {/* 4 Mini Week Pills (W1..W4) */}
                             <div className="grid grid-cols-4 gap-1.5">
-                                {(statsData?.monthlyWeeksBreakdown && statsData.monthlyWeeksBreakdown.length > 0
-                                    ? statsData.monthlyWeeksBreakdown.slice(0, 4)
-                                    : [
-                                          { label: 'W1', plannedTss: Math.round(monthlyPlannedTss / 4), actualTss: Math.round(monthlyActualTss / 4), isCurrentWeek: true },
-                                          { label: 'W2', plannedTss: Math.round(monthlyPlannedTss / 4), actualTss: 0, isCurrentWeek: false },
-                                          { label: 'W3', plannedTss: Math.round(monthlyPlannedTss / 4), actualTss: 0, isCurrentWeek: false },
-                                          { label: 'W4', plannedTss: Math.round(monthlyPlannedTss / 4), actualTss: 0, isCurrentWeek: false },
-                                      ]
-                                ).map((w: any, idx: number) => {
+                                {blockWeeks.map((w: any, idx: number) => {
                                     const isCurrent = w.isCurrentWeek ?? (idx === 0);
                                     return (
                                         <div
@@ -442,7 +503,7 @@ export function RaceCountdown({
                                                 {isCurrent && <span className="w-1 h-1 rounded-full bg-accent-orange" />}
                                             </div>
                                             <div className="text-[8px] font-mono mt-0.5 truncate">
-                                                {w.actualTss > 0 ? `${w.actualTss}T` : `${w.plannedTss}T`}
+                                                {w.actualTss > 0 ? `${w.actualTss}/${w.plannedTss}T` : `${w.plannedTss}T`}
                                             </div>
                                         </div>
                                     );

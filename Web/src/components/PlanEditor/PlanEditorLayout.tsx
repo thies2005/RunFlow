@@ -21,9 +21,69 @@ import { GuidedTipCard } from '@/app/plan-advanced/[goalId]/components/AI/Guided
 import { GuidedWeekSuggest } from '@/app/plan-advanced/[goalId]/components/AI/GuidedWeekSuggest';
 import { AiSuggestionCard } from '@/app/plan-advanced/[goalId]/components/AI/AiSuggestionCard';
 import { startOfWeek, addDays } from 'date-fns';
+import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
 import type { PlanPhase } from '@/app/plan-advanced/[goalId]/components/Editor/PhaseSelector';
 import type { Goal } from '@/app/plan-advanced/[goalId]/components/Progression/types';
 import type { PhaseBlock } from '@/lib/plans';
+
+function estimateWorkoutTss(w: Workout): number {
+    if (w.plannedTss && w.plannedTss > 0) return w.plannedTss;
+    const est = calculateWorkoutPlannedTss(w as any);
+    if (est && est > 0) return est;
+    if (w.targetDuration && w.targetDuration > 0) {
+        return Math.round((w.targetDuration / 3600) * 55);
+    }
+    if (w.targetDistance && w.targetDistance > 0) {
+        return Math.round((w.targetDistance / 1000) * 4);
+    }
+    return 0;
+}
+
+export function detectEffectivePlanSport(params: {
+    planName?: string;
+    sport?: string | null;
+    workouts?: Workout[];
+}): 'CYCLING' | 'TRIATHLON' | 'RUN' {
+    const nameLower = (params.planName || '').toLowerCase();
+    const isCyclingKeyword =
+        nameLower.includes('cycling') ||
+        nameLower.includes('bike') ||
+        nameLower.includes('mywhoosh') ||
+        nameLower.includes('zwift') ||
+        nameLower.includes('ftp') ||
+        nameLower.includes('sweet spot');
+
+    const workouts = params.workouts || [];
+    let bikeCount = 0;
+    let runCount = 0;
+    let swimCount = 0;
+
+    for (const w of workouts) {
+        const type = (w.workoutType || '').toUpperCase();
+        const sp = (w.sport || '').toUpperCase();
+        if (sp === 'BIKE' || ['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS'].includes(type)) {
+            bikeCount++;
+        } else if (sp === 'RUN' || ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'REPETITIONS', 'RECOVERY'].includes(type)) {
+            runCount++;
+        } else if (sp === 'SWIM' || ['SWIM', 'OPEN_WATER_SWIM', 'SWIM_DRILL'].includes(type)) {
+            swimCount++;
+        }
+    }
+
+    if (bikeCount > 0 && runCount === 0 && swimCount === 0) {
+        return 'CYCLING';
+    }
+
+    if (isCyclingKeyword && swimCount === 0 && runCount === 0) {
+        return 'CYCLING';
+    }
+
+    if (params.sport === 'TRIATHLON') {
+        return 'TRIATHLON';
+    }
+
+    return 'RUN';
+}
 
 const AnalysisView = lazy(() =>
     import('./AnalysisView').then((mod) => ({ default: mod.AnalysisView }))
@@ -402,6 +462,95 @@ function EditorContent({
         return Math.max(1, Math.ceil(diffMs / (7 * 24 * 60 * 60 * 1000)));
     }, [timelineStart]);
 
+    const effectiveSport = useMemo(() => {
+        return detectEffectivePlanSport({ planName, sport, workouts });
+    }, [planName, sport, workouts]);
+
+    const hasStrength = useMemo(() => {
+        return workouts.some((w) => w.workoutType === 'STRENGTH' || w.sport === 'STRENGTH');
+    }, [workouts]);
+
+    const computeWeekEffort = useCallback((weekWorkouts: Workout[]) => {
+        let plannedTss = 0;
+        let actualTss = 0;
+        let plannedDurationSec = 0;
+        let actualDurationSec = 0;
+
+        for (const w of weekWorkouts) {
+            if (w.workoutType === 'REST') continue;
+            const wPlannedTss = w.plannedTss && w.plannedTss > 0 ? w.plannedTss : estimateWorkoutTss(w);
+            const wPlannedDur = w.targetDuration || 0;
+            plannedTss += Math.round(wPlannedTss);
+            plannedDurationSec += wPlannedDur;
+
+            if (w.isCompleted || w.linkedActivity) {
+                const linkedTss = w.linkedActivity
+                    ? (w.linkedActivity.bikeTss || w.linkedActivity.runningTss || w.linkedActivity.trimp || 0)
+                    : 0;
+                actualTss += linkedTss > 0 ? Math.round(linkedTss) : Math.round(wPlannedTss);
+                actualDurationSec += (w.linkedActivity?.movingTime && w.linkedActivity.movingTime > 0)
+                    ? w.linkedActivity.movingTime
+                    : wPlannedDur;
+            }
+        }
+
+        return {
+            plannedTss,
+            actualTss,
+            plannedDurationSec,
+            actualDurationSec,
+        };
+    }, []);
+
+    const currentWeekEffort = useMemo(() => {
+        const wk = weeks.find((w) => w.weekNumber === currentWeek) || weeks.find((w) => {
+            const now = new Date();
+            return now >= w.weekStart && now <= w.weekEnd;
+        });
+        let wkWorkouts: Workout[] = [];
+        if (wk) {
+            wkWorkouts = wk.workouts;
+        } else {
+            const wStart = new Date(timelineStart.getTime() + (currentWeek - 1) * 7 * 86400000);
+            const wEnd = new Date(timelineStart.getTime() + currentWeek * 7 * 86400000);
+            wkWorkouts = workouts.filter((w) => {
+                const d = new Date(w.scheduledDate);
+                return d >= wStart && d < wEnd;
+            });
+        }
+        return computeWeekEffort(wkWorkouts);
+    }, [weeks, workouts, currentWeek, timelineStart, computeWeekEffort]);
+
+    const totalWeeks = Math.max(1, Math.ceil((timelineEnd.getTime() - timelineStart.getTime()) / (7 * 86400000)));
+    const blockStartWeek = Math.floor((currentWeek - 1) / 4) * 4 + 1;
+    const blockEndWeek = Math.min(totalWeeks, blockStartWeek + 3);
+
+    const blockWeeksBreakdown = useMemo(() => {
+        const list: Array<{ weekNumber: number; plannedTss: number; actualTss: number; isCurrentWeek: boolean }> = [];
+        for (let wNum = blockStartWeek; wNum <= blockEndWeek; wNum++) {
+            const wk = weeks.find((w) => w.weekNumber === wNum);
+            let wkWorkouts: Workout[] = [];
+            if (wk) {
+                wkWorkouts = wk.workouts;
+            } else {
+                const wStart = new Date(timelineStart.getTime() + (wNum - 1) * 7 * 86400000);
+                const wEnd = new Date(timelineStart.getTime() + wNum * 7 * 86400000);
+                wkWorkouts = workouts.filter((w) => {
+                    const d = new Date(w.scheduledDate);
+                    return d >= wStart && d < wEnd;
+                });
+            }
+            const effort = computeWeekEffort(wkWorkouts);
+            list.push({
+                weekNumber: wNum,
+                plannedTss: effort.plannedTss,
+                actualTss: effort.actualTss,
+                isCurrentWeek: wNum === currentWeek,
+            });
+        }
+        return list;
+    }, [weeks, workouts, blockStartWeek, blockEndWeek, currentWeek, timelineStart, computeWeekEffort]);
+
     return (
         <div className="h-screen flex flex-col bg-background text-foreground">
             <Toolbar
@@ -417,10 +566,11 @@ function EditorContent({
                 onToggleChat={isPremium ? () => setChatOpen((prev) => !prev) : undefined}
                 chatOpen={chatOpen}
                 isPremium={isPremium}
-                sport={sport}
-                raceType={raceType}
+                sport={effectiveSport === 'CYCLING' ? 'CYCLING' : sport}
+                raceType={effectiveSport === 'CYCLING' ? (hasStrength ? 'Cycling & Strength' : 'Cycling') : raceType}
                 raceDate={raceDate}
                 currentVdot={currentVdot}
+                workouts={workouts}
             />
 
             <EventsPanel
@@ -439,6 +589,8 @@ function EditorContent({
                     onMarkerClick={handleGoalMarkerClick}
                     phaseBlocks={currentPhaseBlocks}
                     onUpdatePhaseBlocks={handleUpdatePhaseBlocks}
+                    currentWeekEffort={currentWeekEffort}
+                    blockWeeksBreakdown={blockWeeksBreakdown}
                 />
             )}
 

@@ -8,6 +8,8 @@ import {
     ComposedChart,
     Area,
     Line,
+    Bar,
+    Cell,
     XAxis,
     YAxis,
     Tooltip,
@@ -31,6 +33,9 @@ import {
     workoutTypeDistribution,
     hrZoneDistribution,
     computePhaseBands,
+    weeklyTssProgression,
+    weeklyCyclingVolume,
+    powerZoneDistribution,
 } from '@/app/plan-advanced/[goalId]/lib/analysisUtils';
 import {
     calculateWorkoutPlannedTss,
@@ -56,6 +61,12 @@ export function AnalysisView({ workouts, goalId, raceDate, raceType, isNoRace }:
     const typeData = useMemo(() => workoutTypeDistribution(workouts as any), [workouts]);
     const hrZoneData = useMemo(() => hrZoneDistribution(workouts as any), [workouts]);
     const phaseBands = useMemo(() => computePhaseBands(weeks), [weeks]);
+    const tssData = useMemo(() => weeklyTssProgression(weeks), [weeks]);
+    const cyclingVolumeData = useMemo(() => weeklyCyclingVolume(weeks), [weeks]);
+    const powerZoneData = useMemo(() => powerZoneDistribution(workouts as any), [workouts]);
+    const hasRunning = useMemo(() => volumeData.some((d) => d.km > 0) || longRunData.length > 0, [volumeData, longRunData]);
+    const hasCycling = useMemo(() => cyclingVolumeData.some((d) => d.km > 0 || d.hours > 0), [cyclingVolumeData]);
+    const hideRunningCharts = !hasRunning && hasCycling;
 
     // Fetch server-side Planned-vs-Actual PMC curve (with actual DailyFitness)
     const { data: serverFitnessData } = useQuery<{
@@ -231,31 +242,110 @@ export function AnalysisView({ workouts, goalId, raceDate, raceType, isNoRace }:
             </ChartCard>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Weekly TSS Progression (Planned vs. Completed) */}
                 <div className="md:col-span-2">
                     <ChartCard
-                        title="Weekly Running Volume"
-                        tooltip="Running distance per week colored by training phase"
-                        isEmpty={volumeData.every((d) => d.km === 0)}
-                        emptyMessage="No running distance data assigned"
+                        title="Weekly TSS Progression (Planned vs. Completed)"
+                        tooltip="Planned TSS training stress score per week and actual completed TSS"
+                        isEmpty={tssData.every((d) => d.plannedTss === 0 && d.actualTss === 0)}
+                        emptyMessage="No planned TSS data available"
                     >
                         <LazyChartWrapper height="16rem">
-                            <WeeklyVolumeChart data={volumeData} phaseBands={phaseBands} />
+                            <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart data={tssData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line, rgba(255,255,255,0.08))" />
+                                    <XAxis
+                                        dataKey="weekLabel"
+                                        tick={{ fontSize: 10, fill: 'var(--foreground-muted, #888)' }}
+                                    />
+                                    <YAxis
+                                        tick={{ fontSize: 10, fill: 'var(--foreground-muted, #888)' }}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: 'var(--background-secondary, #1a1a1a)',
+                                            borderColor: 'var(--glass-border, #333)',
+                                            borderRadius: '6px',
+                                            fontSize: '11px',
+                                        }}
+                                    />
+                                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                                    <Bar dataKey="plannedTss" name="Planned TSS" fill="#3b82f6" fillOpacity={0.6} radius={[4, 4, 0, 0]} />
+                                    <Line type="monotone" dataKey="actualTss" name="Completed TSS" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                                </ComposedChart>
+                            </ResponsiveContainer>
                         </LazyChartWrapper>
                     </ChartCard>
                 </div>
 
-                <div className="md:col-span-2">
-                    <ChartCard
-                        title="Long Run Progression"
-                        tooltip="Distance trend for all long runs across the plan"
-                        isEmpty={longRunData.length === 0}
-                        emptyMessage="No long runs found in plan"
-                    >
-                        <LazyChartWrapper height="16rem">
-                            <LongRunProgressionChart data={longRunData} />
-                        </LazyChartWrapper>
-                    </ChartCard>
-                </div>
+                {/* Weekly Cycling Volume (km) whenever hasCycling is true */}
+                {hasCycling && (
+                    <div className="md:col-span-2">
+                        <ChartCard
+                            title="Weekly Cycling Volume (km)"
+                            tooltip="Cycling distance per week estimated from duration/distance targets"
+                            isEmpty={cyclingVolumeData.every((d) => d.km === 0 && d.actualKm === 0)}
+                            emptyMessage="No cycling volume found in plan"
+                        >
+                            <LazyChartWrapper height="16rem">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <ComposedChart data={cyclingVolumeData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--line, rgba(255,255,255,0.08))" />
+                                        <XAxis
+                                            dataKey="weekLabel"
+                                            tick={{ fontSize: 10, fill: 'var(--foreground-muted, #888)' }}
+                                        />
+                                        <YAxis
+                                            tick={{ fontSize: 10, fill: 'var(--foreground-muted, #888)' }}
+                                            unit="km"
+                                        />
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'var(--background-secondary, #1a1a1a)',
+                                                borderColor: 'var(--glass-border, #333)',
+                                                borderRadius: '6px',
+                                                fontSize: '11px',
+                                            }}
+                                        />
+                                        <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                                        <Bar dataKey="km" name="Planned Ride (km)" fill="#06b6d4" fillOpacity={0.7} radius={[4, 4, 0, 0]} />
+                                        <Line type="monotone" dataKey="actualKm" name="Completed (km)" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            </LazyChartWrapper>
+                        </ChartCard>
+                    </div>
+                )}
+
+                {!hideRunningCharts && (
+                    <>
+                        <div className="md:col-span-2">
+                            <ChartCard
+                                title="Weekly Running Volume"
+                                tooltip="Running distance per week colored by training phase"
+                                isEmpty={volumeData.every((d) => d.km === 0)}
+                                emptyMessage="No running distance data assigned"
+                            >
+                                <LazyChartWrapper height="16rem">
+                                    <WeeklyVolumeChart data={volumeData} phaseBands={phaseBands} />
+                                </LazyChartWrapper>
+                            </ChartCard>
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <ChartCard
+                                title="Long Run Progression"
+                                tooltip="Distance trend for all long runs across the plan"
+                                isEmpty={longRunData.length === 0}
+                                emptyMessage="No long runs found in plan"
+                            >
+                                <LazyChartWrapper height="16rem">
+                                    <LongRunProgressionChart data={longRunData} />
+                                </LazyChartWrapper>
+                            </ChartCard>
+                        </div>
+                    </>
+                )}
 
                 <ChartCard
                     title="Weekly Load by Modality"
@@ -279,18 +369,54 @@ export function AnalysisView({ workouts, goalId, raceDate, raceType, isNoRace }:
                     </LazyChartWrapper>
                 </ChartCard>
 
-                <div className="md:col-span-2">
-                    <ChartCard
-                        title="HR Zone Distribution"
-                        tooltip="Kilometers per heart rate zone for running workouts (80/20 rule check)"
-                        isEmpty={hrZoneData.every((d) => d.km === 0)}
-                        emptyMessage="No HR zone data assigned"
-                    >
-                        <LazyChartWrapper height="14rem">
-                            <HrZonePyramid data={hrZoneData} />
-                        </LazyChartWrapper>
-                    </ChartCard>
-                </div>
+                {hasCycling && (
+                    <div className="md:col-span-2">
+                        <ChartCard
+                            title="Cycling Power Zone Distribution"
+                            tooltip="Target training hours per Coggan power zone"
+                            isEmpty={powerZoneData.every((d) => d.hours === 0)}
+                            emptyMessage="No cycling power zone data assigned"
+                        >
+                            <LazyChartWrapper height="14rem">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <ComposedChart data={powerZoneData} layout="vertical" margin={{ top: 10, right: 20, left: 40, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--line, rgba(255,255,255,0.08))" />
+                                        <XAxis type="number" unit="h" tick={{ fontSize: 10, fill: 'var(--foreground-muted, #888)' }} />
+                                        <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: 'var(--foreground-muted, #888)' }} />
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'var(--background-secondary, #1a1a1a)',
+                                                borderColor: 'var(--glass-border, #333)',
+                                                borderRadius: '6px',
+                                                fontSize: '11px',
+                                            }}
+                                        />
+                                        <Bar dataKey="hours" name="Hours" fill="#3b82f6" radius={[0, 4, 4, 0]}>
+                                            {powerZoneData.map((entry) => (
+                                                <Cell key={`power-zone-${entry.zone}`} fill={entry.color} />
+                                            ))}
+                                        </Bar>
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            </LazyChartWrapper>
+                        </ChartCard>
+                    </div>
+                )}
+
+                {!hideRunningCharts && (
+                    <div className="md:col-span-2">
+                        <ChartCard
+                            title="HR Zone Distribution"
+                            tooltip="Kilometers per heart rate zone for running workouts (80/20 rule check)"
+                            isEmpty={hrZoneData.every((d) => d.km === 0)}
+                            emptyMessage="No HR zone data assigned"
+                        >
+                            <LazyChartWrapper height="14rem">
+                                <HrZonePyramid data={hrZoneData} />
+                            </LazyChartWrapper>
+                        </ChartCard>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { Pencil, Check, MessageSquare, ArrowLeft, Sparkles } from 'lucide-react';
@@ -10,6 +10,7 @@ import { ModeToggle } from '@/app/plan-advanced/[goalId]/components/Toolbar/Mode
 import { PlanActionsMenu } from '@/app/plan-advanced/[goalId]/components/Toolbar/PlanActionsMenu';
 import { EngineGenerateModal } from './EngineGenerateModal';
 import type { PlanCreationMode } from '@/app/plan-advanced/[goalId]/hooks/usePlanMode';
+import type { Workout } from './WorkoutDetailPanel';
 
 export interface ToolbarProps {
     goalId: string;
@@ -29,6 +30,7 @@ export interface ToolbarProps {
     raceType?: string | null;
     raceDate?: Date | null;
     currentVdot?: number | null;
+    workouts?: Workout[];
 }
 
 export function Toolbar({
@@ -49,6 +51,7 @@ export function Toolbar({
     raceType,
     raceDate,
     currentVdot,
+    workouts,
 }: ToolbarProps) {
     const [isEditingName, setIsEditingName] = useState(false);
     const [editName, setEditName] = useState(planName);
@@ -56,6 +59,50 @@ export function Toolbar({
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const queryClient = useQueryClient();
+
+    const isCycling = useMemo(() => {
+        const nameLower = (planName || '').toLowerCase();
+        if (
+            sport === 'CYCLING' ||
+            nameLower.includes('cycling') ||
+            nameLower.includes('bike') ||
+            nameLower.includes('mywhoosh') ||
+            nameLower.includes('zwift')
+        ) {
+            return true;
+        }
+        if (workouts && workouts.length > 0) {
+            const bikeCount = workouts.filter((w) => w.sport === 'BIKE' || ['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS'].includes(w.workoutType)).length;
+            const runCount = workouts.filter((w) => w.sport === 'RUN' || ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'REPETITIONS', 'RECOVERY'].includes(w.workoutType)).length;
+            const swimCount = workouts.filter((w) => w.sport === 'SWIM' || ['SWIM', 'OPEN_WATER_SWIM', 'SWIM_DRILL'].includes(w.workoutType)).length;
+            if (bikeCount > 0 && runCount === 0 && swimCount === 0) return true;
+        }
+        return false;
+    }, [planName, sport, workouts]);
+
+    const hasStrength = useMemo(() => {
+        return workouts?.some((w) => w.workoutType === 'STRENGTH' || w.sport === 'STRENGTH') ?? false;
+    }, [workouts]);
+
+    const sportBadgeLabel = useMemo(() => {
+        if (isCycling) {
+            return hasStrength ? 'Cycling & Strength' : 'Cycling';
+        }
+        if (sport === 'TRIATHLON' && (raceType === 'CUSTOM_TRI' || !raceType)) {
+            const isBikeOnly =
+                workouts &&
+                workouts.length > 0 &&
+                workouts.every((w) =>
+                    w.sport === 'BIKE' ||
+                    w.sport === 'STRENGTH' ||
+                    ['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS', 'STRENGTH', 'REST'].includes(w.workoutType)
+                );
+            if (isBikeOnly) {
+                return hasStrength ? 'Cycling & Strength' : 'Cycling';
+            }
+        }
+        return sport ? (raceType ? `${sport} • ${raceType}` : sport) : (raceType || 'RUN');
+    }, [isCycling, hasStrength, sport, raceType, workouts]);
 
     useEffect(() => {
         setEditName(planName);
@@ -121,14 +168,19 @@ export function Toolbar({
                             </button>
                         </div>
                     ) : (
-                        <button
-                            type="button"
-                            onClick={() => setIsEditingName(true)}
-                            className="flex items-center gap-1.5 group max-w-xs"
-                        >
-                            <h1 className="text-sm font-semibold text-foreground truncate">{planName}</h1>
-                            <Pencil className="w-3 h-3 text-foreground-muted group-hover:text-foreground-secondary transition-colors shrink-0" />
-                        </button>
+                        <div className="flex flex-col items-center min-w-0">
+                            <button
+                                type="button"
+                                onClick={() => setIsEditingName(true)}
+                                className="flex items-center gap-1.5 group max-w-xs"
+                            >
+                                <h1 className="text-sm font-semibold text-foreground truncate">{planName}</h1>
+                                <Pencil className="w-3 h-3 text-foreground-muted group-hover:text-foreground-secondary transition-colors shrink-0" />
+                            </button>
+                            <span className="text-[10px] font-mono text-foreground-muted tracking-wider uppercase">
+                                {sportBadgeLabel}
+                            </span>
+                        </div>
                     )}
                 </div>
 

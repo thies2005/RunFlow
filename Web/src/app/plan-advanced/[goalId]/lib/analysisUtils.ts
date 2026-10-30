@@ -1,6 +1,6 @@
 import { startOfWeek, format } from 'date-fns';
 
-type Workout = {
+export interface WorkoutItem {
     id: string;
     scheduledDate: string | Date;
     workoutType: string;
@@ -8,7 +8,24 @@ type Workout = {
     targetDuration: number | null;
     targetHrZone: number | null;
     phase: string;
-};
+    sport?: string | null;
+    isCompleted?: boolean;
+    plannedTss?: number | null;
+    targetPowerWatts?: number | null;
+    targetPowerMinWatts?: number | null;
+    targetPowerMaxWatts?: number | null;
+    targetFtpPercent?: number | null;
+    structuredSteps?: any;
+    linkedActivity?: {
+        distance?: number | null;
+        movingTime?: number | null;
+        trimp?: number | null;
+        runningTss?: number | null;
+        bikeTss?: number | null;
+    } | null;
+}
+
+export type Workout = WorkoutItem;
 
 export const PHASE_COLORS: Record<string, string> = {
     BASE: '#1f4fa8',
@@ -40,12 +57,32 @@ const BIKE_TYPES = new Set(['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS', 'BRICK']);
 
 const SWIM_TYPES = new Set(['SWIM', 'OPEN_WATER_SWIM', 'SWIM_DRILL']);
 
-function getModality(type: string): 'run' | 'bike' | 'swim' | 'strength' | 'other' {
-    if (RUN_TYPES.has(type)) return 'run';
-    if (BIKE_TYPES.has(type)) return 'bike';
-    if (SWIM_TYPES.has(type)) return 'swim';
-    if (type === 'STRENGTH') return 'strength';
+function getModality(type: string, sport?: string | null): 'run' | 'bike' | 'swim' | 'strength' | 'other' {
+    const sp = (sport || '').toUpperCase();
+    if (sp === 'BIKE' || BIKE_TYPES.has(type)) return 'bike';
+    if (sp === 'RUN' || RUN_TYPES.has(type)) return 'run';
+    if (sp === 'SWIM' || SWIM_TYPES.has(type)) return 'swim';
+    if (sp === 'STRENGTH' || type === 'STRENGTH') return 'strength';
     return 'other';
+}
+
+function estimateFallbackTss(w: WorkoutItem): number {
+    if (w.plannedTss && w.plannedTss > 0) return w.plannedTss;
+    const durSec = w.targetDuration ?? (w.targetDistance ? (w.targetDistance / 1000) * 330 : 0);
+    if (!durSec || durSec <= 0) return 0;
+    const hours = durSec / 3600;
+    const mod = getModality(w.workoutType, w.sport);
+    let intensityFactor = 0.75;
+    if (['INTERVALS', 'REPETITIONS', 'RIDE_INTERVALS'].includes(w.workoutType)) {
+        intensityFactor = 0.92;
+    } else if (['TEMPO', 'FARTLEK', 'BRICK'].includes(w.workoutType)) {
+        intensityFactor = 0.85;
+    } else if (['LONG_RUN', 'LONG_RIDE'].includes(w.workoutType)) {
+        intensityFactor = 0.72;
+    } else if (mod === 'strength') {
+        intensityFactor = 0.6;
+    }
+    return Math.round(hours * Math.pow(intensityFactor, 2) * 100);
 }
 
 export interface WeekGroup {
@@ -285,4 +322,210 @@ export function computePhaseBands(weeks: WeekGroup[]): PhaseBand[] {
     });
 
     return bands;
+}
+
+export interface WeeklyTssPoint {
+    weekLabel: string;
+    phase: string;
+    plannedTss: number;
+    actualTss: number;
+    bikeTss: number;
+    runTss: number;
+    strengthTss: number;
+    swimTss: number;
+}
+
+export function weeklyTssProgression(weeks: WeekGroup[]): WeeklyTssPoint[] {
+    return weeks.map((week) => {
+        let plannedTss = 0;
+        let actualTss = 0;
+        let bikeTss = 0;
+        let runTss = 0;
+        let strengthTss = 0;
+        let swimTss = 0;
+
+        const phaseCounts = new Map<string, number>();
+
+        for (const w of week.workouts) {
+            if (w.workoutType === 'REST') continue;
+            const p = w.phase || 'BASE';
+            phaseCounts.set(p, (phaseCounts.get(p) || 0) + 1);
+
+            const wTss = w.plannedTss && w.plannedTss > 0 ? w.plannedTss : estimateFallbackTss(w);
+            plannedTss += wTss;
+
+            const mod = getModality(w.workoutType, w.sport);
+            if (mod === 'bike') bikeTss += wTss;
+            else if (mod === 'run') runTss += wTss;
+            else if (mod === 'strength') strengthTss += wTss;
+            else if (mod === 'swim') swimTss += wTss;
+
+            if (w.isCompleted) {
+                const actTss =
+                    w.linkedActivity?.bikeTss ||
+                    w.linkedActivity?.runningTss ||
+                    w.linkedActivity?.trimp ||
+                    wTss;
+                actualTss += actTss;
+            }
+        }
+
+        let phase = 'BASE';
+        let maxCount = 0;
+        for (const [p, count] of phaseCounts) {
+            if (count > maxCount) {
+                maxCount = count;
+                phase = p;
+            }
+        }
+
+        return {
+            weekLabel: week.weekLabel,
+            phase,
+            plannedTss: Math.round(plannedTss),
+            actualTss: Math.round(actualTss),
+            bikeTss: Math.round(bikeTss),
+            runTss: Math.round(runTss),
+            strengthTss: Math.round(strengthTss),
+            swimTss: Math.round(swimTss),
+        };
+    });
+}
+
+export interface WeeklyCyclingVolumePoint {
+    weekLabel: string;
+    phase: string;
+    km: number;
+    actualKm: number;
+    hours: number;
+    rideCount: number;
+}
+
+export function weeklyCyclingVolume(weeks: WeekGroup[]): WeeklyCyclingVolumePoint[] {
+    return weeks.map((week) => {
+        let km = 0;
+        let actualKm = 0;
+        let totalSec = 0;
+        let rideCount = 0;
+        const phaseCounts = new Map<string, number>();
+
+        for (const w of week.workouts) {
+            const isBike = w.sport === 'BIKE' || BIKE_TYPES.has(w.workoutType);
+            if (!isBike || w.workoutType === 'REST') continue;
+
+            rideCount++;
+            const p = w.phase || 'BASE';
+            phaseCounts.set(p, (phaseCounts.get(p) || 0) + 1);
+
+            let rideKm = 0;
+            if (w.targetDistance && w.targetDistance > 0) {
+                rideKm = w.targetDistance / 1000;
+            } else if (w.targetDuration && w.targetDuration > 0) {
+                let estSpeedKmh = 28;
+                if (['RIDE_INTERVALS', 'BIKE_INTERVALS'].includes(w.workoutType)) {
+                    estSpeedKmh = 32;
+                } else if (w.workoutType === 'BIKE_TEMPO' || w.workoutType === 'TEMPO') {
+                    estSpeedKmh = 31;
+                } else if (w.workoutType === 'LONG_RIDE') {
+                    estSpeedKmh = 29;
+                } else if (w.targetPowerWatts && w.targetPowerWatts > 0) {
+                    estSpeedKmh = Math.max(24, Math.min(38, 20 + w.targetPowerWatts / 20));
+                }
+                rideKm = (w.targetDuration / 3600) * estSpeedKmh;
+            }
+
+            km += rideKm;
+            totalSec += w.targetDuration || 0;
+
+            if (w.isCompleted) {
+                const actDist =
+                    w.linkedActivity?.distance && w.linkedActivity.distance > 0
+                        ? w.linkedActivity.distance / 1000
+                        : rideKm;
+                actualKm += actDist;
+            }
+        }
+
+        let phase = 'BASE';
+        let maxCount = 0;
+        for (const [p, count] of phaseCounts) {
+            if (count > maxCount) {
+                maxCount = count;
+                phase = p;
+            }
+        }
+
+        return {
+            weekLabel: week.weekLabel,
+            phase,
+            km: Math.round(km * 10) / 10,
+            actualKm: Math.round(actualKm * 10) / 10,
+            hours: Math.round((totalSec / 3600) * 10) / 10,
+            rideCount,
+        };
+    });
+}
+
+export interface PowerZoneBar {
+    zone: number;
+    name: string;
+    hours: number;
+    color: string;
+}
+
+export const POWER_ZONE_COLORS: Record<number, string> = {
+    1: '#94a3b8',
+    2: '#3b82f6',
+    3: '#10b981',
+    4: '#f59e0b',
+    5: '#ef4444',
+    6: '#8b5cf6',
+};
+
+const POWER_ZONE_NAMES: Record<number, string> = {
+    1: 'Z1 Active Recovery',
+    2: 'Z2 Endurance',
+    3: 'Z3 Tempo',
+    4: 'Z4 Threshold',
+    5: 'Z5 VO2max',
+    6: 'Z6 Anaerobic',
+};
+
+export function powerZoneDistribution(workouts: WorkoutItem[]): PowerZoneBar[] {
+    const zoneHours = new Map<number, number>();
+    for (let z = 1; z <= 6; z++) zoneHours.set(z, 0);
+
+    for (const w of workouts) {
+        const isBike = w.sport === 'BIKE' || BIKE_TYPES.has(w.workoutType);
+        if (!isBike) continue;
+        const durHours = (w.targetDuration ?? 0) / 3600;
+        if (durHours <= 0) continue;
+
+        let z = 2;
+        if (w.workoutType === 'RIDE_INTERVALS') z = 4;
+        else if (w.workoutType === 'RECOVERY') z = 1;
+        else if (w.workoutType === 'LONG_RIDE') z = 2;
+        else if (w.workoutType === 'TEMPO') z = 3;
+
+        if (w.targetPowerWatts && w.targetPowerWatts > 0) {
+            if (w.targetFtpPercent && w.targetFtpPercent > 0) {
+                const pct = w.targetFtpPercent;
+                if (pct <= 55) z = 1;
+                else if (pct <= 75) z = 2;
+                else if (pct <= 90) z = 3;
+                else if (pct <= 105) z = 4;
+                else if (pct <= 120) z = 5;
+                else z = 6;
+            }
+        }
+
+        zoneHours.set(z, (zoneHours.get(z) || 0) + durHours);
+    }
+
+    return Array.from(zoneHours.entries()).map(([zone, hours]) => ({
+        zone,
+        name: POWER_ZONE_NAMES[zone],
+        hours: Math.round(hours * 10) / 10,
+        color: POWER_ZONE_COLORS[zone],
+    }));
 }

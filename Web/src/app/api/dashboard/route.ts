@@ -9,6 +9,7 @@ import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { ensureFitnessCacheUpToDate, resolveActivityEffectiveTss } from '@/lib/metrics/fitnessCache';
 import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
+import { estimateFallbackWorkoutTss } from '@/lib/plan/sportDetection';
 import { handleError } from '@/lib/errors/handler';
 import { getRedisClient } from '@/lib/redis';
 import { logger } from '@/lib/logging/logger';
@@ -560,11 +561,23 @@ export async function GET(req: NextRequest) {
             let wActualDur = 0;
             let wActualTrimp = 0;
 
+            const countedActivityIds = new Set(weekActs.map(a => a.id));
+
             for (const a of weekActs) {
                 const effTss = getEffectiveTss(a, a.runningTss ?? 0, a.bikeTss ?? 0, a.trimp ?? 0);
                 wActualTss += effTss;
                 wActualDur += a.movingTime || 0;
                 wActualTrimp += a.trimp ? Math.round(a.trimp) : (a.movingTime ? Math.round((a.movingTime / 60) * 2.5) : 0);
+            }
+
+            // Include completed workouts that don't already have a counted activity in this week
+            for (const w of weekWorkouts) {
+                if (w.isCompleted && (!w.linkedActivityId || !countedActivityIds.has(w.linkedActivityId))) {
+                    const fallbackTss = estimateFallbackWorkoutTss(w as any);
+                    wActualTss += fallbackTss;
+                    wActualDur += w.targetDuration || 0;
+                    wActualTrimp += Math.round(fallbackTss / 0.85);
+                }
             }
 
             if (mw.isCurrent) {
@@ -638,6 +651,7 @@ export async function GET(req: NextRequest) {
             monthlyPlannedDurationSec: Math.round(monthlyPlannedDurationSec),
             monthlyActualDurationSec: Math.round(monthlyActualDurationSec),
             monthlyWeeksBreakdown,
+            blockWeeksBreakdown: monthlyWeeksBreakdown,
         };
 
         // Serialize BigInt for recent activities

@@ -56,6 +56,82 @@ async function getPlanBuilderConfig(): Promise<{ config: AiConfig; maxTokens: nu
     };
 }
 
+const PROMPT_VERSION = 2;
+
+const CYCLING_SYSTEM_PROMPT = `You are an expert cycling and strength endurance coach AI. Analyze the user's cycling & strength training plan and return a structured JSON evaluation.
+IMPORTANT: This is a dedicated CYCLING (and strength) plan, NOT a triathlon or running plan. Even if the database sport field says TRIATHLON/CUSTOM_TRI, the athlete is training exclusively for cycling and strength. Do NOT penalize the score or flag risks for having zero swimming or zero running workouts.
+Evaluate:
+1. Weekly TSS progression, overload ramp rate, and recovery/deload weeks.
+2. Cycling intensity distribution (Endurance Z2 vs. Sweet Spot / Threshold FTP / VO2max intervals).
+3. Spacing of high-intensity interval rides and heavy strength sessions.
+4. Specificity and progressive overload across phases.
+KEEP IT CONCISE. Use JSON format in your response with these fields: overallScore (number 0-100), overallSummary (string), weekAnalyses (array of objects with weekIndex, score, summary, suggestions), riskFlags (array of objects with flag, severity "low"|"medium"|"high", description), raceReadiness (object with overallScore, enduranceScore, speedScore, recoveryScore, mentalScore), suggestions (array of objects with category, priority "high"|"medium"|"low", title, description). Do not generate overly long text.`;
+
+function detectEffectiveSport(
+    goal: {
+        name?: string | null;
+        sport?: string | null;
+        raceType?: string | null;
+        runsPerWeek?: number | null;
+        ridesPerWeek?: number | null;
+        swimsPerWeek?: number | null;
+        strengthPerWeek?: number | null;
+    },
+    workouts: Array<{
+        workoutType: string;
+        sport?: string | null;
+        customName?: string | null;
+    }>
+): 'CYCLING' | 'TRIATHLON' | 'RUN' {
+    const nameLower = (goal.name || '').toLowerCase();
+    const isCyclingKeyword =
+        nameLower.includes('cycling') ||
+        nameLower.includes('bike') ||
+        nameLower.includes('mywhoosh') ||
+        nameLower.includes('zwift') ||
+        nameLower.includes('ftp') ||
+        nameLower.includes('sweet spot');
+
+    let bikeCount = 0;
+    let runCount = 0;
+    let swimCount = 0;
+
+    for (const w of workouts) {
+        const type = (w.workoutType || '').toUpperCase();
+        const sp = (w.sport || '').toUpperCase();
+        if (sp === 'BIKE' || ['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS'].includes(type)) {
+            bikeCount++;
+        } else if (sp === 'RUN' || ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'REPETITIONS', 'RECOVERY'].includes(type)) {
+            runCount++;
+        } else if (sp === 'SWIM' || ['SWIM', 'OPEN_WATER_SWIM', 'SWIM_DRILL'].includes(type)) {
+            swimCount++;
+        }
+    }
+
+    if (bikeCount > 0 && runCount === 0 && swimCount === 0) {
+        return 'CYCLING';
+    }
+
+    if (
+        goal.ridesPerWeek != null &&
+        goal.ridesPerWeek > 0 &&
+        (!goal.runsPerWeek || goal.runsPerWeek === 0) &&
+        (!goal.swimsPerWeek || goal.swimsPerWeek === 0)
+    ) {
+        return 'CYCLING';
+    }
+
+    if (isCyclingKeyword && swimCount === 0 && runCount === 0) {
+        return 'CYCLING';
+    }
+
+    if (goal.sport === 'TRIATHLON') {
+        return 'TRIATHLON';
+    }
+
+    return 'RUN';
+}
+
 function buildSystemPrompt(analysisType: string, targetWeekIndex?: number): string {
     const base = `You are an expert running and triathlon coach AI. Analyze the training plan and provide actionable, specific feedback. KEEP IT CONCISE. Use JSON format in your response with these fields: overallScore (number 0-100), overallSummary (string), weekAnalyses (array of objects with weekIndex, score, summary, suggestions), riskFlags (array of objects with flag, severity "low"|"medium"|"high", description), raceReadiness (object with overallScore, enduranceScore, speedScore, recoveryScore, mentalScore), suggestions (array of objects with category, priority "high"|"medium"|"low", title, description). Do not generate overly long text.`;
 
@@ -73,18 +149,35 @@ function buildSystemPrompt(analysisType: string, targetWeekIndex?: number): stri
     }
 }
 
-function buildUserPrompt(goal: Record<string, unknown>, workouts: Array<Record<string, unknown>>, context?: string): string {
+function buildUserPrompt(
+    goal: Record<string, unknown>,
+    workouts: Array<Record<string, unknown>>,
+    effectiveSport: 'CYCLING' | 'TRIATHLON' | 'RUN',
+    context?: string
+): string {
     const workoutSummary = workouts.map(w => {
         const date = w.scheduledDate instanceof Date ? w.scheduledDate.toISOString().split('T')[0] : String(w.scheduledDate);
         const desc = fenceUntrusted(w.description as string | undefined);
-        return `- ${date}: ${w.workoutType} | ${w.targetDistance != null ? `${w.targetDistance}m` : 'no distance'} | ${w.targetDuration != null ? `${w.targetDuration}s` : 'no duration'} | ${desc}`;
+        const namePart = w.customName ? ` [${fenceUntrusted(w.customName as string)}]` : '';
+        const powerPart = w.targetPowerWatts != null && Number(w.targetPowerWatts) > 0 ? ` | ${w.targetPowerWatts}W` : '';
+        const ftpPart = w.targetFtpPercent != null && Number(w.targetFtpPercent) > 0 ? ` | ${w.targetFtpPercent}% FTP` : '';
+        const tssPart = w.plannedTss != null && Number(w.plannedTss) > 0 ? ` | ${w.plannedTss} TSS` : '';
+        return `- ${date}: ${w.workoutType}${namePart} | ${w.targetDistance != null ? `${w.targetDistance}m` : 'no dist'} | ${w.targetDuration != null ? `${w.targetDuration}s` : 'no dur'}${powerPart}${ftpPart}${tssPart} | ${desc}`;
     }).join('\n');
 
     const boundedContext = context ? fenceUntrusted(context.slice(0, 2000)) : '';
 
+    const sportLine = effectiveSport === 'CYCLING'
+        ? 'Sport: CYCLING & STRENGTH (Dedicated Bike Plan — No Running or Swimming)'
+        : `Sport: ${goal.sport}`;
+
+    const raceTypeLine = effectiveSport === 'CYCLING'
+        ? 'Race / Goal Type: Dedicated Cycling Season'
+        : `Race Type: ${goal.raceType || 'Not specified'}`;
+
     return `Training Plan: ${fenceUntrusted(goal.name as string | undefined)}
-Sport: ${goal.sport}
-Race Type: ${goal.raceType || 'Not specified'}
+${sportLine}
+${raceTypeLine}
 Race Date: ${goal.raceDate instanceof Date ? goal.raceDate.toISOString().split('T')[0] : String(goal.raceDate || 'Not set')}
 Plan Start: ${goal.planStartDate instanceof Date ? goal.planStartDate.toISOString().split('T')[0] : String(goal.planStartDate || 'Not set')}
 Workout Day: ${goal.workoutDay ?? 3}
@@ -112,15 +205,53 @@ export async function GET(req: Request, ctx: RouteContext) {
 
         const goal = await prisma.goal.findFirst({
             where: { id: goalId, userId: session.user.id },
+            select: {
+                id: true,
+                name: true,
+                sport: true,
+                raceType: true,
+                runsPerWeek: true,
+                ridesPerWeek: true,
+                swimsPerWeek: true,
+                strengthPerWeek: true,
+                workouts: {
+                    select: {
+                        workoutType: true,
+                        sport: true,
+                        customName: true,
+                        plannedTss: true,
+                        targetPowerWatts: true,
+                        targetFtpPercent: true,
+                    },
+                },
+            },
         });
 
         if (!goal) {
             return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
         }
 
+        const effectiveSport = detectEffectiveSport(goal, goal.workouts);
+
         const analysis = await prisma.aiPlanAnalysis.findUnique({
             where: { goalId },
         });
+
+        // Invalidate outdated cache if cycling plan was evaluated with triathlon v1 prompt
+        if (effectiveSport === 'CYCLING' && analysis) {
+            const isV2 = analysis.modelUsed && analysis.modelUsed.includes(`:v${PROMPT_VERSION}`);
+            const mentionsMissingTriathlon =
+                analysis.overallSummary?.toLowerCase().includes('swim') ||
+                analysis.overallSummary?.toLowerCase().includes('triathlon') ||
+                (analysis.riskFlags as any[])?.some(
+                    (f) =>
+                        (f.description || f.flag || '').toLowerCase().includes('swim') ||
+                        (f.description || f.flag || '').toLowerCase().includes('running')
+                );
+            if (!isV2 || mentionsMissingTriathlon) {
+                return NextResponse.json({ analysis: null });
+            }
+        }
 
         return NextResponse.json({ analysis });
     } catch (error) {
@@ -193,6 +324,19 @@ export async function POST(req: Request, ctx: RouteContext) {
 
         const goal = await prisma.goal.findFirst({
             where: { id: goalId, userId: session.user.id },
+            select: {
+                id: true,
+                name: true,
+                sport: true,
+                raceType: true,
+                raceDate: true,
+                planStartDate: true,
+                workoutDay: true,
+                runsPerWeek: true,
+                ridesPerWeek: true,
+                swimsPerWeek: true,
+                strengthPerWeek: true,
+            },
         });
 
         if (!goal) {
@@ -221,8 +365,31 @@ export async function POST(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: `Invalid analysisType. Must be one of: ${validTypes.join(', ')}` }, { status: 400 });
         }
 
-        const systemPrompt = buildSystemPrompt(analysisType || 'full', targetWeekIndex);
-        const userPrompt = buildUserPrompt(goal, workouts, context);
+        const effectiveSport = detectEffectiveSport(goal, workouts);
+
+        let systemPrompt: string;
+        if (effectiveSport === 'CYCLING') {
+            switch (analysisType) {
+                case 'week':
+                    systemPrompt = `${CYCLING_SYSTEM_PROMPT} Focus your analysis specifically on week ${targetWeekIndex || 'the specified week'}. Provide detailed analysis for that week only. Include specific workout adjustments.`;
+                    break;
+                case 'risks':
+                    systemPrompt = `${CYCLING_SYSTEM_PROMPT} Focus primarily on identifying injury and overtraining risks, interval spacing, recovery weeks, and balancing heavy strength workouts with high-power rides.`;
+                    break;
+                case 'readiness':
+                    systemPrompt = `${CYCLING_SYSTEM_PROMPT} Focus on cycling peak power, FTP readiness, muscular endurance, and taper/freshness before target rides.`;
+                    break;
+                case 'alternatives':
+                    systemPrompt = `${CYCLING_SYSTEM_PROMPT} Provide alternative cycling and strength workout suggestions. Focus on sweet-spot variations, VO2max micro-intervals, and recovery spins.`;
+                    break;
+                default:
+                    systemPrompt = CYCLING_SYSTEM_PROMPT;
+            }
+        } else {
+            systemPrompt = buildSystemPrompt(analysisType || 'full', targetWeekIndex);
+        }
+
+        const userPrompt = buildUserPrompt(goal, workouts, effectiveSport, context);
 
         const messages: ChatMessage[] = [
             { role: 'system', content: systemPrompt },
@@ -306,7 +473,7 @@ export async function POST(req: Request, ctx: RouteContext) {
                 riskFlags: analysisData.riskFlags || [],
                 raceReadiness: analysisData.raceReadiness || {},
                 suggestions: analysisData.suggestions || [],
-                modelUsed: builderConfig.config.model,
+                modelUsed: `${builderConfig.config.model}:v${PROMPT_VERSION}`,
                 inputTokens: inputTokensEstimate,
                 outputTokens: outputTokensEstimate,
             },
@@ -317,7 +484,7 @@ export async function POST(req: Request, ctx: RouteContext) {
                 riskFlags: analysisData.riskFlags || [],
                 raceReadiness: analysisData.raceReadiness || {},
                 suggestions: analysisData.suggestions || [],
-                modelUsed: builderConfig.config.model,
+                modelUsed: `${builderConfig.config.model}:v${PROMPT_VERSION}`,
                 inputTokens: inputTokensEstimate,
                 outputTokens: outputTokensEstimate,
             },

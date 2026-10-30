@@ -3,12 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { AlertCircle, CalendarDays, Clock, Download, Link2, Route, Save, Trash2 } from 'lucide-react';
+import { AlertCircle, CalendarDays, Clock, Link2, Route, Save, Trash2 } from 'lucide-react';
 import ActivityPicker from './ActivityPicker';
 import { Modal } from '@/components/ui/Modal';
 import type { Workout } from '@/lib/types';
-import { downloadWorkoutFit } from '@/lib/plans/fit-export';
-import { generateMyWhooshZwoXml } from '@/lib/plans/zwoExporter';
 
 interface EditWorkoutModalProps {
     isOpen: boolean;
@@ -57,30 +55,6 @@ function toInputDate(value?: string | Date): string {
 function readNumber(value: string): number {
     const parsed = parseFloat(value);
     return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function exportMyWhooshZwo(workout: Workout) {
-    const customName = (workout as Workout & { customName?: string | null }).customName;
-    const xml = generateMyWhooshZwoXml({
-        name: customName || workout.description || workout.workoutType,
-        description: workout.description || '',
-        workoutType: workout.workoutType,
-        targetDurationSeconds: workout.targetDuration || 3600,
-        phase: workout.phase || undefined,
-        structuredSteps: (workout as unknown as { structuredSteps?: any }).structuredSteps ?? null,
-    });
-    const blob = new Blob([xml], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const safeName = (customName || workout.description || workout.workoutType || 'ride')
-        .replace(/[^a-z0-9-_]+/gi, '_')
-        .slice(0, 48);
-    a.download = `RunFlow_${safeName}.zwo`;
-    document.body.appendChild(a);
-    a.click();
-    URL.revokeObjectURL(url);
-    document.body.removeChild(a);
 }
 
 function getDisplayActivityTitle(activity: { name?: string | null; startDate?: string | Date; type?: string | null }): string {
@@ -353,33 +327,6 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                     </div>
                 )}
 
-                {workout && (
-                    <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-md border border-line bg-surface/50 text-xs">
-                        <span className="text-foreground-muted font-medium">Export Workout:</span>
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => downloadWorkoutFit(workout)}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded border border-line bg-background-secondary text-foreground hover:bg-surface-hover font-medium transition-colors"
-                                title="Download Garmin/Coros/Wahoo FIT workout file"
-                            >
-                                <Download className="w-3.5 h-3.5 text-accent-cyan" />
-                                Export .FIT
-                            </button>
-                            {(['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS', 'BRICK'].includes(type) || (workout as any)?.sport === 'BIKE') && (
-                                <button
-                                    type="button"
-                                    onClick={() => exportMyWhooshZwo(workout)}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded border border-accent-orange/30 bg-accent-orange/10 text-accent-orange hover:bg-accent-orange/20 font-medium transition-colors"
-                                    title="Download MyWhoosh ZWO workout file"
-                                >
-                                    <Download className="w-3.5 h-3.5" />
-                                    Export .ZWO
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                )}
 
                 <div className="flex gap-3 pt-1">
                     {workout && (

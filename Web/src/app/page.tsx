@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, AlertCircle, BarChart3, CalendarRange, Hand, Target } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { LinkIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { RaceCountdown, ActivityList, SettingsModal, Footer, MinimalistPillsMenu, PullToRefresh } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
 import ProfileModal from '@/components/ProfileModal';
@@ -110,7 +110,14 @@ export default function Dashboard() {
     const activeGoal: Goal | undefined = goalsList.find((g: Goal) => g.isActive);
     const incompleteGoal: Goal | null = dashboardData?.incompleteGoal || null;
     const planTileGoal: Goal | null = activeGoal || incompleteGoal;
-    const weeklyWorkouts: Workout[] = activeGoal?.workouts || [];
+    const now = new Date();
+    const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 });
+    const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 });
+    const allGoalWorkouts: Workout[] = activeGoal?.workouts || [];
+    const weeklyWorkouts: Workout[] = allGoalWorkouts.filter((w) => {
+        const d = new Date(w.scheduledDate);
+        return d >= currentWeekStart && d <= currentWeekEnd;
+    });
 
     const today = new Date().toDateString();
 
@@ -287,6 +294,8 @@ export default function Dashboard() {
                                             {planTileGoal ? (
                                                 <RaceCountdown
                                                     goal={planTileGoal}
+                                                    statsData={statsData}
+                                                    weeklyWorkouts={weeklyWorkouts}
                                                     className="h-full"
                                                     isIncompleteArchived={!activeGoal && !!incompleteGoal}
                                                     onSelectRace={(goal, activity, mode) => {

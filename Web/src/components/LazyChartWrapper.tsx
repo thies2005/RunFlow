@@ -44,13 +44,17 @@ function LazyChartWrapperComponent({
     }, []);
 
     return (
-        <div ref={ref} style={{ minHeight: height }}>
-            {isVisible ? children : (
+        <div ref={ref} style={{ height, minHeight: height }} className="w-full relative">
+            {isVisible ? (
+                <div className="w-full h-full">{children}</div>
+            ) : (
                 placeholder || (
                     <div
-                        className="bg-background-tertiary rounded-md w-full"
+                        className="w-full h-full bg-background-secondary/50 animate-pulse rounded-lg flex items-center justify-center border border-glass-border"
                         style={{ height }}
-                    />
+                    >
+                        <span className="text-foreground-muted text-sm">Loading chart...</span>
+                    </div>
                 )
             )}
         </div>

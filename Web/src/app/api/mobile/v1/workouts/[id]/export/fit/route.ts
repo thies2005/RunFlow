@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { exportWorkoutFit } from '@/lib/plans/fit-export';
 
 export async function GET(
   request: NextRequest,
@@ -33,24 +34,12 @@ export async function GET(
 
     let fitBytes: Uint8Array | null = null;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const fitModule = require('@/lib/plans/fit-export');
-      if (typeof fitModule?.exportWorkoutFit === 'function') {
-        fitBytes = fitModule.exportWorkoutFit(workout);
-      }
+      fitBytes = exportWorkoutFit(workout);
     } catch {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const fitModule = require('../../../../../../lib/plans/fit-export');
-        if (typeof fitModule?.exportWorkoutFit === 'function') {
-          fitBytes = fitModule.exportWorkoutFit(workout);
-        }
-      } catch {
-        // fit-export may be loaded in parallel
-      }
+      return errorResponses.badRequest('Failed to generate FIT export for this workout');
     }
 
-    if (!fitBytes) {
+    if (!fitBytes || fitBytes.length === 0) {
       return errorResponses.badRequest('FIT exporter not available for this workout');
     }
 

@@ -61,6 +61,7 @@ enum class AnalyticsTab {
 fun AnalyticsScreen(
     container: AppContainer,
     targetSection: String? = null,
+    onOpenZones: () -> Unit = {},
 ) {
     val settings by container.settings.settings.collectAsState(initial = AppSettings())
     val unit = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
@@ -223,18 +224,21 @@ fun AnalyticsScreen(
                         bundle = a,
                         activities = activities,
                         unit = unit,
+                        onOpenZones = onOpenZones,
                     )
                 }
                 AnalyticsTab.RUNNING -> {
                     RunningAnalyticsTab(
                         bundle = a,
                         unit = unit,
+                        onOpenZones = onOpenZones,
                     )
                 }
                 AnalyticsTab.CYCLING -> {
                     CyclingAnalyticsTab(
                         bundle = a,
                         unit = unit,
+                        onOpenZones = onOpenZones,
                     )
                 }
                 AnalyticsTab.RECOVERY -> {

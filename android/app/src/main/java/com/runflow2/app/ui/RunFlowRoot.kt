@@ -360,7 +360,11 @@ fun RunFlowRoot(container: AppContainer) {
                     val section = remember {
                         container.analyticsTargetSection.also { container.analyticsTargetSection = null }
                     }
-                    AnalyticsScreen(container = container, targetSection = section)
+                    AnalyticsScreen(
+                        container = container,
+                        targetSection = section,
+                        onOpenZones = { navController.navigate(Routes.HR_ZONES) },
+                    )
                 }
 
                 composable(Routes.ATHLETE) {

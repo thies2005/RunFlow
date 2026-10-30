@@ -21,10 +21,15 @@ import com.runflow2.app.data.sync.mergeInto
 import com.runflow2.app.data.sync.reconcileCreatedWorkout
 import com.runflow2.app.data.sync.toDailyEntry
 import com.runflow2.app.data.sync.toWorkoutEntity
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -90,12 +95,81 @@ class SyncManager(
 
     private val mutex = Mutex()
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
+    private val syncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var fastPushJob: Job? = null
+
+    init {
+        repository.onMutationCommitted = { triggerFastPush(it) }
+    }
 
     private val _status = MutableStateFlow(SyncStatus())
     val status: StateFlow<SyncStatus> = _status
 
     /** Outbox depth for UI badges. */
     val pendingCount = db.syncQueueDao().observePendingCount()
+
+    fun triggerFastPush(reason: String = "mutation") {
+        fastPushJob?.cancel()
+        fastPushJob = syncScope.launch {
+            delay(250)
+            pushPendingNow(reason)
+        }
+    }
+
+    suspend fun pushPendingNow(reason: String): SyncResult = mutex.withLock {
+        authStore.state.first { it.initialized }
+        if (!authStore.state.value.loggedIn) {
+            AppLog.d(TAG, "pushPendingNow skipped (not signed in), reason=$reason")
+            return SyncResult(skipped = true)
+        }
+        AppLog.i(TAG, "pushPendingNow start, reason=$reason")
+        _status.value = _status.value.copy(running = true, lastMessage = "Syncing…")
+        val result = try {
+            withContext(Dispatchers.IO) {
+                cleanDemoDataOnFirstLogin()
+                uploadLocalPlans()
+                val (pushed, failed) = drainOutbox()
+                try {
+                    pushDirtyReadiness()
+                } catch (e: IOException) {
+                    AppLog.w(TAG, "readiness fast-push skipped (${e.message ?: "io error"})")
+                } catch (e: HttpException) {
+                    if (e.code() == 401) throw e
+                    AppLog.w(TAG, "readiness fast-push failed: HTTP ${e.code()}", e)
+                }
+                SyncResult(pushed = pushed, failed = failed)
+            }
+        } catch (e: IOException) {
+            AppLog.w(TAG, "pushPendingNow offline (${e.message ?: "io error"}), reason=$reason", e)
+            _status.value = SyncStatus(
+                running = false,
+                lastSyncAt = _status.value.lastSyncAt,
+                lastMessage = "Offline — changes stay queued",
+            )
+            return SyncResult(skipped = true)
+        } catch (e: HttpException) {
+            AppLog.e(TAG, "pushPendingNow aborted: server error ${e.code()}", e)
+            _status.value = SyncStatus(
+                running = false,
+                lastSyncAt = _status.value.lastSyncAt,
+                lastMessage = "Server error ${e.code()}",
+            )
+            return SyncResult(failed = 1)
+        } finally {
+            _status.value = _status.value.copy(running = false)
+        }
+
+        val now = System.currentTimeMillis()
+        val msg = buildString {
+            append(if (result.pushed > 0) "↑${result.pushed} " else "")
+            append(if (result.failed > 0) "⚠${result.failed}" else "")
+            if (isEmpty()) append("Up to date")
+        }
+        _status.value = SyncStatus(running = false, lastSyncAt = now, lastMessage = msg.trim())
+        settings.setLastSync(now, msg.trim())
+        AppLog.i(TAG, "pushPendingNow done (${msg.trim()}), reason=$reason")
+        result
+    }
 
     suspend fun syncNow(reason: String, forceStrava: Boolean = false): SyncResult = mutex.withLock {
         // Wait for the persisted session to be restored: without this, the
@@ -173,42 +247,9 @@ class SyncManager(
         uploadLocalPlans()
 
         // ---- push: drain the outbox, oldest first ----
-        while (true) {
-            val batch = db.syncQueueDao().nextBatch(20)
-            if (batch.isEmpty()) break
-            var progress = false
-            for (item in batch) {
-                val now = System.currentTimeMillis()
-                try {
-                    handleOutboxItem(item.entityType, item.localId, item.payloadJson)
-                    db.syncQueueDao().markCompleted(item.id)
-                    pushed++
-                    progress = true
-                } catch (e: HttpException) {
-                    failed++
-                    if (e.code() in 400..499 && e.code() != 408 && e.code() != 429) {
-                        // Client error: retrying can never succeed — dead-letter,
-                        // but retain the row so nothing is silently lost.
-                        AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered: HTTP ${e.code()}", e)
-                        db.syncQueueDao().markDead(item.id, now)
-                    } else if (item.retryCount + 1 >= item.maxRetries) {
-                        AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered after ${item.retryCount + 1} tries: HTTP ${e.code()}", e)
-                        db.syncQueueDao().markDead(item.id, now)
-                    } else {
-                        AppLog.w(TAG, "outbox ${item.entityType}(${item.localId}) retry ${item.retryCount + 1}/${item.maxRetries}: HTTP ${e.code()}", e)
-                        db.syncQueueDao().incrementRetry(item.id, now)
-                    }
-                    progress = true
-                } catch (e: IOException) {
-                    // Connection dropped: stop draining, retry next window.
-                    AppLog.w(TAG, "outbox push interrupted (${e.message ?: "io error"}) — will retry", e)
-                    db.syncQueueDao().incrementRetry(item.id, now)
-                    break
-                }
-            }
-            if (!progress) break
-        }
-        if (pushed > 0) AppLog.i(TAG, "pushed $pushed outbox item(s)")
+        val (outboxPushed, outboxFailed) = drainOutbox()
+        pushed += outboxPushed
+        failed += outboxFailed
 
         // ---- pull: server state wins ----
         var (pulled, pruned) = pullActivities()
@@ -297,22 +338,54 @@ class SyncManager(
         return SyncResult(pushed = pushed, pulled = pulled, pruned = pruned, failed = failed)
     }
 
+    private suspend fun drainOutbox(): Pair<Int, Int> {
+        var pushed = 0
+        var failed = 0
+        while (true) {
+            val batch = db.syncQueueDao().nextBatch(20)
+            if (batch.isEmpty()) break
+            var progress = false
+            for (item in batch) {
+                val now = System.currentTimeMillis()
+                try {
+                    handleOutboxItem(item.entityType, item.localId, item.payloadJson)
+                    db.syncQueueDao().markCompleted(item.id)
+                    pushed++
+                    progress = true
+                } catch (e: HttpException) {
+                    failed++
+                    if (e.code() in 400..499 && e.code() != 408 && e.code() != 429) {
+                        // Client error: retrying can never succeed — dead-letter,
+                        // but retain the row so nothing is silently lost.
+                        AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered: HTTP ${e.code()}", e)
+                        db.syncQueueDao().markDead(item.id, now)
+                    } else if (item.retryCount + 1 >= item.maxRetries) {
+                        AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered after ${item.retryCount + 1} tries: HTTP ${e.code()}", e)
+                        db.syncQueueDao().markDead(item.id, now)
+                    } else {
+                        AppLog.w(TAG, "outbox ${item.entityType}(${item.localId}) retry ${item.retryCount + 1}/${item.maxRetries}: HTTP ${e.code()}", e)
+                        db.syncQueueDao().incrementRetry(item.id, now)
+                    }
+                    progress = true
+                } catch (e: IOException) {
+                    // Connection dropped: stop draining, retry next window.
+                    AppLog.w(TAG, "outbox push interrupted (${e.message ?: "io error"}) — will retry", e)
+                    db.syncQueueDao().incrementRetry(item.id, now)
+                    break
+                }
+            }
+            if (!progress) break
+        }
+        if (pushed > 0) AppLog.i(TAG, "pushed $pushed outbox item(s)")
+        return pushed to failed
+    }
+
     /**
-     * Health-metrics reconciliation, gated on [AppSettings.healthMetricsSyncEnabled]:
-     *  1. refresh today's score cache (the Health Connect import ran earlier
-     *     and leaves the cache columns null on fresh rows);
-     *  2. push every dirty day as a POST /readiness/daily upsert and mark the
-     *     accepted dates clean — failures stay dirty and retry next sync;
-     *  3. on the very first sync (no push ever happened) pull the server's
-     *     90-day history so a second device starts from shared data — dirty
-     *     local rows win, otherwise a strictly newer server record replaces
-     *     the local one;
-     *  4. after a successful push, upload the RHR/sleep baselines (skipped
-     *     silently when neither has enough data yet).
+     * Pushes dirty readiness day records and baseline (no history pull).
      */
-    private suspend fun syncReadiness() {
+    private suspend fun pushDirtyReadiness(): Int {
         val s = settings.settingsOnce()
-        if (!s.healthMetricsSyncEnabled) return
+        if (!s.healthMetricsSyncEnabled) return 0
 
         val series = repository.dailyLoadSeries()
         repository.recomputeDailyReadiness(LocalDate.now(), series)
@@ -336,8 +409,41 @@ class SyncManager(
             AppLog.i(TAG, "readiness pushed ${pushedDates.size} day(s)")
         }
 
+        // ---- baseline upload after a successful push (best-effort) ----
+        if (pushedDates.isNotEmpty()) {
+            val baseline = BaselineDto(
+                rhrMedian30Day = repository.rhrBaseline30d(),
+                sleepAverage28Day = repository.sleepAverage28d(),
+            )
+            if (baseline.rhrMedian30Day != null || baseline.sleepAverage28Day != null) {
+                client.api().putReadinessBaseline(baseline)
+            }
+        }
+        return pushedDates.size
+    }
+
+    /**
+     * Health-metrics reconciliation, gated on [AppSettings.healthMetricsSyncEnabled]:
+     *  1. refresh today's score cache (the Health Connect import ran earlier
+     *     and leaves the cache columns null on fresh rows);
+     *  2. push every dirty day as a POST /readiness/daily upsert and mark the
+     *     accepted dates clean — failures stay dirty and retry next sync;
+     *  3. on the very first sync (no push ever happened) pull the server's
+     *     90-day history so a second device starts from shared data — dirty
+     *     local rows win, otherwise a strictly newer server record replaces
+     *     the local one;
+     *  4. after a successful push, upload the RHR/sleep baselines (skipped
+     *     silently when neither has enough data yet).
+     */
+    private suspend fun syncReadiness() {
+        val s = settings.settingsOnce()
+        if (!s.healthMetricsSyncEnabled) return
+        val isFirstSync = s.readinessLastPushAt == 0L
+
+        pushDirtyReadiness()
+
         // ---- first-sync pull: backfill from the server's history ----
-        if (s.readinessLastPushAt == 0L) {
+        if (isFirstSync) {
             val today = LocalDate.now()
             val history = client.api().getReadinessHistory(
                 start = today.minusDays(READINESS_PULL_DAYS).toString(),
@@ -350,17 +456,6 @@ class SyncManager(
                 pulledReadiness++
             }
             if (pulledReadiness > 0) AppLog.i(TAG, "readiness history pulled $pulledReadiness day(s)")
-        }
-
-        // ---- baseline upload after a successful push (best-effort) ----
-        if (pushedDates.isNotEmpty()) {
-            val baseline = BaselineDto(
-                rhrMedian30Day = repository.rhrBaseline30d(),
-                sleepAverage28Day = repository.sleepAverage28d(),
-            )
-            if (baseline.rhrMedian30Day != null || baseline.sleepAverage28Day != null) {
-                client.api().putReadinessBaseline(baseline)
-            }
         }
     }
 
@@ -439,7 +534,17 @@ class SyncManager(
                 db.profileDao().get()?.let { db.profileDao().upsert(it.copy(dirty = false)) }
             }
             TYPE_WORKOUT_UPDATE -> {
-                val req = json.decodeFromString(PatchWorkoutRequest.serializer(), payloadJson)
+                var req = json.decodeFromString(PatchWorkoutRequest.serializer(), payloadJson)
+                if (req.linkedActivityId != null) {
+                    val localAct = db.activityDao().byId(req.linkedActivityId!!)
+                    if (localAct != null) {
+                        if (localAct.serverId != null) {
+                            req = req.copy(linkedActivityId = localAct.serverId)
+                        } else {
+                            throw IOException("Deferring workout update until linked activity ${localAct.id} is uploaded")
+                        }
+                    }
+                }
                 client.api().patchWorkout(localId, req)
                 db.workoutDao().byId(localId)?.let { db.workoutDao().upsert(it.copy(dirty = false)) }
             }
@@ -513,7 +618,15 @@ class SyncManager(
         val seenIds = HashSet<String>(serverGoals.size)
         for (g in serverGoals) {
             seenIds += g.id
-            val (goal, serverWorkouts) = g.toEntities() ?: continue
+            val (goal, rawServerWorkouts) = g.toEntities() ?: continue
+            val serverWorkouts = rawServerWorkouts.map { sw ->
+                if (sw.activityId != null) {
+                    val localActId = db.activityDao().byServerId(sw.activityId)?.id ?: sw.activityId
+                    sw.copy(activityId = localActId)
+                } else {
+                    sw
+                }
+            }
             val existing = db.goalDao().byId(goal.id)
             db.goalDao().upsert(if (existing?.dirty == true) existing else goal)
             val localWorkouts = db.workoutDao().forGoal(goal.id)

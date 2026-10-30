@@ -2,6 +2,7 @@ package com.runflow2.app.ui.screens.analytics
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,10 +45,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.core.math.BestEffortsEngine
@@ -60,6 +65,7 @@ import com.runflow2.app.ui.components.FitnessChart
 import com.runflow2.app.ui.components.SectionTitle
 import com.runflow2.app.ui.components.Sparkline
 import com.runflow2.app.ui.components.StatTile
+import com.runflow2.app.ui.components.TsbBar
 import com.runflow2.app.ui.components.WeeklyVolumeBars
 import com.runflow2.app.ui.components.themedColor
 import com.runflow2.app.ui.theme.semanticColors
@@ -71,6 +77,7 @@ fun CyclingAnalyticsTab(
     bundle: AnalyticsBundle,
     unit: DistanceUnit,
     modifier: Modifier = Modifier,
+    onOpenZones: () -> Unit = {},
 ) {
     val cycling = bundle.cycling
     val hasCyclingData = cycling != null && (
@@ -141,7 +148,10 @@ fun CyclingAnalyticsTab(
 
         // 5. 7-Zone Coggan Power Distribution Card
         if (cycling.powerZoneDistribution.isNotEmpty()) {
-            CyclingPowerZoneDistributionCard(zones = cycling.powerZoneDistribution)
+            CyclingPowerZoneDistributionCard(
+                zones = cycling.powerZoneDistribution,
+                onOpenZones = onOpenZones,
+            )
         }
 
         // 6. Recent Rides Power Summary
@@ -272,6 +282,7 @@ private fun CyclingMmpCurveCard(
     val durations = remember(mmp42d, mmp1y) {
         (mmp42Map.keys + mmp1yMap.keys).sorted()
     }
+    var scrubIndex by remember { mutableStateOf<Int?>(null) }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -280,77 +291,229 @@ private fun CyclingMmpCurveCard(
         ),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SectionTitle("Mean Maximal Power (MMP)")
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.streamPower, CircleShape))
-                        Text("42d", style = MaterialTheme.typography.labelSmall)
+            SectionTitle(
+                text = "Mean Maximal Power (MMP)",
+                trailing = {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.streamPower, CircleShape))
+                            Text("42d", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.outline, CircleShape))
+                            Text("1Y Peak", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                        }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.outline, CircleShape))
-                        Text("1Y Peak", style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
+                },
+            )
 
             // Graphical MMP Curve Canvas
             if (durations.isNotEmpty()) {
                 val p42Color = MaterialTheme.semanticColors.streamPower
                 val p1yColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)
-                val gridColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                val gridColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                val scrubLineColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
 
-                val maxW = remember(durations, mmp42Map, mmp1yMap) {
-                    durations.maxOfOrNull { dur ->
-                        maxOf(mmp42Map[dur]?.maxWatts ?: 0.0, mmp1yMap[dur]?.maxWatts ?: 0.0)
-                    }?.coerceAtLeast(100.0) ?: 400.0
+                val allWatts = remember(durations, mmp42Map, mmp1yMap) {
+                    durations.flatMap { listOfNotNull(mmp42Map[it]?.maxWatts, mmp1yMap[it]?.maxWatts) }.filter { it > 0.0 }
+                }
+                val minW = (allWatts.minOrNull() ?: 100.0) * 0.90
+                val maxW = (allWatts.maxOrNull() ?: 400.0) * 1.06
+                val rangeW = (maxW - minW).coerceAtLeast(1.0)
+
+                // Scrubber live readout pill
+                if (scrubIndex != null) {
+                    val scrubDur = durations.getOrNull(scrubIndex!!)
+                    if (scrubDur != null) {
+                        val s42 = mmp42Map[scrubDur]?.maxWatts?.roundToInt()
+                        val s1y = mmp1yMap[scrubDur]?.maxWatts?.roundToInt()
+                        val readout = "${formatPowerDuration(scrubDur)} · 42d: ${s42?.let { "$it W" } ?: "—"} · 1Y Peak: ${s1y?.let { "$it W" } ?: "—"}"
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                        ) {
+                            Text(
+                                text = readout,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                maxLines = 1,
+                            )
+                        }
+                    }
                 }
 
-                Canvas(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(140.dp)
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
-                ) {
-                    val w = size.width
-                    val h = size.height
-
-                    // Grid lines
-                    drawLine(gridColor, Offset(0f, 0f), Offset(w, 0f), strokeWidth = 1f)
-                    drawLine(gridColor, Offset(0f, h * 0.5f), Offset(w, h * 0.5f), strokeWidth = 1f)
-                    drawLine(gridColor, Offset(0f, h), Offset(w, h), strokeWidth = 1f)
-
-                    if (durations.size >= 2) {
-                        // Plot 1Y curve
-                        val path1y = Path()
-                        durations.forEachIndexed { idx, dur ->
-                            val x = (idx.toFloat() / (durations.size - 1)) * w
-                            val watts = mmp1yMap[dur]?.maxWatts ?: 0.0
-                            val y = h - ((watts / maxW).toFloat() * h).coerceIn(0f, h)
-                            if (idx == 0) path1y.moveTo(x, y) else path1y.lineTo(x, y)
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(140.dp),
+                    ) {
+                        // Left-hand Y-axis column (38.dp wide)
+                        Column(
+                            modifier = Modifier
+                                .width(38.dp)
+                                .height(140.dp)
+                                .padding(vertical = 4.dp),
+                            verticalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                "${maxW.roundToInt()}W",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                            Text(
+                                "${((minW + maxW) / 2).roundToInt()}W",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                            Text(
+                                "${minW.roundToInt()}W",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
                         }
-                        drawPath(path1y, p1yColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
 
-                        // Plot 42d curve
-                        val path42 = Path()
-                        durations.forEachIndexed { idx, dur ->
-                            val x = (idx.toFloat() / (durations.size - 1)) * w
-                            val watts = mmp42Map[dur]?.maxWatts ?: 0.0
-                            val y = h - ((watts / maxW).toFloat() * h).coerceIn(0f, h)
-                            if (idx == 0) path42.moveTo(x, y) else path42.lineTo(x, y)
+                        Canvas(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(140.dp)
+                                .padding(vertical = 4.dp)
+                                .pointerInput(durations.size) {
+                                    detectDragGestures(
+                                        onDragStart = { offset ->
+                                            if (durations.size > 1) {
+                                                val frac = (offset.x / size.width).coerceIn(0f, 1f)
+                                                scrubIndex = (frac * (durations.size - 1)).roundToInt()
+                                            }
+                                        },
+                                        onDragEnd = { scrubIndex = null },
+                                        onDragCancel = { scrubIndex = null },
+                                        onDrag = { change, _ ->
+                                            if (durations.size > 1) {
+                                                val frac = (change.position.x / size.width).coerceIn(0f, 1f)
+                                                scrubIndex = (frac * (durations.size - 1)).roundToInt()
+                                                change.consume()
+                                            }
+                                        },
+                                    )
+                                },
+                        ) {
+                            val w = size.width
+                            val h = size.height
+
+                            // Grid lines
+                            drawLine(gridColor, Offset(0f, 0f), Offset(w, 0f), strokeWidth = 1f)
+                            drawLine(gridColor, Offset(0f, h * 0.5f), Offset(w, h * 0.5f), strokeWidth = 1f)
+                            drawLine(gridColor, Offset(0f, h), Offset(w, h), strokeWidth = 1f)
+
+                            if (durations.size >= 2) {
+                                fun py(watts: Double): Float =
+                                    (h - ((watts - minW) / rangeW).toFloat() * h).coerceIn(0f, h)
+
+                                // 1Y Peak dashed curve
+                                val path1y = Path()
+                                durations.forEachIndexed { idx, dur ->
+                                    val x = (idx.toFloat() / (durations.size - 1)) * w
+                                    val watts = mmp1yMap[dur]?.maxWatts ?: minW
+                                    val y = py(watts)
+                                    if (idx == 0) path1y.moveTo(x, y) else path1y.lineTo(x, y)
+                                }
+                                drawPath(
+                                    path1y,
+                                    p1yColor,
+                                    style = Stroke(
+                                        width = 2.dp.toPx(),
+                                        cap = StrokeCap.Round,
+                                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx())),
+                                    ),
+                                )
+
+                                // 42d curve with area fill
+                                val path42 = Path()
+                                val fill42 = Path()
+                                durations.forEachIndexed { idx, dur ->
+                                    val x = (idx.toFloat() / (durations.size - 1)) * w
+                                    val watts = mmp42Map[dur]?.maxWatts ?: minW
+                                    val y = py(watts)
+                                    if (idx == 0) {
+                                        path42.moveTo(x, y)
+                                        fill42.moveTo(x, y)
+                                    } else {
+                                        path42.lineTo(x, y)
+                                        fill42.lineTo(x, y)
+                                    }
+                                }
+                                fill42.lineTo(w, h)
+                                fill42.lineTo(0f, h)
+                                fill42.close()
+
+                                drawPath(
+                                    fill42,
+                                    Brush.verticalGradient(
+                                        listOf(p42Color.copy(alpha = 0.22f), Color.Transparent),
+                                    ),
+                                )
+                                drawPath(
+                                    path42,
+                                    p42Color,
+                                    style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round),
+                                )
+
+                                // Circular markers
+                                durations.forEachIndexed { idx, dur ->
+                                    val x = (idx.toFloat() / (durations.size - 1)) * w
+                                    mmp1yMap[dur]?.maxWatts?.let { watts ->
+                                        drawCircle(p1yColor, radius = 2.5.dp.toPx(), center = Offset(x, py(watts)))
+                                    }
+                                    mmp42Map[dur]?.maxWatts?.let { watts ->
+                                        drawCircle(p42Color, radius = 3.5.dp.toPx(), center = Offset(x, py(watts)))
+                                    }
+                                }
+
+                                // Scrubber vertical line
+                                scrubIndex?.let { sIdx ->
+                                    val dur = durations.getOrNull(sIdx)
+                                    if (dur != null) {
+                                        val x = (sIdx.toFloat() / (durations.size - 1)) * w
+                                        drawLine(
+                                            color = scrubLineColor,
+                                            start = Offset(x, 0f),
+                                            end = Offset(x, h),
+                                            strokeWidth = 1.5.dp.toPx(),
+                                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx())),
+                                        )
+                                        mmp42Map[dur]?.maxWatts?.let { w42 ->
+                                            drawCircle(p42Color, radius = 5.dp.toPx(), center = Offset(x, py(w42)))
+                                            drawCircle(Color.White, radius = 2.dp.toPx(), center = Offset(x, py(w42)))
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        drawPath(path42, p42Color, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+                    }
 
-                        // Dots on 42d
-                        durations.forEachIndexed { idx, dur ->
-                            val x = (idx.toFloat() / (durations.size - 1)) * w
-                            val watts = mmp42Map[dur]?.maxWatts ?: 0.0
-                            val y = h - ((watts / maxW).toFloat() * h).coerceIn(0f, h)
-                            drawCircle(p42Color, radius = 3.5.dp.toPx(), center = Offset(x, y))
+                    // Bottom X-axis label row displaying 5s, 30s, 2m, 10m, and 60m
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 38.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        listOf("5s", "30s", "2m", "10m", "60m").forEach { label ->
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
                         }
                     }
                 }
@@ -502,25 +665,23 @@ private fun CyclingVolumeCard(
         ),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SectionTitle("Weekly Cycling Volume")
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    FilterChip(
-                        selected = !showTss,
-                        onClick = { showTss = false },
-                        label = { Text(if (unit == DistanceUnit.IMPERIAL) "Miles" else "Km") },
-                    )
-                    FilterChip(
-                        selected = showTss,
-                        onClick = { showTss = true },
-                        label = { Text("Bike TSS") },
-                    )
-                }
-            }
+            SectionTitle(
+                text = "Weekly Cycling Volume",
+                trailing = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        FilterChip(
+                            selected = !showTss,
+                            onClick = { showTss = false },
+                            label = { Text(if (unit == DistanceUnit.IMPERIAL) "Miles" else "Km", maxLines = 1) },
+                        )
+                        FilterChip(
+                            selected = showTss,
+                            onClick = { showTss = true },
+                            label = { Text("Bike TSS", maxLines = 1) },
+                        )
+                    }
+                },
+            )
 
             val bars = if (showTss) {
                 cycling.weeklyBikeTss.map { it.toWeekVolume() }
@@ -547,6 +708,7 @@ private fun CyclingVolumeCard(
 private fun CyclingPowerZoneDistributionCard(
     zones: List<ZoneBucket>,
     modifier: Modifier = Modifier,
+    onOpenZones: () -> Unit = {},
 ) {
     val totalSec = zones.sumOf { it.seconds }.coerceAtLeast(1)
 
@@ -557,7 +719,14 @@ private fun CyclingPowerZoneDistributionCard(
         ),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            SectionTitle("7-Zone Coggan Power Distribution")
+            SectionTitle(
+                text = "7-Zone Coggan Power Distribution",
+                trailing = {
+                    TextButton(onClick = onOpenZones) {
+                        Text("Edit Zones →", maxLines = 1)
+                    }
+                },
+            )
 
             // Stacked horizontal bar
             Row(
@@ -579,7 +748,7 @@ private fun CyclingPowerZoneDistributionCard(
                 }
             }
 
-            // Zone details list
+            // Zone details list (removed static watt boundary table, kept duration and %)
             zones.forEachIndexed { i, z ->
                 val frac = (z.seconds.toDouble() / totalSec * 100.0).roundToInt()
                 Row(
@@ -597,13 +766,6 @@ private fun CyclingPowerZoneDistributionCard(
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.weight(1f),
-                    )
-                    val rangeText = if (z.zone == 7) ">${z.minWatts}W" else "${z.minWatts}–${z.maxWatts}W"
-                    Text(
-                        rangeText,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(end = 8.dp),
                     )
                     Text(
                         "${Format.duration(z.seconds.toLong())} ($frac%)",
@@ -721,33 +883,4 @@ private fun MetricBarRow(
     }
 }
 
-@Composable
-private fun TsbBar(tsb: Double) {
-    val color = com.runflow2.app.domain.model.TsbStatus.from(tsb).themedColor()
-    val half = (abs(tsb) / 50.0).coerceIn(0.0, 1.0).toFloat()
-    Canvas(
-        Modifier
-            .fillMaxWidth()
-            .height(8.dp),
-    ) {
-        val track = color.copy(alpha = 0.15f)
-        drawRoundRect(track, cornerRadius = CornerRadius(size.height))
-        // center tick
-        drawRoundRect(
-            color = color.copy(alpha = 0.45f),
-            topLeft = Offset(size.width / 2f - 1.dp.toPx(), 0f),
-            size = Size(2.dp.toPx(), size.height),
-            cornerRadius = CornerRadius(1.dp.toPx()),
-        )
-        val barWidth = size.width / 2f * half
-        if (barWidth > 0f) {
-            val left = if (tsb >= 0) size.width / 2f else size.width / 2f - barWidth
-            drawRoundRect(
-                color = color,
-                topLeft = Offset(left, 0f),
-                size = Size(barWidth, size.height),
-                cornerRadius = CornerRadius(size.height),
-            )
-        }
-    }
-}
+

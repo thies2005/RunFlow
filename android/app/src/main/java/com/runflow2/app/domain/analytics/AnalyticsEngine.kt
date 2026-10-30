@@ -11,6 +11,7 @@ import com.runflow2.app.domain.model.TsbStatus
 import java.time.DayOfWeek
 import java.time.LocalDate
 import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.roundToInt
 import kotlin.math.pow
 
@@ -403,25 +404,46 @@ object AnalyticsEngine {
             for (dur in BestEffortsEngine.STANDARD_POWER_DURATIONS_SEC) {
                 var maxWatts = 0.0
                 for (r in rideList) {
-                    val wattsStream = if (r.streamsJson != null) {
+                    val streams = if (r.streamsJson != null) {
                         runCatching {
-                            Api.json.decodeFromString(ActivityStreamsDto.serializer(), r.streamsJson).watts
-                        }.getOrNull()?.filter { !it.isNaN() && it.isFinite() && it >= 0.0 }
+                            Api.json.decodeFromString(ActivityStreamsDto.serializer(), r.streamsJson)
+                        }.getOrNull()
                     } else null
 
-                    val w = if (wattsStream != null && wattsStream.size >= dur) {
-                        BestEffortsEngine.findMeanMaximalPower(wattsStream, listOf(dur)).firstOrNull()?.maxWatts ?: 0.0
+                    val wattsStream = streams?.watts?.filter { !it.isNaN() && it.isFinite() && it >= 0.0 }
+                    val timeStream = if (streams != null && streams.time.isNotEmpty() && streams.watts != null && streams.time.size == streams.watts.size) {
+                        streams.time.map { it.toInt() }
+                    } else null
+
+                    val w = if (wattsStream != null && wattsStream.isNotEmpty()) {
+                        if (timeStream != null) {
+                            BestEffortsEngine.findMeanMaximalPowerWithTime(wattsStream, timeStream, listOf(dur)).firstOrNull()?.maxWatts ?: 0.0
+                        } else if (wattsStream.size >= dur) {
+                            BestEffortsEngine.findMeanMaximalPower(wattsStream, listOf(dur)).firstOrNull()?.maxWatts ?: 0.0
+                        } else {
+                            0.0
+                        }
                     } else {
-                        when {
-                            dur <= 5 -> r.maxWatts ?: 0.0
-                            dur <= 1200 -> r.npWatts ?: r.averageWatts ?: 0.0
-                            else -> r.averageWatts ?: 0.0
+                        if (r.movingTimeSec < dur) {
+                            0.0
+                        } else {
+                            val baseW = r.npWatts ?: r.averageWatts ?: 0.0
+                            val avgW = r.averageWatts ?: baseW
+                            if (baseW <= 0.0 && avgW <= 0.0) {
+                                0.0
+                            } else {
+                                val peak5s = (r.maxWatts?.takeIf { it > baseW } ?: (baseW * 1.65))
+                                val decayFrac = (5.0 / dur.toDouble()).pow(0.28)
+                                val aerobicBase = if (dur <= 1200) baseW * (1.0 - 0.04 * ln(dur / 60.0).coerceAtLeast(0.0)) else avgW
+                                val estimatedW = (aerobicBase + (peak5s - aerobicBase) * decayFrac).coerceAtLeast(avgW * 0.90)
+                                estimatedW
+                            }
                         }
                     }
                     if (w > maxWatts) maxWatts = w
                 }
                 if (maxWatts > 0.0) {
-                    results.add(BestEffortsEngine.PowerEffort(dur, maxWatts, 0, dur))
+                    results.add(BestEffortsEngine.PowerEffort(dur, (maxWatts * 10.0).roundToInt() / 10.0, 0, dur))
                 }
             }
             return results

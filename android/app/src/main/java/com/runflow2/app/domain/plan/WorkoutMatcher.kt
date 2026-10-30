@@ -79,11 +79,12 @@ object WorkoutMatcher {
     /**
      * Finds the best matching candidate activity for an uncompleted non-rest workout.
      * Only considers same-day activities of the same sport with diffRatio <= 0.60
-     * and activity.id != workout.dismissedActivityId.
+     * and activity.id != workout.dismissedActivityId, excluding claimedActivityIds.
      */
     fun findBestMatch(
         workout: WorkoutEntity,
         activities: List<ActivityEntity>,
+        claimedActivityIds: Set<String> = emptySet(),
     ): ActivityEntity? {
         if (workout.isCompleted || workout.activityId != null) return null
         if (workout.workoutType.equals("REST", ignoreCase = true)) return null
@@ -91,6 +92,9 @@ object WorkoutMatcher {
         val workoutDate = Format.localDate(workout.scheduledDate)
 
         val candidates = activities.mapNotNull { act ->
+            if (act.id in claimedActivityIds || (act.serverId != null && act.serverId in claimedActivityIds)) {
+                return@mapNotNull null
+            }
             if (act.id == workout.dismissedActivityId) return@mapNotNull null
             val actDate = Format.localDate(act.startDate)
             if (workoutDate != actDate) return@mapNotNull null
@@ -109,19 +113,27 @@ object WorkoutMatcher {
     fun matchWorkouts(
         workouts: List<WorkoutEntity>,
         activities: List<ActivityEntity>,
+        initialClaimedActivityIds: Set<String> = emptySet(),
     ): List<WorkoutEntity> {
         val updated = mutableListOf<WorkoutEntity>()
+        val claimed = initialClaimedActivityIds.toMutableSet()
         for (w in workouts) {
             if (w.isCompleted || w.activityId != null) continue
             if (w.workoutType.equals("REST", ignoreCase = true)) continue
 
-            val best = findBestMatch(w, activities)
-            if (best != null && best.id != w.suggestedActivityId) {
-                updated.add(w.copy(suggestedActivityId = best.id))
-            } else if (best == null && w.suggestedActivityId != null) {
-                // Clear suggestion if candidate is no longer present or valid
+            val best = findBestMatch(w, activities, claimed)
+            if (best != null) {
+                claimed.add(best.id)
+                best.serverId?.let { claimed.add(it) }
+                if (best.id != w.suggestedActivityId) {
+                    updated.add(w.copy(suggestedActivityId = best.id))
+                }
+            } else if (w.suggestedActivityId != null) {
+                // Clear suggestion if candidate is no longer present or valid or is claimed
                 val stillExists = activities.any { it.id == w.suggestedActivityId }
-                if (!stillExists) {
+                val isClaimed = w.suggestedActivityId in claimed ||
+                    activities.firstOrNull { it.id == w.suggestedActivityId }?.serverId?.let { it in claimed } == true
+                if (!stillExists || isClaimed) {
                     updated.add(w.copy(suggestedActivityId = null))
                 }
             }

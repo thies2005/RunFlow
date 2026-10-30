@@ -63,9 +63,12 @@ import com.runflow2.app.domain.person.Personalization
 import com.runflow2.app.domain.readiness.ReadinessComposer
 import com.runflow2.app.domain.readiness.ReadinessPayload
 import androidx.room.withTransaction
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -96,6 +99,57 @@ class RunFlowRepository(
     // refresh itself still runs — it is read-only unless something changed).
     private val settings: SettingsRepository? = null,
 ) {
+    @Volatile
+    var onMutationCommitted: ((String) -> Unit)? = null
+
+    private val streamBackfillInFlight = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    private fun backfillMissingStreamsAsync(candidates: List<ActivityEntity>) {
+        if (!authStore.state.value.loggedIn) return
+        val eligible = candidates.filter { it.streamsJson == null && it.serverId != null && !it.isDemo && !streamBackfillInFlight.contains(it.id) }
+        val sorted = eligible.sortedWith(
+            compareByDescending<ActivityEntity> {
+                val t = it.type.uppercase()
+                (t == "RIDE" || t == "VIRTUAL_RIDE" || t == "CYCLING") && (it.averageWatts != null || it.deviceWatts)
+            }.thenByDescending {
+                val t = it.type.uppercase()
+                t == "RIDE" || t == "VIRTUAL_RIDE" || t == "CYCLING"
+            }.thenByDescending {
+                it.startDate
+            }
+        )
+        val toFetch = mutableListOf<ActivityEntity>()
+        for (act in sorted) {
+            if (streamBackfillInFlight.add(act.id)) {
+                toFetch.add(act)
+                if (toFetch.size >= 8) break
+            }
+        }
+        if (toFetch.isEmpty()) return
+
+        repositoryScope.launch {
+            var anyUpdated = false
+            try {
+                for (act in toFetch) {
+                    val serverId = act.serverId ?: continue
+                    try {
+                        if (fetchAndCacheStreams(act.id, serverId)) {
+                            anyUpdated = true
+                        }
+                    } catch (e: Exception) {
+                        AppLog.w("RunFlowRepo", "Stream backfill failed for ${act.id}: ${e.message}")
+                    }
+                }
+                if (anyUpdated) {
+                    invalidateAnalyticsCache()
+                }
+            } finally {
+                toFetch.forEach { streamBackfillInFlight.remove(it.id) }
+            }
+        }
+    }
+
     // ---------- profile ----------
     val profile: Flow<ProfileEntity?> = profileDao.observe()
 
@@ -127,6 +181,7 @@ class RunFlowRepository(
         } else {
             profileDao.upsert(profile)
         }
+        onMutationCommitted?.invoke("save_profile")
     }
 
     /** Sets the primary load metric and syncs to server if logged in (Decision U1). */
@@ -155,6 +210,7 @@ class RunFlowRepository(
                 }
             }
         }
+        onMutationCommitted?.invoke("set_primary_load_metric")
     }
 
     /**
@@ -264,16 +320,32 @@ class RunFlowRepository(
             val dayStart = Format.epochMillis(actDate)
             val dayEnd = dayStart + 86_400_000L - 1
             val pending = workoutDao.pendingBetween(dayStart, dayEnd)
-            for (w in pending) {
-                if (w.workoutType.equals("REST", ignoreCase = true)) continue
-                if (w.dismissedActivityId == a.id) continue
-                if (WorkoutMatcher.sportsMatch(w.sport, w.workoutType, a.type)) {
-                    val diff = WorkoutMatcher.computeDiffRatio(w, a)
-                    if (diff <= WorkoutMatcher.MAX_DIFF_RATIO) {
-                        val currentSuggested = w.suggestedActivityId?.let { activityDao.byId(it) }
-                        val currentDiff = currentSuggested?.let { WorkoutMatcher.computeDiffRatio(w, it) } ?: Double.MAX_VALUE
-                        if (diff < currentDiff) {
-                            workoutDao.upsert(w.copy(suggestedActivityId = a.id))
+            val activeGoal = goalDao.observeActive().first()
+            val allGoalWorkouts = if (activeGoal != null) workoutDao.forGoal(activeGoal.id) else emptyList()
+            val claimedActivityIds = mutableSetOf<String>()
+            for (w in allGoalWorkouts) {
+                w.activityId?.let { claimedActivityIds.add(it) }
+                w.suggestedActivityId?.let { claimedActivityIds.add(it) }
+            }
+            val acts = activityDao.betweenStart(dayStart - 86_400_000L, dayEnd + 86_400_000L)
+            for (act in acts) {
+                if (act.id in claimedActivityIds) act.serverId?.let { claimedActivityIds.add(it) }
+                if (act.serverId != null && act.serverId in claimedActivityIds) claimedActivityIds.add(act.id)
+            }
+            if (a.id !in claimedActivityIds && (a.serverId == null || a.serverId !in claimedActivityIds)) {
+                for (w in pending) {
+                    if (w.workoutType.equals("REST", ignoreCase = true)) continue
+                    if (w.dismissedActivityId == a.id) continue
+                    if (WorkoutMatcher.sportsMatch(w.sport, w.workoutType, a.type)) {
+                        val diff = WorkoutMatcher.computeDiffRatio(w, a)
+                        if (diff <= WorkoutMatcher.MAX_DIFF_RATIO) {
+                            val currentSuggested = w.suggestedActivityId?.let { activityDao.byId(it) }
+                            val currentDiff = currentSuggested?.let { WorkoutMatcher.computeDiffRatio(w, it) } ?: Double.MAX_VALUE
+                            if (diff < currentDiff) {
+                                workoutDao.upsert(w.copy(suggestedActivityId = a.id))
+                                claimedActivityIds.add(a.id)
+                                a.serverId?.let { claimedActivityIds.add(it) }
+                            }
                         }
                     }
                 }
@@ -285,6 +357,8 @@ class RunFlowRepository(
         // fail or delay the save itself.
         runCatching { refreshBodyFromData() }
             .onFailure { AppLog.w("Body", "auto-refresh after save failed (${it.message})") }
+
+        onMutationCommitted?.invoke("save_activity")
     }
 
     /**
@@ -356,6 +430,7 @@ class RunFlowRepository(
             activityDao.delete(id)
         }
         invalidateAnalyticsCache()
+        onMutationCommitted?.invoke("delete_activity")
     }
 
     /**
@@ -401,6 +476,7 @@ class RunFlowRepository(
             activityDao.upsert(updated)
         }
         invalidateAnalyticsCache()
+        onMutationCommitted?.invoke("update_activity")
     }
 
     suspend fun renameActivity(id: String, newName: String) =
@@ -657,6 +733,7 @@ class RunFlowRepository(
             Triple(plan.updates.size, plan.reinstates.size, plan.removals.size)
         }
         AppLog.i("Plan", "undo on goal $goalId: ${stats.first} update(s), ${stats.second} reinstated, ${stats.third} removed")
+        onMutationCommitted?.invoke("undo_last_edit")
         return true
     }
 
@@ -673,6 +750,7 @@ class RunFlowRepository(
         val goal = goalDao.byId(w.goalId)
         if (goal == null || goal.isLocalOnly || !authStore.state.value.loggedIn) {
             workoutDao.upsert(w)
+            onMutationCommitted?.invoke("workout_edit")
             return
         }
         val resolvedLinkedId = linkedServerActivityId ?: w.activityId?.let { actId ->
@@ -697,6 +775,7 @@ class RunFlowRepository(
                 )
             )
         }
+        onMutationCommitted?.invoke("workout_edit")
     }
 
     suspend fun saveWorkout(w: WorkoutEntity) {
@@ -733,6 +812,19 @@ class RunFlowRepository(
      */
     suspend fun completeWorkoutWithActivity(workoutId: String, activityId: String?) {
         val w = workoutDao.byId(workoutId) ?: return
+        if (activityId != null) {
+            val act = activityDao.byId(activityId)
+            val serverId = act?.serverId
+            val otherWorkouts = workoutDao.forGoal(w.goalId).filter { other ->
+                other.id != workoutId && (
+                    other.activityId == activityId ||
+                    (serverId != null && other.activityId == serverId)
+                )
+            }
+            for (other in otherWorkouts) {
+                persistWorkoutEdit(other.copy(activityId = null))
+            }
+        }
         val resolvedServerId = activityId?.let { actId ->
             activityDao.byId(actId)?.serverId ?: actId
         }
@@ -839,7 +931,21 @@ class RunFlowRepository(
         val activities = activityDao.betweenStart(windowStart - 86_400_000L, windowEnd + 86_400_000L)
         if (activities.isEmpty()) return
 
-        val updated = WorkoutMatcher.matchWorkouts(pending, activities)
+        val activeGoal = goalDao.observeActive().first()
+        val allGoalWorkouts = if (activeGoal != null) workoutDao.forGoal(activeGoal.id) else emptyList()
+        val claimedActivityIds = mutableSetOf<String>()
+        for (w in allGoalWorkouts) {
+            w.activityId?.let { claimedActivityIds.add(it) }
+            w.suggestedActivityId?.let { claimedActivityIds.add(it) }
+        }
+        val actsById = activities.associateBy { it.id }
+        val actsByServerId = activities.filter { it.serverId != null }.associateBy { it.serverId!! }
+        for (id in claimedActivityIds.toList()) {
+            actsById[id]?.serverId?.let { claimedActivityIds.add(it) }
+            actsByServerId[id]?.let { claimedActivityIds.add(it.id) }
+        }
+
+        val updated = WorkoutMatcher.matchWorkouts(pending, activities, claimedActivityIds)
         for (w in updated) {
             workoutDao.upsert(w)
         }
@@ -895,6 +1001,7 @@ class RunFlowRepository(
                 )
             }
         }
+        onMutationCommitted?.invoke("create_workout")
         return id
     }
 
@@ -934,6 +1041,7 @@ class RunFlowRepository(
         } else {
             workoutDao.delete(id)
         }
+        onMutationCommitted?.invoke("delete_workout")
     }
 
     suspend fun shiftWorkoutDate(id: String, days: Int) {
@@ -959,6 +1067,7 @@ class RunFlowRepository(
         workoutDao.deleteForGoal(id)
         goalDao.delete(id)
         planSnapshotDao.deleteAllForGoal(id)
+        onMutationCommitted?.invoke("delete_goal")
     }
 
     suspend fun completeGoal(id: String) {
@@ -982,6 +1091,7 @@ class RunFlowRepository(
         } else {
             goalDao.complete(id, System.currentTimeMillis())
         }
+        onMutationCommitted?.invoke("complete_goal")
     }
 
     /**
@@ -1280,6 +1390,7 @@ class RunFlowRepository(
         )
         val withCache = readinessCacheFor(stamped, LocalDate.parse(entry.date), dailyLoadSeries())
         dailyEntryDao.upsert(withCache)
+        onMutationCommitted?.invoke("save_daily_entry")
         return withCache
     }
 
@@ -1375,6 +1486,7 @@ class RunFlowRepository(
         val profile = profileOnce()
         val s = settings?.settingsOnce()
         val allRows = activityDao.all()
+        backfillMissingStreamsAsync(allRows)
         val today = LocalDate.now()
         val maxUpdated = allRows.maxOfOrNull { it.updatedAt } ?: 0L
         val key = "$rangeDays|${today}|${allRows.size}|$maxUpdated|${profile.vdotCorrection}|${profile.weightKg}|${profile.hrMax}|${s?.ftpWatts}|${s?.includeCrossTraining}|${s?.effectiveVo2maxCorrection}"
@@ -1450,6 +1562,7 @@ class RunFlowRepository(
                 }
             }
         }
+        onMutationCommitted?.invoke("update_cycling_ftp")
     }
 
     suspend fun cyclingAnalytics(range: String = "90d"): com.runflow2.app.data.net.CyclingAnalyticsDto? = withContext(Dispatchers.IO) {

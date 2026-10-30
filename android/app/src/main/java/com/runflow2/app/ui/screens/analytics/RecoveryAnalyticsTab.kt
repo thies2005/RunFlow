@@ -32,6 +32,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,6 +54,7 @@ import com.runflow2.app.domain.readiness.ComponentScoreJson
 import com.runflow2.app.domain.readiness.DataConfidence
 import com.runflow2.app.domain.readiness.ReadinessJson
 import com.runflow2.app.domain.readiness.ReadinessState
+import com.runflow2.app.ui.components.DailyFormSheet
 import com.runflow2.app.ui.components.HealthTrendChart
 import com.runflow2.app.ui.components.ProgressRing
 import com.runflow2.app.ui.components.ReadinessScoreChart
@@ -89,7 +91,7 @@ fun RecoveryAnalyticsTab(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         // 1. Daily Readiness Composite Card with State & Confidence
-        DailyReadinessCompositeCard(entry = todayEntry)
+        DailyReadinessCompositeCard(entry = todayEntry, container = container)
 
         // 2. 5-Component Breakdown Bars
         ComponentScoresBreakdownCard(entry = todayEntry)
@@ -121,8 +123,10 @@ fun RecoveryAnalyticsTab(
 @Composable
 private fun DailyReadinessCompositeCard(
     entry: DailyEntryEntity?,
+    container: AppContainer,
     modifier: Modifier = Modifier,
 ) {
+    var showDailyForm by rememberSaveable { mutableStateOf(false) }
     val score = entry?.score
     val state = ReadinessJson.readinessStateFromWire(entry?.state)
     val confidence = ReadinessJson.dataConfidenceFromWire(entry?.confidence)
@@ -162,25 +166,39 @@ private fun DailyReadinessCompositeCard(
         ),
     ) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SectionTitle("Daily Readiness")
-                if (confidence != DataConfidence.UNAVAILABLE) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+            SectionTitle(
+                text = "Daily Readiness",
+                trailing = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(
-                            "${confidence.name.lowercase().replaceFirstChar { it.uppercase() }} data",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        )
+                        if (confidence != DataConfidence.UNAVAILABLE) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            ) {
+                                Text(
+                                    "${confidence.name.lowercase().replaceFirstChar { it.uppercase() }} data",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                )
+                            }
+                        }
+                        TextButton(onClick = { showDailyForm = true }) {
+                            Text("Log / Edit", maxLines = 1)
+                        }
                     }
-                }
+                },
+            )
+
+            if (showDailyForm) {
+                DailyFormSheet(
+                    container = container,
+                    onDismiss = { showDailyForm = false },
+                )
             }
 
             Row(
@@ -371,25 +389,23 @@ private fun RecoveryTrendsCard(
         ),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SectionTitle("Resting HR & HRV Trends")
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    listOf(30, 90, 365).forEach { d ->
-                        FilterChip(
-                            selected = healthRange == d,
-                            onClick = { onRangeChange(d) },
-                            label = { Text(if (d == 365) "1Y" else "${d}d") },
-                        )
+            SectionTitle(
+                text = "Resting HR & HRV Trends",
+                trailing = {
+                    Row(
+                        Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        listOf(30, 90, 365).forEach { d ->
+                            FilterChip(
+                                selected = healthRange == d,
+                                onClick = { onRangeChange(d) },
+                                label = { Text(if (d == 365) "1Y" else "${d}d", maxLines = 1) },
+                            )
+                        }
                     }
-                }
-            }
+                },
+            )
 
             if (entries.isEmpty()) {
                 Text(
@@ -491,25 +507,23 @@ private fun SleepAnalysisCard(
         ),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SectionTitle("Sleep Analysis")
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    listOf(30, 90, 365).forEach { d ->
-                        FilterChip(
-                            selected = sleepRange == d,
-                            onClick = { onRangeChange(d) },
-                            label = { Text(if (d == 365) "1Y" else "${d}d") },
-                        )
+            SectionTitle(
+                text = "Sleep Analysis",
+                trailing = {
+                    Row(
+                        Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        listOf(30, 90, 365).forEach { d ->
+                            FilterChip(
+                                selected = sleepRange == d,
+                                onClick = { onRangeChange(d) },
+                                label = { Text(if (d == 365) "1Y" else "${d}d", maxLines = 1) },
+                            )
+                        }
                     }
-                }
-            }
+                },
+            )
 
             if (sleepValues.isEmpty()) {
                 Text(

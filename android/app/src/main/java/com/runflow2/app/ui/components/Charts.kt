@@ -414,6 +414,40 @@ fun ZoneDistribution(zonesSeconds: List<Int>, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Bidirectional center-zero Form (TSB) bar.
+ */
+@Composable
+fun TsbBar(tsb: Double, modifier: Modifier = Modifier) {
+    val color = com.runflow2.app.domain.model.TsbStatus.from(tsb).themedColor()
+    val half = (kotlin.math.abs(tsb) / 50.0).coerceIn(0.0, 1.0).toFloat()
+    Canvas(
+        modifier
+            .fillMaxWidth()
+            .height(8.dp),
+    ) {
+        val track = color.copy(alpha = 0.15f)
+        drawRoundRect(track, cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height))
+        // center tick
+        drawRoundRect(
+            color = color.copy(alpha = 0.45f),
+            topLeft = Offset(size.width / 2f - 1.dp.toPx(), 0f),
+            size = androidx.compose.ui.geometry.Size(2.dp.toPx(), size.height),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(1.dp.toPx()),
+        )
+        val barWidth = size.width / 2f * half
+        if (barWidth > 0f) {
+            val left = if (tsb >= 0) size.width / 2f else size.width / 2f - barWidth
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(left, 0f),
+                size = androidx.compose.ui.geometry.Size(barWidth, size.height),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.height),
+            )
+        }
+    }
+}
+
 
 /** Circular progress ring on canvas. */
 @Composable

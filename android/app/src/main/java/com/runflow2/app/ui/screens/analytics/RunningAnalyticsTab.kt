@@ -1,9 +1,12 @@
 package com.runflow2.app.ui.screens.analytics
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,8 +15,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.DirectionsRun
@@ -26,29 +32,39 @@ import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.core.math.BestEffortsEngine
 import com.runflow2.app.core.math.TrainingPaces
+import com.runflow2.app.core.math.VdotMath
 import com.runflow2.app.core.util.DistanceUnit
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.domain.analytics.AnalyticsBundle
 import com.runflow2.app.domain.analytics.MetricSource
 import com.runflow2.app.domain.model.PaceZone
+import com.runflow2.app.ui.components.FitnessChart
 import com.runflow2.app.ui.components.ProgressRing
 import com.runflow2.app.ui.components.SectionTitle
 import com.runflow2.app.ui.components.Sparkline
@@ -62,9 +78,18 @@ fun RunningAnalyticsTab(
     bundle: AnalyticsBundle,
     unit: DistanceUnit,
     modifier: Modifier = Modifier,
+    onOpenZones: () -> Unit = {},
 ) {
     var marathonShapeExpanded by remember { mutableStateOf(false) }
+    var runRangeDays by rememberSaveable { mutableStateOf(90) }
+    var runShowCtl by rememberSaveable { mutableStateOf(true) }
+    var runShowAtl by rememberSaveable { mutableStateOf(true) }
+    var runShowTsb by rememberSaveable { mutableStateOf(true) }
+
     val sem = MaterialTheme.semanticColors
+    val shapeRes = bundle.marathonShapeResult
+    val shapeScore = bundle.marathonShape?.roundToInt() ?: shapeRes?.shape ?: 0
+    val predVo2 = bundle.aerobicVo2max ?: bundle.effectiveVdot
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -78,37 +103,36 @@ fun RunningAnalyticsTab(
             ),
         ) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    SectionTitle("VDOT & Running Fitness")
-                    val isServer = bundle.vdotSource == MetricSource.SERVER
-                    Surface(
-                        color = if (isServer) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(8.dp),
-                    ) {
-                        Row(
-                            Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                SectionTitle(
+                    text = "VDOT & Running Fitness",
+                    trailing = {
+                        val isServer = bundle.vdotSource == MetricSource.SERVER
+                        Surface(
+                            color = if (isServer) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(8.dp),
                         ) {
-                            Icon(
-                                if (isServer) Icons.Outlined.CloudDone else Icons.Outlined.PhoneAndroid,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = if (isServer) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text(
-                                if (isServer) "Server Verified" else "On-Device",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Medium,
-                                color = if (isServer) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            Row(
+                                Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    if (isServer) Icons.Outlined.CloudDone else Icons.Outlined.PhoneAndroid,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = if (isServer) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Text(
+                                    if (isServer) "Server Verified" else "On-Device",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isServer) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                )
+                            }
                         }
-                    }
-                }
+                    },
+                )
 
                 Row(
                     Modifier.fillMaxWidth(),
@@ -159,7 +183,14 @@ fun RunningAnalyticsTab(
             ),
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                SectionTitle("Training Paces (VDOT ${"%.1f".format(vdot)})")
+                SectionTitle(
+                    text = "Training Paces (VDOT ${"%.1f".format(vdot)})",
+                    trailing = {
+                        TextButton(onClick = onOpenZones) {
+                            Text("Edit Zones →", maxLines = 1)
+                        }
+                    },
+                )
 
                 val paceBands = listOf(
                     "Easy (E)" to paces.range(PaceZone.EASY),
@@ -196,10 +227,122 @@ fun RunningAnalyticsTab(
             }
         }
 
-        // 3. Marathon Shape Card with Expandable Sub-Scores
-        val shapeRes = bundle.marathonShapeResult
-        val shapeScore = bundle.marathonShape?.roundToInt() ?: shapeRes?.shape ?: 0
+        // 3. Race Predictions Card (Shape-Adjusted vs Ideal VDOT)
+        if (predVo2 != null && predVo2 > 0) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    SectionTitle("Race Predictions")
+                    VdotMath.predictionDistances.forEach { (label, distM) ->
+                        val idealSec = VdotMath.predictTimeSec(predVo2, distM)
+                        val nowSec = VdotMath.predictTimeWithShapeSec(predVo2, distM, shapeScore)
+                        if (idealSec != null && nowSec != null) {
+                            val ratio = (idealSec / nowSec).toFloat().coerceIn(0f, 1f)
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            Format.duration(nowSec.toLong()),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                        Text(
+                                            "Ideal: ${Format.duration(idealSec.toLong())}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                                LinearProgressIndicator(
+                                    progress = { ratio },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp)),
+                                    color = if (ratio >= 0.98f) sem.good else if (ratio >= 0.90f) MaterialTheme.colorScheme.primary else Color(0xFFFFA726),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
+        // 4. Running Load (PMC) Card
+        if (bundle.runFitnessSeries.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    SectionTitle("Running Load (PMC)")
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        listOf(90, 180, 365).forEach { d ->
+                            FilterChip(
+                                selected = runRangeDays == d,
+                                onClick = { runRangeDays = d },
+                                label = { Text(if (d == 365) "1Y" else "${d}d", maxLines = 1) },
+                            )
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            selected = runShowCtl,
+                            onClick = { runShowCtl = !runShowCtl },
+                            label = { Text("CTL", maxLines = 1) },
+                            leadingIcon = {
+                                Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.ctl, CircleShape))
+                            },
+                        )
+                        FilterChip(
+                            selected = runShowAtl,
+                            onClick = { runShowAtl = !runShowAtl },
+                            label = { Text("ATL", maxLines = 1) },
+                            leadingIcon = {
+                                Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.atl, CircleShape))
+                            },
+                        )
+                        FilterChip(
+                            selected = runShowTsb,
+                            onClick = { runShowTsb = !runShowTsb },
+                            label = { Text("TSB", maxLines = 1) },
+                            leadingIcon = {
+                                Box(Modifier.size(8.dp).background(MaterialTheme.semanticColors.tsb, CircleShape))
+                            },
+                        )
+                    }
+                    val runDaily = remember(bundle.runFitnessSeries, runRangeDays) {
+                        bundle.runFitnessSeries.map { it.toDailyLoad() }.takeLast(runRangeDays)
+                    }
+                    FitnessChart(
+                        daily = runDaily,
+                        showCtl = runShowCtl,
+                        showAtl = runShowAtl,
+                        showTsb = runShowTsb,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        }
+
+        // 5. Marathon Shape Card with Expandable Sub-Scores
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -326,7 +469,7 @@ fun RunningAnalyticsTab(
             }
         }
 
-        // 4. Running Pace MMP Curve (Personal Records across standard distances)
+        // 6. Running Pace MMP Curve (Personal Records across standard distances)
         if (bundle.bestEfforts.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -335,17 +478,133 @@ fun RunningAnalyticsTab(
                 ),
             ) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        SectionTitle("Running Best Efforts Curve")
-                        Icon(
-                            Icons.Outlined.EmojiEvents,
-                            contentDescription = null,
-                            tint = Color(0xFFFFD700),
-                        )
+                    SectionTitle(
+                        text = "Running Best Efforts Curve",
+                        trailing = {
+                            Icon(
+                                Icons.Outlined.EmojiEvents,
+                                contentDescription = null,
+                                tint = Color(0xFFFFD700),
+                            )
+                        },
+                    )
+
+                    // Visual Pace Curve Canvas
+                    if (bundle.bestEfforts.size >= 2) {
+                        val efforts = bundle.bestEfforts
+                        val minPace = (efforts.minOf { it.paceSecPerKm } * 0.94).coerceAtLeast(60.0) // fastest pace at top
+                        val maxPace = (efforts.maxOf { it.paceSecPerKm } * 1.06).coerceAtLeast(minPace + 15.0) // slowest pace at bottom
+                        val paceRange = (maxPace - minPace).coerceAtLeast(1.0)
+                        val paceColor = MaterialTheme.colorScheme.primary
+                        val gridColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+
+                        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(140.dp),
+                            ) {
+                                // Y-axis labels column (fastest pace at top, slowest at bottom)
+                                Column(
+                                    modifier = Modifier
+                                        .width(42.dp)
+                                        .height(140.dp)
+                                        .padding(vertical = 4.dp),
+                                    verticalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Text(
+                                        Format.pace(minPace, unit),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                    )
+                                    Text(
+                                        Format.pace((minPace + maxPace) / 2.0, unit),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                    )
+                                    Text(
+                                        Format.pace(maxPace, unit),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                    )
+                                }
+
+                                Canvas(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(140.dp)
+                                        .padding(vertical = 4.dp),
+                                ) {
+                                    val w = size.width
+                                    val h = size.height
+
+                                    // Grid lines (top, mid, bottom)
+                                    drawLine(gridColor, Offset(0f, 0f), Offset(w, 0f), strokeWidth = 1f)
+                                    drawLine(gridColor, Offset(0f, h * 0.5f), Offset(w, h * 0.5f), strokeWidth = 1f)
+                                    drawLine(gridColor, Offset(0f, h), Offset(w, h), strokeWidth = 1f)
+
+                                    fun py(pace: Double): Float =
+                                        (((pace - minPace) / paceRange).toFloat() * h).coerceIn(0f, h)
+
+                                    val path = Path()
+                                    val fillPath = Path()
+                                    efforts.forEachIndexed { i, effort ->
+                                        val x = (i.toFloat() / (efforts.size - 1)) * w
+                                        val y = py(effort.paceSecPerKm)
+                                        if (i == 0) {
+                                            path.moveTo(x, y)
+                                            fillPath.moveTo(x, y)
+                                        } else {
+                                            path.lineTo(x, y)
+                                            fillPath.lineTo(x, y)
+                                        }
+                                    }
+                                    fillPath.lineTo(w, h)
+                                    fillPath.lineTo(0f, h)
+                                    fillPath.close()
+
+                                    drawPath(
+                                        fillPath,
+                                        Brush.verticalGradient(
+                                            listOf(paceColor.copy(alpha = 0.22f), Color.Transparent),
+                                        ),
+                                    )
+                                    drawPath(
+                                        path,
+                                        paceColor,
+                                        style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round),
+                                    )
+
+                                    efforts.forEachIndexed { i, effort ->
+                                        val x = (i.toFloat() / (efforts.size - 1)) * w
+                                        val y = py(effort.paceSecPerKm)
+                                        drawCircle(paceColor, radius = 3.5.dp.toPx(), center = Offset(x, y))
+                                    }
+                                }
+                            }
+
+                            // X-axis labels
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 42.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                efforts.forEach { effort ->
+                                    Text(
+                                        effort.label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(6.dp))
                     }
 
                     bundle.bestEfforts.forEachIndexed { idx, effort ->
@@ -384,7 +643,7 @@ fun RunningAnalyticsTab(
             }
         }
 
-        // 5. Weekly Run Volume (last 26 weeks)
+        // 7. Weekly Run Volume (last 26 weeks)
         if (bundle.weeklyVolume.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -394,6 +653,26 @@ fun RunningAnalyticsTab(
             ) {
                 Column(Modifier.padding(16.dp)) {
                     SectionTitle("Weekly Running Volume (26 Weeks)")
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        StatTile(
+                            label = "This Week",
+                            value = Format.distance(bundle.currentWeekKm, unit, 1),
+                            icon = Icons.AutoMirrored.Outlined.DirectionsRun,
+                            accent = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        StatTile(
+                            label = "12-Week Avg",
+                            value = Format.distance(bundle.avgWeeklyKm12, unit, 1),
+                            icon = Icons.Outlined.Speed,
+                            accent = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                     Spacer(Modifier.height(12.dp))
                     WeeklyVolumeBars(
                         weeks = bundle.weeklyVolume,

@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Favorite
@@ -36,6 +37,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -135,6 +137,7 @@ fun DashboardScreen(
     var dismissedAdaptations by rememberSaveable { mutableStateOf(setOf<String>()) }
     var loginPromptHidden by remember { mutableStateOf(false) }
     var showDailyForm by remember { mutableStateOf(false) }
+    var showCompleteSheetForWorkout by remember { mutableStateOf<com.runflow2.app.data.db.WorkoutEntity?>(null) }
     val now = remember { System.currentTimeMillis() }
     val showLoginPrompt = auth.initialized && !loginPromptHidden && LoginPrompt.shouldShow(
         loggedIn = auth.loggedIn,
@@ -829,20 +832,54 @@ fun DashboardScreen(
                                     }
 
                                     if (!w.isCompleted && type != WorkoutType.REST) {
-                                        Button(
-                                            onClick = { onStartWorkout(w.id) },
-                                            modifier = Modifier.fillMaxWidth(),
-                                        ) {
-                                            Icon(Icons.Outlined.PlayArrow, null)
-                                            Spacer(Modifier.width(6.dp))
-                                            Text("Start workout")
+                                        if (w.canRecordInApp(type)) {
+                                            Row(
+                                                Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                            ) {
+                                                Button(
+                                                    onClick = { onStartWorkout(w.id) },
+                                                    modifier = Modifier.weight(1f),
+                                                ) {
+                                                    Icon(Icons.Outlined.PlayArrow, contentDescription = null)
+                                                    Spacer(Modifier.width(6.dp))
+                                                    Text("Start")
+                                                }
+                                                FilledTonalButton(
+                                                    onClick = { showCompleteSheetForWorkout = w },
+                                                    modifier = Modifier.weight(1f),
+                                                ) {
+                                                    Icon(Icons.Outlined.Check, contentDescription = null)
+                                                    Spacer(Modifier.width(6.dp))
+                                                    Text("Complete")
+                                                }
+                                            }
+                                        } else {
+                                            Button(
+                                                onClick = { showCompleteSheetForWorkout = w },
+                                                modifier = Modifier.fillMaxWidth(),
+                                            ) {
+                                                Icon(Icons.Outlined.Check, contentDescription = null)
+                                                Spacer(Modifier.width(6.dp))
+                                                Text("Complete")
+                                            }
                                         }
                                     } else if (w.isCompleted) {
-                                        InfoChip(
-                                            "Completed",
-                                            container = MaterialTheme.colorScheme.secondaryContainer,
-                                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        )
+                                        val linkedAct = activities.firstOrNull { it.id == w.activityId || (it.serverId != null && it.serverId == w.activityId) }
+                                        Row(
+                                            Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            InfoChip(
+                                                if (linkedAct != null) "✓ ${linkedAct.name}" else "✓ Completed",
+                                                container = MaterialTheme.colorScheme.secondaryContainer,
+                                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            )
+                                            TextButton(onClick = { showCompleteSheetForWorkout = w }) {
+                                                Text(if (linkedAct != null) "Relink 🔗" else "Link activity 🔗")
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -982,6 +1019,32 @@ fun DashboardScreen(
     if (showDailyForm) {
         DailyFormSheet(container = container, onDismiss = { showDailyForm = false })
     }
+
+    // ---- complete / link workout sheet ----
+    showCompleteSheetForWorkout?.let { target ->
+        val liveTarget = workouts.firstOrNull { it.id == target.id } ?: target
+        CompleteWorkoutSheet(
+            workout = liveTarget,
+            container = container,
+            onDismiss = { showCompleteSheetForWorkout = null },
+        )
+    }
+}
+
+private fun com.runflow2.app.data.db.WorkoutEntity.canRecordInApp(type: WorkoutType): Boolean {
+    val s = sport.uppercase()
+    val wt = (webWorkoutType ?: workoutType).uppercase()
+    if (s == "SWIM" || s == "STRENGTH" || wt in setOf("SWIM", "SWIM_DRILL", "OPEN_WATER_SWIM", "STRENGTH", "WORKOUT", "CROSS_TRAIN", "REST", "TRANSITION_PRACTICE", "VIRTUAL_RIDE")) {
+        return false
+    }
+    if (description.contains("MyWhoosh", ignoreCase = true) || description.contains("Zwift", ignoreCase = true)) {
+        return false
+    }
+    return type in setOf(
+        WorkoutType.EASY, WorkoutType.RECOVERY, WorkoutType.LONG_RUN,
+        WorkoutType.TEMPO, WorkoutType.INTERVALS, WorkoutType.FARTLEK,
+        WorkoutType.REPETITIONS, WorkoutType.RACE, WorkoutType.RIDE,
+    )
 }
 
 /** Floating-card corner radii: hero/week cards 24dp, compact metric cards 20dp. */

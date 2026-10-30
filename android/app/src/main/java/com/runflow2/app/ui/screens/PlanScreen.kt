@@ -134,7 +134,14 @@ fun PlanScreen(
     var showDeletePlan by remember { mutableStateOf(false) }
 
     val activities by container.repository.activities.collectAsState(initial = emptyList())
-    val activitiesById = remember(activities) { activities.associateBy { it.id } }
+    val activitiesById = remember(activities) {
+        buildMap {
+            activities.forEach {
+                put(it.id, it)
+                it.serverId?.let { s -> put(s, it) }
+            }
+        }
+    }
     val loadMetric = when (settings.primaryLoadMetric.uppercase()) {
         "TRIMP" -> "TRIMP"
         "DUAL" -> "TSS"

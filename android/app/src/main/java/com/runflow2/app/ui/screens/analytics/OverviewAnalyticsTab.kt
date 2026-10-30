@@ -1,7 +1,10 @@
 package com.runflow2.app.ui.screens.analytics
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DirectionsBike
@@ -27,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +51,8 @@ import com.runflow2.app.domain.analytics.AnalyticsBundle
 import com.runflow2.app.ui.components.PmcChart
 import com.runflow2.app.ui.components.SectionTitle
 import com.runflow2.app.ui.components.StatTile
+import com.runflow2.app.ui.components.TsbBar
+import com.runflow2.app.ui.components.ZoneDistribution
 import com.runflow2.app.ui.components.themedColor
 import com.runflow2.app.ui.theme.semanticColors
 import java.time.DayOfWeek
@@ -58,11 +66,13 @@ fun OverviewAnalyticsTab(
     activities: List<ActivityEntity>,
     unit: DistanceUnit,
     modifier: Modifier = Modifier,
+    onOpenZones: () -> Unit = {},
 ) {
     var rangeDays by remember { mutableStateOf(90) }
     var showCtl by remember { mutableStateOf(true) }
     var showAtl by remember { mutableStateOf(true) }
     var showTsb by remember { mutableStateOf(true) }
+    var showPercentage by remember { mutableStateOf(false) }
 
     val today = remember { LocalDate.now() }
     val sem = MaterialTheme.semanticColors
@@ -123,27 +133,132 @@ fun OverviewAnalyticsTab(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             ),
         ) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SectionTitle(
+                    text = "Fitness & Form (PMC)",
+                    trailing = {
+                        Surface(
+                            color = bundle.tsbStatus.themedColor(),
+                            shape = RoundedCornerShape(8.dp),
+                        ) {
+                            Text(
+                                bundle.tsbStatus.label,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.surface,
+                                maxLines = 1,
+                            )
+                        }
+                    },
+                )
+
+                // Range Selector Chips (90d | 180d | 1Y)
                 Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                    Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    SectionTitle("Fitness & Form (PMC)")
-                    Surface(
-                        color = bundle.tsbStatus.themedColor(),
-                        shape = RoundedCornerShape(8.dp),
-                    ) {
-                        Text(
-                            bundle.tsbStatus.label,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.surface,
+                    listOf(90, 180, 365).forEach { d ->
+                        FilterChip(
+                            selected = rangeDays == d,
+                            onClick = { rangeDays = d },
+                            label = { Text(if (d == 365) "1Y" else "${d}d", maxLines = 1) },
                         )
                     }
                 }
-                Spacer(Modifier.height(10.dp))
+
+                // Interactive CTL / ATL / TSB Metric Progress Bars
+                val ctlMax = maxOf(bundle.maxCtl, bundle.ctl, 1.0)
+                val atlMax = maxOf(bundle.maxAtl, bundle.atl, 1.0)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showPercentage = !showPercentage },
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    // Fitness (CTL) bar
+                    val ctlValueText = if (showPercentage) {
+                        "${((bundle.ctl / ctlMax) * 100).roundToInt()}% of peak (${bundle.ctl.roundToInt()})"
+                    } else {
+                        "${bundle.ctl.roundToInt()} (${((bundle.ctl / ctlMax) * 100).roundToInt()}% peak)"
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Fitness (CTL)", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                            Text(ctlValueText, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = sem.ctl, maxLines = 1)
+                        }
+                        val ctlFraction = (bundle.ctl / ctlMax).toFloat().coerceIn(0f, 1f)
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(7.dp)
+                                .background(sem.ctl.copy(alpha = 0.15f), CircleShape),
+                        ) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth(ctlFraction)
+                                    .height(7.dp)
+                                    .background(sem.ctl, CircleShape),
+                            )
+                        }
+                    }
+
+                    // Fatigue (ATL) bar
+                    val atlValueText = if (showPercentage) {
+                        "${((bundle.atl / atlMax) * 100).roundToInt()}% of peak (${bundle.atl.roundToInt()})"
+                    } else {
+                        "${bundle.atl.roundToInt()} (${((bundle.atl / atlMax) * 100).roundToInt()}% peak)"
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Fatigue (ATL)", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                            Text(atlValueText, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = sem.atl, maxLines = 1)
+                        }
+                        val atlFraction = (bundle.atl / atlMax).toFloat().coerceIn(0f, 1f)
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(7.dp)
+                                .background(sem.atl.copy(alpha = 0.15f), CircleShape),
+                        ) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth(atlFraction)
+                                    .height(7.dp)
+                                    .background(sem.atl, CircleShape),
+                            )
+                        }
+                    }
+
+                    // Form (TSB) bar
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Form (TSB)", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                            Text(
+                                "${if (bundle.tsb >= 0) "+" else ""}${bundle.tsb.roundToInt()}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = sem.tsb,
+                                maxLines = 1,
+                            )
+                        }
+                        TsbBar(tsb = bundle.tsb)
+                    }
+                }
 
                 // Metric Toggle Chips
                 Row(
@@ -153,21 +268,19 @@ fun OverviewAnalyticsTab(
                     FilterChip(
                         selected = showCtl,
                         onClick = { showCtl = !showCtl },
-                        label = { Text("CTL ${bundle.ctl.roundToInt()}") },
+                        label = { Text("CTL ${bundle.ctl.roundToInt()}", maxLines = 1) },
                     )
                     FilterChip(
                         selected = showAtl,
                         onClick = { showAtl = !showAtl },
-                        label = { Text("ATL ${bundle.atl.roundToInt()}") },
+                        label = { Text("ATL ${bundle.atl.roundToInt()}", maxLines = 1) },
                     )
                     FilterChip(
                         selected = showTsb,
                         onClick = { showTsb = !showTsb },
-                        label = { Text("TSB ${if (bundle.tsb >= 0) "+" else ""}${bundle.tsb.roundToInt()}") },
+                        label = { Text("TSB ${if (bundle.tsb >= 0) "+" else ""}${bundle.tsb.roundToInt()}", maxLines = 1) },
                     )
                 }
-
-                Spacer(Modifier.height(12.dp))
 
                 val windowDaily = remember(bundle.daily, rangeDays) {
                     if (bundle.daily.size > rangeDays) {
@@ -194,40 +307,25 @@ fun OverviewAnalyticsTab(
             ),
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Icon(
-                            Icons.Outlined.TrendingUp,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                        Text(
-                            "Load & Injury Risk",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                    val isHighRisk = bundle.acwr > 1.5 || bundle.ctlRampRate7d > 8.0 || bundle.fosterMonotony > 2.0
-                    Surface(
-                        color = if (isHighRisk) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(8.dp),
-                    ) {
-                        Text(
-                            if (isHighRisk) "Elevated Risk" else "Optimal Load",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (isHighRisk) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
-                        )
-                    }
-                }
+                val isHighRisk = bundle.acwr > 1.5 || bundle.ctlRampRate7d > 8.0 || bundle.fosterMonotony > 2.0
+                SectionTitle(
+                    text = "Load & Injury Risk",
+                    trailing = {
+                        Surface(
+                            color = if (isHighRisk) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(8.dp),
+                        ) {
+                            Text(
+                                if (isHighRisk) "Elevated Risk" else "Optimal Load",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isHighRisk) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
+                                maxLines = 1,
+                            )
+                        }
+                    },
+                )
 
                 Row(
                     Modifier.fillMaxWidth(),
@@ -295,7 +393,29 @@ fun OverviewAnalyticsTab(
             }
         }
 
-        // 4. Period Summaries with Year-over-Year (YoY) Deltas
+        // 4. 7-Zone Heart Rate Distribution Card
+        if (bundle.zoneSeconds.sum() > 0) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    SectionTitle(
+                        text = "Heart Rate Zone Distribution",
+                        trailing = {
+                            TextButton(onClick = onOpenZones) {
+                                Text("Edit Zones →", maxLines = 1)
+                            }
+                        },
+                    )
+                    ZoneDistribution(zonesSeconds = bundle.zoneSeconds)
+                }
+            }
+        }
+
+        // 5. Period Summaries with Year-over-Year (YoY) Deltas
         val periods = remember(activities, today) {
             calculatePeriodSummaries(activities, today)
         }
@@ -339,6 +459,7 @@ fun OverviewAnalyticsTab(
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = if (isPositive) sem.good else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
                                     )
                                 }
                             }

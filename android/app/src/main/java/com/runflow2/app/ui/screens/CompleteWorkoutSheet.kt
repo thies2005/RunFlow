@@ -72,7 +72,9 @@ fun CompleteWorkoutSheet(
     val unit = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
 
     val allActivities by container.repository.activities.collectAsState(initial = emptyList())
+    val goalWorkouts by container.repository.workoutsForGoal(workout.goalId).collectAsState(initial = emptyList())
     var showMoreDays by remember { mutableStateOf(false) }
+    var showAlreadyLinked by remember { mutableStateOf(false) }
     var selectedActivityId by remember { mutableStateOf<String?>(workout.activityId ?: workout.suggestedActivityId) }
 
     val workoutDate = remember(workout.scheduledDate) {
@@ -83,12 +85,37 @@ fun CompleteWorkoutSheet(
     val startDateLimit = workoutDate.minusDays(dayWindow)
     val endDateLimit = workoutDate.plusDays(dayWindow)
 
-    val candidateActivities = remember(allActivities, workoutDate, showMoreDays) {
+    val linkedToOtherWorkoutMap: Map<String, WorkoutEntity> = remember(goalWorkouts, allActivities, workout.id) {
+        buildMap {
+            val actById = allActivities.associateBy { it.id }
+            val actByServerId = allActivities.filter { it.serverId != null }.associateBy { it.serverId!! }
+            for (w in goalWorkouts) {
+                if (w.id != workout.id && w.activityId != null) {
+                    val actId = w.activityId!!
+                    put(actId, w)
+                    actById[actId]?.serverId?.let { put(it, w) }
+                    actByServerId[actId]?.let { put(it.id, w) }
+                }
+            }
+        }
+    }
+
+    val allCandidateActivities = remember(allActivities, workoutDate, showMoreDays) {
         allActivities.filter { act ->
             val actDate = Format.localDate(act.startDate)
             !actDate.isBefore(startDateLimit) && !actDate.isAfter(endDateLimit)
         }.sortedByDescending { it.startDate }
     }
+
+    val (unlinkedCandidates, alreadyLinkedCandidates) = remember(allCandidateActivities, linkedToOtherWorkoutMap, workout.activityId) {
+        allCandidateActivities.partition { act ->
+            val isLinkedToOther = act.id in linkedToOtherWorkoutMap || (act.serverId != null && act.serverId in linkedToOtherWorkoutMap)
+            val isLinkedToCurrent = act.id == workout.activityId || (act.serverId != null && act.serverId == workout.activityId)
+            !isLinkedToOther || isLinkedToCurrent
+        }
+    }
+
+    val displayedActivities = if (showAlreadyLinked) allCandidateActivities else unlinkedCandidates
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -139,7 +166,7 @@ fun CompleteWorkoutSheet(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            if (candidateActivities.isEmpty()) {
+            if (displayedActivities.isEmpty()) {
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
@@ -155,10 +182,19 @@ fun CompleteWorkoutSheet(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
-                            "No activities found within ±${dayWindow} days",
+                            if (allCandidateActivities.isEmpty()) "No activities found within ±${dayWindow} days"
+                            else "All activities within ±${dayWindow} days are already linked (${alreadyLinkedCandidates.size})",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        if (alreadyLinkedCandidates.isNotEmpty()) {
+                            TextButton(onClick = { showAlreadyLinked = !showAlreadyLinked }) {
+                                Text(
+                                    if (showAlreadyLinked) "Hide already-linked activities (${alreadyLinkedCandidates.size})"
+                                    else "Show already-linked activities (${alreadyLinkedCandidates.size})"
+                                )
+                            }
+                        }
                         if (!showMoreDays) {
                             TextButton(onClick = { showMoreDays = true }) {
                                 Text("Expand window to ±7 days")
@@ -173,16 +209,32 @@ fun CompleteWorkoutSheet(
                         .height(240.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(candidateActivities, key = { it.id }) { act ->
+                    items(displayedActivities, key = { it.id }) { act ->
+                        val otherWorkout = linkedToOtherWorkoutMap[act.id] ?: act.serverId?.let { linkedToOtherWorkoutMap[it] }
                         val isSelected = selectedActivityId == act.id
                         CandidateActivityCard(
                             activity = act,
                             isSelected = isSelected,
                             unit = unit,
+                            otherWorkout = if (act.id != workout.activityId && (act.serverId == null || act.serverId != workout.activityId)) otherWorkout else null,
                             onClick = {
                                 selectedActivityId = if (isSelected) null else act.id
                             },
                         )
+                    }
+
+                    if (alreadyLinkedCandidates.isNotEmpty()) {
+                        item {
+                            TextButton(
+                                onClick = { showAlreadyLinked = !showAlreadyLinked },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(
+                                    if (showAlreadyLinked) "Hide already-linked activities (${alreadyLinkedCandidates.size})"
+                                    else "Show already-linked activities (${alreadyLinkedCandidates.size})"
+                                )
+                            }
+                        }
                     }
 
                     if (!showMoreDays) {
@@ -241,6 +293,7 @@ private fun CandidateActivityCard(
     activity: ActivityEntity,
     isSelected: Boolean,
     unit: DistanceUnit,
+    otherWorkout: WorkoutEntity? = null,
     onClick: () -> Unit,
 ) {
     val sportIcon = when (activity.type.uppercase()) {
@@ -303,6 +356,15 @@ private fun CandidateActivityCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (otherWorkout != null) {
+                    Text(
+                        "Already linked to ${otherWorkout.customName ?: otherWorkout.workoutType}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }

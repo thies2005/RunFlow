@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.Chat
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Height
 import androidx.compose.material.icons.outlined.Info
@@ -41,6 +43,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -75,6 +78,7 @@ import com.runflow2.app.ui.components.StatTile
 import com.runflow2.app.ui.theme.SegmentedCardShapes
 import com.runflow2.app.ui.theme.semanticColors
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /** Repository shown by the About dialog (Custom Tab / browser). */
 private const val GITHUB_URL = "https://github.com/thies2005/RunFlow"
@@ -277,6 +281,18 @@ fun AthleteScreen(
                             container.repository.updateCyclingFtp(watts, autoEstimate)
                         }
                     },
+                )
+            }
+
+            // ---- personal records trophy grid ----
+            item {
+                SectionTitle("Personal Records (PRs)")
+            }
+            item {
+                PrTrophyGridCard(
+                    bundle = analytics,
+                    weightKg = p?.weightKg,
+                    unit = unit,
                 )
             }
 
@@ -629,4 +645,184 @@ private fun CyclingFtpCard(
         )
     }
 }
+
+@Composable
+private fun PrTrophyGridCard(
+    bundle: AnalyticsBundle?,
+    weightKg: Double?,
+    unit: DistanceUnit,
+    modifier: Modifier = Modifier,
+) {
+    val bestEfforts = bundle?.bestEfforts.orEmpty()
+    val powerMmp = bundle?.powerMmpCurve1y?.ifEmpty { bundle.cycling?.mmpCurve1y.orEmpty() }.orEmpty()
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        Icons.Outlined.EmojiEvents,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                    Text(
+                        "Personal Records (PRs)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+
+            // Running PRs Grid
+            Text(
+                "Running Distances",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            val runTargets = listOf("400m", "1k", "1mi", "5k", "10k", "Half", "Marathon")
+            val runMap = remember(bestEfforts) { bestEfforts.associateBy { it.label } }
+
+            val runChunks = runTargets.chunked(2)
+            runChunks.forEach { pair ->
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    pair.forEach { label ->
+                        val effort = runMap[label]
+                        TrophyTile(
+                            title = label,
+                            primaryValue = effort?.let { Format.duration(it.timeSec.toLong()) } ?: "—",
+                            subtitle = effort?.let {
+                                val paceSec = it.paceSecPerKm
+                                Format.paceWithUnit(paceSec, unit)
+                            } ?: "No effort yet",
+                            icon = Icons.Outlined.DirectionsRun,
+                            accent = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (pair.size == 1) {
+                        Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+
+            // Cycling Peak Powers
+            if (powerMmp.isNotEmpty()) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Cycling Peak Powers (1Y Best)",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                val powerTargets = listOf(
+                    5 to "5s",
+                    60 to "1m",
+                    300 to "5m",
+                    1200 to "20m",
+                    3600 to "60m",
+                )
+                val powerMap = remember(powerMmp) { powerMmp.associateBy { it.durationSec } }
+
+                val powerChunks = powerTargets.chunked(2)
+                powerChunks.forEach { pair ->
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        pair.forEach { (durSec, label) ->
+                            val effort = powerMap[durSec]
+                            val wKg = if (effort != null && weightKg != null && weightKg > 0) {
+                                "%.1f W/kg".format(effort.maxWatts / weightKg)
+                            } else null
+
+                            TrophyTile(
+                                title = label,
+                                primaryValue = effort?.let { "${it.maxWatts.roundToInt()} W" } ?: "—",
+                                subtitle = wKg ?: (if (effort != null) "Peak power" else "No effort yet"),
+                                icon = Icons.Outlined.Bolt,
+                                accent = MaterialTheme.semanticColors.streamPower,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (pair.size == 1) {
+                            Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TrophyTile(
+    title: String,
+    primaryValue: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    accent: Color,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Row(
+            Modifier.padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Box(
+                Modifier
+                    .size(34.dp)
+                    .background(accent.copy(alpha = 0.12f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = accent,
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    primaryValue,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
 

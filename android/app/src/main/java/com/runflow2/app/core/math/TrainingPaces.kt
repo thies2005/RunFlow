@@ -6,8 +6,8 @@ import com.runflow2.app.domain.model.PaceZone
 data class TrainingPaces(val vdot: Double) {
 
     private fun band(zone: PaceZone): Pair<Double, Double> = Pair(
-        VdotMath.paceSecPerKmForFraction(vdot, zone.vo2FractionRange.start),
-        VdotMath.paceSecPerKmForFraction(vdot, zone.vo2FractionRange.endInclusive),
+        VdotMath.paceSecPerKmForFraction(vdot, zone.vo2FractionRange.endInclusive), // fast (smaller sec/km)
+        VdotMath.paceSecPerKmForFraction(vdot, zone.vo2FractionRange.start),        // slow (larger sec/km)
     )
 
     fun range(zone: PaceZone) = band(zone)

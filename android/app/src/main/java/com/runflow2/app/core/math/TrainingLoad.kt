@@ -2,7 +2,11 @@ package com.runflow2.app.core.math
 
 import com.runflow2.app.domain.model.TsbStatus
 import java.time.LocalDate
+import java.util.Locale
 import kotlin.math.exp
+import kotlin.math.round
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /**
  * Training-load engine: Banister TRIMP, CTL/ATL/TSB impulse-response model.
@@ -100,4 +104,104 @@ object TrainingLoad {
     }
 
     fun tsbStatus(tsb: Double): TsbStatus = TsbStatus.from(tsb)
+
+    /**
+     * Projects future CTL / ATL series from [from] up to [to] (inclusive)
+     * using daily planned TSS targets.
+     */
+    fun projectFutureSeries(
+        lastCtl: Double,
+        lastAtl: Double,
+        plannedTssByDate: Map<LocalDate, Double>,
+        from: LocalDate,
+        to: LocalDate,
+    ): List<DailyLoad> {
+        var ctl = lastCtl
+        var atl = lastAtl
+        val result = mutableListOf<DailyLoad>()
+        var d = from
+        while (!d.isAfter(to)) {
+            val tss = plannedTssByDate[d] ?: 0.0
+            ctl = ctl * exp(-1.0 / CTL_TIME_CONSTANT) + tss * (1 - exp(-1.0 / CTL_TIME_CONSTANT))
+            atl = atl * exp(-1.0 / ATL_TIME_CONSTANT) + tss * (1 - exp(-1.0 / ATL_TIME_CONSTANT))
+            result += DailyLoad(d, tss, ctl, atl)
+            d = d.plusDays(1)
+        }
+        return result
+    }
+
+    /**
+     * 7-day CTL ramp rate (change in CTL over the last 7 days).
+     */
+    fun ctlRampRate7d(series: List<DailyLoad>): Double {
+        if (series.isEmpty()) return 0.0
+        val current = series.last().ctl
+        val past = if (series.size >= 8) series[series.size - 8].ctl else series.first().ctl
+        return current - past
+    }
+
+    data class FosterMetrics(
+        val mean: Double,
+        val stdDev: Double,
+        val monotony: Double,
+        val strain: Double,
+    )
+
+    /**
+     * Foster Monotony & Strain computed over daily loads (last 7 days).
+     */
+    fun fosterMonotonyStrain(dailyLoads: List<Double>): FosterMetrics {
+        if (dailyLoads.isEmpty()) return FosterMetrics(0.0, 0.0, 0.0, 0.0)
+        val window = dailyLoads.takeLast(7)
+        val mean = window.average()
+        val variance = window.sumOf { (it - mean) * (it - mean) } / window.size
+        val stdDev = sqrt(variance)
+        val monotony = if (stdDev > 0.001) mean / stdDev else (if (mean > 0.0) 10.0 else 0.0)
+        val weeklyLoad = window.sum()
+        val strain = weeklyLoad * monotony
+        return FosterMetrics(
+            mean = mean,
+            stdDev = stdDev,
+            monotony = monotony,
+            strain = strain,
+        )
+    }
+
+    /**
+     * Acute-to-Chronic Workload Ratio (ACWR): ATL / CTL.
+     */
+    fun acwr(atl: Double, ctl: Double): Double {
+        return if (ctl > 0.0) atl / ctl else 0.0
+    }
+
+    /**
+     * Resolves unified effective TSS per activity (Decision U1):
+     * - Rides (RIDE, VIRTUAL_RIDE): bikeTss > 0 ? bikeTss : round(trimp * 0.85)
+     * - Runs (RUN): runningTss > 0 ? runningTss : round(trimp * 0.85)
+     * - Strength (WORKOUT, STRENGTH): max(round(trimp), round(h * 36))
+     * - Other Cardio (SWIM, HIKE, WALK, OTHER): trimp > 0 ? round(trimp * 0.85) : round(h * 40)
+     */
+    fun resolveEffectiveTss(
+        type: String?,
+        movingTimeSec: Int,
+        runningTss: Double = 0.0,
+        bikeTss: Double = 0.0,
+        trimp: Double = 0.0,
+        trainingType: String? = null,
+    ): Double {
+        val t = (type ?: "").uppercase(Locale.ROOT)
+        val trainType = (trainingType ?: "").uppercase(Locale.ROOT)
+        val h = movingTimeSec / 3600.0
+
+        return when {
+            t == "RIDE" || t == "VIRTUAL_RIDE" ->
+                if (bikeTss > 0.0) bikeTss.roundToInt().toDouble() else (trimp * 0.85).roundToInt().toDouble()
+            t == "RUN" ->
+                if (runningTss > 0.0) runningTss.roundToInt().toDouble() else (trimp * 0.85).roundToInt().toDouble()
+            t == "WORKOUT" || t == "STRENGTH" || trainType == "STRENGTH" ->
+                maxOf(trimp.roundToInt().toDouble(), (h * 36.0).roundToInt().toDouble())
+            else ->
+                if (trimp > 0.0) (trimp * 0.85).roundToInt().toDouble() else (h * 40.0).roundToInt().toDouble()
+        }
+    }
 }

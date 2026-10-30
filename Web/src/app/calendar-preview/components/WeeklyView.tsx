@@ -4,6 +4,9 @@ import { useMemo } from 'react';
 import { addDays, format, isToday } from 'date-fns';
 import { Check, Clock, MapPin, AlertCircle } from 'lucide-react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { toast } from 'sonner';
+import { downloadWorkoutFit } from '@/lib/plans/fit-export';
+import { generateMyWhooshZwoXml } from '@/lib/plans/zwoExporter';
 import type { WeekEntry } from './metrics';
 import { fmtDuration, fmtKm, fmtPace } from './metrics';
 import { colorsFor } from './workoutColors';
@@ -105,13 +108,11 @@ function WeekSummary({ week }: { week: WeekEntry }) {
                     value={`${week.tsb >= 0 ? '+' : ''}${week.tsb.toFixed(0)}`}
                     className={tsbPositive ? 'text-positive' : 'text-negative'}
                 />
-                {week.plannedTss > 0 && (
-                    <Stat
-                        label="Planned"
-                        value={week.plannedTss.toFixed(0)}
-                        className="text-foreground-secondary"
-                    />
-                )}
+                <Stat
+                    label="TSS"
+                    value={`${week.tss.toFixed(0)} / ${week.plannedTss.toFixed(0)}`}
+                    className="text-workout-tempo"
+                />
             </div>
         </div>
     );
@@ -128,7 +129,7 @@ function Stat({ label, value, className }: { label: string; value: string; class
 
 function DayRow({
     day,
-    dayName,
+    dayName: _dayName,
     entry,
     onWorkoutClick,
     onActivityClick,
@@ -139,7 +140,7 @@ function DayRow({
     onWorkoutClick?: (workout: MockWorkout) => void;
     onActivityClick?: (activity: MockActivity) => void;
 }) {
-    const key = day.toISOString().split('T')[0];
+    const key = format(day, 'yyyy-MM-dd');
     const { isOver, setNodeRef } = useDroppable({
         id: `day-${key}`,
         data: { date: key },
@@ -163,7 +164,7 @@ function DayRow({
         >
             {/* date column */}
             <div className="w-16 shrink-0 flex flex-col items-center justify-center py-2 border-r border-line">
-                <span className="text-[10px] text-foreground-muted">{dayName}</span>
+                <span className="text-[10px] text-foreground-muted">{format(day, 'EEE')}</span>
                 <span className={`text-base font-semibold font-mono ${today ? 'text-accent-orange' : 'text-foreground'}`}>
                     {format(day, 'd')}
                 </span>
@@ -271,6 +272,47 @@ function DraggableWorkoutPill({
     const isBike = workout.type === 'RIDE' || workout.sport === 'BIKE';
     const isSwim = workout.type === 'SWIM' || workout.sport === 'SWIM';
 
+    const scheduled = new Date(workout.scheduledDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isPastDue = scheduled < today && !workout.completed;
+
+    const handleExportFit = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            downloadWorkoutFit(workout);
+            toast.success('Downloaded .fit file');
+        } catch {
+            toast.error('Failed to export .fit file');
+        }
+    };
+
+    const handleExportZwo = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            const xml = generateMyWhooshZwoXml({
+                name: workout.name,
+                description: `Target TSS: ${workout.plannedTss || 50}`,
+                workoutType: workout.type,
+                targetDurationSeconds: workout.targetDuration || 3600,
+                phase: workout.phase,
+                structuredSteps: (workout as any).structuredSteps || null,
+            });
+            const blob = new Blob([xml], { type: 'application/xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${(workout.name || workout.type).replace(/[^a-z0-9-_]+/gi, '_')}.zwo`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast.success('Downloaded .zwo file');
+        } catch {
+            toast.error('Failed to export .zwo file');
+        }
+    };
+
     let targetChip: string | null = null;
     if (isBike) {
         if (workout.targetPowerMinWatts && workout.targetPowerMaxWatts) {
@@ -297,12 +339,20 @@ function DraggableWorkoutPill({
             {...attributes}
             {...listeners}
             onClick={onClick}
-            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs cursor-pointer select-none transition-all ${
+            className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs cursor-pointer select-none transition-all ${
                 isDragging ? 'opacity-50 ring-2 ring-accent-orange' : 'opacity-90 hover:opacity-100 hover:brightness-110'
             } ${c.bg} ${c.text} border border-dashed border-foreground/20`}
             title="Planned workout — click for details, drag to reschedule"
         >
-            <AlertCircle className="w-3 h-3 text-workout-tempo shrink-0" />
+            {isPastDue ? (
+                <span title="Past due" className="inline-flex shrink-0">
+                    <AlertCircle className="w-3 h-3 text-workout-tempo" />
+                </span>
+            ) : (
+                <span title="Scheduled" className="inline-flex shrink-0">
+                    <Clock className="w-3 h-3 text-foreground-muted" />
+                </span>
+            )}
             <span className="font-medium">{workout.name}</span>
             {workout.targetDistance ? (
                 <span className="flex items-center gap-0.5 text-foreground-secondary font-mono">
@@ -321,6 +371,26 @@ function DraggableWorkoutPill({
             {workout.plannedTss != null && workout.plannedTss > 0 && (
                 <span className="text-foreground-muted font-mono">TSS {workout.plannedTss.toFixed(0)}</span>
             )}
+            <div className="flex items-center gap-1 ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                    type="button"
+                    onClick={handleExportFit}
+                    className="px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-background-tertiary hover:bg-background border border-line text-foreground-muted hover:text-foreground"
+                    title="Export as Garmin/Wahoo/Coros .fit"
+                >
+                    .FIT
+                </button>
+                {isBike && (
+                    <button
+                        type="button"
+                        onClick={handleExportZwo}
+                        className="px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-background-tertiary hover:bg-background border border-line text-accent-cyan hover:text-accent-cyan"
+                        title="Export as MyWhoosh/Zwift .zwo"
+                    >
+                        .ZWO
+                    </button>
+                )}
+            </div>
         </div>
     );
 }

@@ -101,20 +101,27 @@ internal data class WebBikeZones(
 /** bike-zones.ts `calculateBikeZones` (L11-21). */
 internal fun calculateBikeZones(ftpWatts: Double): WebBikeZones {
     val ftp = maxOf(0.0, ftpWatts)
+    val z1Max = jr(ftp * 0.55).toInt()
+    val z2Max = jr(ftp * 0.75).toInt()
+    val z3Max = jr(ftp * 0.90).toInt()
+    val z4Max = jr(ftp * 1.05).toInt()
+    val z5Max = jr(ftp * 1.20).toInt()
     return WebBikeZones(
-        recovery = WebBikeZoneRange(0, jr(ftp * 0.55).toInt()),
-        endurance = WebBikeZoneRange(jr(ftp * 0.56).toInt(), jr(ftp * 0.75).toInt()),
-        tempo = WebBikeZoneRange(jr(ftp * 0.76).toInt(), jr(ftp * 0.90).toInt()),
-        threshold = WebBikeZoneRange(jr(ftp * 0.91).toInt(), jr(ftp * 1.05).toInt()),
-        vo2max = WebBikeZoneRange(jr(ftp * 1.06).toInt(), jr(ftp * 1.20).toInt()),
+        recovery = WebBikeZoneRange(0, z1Max),
+        endurance = WebBikeZoneRange(z1Max + 1, z2Max),
+        tempo = WebBikeZoneRange(z2Max + 1, z3Max),
+        threshold = WebBikeZoneRange(z3Max + 1, z4Max),
+        vo2max = WebBikeZoneRange(z4Max + 1, z5Max),
     )
 }
 
-/** bike-zones.ts `estimateBikeFtpFromVdot` (L42-47). */
-internal fun estimateBikeFtpFromVdot(vdot: Double): Double {
-    if (vdot <= 0) return 100.0
-    val baseFTP = (vdot - 10) * 6 + 120
-    return jr(baseFTP).coerceIn(100.0, 400.0)
+/** bike-zones.ts `estimateBikeFtpFromVdot` */
+internal fun estimateBikeFtpFromVdot(vdot: Double, weightKg: Double = 70.0): Double {
+    if (vdot <= 0.0) return 100.0
+    val safeWeight = if (weightKg > 0.0) weightKg else 70.0
+    val powerVo2PerKg = maxOf(0.0, (vdot - 7.0) / 10.8)
+    val ftpWatts = powerVo2PerKg * 0.75 * safeWeight
+    return jr(ftpWatts).coerceIn(100.0, 450.0)
 }
 
 /** swim-pace.ts `estimateSwimPaceFromVdot` (L71-76). */
@@ -152,6 +159,7 @@ data class StructuredStepsContext(
     val vdot: Double = 45.0,
     val ftpWatts: Double? = null,
     val swimCssSecPer100m: Int? = null,
+    val weightKg: Double? = null,
     val hrZones: List<Personalization.HrZone>? = null,
 )
 
@@ -235,7 +243,7 @@ internal fun enrichWorkoutsWithTargets(
         ),
     ).zones
 
-    val bikeFtp = config.ftpWatts?.takeIf { it > 0 }?.toDouble() ?: estimateBikeFtpFromVdot(config.vdot)
+    val bikeFtp = config.ftpWatts?.takeIf { it > 0 }?.toDouble() ?: estimateBikeFtpFromVdot(config.vdot, config.weightKg ?: 70.0)
     val bikeZones = calculateBikeZones(bikeFtp)
     val phasePacesByVdot = HashMap<Double, Personalization.PersonTrainingPaces>()
 
@@ -298,7 +306,7 @@ fun buildStructuredStepsForWorkout(
     val bikeFtp = if (context.ftpWatts != null && context.ftpWatts > 0) {
         jr(context.ftpWatts).toDouble()
     } else {
-        estimateBikeFtpFromVdot(vdot)
+        estimateBikeFtpFromVdot(vdot, context.weightKg ?: 70.0)
     }
     val swimCss = if (context.swimCssSecPer100m != null && context.swimCssSecPer100m > 0) {
         context.swimCssSecPer100m
@@ -310,6 +318,19 @@ fun buildStructuredStepsForWorkout(
     val paces = Personalization.trainingPaces(vdot)
     val targetPace = workout.targetPace?.takeIf { it > 0 }
     val hrZone = workout.targetHrZone
+    val easyPaceWindowTarget = Target.Pace(
+        unit = "sec_per_km",
+        min = paces.easy.minSecPerKm.toDouble(),
+        max = paces.easy.maxSecPerKm.toDouble(),
+        zoneLabel = "E",
+    )
+    fun exactPaceTarget(p: Double): Target.Pace = Target.Pace(unit = "sec_per_km", min = jr(p).toDouble(), max = jr(p).toDouble())
+    fun paceWindowTarget(p: Double, label: String? = null): Target.Pace = Target.Pace(
+        unit = "sec_per_km",
+        min = jr(p * 0.97).toDouble(),
+        max = jr(p * 1.03).toDouble(),
+        zoneLabel = label,
+    )
 
     // 1. STRENGTH & TRANSITION PRACTICE
     if (type == "STRENGTH" || type == "TRANSITION_PRACTICE") {
@@ -425,7 +446,13 @@ fun buildStructuredStepsForWorkout(
     // 3. BIKE RIDES (Steady & Intervals)
     if (type == "RIDE" || type == "LONG_RIDE") {
         val durationSec = (workout.targetDuration?.takeIf { it > 0 } ?: 3600.0).toInt()
-        val midWatts = (bikeZones.endurance.min + bikeZones.endurance.max) / 2.0
+        val desc = workout.description
+        val isFreeOrRecoveryRide = (workout.plannedTss != null && workout.plannedTss <= 15.0) ||
+            Regex("\\b(free\\s*day|recovery\\s*spin|easy\\s*spin)\\b", RegexOption.IGNORE_CASE).containsMatchIn(desc)
+
+        val targetZone = if (isFreeOrRecoveryRide) bikeZones.recovery else bikeZones.endurance
+        val targetLabel = if (isFreeOrRecoveryRide) "Z1 Recovery" else "Z2 Endurance"
+        val midWatts = (targetZone.min + targetZone.max) / 2.0
         val ftpPercent = if (bikeFtp > 0) jr((midWatts / bikeFtp) * 100).toInt() else null
 
         return StructuredWorkoutV2(
@@ -437,13 +464,13 @@ fun buildStructuredStepsForWorkout(
                     label = if (type == "LONG_RIDE") "Long Ride" else "Easy Ride",
                     duration = Duration.Time(durationSec),
                     target = Target.Power(
-                        minWatts = bikeZones.endurance.min,
-                        maxWatts = bikeZones.endurance.max,
+                        minWatts = targetZone.min,
+                        maxWatts = targetZone.max,
                         ftpPercent = ftpPercent,
-                        zoneLabel = "Z2 Endurance",
+                        zoneLabel = targetLabel,
                     ),
                     cadenceRpm = 90,
-                    hrZone = hrZone ?: 2,
+                    hrZone = hrZone ?: if (isFreeOrRecoveryRide) 1 else 2,
                 ),
             ),
         )
@@ -458,7 +485,7 @@ fun buildStructuredStepsForWorkout(
         val repSeconds = repMinutes * 60
         val recoverySeconds = 180
         val fixedSeconds = warmupSeconds + (reps * repSeconds) + ((reps - 1) * recoverySeconds)
-        val cooldownSeconds = maxOf(300, (workout.targetDuration?.toInt() ?: 0) - fixedSeconds)
+        val cooldownSeconds = maxOf(180, (workout.targetDuration?.toInt() ?: 0) - fixedSeconds)
 
         val recMidWatts = (bikeZones.recovery.min + bikeZones.recovery.max) / 2.0
         val recFtpPercent = if (bikeFtp > 0) jr((recMidWatts / bikeFtp) * 100).toInt() else null
@@ -543,7 +570,12 @@ fun buildStructuredStepsForWorkout(
             )
         }
 
-        val mainWindow = swimPaces.steady
+        val isCssThreshold = workout.description.contains("Threshold") || workout.description.contains("CSS")
+        val mainWindow = when {
+            type == "SWIM_DRILL" -> swimPaces.easy
+            isCssThreshold -> swimPaces.threshold
+            else -> swimPaces.steady
+        }
         val mainPaceTarget: Target = if (targetPace != null) {
             Target.Pace(
                 unit = "sec_per_100m",
@@ -615,31 +647,134 @@ fun buildStructuredStepsForWorkout(
         return StructuredWorkoutV2(version = 2, source = "engine", steps = steps)
     }
 
-    // 5. RUN EASY / RECOVERY / LONG RUN
-    if (type == "EASY" || type == "RECOVERY" || type == "LONG_RUN") {
+    // 5. RUN EASY / RECOVERY
+    if (type == "EASY" || type == "RECOVERY") {
+        val stridesMatch = Regex("(\\d+)x(\\d+)m\\s*Strides", RegexOption.IGNORE_CASE).find(workout.description)
+        if (stridesMatch != null) {
+            val reps = stridesMatch.groupValues[1].toInt()
+            val repMeters = stridesMatch.groupValues[2].toDouble()
+            val stridesTotalDist = reps * repMeters
+            val mainDist = if (workout.totalDistance > stridesTotalDist) {
+                workout.totalDistance - stridesTotalDist
+            } else {
+                if (workout.totalDistance > 0) workout.totalDistance else 0.0
+            }
+
+            val mainStep = if (mainDist > 0) {
+                StructuredStep(
+                    kind = "steady",
+                    label = if (type == "RECOVERY") "Recovery run" else "Easy run",
+                    duration = Duration.Distance(mainDist),
+                    target = targetPace?.let { exactPaceTarget(it) } ?: easyPaceWindowTarget,
+                    hrZone = hrZone ?: if (type == "RECOVERY") 1 else 2,
+                )
+            } else {
+                StructuredStep(
+                    kind = "steady",
+                    label = if (type == "RECOVERY") "Recovery run" else "Easy run",
+                    duration = Duration.Time((workout.targetDuration?.takeIf { it > 0 } ?: 3600.0).toInt()),
+                    target = targetPace?.let { exactPaceTarget(it) } ?: easyPaceWindowTarget,
+                    hrZone = hrZone ?: if (type == "RECOVERY") 1 else 2,
+                )
+            }
+
+            val repPace = paces.repetition.toDouble()
+            val strideStep = StructuredStep(
+                kind = "work",
+                label = "Strides",
+                duration = Duration.Distance(repMeters),
+                target = Target.Pace(unit = "sec_per_km", min = repPace, max = repPace, zoneLabel = "R"),
+                hrZone = 5,
+            )
+
+            val stridesGroup = RepeatGroup(
+                times = reps,
+                setRest = Duration.Time(60),
+                steps = listOf(strideStep),
+                label = "${reps}×${repMeters.toInt()}m Strides",
+            )
+
+            return StructuredWorkoutV2(version = 2, source = "engine", steps = listOf(mainStep, stridesGroup))
+        }
+
         val step = if (workout.totalDistance > 0) {
             StructuredStep(
                 kind = "steady",
-                label = when (type) {
-                    "RECOVERY" -> "Recovery run"
-                    "LONG_RUN" -> "Long run"
-                    else -> "Easy run"
-                },
+                label = if (type == "RECOVERY") "Recovery run" else "Easy run",
                 duration = Duration.Distance(workout.totalDistance),
-                target = targetPace?.let { Target.Pace(unit = "sec_per_km", min = jr(it), max = jr(it)) },
-                hrZone = hrZone,
+                target = targetPace?.let { exactPaceTarget(it) } ?: easyPaceWindowTarget,
+                hrZone = hrZone ?: if (type == "RECOVERY") 1 else 2,
             )
         } else {
             StructuredStep(
                 kind = "steady",
-                label = when (type) {
-                    "RECOVERY" -> "Recovery run"
-                    "LONG_RUN" -> "Long run"
-                    else -> "Easy run"
-                },
+                label = if (type == "RECOVERY") "Recovery run" else "Easy run",
                 duration = Duration.Time((workout.targetDuration?.takeIf { it > 0 } ?: 3600.0).toInt()),
-                target = targetPace?.let { Target.Pace(unit = "sec_per_km", min = jr(it), max = jr(it)) },
-                hrZone = hrZone,
+                target = targetPace?.let { exactPaceTarget(it) } ?: easyPaceWindowTarget,
+                hrZone = hrZone ?: if (type == "RECOVERY") 1 else 2,
+            )
+        }
+        return StructuredWorkoutV2(version = 2, source = "engine", steps = listOf(step))
+    }
+
+    // 5b. RUN LONG RUN
+    if (type == "LONG_RUN") {
+        val goalPaceMatch = Regex("([\\d.]+)km\\s*Easy\\s*\\+\\s*([\\d.]+)km\\s*@\\s*Goal\\s*Pace", RegexOption.IGNORE_CASE).find(workout.description)
+        val progMatch = Regex("last\\s*(\\d+(?:\\.\\d+)?)\\s*km\\s*progressive", RegexOption.IGNORE_CASE).find(workout.description)
+
+        if (goalPaceMatch != null || progMatch != null) {
+            val easyDist: Double
+            val finishDist: Double
+            val finishLabel: String
+
+            if (goalPaceMatch != null) {
+                easyDist = jr(goalPaceMatch.groupValues[1].toDouble() * 1000.0)
+                finishDist = jr(goalPaceMatch.groupValues[2].toDouble() * 1000.0)
+                finishLabel = "Goal Pace finish"
+            } else {
+                val progKm = progMatch!!.groupValues[1].toDouble()
+                finishDist = jr(progKm * 1000.0)
+                easyDist = maxOf(0.0, workout.totalDistance - finishDist)
+                finishLabel = "Progressive finish"
+            }
+
+            return StructuredWorkoutV2(
+                version = 2,
+                source = "engine",
+                steps = listOf(
+                    StructuredStep(
+                        kind = "steady",
+                        label = "Easy segment",
+                        duration = Duration.Distance(if (easyDist > 0) easyDist else 1000.0),
+                        target = easyPaceWindowTarget,
+                        hrZone = 2,
+                    ),
+                    StructuredStep(
+                        kind = "work",
+                        label = finishLabel,
+                        duration = Duration.Distance(finishDist),
+                        target = paceWindowTarget(paces.marathon.toDouble(), "M"),
+                        hrZone = 3,
+                    ),
+                ),
+            )
+        }
+
+        val step = if (workout.totalDistance > 0) {
+            StructuredStep(
+                kind = "steady",
+                label = "Long run",
+                duration = Duration.Distance(workout.totalDistance),
+                target = targetPace?.let { exactPaceTarget(it) } ?: easyPaceWindowTarget,
+                hrZone = hrZone ?: 2,
+            )
+        } else {
+            StructuredStep(
+                kind = "steady",
+                label = "Long run",
+                duration = Duration.Time((workout.targetDuration?.takeIf { it > 0 } ?: 3600.0).toInt()),
+                target = targetPace?.let { exactPaceTarget(it) } ?: easyPaceWindowTarget,
+                hrZone = hrZone ?: 2,
             )
         }
         return StructuredWorkoutV2(version = 2, source = "engine", steps = listOf(step))
@@ -667,7 +802,7 @@ fun buildStructuredStepsForWorkout(
 
         val steps = mutableListOf<StepNode>()
         if (warmupDistance >= 1.0) {
-            steps.add(StructuredStep(kind = "warmup", label = "Warm up", duration = Duration.Distance(warmupDistance), hrZone = 1))
+            steps.add(StructuredStep(kind = "warmup", label = "Warm up", duration = Duration.Distance(warmupDistance), target = easyPaceWindowTarget, hrZone = 1))
         }
 
         val setRest: Duration = if (recoveryDistance >= 1.0) {
@@ -680,7 +815,7 @@ fun buildStructuredStepsForWorkout(
             kind = "work",
             label = "Rep",
             duration = Duration.Distance(repDistMeters),
-            target = targetPace?.let { Target.Pace(unit = "sec_per_km", min = jr(it), max = jr(it)) },
+            target = targetPace?.let { exactPaceTarget(it) },
             hrZone = hrZone,
         )
 
@@ -694,7 +829,7 @@ fun buildStructuredStepsForWorkout(
         steps.add(RepeatGroup(times = reps, setRest = setRest, steps = listOf(workStep), label = "${reps}×${repLabel}"))
 
         if (cooldownDistance >= 1.0) {
-            steps.add(StructuredStep(kind = "cooldown", label = "Cool down", duration = Duration.Distance(cooldownDistance), hrZone = 1))
+            steps.add(StructuredStep(kind = "cooldown", label = "Cool down", duration = Duration.Distance(cooldownDistance), target = easyPaceWindowTarget, hrZone = 1))
         }
 
         return StructuredWorkoutV2(version = 2, source = "engine", steps = steps)
@@ -715,20 +850,24 @@ fun buildStructuredStepsForWorkout(
         val totalSecs = workout.targetDuration?.toInt()
             ?: jr((workout.totalDistance / 1000.0) * (targetPace ?: 300.0)).toInt()
         val mainSecs = maxOf(cycleSeconds, totalSecs - warmupSeconds - cooldownSeconds)
-        val reps = maxOf(1, mainSecs / cycleSeconds)
+        val minCyclesByDist = if (workout.totalDistance >= 11000) 5 else if (workout.totalDistance >= 7500) 4 else 3
+        val reps = maxOf(
+            if (workout.targetDuration != null && workout.targetDuration > 0) 1 else minCyclesByDist,
+            maxOf(minCyclesByDist, mainSecs / cycleSeconds),
+        )
 
         val workStep = StructuredStep(
             kind = "work",
             label = "Fartlek Hard",
             duration = Duration.Time(hardMin * 60),
-            target = targetPace?.let { Target.Pace(unit = "sec_per_km", min = jr(it), max = jr(it)) },
+            target = targetPace?.let { exactPaceTarget(it) },
             hrZone = hrZone,
         )
         val easyStep = StructuredStep(
             kind = "recovery",
             label = "Fartlek Easy",
             duration = Duration.Time(easyMin * 60),
-            target = targetPace?.let { Target.Pace(unit = "sec_per_km", min = jr(it * 1.15), max = jr(it * 1.15)) },
+            target = targetPace?.let { exactPaceTarget(jr(it * 1.15).toDouble()) },
             hrZone = 2,
         )
 
@@ -736,11 +875,34 @@ fun buildStructuredStepsForWorkout(
             version = 2,
             source = "engine",
             steps = listOf(
-                StructuredStep(kind = "warmup", label = "Warm up", duration = Duration.Time(warmupSeconds), hrZone = 1),
+                StructuredStep(kind = "warmup", label = "Warm up", duration = Duration.Time(warmupSeconds), target = easyPaceWindowTarget, hrZone = 1),
                 RepeatGroup(times = reps, setRest = null, steps = listOf(workStep, easyStep), label = "Fartlek Cycles"),
-                StructuredStep(kind = "cooldown", label = "Cool down", duration = Duration.Time(cooldownSeconds), hrZone = 1),
+                StructuredStep(kind = "cooldown", label = "Cool down", duration = Duration.Time(cooldownSeconds), target = easyPaceWindowTarget, hrZone = 1),
             ),
         )
+    }
+
+    // 7b. RACE DAY
+    if (type == "RACE") {
+        val isTimedRace = workout.description.contains("12h") || workout.description.contains("24h") || workout.description.contains("Backyard Ultra")
+        val raceStep = if (isTimedRace && workout.targetDuration != null && workout.targetDuration > 0) {
+            StructuredStep(
+                kind = "work",
+                label = "Race Day",
+                duration = Duration.Time(workout.targetDuration.toInt()),
+                target = targetPace?.let { exactPaceTarget(it) },
+                hrZone = hrZone ?: 2,
+            )
+        } else {
+            StructuredStep(
+                kind = "work",
+                label = "Race Day",
+                duration = Duration.Distance(clampStepMeters(maxOf(100.0, workout.totalDistance))),
+                target = targetPace?.let { exactPaceTarget(it) },
+                hrZone = hrZone ?: 3,
+            )
+        }
+        return StructuredWorkoutV2(version = 2, source = "engine", steps = listOf(raceStep))
     }
 
     // 8. Generic fallback
@@ -750,18 +912,18 @@ fun buildStructuredStepsForWorkout(
 
     val steps = mutableListOf<StepNode>()
     if (warmupDistance >= 1.0) {
-        steps.add(StructuredStep(kind = "warmup", label = "Warm up", duration = Duration.Distance(clampStepMeters(warmupDistance)), hrZone = 1))
+        steps.add(StructuredStep(kind = "warmup", label = "Warm up", duration = Duration.Distance(clampStepMeters(warmupDistance)), target = easyPaceWindowTarget, hrZone = 1))
     }
     val workStep = StructuredStep(
         kind = "work",
         label = workout.description.split(":").firstOrNull()?.takeIf { it.isNotEmpty() } ?: "Main set",
         duration = Duration.Distance(clampStepMeters(if (remainingDistance > 0) remainingDistance else workout.totalDistance)),
-        target = targetPace?.let { Target.Pace(unit = "sec_per_km", min = jr(it), max = jr(it)) },
+        target = targetPace?.let { exactPaceTarget(it) },
         hrZone = hrZone,
     )
     steps.add(workStep)
     if (cooldownDistance >= 1.0) {
-        steps.add(StructuredStep(kind = "cooldown", label = "Cool down", duration = Duration.Distance(clampStepMeters(cooldownDistance)), hrZone = 1))
+        steps.add(StructuredStep(kind = "cooldown", label = "Cool down", duration = Duration.Distance(clampStepMeters(cooldownDistance)), target = easyPaceWindowTarget, hrZone = 1))
     }
 
     return StructuredWorkoutV2(version = 2, source = "engine", steps = steps)

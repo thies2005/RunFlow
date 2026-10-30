@@ -25,6 +25,51 @@ import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
 import DOMPurify from 'dompurify';
 
+export function getDisplayActivityName(activity: {
+    name?: string | null;
+    type?: string | null;
+    trainingType?: string | null;
+    startDate?: string | Date | null;
+}): string {
+    if (activity.name && activity.name.trim().length > 0) {
+        return activity.name.trim();
+    }
+    const d = activity.startDate ? new Date(activity.startDate) : new Date();
+    const hour = !isNaN(d.getTime()) ? d.getHours() : 12;
+    let timeOfDay = 'Morning';
+    if (hour >= 12 && hour < 17) {
+        timeOfDay = 'Afternoon';
+    } else if (hour >= 17 && hour < 21) {
+        timeOfDay = 'Evening';
+    } else if (hour >= 21 || hour < 5) {
+        timeOfDay = 'Night';
+    }
+
+    const type = (activity.type || '').toUpperCase();
+    const trainingType = (activity.trainingType || '').toUpperCase();
+
+    let sport = 'Activity';
+    if (type === 'VIRTUAL_RIDE') {
+        sport = 'Virtual Ride';
+    } else if (type === 'RIDE') {
+        sport = 'Ride';
+    } else if (type === 'RUN') {
+        sport = 'Run';
+    } else if (type === 'SWIM') {
+        sport = 'Swim';
+    } else if (type === 'HIKE') {
+        sport = 'Hike';
+    } else if (type === 'WALK') {
+        sport = 'Walk';
+    } else if (type === 'WORKOUT' || trainingType === 'STRENGTH') {
+        sport = 'Strength Session';
+    } else if (type) {
+        sport = type.charAt(0) + type.slice(1).toLowerCase();
+    }
+
+    return `${timeOfDay} ${sport}`;
+}
+
 interface ActivityDetailsModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -53,7 +98,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         setMounted(true);
         if (activity) {
             setTrainingType(activity.trainingType || 'EASY');
-            setName(activity.name);
+            setName(getDisplayActivityName(activity));
             setAiFeedback(null);
             setIsLoadingFeedback(false);
             setIsGeneratingFeedback(false);
@@ -427,7 +472,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                     <button
                                         onClick={() => {
                                             setIsEditingName(false);
-                                            setName(activity.name);
+                                            setName(getDisplayActivityName(activity));
                                         }}
                                         className="p-1.5 hover:bg-surface-hover text-foreground-muted hover:text-foreground rounded-md transition-colors"
                                         aria-label="Cancel editing name"
@@ -576,70 +621,80 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             {/* 10 Power Metric Tiles */}
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                                 {/* NP */}
-                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Normalized Power</span>
                                     <span className="text-xl font-mono font-bold text-accent-orange tabular-nums">
-                                        {powerMetrics.npWatts ? `${powerMetrics.npWatts} W` : '-'}
+                                        {powerMetrics.npWatts ? (
+                                            <>{powerMetrics.npWatts}<span className="text-xs font-normal text-foreground-muted ml-0.5">W</span></>
+                                        ) : '-'}
                                     </span>
                                 </div>
                                 {/* Avg Power */}
-                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Avg Power</span>
                                     <span className="text-xl font-mono font-bold text-foreground tabular-nums">
-                                        {powerMetrics.avgWatts ? `${powerMetrics.avgWatts} W` : '-'}
+                                        {powerMetrics.avgWatts ? (
+                                            <>{powerMetrics.avgWatts}<span className="text-xs font-normal text-foreground-muted ml-0.5">W</span></>
+                                        ) : '-'}
                                     </span>
                                 </div>
                                 {/* Max Power */}
-                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Max Power</span>
                                     <span className="text-xl font-mono font-bold text-foreground tabular-nums">
-                                        {powerMetrics.maxWatts ? `${powerMetrics.maxWatts} W` : '-'}
+                                        {powerMetrics.maxWatts ? (
+                                            <>{powerMetrics.maxWatts}<span className="text-xs font-normal text-foreground-muted ml-0.5">W</span></>
+                                        ) : '-'}
                                     </span>
                                 </div>
                                 {/* Intensity Factor (IF) */}
-                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Intensity Factor (IF)</span>
                                     <span className="text-xl font-mono font-bold text-accent-purple tabular-nums">
                                         {powerMetrics.intensityFactor ? powerMetrics.intensityFactor.toFixed(2) : '-'}
                                     </span>
                                 </div>
                                 {/* Variability Index (VI) */}
-                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Variability Index (VI)</span>
                                     <span className="text-xl font-mono font-bold text-accent-cyan tabular-nums">
                                         {powerMetrics.variabilityIndex ? powerMetrics.variabilityIndex.toFixed(2) : '-'}
                                     </span>
                                 </div>
                                 {/* Bike TSS */}
-                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Bike TSS</span>
                                     <span className="text-xl font-mono font-bold text-accent-orange tabular-nums">
                                         {powerMetrics.bikeTss ? Math.round(powerMetrics.bikeTss) : '-'}
                                     </span>
                                 </div>
                                 {/* Work (kJ) */}
-                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Work (kJ)</span>
                                     <span className="text-xl font-mono font-bold text-foreground tabular-nums">
-                                        {powerMetrics.kilojoules ? `${Math.round(powerMetrics.kilojoules)} kJ` : '-'}
+                                        {powerMetrics.kilojoules ? (
+                                            <>{Math.round(powerMetrics.kilojoules)}<span className="text-xs font-normal text-foreground-muted ml-0.5">kJ</span></>
+                                        ) : '-'}
                                     </span>
                                 </div>
                                 {/* W/kg */}
-                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Power-to-Weight</span>
                                     <span className="text-xl font-mono font-bold text-foreground tabular-nums">
-                                        {powerMetrics.wPerKg ? `${powerMetrics.wPerKg} W/kg` : '-'}
+                                        {powerMetrics.wPerKg ? (
+                                            <>{powerMetrics.wPerKg}<span className="text-xs font-normal text-foreground-muted ml-0.5">W/kg</span></>
+                                        ) : '-'}
                                     </span>
                                 </div>
                                 {/* Efficiency Factor (EF) */}
-                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Efficiency Factor (EF)</span>
                                     <span className="text-xl font-mono font-bold text-accent-pink tabular-nums">
                                         {powerMetrics.efficiencyFactor ? `${powerMetrics.efficiencyFactor.toFixed(2)}` : '-'}
                                     </span>
                                 </div>
                                 {/* Aerobic Decoupling */}
-                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center">
+                                <div className="bg-background-secondary p-3 rounded-lg border border-line text-center whitespace-nowrap">
                                     <span className="text-[11px] text-foreground-muted block mb-0.5">Decoupling (Pw:HR)</span>
                                     <span className={`text-xl font-mono font-bold tabular-nums ${powerMetrics.decouplingPct !== null && powerMetrics.decouplingPct < 5 ? 'text-positive' : 'text-accent-orange'}`}>
                                         {powerMetrics.decouplingPct !== null ? `${powerMetrics.decouplingPct > 0 ? '+' : ''}${powerMetrics.decouplingPct.toFixed(1)}%` : '-'}

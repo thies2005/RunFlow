@@ -48,6 +48,9 @@ import com.runflow2.app.domain.analytics.MetricSource
 import com.runflow2.app.domain.analytics.ServerMetricSnapshot
 import com.runflow2.app.domain.analytics.ServerMetrics
 import com.runflow2.app.domain.model.ActivityType
+import com.runflow2.app.domain.plan.AdaptationMode
+import com.runflow2.app.domain.plan.WorkoutMatcher
+import kotlin.math.roundToInt
 import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.RaceType
 import com.runflow2.app.domain.model.WorkoutType
@@ -108,7 +111,7 @@ class RunFlowRepository(
                     ftpWatts = s?.ftpWatts,
                     autoEstimateFtp = s?.autoEstimateFtp,
                     includeCrossTraining = s?.includeCrossTraining,
-                ),
+                ).copy(primaryLoadMetric = s?.primaryLoadMetric),
             )
             db.withTransaction {
                 profileDao.upsert(profile.copy(dirty = true))
@@ -123,6 +126,34 @@ class RunFlowRepository(
             }
         } else {
             profileDao.upsert(profile)
+        }
+    }
+
+    /** Sets the primary load metric and syncs to server if logged in (Decision U1). */
+    suspend fun setPrimaryLoadMetric(metric: String) {
+        settings?.setPrimaryLoadMetric(metric)
+        if (authStore.state.value.loggedIn) {
+            val payload = Api.json.encodeToString(
+                com.runflow2.app.data.net.UpdateProfileRequest.serializer(),
+                com.runflow2.app.data.net.UpdateProfileRequest(primaryLoadMetric = metric),
+            )
+            db.withTransaction {
+                syncQueueDao.deletePendingFor(SyncManager.TYPE_PROFILE_UPDATE, "1")
+                syncQueueDao.insert(
+                    SyncQueueEntity(
+                        entityType = SyncManager.TYPE_PROFILE_UPDATE,
+                        localId = "1",
+                        payloadJson = payload,
+                    )
+                )
+            }
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    network.api().updateProfile(
+                        com.runflow2.app.data.net.UpdateProfileRequest(primaryLoadMetric = metric)
+                    )
+                }
+            }
         }
     }
 
@@ -226,11 +257,77 @@ class RunFlowRepository(
         } else {
             activityDao.upsert(a)
         }
+
+        // Auto-match same-day pending workouts (Decision U2 / D6)
+        runCatching {
+            val actDate = Format.localDate(a.startDate)
+            val dayStart = Format.epochMillis(actDate)
+            val dayEnd = dayStart + 86_400_000L - 1
+            val pending = workoutDao.pendingBetween(dayStart, dayEnd)
+            for (w in pending) {
+                if (w.workoutType.equals("REST", ignoreCase = true)) continue
+                if (w.dismissedActivityId == a.id) continue
+                if (WorkoutMatcher.sportsMatch(w.sport, w.workoutType, a.type)) {
+                    val diff = WorkoutMatcher.computeDiffRatio(w, a)
+                    if (diff <= WorkoutMatcher.MAX_DIFF_RATIO) {
+                        val currentSuggested = w.suggestedActivityId?.let { activityDao.byId(it) }
+                        val currentDiff = currentSuggested?.let { WorkoutMatcher.computeDiffRatio(w, it) } ?: Double.MAX_VALUE
+                        if (diff < currentDiff) {
+                            workoutDao.upsert(w.copy(suggestedActivityId = a.id))
+                        }
+                    }
+                }
+            }
+        }.onFailure { AppLog.w("WorkoutMatcher", "auto-matching after saveActivity failed (${it.message})") }
+
         // A newly saved run can move the athlete's body metrics (believable
         // max HR) — refresh in the background; a failure here must never
         // fail or delay the save itself.
         runCatching { refreshBodyFromData() }
             .onFailure { AppLog.w("Body", "auto-refresh after save failed (${it.message})") }
+    }
+
+    /**
+     * Saves an in-app recorded activity.
+     * When [activity.averageHr] is null, computes pace-based TRIMP via [TrainingLoad.trimpFromPace]
+     * instead of a flat constant (Task 5.4 / P0-8).
+     * When [workoutId] is provided (in-app recording started from a scheduled workout),
+     * immediately links and completes the workout (Task 5.3 / Decision U2).
+     */
+    suspend fun saveRecording(
+        activity: ActivityEntity,
+        workoutId: String? = null,
+    ): ActivityEntity {
+        var entityToSave = activity
+        if (entityToSave.averageHr == null && entityToSave.movingTimeSec > 0 && entityToSave.distanceMeters > 0) {
+            val profile = profileOnce()
+            val thresholdPace = profile.thresholdPaceSecPerKm
+            val pace = entityToSave.paceSecPerKm
+            val isRun = entityToSave.type.equals("RUN", ignoreCase = true)
+            val computedTrimp = if (isRun && pace != null && pace > 0.0 && thresholdPace > 0) {
+                val minutes = entityToSave.movingTimeSec / 60.0
+                val avgSpeed = 1000.0 / pace
+                val thresholdSpeed = 1000.0 / thresholdPace
+                TrainingLoad.trimpFromPace(minutes, avgSpeed, thresholdSpeed)
+            } else {
+                computeTrimp(
+                    movingTimeSec = entityToSave.movingTimeSec,
+                    avgHr = null,
+                    zoneSeconds = entityToSave.zoneSeconds,
+                    distanceKm = entityToSave.distanceKm,
+                    thresholdPaceSecPerKm = thresholdPace,
+                    hrMax = profile.hrMax,
+                    hrRest = profile.hrRest,
+                    isRun = isRun,
+                )
+            }
+            entityToSave = entityToSave.copy(trimp = computedTrimp)
+        }
+        saveActivity(entityToSave)
+        if (workoutId != null) {
+            completeWorkoutWithActivity(workoutId, entityToSave.id)
+        }
+        return entityToSave
     }
 
     suspend fun deleteActivity(id: String) {
@@ -569,15 +666,25 @@ class RunFlowRepository(
      * outbox keeps the newest payload per workout); local-only plans write
      * straight to Room as before.
      */
-    private suspend fun persistWorkoutEdit(w: WorkoutEntity) {
+    private suspend fun persistWorkoutEdit(
+        w: WorkoutEntity,
+        linkedServerActivityId: String? = null,
+    ) {
         val goal = goalDao.byId(w.goalId)
         if (goal == null || goal.isLocalOnly || !authStore.state.value.loggedIn) {
             workoutDao.upsert(w)
             return
         }
+        val resolvedLinkedId = linkedServerActivityId ?: w.activityId?.let { actId ->
+            activityDao.byId(actId)?.serverId ?: actId
+        }
+        val patchReq = w.toPatchRequest().copy(
+            linkedActivityId = resolvedLinkedId,
+            adaptationType = w.adaptationType,
+        )
         val payload = Api.json.encodeToString(
             com.runflow2.app.data.net.PatchWorkoutRequest.serializer(),
-            w.toPatchRequest(),
+            patchReq,
         )
         db.withTransaction {
             workoutDao.upsert(w.copy(dirty = true))
@@ -611,13 +718,131 @@ class RunFlowRepository(
     }
 
     suspend fun completeWorkout(id: String, activityId: String?) {
-        val w = workoutDao.byId(id) ?: return
-        persistWorkoutEdit(w.copy(isCompleted = true, completedAt = System.currentTimeMillis(), activityId = activityId))
+        completeWorkoutWithActivity(id, activityId)
     }
 
     suspend fun uncompleteWorkout(id: String) {
         val w = workoutDao.byId(id) ?: return
-        persistWorkoutEdit(w.copy(isCompleted = false, completedAt = null, activityId = null))
+        persistWorkoutEdit(w.copy(isCompleted = false, completedAt = null, activityId = null, adaptationType = null))
+    }
+
+    /**
+     * Completes a workout with an activity, completes without activity, or relinks
+     * an already-completed workout to a different activity (Decision U2).
+     * Resolves the serverId for outbox synchronization.
+     */
+    suspend fun completeWorkoutWithActivity(workoutId: String, activityId: String?) {
+        val w = workoutDao.byId(workoutId) ?: return
+        val resolvedServerId = activityId?.let { actId ->
+            activityDao.byId(actId)?.serverId ?: actId
+        }
+        val updated = w.copy(
+            isCompleted = true,
+            completedAt = w.completedAt ?: System.currentTimeMillis(),
+            activityId = activityId,
+            suggestedActivityId = null,
+        )
+        persistWorkoutEdit(updated, linkedServerActivityId = resolvedServerId)
+    }
+
+    /**
+     * Accepts a suggested activity link banner (Decision U2).
+     * Links the suggested activity to the workout and marks it completed.
+     */
+    suspend fun acceptSuggestedActivityLink(workoutId: String) {
+        val w = workoutDao.byId(workoutId) ?: return
+        val actId = w.suggestedActivityId ?: return
+        completeWorkoutWithActivity(workoutId, actId)
+    }
+
+    /**
+     * Dismisses a suggested activity link banner (Decision U2).
+     * Clears suggestedActivityId and sets dismissedActivityId so this activity
+     * is never re-suggested for this workout.
+     */
+    suspend fun dismissSuggestedActivityLink(workoutId: String) {
+        val w = workoutDao.byId(workoutId) ?: return
+        val dismissedId = w.suggestedActivityId ?: w.dismissedActivityId
+        val updated = w.copy(
+            suggestedActivityId = null,
+            dismissedActivityId = dismissedId,
+        )
+        persistWorkoutEdit(updated)
+    }
+
+    /**
+     * Applies a workout adaptation (REDUCE or RESCHEDULE) triggered by readiness < 65
+     * or athlete selection (Decision U3). Writes a PlanSnapshot first for 1-tap undo.
+     */
+    suspend fun applyWorkoutAdaptation(workoutId: String, mode: AdaptationMode) {
+        val w = workoutDao.byId(workoutId) ?: return
+        snapshotGoal(w.goalId)
+        when (mode) {
+            AdaptationMode.REDUCE -> {
+                val newDistance = w.targetDistanceKm?.let { (it * 0.75 * 10).roundToInt() / 10.0 }
+                val newDuration = w.targetDurationSec?.let { (it * 0.75).roundToInt() }
+                val updatedDesc = if (w.description.startsWith("[Reduced]")) w.description else "[Reduced] ${w.description}"
+                val adapted = w.copy(
+                    targetDistanceKm = newDistance,
+                    targetDurationSec = newDuration,
+                    description = updatedDesc,
+                    adaptationType = "REDUCE",
+                )
+                persistWorkoutEdit(adapted)
+            }
+            AdaptationMode.RESCHEDULE -> {
+                val allWorkouts = workoutDao.forGoal(w.goalId)
+                val newDate = findRescheduleDate(w, allWorkouts)
+                val updatedDesc = if (w.description.startsWith("[Rescheduled]")) w.description else "[Rescheduled] ${w.description}"
+                val adapted = w.copy(
+                    scheduledDate = newDate,
+                    description = updatedDesc,
+                    adaptationType = "RESCHEDULE",
+                )
+                persistWorkoutEdit(adapted)
+            }
+        }
+    }
+
+    private fun findRescheduleDate(workout: WorkoutEntity, allWorkouts: List<WorkoutEntity>): Long {
+        val currDate = Format.localDate(workout.scheduledDate)
+        val hardTypes = setOf(
+            "INTERVALS", "REPETITIONS", "TEMPO", "FARTLEK", "LONG_RUN", "RACE",
+            "RIDE_INTERVALS", "LONG_RIDE",
+        )
+        val hardDates = allWorkouts
+            .filter { it.id != workout.id && it.workoutType.uppercase() in hardTypes }
+            .map { Format.localDate(it.scheduledDate) }
+            .toSet()
+
+        val candidateOffsets = listOf(1L, 2L, 3L, -1L, -2L)
+        for (offset in candidateOffsets) {
+            val candidateDate = currDate.plusDays(offset)
+            val hasConflict = (-1L..1L).any { diff -> candidateDate.plusDays(diff) in hardDates }
+            if (!hasConflict) {
+                return Format.epochMillis(candidateDate)
+            }
+        }
+        return Format.epochMillis(currDate.plusDays(2))
+    }
+
+    /**
+     * Matches pending workouts across the last 30 days through next 7 days against
+     * activities, setting suggestedActivityId when diffRatio <= 0.60. Never marks completed.
+     */
+    suspend fun matchWorkoutsWithActivities() {
+        val now = System.currentTimeMillis()
+        val windowStart = now - 30 * 86_400_000L
+        val windowEnd = now + 7 * 86_400_000L
+        val pending = workoutDao.pendingBetween(windowStart, windowEnd)
+        if (pending.isEmpty()) return
+        val activities = activityDao.betweenStart(windowStart - 86_400_000L, windowEnd + 86_400_000L)
+        if (activities.isEmpty()) return
+
+        val updated = WorkoutMatcher.matchWorkouts(pending, activities)
+        for (w in updated) {
+            workoutDao.upsert(w)
+        }
     }
 
     /**
@@ -714,7 +939,7 @@ class RunFlowRepository(
     suspend fun shiftWorkoutDate(id: String, days: Int) {
         val w = workoutDao.byId(id) ?: return
         snapshotGoal(w.goalId)
-        persistWorkoutEdit(w.copy(scheduledDate = w.scheduledDate + days * 86_400_000L))
+        persistWorkoutEdit(w.copy(scheduledDate = Format.epochMillis(Format.localDate(w.scheduledDate).plusDays(days.toLong()))))
     }
 
     suspend fun deleteGoalWithWorkouts(id: String) {

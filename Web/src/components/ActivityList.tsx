@@ -14,6 +14,52 @@ import {
 } from 'lucide-react';
 import type { WorkoutType, ActivityListItem } from '@/lib/types';
 import ActivityDetailsModal from './ActivityDetailsModal';
+import { resolveActivityEffectiveTss } from '@/lib/metrics/effectiveTss';
+
+export function getDisplayActivityName(activity: {
+    name?: string | null;
+    type?: string | null;
+    trainingType?: string | null;
+    startDate?: string | Date | null;
+}): string {
+    if (activity.name && activity.name.trim().length > 0) {
+        return activity.name.trim();
+    }
+    const d = activity.startDate ? new Date(activity.startDate) : new Date();
+    const hour = !isNaN(d.getTime()) ? d.getHours() : 12;
+    let timeOfDay = 'Morning';
+    if (hour >= 12 && hour < 17) {
+        timeOfDay = 'Afternoon';
+    } else if (hour >= 17 && hour < 21) {
+        timeOfDay = 'Evening';
+    } else if (hour >= 21 || hour < 5) {
+        timeOfDay = 'Night';
+    }
+
+    const type = (activity.type || '').toUpperCase();
+    const trainingType = (activity.trainingType || '').toUpperCase();
+
+    let sport = 'Activity';
+    if (type === 'VIRTUAL_RIDE') {
+        sport = 'Virtual Ride';
+    } else if (type === 'RIDE') {
+        sport = 'Ride';
+    } else if (type === 'RUN') {
+        sport = 'Run';
+    } else if (type === 'SWIM') {
+        sport = 'Swim';
+    } else if (type === 'HIKE') {
+        sport = 'Hike';
+    } else if (type === 'WALK') {
+        sport = 'Walk';
+    } else if (type === 'WORKOUT' || trainingType === 'STRENGTH') {
+        sport = 'Strength Session';
+    } else if (type) {
+        sport = type.charAt(0) + type.slice(1).toLowerCase();
+    }
+
+    return `${timeOfDay} ${sport}`;
+}
 
 interface ActivityListProps {
     activities: ActivityListItem[];
@@ -132,6 +178,12 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
         ? ((activity as any).npWatts ?? (activity as any).averageWatts ?? extractWattsFromTitle(activity.name))
         : null;
     const bikeTss = crossTraining ? ((activity as any).bikeTss as number | null | undefined) : null;
+    const unifiedTss = resolveActivityEffectiveTss(
+        activity,
+        activity.runningTss || 0,
+        (activity as any).bikeTss || 0,
+        activity.trimp || 0
+    );
 
     return (
         <div className="w-full text-left glass-card glass-card-hover p-4 transition-all duration-200">
@@ -147,7 +199,7 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
                 {/* Activity details */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-foreground font-semibold truncate">{activity.name}</h4>
+                        <h4 className="text-foreground font-semibold truncate">{getDisplayActivityName(activity)}</h4>
                         {cyclingBadge && (
                             <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${cyclingBadge.className}`}>
                                 {cyclingBadge.label}
@@ -177,21 +229,43 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
 
                     {/* Stats row */}
                     <div className="flex flex-wrap items-center gap-4 mt-3">
-                        {/* Distance */}
-                        <div className="flex items-center gap-1">
-                            <TrendingUp className="w-4 h-4 text-foreground-muted" />
-                            <span className="text-foreground font-medium font-mono tabular-nums">
-                                {(activity.distance / 1000).toFixed(2)} km
-                            </span>
-                        </div>
+                        {activity.distance > 0 ? (
+                            <>
+                                {/* Distance */}
+                                <div className="flex items-center gap-1">
+                                    <TrendingUp className="w-4 h-4 text-foreground-muted" />
+                                    <span className="text-foreground font-medium font-mono tabular-nums">
+                                        {(activity.distance / 1000).toFixed(2)} km
+                                    </span>
+                                </div>
 
-                        {/* Duration */}
-                        <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4 text-foreground-muted" />
-                            <span className="text-foreground font-medium font-mono tabular-nums">
-                                {formatDuration(activity.movingTime)}
-                            </span>
-                        </div>
+                                {/* Duration */}
+                                <div className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4 text-foreground-muted" />
+                                    <span className="text-foreground font-medium font-mono tabular-nums">
+                                        {formatDuration(activity.movingTime)}
+                                    </span>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                {/* Duration */}
+                                <div className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4 text-foreground-muted" />
+                                    <span className="text-foreground font-medium font-mono tabular-nums">
+                                        {formatDuration(activity.movingTime)}
+                                    </span>
+                                </div>
+
+                                {/* Unified TSS */}
+                                <div className="flex items-center gap-1">
+                                    <Zap className="w-4 h-4 text-accent-orange" />
+                                    <span className="text-foreground font-medium font-mono tabular-nums">
+                                        {unifiedTss} TSS
+                                    </span>
+                                </div>
+                            </>
+                        )}
 
                         {/* Pace (for runs) or Speed & Power (for rides) */}
                         {activity.type === 'RUN' && activity.averageSpeed && (
@@ -277,7 +351,7 @@ const ActivityRow = ({ index, style, activities, onClick, ariaAttributes }: Acti
                 type="button"
                 className="appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
                 onClick={() => onClick(activity)}
-                aria-label={`View details for ${activity.name}`}
+                aria-label={`View details for ${getDisplayActivityName(activity)}`}
             >
                 <ActivityCard activity={activity} />
             </button>
@@ -359,7 +433,7 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
                             className="animate-slide-in appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
                             style={{ animationDelay: `${index * 0.05}s` }}
                             onClick={() => handleActivityClick(activity)}
-                            aria-label={`View details for ${activity.name}`}
+                            aria-label={`View details for ${getDisplayActivityName(activity)}`}
                         >
                             <ActivityCard activity={activity} />
                         </button>

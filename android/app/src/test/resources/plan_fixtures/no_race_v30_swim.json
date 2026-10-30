@@ -103,7 +103,7 @@
       "date": "2026-09-08",
       "type": "STRENGTH",
       "phase": "BASE",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -201,7 +201,14 @@
               "type": "time",
               "seconds": 600
             },
-            "hrZone": 1
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 418,
+              "max": 486,
+              "zoneLabel": "E"
+            }
           },
           {
             "kind": "repeat",
@@ -247,7 +254,14 @@
               "type": "time",
               "seconds": 600
             },
-            "hrZone": 1
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 418,
+              "max": 486,
+              "zoneLabel": "E"
+            }
           }
         ]
       }
@@ -339,7 +353,7 @@
       "date": "2026-09-12",
       "type": "STRENGTH",
       "phase": "BASE",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -538,7 +552,7 @@
       "date": "2026-09-15",
       "type": "STRENGTH",
       "phase": "BASE",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -734,7 +748,7 @@
       "date": "2026-09-19",
       "type": "STRENGTH",
       "phase": "BASE",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -933,7 +947,7 @@
       "date": "2026-09-22",
       "type": "STRENGTH",
       "phase": "BASE",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -1031,7 +1045,14 @@
               "type": "distance",
               "meters": 1500
             },
-            "hrZone": 1
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 418,
+              "max": 486,
+              "zoneLabel": "E"
+            }
           },
           {
             "kind": "repeat",
@@ -1066,7 +1087,14 @@
               "type": "distance",
               "meters": 1000
             },
-            "hrZone": 1
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 418,
+              "max": 486,
+              "zoneLabel": "E"
+            }
           }
         ]
       }
@@ -1158,7 +1186,7 @@
       "date": "2026-09-26",
       "type": "STRENGTH",
       "phase": "BASE",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -1398,7 +1426,7 @@
       "date": "2026-09-30",
       "type": "STRENGTH",
       "phase": "BASE",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -1510,15 +1538,15 @@
     {
       "id": "w25",
       "date": "2026-10-02",
-      "type": "LONG_RUN",
-      "phase": "BUILD",
-      "description": "Long Run: 15.0km @ Easy",
-      "displayDescription": "Long Run: 15.0km",
+      "type": "EASY",
+      "phase": "BASE",
+      "description": "Easy: 4.0km",
+      "displayDescription": "Easy Run: 4.0km",
       "sport": "RUN",
       "intensityZone": "E Zone",
-      "totalDistance": 15000,
+      "totalDistance": 4000,
       "targetPace": 452,
-      "targetDuration": 6780,
+      "targetDuration": 1808,
       "targetHrZone": 2,
       "targetHrZoneLabel": "Z2 Aerobic",
       "targetHrMinBpm": null,
@@ -1532,10 +1560,10 @@
         "steps": [
           {
             "kind": "steady",
-            "label": "Long run",
+            "label": "Easy run",
             "duration": {
               "type": "distance",
-              "meters": 15000
+              "meters": 4000
             },
             "hrZone": 2,
             "target": {
@@ -1553,7 +1581,7 @@
       "date": "2026-10-03",
       "type": "STRENGTH",
       "phase": "BASE",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -1624,15 +1652,15 @@
     {
       "id": "w27",
       "date": "2026-10-04",
-      "type": "EASY",
-      "phase": "BASE",
-      "description": "Easy: 4.0km",
-      "displayDescription": "Easy Run: 4.0km",
+      "type": "LONG_RUN",
+      "phase": "BUILD",
+      "description": "Long Run: 15.0km @ Easy",
+      "displayDescription": "Long Run: 15.0km",
       "sport": "RUN",
       "intensityZone": "E Zone",
-      "totalDistance": 4000,
+      "totalDistance": 15000,
       "targetPace": 452,
-      "targetDuration": 1808,
+      "targetDuration": 6780,
       "targetHrZone": 2,
       "targetHrZoneLabel": "Z2 Aerobic",
       "targetHrMinBpm": null,
@@ -1646,10 +1674,10 @@
         "steps": [
           {
             "kind": "steady",
-            "label": "Easy run",
+            "label": "Long run",
             "duration": {
               "type": "distance",
-              "meters": 4000
+              "meters": 15000
             },
             "hrZone": 2,
             "target": {
@@ -1752,7 +1780,7 @@
       "date": "2026-10-06",
       "type": "STRENGTH",
       "phase": "BUILD",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -1850,7 +1878,14 @@
               "type": "time",
               "seconds": 600
             },
-            "hrZone": 1
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 418,
+              "max": 486,
+              "zoneLabel": "E"
+            }
           },
           {
             "kind": "repeat",
@@ -1896,7 +1931,14 @@
               "type": "time",
               "seconds": 600
             },
-            "hrZone": 1
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 418,
+              "max": 486,
+              "zoneLabel": "E"
+            }
           }
         ]
       }
@@ -1988,7 +2030,7 @@
       "date": "2026-10-10",
       "type": "STRENGTH",
       "phase": "BUILD",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -2187,7 +2229,7 @@
       "date": "2026-10-13",
       "type": "STRENGTH",
       "phase": "BUILD",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -2383,7 +2425,7 @@
       "date": "2026-10-17",
       "type": "STRENGTH",
       "phase": "BUILD",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -2582,7 +2624,7 @@
       "date": "2026-10-20",
       "type": "STRENGTH",
       "phase": "BUILD",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -2680,7 +2722,14 @@
               "type": "distance",
               "meters": 1500
             },
-            "hrZone": 1
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 418,
+              "max": 486,
+              "zoneLabel": "E"
+            }
           },
           {
             "kind": "repeat",
@@ -2715,7 +2764,14 @@
               "type": "distance",
               "meters": 1000
             },
-            "hrZone": 1
+            "hrZone": 1,
+            "target": {
+              "type": "pace",
+              "unit": "sec_per_km",
+              "min": 418,
+              "max": 486,
+              "zoneLabel": "E"
+            }
           }
         ]
       }
@@ -2807,7 +2863,7 @@
       "date": "2026-10-24",
       "type": "STRENGTH",
       "phase": "BUILD",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -3047,7 +3103,7 @@
       "date": "2026-10-28",
       "type": "STRENGTH",
       "phase": "MAINTAIN",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",
@@ -3202,7 +3258,7 @@
       "date": "2026-10-31",
       "type": "STRENGTH",
       "phase": "MAINTAIN",
-      "description": "Strength: 45min",
+      "description": "Strength & Gym: 45min",
       "displayDescription": "Strength: 45min",
       "sport": "STRENGTH",
       "intensityZone": "Strength",

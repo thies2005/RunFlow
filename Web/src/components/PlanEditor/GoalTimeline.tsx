@@ -23,6 +23,18 @@ interface GoalTimelineProps {
     onMarkerClick: (_goalId: string) => void;
     phaseBlocks?: PhaseBlock[];
     onUpdatePhaseBlocks?: (blocks: PhaseBlock[]) => void;
+    currentWeekEffort?: {
+        actualTss?: number;
+        plannedTss?: number;
+        actualDurationSec?: number;
+        plannedDurationSec?: number;
+    };
+    blockWeeksBreakdown?: Array<{
+        weekNumber: number;
+        plannedTss: number;
+        actualTss: number;
+        isCurrentWeek?: boolean;
+    }>;
 }
 
 export function GoalTimeline({
@@ -33,6 +45,8 @@ export function GoalTimeline({
     onMarkerClick,
     phaseBlocks = [],
     onUpdatePhaseBlocks,
+    currentWeekEffort,
+    blockWeeksBreakdown,
 }: GoalTimelineProps) {
     const totalMs = planEndDate.getTime() - planStartDate.getTime();
     const totalDays = Math.max(1, Math.round(totalMs / (24 * 60 * 60 * 1000)));
@@ -185,7 +199,9 @@ export function GoalTimeline({
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1.5 text-[8px] font-mono text-foreground-muted truncate">
-                                    <span>{block.weeklyRunKmTarget}k run</span>
+                                    {block.weeklyRunKmTarget > 0 && (
+                                        <span>{block.weeklyRunKmTarget}k run</span>
+                                    )}
                                     {block.weeklyBikeTssTarget != null && block.weeklyBikeTssTarget > 0 && (
                                         <span>· {block.weeklyBikeTssTarget} bike TSS</span>
                                     )}
@@ -199,6 +215,71 @@ export function GoalTimeline({
                     })}
                 </div>
             </div>
+
+            {/* Weekly & 4-Week Block Effort (Actual vs. Planned) Strip */}
+            {(() => {
+                const curBlock = effectivePhaseBlocks.find(b => currentWeek >= b.startWeek && currentWeek <= b.endWeek) || effectivePhaseBlocks[0];
+                const plannedTss = currentWeekEffort?.plannedTss ?? (curBlock?.targetTss ?? 320);
+                const actualTss = currentWeekEffort?.actualTss ?? 0;
+                const actualDurationSec = currentWeekEffort?.actualDurationSec ?? 0;
+                const plannedDurationSec = currentWeekEffort?.plannedDurationSec ?? Math.round((plannedTss / 55) * 3600);
+
+                const blockStartWeek = Math.floor((currentWeek - 1) / 4) * 4 + 1;
+                const blockEndWeek = Math.min(totalWeeks, blockStartWeek + 3);
+                const miniPills = blockWeeksBreakdown || Array.from({ length: blockEndWeek - blockStartWeek + 1 }, (_, i) => {
+                    const wNum = blockStartWeek + i;
+                    return {
+                        weekNumber: wNum,
+                        plannedTss: curBlock?.targetTss ?? 300,
+                        actualTss: wNum === currentWeek ? actualTss : 0,
+                        isCurrentWeek: wNum === currentWeek,
+                    };
+                });
+
+                return (
+                    <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-1.5 rounded-md bg-background-tertiary/40 border border-glass-border text-[11px]">
+                        {/* Current Week Effort */}
+                        <div className="flex items-center gap-2">
+                            <span className="font-semibold text-foreground-secondary uppercase tracking-wider text-[10px]">
+                                Week {currentWeek} Effort:
+                            </span>
+                            <span className="font-mono tabular-nums text-foreground font-medium">
+                                {actualTss} / {plannedTss} TSS
+                                {plannedTss > 0 && (
+                                    <span className="ml-1 text-[10px] text-accent-cyan">
+                                        ({Math.round((actualTss / plannedTss) * 100)}%)
+                                    </span>
+                                )}
+                            </span>
+                            <span className="text-[10px] text-foreground-muted font-mono">
+                                · {Math.round(actualDurationSec / 60)}m / {Math.round(plannedDurationSec / 60)}m
+                            </span>
+                        </div>
+
+                        {/* Current 4-Week Block Effort */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-foreground-muted font-medium">
+                                Current 4-Week Block (Weeks {blockStartWeek}–{blockEndWeek}):
+                            </span>
+                            <div className="flex items-center gap-1">
+                                {miniPills.map((pill) => (
+                                    <span
+                                        key={pill.weekNumber}
+                                        className={`px-1.5 py-0.5 rounded text-[9px] font-mono border ${
+                                            pill.isCurrentWeek
+                                                ? 'bg-accent-orange/15 border-accent-orange/50 text-accent-orange font-bold'
+                                                : 'bg-background-secondary border-glass-border text-foreground-muted'
+                                        }`}
+                                        title={`Week ${pill.weekNumber}: ${pill.actualTss} / ${pill.plannedTss} TSS`}
+                                    >
+                                        W{pill.weekNumber}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Sub-Goals & Current Progress Timeline Line */}
             <div className="relative h-9">

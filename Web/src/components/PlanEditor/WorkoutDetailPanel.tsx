@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Trash2, Save, Loader2, Check } from 'lucide-react';
+import { format } from 'date-fns';
+import { X, Trash2, Save, Loader2, Check, Download, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WORKOUT_COLORS } from '@/app/plan-advanced/[goalId]/components/Shared/WorkoutTypeColors';
 import { StructuredWorkoutEditor } from '@/components/Editor/StructuredWorkoutEditor';
@@ -10,6 +11,8 @@ import { PaceZoneSlider, formatPaceShort } from '@/app/plan-advanced/[goalId]/co
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { resolveWorkoutSport, type StructuredWorkoutV2 } from '@/lib/plans/structured';
 import { generateMyWhooshZwoXml } from '@/lib/plans/zwoExporter';
+import { downloadWorkoutFit } from '@/lib/plans/fit-export';
+import ActivityPicker from '@/components/ActivityPicker';
 
 export type WorkoutType =
     | 'EASY'
@@ -47,6 +50,8 @@ const PHASES: PlanPhase[] = ['BASE', 'BUILD', 'PEAK', 'TAPER', 'RACE_WEEK', 'REC
 
 const SPORTS = ['RUN', 'BIKE', 'SWIM', 'STRENGTH'] as const;
 
+const CYCLING_WORKOUT_TYPES = new Set(['RIDE', 'LONG_RIDE', 'RIDE_INTERVALS', 'BRICK']);
+
 export interface Workout {
     id: string;
     scheduledDate: string | Date;
@@ -63,6 +68,8 @@ export interface Workout {
     color: string;
     structuredSteps: any;
     isCompleted: boolean;
+    linkedActivityId?: string | null;
+    linkedActivity?: any;
     sport?: string | null;
     targetPaceMinSecondsPerKm?: number | null;
     targetPaceMaxSecondsPerKm?: number | null;
@@ -84,6 +91,38 @@ interface WorkoutDetailPanelProps {
     goalId: string;
     onClose: () => void;
     onUpdate: (workout: Workout) => void;
+}
+
+function exportMyWhooshZwo(workout: Workout) {
+    const xml = generateMyWhooshZwoXml({
+        name: workout.customName || workout.description || workout.workoutType,
+        description: workout.description || '',
+        workoutType: workout.workoutType,
+        targetDurationSeconds: workout.targetDuration || 3600,
+        phase: workout.phase || undefined,
+        structuredSteps: workout.structuredSteps ?? null,
+    });
+    const blob = new Blob([xml], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = (workout.customName || workout.description || workout.workoutType || 'ride')
+        .replace(/[^a-z0-9-_]+/gi, '_')
+        .slice(0, 48);
+    a.download = `RunFlow_${safeName}.zwo`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+
+function getDisplayActivityTitle(activity: { name?: string | null; startDate?: string | Date; type?: string | null }): string {
+    if (activity.name && activity.name.trim().length > 0) {
+        return activity.name.trim();
+    }
+    const d = activity.startDate ? new Date(activity.startDate) : new Date();
+    const typeLabel = (activity.type || 'Activity').replace(/_/g, ' ');
+    return `${format(d, 'EEE')} ${typeLabel}`;
 }
 
 function formatSecToMmSs(sec?: number | null): string {
@@ -226,7 +265,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             if (!isDirtyRef.current) return;
-            const { id, isCompleted, ...patch } = form;
+            const { id, ...patch } = form;
             void saveMutation.mutate(patch);
         }, 600);
     }, [form, saveMutation]);
@@ -239,7 +278,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
 
     const handleManualSave = useCallback(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
-        const { id, isCompleted, ...patch } = form;
+        const { id, ...patch } = form;
         void saveMutation.mutate(patch);
     }, [form, saveMutation]);
 
@@ -663,6 +702,55 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                     />
                 </div>
 
+                {/* Completion & Linked Activity */}
+                <div className="pt-2 border-t border-glass-border space-y-2">
+                    <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={form.isCompleted}
+                                onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    updateField('isCompleted', checked);
+                                    if (!checked) {
+                                        updateField('linkedActivityId', null);
+                                        updateField('linkedActivity', null);
+                                    }
+                                }}
+                                className="h-4 w-4 rounded border-line bg-background accent-accent-orange"
+                            />
+                            <span>Mark as Completed</span>
+                        </label>
+                        {form.isCompleted && (
+                            <span className="text-[10px] text-positive font-mono font-medium flex items-center gap-0.5">
+                                <Check className="w-3 h-3" /> Completed
+                            </span>
+                        )}
+                    </div>
+
+                    {form.isCompleted && (
+                        <div className="p-2.5 rounded bg-background-tertiary/60 border border-glass-border space-y-2">
+                            <div className="flex items-center justify-between text-xs font-medium text-foreground-muted">
+                                <span className="flex items-center gap-1.5">
+                                    <Link2 className="w-3.5 h-3.5" />
+                                    Linked Activity
+                                </span>
+                                {form.linkedActivity && (
+                                    <span className="text-[10px] text-accent-cyan truncate max-w-[180px]">
+                                        {getDisplayActivityTitle(form.linkedActivity)}
+                                    </span>
+                                )}
+                            </div>
+                            <ActivityPicker
+                                selectedId={form.linkedActivityId || null}
+                                onSelect={(activityId) => {
+                                    updateField('linkedActivityId', activityId);
+                                }}
+                            />
+                        </div>
+                    )}
+                </div>
+
                 {/* Structured Workout Editor - Available for ALL workout types */}
                 <div className="pt-2 border-t border-glass-border">
                     <div className="flex items-center justify-between mb-2">
@@ -698,6 +786,30 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
 
             {/* Footer Buttons */}
             <div className="border-t border-glass-border p-4 space-y-2 shrink-0">
+                {/* Export Buttons */}
+                <div className="flex items-center gap-2 pb-1">
+                    <button
+                        type="button"
+                        onClick={() => downloadWorkoutFit(form)}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-glass-border bg-background-tertiary text-foreground text-xs font-medium hover:bg-surface-hover transition-colors"
+                        title="Download Garmin/Coros/Wahoo FIT workout file"
+                    >
+                        <Download className="w-3.5 h-3.5 text-accent-cyan" />
+                        Export .FIT
+                    </button>
+                    {(effectiveSport === 'BIKE' || CYCLING_WORKOUT_TYPES.has(form.workoutType)) && (
+                        <button
+                            type="button"
+                            onClick={() => exportMyWhooshZwo(form)}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-accent-orange/30 bg-accent-orange/10 text-accent-orange text-xs font-medium hover:bg-accent-orange/20 transition-colors"
+                            title="Download MyWhoosh ZWO workout file"
+                        >
+                            <Download className="w-3.5 h-3.5" />
+                            Export .ZWO
+                        </button>
+                    )}
+                </div>
+
                 <button
                     type="button"
                     onClick={handleManualSave}

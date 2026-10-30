@@ -46,7 +46,7 @@ fun dowToServerDay(day: DayOfWeek): Int = day.value % 7
  */
 fun serverDateToEpochMillis(raw: String?): Long? {
     if (raw == null) return null
-    val dateOnly = Regex("^(\\d{4}-\\d{2}-\\d{2})T00:00:00").find(raw)?.groupValues?.get(1)
+    val dateOnly = Regex("^(\\d{4}-\\d{2}-\\d{2})(?:$|T00:00:00)").find(raw)?.groupValues?.get(1)
     if (dateOnly != null) {
         return runCatching {
             LocalDate.parse(dateOnly).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -275,7 +275,7 @@ fun PlanSpec.toCreatePlanRequest(): CreatePlanRequest {
  * the server PATCH route whitelists and persists it along with the builder
  * fields below, and the pull merge re-syncs it from the server.
  */
-fun WorkoutEntity.toPatchRequest(): PatchWorkoutRequest = PatchWorkoutRequest(
+fun WorkoutEntity.toPatchRequest(linkedServerActivityId: String? = this.activityId): PatchWorkoutRequest = PatchWorkoutRequest(
     workoutType = workoutType,
     description = description,
     targetDistance = targetDistanceKm?.let { it * 1000.0 },
@@ -283,6 +283,7 @@ fun WorkoutEntity.toPatchRequest(): PatchWorkoutRequest = PatchWorkoutRequest(
     targetDuration = targetDurationSec,
     scheduledDate = epochMillisToServerDate(scheduledDate),
     isCompleted = isCompleted,
+    linkedActivityId = linkedServerActivityId,
     customName = customName,
     targetHrZone = targetHrZone,
     targetHrMinBpm = targetHrMinBpm,

@@ -1,11 +1,27 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { addMonths, endOfWeek, startOfMonth, startOfWeek, subMonths } from 'date-fns';
+import { addMonths, endOfWeek, startOfMonth, startOfWeek, subMonths, addDays, subDays } from 'date-fns';
 import { PencilRuler } from 'lucide-react';
 import { toast } from 'sonner';
+import * as TrainingStatusCardModule from '@/components/dashboard/TrainingStatusCard';
+import { EVENT_DASHBOARD_LAYOUT_CHANGE } from '@/components/dashboard/TrainingStatusCard';
+
+export type CalendarWeeksMode = '4_WEEKS' | 'FULL_MONTH';
+
+export function readCalendarWeeksMode(): CalendarWeeksMode {
+    if (typeof (TrainingStatusCardModule as any).readCalendarWeeksMode === 'function') {
+        return (TrainingStatusCardModule as any).readCalendarWeeksMode();
+    }
+    if (typeof window === 'undefined') return '4_WEEKS';
+    try {
+        const raw = localStorage.getItem('runflow_calendar_weeks_v1');
+        if (raw === '4_WEEKS' || raw === 'FULL_MONTH') return raw;
+    } catch {}
+    return '4_WEEKS';
+}
 import {
     DndContext,
     useSensor,
@@ -91,7 +107,23 @@ interface CalendarViewProps {
 export function CalendarView({ showHeader: _showHeader = true }: CalendarViewProps) {
     const queryClient = useQueryClient();
     const [mode, setMode] = useState<CalendarViewMode>('week');
-    const [cursor, setCursor] = useState<Date>(() => startOfMonth(new Date()));
+    const [cursor, setCursor] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+    const [calendarWeeksMode, setCalendarWeeksMode] = useState<CalendarWeeksMode>('4_WEEKS');
+
+    useEffect(() => {
+        const syncPrefs = () => {
+            setCalendarWeeksMode(readCalendarWeeksMode());
+        };
+        syncPrefs();
+        window.addEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncPrefs);
+        window.addEventListener('storage', syncPrefs);
+        return () => {
+            window.removeEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncPrefs);
+            window.removeEventListener('storage', syncPrefs);
+        };
+    }, []);
+
+    const is4Weeks = calendarWeeksMode === '4_WEEKS';
 
     // Modals / Detail Drawer state
     const [selectedWorkout, setSelectedWorkout] = useState<MockWorkout | null>(null);
@@ -290,12 +322,19 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
     );
 
     const visibleWeeks = useMemo(() => {
+        if (is4Weeks) {
+            const startMon = startOfWeek(cursor, { weekStartsOn: 1 });
+            startMon.setHours(0, 0, 0, 0);
+            const endSun = addDays(startMon, 27);
+            endSun.setHours(23, 59, 59, 999);
+            return allWeeks.filter((w) => w.weekStart >= startMon && w.weekStart <= endSun).slice(0, 4);
+        }
         const monthStart = startOfMonth(cursor);
         const leadWeeks = startOfWeek(monthStart, { weekStartsOn: 1 });
         const monthEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
         const end = endOfWeek(monthEnd, { weekStartsOn: 1 });
         return allWeeks.filter((w) => w.weekStart >= leadWeeks && w.weekStart <= end);
-    }, [cursor, allWeeks]);
+    }, [cursor, allWeeks, is4Weeks]);
 
     const monthEntry = useMemo(
         () => buildMonth(days, cursor.getFullYear(), cursor.getMonth()),
@@ -303,22 +342,31 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
     );
 
     const label = useMemo(() => {
-        if (mode === 'month') return monthEntry.label;
+        if (!is4Weeks && mode === 'month') return monthEntry.label;
         if (visibleWeeks.length === 0) return '';
         const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
         return `${fmt(visibleWeeks[0].weekStart)} – ${fmt(visibleWeeks[visibleWeeks.length - 1].weekEnd)}`;
-    }, [mode, monthEntry, visibleWeeks]);
+    }, [mode, monthEntry, visibleWeeks, is4Weeks]);
 
-    const period = mode === 'month'
-        ? monthEntry
-        : {
-            trimp: visibleWeeks.reduce((s, w) => s + w.trimp, 0),
-            tss: visibleWeeks.reduce((s, w) => s + w.tss, 0),
-            plannedTss: visibleWeeks.reduce((s, w) => s + w.plannedTss, 0),
-            distance: visibleWeeks.reduce((s, w) => s + w.distance, 0),
-            avgVdot: avgOrNull(visibleWeeks.map((w) => w.avgVdot)),
-        };
-    const fitness = visibleWeeks.length > 0 ? visibleWeeks[visibleWeeks.length - 1] : undefined;
+    const period = useMemo(() => {
+        if (is4Weeks || mode === 'week') {
+            return {
+                trimp: visibleWeeks.reduce((s, w) => s + w.trimp, 0),
+                tss: visibleWeeks.reduce((s, w) => s + w.tss, 0),
+                plannedTss: visibleWeeks.reduce((s, w) => s + w.plannedTss, 0),
+                distance: visibleWeeks.reduce((s, w) => s + w.distance, 0),
+                avgVdot: avgOrNull(visibleWeeks.map((w) => w.avgVdot)),
+            };
+        }
+        return monthEntry;
+    }, [is4Weeks, mode, visibleWeeks, monthEntry]);
+
+    const fitness = useMemo(() => {
+        if (visibleWeeks.length === 0) return undefined;
+        const now = new Date();
+        const currentWeekEntry = visibleWeeks.find((w) => now >= w.weekStart && now <= w.weekEnd);
+        return currentWeekEntry || visibleWeeks[visibleWeeks.length - 1];
+    }, [visibleWeeks]);
 
     const hasAnyData = activities.length > 0 || workouts.length > 0;
 
@@ -329,9 +377,9 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
                     mode={mode}
                     onModeChange={setMode}
                     label={label}
-                    onPrev={() => setCursor((c) => subMonths(c, 1))}
-                    onNext={() => setCursor((c) => addMonths(c, 1))}
-                    onToday={() => setCursor(startOfMonth(new Date()))}
+                    onPrev={() => setCursor((c) => (is4Weeks ? subDays(c, 28) : subMonths(c, 1)))}
+                    onNext={() => setCursor((c) => (is4Weeks ? addDays(c, 28) : addMonths(c, 1)))}
+                    onToday={() => setCursor(is4Weeks ? startOfWeek(new Date(), { weekStartsOn: 1 }) : startOfMonth(new Date()))}
                     actions={activeGoal ? (
                         <Link
                             href={`/plan-advanced/${activeGoal.id}`}
@@ -362,6 +410,7 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
                         <MonthlyView
                             month={cursor}
                             days={days}
+                            weeksCount={is4Weeks ? 4 : undefined}
                             onWorkoutClick={handleWorkoutClick}
                             onActivityClick={handleActivityClick}
                         />

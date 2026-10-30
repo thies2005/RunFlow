@@ -57,6 +57,9 @@ data class AppSettings(
     val includeCrossTraining: Boolean = false,
     val matchToMyWhoosh: Boolean = false,
     val effectiveVo2maxCorrection: Double = 1.0,
+    // ---- load & UI preference sync ----
+    val primaryLoadMetric: String = "TSS", // "TSS", "DUAL", "TRIMP"
+    val effortCardMode: String = "WEEK_AND_MONTH",
 )
 
 class SettingsRepository(private val context: Context) {
@@ -114,6 +117,9 @@ class SettingsRepository(private val context: Context) {
         val SERVER_METRICS_VDOT = doublePreferencesKey("server_metrics_best_effort_vdot")
         val SERVER_METRICS_AEROBIC_VO2MAX = doublePreferencesKey("server_metrics_aerobic_vo2max")
         val SERVER_METRICS_COMPUTED_AT = longPreferencesKey("server_metrics_computed_at")
+        // ---- load & UI preference sync ----
+        val PRIMARY_LOAD_METRIC = stringPreferencesKey("primary_load_metric")
+        val EFFORT_CARD_MODE = stringPreferencesKey("effort_card_mode")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -151,6 +157,8 @@ class SettingsRepository(private val context: Context) {
             includeCrossTraining = p[Keys.INCLUDE_CROSS_TRAINING] ?: false,
             matchToMyWhoosh = p[Keys.MATCH_TO_MY_WHOOSH] ?: false,
             effectiveVo2maxCorrection = p[Keys.EFFECTIVE_VO2MAX_CORRECTION] ?: 1.0,
+            primaryLoadMetric = p[Keys.PRIMARY_LOAD_METRIC] ?: "TSS",
+            effortCardMode = p[Keys.EFFORT_CARD_MODE] ?: "WEEK_AND_MONTH",
         )
     }
 
@@ -320,5 +328,17 @@ class SettingsRepository(private val context: Context) {
     /** Effective-VO2max calibration multiplier applied to the HR-based aerobic VO2max. */
     suspend fun setEffectiveVo2maxCorrection(factor: Double) = context.dataStore.edit {
         it[Keys.EFFECTIVE_VO2MAX_CORRECTION] = factor
+    }
+
+    // ---- load & UI preference sync ----
+
+    /** Sets the primary load metric: "TSS", "DUAL", or "TRIMP" (Decision U1). */
+    suspend fun setPrimaryLoadMetric(mode: String) = context.dataStore.edit {
+        it[Keys.PRIMARY_LOAD_METRIC] = mode
+    }
+
+    /** Sets the effort card display mode: "WEEK_AND_MONTH", "WEEK_ONLY", "LEGACY_KM". */
+    suspend fun setEffortCardMode(mode: String) = context.dataStore.edit {
+        it[Keys.EFFORT_CARD_MODE] = mode
     }
 }

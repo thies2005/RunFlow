@@ -47,7 +47,30 @@ import kotlin.math.roundToInt
 private val monthFmt = DateTimeFormatter.ofPattern("MMM d")
 
 /**
- * CTL / ATL / TSB line chart with a drag scrubber.
+ * PMC (Performance Management Chart) showing CTL, ATL, TSB,
+ * and future projection dashed continuation line.
+ */
+@Composable
+fun PmcChart(
+    daily: List<TrainingLoad.DailyLoad>,
+    showCtl: Boolean,
+    showAtl: Boolean,
+    showTsb: Boolean,
+    futureDaily: List<TrainingLoad.DailyLoad> = emptyList(),
+    modifier: Modifier = Modifier,
+    height: Int = 220,
+) = FitnessChart(
+    daily = daily,
+    showCtl = showCtl,
+    showAtl = showAtl,
+    showTsb = showTsb,
+    futureDaily = futureDaily,
+    modifier = modifier,
+    height = height,
+)
+
+/**
+ * CTL / ATL / TSB line chart with a drag scrubber and future projection support.
  */
 @Composable
 fun FitnessChart(
@@ -55,6 +78,7 @@ fun FitnessChart(
     showCtl: Boolean,
     showAtl: Boolean,
     showTsb: Boolean,
+    futureDaily: List<TrainingLoad.DailyLoad> = emptyList(),
     modifier: Modifier = Modifier,
     height: Int = 220,
 ) {
@@ -67,7 +91,10 @@ fun FitnessChart(
     val tsbColor = sem.tsb
     val scrubColor = MaterialTheme.colorScheme.primary
 
-    val point = scrubIndex?.let { daily.getOrNull(it) }
+    val fullSeries = remember(daily, futureDaily) { daily + futureDaily }
+    val totalCount = fullSeries.size
+    val point = scrubIndex?.let { fullSeries.getOrNull(it) }
+    val isScrubFuture = scrubIndex != null && scrubIndex!! >= daily.size
 
     Column(modifier = modifier) {
         Row(
@@ -79,11 +106,13 @@ fun FitnessChart(
                 if (showCtl) add("CTL" to ctlColor)
                 if (showAtl) add("ATL" to atlColor)
                 if (showTsb) add("TSB" to tsbColor)
+                if (futureDaily.isNotEmpty()) add("Projected" to MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (point != null) {
                 Text(
                     text = buildString {
                         append(point.date.format(monthFmt))
+                        if (isScrubFuture) append(" (Proj.)")
                         if (showCtl) append("   CTL ${point.ctl.roundToInt()}")
                         if (showAtl) append("   ATL ${point.atl.roundToInt()}")
                         if (showTsb) append("   TSB ${point.tsb.roundToInt()}")
@@ -111,7 +140,7 @@ fun FitnessChart(
                 .fillMaxWidth()
                 .height(height.dp)
                 .semantics { contentDescription = chartSummary }
-                .pointerInput(daily.size) {
+                .pointerInput(totalCount) {
                     detectDragGestures(
                         onDragEnd = { scrubIndex = null },
                         onDragCancel = { scrubIndex = null },
@@ -119,12 +148,12 @@ fun FitnessChart(
                         val x = change.position.x
                         val w = size.width.toFloat()
                         val frac = (x / w).coerceIn(0f, 1f)
-                        scrubIndex = (frac * (daily.size - 1)).roundToInt()
+                        scrubIndex = (frac * (totalCount - 1)).roundToInt()
                         change.consume()
                     }
                 },
         ) {
-            if (daily.size < 2) return@Canvas
+            if (totalCount < 2) return@Canvas
             val w = size.width
             val h = size.height
             val padTop = 8f
@@ -132,14 +161,14 @@ fun FitnessChart(
 
             var minV = 0.0
             var maxV = 1.0
-            daily.forEach { d ->
+            fullSeries.forEach { d ->
                 if (showCtl) { minV = minOf(minV, d.ctl); maxV = maxOf(maxV, d.ctl) }
                 if (showAtl) { minV = minOf(minV, d.atl); maxV = maxOf(maxV, d.atl) }
                 if (showTsb) { minV = minOf(minV, d.tsb); maxV = maxOf(maxV, d.tsb) }
             }
             val range = (maxV - minV).coerceAtLeast(1.0)
 
-            fun px(i: Int) = i.toFloat() / (daily.size - 1) * w
+            fun px(i: Int) = i.toFloat() / (totalCount - 1) * w
             fun py(v: Double) = (padTop + (1f - ((v - minV) / range).toFloat()) * (h - padTop - padBottom))
 
             // gridlines at 0 and max/2
@@ -154,7 +183,9 @@ fun FitnessChart(
                 }
             }
 
+            // Historical series
             fun drawSeries(selector: (TrainingLoad.DailyLoad) -> Double, color: Color) {
+                if (daily.isEmpty()) return
                 val path = Path()
                 val fillPath = Path()
                 daily.forEachIndexed { i, d ->
@@ -177,13 +208,60 @@ fun FitnessChart(
                 drawPath(path, color, style = Stroke(width = 2.2.dp.toPx(), cap = StrokeCap.Round))
             }
 
-            if (showAtl) drawSeries({ it.atl }, atlColor)
-            if (showCtl) drawSeries({ it.ctl }, ctlColor)
-            if (showTsb) drawSeries({ it.tsb }, tsbColor)
+            // Future projection dashed series (connects from last point of daily)
+            fun drawFutureSeries(selector: (TrainingLoad.DailyLoad) -> Double, color: Color) {
+                if (futureDaily.isEmpty() || daily.isEmpty()) return
+                val futurePath = Path()
+                val lastHistorical = daily.last()
+                val startX = px(daily.size - 1)
+                val startY = py(selector(lastHistorical))
+                futurePath.moveTo(startX, startY)
+                futureDaily.forEachIndexed { i, d ->
+                    val x = px(daily.size + i)
+                    val y = py(selector(d))
+                    futurePath.lineTo(x, y)
+                }
+                drawPath(
+                    futurePath,
+                    color.copy(alpha = 0.85f),
+                    style = Stroke(
+                        width = 2.2.dp.toPx(),
+                        cap = StrokeCap.Round,
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx())),
+                    ),
+                )
+            }
+
+            if (showAtl) {
+                drawSeries({ it.atl }, atlColor)
+                drawFutureSeries({ it.atl }, atlColor)
+            }
+            if (showCtl) {
+                drawSeries({ it.ctl }, ctlColor)
+                drawFutureSeries({ it.ctl }, ctlColor)
+            }
+            if (showTsb) {
+                drawSeries({ it.tsb }, tsbColor)
+                drawFutureSeries({ it.tsb }, tsbColor)
+            }
+
+            // Today vertical boundary line when future projection is present
+            if (futureDaily.isNotEmpty() && daily.isNotEmpty()) {
+                val todayX = px(daily.size - 1)
+                drawLine(
+                    color = labelColor.copy(alpha = 0.45f),
+                    start = Offset(todayX, padTop),
+                    end = Offset(todayX, h - padBottom),
+                    strokeWidth = 1.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx())),
+                )
+            }
 
             // scrubber
             scrubIndex?.let { i ->
-                val x = px(i.coerceIn(0, daily.size - 1))
+                val clamped = i.coerceIn(0, totalCount - 1)
+                val x = px(clamped)
+                val item = fullSeries[clamped]
                 drawLine(
                     scrubColor.copy(alpha = 0.8f),
                     Offset(x, 0f),
@@ -191,9 +269,9 @@ fun FitnessChart(
                     strokeWidth = 1.5.dp.toPx(),
                 )
                 listOf(
-                    daily[i].ctl to ctlColor,
-                    daily[i].atl to atlColor,
-                    daily[i].tsb to tsbColor,
+                    item.ctl to ctlColor,
+                    item.atl to atlColor,
+                    item.tsb to tsbColor,
                 ).forEach { (v, c) ->
                     drawCircle(c, radius = 5.dp.toPx(), center = Offset(x, py(v)))
                 }
@@ -202,16 +280,33 @@ fun FitnessChart(
         // x-axis labels
         Row(Modifier.fillMaxWidth()) {
             val first = daily.firstOrNull()?.date
-            val last = daily.lastOrNull()?.date
-            if (first != null && last != null) {
+            val lastHistorical = daily.lastOrNull()?.date
+            val futureLast = futureDaily.lastOrNull()?.date
+
+            if (first != null) {
                 Text(
                     first.format(monthFmt),
                     style = MaterialTheme.typography.labelSmall,
                     color = labelColor,
                 )
+            }
+            if (futureLast != null && lastHistorical != null) {
                 Spacer(Modifier.weight(1f))
                 Text(
-                    last.format(monthFmt),
+                    "Today",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = labelColor,
+                )
+                Spacer(Modifier.weight(1f))
+                Text(
+                    futureLast.format(monthFmt),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = labelColor,
+                )
+            } else if (lastHistorical != null) {
+                Spacer(Modifier.weight(1f))
+                Text(
+                    lastHistorical.format(monthFmt),
                     style = MaterialTheme.typography.labelSmall,
                     color = labelColor,
                 )
@@ -319,45 +414,6 @@ fun ZoneDistribution(zonesSeconds: List<Int>, modifier: Modifier = Modifier) {
     }
 }
 
-/** Draws a GPS route polyline normalized to the canvas. */
-@Composable
-fun RouteCanvas(
-    points: List<Pair<Double, Double>>,
-    modifier: Modifier = Modifier,
-    strokeColor: Color = MaterialTheme.colorScheme.primary,
-    trailColor: Color = MaterialTheme.colorScheme.outlineVariant,
-) {
-    val startDot = MaterialTheme.semanticColors.good
-    val endDot = MaterialTheme.colorScheme.error
-    Canvas(modifier) {
-        if (points.size < 2) return@Canvas
-        val lats = points.map { it.first }
-        val lngs = points.map { it.second }
-        val minLat = lats.min(); val maxLat = lats.max()
-        val minLng = lngs.min(); val maxLng = lngs.max()
-        val latRange = (maxLat - minLat).coerceAtLeast(1e-5)
-        val lngRange = (maxLng - minLng).coerceAtLeast(1e-5)
-        val scale = minOf(size.width / lngRange, size.height / latRange) * 0.86f
-        val offsetX = (size.width - (lngRange * scale).toFloat()) / 2f
-        val offsetY = (size.height - (latRange * scale).toFloat()) / 2f
-
-        fun toOffset(p: Pair<Double, Double>) = Offset(
-            offsetX + ((p.second - minLng) * scale).toFloat(),
-            offsetY + ((maxLat - p.first) * scale).toFloat(),
-        )
-
-        val path = Path()
-        points.forEachIndexed { i, p ->
-            val o = toOffset(p)
-            if (i == 0) path.moveTo(o.x, o.y) else path.lineTo(o.x, o.y)
-        }
-        drawPath(path, trailColor, style = Stroke(width = 7.dp.toPx(), cap = StrokeCap.Round))
-        drawPath(path, strokeColor, style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round))
-        // start / finish markers
-        drawCircle(startDot, 5.dp.toPx(), toOffset(points.first()))
-        drawCircle(endDot, 5.dp.toPx(), toOffset(points.last()))
-    }
-}
 
 /** Circular progress ring on canvas. */
 @Composable

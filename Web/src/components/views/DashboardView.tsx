@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { Session } from 'next-auth';
 import { UseMutationResult } from '@tanstack/react-query';
 import { RaceCountdown, ActivityList, Footer, MinimalistPillsMenu, UserAvatar } from '@/components';
+import * as TrainingStatusCardModule from '@/components/dashboard/TrainingStatusCard';
 import TrainingStatusCard, { readDashboardLayoutMode, EVENT_DASHBOARD_LAYOUT_CHANGE, type DashboardStatusLayoutMode } from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
@@ -29,6 +30,22 @@ interface DashboardViewProps {
     onEditWorkout: (_workout: Workout, _complete?: boolean) => void;
     onInvalidateQueries: () => void;
     showHeader?: boolean;
+}
+
+function hydrateUiPreferencesFromServer(prefs: any) {
+    if (typeof (TrainingStatusCardModule as any).hydrateUiPreferencesFromServer === 'function') {
+        (TrainingStatusCardModule as any).hydrateUiPreferencesFromServer(prefs);
+        return;
+    }
+    if (!prefs || typeof prefs !== 'object' || typeof window === 'undefined') return;
+    try {
+        if (prefs.countdownStyle) localStorage.setItem('runflow_countdown_style_v1', prefs.countdownStyle);
+        if (prefs.effortCardMode) localStorage.setItem('runflow_effort_card_mode_v1', prefs.effortCardMode);
+        if (prefs.calendarWeeksMode) localStorage.setItem('runflow_calendar_weeks_v1', prefs.calendarWeeksMode);
+        if (prefs.workoutCardStyle) localStorage.setItem('runflow_workout_card_style_v1', prefs.workoutCardStyle);
+        if (prefs.primaryLoadMetric) localStorage.setItem('runflow_load_metric_v1', prefs.primaryLoadMetric);
+        window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+    } catch {}
 }
 
 export function DashboardView({
@@ -78,6 +95,12 @@ export function DashboardView({
             window.removeEventListener('storage', syncNoPlanPref);
         };
     }, []);
+
+    useEffect(() => {
+        if (statsData && (statsData as any).uiPreferences) {
+            hydrateUiPreferencesFromServer((statsData as any).uiPreferences);
+        }
+    }, [statsData]);
 
     return (
         <div className="min-h-screen bg-background">
@@ -188,6 +211,8 @@ export function DashboardView({
                                         ) : activeGoal ? (
                                             <RaceCountdown
                                                 goal={activeGoal}
+                                                weeklyWorkouts={weeklyWorkouts}
+                                                statsData={statsData}
                                                 className="h-full"
                                                 onSelectRace={(goal, activity, mode) => {
                                                     setRaceResultModal({
@@ -200,6 +225,8 @@ export function DashboardView({
                                         ) : planTileGoal ? (
                                             <RaceCountdown
                                                 goal={planTileGoal}
+                                                weeklyWorkouts={weeklyWorkouts}
+                                                statsData={statsData}
                                                 className="h-full"
                                                 isIncompleteArchived={!activeGoal && !!incompleteGoal}
                                                 onSelectRace={(goal, activity, mode) => {

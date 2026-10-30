@@ -60,6 +60,7 @@ object TriathlonTimeEstimator {
         customSwimDistM: Double? = null,
         customBikeDistM: Double? = null,
         customRunDistM: Double? = null,
+        weightKg: Double? = null,
     ): TriathlonTimeProjection? {
         if (vdot <= 0.0) return null
 
@@ -69,7 +70,7 @@ object TriathlonTimeEstimator {
         val run = customRunDistM?.takeIf { it > 0 } ?: (RUN_M[key] ?: RUN_M.getValue("SPRINT_TRI"))
         val t = TRANSITIONS[key] ?: DEFAULT_TRANSITION
 
-        val optimal = splits(vdot, swim, bike, run, t)
+        val optimal = splits(vdot, swim, bike, run, t, weightKg ?: 70.0)
 
         // longer courses degrade the run more (triathlon-time.ts L108-110)
         val isLongCourse = (swim + bike + run) / 1000.0 >= 100.0
@@ -94,9 +95,10 @@ object TriathlonTimeEstimator {
         bikeDistM: Double,
         runDistM: Double,
         t: Transitions,
+        weightKg: Double = 70.0,
     ): TriathlonSplits {
         val swimSec = estimateSwimPaceFromVdot(vdot) * swimDistM / 100.0
-        val ftp = estimateBikeFtpFromVdot(vdot)
+        val ftp = estimateBikeFtpFromVdot(vdot, weightKg)
         val bikeSec = bikeDistM / bikePowerToSpeed(ftp * 0.75)
         val runSec = VdotMath.predictTimeSec(vdot, runDistM) ?: runDistM / 3.0
         // round each leg, then total the rounded legs so the displayed

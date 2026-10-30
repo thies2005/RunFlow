@@ -68,7 +68,7 @@ object StreamMath {
         val heartrate = streams.heartrate
         val cadence = streams.cadence
         val watts = streams.watts
-        val treatAsRide = isRide || (watts != null && watts.any { !it.isNaN() && it > 0.0 })
+        val treatAsRide = isRide
 
         val step = if (time.size > MAX_POINTS) ceil(time.size / MAX_POINTS.toDouble()).toInt() else 1
 

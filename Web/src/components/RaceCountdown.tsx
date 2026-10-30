@@ -1,11 +1,11 @@
-import { Activity, Calendar, Target, Trophy, CheckCircle, Loader2, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Activity, Calendar, Target, Trophy, CheckCircle, Loader2, Trash2, Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import type { Goal, SuggestedRaceActivity } from '@/lib/types';
+import type { Goal, SuggestedRaceActivity, Workout, AnalyticsStats } from '@/lib/types';
 import type { RaceDistance } from '@/lib/metrics/vdot';
 import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { estimateTriathlonTime } from '@/lib/plans/triathlon-time';
@@ -13,12 +13,56 @@ import { RaceType } from '@/generated/prisma/browser';
 import { useUserMetrics } from './providers/UserMetricsProvider';
 import { useDeviceType } from '@/hooks/useDeviceType';
 import { formatDistanceWithUnit, formatPace as formatPaceWithUnits, useUnits } from '@/lib/units';
+import * as TrainingStatusCardModule from '@/components/dashboard/TrainingStatusCard';
+import { EVENT_DASHBOARD_LAYOUT_CHANGE } from '@/components/dashboard/TrainingStatusCard';
+
+export type CountdownStyleMode = 'COMPACT_BAR' | 'HEADER_PILL' | 'CLASSIC_2BOX';
+export type EffortCardMode = 'WEEK_AND_MONTH' | 'WEEK_ONLY' | 'LEGACY_KM';
+export type PrimaryLoadMetricMode = 'TSS' | 'DUAL' | 'TRIMP';
+
+export function readCountdownStyle(): CountdownStyleMode {
+    if (typeof (TrainingStatusCardModule as any).readCountdownStyle === 'function') {
+        return (TrainingStatusCardModule as any).readCountdownStyle();
+    }
+    if (typeof window === 'undefined') return 'COMPACT_BAR';
+    try {
+        const raw = localStorage.getItem('runflow_countdown_style_v1');
+        if (raw === 'COMPACT_BAR' || raw === 'HEADER_PILL' || raw === 'CLASSIC_2BOX') return raw;
+    } catch {}
+    return 'COMPACT_BAR';
+}
+
+export function readEffortCardMode(): EffortCardMode {
+    if (typeof (TrainingStatusCardModule as any).readEffortCardMode === 'function') {
+        return (TrainingStatusCardModule as any).readEffortCardMode();
+    }
+    if (typeof window === 'undefined') return 'WEEK_AND_MONTH';
+    try {
+        const raw = localStorage.getItem('runflow_effort_card_mode_v1');
+        if (raw === 'WEEK_AND_MONTH' || raw === 'WEEK_ONLY' || raw === 'LEGACY_KM') return raw;
+    } catch {}
+    return 'WEEK_AND_MONTH';
+}
+
+export function readPrimaryLoadMetric(): PrimaryLoadMetricMode {
+    if (typeof (TrainingStatusCardModule as any).readPrimaryLoadMetric === 'function') {
+        return (TrainingStatusCardModule as any).readPrimaryLoadMetric();
+    }
+    if (typeof window === 'undefined') return 'TSS';
+    try {
+        const raw = localStorage.getItem('runflow_load_metric_v1');
+        if (raw === 'TSS' || raw === 'DUAL' || raw === 'TRIMP') return raw;
+    } catch {}
+    return 'TSS';
+}
 
 interface RaceCountdownProps {
     goal: Goal | null;
     className?: string;
     onSelectRace?: (_goal: Goal, _activity: SuggestedRaceActivity | null, _mode: 'suggest' | 'review' | 'pick') => void;
     isIncompleteArchived?: boolean;
+    weeklyWorkouts?: Workout[];
+    statsData?: AnalyticsStats | any | null;
 }
 
 const raceLabels: Record<string, string> = {
@@ -53,11 +97,21 @@ function formatTime(seconds: number): string {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+function fmtDuration(sec: number): string {
+    if (sec <= 0) return '0m';
+    const h = Math.floor(sec / 3600);
+    const m = Math.round((sec % 3600) / 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+}
+
 export function RaceCountdown({
     goal,
     className = '',
     onSelectRace,
     isIncompleteArchived = false,
+    weeklyWorkouts,
+    statsData,
 }: RaceCountdownProps) {
     const router = useRouter();
     const {
@@ -69,6 +123,24 @@ export function RaceCountdown({
     const queryClient = useQueryClient();
 
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [countdownStyle, setCountdownStyle] = useState<CountdownStyleMode>('COMPACT_BAR');
+    const [effortMode, setEffortMode] = useState<EffortCardMode>('WEEK_AND_MONTH');
+    const [primaryLoadMetric, setPrimaryLoadMetric] = useState<PrimaryLoadMetricMode>('TSS');
+
+    useEffect(() => {
+        const syncPrefs = () => {
+            setCountdownStyle(readCountdownStyle());
+            setEffortMode(readEffortCardMode());
+            setPrimaryLoadMetric(readPrimaryLoadMetric());
+        };
+        syncPrefs();
+        window.addEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncPrefs);
+        window.addEventListener('storage', syncPrefs);
+        return () => {
+            window.removeEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncPrefs);
+            window.removeEventListener('storage', syncPrefs);
+        };
+    }, []);
 
     // Delete plan mutation (soft-delete via the advanced plan endpoint: snapshots + cleans sub-goals)
     const deletePlanMutation = useMutation({
@@ -139,9 +211,51 @@ export function RaceCountdown({
     }
 
     // ACTIVE STATE: Race is in the future
+    const exactWeeks = Math.floor(Math.max(0, daysToRace) / 7);
+    const remDays = Math.max(0, daysToRace) % 7;
     const totalWeeks = goal.planWeeks || 12;
-    const weeksCompleted = Math.max(0, totalWeeks - weeksToRace);
+    const weeksCompleted = Math.max(0, Math.min(totalWeeks, totalWeeks - weeksToRace));
     const progressPercent = Math.min(100, (weeksCompleted / totalWeeks) * 100);
+
+    // Effort calculations
+    let fallbackWeeklyPlannedTss = 0;
+    let fallbackWeeklyActualTss = 0;
+    let fallbackWeeklyPlannedDuration = 0;
+    let fallbackWeeklyActualDuration = 0;
+    if (weeklyWorkouts && weeklyWorkouts.length > 0) {
+        for (const w of weeklyWorkouts) {
+            const pTss = (w as any).plannedTss || 40;
+            fallbackWeeklyPlannedTss += pTss;
+            fallbackWeeklyPlannedDuration += w.targetDuration || 3000;
+            if (w.isCompleted) {
+                fallbackWeeklyActualTss += (w as any).actualTss || pTss;
+                fallbackWeeklyActualDuration += w.targetDuration || 3000;
+            }
+        }
+    }
+
+    const weeklyPlannedTss = statsData?.weeklyPlannedTss ?? fallbackWeeklyPlannedTss;
+    const weeklyActualTss = statsData?.weeklyActualTss ?? fallbackWeeklyActualTss;
+    const weeklyPlannedDurationSec = statsData?.weeklyPlannedDurationSec ?? fallbackWeeklyPlannedDuration;
+    const weeklyActualDurationSec = statsData?.weeklyActualDurationSec ?? fallbackWeeklyActualDuration;
+    const weeklyPlannedTrimp = statsData?.weeklyPlannedTrimp ?? Math.round(weeklyPlannedTss * 1.15);
+    const weeklyActualTrimp = statsData?.weeklyActualTrimp ?? Math.round(weeklyActualTss * 1.15);
+
+    const monthlyPlannedTss = statsData?.monthlyPlannedTss ?? (weeklyPlannedTss > 0 ? weeklyPlannedTss * 4 : 800);
+    const monthlyActualTss = statsData?.monthlyActualTss ?? weeklyActualTss;
+
+    const weeklyPct = weeklyPlannedTss > 0 ? Math.round((weeklyActualTss / weeklyPlannedTss) * 100) : 0;
+    const monthlyPct = monthlyPlannedTss > 0 ? Math.round((monthlyActualTss / monthlyPlannedTss) * 100) : 0;
+    const dayOfWeekIndex = (new Date().getDay() + 6) % 7; // Mon=0 .. Sun=6
+    const dayTickPercent = Math.round(((dayOfWeekIndex + 0.5) / 7) * 100);
+
+    const isCustomOrOther = goal.raceType === 'CUSTOM_TRI' || (goal.raceType as string) === 'OTHER' || (goal.raceType as string) === 'CUSTOM_DISTANCE';
+    const planWorkouts = goal.workouts || [];
+    const pastOrTodayWorkouts = planWorkouts.filter(w => new Date(w.scheduledDate) <= new Date());
+    const compliantCount = pastOrTodayWorkouts.filter(w => w.isCompleted).length;
+    const planCompliancePct = pastOrTodayWorkouts.length > 0
+        ? Math.round((compliantCount / pastOrTodayWorkouts.length) * 100)
+        : (weeklyPct > 0 ? weeklyPct : 100);
 
     // CURRENT-fitness prediction for the goal's distance, from the HR-based
     // Aerobic Fitness (VO2max) metric — the SAME inputs the Analytics page
@@ -156,15 +270,12 @@ export function RaceCountdown({
     };
     const nowPredictedTime = (() => {
         if (aerobicVo2max <= 0) return 0;
+        if (isCustomOrOther) return 0; // Suppress Sprint Triathlon prediction mismatch for custom/other
         if (TRI_RACE_TYPES.has(goal.raceType)) {
-            // No run-only entry for triathlon: feed the HR-based value through
-            // the same estimator the race-day projection uses.
             return estimateTriathlonTime({ vdot: aerobicVo2max, raceType: goal.raceType as RaceType })?.optimal.totalSeconds ?? 0;
         }
         const goalDistance = raceDistanceMap[goal.raceType];
         if (!goalDistance) return 0;
-        // Same calibration factor as the Analytics page: the goal's
-        // marathonShapeFactor (falls back to 1.0 there and here).
         const predictions = calculateAllRacePredictions(aerobicVo2max, shapePercent, goal.marathonShapeFactor || 1.0);
         return predictions.find(p => p.distance === predictionDistanceNames[goalDistance])?.predicted ?? 0;
     })();
@@ -180,7 +291,7 @@ export function RaceCountdown({
                     >
                         {isMobile ? 'View Full Plan →' : 'View Calendar →'}
                     </button>
-                    <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
+                    <span className="badge badge-run">{raceLabels[goal.raceType] ?? goal.raceType}</span>
                     <button
                         onClick={() => setIsDeleteConfirmOpen(true)}
                         disabled={deletePlanMutation.isPending}
@@ -193,39 +304,156 @@ export function RaceCountdown({
                 </div>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-4">
                 <h3 className="text-xl font-bold text-foreground mb-1">{goal.name}</h3>
-                <div className="flex items-center gap-2 text-foreground-muted">
-                    <Calendar className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-foreground-muted text-xs">
+                    <Calendar className="w-3.5 h-3.5" />
                     <span>{format(raceDate, 'MMMM d, yyyy')}</span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="glass-card p-4 text-center">
-                    <p className="stat-value-accent">{daysToRace}</p>
-                    <p className="text-sm text-foreground-muted mt-1">days to go</p>
-                </div>
-                <div className="glass-card p-4 text-center">
-                    <p className="stat-value">{weeksToRace}</p>
-                    <p className="text-sm text-foreground-muted mt-1">weeks</p>
-                </div>
-            </div>
+            {/* Countdown Display: Compact Bar by default, or classic 2-box */}
+            {countdownStyle === 'CLASSIC_2BOX' ? (
+                <>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="glass-card p-4 text-center">
+                            <p className="stat-value-accent">{daysToRace}</p>
+                            <p className="text-sm text-foreground-muted mt-1">days to go</p>
+                        </div>
+                        <div className="glass-card p-4 text-center">
+                            <p className="stat-value">{weeksToRace}</p>
+                            <p className="text-sm text-foreground-muted mt-1">weeks</p>
+                        </div>
+                    </div>
 
-            <div className="mb-6">
-                <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-foreground-muted">Training Progress</span>
-                    <span className="text-foreground font-medium tabular-nums">Week {weeksCompleted} of {totalWeeks}</span>
+                    <div className="mb-4">
+                        <div className="flex items-center justify-between text-sm mb-2">
+                            <span className="text-foreground-muted">Training Progress</span>
+                            <span className="text-foreground font-medium tabular-nums">Week {weeksCompleted} of {totalWeeks}</span>
+                        </div>
+                        <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-accent-orange rounded-full transition-all duration-500"
+                                style={{ width: `${progressPercent}%` }}
+                            />
+                        </div>
+                    </div>
+                </>
+            ) : (
+                /* COMPACT_BAR (Default) */
+                <div className="bg-background-tertiary/60 border border-line rounded-lg p-3.5 mb-4">
+                    <div className="flex items-center justify-between text-xs mb-2">
+                        <span className="font-semibold text-foreground">
+                            {daysToRace} days to go <span className="font-mono text-foreground-muted text-[11px]">({exactWeeks}w {remDays}d)</span>
+                        </span>
+                        <span className="font-mono text-foreground-muted text-xs">
+                            Week {weeksCompleted} of {totalWeeks}
+                        </span>
+                    </div>
+                    <div className="h-2 bg-background rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-accent-orange rounded-full transition-all duration-500"
+                            style={{ width: `${progressPercent}%` }}
+                        />
+                    </div>
                 </div>
-                <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
-                    <div
-                        className="h-full bg-accent-orange rounded-full transition-all duration-500"
-                        style={{ width: `${progressPercent}%` }}
-                    />
-                </div>
-            </div>
+            )}
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* Planned vs. Actual Effort Subcard */}
+            {effortMode !== 'LEGACY_KM' && (
+                <div className="bg-background-tertiary/40 border border-line rounded-lg p-3.5 mb-4 space-y-3">
+                    {/* This Week Effort Bar */}
+                    <div>
+                        <div className="flex items-center justify-between text-xs mb-1.5">
+                            <span className="text-foreground-muted font-medium">This Week Effort</span>
+                            <span className="font-mono tabular-nums text-foreground font-semibold text-xs">
+                                {primaryLoadMetric === 'TRIMP'
+                                    ? `${weeklyActualTrimp} / ${weeklyPlannedTrimp} TRIMP`
+                                    : primaryLoadMetric === 'DUAL'
+                                    ? `${weeklyActualTss}/${weeklyPlannedTss} TSS · ${weeklyActualTrimp}/${weeklyPlannedTrimp} TR`
+                                    : `${weeklyActualTss} / ${weeklyPlannedTss} TSS`}
+                                <span className="ml-1 text-[11px] text-accent-cyan">({weeklyPct}%)</span>
+                            </span>
+                        </div>
+                        <div className="relative h-2 bg-background rounded-full overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                    weeklyPct >= 85 && weeklyPct <= 115
+                                        ? 'bg-positive'
+                                        : weeklyPct >= 60 && weeklyPct <= 135
+                                        ? 'bg-workout-tempo'
+                                        : 'bg-accent-orange'
+                                }`}
+                                style={{ width: `${Math.min(100, weeklyPct)}%` }}
+                            />
+                            {/* Day-of-week tick marker */}
+                            <div
+                                className="absolute top-0 bottom-0 w-0.5 bg-foreground/60 z-10"
+                                style={{ left: `${dayTickPercent}%` }}
+                                title={`Today: Day ${dayOfWeekIndex + 1} of 7`}
+                            />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-foreground-muted mt-1 font-mono">
+                            <span>Today marker: Day {dayOfWeekIndex + 1}/7</span>
+                            <span>{fmtDuration(weeklyActualDurationSec)} / {fmtDuration(weeklyPlannedDurationSec)}</span>
+                        </div>
+                    </div>
+
+                    {/* 4-Week Block (Monthly) Effort Bar */}
+                    {effortMode === 'WEEK_AND_MONTH' && (
+                        <div className="pt-2 border-t border-line/60">
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                                <span className="text-foreground-muted font-medium">4-Week Block</span>
+                                <span className="font-mono tabular-nums text-foreground font-semibold text-xs">
+                                    {monthlyActualTss} / {monthlyPlannedTss} TSS
+                                    <span className="ml-1 text-[11px] text-accent-cyan">({monthlyPct}%)</span>
+                                </span>
+                            </div>
+                            <div className="h-1.5 bg-background rounded-full overflow-hidden mb-2">
+                                <div
+                                    className="h-full bg-accent-blue rounded-full transition-all duration-500"
+                                    style={{ width: `${Math.min(100, monthlyPct)}%` }}
+                                />
+                            </div>
+
+                            {/* 4 Mini Week Pills (W1..W4) */}
+                            <div className="grid grid-cols-4 gap-1.5">
+                                {(statsData?.monthlyWeeksBreakdown && statsData.monthlyWeeksBreakdown.length > 0
+                                    ? statsData.monthlyWeeksBreakdown.slice(0, 4)
+                                    : [
+                                          { label: 'W1', plannedTss: Math.round(monthlyPlannedTss / 4), actualTss: Math.round(monthlyActualTss / 4), isCurrentWeek: true },
+                                          { label: 'W2', plannedTss: Math.round(monthlyPlannedTss / 4), actualTss: 0, isCurrentWeek: false },
+                                          { label: 'W3', plannedTss: Math.round(monthlyPlannedTss / 4), actualTss: 0, isCurrentWeek: false },
+                                          { label: 'W4', plannedTss: Math.round(monthlyPlannedTss / 4), actualTss: 0, isCurrentWeek: false },
+                                      ]
+                                ).map((w: any, idx: number) => {
+                                    const isCurrent = w.isCurrentWeek ?? (idx === 0);
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={`p-1 rounded text-center border ${
+                                                isCurrent
+                                                    ? 'bg-accent-orange/10 border-accent-orange/40 text-foreground'
+                                                    : 'bg-background-secondary border-line/60 text-foreground-muted'
+                                            }`}
+                                        >
+                                            <div className="text-[9px] font-semibold flex items-center justify-center gap-1">
+                                                <span>{w.label || `W${idx + 1}`}</span>
+                                                {isCurrent && <span className="w-1 h-1 rounded-full bg-accent-orange" />}
+                                            </div>
+                                            <div className="text-[8px] font-mono mt-0.5 truncate">
+                                                {w.actualTss > 0 ? `${w.actualTss}T` : `${w.plannedTss}T`}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
                 {goal.targetTime && (
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-md bg-workout-long-run/15 flex items-center justify-center shrink-0">
@@ -238,7 +466,7 @@ export function RaceCountdown({
                     </div>
                 )}
 
-                {nowPredictedTime > 0 && (
+                {!isCustomOrOther && nowPredictedTime > 0 && (
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-md bg-accent-cyan/15 flex items-center justify-center shrink-0">
                             <Activity className="w-5 h-5 text-accent-cyan" />
@@ -246,15 +474,30 @@ export function RaceCountdown({
                         <div>
                             <p className="text-xs text-foreground-muted flex items-center gap-1">
                                 Now
-                                <span className="cursor-help" title="Current predicted finish time based on your calibrated Effective VO2max and Marathon Shape">&#8505;</span>
+                                <span className="cursor-help inline-flex items-center ml-0.5" title="Current predicted finish time based on your calibrated Effective VO2max and Marathon Shape">
+                                    <Info className="w-3.5 h-3.5 text-foreground-muted inline" />
+                                </span>
                             </p>
                             <p className="text-xl font-mono tabular-nums font-semibold text-foreground">{formatTime(nowPredictedTime)}</p>
                         </div>
                     </div>
                 )}
+
+                {isCustomOrOther && (
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-md bg-positive/15 flex items-center justify-center shrink-0">
+                            <CheckCircle className="w-5 h-5 text-positive" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-foreground-muted">Plan Compliance</p>
+                            <p className="text-xl font-mono tabular-nums font-semibold text-positive">{planCompliancePct}%</p>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {goal.workouts && goal.workouts.length > 0 && (() => {
+            {/* Legacy KM Mode */}
+            {effortMode === 'LEGACY_KM' && goal.workouts && goal.workouts.length > 0 && (() => {
                 const plannedWeekMileage = goal.workouts.reduce((acc, workout) => {
                     const isRun = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'RECOVERY', 'RACE', 'REPETITIONS'].includes(workout.workoutType);
                     if (isRun && workout.targetDistance) {
@@ -281,8 +524,7 @@ export function RaceCountdown({
                         </div>
                     </div>
                 );
-            })()
-            }
+            })()}
 
             <ConfirmDialog
                 open={isDeleteConfirmOpen}

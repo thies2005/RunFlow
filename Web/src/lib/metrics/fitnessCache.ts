@@ -43,6 +43,18 @@ function getDateKey(date: Date): string {
 }
 
 /**
+ * Resolves unified effective TSS for any activity across Run, Bike, Swim, Strength, and other cardio.
+ *
+ * Rules:
+ * - Rides (RIDE / VIRTUAL_RIDE): bikeTss > 0 ? bikeTss : Math.round(trimp * 0.85)
+ * - Runs (RUN): runningTss > 0 ? runningTss : Math.round(trimp * 0.85)
+ * - Strength (WORKOUT / STRENGTH): Math.max(trimp, Math.round(((activity.movingTime || 0) / 3600) * 36))
+ * - Other cardio (SWIM, HIKE, WALK, OTHER): trimp > 0 ? Math.round(trimp * 0.85) : Math.round(((activity.movingTime || 0) / 3600) * 40)
+ */
+import { resolveActivityEffectiveTss } from './effectiveTss';
+export { resolveActivityEffectiveTss } from './effectiveTss';
+
+/**
  * Updates the fitness cache for a user based on new or modified activities.
  *
  * Strategy:
@@ -241,8 +253,8 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
                 dailyRunningTss += runningTss;
                 dailyBikeTss += bikeTss;
 
-                // For combined fitness load: use bikeTss for rides instead of trimp when present
-                const activityCombinedLoad = (isRide && bikeTss > 0) ? bikeTss : trimp;
+                // Combined load uses unified resolveActivityEffectiveTss
+                const activityCombinedLoad = resolveActivityEffectiveTss(a, runningTss, bikeTss, trimp);
                 dailyCombinedLoad += activityCombinedLoad;
             }
 

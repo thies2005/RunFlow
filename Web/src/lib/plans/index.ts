@@ -298,6 +298,8 @@ export type PlanConfig = {
     customSwimDistM?: number;
     customBikeDistM?: number;
     customRunDistM?: number;
+    /** Athlete weight in kg (used for weight-aware bike FTP estimation). */
+    weightKg?: number | null;
     /** Athlete bike FTP in watts (falls back to `estimateBikeFtpFromVdot(vdot)`). */
     ftpWatts?: number | null;
     /** Athlete swim CSS in seconds per 100m (falls back to `estimateSwimPaceFromVdot(vdot)`). */
@@ -370,7 +372,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const paces = calculateTrainingPaces(config.vdot);
     const resolvedFtp = config.ftpWatts && config.ftpWatts > 0
         ? config.ftpWatts
-        : estimateBikeFtpFromVdot(config.vdot);
+        : estimateBikeFtpFromVdot(config.vdot, config.weightKg ?? 70);
 
     const enrichTargets = (workouts: GeneratedWorkout[], options?: { usePhaseVdot?: boolean }) => {
         for (const w of workouts) {
@@ -390,6 +392,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
                     vdot: config.vdot,
                     ftpWatts: config.ftpWatts ?? undefined,
                     swimCssSecPer100m: config.swimCssSecPer100m ?? undefined,
+                    weightKg: config.weightKg ?? 70,
                 });
             }
             if (w.plannedTss == null) {
@@ -463,8 +466,8 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     let currentDate = new Date(startDate);
     currentDate.setDate(currentDate.getDate() - currentDate.getDay());
 
-    const timeDiff = raceDate.getTime() - currentDate.getTime();
-    const totalWeeks = Math.min(PLAN_CONSTANTS.MAX_TOTAL_WEEKS, Math.max(1, Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 7)) + 1));
+    const calendarDays = Math.round((raceDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+    const totalWeeks = Math.min(PLAN_CONSTANTS.MAX_TOTAL_WEEKS, Math.max(1, Math.ceil(calendarDays / 7)));
 
     const minStart = getMinStartVolume(config.raceType ?? null);
     let startVolume: number;
@@ -657,7 +660,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     enrichWorkoutsWithDescriptions(result, racePace);
     if (config.matchToMyWhoosh || config.mywhooshPlanId) {
         const { findClosestMyWhooshWorkout, mywhooshWorkoutToStructuredV2 } = require('./mywhooshMatcher');
-        const bikeFtp = config.ftpWatts && config.ftpWatts > 0 ? config.ftpWatts : estimateBikeFtpFromVdot(vdot);
+        const bikeFtp = config.ftpWatts && config.ftpWatts > 0 ? config.ftpWatts : estimateBikeFtpFromVdot(vdot, config.weightKg ?? 70);
         let rideIdx = 0;
         for (const w of result) {
             if (w.type === WorkoutType.RIDE || w.type === WorkoutType.LONG_RIDE || w.type === WorkoutType.RIDE_INTERVALS) {
@@ -1955,6 +1958,7 @@ export interface StructuredStepsContext {
     vdot?: number;
     ftpWatts?: number;
     swimCssSecPer100m?: number;
+    weightKg?: number;
     /** Pre-resolved HR zone bpm bounds (from `resolveHrZones`). */
     hrZones?: HrZoneDefinition[] | null;
 }
@@ -2135,7 +2139,7 @@ export function buildStructuredStepsForWorkout(
         : (workout.vdot && workout.vdot > 0 ? workout.vdot : 45);
     const bikeFtp = context.ftpWatts && context.ftpWatts > 0
         ? Math.round(context.ftpWatts)
-        : (workout.ftpWatts && workout.ftpWatts > 0 ? Math.round(workout.ftpWatts) : estimateBikeFtpFromVdot(vdot));
+        : (workout.ftpWatts && workout.ftpWatts > 0 ? Math.round(workout.ftpWatts) : estimateBikeFtpFromVdot(vdot, context.weightKg ?? 70));
     const swimCss = context.swimCssSecPer100m && context.swimCssSecPer100m > 0
         ? context.swimCssSecPer100m
         : estimateSwimPaceFromVdot(vdot);
@@ -2901,7 +2905,7 @@ export function assignWorkoutTargets(
 function enrichWorkoutsWithTargets(
     workouts: GeneratedWorkout[],
     paces: TrainingPaces,
-    config: Pick<PlanConfig, 'vdot' | 'targetVdot' | 'ftpWatts' | 'thresholdHeartRate' | 'hrZoneMethod' | 'hrZone1Max' | 'hrZone2Max' | 'hrZone3Max' | 'hrZone4Max' | 'hrZone5Max' | 'hrZone6Max' | 'hrMax' | 'hrRest'> & { usePhaseVdot?: boolean },
+    config: Pick<PlanConfig, 'vdot' | 'targetVdot' | 'ftpWatts' | 'weightKg' | 'thresholdHeartRate' | 'hrZoneMethod' | 'hrZone1Max' | 'hrZone2Max' | 'hrZone3Max' | 'hrZone4Max' | 'hrZone5Max' | 'hrZone6Max' | 'hrMax' | 'hrRest'> & { usePhaseVdot?: boolean },
 ): void {
     const hrZones = resolveHrZones({
         thresholdHeartRate: config.thresholdHeartRate ?? null,
@@ -2917,7 +2921,7 @@ function enrichWorkoutsWithTargets(
 
     const bikeFtp = config.ftpWatts && config.ftpWatts > 0
         ? Math.round(config.ftpWatts)
-        : estimateBikeFtpFromVdot(config.vdot);
+        : estimateBikeFtpFromVdot(config.vdot, config.weightKg ?? 70);
     const bikeZones = calculateBikeZones(bikeFtp);
     const usePhaseVdot = config.usePhaseVdot ?? false;
     const phasePacesByVdot = new Map<number, TrainingPaces>();

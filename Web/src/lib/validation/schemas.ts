@@ -69,6 +69,16 @@ export const goalSchema = z.object({
   planSource: z.string().optional()
 })
 
+export const primaryLoadMetricSchema = z.enum(['TSS', 'DUAL', 'TRIMP']);
+
+export const uiPreferencesSchema = z.object({
+  workoutCardStyle: z.string().optional(),
+  countdownStyle: z.string().optional(),
+  effortCardMode: z.string().optional(),
+  calendarWeeksMode: z.string().optional(),
+  primaryLoadMetric: primaryLoadMetricSchema.optional(),
+}).passthrough();
+
 export const userSettingsSchema = z.object({
   weight: z.number().positive().optional(),
   height: z.number().positive().optional(),
@@ -82,7 +92,9 @@ export const userSettingsSchema = z.object({
   hrZone6Max: z.number().int().positive().optional(),
   hrZone7Max: z.number().int().positive().optional(),
   includeCrossTraining: z.boolean().optional(),
-  useImperial: z.boolean().optional()
+  useImperial: z.boolean().optional(),
+  primaryLoadMetric: primaryLoadMetricSchema.optional(),
+  uiPreferences: uiPreferencesSchema.optional().nullable(),
 })
 
 export const passwordSchema = z

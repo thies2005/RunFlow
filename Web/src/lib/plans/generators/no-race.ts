@@ -123,7 +123,7 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
     enrichWorkoutsWithDescriptions(result);
 
     if (config.matchToMyWhoosh || config.mywhooshPlanId) {
-        const bikeFtp = config.ftpWatts && config.ftpWatts > 0 ? config.ftpWatts : estimateBikeFtpFromVdot(vdot);
+        const bikeFtp = config.ftpWatts && config.ftpWatts > 0 ? config.ftpWatts : estimateBikeFtpFromVdot(vdot, config.weightKg ?? 70);
         let rideCounter = 0;
         for (const w of result) {
             if (

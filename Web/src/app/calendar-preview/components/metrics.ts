@@ -10,9 +10,8 @@
  * ATL=orange, TSB=green>0 / red<0) but computed locally from TRIMP/TSS.
  */
 
+import { addDays, format, startOfWeek } from 'date-fns';
 import { dayKey } from './mockData';
-
-const DAY = 24 * 60 * 60 * 1000;
 
 export interface DayEntry {
     date: string;
@@ -93,7 +92,7 @@ export function buildDays(
     const byDay = new Map<string, DayEntry>();
 
     const ensure = (d: Date): DayEntry => {
-        const k = dayKey(d);
+        const k = format(d, 'yyyy-MM-dd');
         let e = byDay.get(k);
         if (!e) {
             e = {
@@ -112,8 +111,8 @@ export function buildDays(
         return e;
     };
 
-    for (let t = from.getTime(); t <= to.getTime(); t += DAY) {
-        ensure(new Date(t));
+    for (let d = new Date(from); d <= to; d = addDays(d, 1)) {
+        ensure(new Date(d));
     }
 
     for (const a of activities) {
@@ -122,7 +121,9 @@ export function buildDays(
         const e = ensure(d);
         e.activities.push(a);
         e.trimp += a.trimp ?? 0;
-        e.tss += a.bikeTss ?? a.tss ?? 0;
+        const isStrength = (a as any).sport === 'STRENGTH' || a.type === 'STRENGTH' || (a.name && /strength|gym|core|weights/i.test(a.name));
+        const resolvedActTss = a.bikeTss ?? a.tss ?? (isStrength ? Math.round((a.duration / 3600) * 36) : a.trimp != null ? Math.round(a.trimp * 0.85) : 0);
+        e.tss += resolvedActTss;
         e.distance += a.distance;
         e.duration += a.duration;
         if (a.vdot != null) e.vdots.push(a.vdot);
@@ -146,19 +147,17 @@ export function buildWeeks(
     to: Date,
 ): WeekEntry[] {
     // align to Monday
-    const start = new Date(from);
-    start.setHours(0, 0, 0, 0);
-    const dow = (start.getDay() + 6) % 7; // Mon=0
-    start.setDate(start.getDate() - dow);
+    let cursor = startOfWeek(new Date(from), { weekStartsOn: 1 });
+    cursor.setHours(0, 0, 0, 0);
 
     const weeks: WeekEntry[] = [];
-    let cursor = new Date(start);
     while (cursor <= to) {
         const ws = new Date(cursor);
-        const we = new Date(cursor.getTime() + 6 * DAY);
+        const we = addDays(ws, 6);
         const dayEntries: DayEntry[] = [];
         for (let i = 0; i < 7; i++) {
-            const k = dayKey(new Date(ws.getTime() + i * DAY));
+            const dayDate = addDays(ws, i);
+            const k = format(dayDate, 'yyyy-MM-dd');
             const e = days.get(k);
             if (e) dayEntries.push(e);
         }
@@ -186,7 +185,7 @@ export function buildWeeks(
             atl: 0,
             tsb: 0,
         });
-        cursor = new Date(cursor.getTime() + 7 * DAY);
+        cursor = addDays(cursor, 7);
     }
     return weeks;
 }
@@ -201,7 +200,7 @@ export function buildWeeks(
  *   TSB  = CTL - ATL  (form)
  *
  * TSS is used as the daily load signal (falls back to TRIMP when TSS missing).
- * We seed the EWMA from ATHLETE_PROFILE.initialCtl/Atl so history is realistic.
+ * Stepping day-by-day across w.days rather than once per week.
  */
 export function fillFitness(
     weeks: WeekEntry[],
@@ -214,11 +213,11 @@ export function fillFitness(
     let atl = seed.initialAtl;
 
     for (const w of weeks) {
-        const load = w.tss || w.trimp; // weekly average per day would be smoother, but
-        // use the daily average so a single hard week doesn't explode ATL
-        const dailyLoad = load / 7;
-        ctl = ctlAlpha * dailyLoad + (1 - ctlAlpha) * ctl;
-        atl = atlAlpha * dailyLoad + (1 - atlAlpha) * atl;
+        for (const d of w.days) {
+            const dailyLoad = d.tss > 0 ? d.tss : (d.trimp > 0 ? Math.round(d.trimp * 0.85) : 0);
+            ctl = ctlAlpha * dailyLoad + (1 - ctlAlpha) * ctl;
+            atl = atlAlpha * dailyLoad + (1 - atlAlpha) * atl;
+        }
         w.ctl = ctl;
         w.atl = atl;
         w.tsb = ctl - atl;
@@ -236,8 +235,8 @@ export function buildMonth(
     const monthStart = new Date(year, month, 1);
     const monthEnd = new Date(year, month + 1, 0);
     const dayEntries: DayEntry[] = [];
-    for (let t = monthStart.getTime(); t <= monthEnd.getTime(); t += DAY) {
-        const e = days.get(dayKey(new Date(t)));
+    for (let d = new Date(monthStart); d <= monthEnd; d = addDays(d, 1)) {
+        const e = days.get(format(d, 'yyyy-MM-dd'));
         if (e) dayEntries.push(e);
     }
     const trimp = dayEntries.reduce((s, d) => s + d.trimp, 0);

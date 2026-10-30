@@ -54,9 +54,10 @@ export function calculateBikeZonesFromHR(hrMax: number, thresholdHR: number): Bi
     };
 }
 
-export function estimateBikeFtpFromVdot(vdot: number): number {
-    if (vdot <= 0) return 100;
-
-    const baseFTP = (vdot - 10) * 6 + 120;
-    return Math.max(100, Math.min(400, Math.round(baseFTP)));
+export function estimateBikeFtpFromVdot(vdot: number, weightKg: number = 70): number {
+    if (!vdot || vdot <= 0) return 100;
+    const safeWeight = weightKg > 0 ? weightKg : 70;
+    const powerVo2PerKg = Math.max(0, (vdot - 7) / 10.8);
+    const ftpWatts = powerVo2PerKg * 0.75 * safeWeight;
+    return Math.max(100, Math.min(450, Math.round(ftpWatts)));
 }

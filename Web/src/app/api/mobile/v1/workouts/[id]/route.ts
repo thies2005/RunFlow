@@ -77,12 +77,14 @@ export async function PATCH(
       return errorResponses.badRequest('Invalid builder field type');
     }
 
-    if (body.linkedActivityId && prisma.activity) {
-      const activity = await prisma.activity.findFirst({
-        where: { id: body.linkedActivityId, userId: user.id },
-      });
-      if (!activity) {
-        return errorResponses.notFound('Activity');
+    if (body.linkedActivityId !== undefined) {
+      if (body.linkedActivityId !== null && typeof body.linkedActivityId === 'string' && body.linkedActivityId.trim() !== '' && prisma.activity) {
+        const activity = await prisma.activity.findFirst({
+          where: { id: body.linkedActivityId, userId: user.id },
+        });
+        if (!activity) {
+          return errorResponses.notFound('Activity');
+        }
       }
     }
 
@@ -130,8 +132,37 @@ export async function PATCH(
       if (body.completedAt === undefined) {
         updateData.completedAt = body.isCompleted ? (workout.completedAt ?? new Date()) : null;
       }
-      if (!body.isCompleted) {
+      if (!body.isCompleted && body.linkedActivityId === undefined) {
         updateData.linkedActivityId = null;
+      }
+    }
+
+    if (body.adaptationType && typeof body.adaptationType === 'string' && (prisma as any).adaptedWorkout) {
+      try {
+        await (prisma as any).adaptedWorkout.upsert({
+          where: {
+            userId_originalWorkoutId: {
+              userId: user.id,
+              originalWorkoutId: workout.id,
+            },
+          },
+          create: {
+            userId: user.id,
+            originalWorkoutId: workout.id,
+            date: workout.scheduledDate,
+            originalType: body.originalType || workout.workoutType,
+            adaptedType: (body.workoutType ?? workout.workoutType) as string,
+            adaptationType: body.adaptationType,
+            isAccepted: true,
+          },
+          update: {
+            adaptedType: (body.workoutType ?? workout.workoutType) as string,
+            adaptationType: body.adaptationType,
+            isAccepted: true,
+          },
+        });
+      } catch (err) {
+        logger.warn('Failed to record adaptedWorkout from patch', { err });
       }
     }
 
@@ -157,6 +188,8 @@ export async function PATCH(
       createdAt: updated.createdAt.toISOString(),
       updatedAt: updated.updatedAt.toISOString(),
       completedAt: updated.completedAt?.toISOString() || null,
+      ...(body.adaptationType !== undefined && { adaptationType: body.adaptationType }),
+      ...(body.originalType !== undefined && { originalType: body.originalType }),
     };
 
     return NextResponse.json({ ...serialized, warnings }, { headers: rateLimitHeaders(rateLimitResult) });

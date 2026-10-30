@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Share
@@ -80,6 +82,7 @@ import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
 import com.runflow2.app.core.math.VdotMath
 import com.runflow2.app.core.util.DistanceUnit
+import com.runflow2.app.core.export.PlanFitExporter
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.GoalEntity
 import com.runflow2.app.data.db.WorkoutEntity
@@ -88,11 +91,13 @@ import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.WorkoutType
 import com.runflow2.app.domain.person.Personalization
+import com.runflow2.app.domain.plan.ComplianceCalculator
 import com.runflow2.app.domain.plan.vdotFromThresholdPaceSecPerKm
 import com.runflow2.app.ui.components.InfoChip
 import com.runflow2.app.ui.components.WorkoutVisuals
 import android.widget.Toast
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
@@ -122,10 +127,19 @@ fun PlanScreen(
     } ?: 0
 
     var selectedWorkout by remember { mutableStateOf<WorkoutEntity?>(null) }
+    var showCompleteSheetForWorkout by remember { mutableStateOf<WorkoutEntity?>(null) }
     var showRaceResult by remember { mutableStateOf(false) }
     var showAddWorkout by remember { mutableStateOf(false) }
     var showPlanMenu by remember { mutableStateOf(false) }
     var showDeletePlan by remember { mutableStateOf(false) }
+
+    val activities by container.repository.activities.collectAsState(initial = emptyList())
+    val activitiesById = remember(activities) { activities.associateBy { it.id } }
+    val loadMetric = when (settings.primaryLoadMetric.uppercase()) {
+        "TRIMP" -> "TRIMP"
+        "DUAL" -> "TSS"
+        else -> "TSS"
+    }
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -185,6 +199,17 @@ fun PlanScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
+                    val currentWeekMonday = today.with(DayOfWeek.MONDAY)
+                    val blockStart = currentWeekMonday.minusWeeks(3)
+                    val blockEnd = currentWeekMonday.plusDays(6)
+                    val blockWorkouts = workouts.filter {
+                        val d = Format.localDate(it.scheduledDate)
+                        !d.isBefore(blockStart) && !d.isAfter(blockEnd)
+                    }.ifEmpty { workouts.take(28) }
+                    val blockCompliance = if (blockWorkouts.isNotEmpty()) {
+                        ComplianceCalculator.calculateWeeklyCompliance(blockWorkouts, activitiesById, today)
+                    } else null
+
                     GoalHeaderCard(
                         goalName = g.name,
                         raceLabel = g.raceType().label,
@@ -196,6 +221,8 @@ fun PlanScreen(
                         targetTime = g.targetTimeSec,
                         unit = unit,
                         onRecordResult = { showRaceResult = true },
+                        blockCompliance = blockCompliance,
+                        loadMetric = loadMetric,
                     )
                 }
 
@@ -238,6 +265,11 @@ fun PlanScreen(
                     item(key = "week_$weekMonday") {
                         val phase = weekWorkouts.firstOrNull()
                             ?.let { runCatching { PlanPhase.valueOf(it.phase) }.getOrNull() }
+                        val weekCompliance = ComplianceCalculator.calculateWeeklyCompliance(
+                            weekWorkouts,
+                            activitiesById,
+                            today,
+                        )
                         WeekHeader(
                             weekNumber = if (firstWeek != null)
                                 ChronoUnit.WEEKS.between(firstWeek, weekMonday).toInt() + 1 else 1,
@@ -245,6 +277,8 @@ fun PlanScreen(
                             totalKm = weekWorkouts.sumOf { it.targetDistanceKm ?: 0.0 },
                             unit = unit,
                             isCurrent = weekMonday == today.with(DayOfWeek.MONDAY),
+                            compliance = weekCompliance,
+                            loadMetric = loadMetric,
                         )
                     }
                     weekWorkouts.sortedBy { it.scheduledDate }.forEach { w ->
@@ -275,12 +309,18 @@ fun PlanScreen(
                     onStartWorkout(liveWorkout.id)
                 },
                 onComplete = {
-                    scope.launch { container.repository.completeWorkout(liveWorkout.id, null) }
+                    val target = liveWorkout
                     selectedWorkout = null
+                    showCompleteSheetForWorkout = target
                 },
                 onUncomplete = {
                     scope.launch { container.repository.uncompleteWorkout(liveWorkout.id) }
                     selectedWorkout = null
+                },
+                onLinkActivity = {
+                    val target = liveWorkout
+                    selectedWorkout = null
+                    showCompleteSheetForWorkout = target
                 },
                 onShift = { days ->
                     scope.launch { container.repository.shiftWorkoutDate(liveWorkout.id, days) }
@@ -299,6 +339,16 @@ fun PlanScreen(
                 },
             )
         }
+    }
+
+    // ---- complete / link workout sheet ----
+    showCompleteSheetForWorkout?.let { target ->
+        val liveTarget = workouts.firstOrNull { it.id == target.id } ?: target
+        CompleteWorkoutSheet(
+            workout = liveTarget,
+            container = container,
+            onDismiss = { showCompleteSheetForWorkout = null },
+        )
     }
 
     // ---- add workout dialog ----
@@ -393,6 +443,8 @@ private fun GoalHeaderCard(
     targetTime: Int?,
     unit: DistanceUnit,
     onRecordResult: () -> Unit,
+    blockCompliance: ComplianceCalculator.WeeklyCompliance? = null,
+    loadMetric: String = "TSS",
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -429,6 +481,42 @@ private fun GoalHeaderCard(
                     Text("Target ${Format.duration(targetTime)}")
                 }
             }
+
+            if (blockCompliance != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.15f))
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "4-Week Block Load",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            "${blockCompliance.actualTss.roundToInt()} / ${blockCompliance.plannedTss.roundToInt()} $loadMetric · ${blockCompliance.compliancePct}% Adherence",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    ComplianceProgressBar(
+                        ratio = blockCompliance.complianceRatio,
+                        color = complianceColorToComposeColor(blockCompliance.statusColor),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp),
+                    )
+                }
+            }
+
             if (daysToGo <= 2) {
                 TextButton(onClick = onRecordResult) {
                     Icon(Icons.Outlined.Check, null)
@@ -447,37 +535,63 @@ private fun WeekHeader(
     totalKm: Double,
     unit: DistanceUnit,
     isCurrent: Boolean,
+    compliance: ComplianceCalculator.WeeklyCompliance? = null,
+    loadMetric: String = "TSS",
 ) {
-    Row(
+    Column(
         Modifier
             .fillMaxWidth()
-            .padding(top = 14.dp, bottom = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(top = 14.dp, bottom = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Week $weekNumber", style = MaterialTheme.typography.titleMedium)
-                if (isCurrent) {
-                    InfoChip(
-                        "Current",
-                        container = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Week $weekNumber", style = MaterialTheme.typography.titleMedium)
+                    if (isCurrent) {
+                        InfoChip(
+                            "Current",
+                            container = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                }
+                if (phase != null) {
+                    Text(
+                        "${phase.label} phase",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            if (phase != null) {
+            Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    "${phase.label} phase",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Format.distance(totalKm, unit),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
+                if (compliance != null && compliance.plannedTss > 0) {
+                    Text(
+                        "${compliance.actualTss.roundToInt()} / ${compliance.plannedTss.roundToInt()} $loadMetric · ${compliance.compliancePct}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = complianceColorToComposeColor(compliance.statusColor),
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
-        Text(
-            Format.distance(totalKm, unit),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        if (compliance != null && compliance.plannedTss > 0) {
+            ComplianceProgressBar(
+                ratio = compliance.complianceRatio,
+                color = complianceColorToComposeColor(compliance.statusColor),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp),
+            )
+        }
     }
 }
 
@@ -568,6 +682,7 @@ private fun WorkoutActionSheet(
     onDelete: () -> Unit,
     onSaveEdit: (WorkoutEntity) -> Unit,
     onEditIntervals: () -> Unit,
+    onLinkActivity: () -> Unit = {},
 ) {
     val type = runCatching { WorkoutType.valueOf(workout.workoutType) }.getOrDefault(WorkoutType.EASY)
     val visual = WorkoutVisuals.themedForType(type)
@@ -650,6 +765,23 @@ private fun WorkoutActionSheet(
                     },
             )
             ListItem(
+                headlineContent = {
+                    Text(if (workout.activityId != null) "Relink activity (🔗)" else "Link activity (🔗)")
+                },
+                leadingContent = {
+                    Icon(
+                        Icons.Outlined.Link,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onLinkActivity() },
+            )
+            ListItem(
                 headlineContent = { Text("Edit targets (km, pace, type)") },
                 leadingContent = {
                     Icon(
@@ -721,6 +853,28 @@ private fun WorkoutActionSheet(
                         },
                 )
             }
+            val context = androidx.compose.ui.platform.LocalContext.current
+            ListItem(
+                headlineContent = { Text("Export .fit (Garmin / Coros / Wahoo)") },
+                leadingContent = {
+                    Icon(
+                        Icons.Outlined.Share,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable {
+                        runCatching {
+                            PlanFitExporter.exportWorkoutToFit(context, workout)
+                        }.onFailure {
+                            Toast.makeText(context, "Export failed: ${it.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1041,3 +1195,36 @@ private fun RaceResultDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
+
+private fun PlanFitExporter.exportWorkoutToFit(context: android.content.Context, workout: WorkoutEntity) {
+    share(context, workout)
+}
+
+private fun complianceColorToComposeColor(color: ComplianceCalculator.ComplianceColor): Color = when (color) {
+    ComplianceCalculator.ComplianceColor.GREEN -> Color(0xFF10B981)
+    ComplianceCalculator.ComplianceColor.AMBER -> Color(0xFFF59E0B)
+    ComplianceCalculator.ComplianceColor.RED -> Color(0xFFEF4444)
+    ComplianceCalculator.ComplianceColor.GRAY -> Color.Gray.copy(alpha = 0.5f)
+}
+
+@Composable
+private fun ComplianceProgressBar(
+    ratio: Double,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    val progress = (ratio.toFloat() / 1.35f).coerceIn(0.05f, 1f)
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(3.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(progress)
+                .background(color, RoundedCornerShape(3.dp)),
+        )
+    }
+}
+

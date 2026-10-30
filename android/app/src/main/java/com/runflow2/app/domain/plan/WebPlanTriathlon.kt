@@ -48,6 +48,11 @@ internal object WebPlanTriathlonGenerator {
         "HALF_IRONMAN" to 55000.0, "FULL_IRONMAN" to 70000.0,
     )
 
+    private val TRI_MAX_PEAK_VOLUME: Map<String, Double> = mapOf(
+        "SPRINT_TRI" to 50000.0, "OLYMPIC_TRI" to 65000.0,
+        "HALF_IRONMAN" to 85000.0, "FULL_IRONMAN" to 105000.0,
+    )
+
     private val TRI_MAX_LONG_RUN: Map<String, Double> = mapOf(
         "SPRINT_TRI" to 15000.0, "OLYMPIC_TRI" to 18000.0,
         "HALF_IRONMAN" to 22000.0, "FULL_IRONMAN" to 30000.0,
@@ -99,6 +104,15 @@ internal object WebPlanTriathlonGenerator {
             customBikeDist = config.customBikeDistM?.takeIf { it > 0 }
             customRunDist = config.customRunDistM?.takeIf { it > 0 }
 
+            if (customSwimDist == null && customBikeDist == null && customRunDist == null &&
+                config.customDistanceM != null && config.customDistanceM > 0
+            ) {
+                val totalM = config.customDistanceM
+                customSwimDist = maxOf(400.0, jr((totalM * 0.017) / 50.0) * 50.0)
+                customBikeDist = maxOf(5000.0, jr((totalM * 0.796) / 1000.0) * 1000.0)
+                customRunDist = maxOf(1000.0, jr((totalM - customSwimDist - customBikeDist) / 100.0) * 100.0)
+            }
+
             effectiveRaceType = classifyCustomTri(
                 customSwimDist ?: 750.0,
                 customBikeDist ?: 20000.0,
@@ -108,9 +122,9 @@ internal object WebPlanTriathlonGenerator {
 
         val startDate = if (requestedStartDate > raceDate) raceDate else requestedStartDate
 
-        val runsPerWeek = maxOf(2, config.runsPerWeek ?: 3)
-        val ridesPerWeek = maxOf(2, config.ridesPerWeek ?: 3)
-        val swimsPerWeek = maxOf(2, config.swimsPerWeek ?: 3)
+        val runsPerWeek = maxOf(1, config.runsPerWeek ?: 3)
+        val ridesPerWeek = maxOf(1, config.ridesPerWeek ?: 3)
+        val swimsPerWeek = maxOf(1, config.swimsPerWeek ?: 2)
         val strengthPerWeek = maxOf(0, config.strengthPerWeek ?: 1)
         val longRunDay = config.longRunDay ?: 0
         val swimDay = config.swimDay ?: 1
@@ -121,11 +135,19 @@ internal object WebPlanTriathlonGenerator {
         var peakVolume = config.weeklyMileageGoal
             ?: (TRI_MIN_PEAK_VOLUME[effectiveRaceType] ?: 40000.0)
         val minPeak = TRI_MIN_PEAK_VOLUME[effectiveRaceType] ?: 40000.0
+        val maxPeak = TRI_MAX_PEAK_VOLUME[effectiveRaceType] ?: 105000.0
         if (peakVolume < minPeak) peakVolume = minPeak
+        if (peakVolume > maxPeak) peakVolume = maxPeak
 
         val weekStart = startDate.minusDays(jsDay(startDate).toLong())
 
-        val totalWeeks = maxOf(1, ceil(ChronoUnit.DAYS.between(weekStart, raceDate) / 7.0).toInt())
+        val totalWeeks = minOf(
+            WebPlanEngine.PLAN_CONSTANTS.MAX_TOTAL_WEEKS,
+            maxOf(
+                1,
+                (ChronoUnit.DAYS.between(weekStart, raceDate) / 7).toInt() + 1,
+            ),
+        )
 
         val minStart = WebPlanEngine.getMinStartVolume(config.raceType)
         val startVolume: Double = if (config.startWeeklyMileage != null && config.startWeeklyMileage > 0) {
@@ -136,8 +158,8 @@ internal object WebPlanTriathlonGenerator {
         }
 
         val paces = Personalization.trainingPaces(vdot)
-        val css = estimateSwimPaceFromVdot(vdot)
-        val bikeFtp = estimateBikeFtpFromVdot(vdot)
+        val css = config.swimCssSecPer100m?.takeIf { it > 0 }?.let { jr(it) } ?: estimateSwimPaceFromVdot(vdot)
+        val bikeFtp = config.ftpWatts?.takeIf { it > 0 }?.toDouble() ?: estimateBikeFtpFromVdot(vdot, config.weightKg ?: 70.0)
         val bikeZones = calculateBikeZones(bikeFtp)
 
         val taperFractions = TRI_TAPER_FRACTIONS[effectiveRaceType] ?: listOf(0.80, 0.60)
@@ -217,6 +239,7 @@ internal object WebPlanTriathlonGenerator {
                             totalDistance = w.totalDistance,
                             targetPace = w.targetPace,
                             targetDuration = w.targetDuration,
+                            targetHrZone = w.targetHrZone,
                             phase = "RACE_WEEK",
                         )
                     )
@@ -238,11 +261,13 @@ internal object WebPlanTriathlonGenerator {
                 baseBuildCounter++
                 isRecoveryWeek = baseBuildCounter % WebPlanEngine.PLAN_CONSTANTS.STEP_LOADING_CYCLE == 0
                 weekVolumeCap = if (isRecoveryWeek) {
-                    jr(lastNonRecoveryVolume * weeklyGrowthRate * WebPlanEngine.PLAN_CONSTANTS.RECOVERY_WEEK_FACTOR)
+                    jr(lastNonRecoveryVolume * WebPlanEngine.PLAN_CONSTANTS.RECOVERY_WEEK_FACTOR)
                 } else {
                     effectiveWeekIndex++
-                    var cap = jr(startVolume * weeklyGrowthRate.pow(effectiveWeekIndex.toDouble()))
-                    cap = minOf(cap, effectivePeakVolume)
+                    val cap = minOf(
+                        jr(startVolume * weeklyGrowthRate.pow(effectiveWeekIndex.toDouble())),
+                        effectivePeakVolume,
+                    )
                     lastNonRecoveryVolume = cap
                     cap
                 }
@@ -307,6 +332,7 @@ internal object WebPlanTriathlonGenerator {
                         totalDistance = w.totalDistance,
                         targetPace = w.targetPace,
                         targetDuration = w.targetDuration,
+                        targetHrZone = w.targetHrZone,
                         phase = phase,
                     )
                 )
@@ -363,12 +389,13 @@ internal object WebPlanTriathlonGenerator {
         customBikeDist: Double?,
     ): List<WebScheduledWorkout> {
         val workouts = ArrayList<WebScheduledWorkout>()
-        val usedDays = HashSet<Int>()
+        val restDaySet = restDays?.toSet() ?: emptySet()
+        val usedAnyDays = HashSet<Int>(restDaySet)
+        val usedRunDays = HashSet<Int>(restDaySet)
+        val usedBikeDays = HashSet<Int>(restDaySet)
+        val usedSwimDays = HashSet<Int>(restDaySet)
+        val usedStrengthDays = HashSet<Int>(restDaySet)
         val hardSessionDays = ArrayList<Int>()
-
-        if (restDays != null && restDays.isNotEmpty()) {
-            for (rd in restDays) usedDays.add(rd)
-        }
 
         val isTaper = phase == "TAPER"
         val taperIdx = if (isTaper) taperWeeks - weeksUntilRace else -1
@@ -378,336 +405,345 @@ internal object WebPlanTriathlonGenerator {
         val bikeVolumeSeconds = weeklyBikeDurationS
         val easyPace = jr((paces.easy.minSecPerKm + paces.easy.maxSecPerKm) / 2.0)
 
-        val maxLongRun = TRI_MAX_LONG_RUN[raceType] ?: 22000.0
-        val longRunDist = minOf(
-            jr(runVolume * WebPlanEngine.PLAN_CONSTANTS.LONG_RUN_RATIO),
+        val maxLongRun = maxLongRunKm?.let { it * 1000.0 } ?: (TRI_MAX_LONG_RUN[raceType] ?: 22000.0)
+        val rawLongRunDist = minOf(
+            jr(runVolume * (if (isRecoveryWeek) WebPlanEngine.PLAN_CONSTANTS.LONG_RUN_RATIO * 0.85 else WebPlanEngine.PLAN_CONSTANTS.LONG_RUN_RATIO)),
             maxLongRun,
         )
-        val remainingRunVol = maxOf(0.0, runVolume - longRunDist)
+        val minEasyReserve = maxOf(0, runsPerWeek - 1) * WebPlanEngine.PLAN_CONSTANTS.EASY_RUN_MIN
+        val longRunDist = maxOf(
+            WebPlanEngine.PLAN_CONSTANTS.MIN_LONG_RUN,
+            minOf(rawLongRunDist, maxOf(WebPlanEngine.PLAN_CONSTANTS.MIN_LONG_RUN, runVolume - minEasyReserve)),
+        )
 
-        val hasBrick = phase == "BUILD" || phase == "PEAK" || (isTaper && taperIdx == 0)
-        val hasOpenWater = phase == "PEAK" || (isTaper && taperIdx <= 1)
-        val hasTransition = phase == "PEAK" || (isTaper && taperIdx == 0)
+        val hasBrick = runsPerWeek >= 1 && ridesPerWeek >= 2 && !isRecoveryWeek && !isTaper && (phase == "BUILD" || phase == "PEAK")
+        val hasOpenWater = swimsPerWeek >= 2 && (phase == "PEAK" || (isTaper && taperIdx <= 1))
 
-        fun getAvailableDay(preferred: Int, gapFrom: List<Int>): Int {
-            val candidates = ArrayList<Int>()
-            for (d in 0 until 7) {
-                if (usedDays.contains(d)) continue
-                val tooClose = gapFrom.any { hd ->
-                    val diff = kotlin.math.abs(d - hd)
-                    minOf(diff, 7 - diff) < WebPlanEngine.PLAN_CONSTANTS.MIN_GAP_DAYS
+        fun pickSportDay(preferred: Int, sportSet: Set<Int>, gapFrom: List<Int>): Int {
+            for (disallowSameDay in listOf(true, false)) {
+                val candidates = ArrayList<Int>()
+                for (d in 0 until 7) {
+                    if (sportSet.contains(d)) continue
+                    if (disallowSameDay && usedAnyDays.contains(d)) continue
+                    val tooClose = gapFrom.any { hd ->
+                        val diff = kotlin.math.abs(d - hd)
+                        minOf(diff, 7 - diff) < WebPlanEngine.PLAN_CONSTANTS.MIN_GAP_DAYS
+                    }
+                    if (!tooClose) candidates.add(d)
                 }
-                if (!tooClose) candidates.add(d)
+                if (candidates.contains(preferred)) return preferred
+                if (candidates.isNotEmpty()) {
+                    return candidates.sortedBy { kotlin.math.abs(it - preferred) }[0]
+                }
+                for (offset in 0..6) {
+                    val after = (preferred + offset) % 7
+                    if (!sportSet.contains(after) && (!disallowSameDay || !usedAnyDays.contains(after))) return after
+                    val before = (preferred - offset + 7) % 7
+                    if (!sportSet.contains(before) && (!disallowSameDay || !usedAnyDays.contains(before))) return before
+                }
             }
-            if (candidates.contains(preferred)) return preferred
-            if (candidates.isNotEmpty()) {
-                return candidates.sortedBy { kotlin.math.abs(it - preferred) }[0]
-            }
-            if (!usedDays.contains(preferred)) return preferred
-            for (offset in 1..6) {
-                val after = (preferred + offset) % 7
-                if (!usedDays.contains(after)) return after
-                val before = (preferred - offset + 7) % 7
-                if (!usedDays.contains(before)) return before
+            for (d in 0 until 7) {
+                if (!restDaySet.contains(d)) return d
             }
             return preferred
         }
 
-        val longRunDayResolved = getAvailableDay(preferredLongRunDay, emptyList())
-        usedDays.add(longRunDayResolved)
-        hardSessionDays.add(longRunDayResolved)
-
-        if (isTaper) {
-            val taperFactor = when (taperIdx) {
-                0 -> 0.5
-                1 -> 0.65
-                else -> 0.80
-            }
-            val taperedDist = jr(longRunDist * taperFactor)
-            workouts.add(
-                WebScheduledWorkout(
-                    dayOffset = longRunDayResolved,
-                    type = "LONG_RUN",
-                    description = "Long Run: ${WebPlanEngine.toFixed1(taperedDist / 1000)}km @ Easy",
-                    totalDistance = taperedDist,
-                    targetPace = easyPace,
-                    targetDuration = 0.0,
-                )
-            )
-        } else {
-            var longRunDesc = "Long Run: ${WebPlanEngine.toFixed1(longRunDist / 1000)}km @ Easy"
-            if (phase == "PEAK") {
-                val raceRunDist = customRunDist ?: (TRI_RACE_RUN_DIST[raceType] ?: 10000.0)
-                val mpDist = minOf(jr(longRunDist * 0.3 / 100) * 100, raceRunDist * 0.3)
-                val easyPart = longRunDist - mpDist
-                longRunDesc =
-                    "Long Run: ${WebPlanEngine.toFixed1(easyPart / 1000)}km Easy + ${WebPlanEngine.toFixed1(mpDist / 1000)}km @ Race Pace"
-            }
-            workouts.add(
-                WebScheduledWorkout(
-                    dayOffset = longRunDayResolved,
-                    type = "LONG_RUN",
-                    description = longRunDesc,
-                    totalDistance = longRunDist,
-                    targetPace = easyPace,
-                    targetDuration = 0.0,
-                )
-            )
+        fun markDay(d: Int, sportSet: HashSet<Int>, isHard: Boolean = false) {
+            sportSet.add(d)
+            usedAnyDays.add(d)
+            if (isHard) hardSessionDays.add(d)
         }
 
-        if (!isRecoveryWeek && phase != "TAPER") {
-            val qualityDay = getAvailableDay(preferredWorkoutDay, hardSessionDays)
-            usedDays.add(qualityDay)
-            hardSessionDays.add(qualityDay)
-
-            if (phase == "PEAK" && raceType == "FULL_IRONMAN") {
+        // 1. Key Long Run
+        val longRunDay = pickSportDay(preferredLongRunDay, usedRunDays, emptyList())
+        if (runsPerWeek >= 1) {
+            markDay(longRunDay, usedRunDays, true)
+            if (isTaper) {
+                val taperFactor = when (taperIdx) {
+                    0 -> 0.5
+                    1 -> 0.65
+                    else -> 0.80
+                }
+                val taperedDist = maxOf(WebPlanEngine.PLAN_CONSTANTS.EASY_RUN_MIN, jr(longRunDist * taperFactor / 100) * 100)
                 workouts.add(
                     WebScheduledWorkout(
-                        dayOffset = qualityDay, type = "TEMPO",
-                        description = "Run Threshold: 3x3km @ ${formatPace(paces.threshold.toDouble())}",
-                        totalDistance = 13000.0, targetPace = paces.threshold.toDouble(), targetDuration = 0.0,
-                    )
-                )
-            } else if (phase == "PEAK") {
-                workouts.add(
-                    WebScheduledWorkout(
-                        dayOffset = qualityDay, type = "INTERVALS",
-                        description = "Intervals: 5x1km @ ${formatPace(paces.interval.toDouble())}",
-                        totalDistance = 10000.0, targetPace = paces.interval.toDouble(), targetDuration = 0.0,
+                        dayOffset = longRunDay,
+                        type = "LONG_RUN",
+                        description = "Long Run: ${WebPlanEngine.toFixed1(taperedDist / 1000)}km @ Easy",
+                        totalDistance = taperedDist,
+                        targetPace = easyPace,
+                        targetDuration = 0.0,
                     )
                 )
             } else {
+                var longRunDesc = "Long Run: ${WebPlanEngine.toFixed1(longRunDist / 1000)}km @ Easy"
+                if (phase == "PEAK") {
+                    val raceRunDist = customRunDist ?: (TRI_RACE_RUN_DIST[raceType] ?: 10000.0)
+                    val mpDist = minOf(jr(longRunDist * 0.3 / 100) * 100, raceRunDist * 0.3)
+                    val easyPart = longRunDist - mpDist
+                    longRunDesc = "Long Run: ${WebPlanEngine.toFixed1(easyPart / 1000)}km Easy + ${WebPlanEngine.toFixed1(mpDist / 1000)}km @ Race Pace"
+                }
                 workouts.add(
                     WebScheduledWorkout(
-                        dayOffset = qualityDay, type = "TEMPO",
-                        description = "Threshold: 6km @ ${formatPace(paces.threshold.toDouble())}",
-                        totalDistance = 8000.0, targetPace = paces.threshold.toDouble(), targetDuration = 0.0,
+                        dayOffset = longRunDay,
+                        type = "LONG_RUN",
+                        description = longRunDesc,
+                        totalDistance = longRunDist,
+                        targetPace = easyPace,
+                        targetDuration = 0.0,
                     )
                 )
             }
         }
 
-        val runSlotsLeft = maxOf(0, runsPerWeek - 2)
-        val easyRunDist = if (runSlotsLeft > 0) jr(remainingRunVol / runSlotsLeft / 100) * 100 else 0.0
-        val clampedEasyDist = maxOf(
-            WebPlanEngine.PLAN_CONSTANTS.EASY_RUN_MIN,
-            minOf(WebPlanEngine.PLAN_CONSTANTS.EASY_RUN_MAX, easyRunDist),
-        )
-
-        for (i in 0 until runSlotsLeft) {
-            val day = getAvailableDay((longRunDayResolved + 2 + i) % 7, hardSessionDays)
-            if (usedDays.contains(day)) break
-            usedDays.add(day)
+        // 2. Key Long Ride
+        val longRideDuration = getLongRideDuration(raceType, phase, isTaper, taperIdx, bikeVolumeSeconds)
+        val hasLongRide = ridesPerWeek >= 1
+        var longRideDay = (longRunDay + 6) % 7
+        if (hasLongRide) {
+            longRideDay = pickSportDay((longRunDay + 6) % 7, usedBikeDays, listOf(longRunDay))
+            markDay(longRideDay, usedBikeDays, true)
             workouts.add(
                 WebScheduledWorkout(
-                    dayOffset = day, type = "EASY",
-                    description = "Easy: ${WebPlanEngine.toFixed1(clampedEasyDist / 1000)}km",
-                    totalDistance = clampedEasyDist, targetPace = easyPace, targetDuration = 0.0,
+                    dayOffset = longRideDay,
+                    type = "LONG_RIDE",
+                    description = "Long Ride: ${jr(longRideDuration / 60).toInt()}min (Zone 2)",
+                    totalDistance = 0.0,
+                    targetPace = 0.0,
+                    targetDuration = longRideDuration,
                 )
             )
         }
 
-        val raceSwimDist = customSwimDist ?: (TRI_RACE_SWIM_DIST[raceType] ?: 1500.0)
-        val maxSwimPerSession = raceSwimDist * 2
-        val swimDistPerSession = minOf(
-            if (swimsPerWeek > 0) jr(swimVolume / swimsPerWeek / 100) * 100 else 1500.0,
-            maxSwimPerSession,
-        )
+        // 3. Brick Workout
+        var bricksScheduled = 0
+        if (hasBrick && ridesPerWeek - (if (hasLongRide) 1 else 0) > 0) {
+            val brickDay = pickSportDay((longRideDay + 3) % 7, usedBikeDays, listOf(longRunDay, longRideDay))
+            markDay(brickDay, usedBikeDays, true)
+            val brickBikeMin = when (raceType) {
+                "FULL_IRONMAN" -> 90
+                "HALF_IRONMAN" -> 60
+                else -> 40
+            }
+            workouts.add(
+                WebScheduledWorkout(
+                    dayOffset = brickDay,
+                    type = "BRICK",
+                    description = "Brick: ${brickBikeMin}min Bike -> 15min Run (T1/T2 practice)",
+                    totalDistance = 0.0,
+                    targetPace = 0.0,
+                    targetDuration = (brickBikeMin + 17) * 60.0,
+                )
+            )
+            bricksScheduled = 1
+        }
 
-        if (hasOpenWater && swimsPerWeek >= 2) {
-            val owDay = getAvailableDay(preferredSwimDay, hardSessionDays)
-            if (!usedDays.contains(owDay)) {
-                usedDays.add(owDay)
+        // 4. Run Quality Session
+        var qualityRunDist = 0.0
+        if (runsPerWeek >= 2 && !isRecoveryWeek && !isTaper) {
+            val qualityDay = pickSportDay(preferredWorkoutDay, usedRunDays, listOf(longRunDay))
+            markDay(qualityDay, usedRunDays, true)
+            val maxQualityDist = maxOf(5000.0, minOf(13000.0, jr((runVolume - longRunDist) * 0.45 / 500) * 500))
+            if (phase == "PEAK" && raceType == "FULL_IRONMAN") {
+                qualityRunDist = minOf(12000.0, maxQualityDist)
+                val repKm = maxOf(2, jr((qualityRunDist - 2500) / 3000).toInt())
                 workouts.add(
                     WebScheduledWorkout(
-                        dayOffset = owDay, type = "OPEN_WATER_SWIM",
-                        description = "Open Water Swim: ${jr(swimDistPerSession / 100).toInt()}00m (sighting practice)",
-                        totalDistance = swimDistPerSession,
-                        targetPace = jr(css + 10),
+                        dayOffset = qualityDay,
+                        type = "TEMPO",
+                        description = "Run Threshold: 3x${repKm}km @ ${formatPace(paces.threshold.toDouble())}",
+                        totalDistance = 2500.0 + 3 * repKm * 1000.0,
+                        targetPace = paces.threshold.toDouble(),
                         targetDuration = 0.0,
                     )
                 )
-            }
-        } else if (phase == "BASE") {
-            val drillDay = getAvailableDay(preferredSwimDay, hardSessionDays)
-            if (!usedDays.contains(drillDay)) {
-                usedDays.add(drillDay)
+                qualityRunDist = 2500.0 + 3 * repKm * 1000.0
+            } else if (phase == "PEAK") {
+                val reps = if (maxQualityDist >= 8500) 5 else 4
+                qualityRunDist = 2500.0 + reps * 1000.0 + (reps - 1) * 200.0
                 workouts.add(
                     WebScheduledWorkout(
-                        dayOffset = drillDay, type = "SWIM_DRILL",
-                        description = "Swim Drill: ${jr(jr(swimDistPerSession * 0.8) / 100).toInt()}00m (technique focus)",
-                        totalDistance = jr(swimDistPerSession * 0.8),
-                        targetPace = css,
+                        dayOffset = qualityDay,
+                        type = "INTERVALS",
+                        description = "Intervals: ${reps}x1km @ ${formatPace(paces.interval.toDouble())}",
+                        totalDistance = qualityRunDist,
+                        targetPace = paces.interval.toDouble(),
+                        targetDuration = 0.0,
+                    )
+                )
+            } else {
+                val workKm = maxOf(3, minOf(6, jr((maxQualityDist - 2500) / 1000).toInt()))
+                qualityRunDist = (workKm + 2.5) * 1000.0
+                workouts.add(
+                    WebScheduledWorkout(
+                        dayOffset = qualityDay,
+                        type = "TEMPO",
+                        description = "Threshold: ${workKm}km @ ${formatPace(paces.threshold.toDouble())}",
+                        totalDistance = qualityRunDist,
+                        targetPace = paces.threshold.toDouble(),
                         targetDuration = 0.0,
                     )
                 )
             }
         }
 
-        val existingSwimVariants = workouts.count { it.type == "OPEN_WATER_SWIM" || it.type == "SWIM_DRILL" }
-        var remainingSwims = swimsPerWeek - existingSwimVariants
-        for (i in 0 until remainingSwims) {
-            val day = getAvailableDay((preferredSwimDay + 2 + i * 2) % 7, hardSessionDays)
-            if (usedDays.contains(day)) break
-            usedDays.add(day)
+        // 5. Remaining Bike Sessions
+        var remainingRides = maxOf(0, ridesPerWeek - (if (hasLongRide) 1 else 0) - bricksScheduled)
+        val brickBikeSeconds = bricksScheduled * ((if (raceType == "FULL_IRONMAN") 90 else if (raceType == "HALF_IRONMAN") 60 else 40) * 60.0)
+        val usedBikeSeconds = (if (hasLongRide) longRideDuration else 0.0) + brickBikeSeconds
+        val remainingBikeBudget = maxOf(0.0, bikeVolumeSeconds - usedBikeSeconds)
+
+        if (!isRecoveryWeek && !isTaper && remainingRides > 0) {
+            val intervalDay = pickSportDay((preferredWorkoutDay + 2) % 7, usedBikeDays, listOf(longRideDay))
+            markDay(intervalDay, usedBikeDays, true)
+            val intervalDuration = if (remainingRides >= 2) {
+                maxOf(2400.0, minOf(5400.0, jr(remainingBikeBudget * 0.45)))
+            } else {
+                maxOf(2400.0, minOf(5400.0, jr(remainingBikeBudget * 0.65)))
+            }
             workouts.add(
                 WebScheduledWorkout(
-                    dayOffset = day, type = "SWIM",
-                    description = "Swim: ${jr(swimDistPerSession / 100).toInt()}00m @ Endurance",
-                    totalDistance = swimDistPerSession,
-                    targetPace = jr(css + 8),
+                    dayOffset = intervalDay,
+                    type = "RIDE_INTERVALS",
+                    description = "Bike Intervals: 4x5min @ Threshold (${bikeZones.threshold.min}-${bikeZones.threshold.max}W)",
+                    totalDistance = 0.0,
+                    targetPace = 0.0,
+                    targetDuration = intervalDuration,
+                )
+            )
+            remainingRides--
+        }
+
+        val maxEasyRideSec = if (isTaper) 3600.0 else (if (raceType == "FULL_IRONMAN") 7200.0 else if (raceType == "HALF_IRONMAN") 5400.0 else 3600.0)
+        for (i in 0 until remainingRides) {
+            val day = pickSportDay((longRideDay + 2 + i * 2) % 7, usedBikeDays, emptyList())
+            markDay(day, usedBikeDays, false)
+            val ridesLeft = remainingRides - i
+            val usedSoFar = workouts.filter { it.type == "LONG_RIDE" || it.type == "RIDE_INTERVALS" || it.type == "BRICK" }.sumOf { it.targetDuration ?: 0.0 }
+            val rawEasyDuration = jr((bikeVolumeSeconds - usedSoFar) / ridesLeft)
+            val easyDuration = maxOf(1800.0, minOf(maxEasyRideSec, rawEasyDuration))
+            workouts.add(
+                WebScheduledWorkout(
+                    dayOffset = day,
+                    type = "RIDE",
+                    description = "Easy Ride: ${jr(easyDuration / 60).toInt()}min (Zone 1-2)",
+                    totalDistance = 0.0,
+                    targetPace = 0.0,
+                    targetDuration = easyDuration,
+                )
+            )
+        }
+
+        // 6. Remaining Easy Runs
+        val scheduledRunCount = workouts.count { isTriRun(it.type) }
+        val runSlotsLeft = maxOf(0, runsPerWeek - scheduledRunCount)
+        val remainingRunVol = maxOf(0.0, runVolume - longRunDist - qualityRunDist)
+        val easyRunDist = if (runSlotsLeft > 0) jr(remainingRunVol / runSlotsLeft / 100) * 100 else 0.0
+        val clampedEasyDist = maxOf(3000.0, minOf(WebPlanEngine.PLAN_CONSTANTS.EASY_RUN_MAX, easyRunDist))
+
+        for (i in 0 until runSlotsLeft) {
+            val day = pickSportDay((longRunDay + 2 + i * 2) % 7, usedRunDays, emptyList())
+            markDay(day, usedRunDays, false)
+            workouts.add(
+                WebScheduledWorkout(
+                    dayOffset = day,
+                    type = "EASY",
+                    description = "Easy: ${WebPlanEngine.toFixed1(clampedEasyDist / 1000)}km",
+                    totalDistance = clampedEasyDist,
+                    targetPace = easyPace,
                     targetDuration = 0.0,
                 )
             )
         }
 
-        val longRideDuration = getLongRideDuration(raceType, phase, isTaper, taperIdx, bikeVolumeSeconds)
-        val hasLongRide = ridesPerWeek >= 2 && !isRecoveryWeek
-        var longRideDay: Int? = null
+        // 7. Swim Sessions
+        val raceSwimDist = customSwimDist ?: (TRI_RACE_SWIM_DIST[raceType] ?: 1500.0)
+        val maxSwimPerSession = maxOf(2000.0, jr(raceSwimDist * 1.4 / 100) * 100)
+        val swimDistPerSession = maxOf(
+            800.0,
+            minOf(
+                if (swimsPerWeek > 0) jr(swimVolume / swimsPerWeek / 100) * 100 else 1500.0,
+                maxSwimPerSession,
+            ),
+        )
+        val swimEndurancePace = jr(css + 3)
+        val swimThresholdPace = jr(css + 1)
+        val swimEasyPace = jr(css + 9)
 
-        if (hasLongRide) {
-            // Web parity: longRideDay is assigned BEFORE the placement check,
-            // so the overflow easy rides anchor on it (and remainingRides
-            // subtracts the long ride) even when the day is already taken and
-            // the LONG_RIDE workout is never pushed.
-            // Web parity: longRideDay is assigned BEFORE the placement check,
-            // so the overflow easy rides anchor on it (and remainingRides
-            // subtracts the long ride) even when the day is already taken and
-            // the LONG_RIDE workout is never pushed.
-            val candidate = getAvailableDay((longRunDayResolved + 5) % 7, hardSessionDays)
-            longRideDay = candidate
-            if (!usedDays.contains(candidate)) {
-                usedDays.add(candidate)
-                hardSessionDays.add(candidate)
-                workouts.add(
-                    WebScheduledWorkout(
-                        dayOffset = candidate, type = "LONG_RIDE",
-                        description = "Long Ride: ${jr(longRideDuration / 60).toInt()}min (Zone 2)",
-                        totalDistance = 0.0, targetPace = 0.0, targetDuration = longRideDuration,
-                    )
-                )
-            }
-        }
-
-        if (hasBrick && !isRecoveryWeek && !isTaper) {
-            val brickDay = getAvailableDay(preferredWorkoutDay, hardSessionDays + longRunDayResolved)
-            if (!usedDays.contains(brickDay)) {
-                usedDays.add(brickDay)
-                hardSessionDays.add(brickDay)
-                val brickBikeMin = when (raceType) {
-                    "FULL_IRONMAN" -> 90
-                    "HALF_IRONMAN" -> 60
-                    else -> 40
-                }
-                workouts.add(
-                    WebScheduledWorkout(
-                        dayOffset = brickDay, type = "BRICK",
-                        description = "Brick: ${brickBikeMin}min Bike -> 15min Run (T1/T2 practice)",
-                        totalDistance = 0.0, targetPace = 0.0,
-                        targetDuration = (brickBikeMin + 20) * 60.0,
-                    )
-                )
-            }
-        }
-
-        if (hasTransition && !usedDays.contains(preferredWorkoutDay)) {
-            usedDays.add(preferredWorkoutDay)
+        if (hasOpenWater && swimsPerWeek >= 2) {
+            val owDay = pickSportDay(preferredSwimDay, usedSwimDays, emptyList())
+            markDay(owDay, usedSwimDays, false)
             workouts.add(
                 WebScheduledWorkout(
-                    dayOffset = preferredWorkoutDay, type = "TRANSITION_PRACTICE",
-                    description = "Transition Practice: T1 + T2 rehearsal",
-                    totalDistance = 0.0, targetPace = 0.0, targetDuration = 1800.0,
+                    dayOffset = owDay,
+                    type = "OPEN_WATER_SWIM",
+                    description = "Open Water Swim: ${swimDistPerSession.toInt()}m @ Endurance (sighting practice)",
+                    totalDistance = swimDistPerSession,
+                    targetPace = swimEndurancePace,
+                    targetDuration = 0.0,
+                )
+            )
+        } else if (phase == "BASE" && swimsPerWeek >= 1) {
+            val drillDay = pickSportDay(preferredSwimDay, usedSwimDays, emptyList())
+            markDay(drillDay, usedSwimDays, false)
+            val drillDist = maxOf(800.0, jr(swimDistPerSession * 0.85 / 100) * 100)
+            workouts.add(
+                WebScheduledWorkout(
+                    dayOffset = drillDay,
+                    type = "SWIM_DRILL",
+                    description = "Swim Drill: ${drillDist.toInt()}m (technique focus)",
+                    totalDistance = drillDist,
+                    targetPace = swimEasyPace,
+                    targetDuration = 0.0,
                 )
             )
         }
 
-        val brickCount = workouts.count { it.type == "BRICK" }
-        // Web parity: the long ride is subtracted when hasLongRide — even if
-        // its day was taken and the workout was never pushed.
-        // Web parity: the long ride is subtracted when hasLongRide — even if
-        // its day was taken and the workout was never pushed.
-        var remainingRides = ridesPerWeek - (if (hasLongRide) 1 else 0) - brickCount
-
-        val brickBikeMinForCalc = when (raceType) {
-            "FULL_IRONMAN" -> 90
-            "HALF_IRONMAN" -> 60
-            else -> 40
-        }
-        val usedBikeSeconds = longRideDuration + brickCount * (brickBikeMinForCalc * 60.0)
-        val remainingBikeBudget = maxOf(0.0, bikeVolumeSeconds - usedBikeSeconds)
-
-        if (!isRecoveryWeek && phase != "TAPER" && remainingRides > 0) {
-            val intervalDay = getAvailableDay((preferredWorkoutDay + 2) % 7, hardSessionDays)
-            if (!usedDays.contains(intervalDay)) {
-                usedDays.add(intervalDay)
-                hardSessionDays.add(intervalDay)
-                val intervalDuration = if (remainingRides >= 2) {
-                    maxOf(2400.0, minOf(5400.0, jr(remainingBikeBudget * 0.45)))
-                } else {
-                    maxOf(2400.0, minOf(5400.0, jr(remainingBikeBudget * 0.55)))
-                }
-                workouts.add(
-                    WebScheduledWorkout(
-                        dayOffset = intervalDay, type = "RIDE_INTERVALS",
-                        description = "Bike Intervals: 4x5min @ Threshold (${bikeZones.threshold.min}-${bikeZones.threshold.max}W)",
-                        totalDistance = 0.0, targetPace = 0.0, targetDuration = intervalDuration,
-                    )
-                )
-                remainingRides--
-            }
-        }
-
-        for (i in 0 until remainingRides) {
-            // JS `longRideDay || (5 + i)` treats day 0 (Sunday) as falsy too
-            val anchorDay = if (longRideDay != null && longRideDay != 0) longRideDay else 5 + i
-            val day = getAvailableDay(anchorDay % 7, hardSessionDays)
-            if (usedDays.contains(day)) break
-            usedDays.add(day)
-            val ridesLeft = remainingRides - i
-            val usedSoFar = workouts
-                .filter {
-                    it.type == "LONG_RIDE" || it.type == "RIDE_INTERVALS" || it.type == "BRICK"
-                }
-                .sumOf { it.targetDuration ?: 0.0 }
-            val easyDuration = maxOf(1800.0, jr((bikeVolumeSeconds - usedSoFar) / ridesLeft))
+        val scheduledSwims = workouts.count { it.type == "OPEN_WATER_SWIM" || it.type == "SWIM_DRILL" }
+        val remainingSwims = maxOf(0, swimsPerWeek - scheduledSwims)
+        for (i in 0 until remainingSwims) {
+            val day = pickSportDay((preferredSwimDay + 2 + i * 2) % 7, usedSwimDays, emptyList())
+            markDay(day, usedSwimDays, false)
+            val isThresholdSwim = i == 0 && (phase == "BUILD" || phase == "PEAK") && !isRecoveryWeek
             workouts.add(
                 WebScheduledWorkout(
-                    dayOffset = day, type = "RIDE",
-                    description = "Easy Ride: ${jr(easyDuration / 60).toInt()}min (Zone 1-2)",
-                    totalDistance = 0.0, targetPace = 0.0, targetDuration = easyDuration,
+                    dayOffset = day,
+                    type = "SWIM",
+                    description = if (isThresholdSwim) "Swim: ${swimDistPerSession.toInt()}m @ CSS Threshold" else "Swim: ${swimDistPerSession.toInt()}m @ Endurance",
+                    totalDistance = swimDistPerSession,
+                    targetPace = if (isThresholdSwim) swimThresholdPace else swimEndurancePace,
+                    targetDuration = 0.0,
                 )
             )
         }
 
-        var remainingStrength = strengthPerWeek
-        val freeDays = ArrayList<Int>()
-        for (d in 0 until 7) {
-            if (!usedDays.contains(d)) freeDays.add(d)
-        }
-        for (d in freeDays) {
-            if (remainingStrength <= 0) break
-            usedDays.add(d)
+        // 8. Strength Sessions
+        for (i in 0 until strengthPerWeek) {
+            val day = pickSportDay((1 + i * 3) % 7, usedStrengthDays, listOf(longRunDay, longRideDay))
+            markDay(day, usedStrengthDays, false)
             workouts.add(
                 WebScheduledWorkout(
-                    dayOffset = d, type = "STRENGTH",
+                    dayOffset = day,
+                    type = "STRENGTH",
                     description = "Strength: 45min (Triathlon Core & Stability)",
-                    totalDistance = 0.0, targetPace = 0.0, targetDuration = 2700.0,
+                    totalDistance = 0.0,
+                    targetPace = 0.0,
+                    targetDuration = 2700.0,
                 )
             )
-            remainingStrength--
         }
 
         return scaleTriRunVolume(workouts, weeklyRunDistanceM)
     }
 
-    /** triathlon.ts `scaleTriRunVolume` (L674-715). */
+    /** triathlon.ts `scaleTriRunVolume` (L735-790). */
     private fun scaleTriRunVolume(
         workouts: List<WebScheduledWorkout>,
         weeklyRunDistanceM: Double,
     ): List<WebScheduledWorkout> {
         val runWorkouts = workouts.filter { isTriRun(it.type) && it.totalDistance > 0 }
         val totalRunDistance = runWorkouts.sumOf { it.totalDistance }
-        if (weeklyRunDistanceM <= 0 || totalRunDistance <= weeklyRunDistanceM) return workouts
+        if (weeklyRunDistanceM <= 0.0 || totalRunDistance <= weeklyRunDistanceM) return workouts
 
         val priorityTypes = setOf("LONG_RUN", "TEMPO", "INTERVALS", "REPETITIONS", "FARTLEK")
 
@@ -720,25 +756,39 @@ internal object WebPlanTriathlonGenerator {
         val fillBudget = maxOf(0.0, weeklyRunDistanceM - priorityDistance)
         val fillScale = if (fillDistance > 0) minOf(1.0, fillBudget / fillDistance) else 0.0
 
+        val minTriFillM = 3000.0
+        val fillCount = runWorkouts.count { !priorityTypes.contains(it.type) }
+        if (fillCount > 0 && priorityDistance + fillCount * minTriFillM > weeklyRunDistanceM) {
+            val totalScale = weeklyRunDistanceM / totalRunDistance
+            return workouts
+                .map { w ->
+                    if (!isTriRun(w.type)) return@map w
+                    val floor = if (priorityTypes.contains(w.type)) 3000.0 else minOf(minTriFillM, jr(weeklyRunDistanceM / maxOf(1, runWorkouts.size)))
+                    val newDistance = maxOf(floor, roundRunDistance(w.totalDistance * totalScale))
+                    withTriRunDistance(w, newDistance)
+                }
+                .filter { !isTriRun(it.type) || it.totalDistance > 0 }
+        }
+
         if (priorityDistance <= weeklyRunDistanceM) {
             return workouts
                 .map { w ->
                     if (!isTriRun(w.type) || priorityTypes.contains(w.type)) return@map w
-                    val newDistance = roundRunDistance(w.totalDistance * fillScale)
+                    val newDistance = maxOf(minTriFillM, roundRunDistance(w.totalDistance * fillScale))
                     withTriRunDistance(w, newDistance)
                 }
-                .filter { w -> !isTriRun(w.type) || w.totalDistance > 0 }
+                .filter { !isTriRun(it.type) || it.totalDistance > 0 }
         }
 
         val priorityScale = weeklyRunDistanceM / priorityDistance
         return workouts
             .map { w ->
                 if (!isTriRun(w.type)) return@map w
-                if (!priorityTypes.contains(w.type)) return@map w.copy(totalDistance = 0.0, targetDuration = 0.0)
+                if (!priorityTypes.contains(w.type)) return@map withTriRunDistance(w, minTriFillM)
                 val newDistance = roundRunDistance(w.totalDistance * priorityScale)
                 withTriRunDistance(w, newDistance)
             }
-            .filter { w -> !isTriRun(w.type) || w.totalDistance > 0 }
+            .filter { !isTriRun(it.type) || it.totalDistance > 0 }
     }
 
     /** triathlon.ts `roundRunDistance` (L717-720). */
@@ -802,7 +852,14 @@ internal object WebPlanTriathlonGenerator {
             "SPRINT_TRI" to 3600.0, "OLYMPIC_TRI" to 5400.0,
             "HALF_IRONMAN" to 10800.0, "FULL_IRONMAN" to 18000.0,
         )
+        val maxLongRideCaps = mapOf(
+            "SPRINT_TRI" to 5400.0,
+            "OLYMPIC_TRI" to 9000.0,
+            "HALF_IRONMAN" to 14400.0,
+            "FULL_IRONMAN" to 21600.0,
+        )
         val base = baseDurations[raceType] ?: 5400.0
+        val maxCap = maxLongRideCaps[raceType] ?: 10800.0
 
         if (bikeVolumeSeconds != null && bikeVolumeSeconds > 0) {
             val longRideShare = when (raceType) {
@@ -811,19 +868,15 @@ internal object WebPlanTriathlonGenerator {
                 "OLYMPIC_TRI" -> 0.45
                 else -> 0.40
             }
-            val scaled = jr(bikeVolumeSeconds * longRideShare)
-            if (phase == "BASE") return maxOf(1800.0, jr(scaled * 0.55))
-            if (phase == "BUILD") return maxOf(2400.0, jr(scaled * 0.80))
-            if (phase == "PEAK") return maxOf(3000.0, scaled)
+            val scaled = minOf(maxCap, jr(bikeVolumeSeconds * longRideShare))
+            if (phase == "BASE") return minOf(maxCap, maxOf(1800.0, jr(scaled * 0.55)))
+            if (phase == "BUILD") return minOf(maxCap, maxOf(2400.0, jr(scaled * 0.80)))
+            if (phase == "PEAK") return minOf(maxCap, maxOf(3000.0, scaled))
             if (isTaper) {
-                val factor = when (taperIdx) {
-                    0 -> 0.4
-                    1 -> 0.6
-                    else -> 0.75
-                }
-                return maxOf(1800.0, jr(scaled * factor))
+                val factor = if (taperIdx <= 0) 0.40 else if (taperIdx == 1) 0.55 else 0.70
+                return minOf(jr(maxCap * 0.60), maxOf(1800.0, jr(scaled * factor)))
             }
-            return maxOf(2400.0, scaled)
+            return minOf(maxCap, maxOf(2400.0, scaled))
         }
 
         if (phase == "BASE") return jr(base * 0.5)
@@ -840,7 +893,7 @@ internal object WebPlanTriathlonGenerator {
         return base
     }
 
-    /** triathlon.ts `generateTriRaceWeek` (L803-864). */
+    /** triathlon.ts `generateTriRaceWeek` (L885-952). */
     private fun generateTriRaceWeek(
         raceType: String,
         paces: Personalization.PersonTrainingPaces,
@@ -852,6 +905,17 @@ internal object WebPlanTriathlonGenerator {
         val workouts = ArrayList<WebScheduledWorkout>()
         val usedDays = HashSet<Int>()
 
+        val raceSwimM = customSwimDist ?: (TRI_RACE_SWIM_DIST[raceType] ?: 1500.0)
+        val raceRunM = customRunDist ?: (TRI_RACE_RUN_DIST[raceType] ?: 10000.0)
+        val estSwimSec = jr((raceSwimM / 100.0) * (css + 3.0))
+        val estRunSec = jr((raceRunM / 1000.0) * paces.marathon.toDouble())
+        val estBikeSec = when (raceType) {
+            "FULL_IRONMAN" -> 20400.0
+            "HALF_IRONMAN" -> 10200.0
+            "OLYMPIC_TRI" -> 4500.0
+            else -> 2400.0
+        }
+
         usedDays.add(0)
         workouts.add(
             WebScheduledWorkout(
@@ -859,16 +923,16 @@ internal object WebPlanTriathlonGenerator {
                 type = "RACE",
                 description = "Race Day: " + (
                     if (customSwimDist != null || customBikeDist != null || customRunDist != null) {
-                        "Custom Tri (${WebPlanEngine.toFixed1((customSwimDist ?: 750.0) / 1000)}km / " +
-                            "${((customBikeDist ?: 20000.0) / 1000).toInt()}km / " +
-                            "${WebPlanEngine.toFixed1((customRunDist ?: 5000.0) / 1000)}km)"
+                        "Custom Tri (${WebPlanEngine.toFixed1(raceSwimM / 1000.0)}km / " +
+                            "${((customBikeDist ?: 20000.0) / 1000.0).toInt()}km / " +
+                            "${WebPlanEngine.toFixed1(raceRunM / 1000.0)}km)"
                     } else {
                         TRI_RACE_LABELS[raceType] ?: "Triathlon"
                     }
                     ),
-                totalDistance = customRunDist ?: (TRI_RACE_RUN_DIST[raceType] ?: 10000.0),
-                targetPace = 0.0,
-                targetDuration = 0.0,
+                totalDistance = raceRunM,
+                targetPace = paces.marathon.toDouble(),
+                targetDuration = estSwimSec + estBikeSec + estRunSec + 300.0,
             )
         )
 
@@ -877,7 +941,7 @@ internal object WebPlanTriathlonGenerator {
             WebScheduledWorkout(
                 dayOffset = -2, type = "SWIM",
                 description = "Swim: 1000m Easy (race site familiarization)",
-                totalDistance = 1000.0, targetPace = jr(css + 10), targetDuration = 0.0,
+                totalDistance = 1000.0, targetPace = jr(css + 9.0), targetDuration = 0.0,
             )
         )
 

@@ -1,5 +1,6 @@
 package com.runflow2.app.core.math
 
+import com.runflow2.app.domain.model.PaceZone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -42,6 +43,9 @@ class VdotMathTest {
     @Test
     fun `easy pace is slower than threshold pace`() {
         val paces = TrainingPaces(50.0)
+        val (fast, slow) = paces.range(PaceZone.EASY)
+        assertTrue("slow ($slow) should be > fast ($fast)", slow > fast)
+        assertTrue(paces.paceSecPerKm(WorkoutPaceTarget.LONG) > paces.paceSecPerKm(WorkoutPaceTarget.EASY))
         assertTrue(paces.paceSecPerKm(WorkoutPaceTarget.EASY) > paces.paceSecPerKm(WorkoutPaceTarget.THRESHOLD))
         assertTrue(paces.paceSecPerKm(WorkoutPaceTarget.THRESHOLD) > paces.paceSecPerKm(WorkoutPaceTarget.INTERVAL))
     }

@@ -1,5 +1,7 @@
 package com.runflow2.app.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,10 +11,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -43,10 +50,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
 import com.runflow2.app.BuildConfig
+import com.runflow2.app.core.export.LocalBackupManager
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.repo.ThemeMode
 import com.runflow2.app.ui.components.PixelSwitch
@@ -68,6 +77,47 @@ fun SettingsScreen(
     val pending by container.syncManager.pendingCount.collectAsState(initial = 0)
     var showResetDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    var backupStatusMessage by remember { mutableStateOf<String?>(null) }
+    var importSummaryDialog by remember { mutableStateOf<LocalBackupManager.Summary?>(null) }
+    var importErrorDialog by remember { mutableStateOf<String?>(null) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                runCatching {
+                    context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                        LocalBackupManager(container.database).exportTo(outputStream)
+                    }
+                }.onSuccess {
+                    backupStatusMessage = "Backup exported successfully."
+                }.onFailure { err ->
+                    backupStatusMessage = "Backup export failed: ${err.message}"
+                }
+            }
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                runCatching {
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        LocalBackupManager(container.database).importFrom(inputStream).getOrThrow()
+                    }
+                }.onSuccess { summary ->
+                    importSummaryDialog = summary
+                    backupStatusMessage = "Restored ${summary?.totalCount ?: 0} records."
+                }.onFailure { err ->
+                    importErrorDialog = err.message ?: "Unknown import error"
+                }
+            }
+        }
+    }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     Scaffold(
@@ -473,6 +523,51 @@ fun SettingsScreen(
                 )
             }
 
+            SettingSection("Training load & effort") {
+                Text(
+                    "Primary Effort Metric",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    "Select which metric drives your Performance Management Chart (PMC), fitness/fatigue calculations, and daily load tracking.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    val currentMetric = settings.primaryLoadMetric
+                    SegmentedButton(
+                        selected = currentMetric == "TSS",
+                        onClick = { scope.launch { container.repository.setPrimaryLoadMetric("TSS") } },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
+                        label = { Text("Unified TSS") },
+                    )
+                    SegmentedButton(
+                        selected = currentMetric == "DUAL",
+                        onClick = { scope.launch { container.repository.setPrimaryLoadMetric("DUAL") } },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
+                        label = { Text("Dual TSS + TRIMP") },
+                    )
+                    SegmentedButton(
+                        selected = currentMetric == "TRIMP",
+                        onClick = { scope.launch { container.repository.setPrimaryLoadMetric("TRIMP") } },
+                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                        label = { Text("TRIMP") },
+                    )
+                }
+                Text(
+                    when (settings.primaryLoadMetric) {
+                        "DUAL" -> "Dual mode: uses TSS when power or pace/HR is calibrated, TRIMP as fallback."
+                        "TRIMP" -> "TRIMP: Banister heart rate reserve exponential impulse."
+                        else -> "Unified TSS: rTSS for runs, bike TSS for rides, 36 TSS/hr for strength, and TRIMP fallback."
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             SettingSection("Data sources") {
                 val hc = container.healthConnect
                 val availability = remember { hc.availability() }
@@ -716,12 +811,58 @@ fun SettingsScreen(
                 )
             }
 
-            SettingSection("Data") {
+            SettingSection("Data & backups") {
+                Text(
+                    "Local .runflow.json Backup",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    "Export a full offline backup of all your activities, plans, workouts, daily readiness entries, and profile. Restore anytime without server dependency.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            val filename = "runflow-backup-${java.time.LocalDate.now()}.runflow.json"
+                            exportLauncher.launch(filename)
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Outlined.Upload, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Export backup")
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            importLauncher.launch(arrayOf("application/json", "*/*"))
+                        },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Restore backup")
+                    }
+                }
+
+                backupStatusMessage?.let { msg ->
+                    Text(
+                        msg,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
                 Text(
                     "RunFlow v${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE}) — native Kotlin rewrite. " +
                         "Training, planning and analytics run fully on-device; account sync and the AI coach use your RunFlow server. " +
                         "Source code: github.com/thies2005/RunFlow",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 TextButton(onClick = { showResetDialog = true }) {
@@ -794,6 +935,39 @@ fun SettingsScreen(
                 ) { Text("Reset") }
             },
             dismissButton = { TextButton(onClick = { showResetDialog = false }) { Text("Cancel") } },
+        )
+    }
+
+    importSummaryDialog?.let { summary ->
+        AlertDialog(
+            onDismissRequest = { importSummaryDialog = null },
+            icon = { Icon(Icons.Outlined.CheckCircle, null) },
+            title = { Text("Backup restored") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Successfully imported ${summary.totalCount} records into RunFlow:")
+                    Text("• ${summary.activitiesCount} activities")
+                    Text("• ${summary.workoutsCount} planned workouts")
+                    Text("• ${summary.dailyEntriesCount} daily readiness entries")
+                    Text("• ${summary.goalsCount} goals")
+                    Text("• ${summary.planSnapshotsCount} plan snapshots")
+                    if (summary.profilesCount > 0) Text("• Profile restored")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { importSummaryDialog = null }) { Text("OK") }
+            },
+        )
+    }
+
+    importErrorDialog?.let { err ->
+        AlertDialog(
+            onDismissRequest = { importErrorDialog = null },
+            title = { Text("Restore failed") },
+            text = { Text("Could not restore backup: $err") },
+            confirmButton = {
+                TextButton(onClick = { importErrorDialog = null }) { Text("OK") }
+            },
         )
     }
 }

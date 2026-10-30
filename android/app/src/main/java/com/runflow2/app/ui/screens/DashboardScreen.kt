@@ -27,6 +27,8 @@ import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Undo
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -37,7 +39,12 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -50,6 +57,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,7 +86,13 @@ import com.runflow2.app.ui.components.themedColor
 import com.runflow2.app.ui.theme.semanticColors
 import com.runflow2.app.domain.model.TsbStatus
 import com.runflow2.app.domain.model.WorkoutType
+import com.runflow2.app.domain.plan.AdaptationMode
+import com.runflow2.app.domain.plan.SmartScheduler
 import com.runflow2.app.domain.plan.TriathlonTimeEstimator
+import com.runflow2.app.domain.readiness.DataConfidence
+import com.runflow2.app.domain.readiness.ReadinessResult
+import com.runflow2.app.domain.readiness.ReadinessScoring
+import com.runflow2.app.domain.readiness.ReadinessState
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -117,6 +131,8 @@ fun DashboardScreen(
     // signed-in user while the persisted session is still being restored.
     val auth by container.authStore.state.collectAsState()
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var dismissedAdaptations by rememberSaveable { mutableStateOf(setOf<String>()) }
     var loginPromptHidden by remember { mutableStateOf(false) }
     var showDailyForm by remember { mutableStateOf(false) }
     val now = remember { System.currentTimeMillis() }
@@ -160,6 +176,7 @@ fun DashboardScreen(
     ) {
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = {
@@ -556,6 +573,95 @@ fun DashboardScreen(
                         todayWorkouts.forEach { w ->
                             val type = runCatching { WorkoutType.valueOf(w.workoutType) }.getOrDefault(WorkoutType.EASY)
                             val visual = WorkoutVisuals.themedForType(type)
+                            val readinessScore = todayEntry?.score
+                            val isUncompletedNonRest = !w.isCompleted && type != WorkoutType.REST
+
+                            // Auto-link confirmation banner (Decision U2)
+                            if (w.suggestedActivityId != null) {
+                                val suggestedAct = activities.firstOrNull { it.id == w.suggestedActivityId }
+                                val actName = suggestedAct?.name ?: "Activity"
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp),
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Text(
+                                            "🔗 Link \"$actName\" to this workout?",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        TextButton(
+                                            onClick = {
+                                                scope.launch {
+                                                    container.repository.acceptSuggestedActivityLink(w.id)
+                                                }
+                                            },
+                                        ) {
+                                            Text("Accept", fontWeight = FontWeight.Bold)
+                                        }
+                                        TextButton(
+                                            onClick = {
+                                                scope.launch {
+                                                    container.repository.dismissSuggestedActivityLink(w.id)
+                                                }
+                                            },
+                                        ) {
+                                            Text("Dismiss")
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 1-tap Undo banner if workout has an active adaptation
+                            if (w.adaptationType != null) {
+                                Card(
+                                    shape = RoundedCornerShape(14.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f),
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp),
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Text(
+                                            if (w.adaptationType == "REDUCE") "Adapted: Volume reduced (-25%)" else "Adapted: Rescheduled",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Medium,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        TextButton(
+                                            onClick = {
+                                                scope.launch {
+                                                    val undone = container.repository.undoLastEdit(w.goalId)
+                                                    if (undone) {
+                                                        snackbarHostState.showSnackbar("Adaptation undone")
+                                                    }
+                                                }
+                                            },
+                                        ) {
+                                            Icon(Icons.Outlined.Undo, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(Modifier.width(4.dp))
+                                            Text("Undo")
+                                        }
+                                    }
+                                }
+                            }
+
                             Card(
                                 shape = CardShape,
                                 colors = CardDefaults.cardColors(
@@ -597,6 +703,131 @@ fun DashboardScreen(
                                             InfoChip(Format.duration(it), icon = Icons.Outlined.Timer)
                                         }
                                     }
+
+                                    // Adaptive Today Card (< 65: Reduce Today + Reschedule)
+                                    val showAdaptivePrompt = readinessScore != null &&
+                                        readinessScore < 65.0 &&
+                                        isUncompletedNonRest &&
+                                        w.id !in dismissedAdaptations &&
+                                        w.adaptationType == null
+
+                                    if (showAdaptivePrompt) {
+                                        val readinessResult = ReadinessResult(
+                                            compositeScore = readinessScore!!,
+                                            state = when {
+                                                readinessScore >= 50.0 -> ReadinessState.MODERATE
+                                                readinessScore >= 30.0 -> ReadinessState.REDUCED
+                                                else -> ReadinessState.REST
+                                            },
+                                            confidence = DataConfidence.FULL,
+                                            componentScores = emptyList(),
+                                            reasons = emptyList(),
+                                            adaptationType = if (readinessScore < 50.0) {
+                                                com.runflow2.app.domain.readiness.AdaptationType.SWAP_TO_EASY
+                                            } else {
+                                                com.runflow2.app.domain.readiness.AdaptationType.VOLUME_REDUCTION
+                                            },
+                                        )
+                                        val reduceAdaptation = ReadinessScoring.buildReduceAdaptation(w, readinessResult)
+                                        val reduceLabel = reduceAdaptation?.title ?: if (readinessScore < 50.0) "Swap to Easy" else "Reduce Today (-25%)"
+
+                                        val rescheduleAdaptation = ReadinessScoring.buildRescheduleAdaptation(w, workouts, readinessResult, today)
+                                        val targetDate = rescheduleAdaptation?.recommendedDate
+                                            ?: SmartScheduler.findSmartRescheduleDay(w, workouts, today)
+                                        val dayName = targetDate?.dayOfWeek?.name?.lowercase()?.replaceFirstChar { it.uppercase() }
+                                        val rescheduleLabel = if (dayName != null) "Reschedule (Move to $dayName)" else "Reschedule"
+
+                                        Card(
+                                            shape = RoundedCornerShape(16.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.semanticColors.statusFatigued.copy(alpha = 0.12f),
+                                            ),
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.padding(12.dp),
+                                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                ) {
+                                                    Icon(
+                                                        Icons.Outlined.Tune,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.semanticColors.statusFatigued,
+                                                        modifier = Modifier.size(18.dp),
+                                                    )
+                                                    Text(
+                                                        "Low Readiness (${readinessScore.roundToInt()})",
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                    )
+                                                }
+                                                Text(
+                                                    "Adapt today's session to aid recovery and avoid excessive strain.",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                )
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                ) {
+                                                    OutlinedButton(
+                                                        onClick = {
+                                                            scope.launch {
+                                                                container.repository.applyWorkoutAdaptation(w.id, AdaptationMode.REDUCE)
+                                                                val res = snackbarHostState.showSnackbar(
+                                                                    message = "Workout volume reduced by 25%",
+                                                                    actionLabel = "Undo",
+                                                                    duration = SnackbarDuration.Short,
+                                                                )
+                                                                if (res == SnackbarResult.ActionPerformed) {
+                                                                    container.repository.undoLastEdit(w.goalId)
+                                                                }
+                                                            }
+                                                        },
+                                                        modifier = Modifier.weight(1f),
+                                                    ) {
+                                                        Text(reduceLabel, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelSmall)
+                                                    }
+                                                    if (targetDate != null) {
+                                                        OutlinedButton(
+                                                            onClick = {
+                                                                scope.launch {
+                                                                    container.repository.applyWorkoutAdaptation(w.id, AdaptationMode.RESCHEDULE)
+                                                                    val res = snackbarHostState.showSnackbar(
+                                                                        message = "Workout moved to $dayName",
+                                                                        actionLabel = "Undo",
+                                                                        duration = SnackbarDuration.Short,
+                                                                    )
+                                                                    if (res == SnackbarResult.ActionPerformed) {
+                                                                        container.repository.undoLastEdit(w.goalId)
+                                                                    }
+                                                                }
+                                                            },
+                                                            modifier = Modifier.weight(1f),
+                                                        ) {
+                                                            Text(rescheduleLabel, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelSmall)
+                                                        }
+                                                    }
+                                                }
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.End,
+                                                ) {
+                                                    TextButton(
+                                                        onClick = {
+                                                            dismissedAdaptations = dismissedAdaptations + w.id
+                                                        },
+                                                    ) {
+                                                        Text("Keep Original", style = MaterialTheme.typography.labelMedium)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
                                     if (!w.isCompleted && type != WorkoutType.REST) {
                                         Button(
                                             onClick = { onStartWorkout(w.id) },

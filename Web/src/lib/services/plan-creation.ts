@@ -926,9 +926,9 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
     // falling back to VDOT-derived estimates (mirrors buildStructuredStepsForWorkout).
     const userThresholds = await prisma.user.findUnique({
         where: { id: userId },
-        select: { ftpWatts: true, swimCssSecPer100m: true },
+        select: { ftpWatts: true, swimCssSecPer100m: true, weight: true },
     });
-    const ftpAtCreation = userThresholds?.ftpWatts ?? estimateBikeFtpFromVdot(effectiveVdot);
+    const ftpAtCreation = userThresholds?.ftpWatts ?? estimateBikeFtpFromVdot(effectiveVdot, userThresholds?.weight ?? 70);
     const swimCssAtCreation = userThresholds?.swimCssSecPer100m ?? estimateSwimPaceFromVdot(effectiveVdot);
 
     const trainingVdotResult = resolveTrainingVdotForGoal({
@@ -1065,6 +1065,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         mywhooshPlanId: mywhooshPlanId ?? null,
         ftpWatts: ftpAtCreation,
         swimCssSecPer100m: swimCssAtCreation,
+        weightKg: userThresholds?.weight ?? 70,
     };
 
     const workouts = generateTrainingPlan(planConfig);
@@ -1194,6 +1195,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
                         hrRest: hrRest ?? restingHeartRate ?? null,
                         ftpWatts: ftpAtCreation,
                         swimCssSecPer100m: swimCssAtCreation,
+                        weightKg: userThresholds?.weight ?? 70,
                     });
 
                     const parentRaceDate = raceDate ? new Date(raceDate) : null;

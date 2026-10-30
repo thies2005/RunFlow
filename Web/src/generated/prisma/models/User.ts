@@ -110,6 +110,7 @@ export type UserMinAggregateOutputType = {
   autoEstimateFtp: boolean | null
   matchToMyWhoosh: boolean | null
   swimCssSecPer100m: number | null
+  primaryLoadMetric: string | null
   lastSyncAt: Date | null
   syncInProgress: boolean | null
   createdAt: Date | null
@@ -159,6 +160,7 @@ export type UserMaxAggregateOutputType = {
   autoEstimateFtp: boolean | null
   matchToMyWhoosh: boolean | null
   swimCssSecPer100m: number | null
+  primaryLoadMetric: string | null
   lastSyncAt: Date | null
   syncInProgress: boolean | null
   createdAt: Date | null
@@ -208,6 +210,8 @@ export type UserCountAggregateOutputType = {
   autoEstimateFtp: number
   matchToMyWhoosh: number
   swimCssSecPer100m: number
+  primaryLoadMetric: number
+  uiPreferences: number
   lastSyncAt: number
   syncInProgress: number
   createdAt: number
@@ -303,6 +307,7 @@ export type UserMinAggregateInputType = {
   autoEstimateFtp?: true
   matchToMyWhoosh?: true
   swimCssSecPer100m?: true
+  primaryLoadMetric?: true
   lastSyncAt?: true
   syncInProgress?: true
   createdAt?: true
@@ -352,6 +357,7 @@ export type UserMaxAggregateInputType = {
   autoEstimateFtp?: true
   matchToMyWhoosh?: true
   swimCssSecPer100m?: true
+  primaryLoadMetric?: true
   lastSyncAt?: true
   syncInProgress?: true
   createdAt?: true
@@ -401,6 +407,8 @@ export type UserCountAggregateInputType = {
   autoEstimateFtp?: true
   matchToMyWhoosh?: true
   swimCssSecPer100m?: true
+  primaryLoadMetric?: true
+  uiPreferences?: true
   lastSyncAt?: true
   syncInProgress?: true
   createdAt?: true
@@ -537,6 +545,8 @@ export type UserGroupByOutputType = {
   autoEstimateFtp: boolean
   matchToMyWhoosh: boolean
   swimCssSecPer100m: number | null
+  primaryLoadMetric: string
+  uiPreferences: runtime.JsonValue | null
   lastSyncAt: Date | null
   syncInProgress: boolean
   createdAt: Date
@@ -609,6 +619,8 @@ export type UserWhereInput = {
   autoEstimateFtp?: Prisma.BoolFilter<"User"> | boolean
   matchToMyWhoosh?: Prisma.BoolFilter<"User"> | boolean
   swimCssSecPer100m?: Prisma.IntNullableFilter<"User"> | number | null
+  primaryLoadMetric?: Prisma.StringFilter<"User"> | string
+  uiPreferences?: Prisma.JsonNullableFilter<"User">
   lastSyncAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -692,6 +704,8 @@ export type UserOrderByWithRelationInput = {
   autoEstimateFtp?: Prisma.SortOrder
   matchToMyWhoosh?: Prisma.SortOrder
   swimCssSecPer100m?: Prisma.SortOrderInput | Prisma.SortOrder
+  primaryLoadMetric?: Prisma.SortOrder
+  uiPreferences?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -778,6 +792,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   autoEstimateFtp?: Prisma.BoolFilter<"User"> | boolean
   matchToMyWhoosh?: Prisma.BoolFilter<"User"> | boolean
   swimCssSecPer100m?: Prisma.IntNullableFilter<"User"> | number | null
+  primaryLoadMetric?: Prisma.StringFilter<"User"> | string
+  uiPreferences?: Prisma.JsonNullableFilter<"User">
   lastSyncAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -861,6 +877,8 @@ export type UserOrderByWithAggregationInput = {
   autoEstimateFtp?: Prisma.SortOrder
   matchToMyWhoosh?: Prisma.SortOrder
   swimCssSecPer100m?: Prisma.SortOrderInput | Prisma.SortOrder
+  primaryLoadMetric?: Prisma.SortOrder
+  uiPreferences?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -918,6 +936,8 @@ export type UserScalarWhereWithAggregatesInput = {
   autoEstimateFtp?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   matchToMyWhoosh?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   swimCssSecPer100m?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
+  primaryLoadMetric?: Prisma.StringWithAggregatesFilter<"User"> | string
+  uiPreferences?: Prisma.JsonNullableWithAggregatesFilter<"User">
   lastSyncAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -967,6 +987,8 @@ export type UserCreateInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -1050,6 +1072,8 @@ export type UserUncheckedCreateInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -1133,6 +1157,8 @@ export type UserUpdateInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1216,6 +1242,8 @@ export type UserUncheckedUpdateInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1299,6 +1327,8 @@ export type UserCreateManyInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -1348,6 +1378,8 @@ export type UserUpdateManyMutationInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1397,6 +1429,8 @@ export type UserUncheckedUpdateManyInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1446,6 +1480,8 @@ export type UserCountOrderByAggregateInput = {
   autoEstimateFtp?: Prisma.SortOrder
   matchToMyWhoosh?: Prisma.SortOrder
   swimCssSecPer100m?: Prisma.SortOrder
+  primaryLoadMetric?: Prisma.SortOrder
+  uiPreferences?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1517,6 +1553,7 @@ export type UserMaxOrderByAggregateInput = {
   autoEstimateFtp?: Prisma.SortOrder
   matchToMyWhoosh?: Prisma.SortOrder
   swimCssSecPer100m?: Prisma.SortOrder
+  primaryLoadMetric?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1566,6 +1603,7 @@ export type UserMinOrderByAggregateInput = {
   autoEstimateFtp?: Prisma.SortOrder
   matchToMyWhoosh?: Prisma.SortOrder
   swimCssSecPer100m?: Prisma.SortOrder
+  primaryLoadMetric?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -2174,6 +2212,8 @@ export type UserCreateWithoutConsentsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2256,6 +2296,8 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2354,6 +2396,8 @@ export type UserUpdateWithoutConsentsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2436,6 +2480,8 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2518,6 +2564,8 @@ export type UserCreateWithoutAiSettingsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2600,6 +2648,8 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2698,6 +2748,8 @@ export type UserUpdateWithoutAiSettingsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2780,6 +2832,8 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2862,6 +2916,8 @@ export type UserCreateWithoutFeedbackJobsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -2944,6 +3000,8 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3042,6 +3100,8 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3124,6 +3184,8 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3206,6 +3268,8 @@ export type UserCreateWithoutAccountsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3288,6 +3352,8 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3386,6 +3452,8 @@ export type UserUpdateWithoutAccountsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3468,6 +3536,8 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3550,6 +3620,8 @@ export type UserCreateWithoutSessionsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3632,6 +3704,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3730,6 +3804,8 @@ export type UserUpdateWithoutSessionsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3812,6 +3888,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3894,6 +3972,8 @@ export type UserCreateWithoutActivitiesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -3976,6 +4056,8 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4074,6 +4156,8 @@ export type UserUpdateWithoutActivitiesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4156,6 +4240,8 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4238,6 +4324,8 @@ export type UserCreateWithoutDailyFitnessInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4320,6 +4408,8 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4418,6 +4508,8 @@ export type UserUpdateWithoutDailyFitnessInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4500,6 +4592,8 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4582,6 +4676,8 @@ export type UserCreateWithoutSupplementStacksInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4664,6 +4760,8 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -4762,6 +4860,8 @@ export type UserUpdateWithoutSupplementStacksInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4844,6 +4944,8 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4926,6 +5028,8 @@ export type UserCreateWithoutSupplementsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5008,6 +5112,8 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5106,6 +5212,8 @@ export type UserUpdateWithoutSupplementsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5188,6 +5296,8 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5270,6 +5380,8 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5352,6 +5464,8 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5450,6 +5564,8 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5532,6 +5648,8 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5614,6 +5732,8 @@ export type UserCreateWithoutGoalsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5696,6 +5816,8 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -5794,6 +5916,8 @@ export type UserUpdateWithoutGoalsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5876,6 +6000,8 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -5958,6 +6084,8 @@ export type UserCreateWithoutNotificationsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6040,6 +6168,8 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6138,6 +6268,8 @@ export type UserUpdateWithoutNotificationsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6220,6 +6352,8 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6302,6 +6436,8 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6384,6 +6520,8 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6482,6 +6620,8 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6564,6 +6704,8 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6646,6 +6788,8 @@ export type UserCreateWithoutReminderSettingsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6728,6 +6872,8 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -6826,6 +6972,8 @@ export type UserUpdateWithoutReminderSettingsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6908,6 +7056,8 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -6990,6 +7140,8 @@ export type UserCreateWithoutApiKeyInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7072,6 +7224,8 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7170,6 +7324,8 @@ export type UserUpdateWithoutApiKeyInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7252,6 +7408,8 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7334,6 +7492,8 @@ export type UserCreateWithoutChatMessagesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7416,6 +7576,8 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7514,6 +7676,8 @@ export type UserUpdateWithoutChatMessagesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7596,6 +7760,8 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7678,6 +7844,8 @@ export type UserCreateWithoutChatSessionsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7760,6 +7928,8 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -7858,6 +8028,8 @@ export type UserUpdateWithoutChatSessionsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -7940,6 +8112,8 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8022,6 +8196,8 @@ export type UserCreateWithoutUsageHistoryInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8104,6 +8280,8 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8202,6 +8380,8 @@ export type UserUpdateWithoutUsageHistoryInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8284,6 +8464,8 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8366,6 +8548,8 @@ export type UserCreateWithoutNutritionLogsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8448,6 +8632,8 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8546,6 +8732,8 @@ export type UserUpdateWithoutNutritionLogsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8628,6 +8816,8 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8710,6 +8900,8 @@ export type UserCreateWithoutNutritionTargetInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8792,6 +8984,8 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -8890,6 +9084,8 @@ export type UserUpdateWithoutNutritionTargetInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -8972,6 +9168,8 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9054,6 +9252,8 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9136,6 +9336,8 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9234,6 +9436,8 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9316,6 +9520,8 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9398,6 +9604,8 @@ export type UserCreateWithoutFastingSessionsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9480,6 +9688,8 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9578,6 +9788,8 @@ export type UserUpdateWithoutFastingSessionsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9660,6 +9872,8 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -9742,6 +9956,8 @@ export type UserCreateWithoutHealthInsightsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9824,6 +10040,8 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -9922,6 +10140,8 @@ export type UserUpdateWithoutHealthInsightsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10004,6 +10224,8 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10086,6 +10308,8 @@ export type UserCreateWithoutSavedMealsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10168,6 +10392,8 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10266,6 +10492,8 @@ export type UserUpdateWithoutSavedMealsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10348,6 +10576,8 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10430,6 +10660,8 @@ export type UserCreateWithoutFoodFavoritesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10512,6 +10744,8 @@ export type UserUncheckedCreateWithoutFoodFavoritesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10610,6 +10844,8 @@ export type UserUpdateWithoutFoodFavoritesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10692,6 +10928,8 @@ export type UserUncheckedUpdateWithoutFoodFavoritesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -10774,6 +11012,8 @@ export type UserCreateWithoutDeviceTokensInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10856,6 +11096,8 @@ export type UserUncheckedCreateWithoutDeviceTokensInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -10954,6 +11196,8 @@ export type UserUpdateWithoutDeviceTokensInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11036,6 +11280,8 @@ export type UserUncheckedUpdateWithoutDeviceTokensInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11118,6 +11364,8 @@ export type UserCreateWithoutDailyReadinessRecordsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11200,6 +11448,8 @@ export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11298,6 +11548,8 @@ export type UserUpdateWithoutDailyReadinessRecordsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11380,6 +11632,8 @@ export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11462,6 +11716,8 @@ export type UserCreateWithoutReadinessBaselinesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11544,6 +11800,8 @@ export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11642,6 +11900,8 @@ export type UserUpdateWithoutReadinessBaselinesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11724,6 +11984,8 @@ export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -11806,6 +12068,8 @@ export type UserCreateWithoutAdaptedWorkoutsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11888,6 +12152,8 @@ export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -11986,6 +12252,8 @@ export type UserUpdateWithoutAdaptedWorkoutsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -12068,6 +12336,8 @@ export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -12150,6 +12420,8 @@ export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -12232,6 +12504,8 @@ export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -12330,6 +12604,8 @@ export type UserUpdateWithoutWeeklyReconciliationRecordsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -12412,6 +12688,8 @@ export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -12494,6 +12772,8 @@ export type UserCreateWithoutWeekTemplatesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -12576,6 +12856,8 @@ export type UserUncheckedCreateWithoutWeekTemplatesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -12674,6 +12956,8 @@ export type UserUpdateWithoutWeekTemplatesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -12756,6 +13040,8 @@ export type UserUncheckedUpdateWithoutWeekTemplatesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -12838,6 +13124,8 @@ export type UserCreateWithoutGuidedPlanSessionsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -12920,6 +13208,8 @@ export type UserUncheckedCreateWithoutGuidedPlanSessionsInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -13018,6 +13308,8 @@ export type UserUpdateWithoutGuidedPlanSessionsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -13100,6 +13392,8 @@ export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -13182,6 +13476,8 @@ export type UserCreateWithoutMcpOAuthCodesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -13264,6 +13560,8 @@ export type UserUncheckedCreateWithoutMcpOAuthCodesInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -13362,6 +13660,8 @@ export type UserUpdateWithoutMcpOAuthCodesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -13444,6 +13744,8 @@ export type UserUncheckedUpdateWithoutMcpOAuthCodesInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -13526,6 +13828,8 @@ export type UserCreateWithoutMcpOAuthTokensInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -13608,6 +13912,8 @@ export type UserUncheckedCreateWithoutMcpOAuthTokensInput = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
   createdAt?: Date | string
@@ -13706,6 +14012,8 @@ export type UserUpdateWithoutMcpOAuthTokensInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -13788,6 +14096,8 @@ export type UserUncheckedUpdateWithoutMcpOAuthTokensInput = {
   autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
   matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
   swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -14162,6 +14472,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: boolean
+  primaryLoadMetric?: boolean
+  uiPreferences?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
   createdAt?: boolean
@@ -14246,6 +14558,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: boolean
+  primaryLoadMetric?: boolean
+  uiPreferences?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
   createdAt?: boolean
@@ -14295,6 +14609,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: boolean
+  primaryLoadMetric?: boolean
+  uiPreferences?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
   createdAt?: boolean
@@ -14344,6 +14660,8 @@ export type UserSelectScalar = {
   autoEstimateFtp?: boolean
   matchToMyWhoosh?: boolean
   swimCssSecPer100m?: boolean
+  primaryLoadMetric?: boolean
+  uiPreferences?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
   createdAt?: boolean
@@ -14353,7 +14671,7 @@ export type UserSelectScalar = {
   tokenVersion?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "effectiveVo2maxCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "ftpWatts" | "autoEstimateFtp" | "matchToMyWhoosh" | "swimCssSecPer100m" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin" | "tokenVersion", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "effectiveVo2maxCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "ftpWatts" | "autoEstimateFtp" | "matchToMyWhoosh" | "swimCssSecPer100m" | "primaryLoadMetric" | "uiPreferences" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin" | "tokenVersion", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   mcpOAuthCodes?: boolean | Prisma.User$mcpOAuthCodesArgs<ExtArgs>
   mcpOAuthTokens?: boolean | Prisma.User$mcpOAuthTokensArgs<ExtArgs>
@@ -14472,6 +14790,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     autoEstimateFtp: boolean
     matchToMyWhoosh: boolean
     swimCssSecPer100m: number | null
+    primaryLoadMetric: string
+    uiPreferences: runtime.JsonValue | null
     lastSyncAt: Date | null
     syncInProgress: boolean
     createdAt: Date
@@ -14975,6 +15295,8 @@ export interface UserFieldRefs {
   readonly autoEstimateFtp: Prisma.FieldRef<"User", 'Boolean'>
   readonly matchToMyWhoosh: Prisma.FieldRef<"User", 'Boolean'>
   readonly swimCssSecPer100m: Prisma.FieldRef<"User", 'Int'>
+  readonly primaryLoadMetric: Prisma.FieldRef<"User", 'String'>
+  readonly uiPreferences: Prisma.FieldRef<"User", 'Json'>
   readonly lastSyncAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly syncInProgress: Prisma.FieldRef<"User", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>

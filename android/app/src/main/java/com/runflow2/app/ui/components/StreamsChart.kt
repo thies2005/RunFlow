@@ -60,6 +60,7 @@ fun StreamsChart(
     unit: DistanceUnit = DistanceUnit.METRIC,
     isRide: Boolean = false,
     height: Int = 220,
+    onScrubChange: ((Float?) -> Unit)? = null,
 ) {
     val sem = MaterialTheme.semanticColors
     val hrColor = sem.streamHr
@@ -162,15 +163,23 @@ fun StreamsChart(
                     detectTapGestures { offset ->
                         val frac = (offset.x / size.width).coerceIn(0f, 1f)
                         scrubIndex = (frac * (n - 1)).roundToInt()
+                        onScrubChange?.invoke(frac)
                     }
                 }
                 .pointerInput(n) {
                     detectDragGestures(
-                        onDragEnd = { scrubIndex = null },
-                        onDragCancel = { scrubIndex = null },
+                        onDragEnd = {
+                            scrubIndex = null
+                            onScrubChange?.invoke(null)
+                        },
+                        onDragCancel = {
+                            scrubIndex = null
+                            onScrubChange?.invoke(null)
+                        },
                     ) { change, _ ->
                         val frac = (change.position.x / size.width).coerceIn(0f, 1f)
                         scrubIndex = (frac * (n - 1)).roundToInt()
+                        onScrubChange?.invoke(frac)
                         change.consume()
                     }
                 },

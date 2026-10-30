@@ -78,13 +78,20 @@ object WebPlanEngine {
             config.raceType == null ->
                 enrichTargets(WebPlanNoRaceGenerator.generate(config), config, paces, usePhaseVdot = false)
 
+            config.raceType == "CUSTOM_DISTANCE" && config.customDistanceM != null && config.customDistanceM > 45000 -> {
+                val ultraClass = classifyCustomRunDistance(config.customDistanceM)
+                enrichTargets(WebPlanUltraGenerator.generate(config.copy(raceType = ultraClass)), config, paces, usePhaseVdot = false)
+            }
+
             config.raceType != null && config.raceType in ULTRA_RACE_TYPES ->
                 enrichTargets(WebPlanUltraGenerator.generate(config), config, paces, usePhaseVdot = false)
 
             else -> enrichTargets(generateStandardPlan(config), config, paces, usePhaseVdot = true)
         }
         val ctx = StructuredStepsContext(
+            vdot = config.vdot,
             ftpWatts = config.ftpWatts?.takeIf { it > 0 }?.toDouble(),
+            weightKg = config.weightKg,
         )
         return withTargets.map { it.copy(structuredSteps = buildStructuredStepsForWorkout(it, ctx)) }
     }
@@ -139,7 +146,24 @@ object WebPlanEngine {
         const val STEP_LOADING_CYCLE: Int = 4
         const val MIN_GAP_DAYS: Int = 2
         const val MAX_TIME_ON_FEET_SECONDS: Double = 12600.0
+        const val MAX_TOTAL_WEEKS: Int = 104
     }
+
+    /** index.ts L435-440. */
+    val MAX_STANDARD_PEAK_VOLUME: Map<String, Double> = mapOf(
+        "FIVE_K" to 65000.0,
+        "TEN_K" to 75000.0,
+        "HALF_MARATHON" to 85000.0,
+        "MARATHON" to 95000.0,
+    )
+
+    /** index.ts L1304-1310. */
+    val MAX_TIME_ON_FEET_BY_RACE: Map<String, Double> = mapOf(
+        "FIVE_K" to 5400.0,
+        "TEN_K" to 6900.0,
+        "HALF_MARATHON" to 9600.0,
+        "MARATHON" to PLAN_CONSTANTS.MAX_TIME_ON_FEET_SECONDS,
+    )
 
     /** index.ts L68-73. */
     val TAPER_FRACTIONS: Map<String, List<Double>> = mapOf(
@@ -160,7 +184,11 @@ object WebPlanEngine {
         customDistanceM <= 6000 -> "FIVE_K"
         customDistanceM <= 15000 -> "TEN_K"
         customDistanceM <= 30000 -> "HALF_MARATHON"
-        else -> "MARATHON"
+        customDistanceM <= 45000 -> "MARATHON"
+        customDistanceM <= 65000 -> "FIFTY_K"
+        customDistanceM <= 90000 -> "FIFTY_MILE"
+        customDistanceM <= 125000 -> "HUNDRED_K"
+        else -> "HUNDRED_MILE"
     }
 
     /** index.ts L105-112. */
@@ -187,8 +215,11 @@ object WebPlanEngine {
         val resolvedTotal = maxOf(1, totalWeeks)
         val availableWeeks = maxOf(0, resolvedTotal - 1)
 
+        val maxTaperAllowed = if (resolvedTotal >= 8) {
+            minOf(4, maxOf(1, floor(availableWeeks * 0.25).toInt()))
+        } else availableWeeks
         var taper = taperWeeks ?: (defaultTaper ?: 2)
-        taper = taper.coerceIn(0, availableWeeks)
+        taper = taper.coerceIn(0, maxTaperAllowed)
 
         var remaining = availableWeeks - taper
 
@@ -236,14 +267,13 @@ object WebPlanEngine {
             val base = maxOf(0, remaining)
             return PhaseBudget(taper, peak, build, endurance, mentalPrep, base)
         } else {
-            val reserveBaseWeeks = if (peakWeeks == null && buildWeeks == null) {
-                when {
-                    resolvedTotal >= 10 -> 4
-                    resolvedTotal >= 8 -> 3
-                    resolvedTotal >= 6 -> 2
-                    else -> 0
-                }
-            } else 0
+            val explicitZeroBuildAndPeak = peakWeeks == 0 && buildWeeks == 0
+            val reserveBaseWeeks = if (explicitZeroBuildAndPeak) 0 else when {
+                resolvedTotal >= 10 -> 4
+                resolvedTotal >= 8 -> 3
+                resolvedTotal >= 6 -> 2
+                else -> 0
+            }
             val phaseBudget = maxOf(0, remaining - reserveBaseWeeks)
 
             var peak = peakWeeks ?: 2
@@ -324,15 +354,21 @@ object WebPlanEngine {
         val workoutDay = config.workoutDay ?: 3
 
         var peakVolume = config.weeklyMileageGoal.orWebDefault(40000.0)
-        val minPeak = PLAN_CONSTANTS.MIN_PEAK_VOLUME[effectiveRaceType] ?: 20000.0
+        val isVeryShortCustom = raceType == "CUSTOM_DISTANCE" && config.customDistanceM != null && config.customDistanceM > 0 && config.customDistanceM < 3000
+        val minPeak = if (isVeryShortCustom) 15000.0 else (PLAN_CONSTANTS.MIN_PEAK_VOLUME[effectiveRaceType] ?: 20000.0)
+        val maxPeak = if (isVeryShortCustom) 35000.0 else (MAX_STANDARD_PEAK_VOLUME[effectiveRaceType] ?: 95000.0)
         if (peakVolume < minPeak) peakVolume = minPeak
+        if (peakVolume > maxPeak) peakVolume = maxPeak
 
         // current week's Sunday (index.ts L395-396)
         val weekStart = startDate.minusDays(jsDay(startDate).toLong())
 
-        val totalWeeks = maxOf(
-            1,
-            ceil(ChronoUnit.DAYS.between(weekStart, raceDate) / 7.0).toInt(),
+        val totalWeeks = minOf(
+            PLAN_CONSTANTS.MAX_TOTAL_WEEKS,
+            maxOf(
+                1,
+                (ChronoUnit.DAYS.between(weekStart, raceDate) / 7).toInt() + 1,
+            ),
         )
 
         val minStart = getMinStartVolume(config.raceType)
@@ -420,13 +456,19 @@ object WebPlanEngine {
                     targetRacePace = targetRacePace,
                     targetRaceDuration = config.targetTime,
                 )
+                var clampedToStartDateCount = 0
                 for (w in raceWeekWorkouts) {
                     var specificDate = raceDate
                     if (w.type != "RACE") {
                         specificDate = raceDate.plusDays(w.dayOffset.toLong())
                     }
-                    // index.ts L484-491: clamp into the plan start
-                    if (specificDate < startDate) specificDate = startDate
+                    if (specificDate < startDate) {
+                        if (w.type != "RACE" && (clampedToStartDateCount >= 1 || startDate >= raceDate)) {
+                            continue
+                        }
+                        specificDate = startDate
+                        clampedToStartDateCount++
+                    }
                     workouts.add(
                         WebGeneratedWorkout(
                             date = specificDate,
@@ -458,7 +500,7 @@ object WebPlanEngine {
                 baseBuildCounter++
                 isRecoveryWeek = baseBuildCounter % PLAN_CONSTANTS.STEP_LOADING_CYCLE == 0
                 weekVolumeCap = if (isRecoveryWeek) {
-                    jr(lastNonRecoveryVolume * weeklyGrowthRate * PLAN_CONSTANTS.RECOVERY_WEEK_FACTOR)
+                    jr(lastNonRecoveryVolume * PLAN_CONSTANTS.RECOVERY_WEEK_FACTOR)
                 } else {
                     effectiveWeekIndex++
                     var cap = jr(startVolume * weeklyGrowthRate.pow(effectiveWeekIndex.toDouble()))
@@ -1137,7 +1179,8 @@ object WebPlanEngine {
         if (dist > dynamicCap) dist = dynamicCap
 
         val safeEasyMax = maxOf(120.0, paces.easy.maxSecPerKm.toDouble())
-        val maxDistForTime = jr(PLAN_CONSTANTS.MAX_TIME_ON_FEET_SECONDS / safeEasyMax * 1000)
+        val maxTimeSec = MAX_TIME_ON_FEET_BY_RACE[raceType] ?: PLAN_CONSTANTS.MAX_TIME_ON_FEET_SECONDS
+        val maxDistForTime = jr(maxTimeSec / safeEasyMax * 1000)
         if (dist > maxDistForTime) dist = maxDistForTime
 
         if (dist < PLAN_CONSTANTS.MIN_LONG_RUN) dist = PLAN_CONSTANTS.MIN_LONG_RUN
@@ -1160,8 +1203,13 @@ object WebPlanEngine {
             "HALF_MARATHON" -> getHalfMarathonQualitySession(paces, phase, weekInPhase, targetRacePace)
             else -> getMarathonQualitySession(paces, phase, weekInPhase, targetRacePace)
         }
+        val scaledDist = scaleQualitySessionDistance(base.type, base.totalDistance, weeklyVolume, raceType)
+        val desc = if (base.description.contains("Fartlek:")) {
+            base.description.replace(Regex("^Fartlek:\\s*[\\d.]+km"), "Fartlek: ${toFixed1(scaledDist / 1000).replace(".0", "")}km")
+        } else base.description
         return base.copy(
-            totalDistance = scaleQualitySessionDistance(base.type, base.totalDistance, weeklyVolume, raceType),
+            totalDistance = scaledDist,
+            description = desc,
         )
     }
 
@@ -1494,6 +1542,33 @@ object WebPlanEngine {
                 val newDist = roundDownTo100(w.totalDistance * scalingFactor)
                 val finalDist = maxOf(newDist, 0.0)
                 withScaledDistance(w, finalDist, preserveSpecialDescription(w, finalDist))
+            }
+        }
+
+        // If remainingCap cannot fit all fill runs at EASY_RUN_MIN (4km), keep as many 4km fill runs as fit
+        // (trimming priority runs by up to 15% if needed) rather than zeroing ALL fill runs at once.
+        if (fillWorkouts.isNotEmpty() && remainingCap < fillWorkouts.size * PLAN_CONSTANTS.EASY_RUN_MIN) {
+            val maxPriorityTrim = jr(priorityDist * 0.15 / 100) * 100
+            val neededExtra = fillWorkouts.size * PLAN_CONSTANTS.EASY_RUN_MIN - remainingCap
+            val actualTrim = minOf(maxPriorityTrim, maxOf(0.0, neededExtra))
+            val boostedRemaining = remainingCap + actualTrim
+            val affordableFillCount = minOf(fillWorkouts.size, floor(boostedRemaining / PLAN_CONSTANTS.EASY_RUN_MIN).toInt())
+            val priorityScale = if (priorityDist > 0) (priorityDist - actualTrim) / priorityDist else 1.0
+            val perFillDist = if (affordableFillCount > 0) {
+                maxOf(PLAN_CONSTANTS.EASY_RUN_MIN, roundDownTo100(boostedRemaining / affordableFillCount))
+            } else 0.0
+            var keptFill = 0
+            return weekSchedule.map { w ->
+                if (!isRun(w.type)) return@map w
+                if (isPriority(w)) {
+                    val newPrioDist = maxOf(PLAN_CONSTANTS.MIN_LONG_RUN, roundDownTo100(w.totalDistance * priorityScale))
+                    return@map withScaledDistance(w, newPrioDist, preserveSpecialDescription(w, newPrioDist))
+                }
+                if (keptFill < affordableFillCount && perFillDist >= PLAN_CONSTANTS.EASY_RUN_MIN) {
+                    keptFill++
+                    return@map withScaledDistance(w, perFillDist, preserveSpecialDescription(w, perFillDist))
+                }
+                w.copy(totalDistance = 0.0, targetDuration = 0.0, description = "Rest (Volume Cap)")
             }
         }
 
@@ -1846,6 +1921,8 @@ data class WebPlanConfig(
     val customSwimDistM: Double? = null,
     val customBikeDistM: Double? = null,
     val customRunDistM: Double? = null,
+    val swimCssSecPer100m: Double? = null,
+    val weightKg: Double? = null,
     val ftpWatts: Int? = null,
     val matchToMyWhoosh: Boolean = false,
 )

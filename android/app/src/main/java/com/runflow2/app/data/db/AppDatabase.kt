@@ -174,6 +174,10 @@ data class WorkoutEntity(
     val targetRpe: Int? = null,
     val plannedTss: Double? = null,
     @ColumnInfo(defaultValue = "RUN") val sport: String = "RUN",
+    // ---- v16: auto-link suggestions and adaptation tracking ----
+    val suggestedActivityId: String? = null,
+    val dismissedActivityId: String? = null,
+    val adaptationType: String? = null,
 )
 
 @Entity(tableName = "profile")
@@ -569,7 +573,7 @@ interface DailyEntryDao {
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
         DailyEntryEntity::class,
     ],
-    version = 15,
+    version = 16,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -826,6 +830,20 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_workouts_goalId ON workouts(goalId)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_workouts_scheduledDate ON workouts(scheduledDate)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_queue_entityType_dead_localId ON sync_queue(entityType, dead, localId)")
+            }
+        }
+
+        /**
+         * v15 -> v16 adds auto-link suggestions and adaptation tracking to workouts:
+         * suggestedActivityId (best match candidate awaiting user confirmation),
+         * dismissedActivityId (candidate dismissed by user, prevents re-suggesting),
+         * and adaptationType (e.g. REDUCE, RESCHEDULE). All nullable.
+         */
+        val MIGRATION_15_16: Migration = object : Migration(15, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE workouts ADD COLUMN suggestedActivityId TEXT")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN dismissedActivityId TEXT")
+                db.execSQL("ALTER TABLE workouts ADD COLUMN adaptationType TEXT")
             }
         }
     }

@@ -209,7 +209,7 @@ function exportWorkout(w: ReturnType<typeof generateTrainingPlan>[number], index
         targetPaceZoneLabel: w.targetPaceZoneLabel ?? null,
         targetPaceMinSecondsPerKm: n(w.targetPaceMinSecondsPerKm),
         targetPaceMaxSecondsPerKm: n(w.targetPaceMaxSecondsPerKm),
-        structuredSteps: buildStructuredStepsForWorkout(w),
+        structuredSteps: w.structuredSteps ?? buildStructuredStepsForWorkout(w),
     };
 }
 

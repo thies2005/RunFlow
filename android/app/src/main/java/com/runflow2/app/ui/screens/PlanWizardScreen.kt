@@ -70,6 +70,7 @@ import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.repo.AppSettings
 import com.runflow2.app.data.sync.calibrationDistanceFor
 import com.runflow2.app.domain.analytics.AnalyticsBundle
+import com.runflow2.app.domain.analytics.AnalyticsEngine
 import com.runflow2.app.domain.model.RaceType
 import com.runflow2.app.domain.plan.EventCategory
 import com.runflow2.app.domain.plan.PlanMath
@@ -310,7 +311,11 @@ fun PlanWizardScreen(
                                 container.settings.setMatchToMyWhoosh(data.matchToMyWhoosh)
                                 val isCycling = data.category == EventCategory.CYCLING
                                 val noRace = data.raceType == RaceType.NONE || isCycling
-                                val activeFtp = settings.ftpWatts.takeIf { it > 0 } ?: analytics?.cycling?.eFtpWatts
+                                val profile = container.repository.profileOnce()
+                                val weightKg = profile.weightKg.takeIf { it > 0.0 } ?: 70.0
+                                val activeFtp = settings.ftpWatts.takeIf { it > 0 }
+                                    ?: analytics?.cycling?.eFtpWatts
+                                    ?: effectiveVdot?.let { AnalyticsEngine.estimateBikeFtpFromVdot(it, weightKg) }
                                 val spec = PlanSpec(
                                     name = data.name.ifBlank {
                                         if (isCycling) "Cycling Training Plan" else data.raceType.label

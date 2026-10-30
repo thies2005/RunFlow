@@ -1,10 +1,14 @@
 package com.runflow2.app.domain.readiness
 
+import com.runflow2.app.data.db.WorkoutEntity
+import com.runflow2.app.domain.plan.SmartScheduler
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /*
  * Daily readiness scoring. Originally a faithful Kotlin port of the deleted
@@ -163,6 +167,25 @@ data class ReadinessResult(
     val adaptationType: AdaptationType,
     val adaptationDescription: String? = null,
     val recommendation: String? = null,
+)
+
+data class ReduceAdaptation(
+    val originalWorkoutId: String,
+    val type: AdaptationType,
+    val title: String,
+    val description: String,
+    val adaptedDistanceKm: Double?,
+    val adaptedDurationSec: Int?,
+    val adaptedPlannedTss: Double?,
+    val adaptedWorkoutType: String?,
+)
+
+data class RescheduleAdaptation(
+    val originalWorkoutId: String,
+    val recommendedDate: LocalDate,
+    val recommendedDateEpochMs: Long,
+    val title: String,
+    val description: String,
 )
 
 // ---- Scoring engine ----
@@ -438,4 +461,76 @@ object ReadinessScoring {
     // Locale.ROOT keeps the decimal point ASCII in reason strings.
     private fun fmt1(v: Double): String = String.format(Locale.ROOT, "%.1f", v)
     private fun fmt2(v: Double): String = String.format(Locale.ROOT, "%.2f", v)
+
+    /**
+     * Builds a reduce adaptation recommendation when readiness compositeScore < 65.0.
+     * - Score 50..64: -25% volume/duration
+     * - Score < 50: Swap to easy recovery session (~60% duration)
+     */
+    fun buildReduceAdaptation(
+        workout: WorkoutEntity,
+        readinessResult: ReadinessResult,
+        vdot: Double? = null,
+    ): ReduceAdaptation? {
+        val score = readinessResult.compositeScore
+        if (score >= 65.0) return null
+
+        val isModerate = score >= 50.0
+        return if (isModerate) {
+            val dist = workout.targetDistanceKm?.let { (it * 0.75 * 10.0).roundToInt() / 10.0 }
+            val dur = workout.targetDurationSec?.let { (it * 0.75).roundToInt() }
+            val tss = workout.plannedTss?.let { (it * 0.75 * 10.0).roundToInt() / 10.0 }
+            ReduceAdaptation(
+                originalWorkoutId = workout.id,
+                type = AdaptationType.VOLUME_REDUCTION,
+                title = "Reduce Today (-25%)",
+                description = "Volume reduced by 25% due to moderate readiness (${score.roundToInt()})",
+                adaptedDistanceKm = dist,
+                adaptedDurationSec = dur,
+                adaptedPlannedTss = tss,
+                adaptedWorkoutType = workout.workoutType,
+            )
+        } else {
+            val baseDur = workout.targetDurationSec ?: 3600
+            val dur = (baseDur * 0.60).roundToInt().coerceIn(1200, 2700)
+            val tss = workout.plannedTss?.let { (it * 0.50 * 10.0).roundToInt() / 10.0 }
+            ReduceAdaptation(
+                originalWorkoutId = workout.id,
+                type = AdaptationType.SWAP_TO_EASY,
+                title = "Swap to Easy Recovery",
+                description = "Replace with an easy recovery session (~60% duration) due to low readiness (${score.roundToInt()})",
+                adaptedDistanceKm = null,
+                adaptedDurationSec = dur,
+                adaptedPlannedTss = tss,
+                adaptedWorkoutType = "RECOVERY",
+            )
+        }
+    }
+
+    /**
+     * Builds a reschedule adaptation recommendation using [SmartScheduler] when readiness compositeScore < 65.0.
+     */
+    fun buildRescheduleAdaptation(
+        workout: WorkoutEntity,
+        weekWorkouts: List<WorkoutEntity>,
+        readinessResult: ReadinessResult,
+        today: LocalDate = LocalDate.now(),
+        zoneId: ZoneId = ZoneId.systemDefault(),
+    ): RescheduleAdaptation? {
+        if (readinessResult.compositeScore >= 65.0) return null
+
+        val targetDate = SmartScheduler.findSmartRescheduleDay(workout, weekWorkouts, today, zoneId)
+            ?: return null
+
+        val targetEpochMs = targetDate.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val dayName = targetDate.dayOfWeek.name.lowercase(Locale.ROOT).replaceFirstChar { it.uppercase() }
+
+        return RescheduleAdaptation(
+            originalWorkoutId = workout.id,
+            recommendedDate = targetDate,
+            recommendedDateEpochMs = targetEpochMs,
+            title = "Move to $dayName",
+            description = "Reschedule key session to $dayName to allow full recovery",
+        )
+    }
 }

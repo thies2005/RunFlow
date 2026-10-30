@@ -4,10 +4,11 @@ import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
 import { calculateCyclingVo2Max, calculateBikeTss, calculateIntensityFactor } from '@/lib/metrics/power';
-import { startOfWeek, endOfWeek, subDays } from 'date-fns';
+import { startOfWeek, endOfWeek, subDays, addDays, format } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
+import { ensureFitnessCacheUpToDate, resolveActivityEffectiveTss } from '@/lib/metrics/fitnessCache';
+import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
 import { handleError } from '@/lib/errors/handler';
 import { getRedisClient } from '@/lib/redis';
 import { logger } from '@/lib/logging/logger';
@@ -41,6 +42,12 @@ export async function GET(req: NextRequest) {
 
         // Check if refDate is valid
         const validRefDate = !isNaN(refDate.getTime()) ? refDate : new Date();
+
+        // 4-week mesocycle window around validRefDate (subDays(weekStart, 7) to addDays(weekEnd, 14))
+        const weekStart = startOfWeek(validRefDate, { weekStartsOn: 1 });
+        const weekEnd = endOfWeek(validRefDate, { weekStartsOn: 1 });
+        const mesoStart = subDays(weekStart, 7);
+        const mesoEnd = addDays(weekEnd, 14);
 
         // Try Redis Cache
         // The cache key embeds a per-user version counter that updateSyncStatus()
@@ -88,7 +95,19 @@ export async function GET(req: NextRequest) {
         // 1. User Settings & Active Goals
         const userPromise = prisma.user.findUnique({
             where: { id: userId },
-            select: { hrMax: true, weight: true, ftpWatts: true, vdotCorrectionFactor: true, effectiveVo2maxCorrectionFactor: true, includeCrossTraining: true, healthTrackingEnabled: true, vdotReferenceRaceDate: true, autoRevolvingVo2max: true }
+            select: {
+                hrMax: true,
+                weight: true,
+                ftpWatts: true,
+                vdotCorrectionFactor: true,
+                effectiveVo2maxCorrectionFactor: true,
+                includeCrossTraining: true,
+                healthTrackingEnabled: true,
+                vdotReferenceRaceDate: true,
+                autoRevolvingVo2max: true,
+                primaryLoadMetric: true,
+                uiPreferences: true,
+            }
         });
 
         const activeGoalsPromise = prisma.goal.findMany({
@@ -98,8 +117,8 @@ export async function GET(req: NextRequest) {
                 workouts: {
                     where: {
                         scheduledDate: {
-                            gte: startOfWeek(validRefDate, { weekStartsOn: 1 }),
-                            lte: endOfWeek(validRefDate, { weekStartsOn: 1 }),
+                            gte: mesoStart,
+                            lte: mesoEnd,
                         }
                     },
                     orderBy: { scheduledDate: 'asc' }
@@ -190,12 +209,14 @@ export async function GET(req: NextRequest) {
                 startDate: { gte: sixMonthsAgo },
             },
             select: {
+                id: true,
                 name: true,
                 type: true,
                 startDate: true,
                 distance: true,
                 movingTime: true,
                 trimp: true, // M-01: Include stored TRIMP for fitness calculations
+                runningTss: true,
                 averageHr: true,
                 hasHeartrate: true,
                 averageWatts: true,
@@ -327,7 +348,6 @@ export async function GET(req: NextRequest) {
         // Compute Cycling Dashboard Metrics
         const weightKg = user?.weight && user.weight > 0 ? user.weight : 75;
         let bestRideFtp = user?.ftpWatts ?? null;
-        const weekStart = startOfWeek(validRefDate, { weekStartsOn: 1 });
         let weeklyBikeMeters = 0;
         let weeklyBikeTss = 0;
         let efSum = 0;
@@ -380,6 +400,201 @@ export async function GET(req: NextRequest) {
         const atlBike = Math.round((currentFitness as { atlBike?: number } | null)?.atlBike || 0);
         const tsbBike = Math.round((currentFitness as { tsbBike?: number } | null)?.tsbBike ?? (ctlBike - atlBike));
 
+        // --- AUTO-LINK SUGGESTIONS (Decision U2) ---
+        const isSameSport = (workoutSport: string | undefined | null, workoutType: string, actType: string) => {
+            const wSport = (workoutSport || '').toUpperCase();
+            const wType = (workoutType || '').toUpperCase();
+            const aType = (actType || '').toUpperCase();
+
+            if (wSport === 'BIKE' || wType === 'LONG_RIDE' || wType === 'RIDE_INTERVALS' || wType === 'RECOVERY_SPIN') {
+                return aType === 'RIDE' || aType === 'VIRTUAL_RIDE';
+            }
+            if (wSport === 'SWIM' || wType === 'SWIM') {
+                return aType === 'SWIM';
+            }
+            if (wSport === 'STRENGTH' || wType === 'STRENGTH' || wType === 'WORKOUT') {
+                return aType === 'WORKOUT' || aType === 'OTHER';
+            }
+            return aType === 'RUN';
+        };
+
+        const computeDiffRatio = (
+            workout: { targetDistance?: number | null; targetDuration?: number | null },
+            activity: { distance?: number | null; movingTime?: number | null }
+        ) => {
+            const actDist = activity.distance || 0;
+            const actDur = activity.movingTime || 0;
+            const planDist = workout.targetDistance || 0;
+            const planDur = workout.targetDuration || 0;
+
+            if (planDist > 0 && actDist > 0) {
+                return Math.abs(actDist - planDist) / planDist;
+            }
+            if (planDur > 0 && actDur > 0) {
+                return Math.abs(actDur - planDur) / planDur;
+            }
+            if (planDist === 0 && planDur === 0) {
+                return 0;
+            }
+            return 1.0;
+        };
+
+        const allWorkouts = goals.flatMap(g => g.workouts);
+        const linkedActivityIds = new Set<string>();
+        for (const w of allWorkouts) {
+            if (w.linkedActivityId) {
+                linkedActivityIds.add(w.linkedActivityId);
+            }
+        }
+
+        const suggestedActIds = new Set<string>();
+        for (const w of allWorkouts) {
+            if (!w.isCompleted && !w.linkedActivityId) {
+                const workoutDay = format(new Date(w.scheduledDate), 'yyyy-MM-dd');
+                const candidates = statsActivities.filter(a => {
+                    if (!a.id || linkedActivityIds.has(a.id) || suggestedActIds.has(a.id)) return false;
+                    const actDay = format(new Date(a.startDate), 'yyyy-MM-dd');
+                    if (actDay !== workoutDay) return false;
+                    if (!isSameSport(w.sport, w.workoutType, a.type)) return false;
+                    const diff = computeDiffRatio(w, a);
+                    return diff <= 0.60;
+                });
+
+                if (candidates.length > 0) {
+                    candidates.sort((c1, c2) => computeDiffRatio(w, c1) - computeDiffRatio(w, c2));
+                    const best = candidates[0];
+                    suggestedActIds.add(best.id);
+                    (w as any).suggestedActivity = {
+                        id: best.id,
+                        name: best.name,
+                        distance: best.distance,
+                        movingTime: best.movingTime,
+                    };
+                } else {
+                    (w as any).suggestedActivity = null;
+                }
+            } else {
+                (w as any).suggestedActivity = null;
+            }
+        }
+
+        // --- WEEKLY & 4-WEEK BLOCK EFFORT (Task 4.3) ---
+        const w1Start = subDays(weekStart, 7);
+        const w1End = endOfWeek(w1Start, { weekStartsOn: 1 });
+        const w2Start = weekStart;
+        const w2End = weekEnd;
+        const w3Start = addDays(weekStart, 7);
+        const w3End = endOfWeek(w3Start, { weekStartsOn: 1 });
+        const w4Start = addDays(weekStart, 14);
+        const w4End = endOfWeek(w4Start, { weekStartsOn: 1 });
+
+        const mesoWeeks = [
+            { label: 'W1', index: 1, start: w1Start, end: w1End, isCurrent: false },
+            { label: 'W2', index: 2, start: w2Start, end: w2End, isCurrent: true },
+            { label: 'W3', index: 3, start: w3Start, end: w3End, isCurrent: false },
+            { label: 'W4', index: 4, start: w4Start, end: w4End, isCurrent: false },
+        ];
+
+        let weeklyPlannedTss = 0;
+        let weeklyActualTss = 0;
+        let weeklyPlannedBikeTss = 0;
+        let weeklyPlannedDurationSec = 0;
+        let weeklyActualDurationSec = 0;
+        let weeklyPlannedTrimp = 0;
+        let weeklyActualTrimp = 0;
+
+        let monthlyPlannedTss = 0;
+        let monthlyActualTss = 0;
+        let monthlyPlannedDurationSec = 0;
+        let monthlyActualDurationSec = 0;
+
+        const getEffectiveTss = typeof resolveActivityEffectiveTss === 'function'
+            ? resolveActivityEffectiveTss
+            : (a: any, rTss: number, bTss: number, trimp: number) => {
+                const type = (a.type || '').toUpperCase();
+                if (type === 'RIDE' || type === 'VIRTUAL_RIDE') return bTss > 0 ? bTss : Math.round(trimp * 0.85);
+                if (type === 'RUN') return rTss > 0 ? rTss : Math.round(trimp * 0.85);
+                if (type === 'WORKOUT' || type === 'STRENGTH') return Math.max(trimp, Math.round(((a.movingTime || 0) / 3600) * 36));
+                return trimp > 0 ? Math.round(trimp * 0.85) : Math.round(((a.movingTime || 0) / 3600) * 40);
+            };
+
+        const getWorkoutPlannedTss = typeof calculateWorkoutPlannedTss === 'function'
+            ? calculateWorkoutPlannedTss
+            : (_w: any) => 0;
+
+        const monthlyWeeksBreakdown = mesoWeeks.map(mw => {
+            const weekWorkouts = allWorkouts.filter(w => {
+                const wd = new Date(w.scheduledDate);
+                return wd >= mw.start && wd <= mw.end;
+            });
+
+            let wPlannedTss = 0;
+            let wPlannedDur = 0;
+            let wPlannedBikeTss = 0;
+            let wPlannedTrimp = 0;
+
+            for (const w of weekWorkouts) {
+                const pTss: number = (w.plannedTss != null && w.plannedTss > 0)
+                    ? w.plannedTss
+                    : (getWorkoutPlannedTss(w as any) || 0);
+                let pDur = w.targetDuration ?? 0;
+                if (pDur <= 0 && w.targetDistance && w.targetPace) {
+                    pDur = Math.round((w.targetDistance * w.targetPace) / 1000);
+                }
+                const isBike = w.sport === 'BIKE' || w.workoutType === 'LONG_RIDE' || w.workoutType === 'RIDE_INTERVALS';
+
+                wPlannedTss += pTss;
+                wPlannedDur += pDur;
+                if (isBike) {
+                    wPlannedBikeTss += pTss;
+                }
+                wPlannedTrimp += Math.round(pTss / 0.85);
+            }
+
+            const weekActs = statsActivities.filter(a => {
+                const ad = new Date(a.startDate);
+                return ad >= mw.start && ad <= mw.end;
+            });
+
+            let wActualTss = 0;
+            let wActualDur = 0;
+            let wActualTrimp = 0;
+
+            for (const a of weekActs) {
+                const effTss = getEffectiveTss(a, a.runningTss ?? 0, a.bikeTss ?? 0, a.trimp ?? 0);
+                wActualTss += effTss;
+                wActualDur += a.movingTime || 0;
+                wActualTrimp += a.trimp ? Math.round(a.trimp) : (a.movingTime ? Math.round((a.movingTime / 60) * 2.5) : 0);
+            }
+
+            if (mw.isCurrent) {
+                weeklyPlannedTss = wPlannedTss;
+                weeklyActualTss = wActualTss;
+                weeklyPlannedBikeTss = wPlannedBikeTss;
+                weeklyPlannedDurationSec = wPlannedDur;
+                weeklyActualDurationSec = wActualDur;
+                weeklyPlannedTrimp = wPlannedTrimp;
+                weeklyActualTrimp = wActualTrimp;
+            }
+
+            monthlyPlannedTss += wPlannedTss;
+            monthlyActualTss += wActualTss;
+            monthlyPlannedDurationSec += wPlannedDur;
+            monthlyActualDurationSec += wActualDur;
+
+            return {
+                weekLabel: mw.label,
+                weekIndex: mw.index,
+                startDate: format(mw.start, 'yyyy-MM-dd'),
+                endDate: format(mw.end, 'yyyy-MM-dd'),
+                plannedTss: Math.round(wPlannedTss),
+                actualTss: Math.round(wActualTss),
+                plannedDurationSec: Math.round(wPlannedDur),
+                actualDurationSec: Math.round(wActualDur),
+                isCurrentWeek: mw.isCurrent,
+            };
+        });
+
         const stats = {
             currentWeekMileage,
             vdot,
@@ -408,7 +623,21 @@ export async function GET(req: NextRequest) {
             maxCtl,
             maxAtl,
             avgWeeklyKmLast3Months,
-            healthTrackingEnabled: user?.healthTrackingEnabled ?? false
+            healthTrackingEnabled: user?.healthTrackingEnabled ?? false,
+            primaryLoadMetric: user?.primaryLoadMetric ?? 'TSS',
+            uiPreferences: user?.uiPreferences ?? null,
+            weeklyPlannedTss: Math.round(weeklyPlannedTss),
+            weeklyActualTss: Math.round(weeklyActualTss),
+            weeklyPlannedBikeTss: Math.round(weeklyPlannedBikeTss),
+            weeklyPlannedDurationSec: Math.round(weeklyPlannedDurationSec),
+            weeklyActualDurationSec: Math.round(weeklyActualDurationSec),
+            weeklyPlannedTrimp: Math.round(weeklyPlannedTrimp),
+            weeklyActualTrimp: Math.round(weeklyActualTrimp),
+            monthlyPlannedTss: Math.round(monthlyPlannedTss),
+            monthlyActualTss: Math.round(monthlyActualTss),
+            monthlyPlannedDurationSec: Math.round(monthlyPlannedDurationSec),
+            monthlyActualDurationSec: Math.round(monthlyActualDurationSec),
+            monthlyWeeksBreakdown,
         };
 
         // Serialize BigInt for recent activities

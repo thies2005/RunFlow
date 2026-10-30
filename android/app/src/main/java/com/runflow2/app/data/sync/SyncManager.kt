@@ -263,6 +263,7 @@ class SyncManager(
                 // engine too (they live in DataStore for fast UI reads).
                 server.effectiveVo2maxCorrectionFactor?.let { settings.setEffectiveVo2maxCorrection(it) }
                 server.includeCrossTraining?.let { settings.setIncludeCrossTraining(it) }
+                server.primaryLoadMetric?.let { settings.setPrimaryLoadMetric(it) }
                 // A Strava account may only get its email server-side later
                 // (profile:read_all scope) — persist it once it shows up.
                 authStore.updateEmailIfMissing(server.email)
@@ -284,6 +285,13 @@ class SyncManager(
         } catch (e: HttpException) {
             if (e.code() == 401) throw e
             AppLog.w(TAG, "readiness sync failed: HTTP ${e.code()}", e)
+        }
+
+        // ---- workout auto-link suggestions (Decision U2 / D6) ----
+        try {
+            repository.matchWorkoutsWithActivities()
+        } catch (e: Exception) {
+            AppLog.w(TAG, "workout auto-link matching failed: ${e.message}", e)
         }
 
         return SyncResult(pushed = pushed, pulled = pulled, pruned = pruned, failed = failed)

@@ -1,8 +1,11 @@
 package com.runflow2.app.domain.analytics
 
+import com.runflow2.app.core.math.BestEffortsEngine
 import com.runflow2.app.core.math.MarathonShape
 import com.runflow2.app.core.math.TrainingLoad
 import com.runflow2.app.core.math.VdotMath
+import com.runflow2.app.data.net.ActivityStreamsDto
+import com.runflow2.app.data.net.Api
 import com.runflow2.app.domain.model.ActivityType
 import com.runflow2.app.domain.model.TsbStatus
 import java.time.DayOfWeek
@@ -32,6 +35,9 @@ data class ActivityInput(
     val aerobicDecoupling: Double? = null,
     val deviceWatts: Boolean = false,
     val powerZoneSeconds: List<Int> = emptyList(),
+    val runningTss: Double = 0.0,
+    val trainingType: String? = null,
+    val streamsJson: String? = null,
 )
 
 data class WeekVolume(val weekStart: LocalDate, val km: Double, val runs: Int)
@@ -81,6 +87,10 @@ data class CyclingAnalyticsSummary(
     val avgWatts: Int?,
     val totalBikeTss30d: Int,
     val powerZoneDistribution: List<ZoneBucket>,
+    val mmpCurve42d: List<BestEffortsEngine.PowerEffort> = emptyList(),
+    val mmpCurve1y: List<BestEffortsEngine.PowerEffort> = emptyList(),
+    val cpWatts: Int? = null,
+    val wPrimeKj: Double? = null,
 )
 
 data class AnalyticsBundle(
@@ -122,6 +132,16 @@ data class AnalyticsBundle(
     val aerobicVo2max: Double? = null,
     /** Which source won the VDOT pair — UI must never mix the two sources. */
     val vdotSource: MetricSource = MetricSource.LOCAL,
+    // ---- Task 7.2 extensions ----
+    val futureDaily: List<TrainingLoad.DailyLoad> = emptyList(),
+    val ctlRampRate7d: Double = 0.0,
+    val fosterMonotony: Double = 0.0,
+    val fosterStrain: Double = 0.0,
+    val acwr: Double = 0.0,
+    val bestEfforts: List<BestEffortsEngine.BestEffort> = emptyList(),
+    val powerMmpCurve42d: List<BestEffortsEngine.PowerEffort> = emptyList(),
+    val powerMmpCurve1y: List<BestEffortsEngine.PowerEffort> = emptyList(),
+    val marathonShapeResult: MarathonShape.Result? = null,
 )
 
 object AnalyticsEngine {
@@ -136,18 +156,32 @@ object AnalyticsEngine {
         includeCrossTraining: Boolean = false,
         effectiveVo2maxCorrection: Double = 1.0,
         maxHr: Int = 190,
+        primaryLoadMetric: String = "TSS",
+        plannedTssByDate: Map<LocalDate, Double> = emptyMap(),
+        raceDate: LocalDate? = null,
     ): AnalyticsBundle {
         // CTL/ATL/TSB and zone distribution cover ALL sports (web parity);
         // distance-based metrics (VO₂ max, weekly km, volume bars) stay run-only.
         val runs = activities.filter { it.type == ActivityType.RUN }
         val rides = activities.filter { it.type == ActivityType.RIDE || it.type == ActivityType.VIRTUAL_RIDE }
 
-        // daily combined load map: bikeTss for rides when present, TRIMP for
-        // everything else (web parity: fitnessCache.ts dailyCombinedLoad)
+        // daily combined load map: Unified Effective TSS per activity (Decision U1)
         val trimpByDate = HashMap<LocalDate, Double>()
         for (a in activities) {
-            val isRide = a.type == ActivityType.RIDE || a.type == ActivityType.VIRTUAL_RIDE
-            val load = if (isRide && (a.bikeTss ?: 0.0) > 0.0) a.bikeTss!! else effectiveTrimp(a)
+            val load = when (primaryLoadMetric) {
+                "TRIMP" -> effectiveTrimp(a)
+                else -> {
+                    val eff = TrainingLoad.resolveEffectiveTss(
+                        type = a.type.name,
+                        movingTimeSec = a.movingTimeSec,
+                        runningTss = a.runningTss,
+                        bikeTss = a.bikeTss ?: 0.0,
+                        trimp = a.trimp,
+                        trainingType = a.trainingType,
+                    )
+                    if (eff > 0.0) eff else effectiveTrimp(a)
+                }
+            }
             trimpByDate[a.date] = (trimpByDate[a.date] ?: 0.0) + load
         }
 
@@ -156,6 +190,30 @@ object AnalyticsEngine {
         val ctl = latest?.ctl ?: 0.0
         val atl = latest?.atl ?: 0.0
         val tsb = ctl - atl
+
+        // 7-day CTL Ramp Rate
+        val ctlRampRate7d = TrainingLoad.ctlRampRate7d(daily)
+
+        // Foster Monotony & Strain over last 7 days
+        val last7DaysLoads = (6 downTo 0).map { offset ->
+            trimpByDate[today.minusDays(offset.toLong())] ?: 0.0
+        }
+        val foster = TrainingLoad.fosterMonotonyStrain(last7DaysLoads)
+        val fosterMonotony = (foster.monotony * 100.0).roundToInt() / 100.0
+        val fosterStrain = foster.strain.roundToInt().toDouble()
+
+        // ACWR
+        val acwr = (TrainingLoad.acwr(atl, ctl) * 100.0).roundToInt() / 100.0
+
+        // Future PMC projection
+        val targetFutureDate = when {
+            raceDate != null && raceDate.isAfter(today) -> raceDate
+            plannedTssByDate.keys.any { it.isAfter(today) } -> plannedTssByDate.keys.filter { it.isAfter(today) }.maxOrNull()!!
+            else -> null
+        }
+        val futureDaily = if (targetFutureDate != null) {
+            TrainingLoad.projectFutureSeries(ctl, atl, plannedTssByDate, today.plusDays(1), targetFutureDate)
+        } else emptyList()
 
         // % of max needs the peak over the full history, not just the window
         val historyDays = activities.minOfOrNull { it.date }
@@ -226,14 +284,15 @@ object AnalyticsEngine {
         } else {
             emptyList()
         }
-        val shape = effectiveVdot?.let {
+        val shapeResult = effectiveVdot?.let {
             MarathonShape.calculate(
                 runs = runs.map { MarathonShape.Run(it.date, it.distanceKm) },
                 crossTraining = crossTrainingActivities,
                 effectiveVdot = it,
                 today = today,
-            ).shape.toDouble()
+            )
         }
+        val shape = shapeResult?.shape?.toDouble()
 
         // Aerobic fitness (VO2max) — the HR-based trend, computed on device
         // (web parity: calculateWeightedEffectiveVO2max × effective-VO2max
@@ -334,6 +393,59 @@ object AnalyticsEngine {
             weightKg = weightKg,
         )
 
+        // Cycling Power MMP curves (42d vs 365d)
+        val cutoff42 = today.minusDays(42)
+        val rides42 = rides.filter { !it.date.isBefore(cutoff42) }
+        val rides365 = rides.filter { !it.date.isBefore(today.minusDays(365)) }
+
+        fun extractPowerMmp(rideList: List<ActivityInput>): List<BestEffortsEngine.PowerEffort> {
+            val results = mutableListOf<BestEffortsEngine.PowerEffort>()
+            for (dur in BestEffortsEngine.STANDARD_POWER_DURATIONS_SEC) {
+                var maxWatts = 0.0
+                for (r in rideList) {
+                    val wattsStream = if (r.streamsJson != null) {
+                        runCatching {
+                            Api.json.decodeFromString(ActivityStreamsDto.serializer(), r.streamsJson).watts
+                        }.getOrNull()?.filter { !it.isNaN() && it.isFinite() && it >= 0.0 }
+                    } else null
+
+                    val w = if (wattsStream != null && wattsStream.size >= dur) {
+                        BestEffortsEngine.findMeanMaximalPower(wattsStream, listOf(dur)).firstOrNull()?.maxWatts ?: 0.0
+                    } else {
+                        when {
+                            dur <= 5 -> r.maxWatts ?: 0.0
+                            dur <= 1200 -> r.npWatts ?: r.averageWatts ?: 0.0
+                            else -> r.averageWatts ?: 0.0
+                        }
+                    }
+                    if (w > maxWatts) maxWatts = w
+                }
+                if (maxWatts > 0.0) {
+                    results.add(BestEffortsEngine.PowerEffort(dur, maxWatts, 0, dur))
+                }
+            }
+            return results
+        }
+
+        val powerMmpCurve42d = extractPowerMmp(rides42)
+        val powerMmpCurve1y = extractPowerMmp(rides365)
+
+        // Curve-derived CP & W' from 5m (300s) and 20m (1200s)
+        val p300 = powerMmpCurve1y.find { it.durationSec == 300 }?.maxWatts
+        val p1200 = powerMmpCurve1y.find { it.durationSec == 1200 }?.maxWatts
+        var cpWatts: Int? = null
+        var wPrimeKj: Double? = null
+        if (p300 != null && p1200 != null && p300 > p1200 && p1200 > 0.0) {
+            val w1 = p300 * 300.0
+            val w2 = p1200 * 1200.0
+            val cp = (w2 - w1) / (1200.0 - 300.0)
+            if (cp in 50.0..600.0) {
+                cpWatts = cp.roundToInt()
+                val wp = (w1 - cp * 300.0) / 1000.0
+                if (wp > 0.0) wPrimeKj = (wp * 10.0).roundToInt() / 10.0
+            }
+        }
+
         val cyclingSummary = CyclingAnalyticsSummary(
             ftpWatts = ftpWatts,
             eFtpWatts = eFtpWatts,
@@ -350,7 +462,56 @@ object AnalyticsEngine {
             avgWatts = avgWatts,
             totalBikeTss30d = totalBikeTss30d,
             powerZoneDistribution = powerZoneDistribution,
+            mmpCurve42d = powerMmpCurve42d,
+            mmpCurve1y = powerMmpCurve1y,
+            cpWatts = cpWatts,
+            wPrimeKj = wPrimeKj,
         )
+
+        // Running Best Efforts (PRs across STANDARD_RUN_DISTANCES)
+        val bestEffortsList = mutableListOf<BestEffortsEngine.BestEffort>()
+        for (target in BestEffortsEngine.STANDARD_RUN_DISTANCES) {
+            var bestTime = Int.MAX_VALUE
+            for (r in runs) {
+                val distM = r.distanceKm * 1000.0
+                if (distM >= target.meters && r.movingTimeSec > 0) {
+                    val timeSec = if (r.streamsJson != null) {
+                        val streams = runCatching { Api.json.decodeFromString(ActivityStreamsDto.serializer(), r.streamsJson) }.getOrNull()
+                        val vel = streams?.velocitySmooth
+                        val tList = streams?.time
+                        if (vel != null && tList != null && vel.size == tList.size && tList.size >= 2) {
+                            val dists = ArrayList<Double>(tList.size)
+                            var cum = 0.0
+                            dists.add(0.0)
+                            for (i in 1 until tList.size) {
+                                cum += vel[i].coerceAtLeast(0.0) * (tList[i] - tList[i - 1]).coerceAtLeast(0.0)
+                                dists.add(cum)
+                            }
+                            val effs = BestEffortsEngine.findBestEfforts(dists, tList.map { it.roundToInt() }, listOf(target))
+                            effs.firstOrNull()?.timeSec ?: (target.meters / distM * r.movingTimeSec).roundToInt()
+                        } else {
+                            (target.meters / distM * r.movingTimeSec).roundToInt()
+                        }
+                    } else {
+                        (target.meters / distM * r.movingTimeSec).roundToInt()
+                    }
+                    if (timeSec < bestTime) {
+                        bestTime = timeSec
+                    }
+                }
+            }
+            if (bestTime < Int.MAX_VALUE) {
+                bestEffortsList.add(
+                    BestEffortsEngine.BestEffort(
+                        label = target.label,
+                        distanceMeters = target.meters,
+                        timeSec = bestTime,
+                        startIndex = 0,
+                        endIndex = 0,
+                    )
+                )
+            }
+        }
 
         return AnalyticsBundle(
             daily = daily,
@@ -378,6 +539,15 @@ object AnalyticsEngine {
             totalMovingHours = activities.sumOf { it.movingTimeSec } / 3600.0,
             runFitnessSeries = runFitnessSeries,
             aerobicVo2max = aerobicVo2maxLocal,
+            futureDaily = futureDaily,
+            ctlRampRate7d = ctlRampRate7d,
+            fosterMonotony = fosterMonotony,
+            fosterStrain = fosterStrain,
+            acwr = acwr,
+            bestEfforts = bestEffortsList,
+            powerMmpCurve42d = powerMmpCurve42d,
+            powerMmpCurve1y = powerMmpCurve1y,
+            marathonShapeResult = shapeResult,
         )
     }
 

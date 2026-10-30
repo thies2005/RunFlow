@@ -15,9 +15,21 @@ import {
     readDashboardLayoutMode,
     readDashboardCyclingMetrics,
     readDashboardRunningMetrics,
+    readWorkoutCardStyle,
+    readCountdownStyle,
+    readEffortCardMode,
+    readCalendarWeeksMode,
+    readPrimaryLoadMetric,
+    syncUiPreferencesToServer,
     type DashboardStatusLayoutMode,
     type CyclingDashboardMetricId,
     type RunningDashboardMetricId,
+    type WorkoutCardStyleMode,
+    type CountdownStyleMode,
+    type EffortCardMode,
+    type CalendarWeeksMode,
+    type PrimaryLoadMetricMode,
+    type UiPreferences,
 } from '@/components/dashboard/TrainingStatusCard';
 import { evictAuthBoundCaches } from '@/lib/pwa/authCacheEviction';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
@@ -1785,6 +1797,11 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
     const [dashboardLayoutMode, setDashboardLayoutMode] = useState<DashboardStatusLayoutMode>('COMBINED_STRIP');
     const [selectedCyclingMetrics, setSelectedCyclingMetrics] = useState<CyclingDashboardMetricId[]>(DEFAULT_CYCLING_METRICS);
     const [selectedRunningMetrics, setSelectedRunningMetrics] = useState<RunningDashboardMetricId[]>(DEFAULT_RUNNING_METRICS);
+    const [workoutCardStyle, setWorkoutCardStyle] = useState<WorkoutCardStyleMode>('OPTION_C');
+    const [countdownStyle, setCountdownStyle] = useState<CountdownStyleMode>('COMPACT_BAR');
+    const [effortCardMode, setEffortCardMode] = useState<EffortCardMode>('WEEK_AND_MONTH');
+    const [calendarWeeksMode, setCalendarWeeksMode] = useState<CalendarWeeksMode>('4_WEEKS');
+    const [primaryLoadMetric, setPrimaryLoadMetric] = useState<PrimaryLoadMetricMode>('TSS');
 
     const { data: settingsData } = useQuery({
         queryKey: ['user-settings'],
@@ -1807,15 +1824,65 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             setDashboardLayoutMode(readDashboardLayoutMode());
             setSelectedCyclingMetrics(readDashboardCyclingMetrics());
             setSelectedRunningMetrics(readDashboardRunningMetrics());
+            setWorkoutCardStyle(readWorkoutCardStyle());
+            setCountdownStyle(readCountdownStyle());
+            setEffortCardMode(readEffortCardMode());
+            setCalendarWeeksMode(readCalendarWeeksMode());
+            setPrimaryLoadMetric(readPrimaryLoadMetric());
         };
         syncDashboardPrefs();
         window.addEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncDashboardPrefs);
+        window.addEventListener('runflow-dashboard-layout-change', syncDashboardPrefs);
         window.addEventListener('storage', syncDashboardPrefs);
         return () => {
             window.removeEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, syncDashboardPrefs);
+            window.removeEventListener('runflow-dashboard-layout-change', syncDashboardPrefs);
             window.removeEventListener('storage', syncDashboardPrefs);
         };
     }, []);
+
+    const handleUpdatePref = (patch: Partial<UiPreferences>) => {
+        if (patch.workoutCardStyle) setWorkoutCardStyle(patch.workoutCardStyle);
+        if (patch.countdownStyle) setCountdownStyle(patch.countdownStyle);
+        if (patch.effortCardMode) setEffortCardMode(patch.effortCardMode);
+        if (patch.calendarWeeksMode) setCalendarWeeksMode(patch.calendarWeeksMode);
+        if (patch.primaryLoadMetric) setPrimaryLoadMetric(patch.primaryLoadMetric);
+        void syncUiPreferencesToServer(patch);
+    };
+
+    const handleApplyPreset = (preset: 'NEW_DEFAULT' | 'CLASSIC') => {
+        if (preset === 'NEW_DEFAULT') {
+            handleUpdatePref({
+                workoutCardStyle: 'OPTION_C',
+                countdownStyle: 'COMPACT_BAR',
+                effortCardMode: 'WEEK_AND_MONTH',
+                calendarWeeksMode: '4_WEEKS',
+                primaryLoadMetric: 'TSS',
+            });
+        } else {
+            handleUpdatePref({
+                workoutCardStyle: 'OPTION_A',
+                countdownStyle: 'TWO_BOX_LEGACY',
+                effortCardMode: 'LEGACY_KM',
+                calendarWeeksMode: '6_WEEKS_LEGACY',
+                primaryLoadMetric: 'TRIMP',
+            });
+        }
+    };
+
+    const isNewDefaultActive =
+        workoutCardStyle === 'OPTION_C' &&
+        countdownStyle === 'COMPACT_BAR' &&
+        effortCardMode === 'WEEK_AND_MONTH' &&
+        calendarWeeksMode === '4_WEEKS' &&
+        primaryLoadMetric === 'TSS';
+
+    const isClassicActive =
+        workoutCardStyle === 'OPTION_A' &&
+        countdownStyle === 'TWO_BOX_LEGACY' &&
+        effortCardMode === 'LEGACY_KM' &&
+        calendarWeeksMode === '6_WEEKS_LEGACY' &&
+        primaryLoadMetric === 'TRIMP';
 
     const handleSelectDashboardLayoutMode = (mode: DashboardStatusLayoutMode) => {
         setDashboardLayoutMode(mode);
@@ -2002,6 +2069,243 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                             )}
                         </div>
                     )}
+                </div>
+            </div>
+
+            {/* Dashboard, Calendar & Effort Preferences */}
+            <div className="space-y-4 p-3.5 rounded-md bg-surface border border-line">
+                <div>
+                    <h4 className="text-xs text-accent-cyan font-semibold">Dashboard, Calendar &amp; Effort Preferences</h4>
+                    <p className="text-[11px] text-foreground-muted mt-0.5">
+                        Synchronized UI and effort display preferences across Web &amp; Mobile.
+                    </p>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="space-y-1.5">
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-foreground-muted">Quick Presets</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => handleApplyPreset('NEW_DEFAULT')}
+                            className={`p-2.5 rounded-md border text-left transition-all ${
+                                isNewDefaultActive
+                                    ? 'border-accent-cyan bg-accent-cyan/10 text-foreground ring-1 ring-accent-cyan/40'
+                                    : 'border-line bg-background-secondary text-foreground-muted hover:text-foreground'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-foreground">★ New Default UI</span>
+                                {isNewDefaultActive && <span className="text-[10px] font-mono text-accent-cyan">Active</span>}
+                            </div>
+                            <p className="text-[10px] text-foreground-muted mt-1 leading-snug">
+                                Option C compact rows, compact countdown bar, 4-wk calendar &amp; unified TSS.
+                            </p>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => handleApplyPreset('CLASSIC')}
+                            className={`p-2.5 rounded-md border text-left transition-all ${
+                                isClassicActive
+                                    ? 'border-accent-cyan bg-accent-cyan/10 text-foreground ring-1 ring-accent-cyan/40'
+                                    : 'border-line bg-background-secondary text-foreground-muted hover:text-foreground'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-foreground">↺ Classic / Legacy UI</span>
+                                {isClassicActive && <span className="text-[10px] font-mono text-accent-cyan">Active</span>}
+                            </div>
+                            <p className="text-[10px] text-foreground-muted mt-1 leading-snug">
+                                Multi-line workout cards, 2-box countdown, 6-week month &amp; TRIMP metrics.
+                            </p>
+                        </button>
+                    </div>
+                </div>
+
+                {/* 5 Individual Toggles */}
+                <div className="space-y-3 pt-2 border-t border-line/60">
+                    {/* 1. Workouts Card Style */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-foreground flex items-center justify-between">
+                            <span>1. Workouts Card Style</span>
+                            <span className="text-[10px] font-mono text-foreground-muted">{workoutCardStyle}</span>
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ workoutCardStyle: 'OPTION_C' })}
+                                className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
+                                    workoutCardStyle === 'OPTION_C'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                Option C (Compact Rows · Recommended)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ workoutCardStyle: 'OPTION_A' })}
+                                className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
+                                    workoutCardStyle === 'OPTION_A'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                Classic (Full Cards)
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 2. Race Countdown Style */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-foreground flex items-center justify-between">
+                            <span>2. Race Countdown Style</span>
+                            <span className="text-[10px] font-mono text-foreground-muted">{countdownStyle}</span>
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ countdownStyle: 'COMPACT_BAR' })}
+                                className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
+                                    countdownStyle === 'COMPACT_BAR'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                Compact Countdown Bar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ countdownStyle: 'TWO_BOX_LEGACY' })}
+                                className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
+                                    countdownStyle === 'TWO_BOX_LEGACY'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                Classic 2-Box Grid
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 3. Goal Card Effort Tracker */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-foreground flex items-center justify-between">
+                            <span>3. Goal Card Effort Tracker</span>
+                            <span className="text-[10px] font-mono text-foreground-muted">{effortCardMode}</span>
+                        </label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ effortCardMode: 'WEEK_AND_MONTH' })}
+                                className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
+                                    effortCardMode === 'WEEK_AND_MONTH'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                Week &amp; 4-Wk Block
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ effortCardMode: 'WEEK_ONLY' })}
+                                className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
+                                    effortCardMode === 'WEEK_ONLY'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                Week Only
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ effortCardMode: 'LEGACY_KM' })}
+                                className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
+                                    effortCardMode === 'LEGACY_KM'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                Distance Km Only
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 4. Training Calendar Window */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-foreground flex items-center justify-between">
+                            <span>4. Training Calendar Window</span>
+                            <span className="text-[10px] font-mono text-foreground-muted">{calendarWeeksMode}</span>
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ calendarWeeksMode: '4_WEEKS' })}
+                                className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
+                                    calendarWeeksMode === '4_WEEKS'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                4-Week Training Window (28 Days)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ calendarWeeksMode: '6_WEEKS_LEGACY' })}
+                                className={`px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
+                                    calendarWeeksMode === '6_WEEKS_LEGACY'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                6-Week Legacy Month
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 5. Primary Effort Metric */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-foreground flex items-center justify-between">
+                            <span>5. Primary Effort Metric</span>
+                            <span className="text-[10px] font-mono text-foreground-muted">{primaryLoadMetric}</span>
+                        </label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ primaryLoadMetric: 'TSS' })}
+                                className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
+                                    primaryLoadMetric === 'TSS'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                Unified TSS
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ primaryLoadMetric: 'DUAL' })}
+                                className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
+                                    primaryLoadMetric === 'DUAL'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                Dual TSS + TRIMP
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleUpdatePref({ primaryLoadMetric: 'TRIMP' })}
+                                className={`px-2 py-1.5 rounded text-center text-[10px] border transition-colors ${
+                                    primaryLoadMetric === 'TRIMP'
+                                        ? 'bg-accent-cyan/10 border-accent-cyan text-foreground font-semibold'
+                                        : 'bg-background-secondary border-line text-foreground-muted hover:text-foreground'
+                                }`}
+                            >
+                                Classic TRIMP
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -29,12 +29,14 @@ import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,21 +59,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.AppContainer
+import com.runflow2.app.core.math.BestEffortsEngine
 import com.runflow2.app.core.math.StreamMath
 import com.runflow2.app.core.util.DistanceUnit
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.data.net.AiFeedbackDto
+import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.repo.RunFlowRepository
 import com.runflow2.app.data.sync.streams
 import com.runflow2.app.domain.analytics.AnalyticsEngine
 import com.runflow2.app.ui.components.RouteCanvas
+import com.runflow2.app.ui.components.RouteColorMode
 import com.runflow2.app.ui.components.SectionTitle
 import com.runflow2.app.ui.components.StatTile
 import com.runflow2.app.ui.components.StreamsChart
 import com.runflow2.app.ui.components.ZoneDistribution
 import com.runflow2.app.ui.theme.semanticColors
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.math.roundToInt
 
 /** UI state of the per-run AI overview card. */
@@ -134,15 +144,20 @@ fun ActivityDetailScreen(
     val route = remember(a.id, a.routeJson) { parseRoute(a.routeJson) }
     val laps = remember(a.id, a.lapsJson) { parseLaps(a.lapsJson) }
 
-    val isRideTypeFlag = remember(a.type, a.averageWatts, a.npWatts) {
-        Format.isRideType(a.type) || a.averageWatts != null || a.npWatts != null
-    }
+    val isRide = remember(a.type) { Format.isRideType(a.type) }
     // ---- analysis streams: local cache first, server fetch once for synced rows ----
-    val series = remember(a.id, a.streamsJson, isRideTypeFlag) {
-        a.streams()?.let { StreamMath.build(it, isRide = isRideTypeFlag) }
+    val series = remember(a.id, a.streamsJson, isRide) {
+        a.streams()?.let { StreamMath.build(it, isRide = isRide) }
     }
-    val isRide = remember(isRideTypeFlag, series) {
-        isRideTypeFlag || (series?.hasWatts == true)
+    val hasPower = remember(a.averageWatts, a.npWatts, series) {
+        (a.averageWatts ?: 0.0) > 0.0 || (a.npWatts ?: 0.0) > 0.0 || !(series?.watts).isNullOrEmpty()
+    }
+    var routeColorMode by remember { mutableStateOf(RouteColorMode.ROUTE) }
+    var scrubFraction by remember { mutableStateOf<Float?>(null) }
+
+    val allActivities by container.repository.activities.collectAsState(initial = emptyList())
+    val prBadges = remember(a.id, series, allActivities) {
+        calculatePrBadges(a, series, allActivities, isRide, hasPower, u)
     }
     var loadingStreams by remember(activityId) { mutableStateOf(false) }
     LaunchedEffect(a.id, a.serverId, a.streamsJson) {
@@ -280,13 +295,79 @@ fun ActivityDetailScreen(
                 }
             }
 
+            // personal records & best efforts badges
+            if (prBadges.isNotEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ),
+                    ) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Icon(
+                                    Icons.Outlined.EmojiEvents,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFFD700),
+                                )
+                                Text(
+                                    "Best Efforts & PRs",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                            prBadges.forEach { badge ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            MaterialTheme.colorScheme.surfaceContainer,
+                                            RoundedCornerShape(8.dp),
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Text(badge.medal, fontWeight = FontWeight.Bold)
+                                        Text(badge.label, fontWeight = FontWeight.SemiBold)
+                                    }
+                                    Text(
+                                        badge.valueText,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // cycling power card (ride power metrics & Coggan zones)
-            if (isRide) {
+            if (isRide && hasPower) {
                 item {
                     CyclingPowerCard(
                         activity = a,
                         series = series,
                         ftpWatts = settings.ftpWatts,
+                    )
+                }
+            }
+
+            // running power card
+            if (!isRide && hasPower) {
+                item {
+                    RunningPowerCard(
+                        activity = a,
+                        series = series,
                     )
                 }
             }
@@ -319,7 +400,13 @@ fun ActivityDetailScreen(
                         Column(Modifier.padding(16.dp)) {
                             SectionTitle("Analysis")
                             Spacer(Modifier.height(12.dp))
-                            StreamsChart(series = series, unit = u, isRide = isRide, modifier = Modifier.fillMaxWidth())
+                            StreamsChart(
+                                series = series,
+                                unit = u,
+                                isRide = isRide,
+                                modifier = Modifier.fillMaxWidth(),
+                                onScrubChange = { scrubFraction = it },
+                            )
                         }
                     }
                 }
@@ -357,13 +444,44 @@ fun ActivityDetailScreen(
                         ),
                     ) {
                         Column(Modifier.padding(16.dp)) {
-                            SectionTitle("Route")
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                SectionTitle("Route")
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    FilterChip(
+                                        selected = routeColorMode == RouteColorMode.ROUTE,
+                                        onClick = { routeColorMode = RouteColorMode.ROUTE },
+                                        label = { Text("Route") },
+                                    )
+                                    if (series?.pace != null && series.pace.isNotEmpty()) {
+                                        FilterChip(
+                                            selected = routeColorMode == RouteColorMode.PACE,
+                                            onClick = { routeColorMode = RouteColorMode.PACE },
+                                            label = { Text("Pace") },
+                                        )
+                                    }
+                                    if (series?.heartrate != null && series.heartrate.isNotEmpty()) {
+                                        FilterChip(
+                                            selected = routeColorMode == RouteColorMode.HR,
+                                            onClick = { routeColorMode = RouteColorMode.HR },
+                                            label = { Text("HR") },
+                                        )
+                                    }
+                                }
+                            }
                             Spacer(Modifier.height(10.dp))
                             RouteCanvas(
                                 points = route,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(200.dp),
+                                mode = routeColorMode,
+                                paceValues = series?.pace?.map { (it ?: 0.0) * 60.0 },
+                                hrValues = series?.heartrate?.map { it.roundToInt() },
+                                scrubFraction = scrubFraction,
                             )
                         }
                     }
@@ -660,28 +778,33 @@ private fun AiFeedbackSection(title: String, markdown: String?) {
 private fun parseRoute(json: String?): List<Pair<Double, Double>> {
     if (json.isNullOrBlank()) return emptyList()
     return runCatching {
-        Regex("""\[(\-?\d+\.\d+),(\-?\d+\.\d+)\]""").findAll(json)
-            .map { m ->
-                val lat = m.groupValues[1].toDouble()
-                val lng = m.groupValues[2].toDouble()
-                lat to lng
+        val element = Api.json.parseToJsonElement(json)
+        if (element is JsonArray) {
+            element.mapNotNull { item ->
+                if (item is JsonArray && item.size >= 2) {
+                    val lat = item[0].jsonPrimitive.doubleOrNull
+                    val lng = item[1].jsonPrimitive.doubleOrNull
+                    if (lat != null && lng != null) lat to lng else null
+                } else null
             }
-            .toList()
+        } else emptyList()
     }.getOrDefault(emptyList())
 }
 
 private fun parseLaps(json: String?): List<Triple<Int, Int, Double>> {
     if (json.isNullOrBlank()) return emptyList()
     return runCatching {
-        Regex("""\{"km":(\d+),"durSec":(\d+),"paceSecPerKm":(\d+)\}""").findAll(json)
-            .map { m ->
-                Triple(
-                    m.groupValues[1].toInt(),
-                    m.groupValues[2].toInt(),
-                    m.groupValues[3].toDouble(),
-                )
+        val element = Api.json.parseToJsonElement(json)
+        if (element is JsonArray) {
+            element.mapNotNull { item ->
+                if (item is JsonObject) {
+                    val km = item["km"]?.jsonPrimitive?.intOrNull ?: return@mapNotNull null
+                    val durSec = item["durSec"]?.jsonPrimitive?.intOrNull ?: return@mapNotNull null
+                    val pace = item["paceSecPerKm"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
+                    Triple(km, durSec, pace)
+                } else null
             }
-            .toList()
+        } else emptyList()
     }.getOrDefault(emptyList())
 }
 
@@ -691,9 +814,12 @@ private fun CyclingPowerCard(
     series: StreamMath.Series?,
     ftpWatts: Int,
 ) {
-    val avgW = activity.averageWatts ?: series?.watts?.takeIf { it.isNotEmpty() }?.average()
-    val npW = activity.npWatts ?: series?.watts?.let { AnalyticsEngine.calculateNormalizedPower(it) }
-    val maxW = activity.maxWatts ?: series?.watts?.maxOrNull()
+    val cleanWatts = remember(series?.watts) {
+        series?.watts?.filter { !it.isNaN() && it.isFinite() && it >= 0.0 }.orEmpty()
+    }
+    val avgW = activity.averageWatts ?: cleanWatts.takeIf { it.isNotEmpty() }?.average()
+    val npW = activity.npWatts ?: (if (cleanWatts.isNotEmpty()) AnalyticsEngine.calculateNormalizedPower(cleanWatts) else null)
+    val maxW = activity.maxWatts ?: cleanWatts.maxOrNull()
     val ifVal = activity.intensityFactor ?: (if (npW != null && ftpWatts > 0) AnalyticsEngine.calculateIntensityFactor(npW, ftpWatts) else null)
     val viVal = activity.variabilityIndex ?: (if (npW != null && avgW != null && avgW > 0.0) AnalyticsEngine.calculateVariabilityIndex(npW, avgW) else null)
     val tssVal = activity.bikeTss ?: (if (npW != null && ifVal != null && ftpWatts > 0) AnalyticsEngine.calculateBikeTss(activity.movingTimeSec, npW, ifVal, ftpWatts) else null)
@@ -820,11 +946,11 @@ private fun CyclingPowerCard(
                 )
             }
 
-            // 7-zone Coggan power breakdown if watts stream exists
-            if (series?.hasWatts == true) {
+            // 7-zone Coggan power breakdown if clean watts stream exists
+            if (cleanWatts.isNotEmpty()) {
                 val effectiveFtp = if (ftpWatts > 0) ftpWatts else (AnalyticsEngine.estimateBikeFtpFromVdot(activity.estimatedVdot ?: 45.0) ?: 200)
-                val powerZoneSecs = remember(series, effectiveFtp) {
-                    AnalyticsEngine.calculatePowerZoneTimes(series.watts ?: emptyList(), series.time, effectiveFtp)
+                val powerZoneSecs = remember(cleanWatts, effectiveFtp) {
+                    AnalyticsEngine.calculatePowerZoneTimes(cleanWatts, series?.time, effectiveFtp)
                 }
                 if (powerZoneSecs.sum() > 0) {
                     Spacer(Modifier.height(4.dp))
@@ -838,5 +964,209 @@ private fun CyclingPowerCard(
             }
         }
     }
+}
+
+@Composable
+private fun RunningPowerCard(
+    activity: ActivityEntity,
+    series: StreamMath.Series?,
+) {
+    val cleanWatts = remember(series?.watts) {
+        series?.watts?.filter { !it.isNaN() && it.isFinite() && it >= 0.0 }.orEmpty()
+    }
+    val avgW = activity.averageWatts ?: cleanWatts.takeIf { it.isNotEmpty() }?.average()
+    val maxW = activity.maxWatts ?: cleanWatts.maxOrNull()
+    val npW = activity.npWatts ?: (if (cleanWatts.isNotEmpty()) AnalyticsEngine.calculateNormalizedPower(cleanWatts) else null)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+    ) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    Icons.Outlined.Bolt,
+                    contentDescription = null,
+                    tint = MaterialTheme.semanticColors.streamPower,
+                )
+                Text(
+                    "Running Power",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                StatTile(
+                    "Avg Power",
+                    avgW?.let { "${it.roundToInt()} W" } ?: "—",
+                    Icons.Outlined.Bolt,
+                    accent = MaterialTheme.semanticColors.streamPower,
+                )
+                StatTile(
+                    "Max Power",
+                    maxW?.let { "${it.roundToInt()} W" } ?: "—",
+                    Icons.Outlined.Bolt,
+                )
+                if (npW != null) {
+                    StatTile(
+                        "Running NP",
+                        "${npW.roundToInt()} W",
+                        Icons.Outlined.Speed,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private data class PrBadgeInfo(
+    val rank: Int,
+    val medal: String,
+    val label: String,
+    val valueText: String,
+)
+
+private fun extractRunDistanceAndTime(activity: ActivityEntity, series: StreamMath.Series?): Pair<List<Double>, List<Int>>? {
+    val streams = activity.streams()
+    if (streams != null && streams.time.size >= 2) {
+        val n = streams.time.size
+        val timeInts = streams.time.map { it.roundToInt() }
+        val vel = streams.velocitySmooth
+        if (vel != null && vel.size == n) {
+            val dists = ArrayList<Double>(n)
+            var sum = 0.0
+            dists.add(0.0)
+            for (i in 1 until n) {
+                val dt = (streams.time[i] - streams.time[i - 1]).coerceAtLeast(0.0)
+                val v = vel[i].coerceAtLeast(0.0)
+                sum += v * dt
+                dists.add(sum)
+            }
+            return dists to timeInts
+        }
+    }
+    // Fallback: estimate from elapsed time and total distance if series is available
+    if (series != null && series.time.size >= 2 && activity.distanceMeters > 0.0) {
+        val timeInts = series.time.map { it.roundToInt() }
+        val totalTime = (series.time.last() - series.time.first()).coerceAtLeast(1.0)
+        val dists = series.time.map { t -> ((t - series.time.first()) / totalTime) * activity.distanceMeters }
+        return dists to timeInts
+    }
+    return null
+}
+
+private fun calculatePrBadges(
+    activity: ActivityEntity,
+    series: StreamMath.Series?,
+    allActivities: List<ActivityEntity>,
+    isRide: Boolean,
+    hasPower: Boolean,
+    unit: DistanceUnit,
+): List<PrBadgeInfo> {
+    val badges = mutableListOf<PrBadgeInfo>()
+    if (!isRide) {
+        // Running best efforts
+        val distTime = extractRunDistanceAndTime(activity, series)
+        if (distTime != null && distTime.first.size >= 2) {
+            val (distList, timeList) = distTime
+            val myEfforts = BestEffortsEngine.findBestEfforts(distList, timeList)
+            val otherRuns = allActivities.filter { !Format.isRideType(it.type) && it.id != activity.id }
+
+            for (effort in myEfforts) {
+                val candidateTimes = mutableListOf<Int>()
+                candidateTimes.add(effort.timeSec)
+                for (other in otherRuns) {
+                    val otherDistTime = extractRunDistanceAndTime(
+                        other,
+                        other.streams()?.let { StreamMath.build(it, isRide = false) },
+                    )
+                    if (otherDistTime != null && otherDistTime.first.size >= 2) {
+                        val otherEfforts = BestEffortsEngine.findBestEfforts(
+                            otherDistTime.first,
+                            otherDistTime.second,
+                            listOf(BestEffortsEngine.DistanceTarget(effort.label, effort.distanceMeters)),
+                        )
+                        otherEfforts.firstOrNull()?.let { candidateTimes.add(it.timeSec) }
+                    } else if (other.distanceMeters >= effort.distanceMeters && other.movingTimeSec > 0) {
+                        val approxTime = (effort.distanceMeters / other.distanceMeters * other.movingTimeSec).roundToInt()
+                        candidateTimes.add(approxTime)
+                    }
+                }
+                candidateTimes.sort()
+                val rank = candidateTimes.indexOf(effort.timeSec) + 1
+                if (rank in 1..3) {
+                    val medal = when (rank) {
+                        1 -> "🥇 PR"
+                        2 -> "🥈 2nd"
+                        else -> "🥉 3rd"
+                    }
+                    val paceText = Format.pace(effort.paceSecPerKm, unit)
+                    badges.add(
+                        PrBadgeInfo(
+                            rank = rank,
+                            medal = medal,
+                            label = effort.label,
+                            valueText = "${Format.duration(effort.timeSec.toLong())} ($paceText)",
+                        )
+                    )
+                }
+            }
+        }
+    } else if (hasPower) {
+        // Cycling power peak PRs
+        val cleanWatts = series?.watts?.filter { !it.isNaN() && it.isFinite() && it >= 0.0 }.orEmpty()
+        if (cleanWatts.isNotEmpty()) {
+            val myPower = BestEffortsEngine.findMeanMaximalPower(cleanWatts)
+            val otherRides = allActivities.filter { Format.isRideType(it.type) && it.id != activity.id }
+            val keyDurations = listOf(
+                5 to "5s Power",
+                60 to "1m Power",
+                300 to "5m Power",
+                1200 to "20m Power",
+                3600 to "60m Power",
+            )
+            for ((dur, label) in keyDurations) {
+                val myP = myPower.find { it.durationSec == dur } ?: continue
+                val candidatePowers = mutableListOf<Double>()
+                candidatePowers.add(myP.maxWatts)
+                for (other in otherRides) {
+                    val ow = other.streams()?.watts?.filter { !it.isNaN() && it.isFinite() && it >= 0.0 }.orEmpty()
+                    if (ow.size >= dur) {
+                        val otherP = BestEffortsEngine.findMeanMaximalPower(ow, listOf(dur))
+                        otherP.firstOrNull()?.let { candidatePowers.add(it.maxWatts) }
+                    } else if (dur <= 5 && (other.maxWatts ?: 0.0) > 0.0) {
+                        candidatePowers.add(other.maxWatts!!)
+                    }
+                }
+                candidatePowers.sortDescending()
+                val rank = candidatePowers.indexOf(myP.maxWatts) + 1
+                if (rank in 1..3) {
+                    val medal = when (rank) {
+                        1 -> "🥇 PR"
+                        2 -> "🥈 2nd"
+                        else -> "🥉 3rd"
+                    }
+                    badges.add(
+                        PrBadgeInfo(
+                            rank = rank,
+                            medal = medal,
+                            label = label,
+                            valueText = "${myP.maxWatts.roundToInt()} W",
+                        )
+                    )
+                }
+            }
+        }
+    }
+    return badges
 }
 

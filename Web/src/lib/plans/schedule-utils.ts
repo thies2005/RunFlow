@@ -1,4 +1,5 @@
 import { WorkoutType } from '@/generated/prisma/browser';
+import { startOfWeek, endOfWeek, addDays, isAfter, format, parseISO } from 'date-fns';
 import type { GeneratedWorkout } from './index';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -111,3 +112,148 @@ export function fixBackToBackSameType(
 
     return sorted;
 }
+
+// ==========================================
+// Smart Rescheduling (Task 1.5 / Decision U3)
+// ==========================================
+
+export const HARD_TYPES = new Set([
+    'INTERVALS',
+    'REPETITIONS',
+    'TEMPO',
+    'FARTLEK',
+    'LONG_RUN',
+    'RACE',
+    'RIDE_INTERVALS',
+    'LONG_RIDE',
+]);
+
+export function isHardWorkoutType(type?: string | null): boolean {
+    if (!type) return false;
+    const clean = type.trim().toUpperCase().replace(/[\s-]+/g, '_');
+    return HARD_TYPES.has(clean);
+}
+
+export function isEasyOrRecoveryType(type?: string | null): boolean {
+    if (!type) return false;
+    const clean = type.trim().toUpperCase().replace(/[\s-]+/g, '_');
+    return clean === 'EASY' || clean === 'RECOVERY' || clean === 'REST' || clean === 'CROSS_TRAIN';
+}
+
+export interface WorkoutScheduleItem {
+    id?: string;
+    workoutType?: string | null;
+    type?: string | null;
+    scheduledDate: string | Date;
+    isCompleted?: boolean;
+    customName?: string | null;
+}
+
+function normalizeScheduleDate(d: string | Date): Date {
+    if (typeof d === 'string') {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+            const [y, m, day] = d.split('-').map(Number);
+            return new Date(y, m - 1, day);
+        }
+        return parseISO(d);
+    }
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/**
+ * Finds a smart reschedule day for a workout within the current Monday-Sunday week.
+ *
+ * Rules:
+ * - Candidate day must be in the future relative to `today` (`day > today`).
+ * - Candidate day must be within the same Monday-Sunday calendar week as `today`.
+ * - Maintains a >= 48h (at least 2 calendar days) buffer from other HARD_TYPES in the week if `workout` is a HARD_TYPE.
+ * - Preference order:
+ *   1. Open days (no workouts scheduled)
+ *   2. Easy / Recovery days (suitable for swapping)
+ * - Returns candidate date string ('YYYY-MM-DD') or null if no valid slot exists.
+ */
+export function findSmartRescheduleDay(
+    workout: WorkoutScheduleItem,
+    weekWorkouts: WorkoutScheduleItem[],
+    today: string | Date
+): string | null {
+    const todayNorm = normalizeScheduleDate(today);
+    // Week starts on Monday (weekStartsOn: 1)
+    const weekSun = endOfWeek(todayNorm, { weekStartsOn: 1 });
+
+    const workoutId = workout.id;
+    const targetType = (workout.workoutType || workout.type || '').toUpperCase();
+    const isTargetHard = isHardWorkoutType(targetType);
+
+    // Map existing workouts by YYYY-MM-DD
+    const workoutsByDay = new Map<string, WorkoutScheduleItem[]>();
+    for (const w of weekWorkouts) {
+        if (workoutId && w.id === workoutId) continue; // Exclude workout being rescheduled
+        const dateKey = format(normalizeScheduleDate(w.scheduledDate), 'yyyy-MM-dd');
+        if (!workoutsByDay.has(dateKey)) {
+            workoutsByDay.set(dateKey, []);
+        }
+        workoutsByDay.get(dateKey)!.push(w);
+    }
+
+    // Identify days with other hard workouts
+    const hardDays = new Set<string>();
+    for (const [dayKey, list] of workoutsByDay.entries()) {
+        if (list.some((item) => isHardWorkoutType(item.workoutType || item.type))) {
+            hardDays.add(dayKey);
+        }
+    }
+
+    // Collect candidate days from tomorrow through Sunday
+    interface CandidateSlot {
+        date: Date;
+        dateKey: string;
+        score: number; // 0 = open, 1 = easy/recovery, 2 = other non-hard
+    }
+
+    const candidates: CandidateSlot[] = [];
+
+    let cursor = addDays(todayNorm, 1);
+    while (!isAfter(cursor, weekSun)) {
+        const dateKey = format(cursor, 'yyyy-MM-dd');
+
+        // Check 48h buffer from other hard workouts if the moving workout is hard
+        let bufferOk = true;
+        if (isTargetHard) {
+            for (const hDayStr of hardDays) {
+                const hDate = parseISO(hDayStr);
+                const dayDiff = Math.abs(Math.round((cursor.getTime() - hDate.getTime()) / 86400000));
+                if (dayDiff < 2) {
+                    bufferOk = false;
+                    break;
+                }
+            }
+        }
+
+        if (bufferOk) {
+            const dayWorkouts = workoutsByDay.get(dateKey) || [];
+            if (dayWorkouts.length === 0) {
+                // Tier 0: Open day
+                candidates.push({ date: cursor, dateKey, score: 0 });
+            } else if (dayWorkouts.every((w) => isEasyOrRecoveryType(w.workoutType || w.type))) {
+                // Tier 1: Easy / recovery day
+                candidates.push({ date: cursor, dateKey, score: 1 });
+            }
+        }
+
+        cursor = addDays(cursor, 1);
+    }
+
+    if (candidates.length === 0) {
+        return null;
+    }
+
+    // Sort by preference score asc (open first, then easy), then by date asc (earliest)
+    candidates.sort((a, b) => {
+        if (a.score !== b.score) return a.score - b.score;
+        return a.date.getTime() - b.date.getTime();
+    });
+
+    return candidates[0].dateKey;
+}
+

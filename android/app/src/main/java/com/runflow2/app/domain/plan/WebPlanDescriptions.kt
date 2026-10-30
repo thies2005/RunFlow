@@ -59,8 +59,10 @@ object WebPlanDescriptions {
         targetPace: Double?,
         isGoalPaceWorkout: Boolean,
         racePace: Double?,
+        description: String? = null,
     ): Boolean {
         if (isGoalPaceWorkout) return true
+        if (description?.startsWith("Steady State:") == true) return false
         if (racePace == null || targetPace == null || targetPace == 0.0) return false
         if (phase != "PEAK") return false
         if (type != "TEMPO" && type != "INTERVALS") return false
@@ -116,7 +118,7 @@ object WebPlanDescriptions {
 
         if (type == "RACE") return "Race Day"
 
-        if (isGoalPace(type, phase, targetPace, isGoalPaceWorkout = false, racePace = racePace) && targetPace != null) {
+        if (isGoalPace(type, phase, targetPace, isGoalPaceWorkout = false, racePace = racePace, description = description) && targetPace != null) {
             val detail = extractRepDetail(description).ifEmpty { dist }
             return "Goal Pace: $detail @ ${formatPace(targetPace)}"
         }

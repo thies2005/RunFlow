@@ -15,7 +15,7 @@
         "longRunDay": 0,
         "workoutDay": 3
       },
-      "workoutCount": 55
+      "workoutCount": 68
     },
     {
       "name": "five_k_v40",
@@ -29,7 +29,7 @@
         "maxLongRunKm": 20,
         "name": "five_k_v40"
       },
-      "workoutCount": 21
+      "workoutCount": 44
     },
     {
       "name": "five_k_v50",
@@ -43,7 +43,7 @@
         "taperWeeks": 1,
         "name": "five_k_v50"
       },
-      "workoutCount": 13
+      "workoutCount": 19
     },
     {
       "name": "ten_k_v30",
@@ -56,7 +56,7 @@
         "weeklyMileageGoal": 34000,
         "maxLongRunKm": 20
       },
-      "workoutCount": 43
+      "workoutCount": 56
     },
     {
       "name": "ten_k_v40",
@@ -72,7 +72,7 @@
           4
         ]
       },
-      "workoutCount": 31
+      "workoutCount": 60
     },
     {
       "name": "ten_k_v50",
@@ -85,7 +85,7 @@
         "weeklyMileageGoal": 38000,
         "taperWeeks": 1
       },
-      "workoutCount": 23
+      "workoutCount": 34
     },
     {
       "name": "half_marathon_v30",
@@ -98,7 +98,7 @@
         "weeklyMileageGoal": 42000,
         "maxLongRunKm": 24
       },
-      "workoutCount": 49
+      "workoutCount": 65
     },
     {
       "name": "half_marathon_v40",
@@ -112,7 +112,7 @@
         "maxLongRunKm": 24,
         "targetTime": 5940
       },
-      "workoutCount": 28
+      "workoutCount": 69
     },
     {
       "name": "half_marathon_v50",
@@ -126,7 +126,7 @@
         "taperWeeks": 2,
         "targetVdot": 55
       },
-      "workoutCount": 41
+      "workoutCount": 51
     },
     {
       "name": "marathon_v30",
@@ -139,7 +139,7 @@
         "weeklyMileageGoal": 52000,
         "maxLongRunKm": 30
       },
-      "workoutCount": 63
+      "workoutCount": 71
     },
     {
       "name": "marathon_v40",
@@ -153,7 +153,7 @@
         "maxLongRunKm": 32,
         "taperWeeks": 2
       },
-      "workoutCount": 63
+      "workoutCount": 83
     },
     {
       "name": "marathon_v50",
@@ -175,7 +175,7 @@
         "hrMax": 190,
         "hrRest": 55
       },
-      "workoutCount": 52
+      "workoutCount": 63
     },
     {
       "name": "fifty_k_v30",
@@ -188,7 +188,7 @@
         "weeklyMileageGoal": 70000,
         "maxLongRunKm": 35
       },
-      "workoutCount": 98
+      "workoutCount": 104
     },
     {
       "name": "fifty_k_v40",
@@ -201,7 +201,7 @@
         "weeklyMileageGoal": 75000,
         "name": "fifty_k_v40"
       },
-      "workoutCount": 86
+      "workoutCount": 92
     },
     {
       "name": "hundred_k_v40",
@@ -213,7 +213,7 @@
         "runsPerWeek": 6,
         "weeklyMileageGoal": 90000
       },
-      "workoutCount": 121
+      "workoutCount": 128
     },
     {
       "name": "hundred_k_v50",
@@ -226,7 +226,7 @@
         "weeklyMileageGoal": 95000,
         "taperWeeks": 2
       },
-      "workoutCount": 92
+      "workoutCount": 98
     },
     {
       "name": "hundred_mile_v30",
@@ -239,7 +239,7 @@
         "weeklyMileageGoal": 96000,
         "maxLongRunKm": 45
       },
-      "workoutCount": 140
+      "workoutCount": 146
     },
     {
       "name": "hundred_mile_v40",
@@ -252,7 +252,7 @@
         "weeklyMileageGoal": 100000,
         "name": "hundred_mile_v40"
       },
-      "workoutCount": 135
+      "workoutCount": 142
     },
     {
       "name": "backyard_ultra_v40",
@@ -264,7 +264,7 @@
         "runsPerWeek": 5,
         "weeklyMileageGoal": 60000
       },
-      "workoutCount": 94
+      "workoutCount": 98
     },
     {
       "name": "twelve_hour_v40",
@@ -276,7 +276,7 @@
         "runsPerWeek": 5,
         "weeklyMileageGoal": 80000
       },
-      "workoutCount": 85
+      "workoutCount": 86
     },
     {
       "name": "fifty_mile_v40",
@@ -289,7 +289,7 @@
         "weeklyMileageGoal": 85000,
         "maxLongRunKm": 40
       },
-      "workoutCount": 110
+      "workoutCount": 116
     },
     {
       "name": "twenty_four_hour_v40",
@@ -301,7 +301,7 @@
         "runsPerWeek": 5,
         "weeklyMileageGoal": 90000
       },
-      "workoutCount": 97
+      "workoutCount": 98
     },
     {
       "name": "custom_distance_v40",
@@ -314,7 +314,7 @@
         "weeklyMileageGoal": 40000,
         "customDistanceM": 21100
       },
-      "workoutCount": 31
+      "workoutCount": 49
     },
     {
       "name": "sprint_tri_v40",
@@ -330,7 +330,7 @@
         "strengthPerWeek": 2,
         "weeklyMileageGoal": 30000
       },
-      "workoutCount": 74
+      "workoutCount": 111
     },
     {
       "name": "olympic_tri_v50",
@@ -344,7 +344,7 @@
         "ridesPerWeek": 3,
         "swimsPerWeek": 3
       },
-      "workoutCount": 115
+      "workoutCount": 173
     },
     {
       "name": "half_ironman_v40",
@@ -358,7 +358,7 @@
         "ridesPerWeek": 3,
         "swimsPerWeek": 3
       },
-      "workoutCount": 136
+      "workoutCount": 203
     },
     {
       "name": "half_ironman_saturated",
@@ -378,7 +378,7 @@
         ],
         "name": "half_ironman_saturated"
       },
-      "workoutCount": 98
+      "workoutCount": 202
     },
     {
       "name": "full_ironman_v30",
@@ -393,7 +393,7 @@
         "swimsPerWeek": 3,
         "strengthPerWeek": 2
       },
-      "workoutCount": 164
+      "workoutCount": 267
     },
     {
       "name": "custom_tri_v40",
@@ -410,7 +410,7 @@
         "customBikeDistM": 40000,
         "customRunDistM": 10000
       },
-      "workoutCount": 122
+      "workoutCount": 165
     },
     {
       "name": "no_race_v40",

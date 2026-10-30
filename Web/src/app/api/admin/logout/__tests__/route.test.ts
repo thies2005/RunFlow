@@ -4,6 +4,7 @@
 
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
+import { generateCsrfToken } from '@/lib/security/csrf';
 
 jest.mock('@/lib/admin/auth', () => ({
     COOKIE_NAME: 'runflow_admin_token',
@@ -25,13 +26,15 @@ function makeRequest(csrfHeader?: string, csrfCookieValue?: string): NextRequest
     });
 }
 
-function validCsrfCookie(token = 'tok-abc'): string {
-    return JSON.stringify({ token, expiresAt: Date.now() + 60_000 });
+function validCsrfCookie(token?: string): string {
+    const t = token ?? generateCsrfToken();
+    return JSON.stringify({ token: t, expiresAt: Date.now() + 60_000 });
 }
 
 describe('POST /api/admin/logout', () => {
     it('expires the httpOnly admin cookie server-side on a valid CSRF pair', async () => {
-        const request = makeRequest('tok-abc', validCsrfCookie());
+        const token = generateCsrfToken();
+        const request = makeRequest(token, validCsrfCookie(token));
         const response = await POST(request);
 
         expect(response.status).toBe(200);
@@ -66,15 +69,17 @@ describe('POST /api/admin/logout', () => {
     });
 
     it('rejects logout when no csrf cookie pair exists at all', async () => {
-        const request = makeRequest('tok-abc', undefined);
+        const token = generateCsrfToken();
+        const request = makeRequest(token, undefined);
         const response = await POST(request);
 
         expect(response.status).toBe(403);
     });
 
     it('rejects logout with an expired csrf cookie', async () => {
-        const expired = JSON.stringify({ token: 'tok-abc', expiresAt: Date.now() - 60_000 });
-        const request = makeRequest('tok-abc', expired);
+        const token = generateCsrfToken();
+        const expired = JSON.stringify({ token, expiresAt: Date.now() - 60_000 });
+        const request = makeRequest(token, expired);
         const response = await POST(request);
 
         expect(response.status).toBe(403);

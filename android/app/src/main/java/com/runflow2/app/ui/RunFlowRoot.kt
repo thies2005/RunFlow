@@ -6,10 +6,19 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Insights
@@ -21,20 +30,27 @@ import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.RadioButtonChecked
 import androidx.compose.material.icons.outlined.SpaceDashboard
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -120,6 +136,26 @@ fun RunFlowRoot(container: AppContainer) {
         val backStack by navController.currentBackStackEntryAsState()
         val currentRoute = backStack?.destination?.route
 
+        val snackbarHostState = remember { SnackbarHostState() }
+        val pendingCount by container.syncManager.pendingCount.collectAsState(initial = 0)
+        val syncStatus by container.syncManager.status.collectAsState()
+
+        LaunchedEffect(syncStatus.lastMessage) {
+            val msg = syncStatus.lastMessage
+            if (msg != null && (msg.contains("error", ignoreCase = true) || msg.contains("⚠") || msg.contains("failed", ignoreCase = true))) {
+                val result = snackbarHostState.showSnackbar(
+                    message = "Sync error: $msg",
+                    actionLabel = "Retry",
+                    duration = SnackbarDuration.Long,
+                )
+                if (result == SnackbarResult.ActionPerformed) {
+                    container.appScope.launch {
+                        container.syncManager.syncNow("user-retry")
+                    }
+                }
+            }
+        }
+
         // recording state guards navigation away from the record tab
         val recState by container.recording.state.collectAsState()
         val recording = recState.status != RecStatus.IDLE
@@ -141,35 +177,64 @@ fun RunFlowRoot(container: AppContainer) {
         // Scaffolds do not re-apply the bottom system navigation bar inset.
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
-                if (showBottomBar) {
-                    ShortNavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    ) {
-                        tabs.forEach { tab ->
-                            val selected = currentRoute == tab.route
-                            ShortNavigationBarItem(
-                                selected = selected,
-                                onClick = {
-                                    if (currentRoute == tab.route) return@ShortNavigationBarItem
-                                    navController.navigate(tab.route) {
-                                        popUpTo(navController.graph.findStartDestination().id)
-                                        launchSingleTop = true
-                                    }
-                                },
-                                icon = {
-                                    Icon(
-                                        imageVector = if (selected) tab.selectedIcon else tab.unselectedIcon,
-                                        contentDescription = tab.label,
-                                    )
-                                },
-                                label = {
-                                    Text(
-                                        text = tab.label,
-                                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                                    )
-                                },
-                            )
+                Column {
+                    if (pendingCount > 0 && !recording) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f))
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Sync,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(13.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                                Text(
+                                    if (syncStatus.running) "Syncing changes…" else "$pendingCount pending sync",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                    if (showBottomBar) {
+                        ShortNavigationBar(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        ) {
+                            tabs.forEach { tab ->
+                                val selected = currentRoute == tab.route
+                                ShortNavigationBarItem(
+                                    selected = selected,
+                                    onClick = {
+                                        if (currentRoute == tab.route) return@ShortNavigationBarItem
+                                        navController.navigate(tab.route) {
+                                            popUpTo(navController.graph.findStartDestination().id)
+                                            launchSingleTop = true
+                                        }
+                                    },
+                                    icon = {
+                                        Icon(
+                                            imageVector = if (selected) tab.selectedIcon else tab.unselectedIcon,
+                                            contentDescription = tab.label,
+                                        )
+                                    },
+                                    label = {
+                                        Text(
+                                            text = tab.label,
+                                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                        )
+                                    },
+                                )
+                            }
                         }
                     }
                 }

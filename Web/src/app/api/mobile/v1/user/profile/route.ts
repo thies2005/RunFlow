@@ -57,6 +57,8 @@ export async function GET(request: NextRequest) {
                 ftpWatts: true,
                 autoEstimateFtp: true,
                 swimCssSecPer100m: true,
+                primaryLoadMetric: true,
+                uiPreferences: true,
                 lastSyncAt: true,
                 createdAt: true,
             }
@@ -106,7 +108,8 @@ export async function PUT(request: NextRequest) {
             hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
             thresholdHeartRate, thresholdPace,
             vdotCorrectionFactor, effectiveVo2maxCorrectionFactor, includeCrossTraining,
-            ftpWatts, autoEstimateFtp, swimCssSecPer100m
+            ftpWatts, autoEstimateFtp, swimCssSecPer100m,
+            primaryLoadMetric, uiPreferences
         } = body;
 
         // Validate HR zones if provided
@@ -163,6 +166,35 @@ export async function PUT(request: NextRequest) {
             }
         }
 
+        if (primaryLoadMetric !== undefined && primaryLoadMetric !== null) {
+            if (!['TSS', 'DUAL', 'TRIMP'].includes(primaryLoadMetric)) {
+                return errorResponses.validation('primaryLoadMetric must be TSS, DUAL, or TRIMP', { field: 'primaryLoadMetric' });
+            }
+        }
+
+        if (uiPreferences !== undefined && uiPreferences !== null && typeof uiPreferences !== 'object') {
+            return errorResponses.validation('uiPreferences must be an object', { field: 'uiPreferences' });
+        }
+
+        let mergedUiPreferences: unknown = undefined;
+        if (uiPreferences !== undefined) {
+            if (uiPreferences === null) {
+                mergedUiPreferences = null;
+            } else {
+                const existingUser = await prisma.user.findUnique({
+                    where: { id: authUser.id },
+                    select: { uiPreferences: true },
+                });
+                const prev = (existingUser?.uiPreferences && typeof existingUser.uiPreferences === 'object')
+                    ? (existingUser.uiPreferences as Record<string, unknown>)
+                    : {};
+                mergedUiPreferences = {
+                    ...prev,
+                    ...uiPreferences,
+                };
+            }
+        }
+
         const user = await prisma.user.update({
             where: { id: authUser.id },
             data: {
@@ -187,6 +219,8 @@ export async function PUT(request: NextRequest) {
                 ftpWatts: undefined !== ftpWatts ? ftpWatts : undefined,
                 autoEstimateFtp: undefined !== autoEstimateFtp ? autoEstimateFtp : undefined,
                 swimCssSecPer100m: undefined !== swimCssSecPer100m ? swimCssSecPer100m : undefined,
+                primaryLoadMetric: primaryLoadMetric !== undefined ? primaryLoadMetric : undefined,
+                uiPreferences: mergedUiPreferences !== undefined ? (mergedUiPreferences as any) : undefined,
             },
             select: {
                 id: true,
@@ -213,6 +247,8 @@ export async function PUT(request: NextRequest) {
                 ftpWatts: true,
                 autoEstimateFtp: true,
                 swimCssSecPer100m: true,
+                primaryLoadMetric: true,
+                uiPreferences: true,
             }
         });
 

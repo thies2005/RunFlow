@@ -98,7 +98,159 @@ export const DEFAULT_RUNNING_METRICS: RunningDashboardMetricId[] = [
 export const STORAGE_KEY_LAYOUT_MODE = 'runflow_dashboard_layout_mode_v1';
 export const STORAGE_KEY_CYCLING_METRICS = 'runflow_dashboard_cycling_metrics_v1';
 export const STORAGE_KEY_RUNNING_METRICS = 'runflow_dashboard_running_metrics_v1';
-export const EVENT_DASHBOARD_LAYOUT_CHANGE = 'runflow-dashboard-layout-change';
+export const STORAGE_KEY_WORKOUT_CARD_STYLE = 'runflow_workout_card_style_v1';
+export const STORAGE_KEY_COUNTDOWN_STYLE = 'runflow_countdown_style_v1';
+export const STORAGE_KEY_EFFORT_CARD_MODE = 'runflow_effort_card_mode_v1';
+export const STORAGE_KEY_CALENDAR_WEEKS = 'runflow_calendar_weeks_v1';
+export const STORAGE_KEY_LOAD_METRIC = 'runflow_load_metric_v1';
+export const EVENT_DASHBOARD_LAYOUT_CHANGE = 'runflow:dashboard-layout-change';
+
+export type WorkoutCardStyleMode = 'OPTION_A' | 'OPTION_B' | 'OPTION_C';
+export type CountdownStyleMode = 'COMPACT_BAR' | 'TWO_BOX_LEGACY';
+export type EffortCardMode = 'WEEK_AND_MONTH' | 'WEEK_ONLY' | 'LEGACY_KM';
+export type CalendarWeeksMode = '4_WEEKS' | '6_WEEKS_LEGACY';
+export type PrimaryLoadMetricMode = 'TSS' | 'DUAL' | 'TRIMP';
+
+export interface UiPreferences {
+    workoutCardStyle?: WorkoutCardStyleMode;
+    countdownStyle?: CountdownStyleMode;
+    effortCardMode?: EffortCardMode;
+    calendarWeeksMode?: CalendarWeeksMode;
+    primaryLoadMetric?: PrimaryLoadMetricMode;
+    [key: string]: any;
+}
+
+export function readWorkoutCardStyle(): 'OPTION_A' | 'OPTION_B' | 'OPTION_C' {
+    if (typeof window === 'undefined') return 'OPTION_C';
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_WORKOUT_CARD_STYLE);
+        if (raw === 'OPTION_A' || raw === 'OPTION_B' || raw === 'OPTION_C') return raw;
+        if (raw === 'CLASSIC') return 'OPTION_A';
+        if (raw === 'COMPACT_C') return 'OPTION_C';
+    } catch {
+        // ignore
+    }
+    return 'OPTION_C';
+}
+
+export function readCountdownStyle(): 'COMPACT_BAR' | 'TWO_BOX_LEGACY' {
+    if (typeof window === 'undefined') return 'COMPACT_BAR';
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_COUNTDOWN_STYLE);
+        if (raw === 'COMPACT_BAR' || raw === 'TWO_BOX_LEGACY') return raw;
+        if (raw === 'HEADER_PILL' || raw === 'COMPACT') return 'COMPACT_BAR';
+        if (raw === 'CLASSIC_2BOX') return 'TWO_BOX_LEGACY';
+    } catch {
+        // ignore
+    }
+    return 'COMPACT_BAR';
+}
+
+export function readEffortCardMode(): 'WEEK_AND_MONTH' | 'WEEK_ONLY' | 'LEGACY_KM' {
+    if (typeof window === 'undefined') return 'WEEK_AND_MONTH';
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_EFFORT_CARD_MODE);
+        if (raw === 'WEEK_AND_MONTH' || raw === 'WEEK_ONLY' || raw === 'LEGACY_KM') return raw;
+    } catch {
+        // ignore
+    }
+    return 'WEEK_AND_MONTH';
+}
+
+export function readCalendarWeeksMode(): '4_WEEKS' | '6_WEEKS_LEGACY' {
+    if (typeof window === 'undefined') return '4_WEEKS';
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_CALENDAR_WEEKS);
+        if (raw === '4_WEEKS' || raw === '6_WEEKS_LEGACY') return raw;
+        if (raw === 'FULL_MONTH') return '6_WEEKS_LEGACY';
+    } catch {
+        // ignore
+    }
+    return '4_WEEKS';
+}
+
+export function readPrimaryLoadMetric(): 'TSS' | 'DUAL' | 'TRIMP' {
+    if (typeof window === 'undefined') return 'TSS';
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY_LOAD_METRIC);
+        if (raw === 'TSS' || raw === 'DUAL' || raw === 'TRIMP') return raw;
+    } catch {
+        // ignore
+    }
+    return 'TSS';
+}
+
+export function hydrateUiPreferencesFromServer(serverPrefs: any): void {
+    if (typeof window === 'undefined' || !serverPrefs || typeof serverPrefs !== 'object') return;
+    try {
+        let changed = false;
+        if (serverPrefs.workoutCardStyle) {
+            const mapped = serverPrefs.workoutCardStyle === 'CLASSIC' ? 'OPTION_A' : serverPrefs.workoutCardStyle === 'COMPACT_C' ? 'OPTION_C' : serverPrefs.workoutCardStyle;
+            if (['OPTION_A', 'OPTION_B', 'OPTION_C'].includes(mapped)) {
+                localStorage.setItem(STORAGE_KEY_WORKOUT_CARD_STYLE, mapped);
+                changed = true;
+            }
+        }
+        if (serverPrefs.countdownStyle) {
+            const mapped = serverPrefs.countdownStyle === 'CLASSIC_2BOX' ? 'TWO_BOX_LEGACY' : serverPrefs.countdownStyle === 'HEADER_PILL' ? 'COMPACT_BAR' : serverPrefs.countdownStyle;
+            if (['COMPACT_BAR', 'TWO_BOX_LEGACY'].includes(mapped)) {
+                localStorage.setItem(STORAGE_KEY_COUNTDOWN_STYLE, mapped);
+                changed = true;
+            }
+        }
+        if (serverPrefs.effortCardMode && ['WEEK_AND_MONTH', 'WEEK_ONLY', 'LEGACY_KM'].includes(serverPrefs.effortCardMode)) {
+            localStorage.setItem(STORAGE_KEY_EFFORT_CARD_MODE, serverPrefs.effortCardMode);
+            changed = true;
+        }
+        if (serverPrefs.calendarWeeksMode) {
+            const mapped = serverPrefs.calendarWeeksMode === 'FULL_MONTH' ? '6_WEEKS_LEGACY' : serverPrefs.calendarWeeksMode;
+            if (['4_WEEKS', '6_WEEKS_LEGACY'].includes(mapped)) {
+                localStorage.setItem(STORAGE_KEY_CALENDAR_WEEKS, mapped);
+                changed = true;
+            }
+        }
+        if (serverPrefs.primaryLoadMetric && ['TSS', 'DUAL', 'TRIMP'].includes(serverPrefs.primaryLoadMetric)) {
+            localStorage.setItem(STORAGE_KEY_LOAD_METRIC, serverPrefs.primaryLoadMetric);
+            changed = true;
+        }
+        if (changed) {
+            window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+            window.dispatchEvent(new Event('runflow-dashboard-layout-change'));
+        }
+    } catch {
+        // ignore
+    }
+}
+
+export async function syncUiPreferencesToServer(newPrefs: Partial<UiPreferences>): Promise<void> {
+    if (typeof window !== 'undefined') {
+        try {
+            if (newPrefs.workoutCardStyle) localStorage.setItem(STORAGE_KEY_WORKOUT_CARD_STYLE, newPrefs.workoutCardStyle);
+            if (newPrefs.countdownStyle) localStorage.setItem(STORAGE_KEY_COUNTDOWN_STYLE, newPrefs.countdownStyle);
+            if (newPrefs.effortCardMode) localStorage.setItem(STORAGE_KEY_EFFORT_CARD_MODE, newPrefs.effortCardMode);
+            if (newPrefs.calendarWeeksMode) localStorage.setItem(STORAGE_KEY_CALENDAR_WEEKS, newPrefs.calendarWeeksMode);
+            if (newPrefs.primaryLoadMetric) localStorage.setItem(STORAGE_KEY_LOAD_METRIC, newPrefs.primaryLoadMetric);
+            window.dispatchEvent(new Event(EVENT_DASHBOARD_LAYOUT_CHANGE));
+            window.dispatchEvent(new Event('runflow-dashboard-layout-change'));
+        } catch {
+            // ignore
+        }
+    }
+
+    try {
+        const payload: Record<string, any> = { uiPreferences: newPrefs };
+        if (newPrefs.primaryLoadMetric) {
+            payload.primaryLoadMetric = newPrefs.primaryLoadMetric;
+        }
+        await fetch('/api/settings/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+    } catch {
+        // non-blocking sync
+    }
+}
 
 const VALID_CYCLING_METRIC_SET = new Set<string>(CYCLING_METRIC_OPTIONS.map((o) => o.id));
 const VALID_RUNNING_METRIC_SET = new Set<string>(RUNNING_METRIC_OPTIONS.map((o) => o.id));
@@ -148,7 +300,12 @@ export function readDashboardRunningMetrics(): RunningDashboardMetricId[] {
     }
 }
 
-export default function TrainingStatusCard() {
+interface TrainingStatusCardProps {
+    stats?: any;
+}
+
+export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = {}) {
+    const userMetrics = useUserMetrics();
     const {
         marathonShape,
         vdot,
@@ -174,7 +331,7 @@ export default function TrainingStatusCard() {
         maxAtl,
         ctlPercent,
         atlPercent
-    } = useUserMetrics();
+    } = userMetrics;
 
     const [showAbsoluteAtl, setShowAbsoluteAtl] = useState(false);
     const [showAbsoluteCtl, setShowAbsoluteCtl] = useState(false);
@@ -190,9 +347,11 @@ export default function TrainingStatusCard() {
         };
         loadPrefs();
         window.addEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, loadPrefs);
+        window.addEventListener('runflow-dashboard-layout-change', loadPrefs);
         window.addEventListener('storage', loadPrefs);
         return () => {
             window.removeEventListener(EVENT_DASHBOARD_LAYOUT_CHANGE, loadPrefs);
+            window.removeEventListener('runflow-dashboard-layout-change', loadPrefs);
             window.removeEventListener('storage', loadPrefs);
         };
     }, []);
@@ -362,60 +521,63 @@ export default function TrainingStatusCard() {
         </div>
     );
 
-    const renderCyclingProgressBars = () => (
-        <div className="space-y-5 flex-1 flex flex-col justify-center border-t border-line pt-6">
-            {/* Bike Fatigue (ATL) */}
-            <div className="flex items-center gap-3">
-                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Bike Fatigue (ATL)</div>
-                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
-                    <div className="h-full bg-negative transition-all duration-500" style={{ width: `${Math.min(100, atlBike)}%` }} />
+    const renderCyclingProgressBars = () => {
+        const plannedBikeTss = (stats as any)?.weeklyPlannedBikeTss || 300;
+        return (
+            <div className="space-y-5 flex-1 flex flex-col justify-center border-t border-line pt-6">
+                {/* Bike Fatigue (ATL) */}
+                <div className="flex items-center gap-3">
+                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Bike Fatigue (ATL)</div>
+                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                        <div className="h-full bg-negative transition-all duration-500" style={{ width: `${Math.min(100, atlBike)}%` }} />
+                    </div>
+                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-negative">
+                        {atlBike > 0 ? atlBike : '0'}
+                    </div>
                 </div>
-                <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-negative">
-                    {atlBike > 0 ? atlBike : '0'}
-                </div>
-            </div>
 
-            {/* Bike Fitness (CTL) */}
-            <div className="flex items-center gap-3">
-                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Bike Fitness (CTL)</div>
-                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
-                    <div className="h-full bg-accent-blue transition-all duration-500" style={{ width: `${Math.min(100, ctlBike)}%` }} />
+                {/* Bike Fitness (CTL) */}
+                <div className="flex items-center gap-3">
+                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Bike Fitness (CTL)</div>
+                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                        <div className="h-full bg-accent-blue transition-all duration-500" style={{ width: `${Math.min(100, ctlBike)}%` }} />
+                    </div>
+                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-blue">
+                        {ctlBike > 0 ? ctlBike : '0'}
+                    </div>
                 </div>
-                <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-blue">
-                    {ctlBike > 0 ? ctlBike : '0'}
-                </div>
-            </div>
 
-            {/* Bike Stress Balance (TSB) */}
-            <div className="flex items-center gap-3">
-                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Bike Stress Bal.</div>
-                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden relative">
-                    <div className="absolute left-1/2 w-[1px] h-full bg-line" />
-                    <div
-                        className={`h-full ${tsbBike >= 0 ? 'bg-positive' : 'bg-workout-tempo'} absolute transition-all duration-500`}
-                        style={{
-                            width: `${Math.min(50, Math.abs(tsbBike))}%`,
-                            left: tsbBike >= 0 ? '50%' : `${50 - Math.min(50, Math.abs(tsbBike))}%`
-                        }}
-                    />
+                {/* Bike Stress Balance (TSB) */}
+                <div className="flex items-center gap-3">
+                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Bike Stress Bal.</div>
+                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden relative">
+                        <div className="absolute left-1/2 w-[1px] h-full bg-line" />
+                        <div
+                            className={`h-full ${tsbBike >= 0 ? 'bg-positive' : 'bg-workout-tempo'} absolute transition-all duration-500`}
+                            style={{
+                                width: `${Math.min(50, Math.abs(tsbBike))}%`,
+                                left: tsbBike >= 0 ? '50%' : `${50 - Math.min(50, Math.abs(tsbBike))}%`
+                            }}
+                        />
+                    </div>
+                    <div className={`w-14 text-right text-sm font-mono tabular-nums font-semibold ${bikeTsbStatus.color}`}>
+                        {tsbBike >= 0 ? `+${tsbBike}` : tsbBike}
+                    </div>
                 </div>
-                <div className={`w-14 text-right text-sm font-mono tabular-nums font-semibold ${bikeTsbStatus.color}`}>
-                    {tsbBike >= 0 ? `+${tsbBike}` : tsbBike}
-                </div>
-            </div>
 
-            {/* Weekly Bike TSS */}
-            <div className="flex items-center gap-3">
-                <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Weekly Bike TSS</div>
-                <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
-                    <div className="h-full bg-accent-purple transition-all duration-500" style={{ width: `${Math.min(100, (weeklyBikeTss / 400) * 100)}%` }} />
-                </div>
-                <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-purple underline decoration-accent-purple/30 underline-offset-2">
-                    {weeklyBikeTss > 0 ? weeklyBikeTss : '0'}
+                {/* Weekly Bike TSS */}
+                <div className="flex items-center gap-3">
+                    <div className="w-32 text-xs text-foreground-muted font-semibold truncate">Weekly Bike TSS</div>
+                    <div className="flex-1 h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                        <div className="h-full bg-accent-purple transition-all duration-500" style={{ width: `${Math.min(100, (weeklyBikeTss / plannedBikeTss) * 100)}%` }} />
+                    </div>
+                    <div className="w-14 text-right text-sm font-mono tabular-nums font-semibold text-accent-purple underline decoration-accent-purple/30 underline-offset-2">
+                        {weeklyBikeTss > 0 ? weeklyBikeTss : '0'}
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     // ─── MODE 1: DUAL_BOXES (Dual Sport Cards — Running Status + Cycling Status) ───
     if (layoutMode === 'DUAL_BOXES') {
@@ -541,6 +703,11 @@ export default function TrainingStatusCard() {
     }
 
     // ─── MODES 2, 3, 4: SINGLE CARD (COMBINED_STRIP / CYCLING_HERO / CLASSIC_RUN) ───
+    const isCyclist = layoutMode === 'CYCLING_HERO' || (currentWeekMileage === 0 && (weeklyBikeKm > 0 || weeklyBikeTss > 0 || activeFtpWatts > 0));
+    const middleCyclingOptions = layoutMode === 'CYCLING_HERO'
+        ? CYCLING_METRIC_OPTIONS.filter((opt) => ['avgEf', 'weeklyBikeKm', 'ctlBike', 'tsbBike'].includes(opt.id))
+        : activeCyclingOptions;
+
     return (
         <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px] relative">
             <h2 className="text-lg font-semibold text-foreground-muted mb-5 shrink-0">
@@ -562,6 +729,25 @@ export default function TrainingStatusCard() {
                             {wPerKg > 0 && (
                                 <p className="text-[10px] font-mono text-accent-cyan mt-0.5">{wPerKg.toFixed(2)} W/kg</p>
                             )}
+                        </div>
+                    </div>
+                ) : isCyclist ? (
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-md bg-accent-purple/15 flex items-center justify-center shrink-0">
+                            <Bike className="w-5 h-5 text-accent-purple" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-foreground-muted font-semibold leading-tight">Weekly Cycling</p>
+                            <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
+                                {weeklyBikeKm > 0 ? `${weeklyBikeKm} km` : weeklyBikeTss > 0 ? `${weeklyBikeTss} TSS` : activeFtpWatts > 0 ? `${activeFtpWatts}W` : '0 km'}
+                            </p>
+                            <p className="text-[10px] font-mono text-accent-cyan mt-0.5">
+                                {weeklyBikeKm > 0 && weeklyBikeTss > 0
+                                    ? `${weeklyBikeTss} TSS`
+                                    : activeFtpWatts > 0
+                                    ? `${activeFtpWatts}W Active FTP`
+                                    : 'Cycling Load'}
+                            </p>
                         </div>
                     </div>
                 ) : (
@@ -599,9 +785,9 @@ export default function TrainingStatusCard() {
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 mt-0.5 text-[10px] font-mono text-foreground-muted">
                             {vdot > 0 && layoutMode !== 'CYCLING_HERO' && <span>Run VDOT: {vdot.toFixed(1)}</span>}
-                            {cyclingVo2max > 0 && layoutMode !== 'CLASSIC_RUN' && (
+                            {cyclingVo2max > 0 && layoutMode !== 'CLASSIC_RUN' && layoutMode !== 'CYCLING_HERO' && (
                                 <span className="text-accent-orange font-semibold">
-                                    {vdot > 0 && layoutMode !== 'CYCLING_HERO' ? '· ' : ''}Bike VO2: {cyclingVo2max.toFixed(1)}
+                                    {vdot > 0 ? '· ' : ''}Bike VO2: {cyclingVo2max.toFixed(1)}
                                 </span>
                             )}
                         </div>
@@ -610,7 +796,7 @@ export default function TrainingStatusCard() {
             </div>
 
             {/* Customizable Cycling Metrics Strip (Configured in App Settings) */}
-            {(layoutMode === 'COMBINED_STRIP' || layoutMode === 'CYCLING_HERO') && activeCyclingOptions.length > 0 && (
+            {(layoutMode === 'COMBINED_STRIP' || layoutMode === 'CYCLING_HERO') && middleCyclingOptions.length > 0 && (
                 <div className="mb-5 p-3 rounded-md bg-background-tertiary/70 border border-line space-y-2 shrink-0">
                     <div className="flex items-center justify-between">
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-accent-cyan flex items-center gap-1">
@@ -619,7 +805,7 @@ export default function TrainingStatusCard() {
                         </span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-2">
-                        {activeCyclingOptions.map((opt) => (
+                        {middleCyclingOptions.map((opt) => (
                             <div key={opt.id} className="p-2 rounded bg-background-secondary border border-line/70">
                                 <span className="block text-[10px] text-foreground-muted truncate" title={opt.label}>
                                     {opt.shortLabel}

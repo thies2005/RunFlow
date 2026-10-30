@@ -443,7 +443,7 @@ internal object WebPlanNoRaceGenerator {
             workouts.add(
                 WebScheduledWorkout(
                     dayOffset = d, type = "STRENGTH",
-                    description = "Strength: 45min",
+                    description = "Strength & Gym: 45min",
                     totalDistance = 0.0, targetPace = 0.0, targetDuration = 2700.0,
                 )
             )

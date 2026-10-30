@@ -55,6 +55,9 @@ data class WorkoutSnapshotDto(
     val targetRpe: Int? = null,
     val plannedTss: Double? = null,
     val sport: String = "RUN",
+    val suggestedActivityId: String? = null,
+    val dismissedActivityId: String? = null,
+    val adaptationType: String? = null,
 )
 
 fun WorkoutEntity.toSnapshotDto(): WorkoutSnapshotDto = WorkoutSnapshotDto(
@@ -90,6 +93,9 @@ fun WorkoutEntity.toSnapshotDto(): WorkoutSnapshotDto = WorkoutSnapshotDto(
     targetRpe = targetRpe,
     plannedTss = plannedTss,
     sport = sport,
+    suggestedActivityId = suggestedActivityId,
+    dismissedActivityId = dismissedActivityId,
+    adaptationType = adaptationType,
 )
 
 fun WorkoutSnapshotDto.toEntity(dirty: Boolean = false): WorkoutEntity = WorkoutEntity(
@@ -126,6 +132,9 @@ fun WorkoutSnapshotDto.toEntity(dirty: Boolean = false): WorkoutEntity = Workout
     targetRpe = targetRpe,
     plannedTss = plannedTss,
     sport = sport,
+    suggestedActivityId = suggestedActivityId,
+    dismissedActivityId = dismissedActivityId,
+    adaptationType = adaptationType,
 )
 
 fun List<WorkoutEntity>.toSnapshotJson(): String =

@@ -143,6 +143,24 @@ class StreamMathTest {
     }
 
     @Test
+    fun `run with power preserves pace, gap, and doubled cadence`() {
+        val s = StreamMath.build(
+            ActivityStreamsDto(
+                time = listOf(0.0, 5.0, 10.0),
+                velocitySmooth = listOf(3.0, 3.0, 3.0),
+                altitude = listOf(100.0, 100.0, 100.0),
+                cadence = listOf(88.0, 90.0, 91.0),
+                watts = listOf(220.0, 230.0, 240.0),
+            ),
+            isRide = false,
+        )
+        assertTrue(s.hasPace)
+        assertTrue(s.hasGap)
+        assertEquals(listOf(176.0, 180.0, 182.0), s.cadence)
+        assertEquals(listOf(220.0, 230.0, 240.0), s.watts)
+    }
+
+    @Test
     fun `short series are empty`() {
         val s = StreamMath.build(ActivityStreamsDto(time = listOf(0.0)))
         assertTrue(s.isEmpty)

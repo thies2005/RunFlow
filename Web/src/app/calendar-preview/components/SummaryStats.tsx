@@ -11,22 +11,26 @@ interface SummaryStatsProps {
 }
 
 export function SummaryStats({ period, fitness }: SummaryStatsProps) {
+    const plannedTss = period.plannedTss || 0;
+    const actualTss = period.tss || 0;
+    const loadPct = plannedTss > 0 ? Math.round((actualTss / plannedTss) * 100) : 0;
+
     const cards = [
+        {
+            label: 'Actual vs. Planned TSS',
+            value: `${actualTss.toFixed(0)} / ${plannedTss.toFixed(0)}`,
+            sub: `${loadPct}% of scheduled load`,
+            icon: ClipboardList,
+            color: 'text-workout-tempo',
+            bg: 'bg-workout-tempo/10',
+        },
         {
             label: 'Period TRIMP',
             value: period.trimp.toFixed(0),
-            sub: `TSS ${period.tss.toFixed(0)}`,
+            sub: 'heart-rate load',
             icon: Activity,
             color: 'text-negative',
             bg: 'bg-negative/10',
-        },
-        {
-            label: 'Planned TSS',
-            value: period.plannedTss.toFixed(0),
-            sub: 'scheduled load',
-            icon: ClipboardList,
-            color: 'text-foreground-secondary',
-            bg: 'bg-background-tertiary',
         },
         {
             label: 'Avg VO₂max',

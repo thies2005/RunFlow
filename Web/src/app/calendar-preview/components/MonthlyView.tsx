@@ -11,17 +11,27 @@ import type { MockActivity, MockWorkout } from './mockData';
 interface MonthlyViewProps {
     month: Date;
     days: Map<string, DayEntry>;
+    weeksCount?: number;
     onWorkoutClick?: (workout: MockWorkout) => void;
     onActivityClick?: (activity: MockActivity) => void;
 }
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-export function MonthlyView({ month, days, onWorkoutClick, onActivityClick }: MonthlyViewProps) {
+export function MonthlyView({ month, days, weeksCount, onWorkoutClick, onActivityClick }: MonthlyViewProps) {
     const weeks = useMemo(() => {
         const monthStart = startOfMonth(month);
-        const monthEnd = endOfMonth(month);
         const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+        if (weeksCount === 4) {
+            const rows: Date[][] = [];
+            let cur = gridStart;
+            for (let w = 0; w < 4; w++) {
+                rows.push(Array.from({ length: 7 }, (_, i) => addDays(cur, i)));
+                cur = addDays(cur, 7);
+            }
+            return rows;
+        }
+        const monthEnd = endOfMonth(month);
         const rows: Date[][] = [];
         let cur = gridStart;
         while (cur <= monthEnd) {
@@ -29,7 +39,14 @@ export function MonthlyView({ month, days, onWorkoutClick, onActivityClick }: Mo
             cur = addDays(cur, 7);
         }
         return rows;
-    }, [month]);
+    }, [month, weeksCount]);
+
+    const gridRowsClass =
+        weeks.length === 4
+            ? 'grid-rows-4'
+            : weeks.length === 5
+            ? 'grid-rows-5'
+            : 'grid-rows-6';
 
     return (
         <div className="flex flex-col h-full">
@@ -46,7 +63,7 @@ export function MonthlyView({ month, days, onWorkoutClick, onActivityClick }: Mo
             </div>
 
             {/* grid */}
-            <div className="flex-1 grid grid-rows-6 min-h-0">
+            <div className={`flex-1 grid ${gridRowsClass} min-h-0`}>
                 {weeks.map((week, wi) => (
                     <div key={wi} className="grid grid-cols-7 min-h-0">
                         {week.map((day) => (
@@ -79,7 +96,7 @@ function DayCell({
     onWorkoutClick?: (workout: MockWorkout) => void;
     onActivityClick?: (activity: MockActivity) => void;
 }) {
-    const key = day.toISOString().split('T')[0];
+    const key = format(day, 'yyyy-MM-dd');
     const { isOver, setNodeRef } = useDroppable({
         id: `day-${key}`,
         data: { date: key },
@@ -101,7 +118,8 @@ function DayCell({
             ref={setNodeRef}
             className={`
                 relative flex flex-col p-1 border-b border-r border-line min-h-[78px]
-                ${inMonth ? fill : 'bg-background'}
+                ${fill || 'bg-background'}
+                ${!inMonth ? 'opacity-75' : ''}
                 ${today ? 'ring-1 ring-inset ring-accent-orange' : ''}
                 ${isOver ? 'ring-2 ring-inset ring-accent-orange bg-accent-orange/10' : ''}
                 hover:brightness-110 transition-[filter]
@@ -114,13 +132,13 @@ function DayCell({
                 >
                     {format(day, 'd')}
                 </span>
-                {trimp > 0 && inMonth && (
+                {trimp > 0 && (
                     <span className="text-[9px] text-foreground-muted font-medium font-mono">{trimp.toFixed(0)}</span>
                 )}
             </div>
 
             {/* workout dots / planned dots */}
-            {inMonth && entry && (
+            {entry && (
                 <div className="flex-1 flex flex-col gap-0.5 mt-1 overflow-hidden">
                     {/* completed activities */}
                     {completedActivities.slice(0, 3).map((a) => {
@@ -150,14 +168,14 @@ function DayCell({
             )}
 
             {/* leftover count */}
-            {inMonth && entry && completedActivities.length + plannedWorkouts.filter((w) => !w.completed).length > 5 && (
+            {entry && completedActivities.length + plannedWorkouts.filter((w) => !w.completed).length > 5 && (
                 <span className="text-[8px] text-foreground-muted mt-0.5">
                     +{completedActivities.length + plannedWorkouts.filter((w) => !w.completed).length - 5}
                 </span>
             )}
 
             {/* unfulfilled-plan indicator */}
-            {inMonth && hasUnfinishedPlan && entry && completedActivities.length === 0 && (
+            {hasUnfinishedPlan && entry && completedActivities.length === 0 && (
                 <span className="absolute bottom-0.5 right-1 text-[8px] text-workout-tempo" title="Planned, not yet completed">●</span>
             )}
         </div>

@@ -165,7 +165,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
     const css = config.swimCssSecPer100m && config.swimCssSecPer100m > 0
         ? Math.round(config.swimCssSecPer100m)
         : estimateSwimPaceFromVdot(vdot);
-    const bikeFtp = config.ftpWatts && config.ftpWatts > 0 ? config.ftpWatts : estimateBikeFtpFromVdot(vdot);
+    const bikeFtp = config.ftpWatts && config.ftpWatts > 0 ? config.ftpWatts : estimateBikeFtpFromVdot(vdot, config.weightKg ?? 70);
     const bikeZones = calculateBikeZones(bikeFtp);
 
     const taperFractions = TRI_TAPER_FRACTIONS[effectiveRaceType] || [0.80, 0.60];

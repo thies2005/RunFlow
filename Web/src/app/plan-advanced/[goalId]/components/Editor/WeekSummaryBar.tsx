@@ -20,6 +20,9 @@ interface WeekSummaryBarProps {
     runDistance: number;
     swimDistance: number;
     bikeDuration: number;
+    strengthDuration?: number;
+    actualWeekTss?: number;
+    plannedTss?: number;
     focusGoal?: string;
     goalId: string;
     onPhaseChange: (phase: PlanPhase) => void;
@@ -31,11 +34,23 @@ export function WeekSummaryBar({
     runDistance,
     swimDistance,
     bikeDuration,
+    strengthDuration = 0,
+    actualWeekTss = 0,
+    plannedTss = 0,
     focusGoal,
     goalId,
     onPhaseChange,
 }: WeekSummaryBarProps) {
     const phaseColor = PHASE_COLORS[phase] || PHASE_COLORS.OFF;
+
+    const hasTss = plannedTss > 0 || actualWeekTss > 0;
+    const pct = plannedTss > 0 ? Math.round((actualWeekTss / plannedTss) * 100) : 0;
+    const complianceBadgeClass =
+        pct >= 85 && pct <= 115
+            ? 'bg-positive/15 text-positive border-positive/30'
+            : (pct >= 60 && pct < 85) || (pct > 115 && pct <= 135)
+            ? 'bg-workout-tempo/15 text-workout-tempo border-workout-tempo/30'
+            : 'bg-negative/15 text-negative border-negative/30';
 
     return (
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-glass-border bg-background-secondary">
@@ -62,6 +77,16 @@ export function WeekSummaryBar({
                 {bikeDuration > 0 && (
                     <span className="text-xs text-positive font-medium font-mono tabular-nums">
                         🚴 {Math.round(bikeDuration / 60)}m
+                    </span>
+                )}
+                {strengthDuration > 0 && (
+                    <span className="text-xs text-foreground font-medium font-mono tabular-nums">
+                        🏋️ {Math.round(strengthDuration / 60)}m
+                    </span>
+                )}
+                {hasTss && (
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono font-medium border ${complianceBadgeClass}`}>
+                        Effort: {actualWeekTss} / {plannedTss} TSS ({pct}%)
                     </span>
                 )}
                 {focusGoal && (

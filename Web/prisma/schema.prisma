@@ -48,6 +48,8 @@ model User {
   autoEstimateFtp                  Boolean              @default(true)
   matchToMyWhoosh                  Boolean              @default(false)
   swimCssSecPer100m         Int?
+  primaryLoadMetric     String               @default("TSS")
+  uiPreferences         Json?
   mcpOAuthCodes             McpOAuthCode[]
   mcpOAuthTokens            McpOAuthToken[]
   lastSyncAt            DateTime?

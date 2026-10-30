@@ -66,6 +66,9 @@ class WebPlanEngineParityTest {
         val customSwimDistM: Double? = null,
         val customBikeDistM: Double? = null,
         val customRunDistM: Double? = null,
+        val swimCssSecPer100m: Double? = null,
+        val weightKg: Double? = null,
+        val ftpWatts: Int? = null,
     )
 
     @Serializable
@@ -257,6 +260,9 @@ class WebPlanEngineParityTest {
         customSwimDistM = c.customSwimDistM,
         customBikeDistM = c.customBikeDistM,
         customRunDistM = c.customRunDistM,
+        swimCssSecPer100m = c.swimCssSecPer100m,
+        weightKg = c.weightKg,
+        ftpWatts = c.ftpWatts,
     )
 
     private fun assertEqualsDouble(message: String, expected: Double, actual: Double, tolerance: Double) {

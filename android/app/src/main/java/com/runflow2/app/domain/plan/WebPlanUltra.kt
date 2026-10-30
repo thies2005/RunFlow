@@ -34,12 +34,12 @@ internal object WebPlanUltraGenerator {
 
     private val TAPER_FRACTIONS: Map<String, List<Double>> = mapOf(
         "FIFTY_K" to listOf(0.75, 0.55),
-        "FIFTY_MILE" to listOf(0.75, 0.60, 0.45),
-        "HUNDRED_K" to listOf(0.80, 0.65, 0.50),
-        "HUNDRED_MILE" to listOf(0.80, 0.65, 0.50, 0.35),
-        "TWELVE_HOUR" to listOf(0.75, 0.60),
+        "FIFTY_MILE" to listOf(0.75, 0.55),
+        "HUNDRED_K" to listOf(0.75, 0.55),
+        "HUNDRED_MILE" to listOf(0.80, 0.65, 0.50),
+        "TWELVE_HOUR" to listOf(0.75, 0.55),
         "TWENTY_FOUR_HOUR" to listOf(0.80, 0.65, 0.50),
-        "BACKYARD_ULTRA" to listOf(0.75, 0.60, 0.45),
+        "BACKYARD_ULTRA" to listOf(0.75, 0.55),
     )
 
     private val RACE_DISTANCE_KM: Map<String, String> = mapOf(
@@ -73,7 +73,13 @@ internal object WebPlanUltraGenerator {
 
         val weekStart = startDate.minusDays(jsDay(startDate).toLong())
 
-        val totalWeeks = maxOf(1, ceil(ChronoUnit.DAYS.between(weekStart, raceDate) / 7.0).toInt())
+        val totalWeeks = minOf(
+            WebPlanEngine.PLAN_CONSTANTS.MAX_TOTAL_WEEKS,
+            maxOf(
+                1,
+                (ChronoUnit.DAYS.between(weekStart, raceDate) / 7).toInt() + 1,
+            ),
+        )
 
         val minStart = WebPlanEngine.getMinStartVolume(config.raceType)
         val startVolume: Double = if (config.startWeeklyMileage != null && config.startWeeklyMileage > 0) {
@@ -84,10 +90,10 @@ internal object WebPlanUltraGenerator {
         }
 
         val paces = Personalization.trainingPaces(vdot)
-        val ultraEasyPace = jr(paces.easy.maxSecPerKm * 1.1)
+        val ultraEasyPace = computeUltraEventPace(raceType, paces)
 
         val taperFractions = TAPER_FRACTIONS[raceType]
-        val defaultTaperWeeks = taperFractions?.size ?: 3
+        val defaultTaperWeeks = taperFractions?.size ?: 2
         val phases = WebPlanEngine.resolvePhaseBudget(
             totalWeeks,
             config.taperWeeks,
@@ -133,6 +139,7 @@ internal object WebPlanUltraGenerator {
         var lastNonRecoveryVolume = startVolume
         var effectiveWeekIndex = 0
         var baseBuildCounter = 0
+        var b2bWeeksCompleted = 0
 
         val workouts = ArrayList<WebGeneratedWorkout>()
 
@@ -153,7 +160,7 @@ internal object WebPlanUltraGenerator {
                 val raceWeekWorkouts = generateUltraRaceWeek(
                     raceType = raceType,
                     ultraEasyPace = ultraEasyPace,
-                    isTimedEvent = isTimedEvent,
+                    customDistanceM = config.customDistanceM,
                 )
                 for (w in raceWeekWorkouts) {
                     var specificDate = raceDate
@@ -169,6 +176,7 @@ internal object WebPlanUltraGenerator {
                             totalDistance = w.totalDistance,
                             targetPace = w.targetPace,
                             targetDuration = w.targetDuration,
+                            targetHrZone = w.targetHrZone,
                             phase = "RACE_WEEK",
                         )
                     )
@@ -207,11 +215,12 @@ internal object WebPlanUltraGenerator {
                     baseBuildCounter++
                     isRecoveryWeek = baseBuildCounter % WebPlanEngine.PLAN_CONSTANTS.STEP_LOADING_CYCLE == 0
                     weekVolumeCap = if (isRecoveryWeek) {
-                        jr(lastNonRecoveryVolume * weeklyGrowthRate * WebPlanEngine.PLAN_CONSTANTS.RECOVERY_WEEK_FACTOR)
+                        jr(lastNonRecoveryVolume * WebPlanEngine.PLAN_CONSTANTS.RECOVERY_WEEK_FACTOR)
                     } else {
                         effectiveWeekIndex++
-                        var cap = jr(startVolume * weeklyGrowthRate.pow(effectiveWeekIndex.toDouble()))
-                        cap = minOf(cap, effectivePeakVolume)
+                        val targetVol = jr(startVolume * weeklyGrowthRate.pow(effectiveWeekIndex.toDouble()))
+                        val maxAllowed = jr(lastNonRecoveryVolume * WebPlanEngine.PLAN_CONSTANTS.WEEKLY_GROWTH_CAP)
+                        val cap = minOf(targetVol, maxAllowed, effectivePeakVolume)
                         lastNonRecoveryVolume = cap
                         cap
                     }
@@ -239,7 +248,11 @@ internal object WebPlanUltraGenerator {
                 isBackyardUltra = isBackyardUltra,
                 isTimedEvent = isTimedEvent,
                 isRecoveryWeek = isRecoveryWeek,
+                b2bWeekIndex = b2bWeeksCompleted,
             )
+            if ((phase == "ENDURANCE" || phase == "PEAK" || phase == "MENTAL_PREP") && !isRecoveryWeek) {
+                b2bWeeksCompleted++
+            }
 
             val totalRunDistance = weekSchedule.filter { isUltraRun(it.type) }.sumOf { it.totalDistance }
 
@@ -247,6 +260,13 @@ internal object WebPlanUltraGenerator {
                 scaleUltraToVolumeCap(weekSchedule, weekVolumeCap)
             } else {
                 weekSchedule
+            }
+
+            val scheduledRunMeters = finalSchedule
+                .filter { isUltraRun(it.type) }
+                .sumOf { it.totalDistance }
+            if (!isRecoveryWeek && phase != "TAPER" && phase != "MENTAL_PREP" && scheduledRunMeters > 0.0) {
+                lastNonRecoveryVolume = scheduledRunMeters
             }
 
             for (w in finalSchedule) {
@@ -261,6 +281,7 @@ internal object WebPlanUltraGenerator {
                         totalDistance = w.totalDistance,
                         targetPace = w.targetPace,
                         targetDuration = w.targetDuration,
+                        targetHrZone = w.targetHrZone,
                         phase = phase,
                     )
                 )
@@ -361,6 +382,7 @@ internal object WebPlanUltraGenerator {
         isBackyardUltra: Boolean,
         isTimedEvent: Boolean,
         isRecoveryWeek: Boolean,
+        b2bWeekIndex: Int = 0,
     ): List<WebScheduledWorkout> {
         val workouts = ArrayList<WebScheduledWorkout>()
         val usedDays = HashSet<Int>()
@@ -370,16 +392,31 @@ internal object WebPlanUltraGenerator {
             for (rd in restDays) usedDays.add(rd)
         }
 
-        val longRunDist = getUltraLongRunDistance(raceType, weeklyVolume, paces, maxLongRunKm)
-        val backToBackDist = jr(longRunDist * BACK_TO_BACK_RATIO)
+        val rawLongRunDist = getUltraLongRunDistance(raceType, weeklyVolume, paces, maxLongRunKm)
+        val longRunDist = if (isRecoveryWeek) {
+            maxOf(WebPlanEngine.PLAN_CONSTANTS.MIN_LONG_RUN, jr(rawLongRunDist * 0.80 / 100) * 100)
+        } else rawLongRunDist
 
-        val hasQuality = runsPerWeek >= 4 && phase != "TAPER" && phase != "MENTAL_PREP" && !isRecoveryWeek
+        val hasBackToBack = !isRecoveryWeek && (phase == "ENDURANCE" || phase == "PEAK" || phase == "MENTAL_PREP")
+        val b2bRatio = if (b2bWeekIndex == 0) 0.40 else if (b2bWeekIndex == 1) 0.50 else BACK_TO_BACK_RATIO
+        val backToBackDist = if (hasBackToBack) jr(longRunDist * b2bRatio / 100) * 100 else 0.0
+
+        val hasTimedSteady = isTimedEvent && !isRecoveryWeek && (phase == "ENDURANCE" || phase == "PEAK")
+        val hasQuality = runsPerWeek >= 4 && phase != "TAPER" && phase != "MENTAL_PREP" && !isRecoveryWeek && !hasTimedSteady
         val qualitySession = if (hasQuality) getUltraQualitySession(phase, paces, ultraEasyPace) else null
-        val qualityDist = qualitySession?.totalDistance ?: 0.0
 
-        val hasBackToBack = phase == "ENDURANCE" || phase == "PEAK" || phase == "MENTAL_PREP"
+        var timedSteadyDist = 0.0
+        var timedSteadyDuration = 0.0
+        if (hasTimedSteady) {
+            val maxSteadyDist = maxOf(10000.0, minOf(24000.0, jr(weeklyVolume * 0.24 / 100) * 100.0))
+            timedSteadyDist = maxSteadyDist
+            timedSteadyDuration = jr((timedSteadyDist / 1000.0) * ultraEasyPace).toDouble()
+        }
+
+        val qualityDist = if (hasTimedSteady) timedSteadyDist else (qualitySession?.totalDistance ?: 0.0)
+
         val longRunCount = if (hasBackToBack) 2 else 1
-        val qualityRunCount = if (hasQuality) 1 else 0
+        val qualityRunCount = if (hasQuality || hasTimedSteady) 1 else 0
         val easyRunsCount = maxOf(0, runsPerWeek - longRunCount - qualityRunCount)
 
         val remainingVol = maxOf(0.0, weeklyVolume - longRunDist - backToBackDist - qualityDist)
@@ -446,11 +483,11 @@ internal object WebPlanUltraGenerator {
                     description = longRunDesc,
                     totalDistance = longRunDist,
                     targetPace = longRunPace,
-                    targetDuration = 0.0,
+                    targetDuration = jr((longRunDist / 1000.0) * longRunPace),
                 )
             )
 
-            if (hasBackToBack) {
+            if (hasBackToBack && backToBackDist > 0.0) {
                 val adjacentCandidates = listOf(
                     if (day < 6) day + 1 else null,
                     if (day > 0) day - 1 else null,
@@ -473,14 +510,29 @@ internal object WebPlanUltraGenerator {
                             description = b2bDesc,
                             totalDistance = backToBackDist,
                             targetPace = ultraEasyPace,
-                            targetDuration = 0.0,
+                            targetDuration = jr((backToBackDist / 1000.0) * ultraEasyPace),
                         )
                     )
                 }
             }
         }
 
-        if (hasQuality && qualitySession != null) {
+        if (hasTimedSteady && timedSteadyDist > 0.0) {
+            val paceRunDay = getAvailableDay(3, hardSessionDays)
+            usedDays.add(paceRunDay)
+            hardSessionDays.add(paceRunDay)
+            workouts.add(
+                WebScheduledWorkout(
+                    dayOffset = paceRunDay,
+                    type = "TEMPO",
+                    description = "Steady State: ${WebPlanEngine.toFixed1(timedSteadyDist / 1000.0)}km @ Target Race Pace (${formatPace(ultraEasyPace)}/km)",
+                    totalDistance = timedSteadyDist,
+                    targetPace = ultraEasyPace,
+                    targetDuration = timedSteadyDuration,
+                    targetHrZone = 2,
+                )
+            )
+        } else if (hasQuality && qualitySession != null) {
             val day = getAvailableDay(3, hardSessionDays)
             usedDays.add(day)
             hardSessionDays.add(day)
@@ -490,14 +542,25 @@ internal object WebPlanUltraGenerator {
         val additionalRunsCount = maxOf(0, easyRunsCount)
         val easyRunDays = getUltraDistributedDays(additionalRunsCount, usedDays)
 
-        for (d in easyRunDays) {
+        for ((idx, d) in easyRunDays.withIndex()) {
             usedDays.add(d)
             val dayAfterHard = hardSessionDays.any { hd ->
                 val diff = (d - hd + 7) % 7
                 diff == 1
             }
 
-            if (dayAfterHard) {
+            if (phase == "MENTAL_PREP" && isBackyardUltra && idx == easyRunDays.size - 1) {
+                workouts.add(
+                    WebScheduledWorkout(
+                        dayOffset = d,
+                        type = "EASY",
+                        description = "Night Run: ${WebPlanEngine.toFixed1(easyDist / 1000)}km (sleep deprivation & headlamp practice)",
+                        totalDistance = easyDist,
+                        targetPace = ultraEasyPace,
+                        targetDuration = jr((easyDist / 1000.0) * ultraEasyPace),
+                    )
+                )
+            } else if (dayAfterHard) {
                 workouts.add(
                     WebScheduledWorkout(
                         dayOffset = d,
@@ -505,7 +568,7 @@ internal object WebPlanUltraGenerator {
                         description = "Recovery: ${WebPlanEngine.toFixed1(easyDist / 1000)}km",
                         totalDistance = easyDist,
                         targetPace = recoveryPace,
-                        targetDuration = 0.0,
+                        targetDuration = jr((easyDist / 1000.0) * recoveryPace),
                     )
                 )
             } else {
@@ -516,42 +579,7 @@ internal object WebPlanUltraGenerator {
                         description = "Easy: ${WebPlanEngine.toFixed1(easyDist / 1000)}km",
                         totalDistance = easyDist,
                         targetPace = easyPace,
-                        targetDuration = 0.0,
-                    )
-                )
-            }
-        }
-
-        if (phase == "MENTAL_PREP" && isBackyardUltra) {
-            val nightRunDay = getAvailableDay(5, hardSessionDays)
-            if (nightRunDay != -1 && !usedDays.contains(nightRunDay)) {
-                usedDays.add(nightRunDay)
-                workouts.add(
-                    WebScheduledWorkout(
-                        dayOffset = nightRunDay,
-                        type = "EASY",
-                        description = "Night Run: ${WebPlanEngine.toFixed1(easyDist / 1000)}km (sleep deprivation practice)",
-                        totalDistance = easyDist,
-                        targetPace = ultraEasyPace,
-                        targetDuration = 0.0,
-                    )
-                )
-            }
-        }
-
-        if (isTimedEvent && (phase == "ENDURANCE" || phase == "PEAK")) {
-            val targetHours = if (raceType == "TWELVE_HOUR") 3 else 4
-            val paceRunDay = getAvailableDay(2, hardSessionDays)
-            if (paceRunDay != -1 && !usedDays.contains(paceRunDay)) {
-                usedDays.add(paceRunDay)
-                workouts.add(
-                    WebScheduledWorkout(
-                        dayOffset = paceRunDay,
-                        type = "TEMPO",
-                        description = "Steady State: ${targetHours}h @ Target Race Pace",
-                        totalDistance = jr(easyDist * 1.5),
-                        targetPace = ultraEasyPace,
-                        targetDuration = targetHours * 3600.0,
+                        targetDuration = jr((easyDist / 1000.0) * easyPace),
                     )
                 )
             }
@@ -561,6 +589,13 @@ internal object WebPlanUltraGenerator {
         val freeDays = ArrayList<Int>()
         for (d in 0 until 7) {
             if (!usedDays.contains(d)) freeDays.add(d)
+        }
+        if (freeDays.size < remainingStrength) {
+            for (w in workouts) {
+                if ((w.type == "EASY" || w.type == "RECOVERY") && w.dayOffset != (preferredLongRunDay + 6) % 7) {
+                    if (!freeDays.contains(w.dayOffset)) freeDays.add(w.dayOffset)
+                }
+            }
         }
 
         for (d in freeDays) {
@@ -598,21 +633,21 @@ internal object WebPlanUltraGenerator {
         "BUILD" -> WebScheduledWorkout(
             0, "TEMPO",
             "Threshold: 8km @ ${formatPace(paces.threshold.toDouble())}",
-            10000.0,
+            10500.0,
             paces.threshold.toDouble(),
         )
 
         "ENDURANCE" -> WebScheduledWorkout(
             0, "TEMPO",
             "Steady: 10km @ Ultra Threshold",
-            12000.0,
+            12500.0,
             jr(paces.threshold.toDouble() + 15),
         )
 
         else -> WebScheduledWorkout(
             0, "TEMPO",
             "Steady: 12km @ Ultra Threshold",
-            14000.0,
+            14500.0,
             jr(paces.threshold.toDouble() + 15),
         )
     }
@@ -621,21 +656,48 @@ internal object WebPlanUltraGenerator {
     private fun generateUltraRaceWeek(
         raceType: String,
         ultraEasyPace: Double,
-        isTimedEvent: Boolean,
+        customDistanceM: Double? = null,
     ): List<WebScheduledWorkout> {
         val workouts = ArrayList<WebScheduledWorkout>()
         val usedDays = HashSet<Int>()
 
-        val raceLabel = RACE_DISTANCE_KM[raceType] ?: "Ultra"
+        val raceLabel = if (raceType == "CUSTOM_DISTANCE" && customDistanceM != null && customDistanceM > 0) {
+            "${WebPlanEngine.toFixed1(customDistanceM / 1000.0)}km"
+        } else {
+            RACE_DISTANCE_KM[raceType] ?: "Ultra"
+        }
+
+        val raceDistanceM: Double
+        val raceDurationS: Double
+        if (raceType == "TWELVE_HOUR") {
+            raceDurationS = 12.0 * 3600.0
+            raceDistanceM = jr((raceDurationS / ultraEasyPace) * 1000.0 / 100.0) * 100.0
+        } else if (raceType == "TWENTY_FOUR_HOUR") {
+            raceDurationS = 24.0 * 3600.0
+            raceDistanceM = jr((raceDurationS / ultraEasyPace) * 1000.0 / 100.0) * 100.0
+        } else if (raceType == "BACKYARD_ULTRA") {
+            val targetLaps = 8.0 // 8 hourly loops (53.6km) default simulation target
+            raceDistanceM = targetLaps * 6706.0
+            raceDurationS = targetLaps * 3600.0
+        } else {
+            raceDistanceM = if (customDistanceM != null && customDistanceM > 0) {
+                customDistanceM
+            } else {
+                RACE_DISTANCE_M[raceType] ?: 50000.0
+            }
+            raceDurationS = jr((raceDistanceM / 1000.0) * ultraEasyPace).toDouble()
+        }
+
         usedDays.add(0)
         workouts.add(
             WebScheduledWorkout(
                 dayOffset = 0,
                 type = "RACE",
                 description = "Race Day: $raceLabel",
-                totalDistance = RACE_DISTANCE_M[raceType] ?: 50000.0,
-                targetPace = 0.0,
-                targetDuration = 0.0,
+                totalDistance = raceDistanceM,
+                targetPace = ultraEasyPace,
+                targetDuration = raceDurationS,
+                targetHrZone = 2,
             )
         )
 
@@ -653,7 +715,7 @@ internal object WebPlanUltraGenerator {
                     description = "Shakeout: 3km Easy",
                     totalDistance = 3000.0,
                     targetPace = ultraEasyPace,
-                    targetDuration = 0.0,
+                    targetDuration = jr(3.0 * ultraEasyPace).toDouble(),
                 )
             )
         }
@@ -673,6 +735,13 @@ internal object WebPlanUltraGenerator {
         return weekSchedule.map { w ->
             if (!isUltraRun(w.type)) return@map w
             val newDist = floor(w.totalDistance * scaleFactor / 100) * 100
+            val newDur = if ((w.targetDuration ?: 0.0) > 0.0 && w.totalDistance > 0.0) {
+                jr(w.targetDuration!! * (newDist / w.totalDistance))
+            } else if ((w.targetPace ?: 0.0) > 0.0) {
+                jr((newDist / 1000.0) * w.targetPace!!)
+            } else 0.0
+            val distKm = WebPlanEngine.toFixed1(newDist / 1000.0)
+
             if (w.type == "LONG_RUN") {
                 if (w.description.contains("Back-to-Back")) {
                     val suffix = if (w.description.contains("@ Loop Pace")) {
@@ -682,21 +751,46 @@ internal object WebPlanUltraGenerator {
                     }
                     return@map w.copy(
                         totalDistance = newDist,
-                        description = "Back-to-Back: ${WebPlanEngine.toFixed1(newDist / 1000)}km $suffix",
+                        targetDuration = newDur,
+                        description = "Back-to-Back: ${distKm}km $suffix",
                     )
                 }
                 if (w.description.contains("fueling") || w.description.contains("walk/run")) {
                     return@map w.copy(
                         totalDistance = newDist,
-                        description = "Long Run: ${WebPlanEngine.toFixed1(newDist / 1000)}km @ Ultra Easy (fueling + walk/run strategy)",
+                        targetDuration = newDur,
+                        description = "Long Run: ${distKm}km @ Ultra Easy (fueling + walk/run strategy)",
                     )
                 }
                 return@map w.copy(
                     totalDistance = newDist,
-                    description = "Long Run: ${WebPlanEngine.toFixed1(newDist / 1000)}km @ Easy",
+                    targetDuration = newDur,
+                    description = "Long Run: ${distKm}km @ Easy",
                 )
             }
-            w.copy(totalDistance = newDist)
+            if (w.type == "EASY") {
+                val isNight = w.description.contains("Night Run")
+                return@map w.copy(
+                    totalDistance = newDist,
+                    targetDuration = newDur,
+                    description = if (isNight) "Night Run: ${distKm}km (sleep deprivation & headlamp practice)" else "Easy: ${distKm}km",
+                )
+            }
+            if (w.type == "RECOVERY") {
+                return@map w.copy(
+                    totalDistance = newDist,
+                    targetDuration = newDur,
+                    description = "Recovery: ${distKm}km",
+                )
+            }
+            if (w.type == "TEMPO" && w.description.startsWith("Steady State:")) {
+                return@map w.copy(
+                    totalDistance = newDist,
+                    targetDuration = newDur,
+                    description = "Steady State: ${distKm}km @ Target Race Pace",
+                )
+            }
+            w.copy(totalDistance = newDist, targetDuration = newDur)
         }
     }
 
@@ -717,6 +811,20 @@ internal object WebPlanUltraGenerator {
             selected.add(available[idx])
         }
         return selected
+    }
+
+    /** run-ultra.ts `computeUltraEventPace` (L63-75). */
+    private fun computeUltraEventPace(raceType: String, paces: Personalization.PersonTrainingPaces): Double {
+        if (raceType == "TWENTY_FOUR_HOUR") {
+            return maxOf(310.0, jr(paces.easy.maxSecPerKm * 1.32))
+        }
+        if (raceType == "TWELVE_HOUR") {
+            return maxOf(255.0, jr(paces.easy.maxSecPerKm * 1.18))
+        }
+        if (raceType == "BACKYARD_ULTRA") {
+            return maxOf(300.0, jr(paces.easy.maxSecPerKm * 1.25))
+        }
+        return jr(paces.easy.maxSecPerKm * 1.1)
     }
 
     /** run-ultra.ts `isUltraRun` (L690-692). */

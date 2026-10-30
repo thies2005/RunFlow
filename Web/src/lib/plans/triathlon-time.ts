@@ -9,6 +9,7 @@ interface TriathlonTimeInput {
     customSwimDistM?: number;
     customBikeDistM?: number;
     customRunDistM?: number;
+    weightKg?: number | null;
 }
 
 interface TriathlonTimeResult {
@@ -78,9 +79,16 @@ function bikePowerToSpeed(watts: number): number {
     return Math.pow(watts / 0.38, 1 / 3);
 }
 
-function computeTriathlonSplits(vdot: number, swimDistM: number, bikeDistM: number, runDistM: number, transitions: TransitionTimes): TriathlonTimeResult {
+function computeTriathlonSplits(
+    vdot: number,
+    swimDistM: number,
+    bikeDistM: number,
+    runDistM: number,
+    transitions: TransitionTimes,
+    weightKg: number = 70,
+): TriathlonTimeResult {
     const swimSeconds = (estimateSwimPaceFromVdot(vdot) * swimDistM) / 100;
-    const ftp = estimateBikeFtpFromVdot(vdot);
+    const ftp = estimateBikeFtpFromVdot(vdot, weightKg);
     const bikeSeconds = bikeDistM / bikePowerToSpeed(ftp * 0.75);
     const runSeconds = predictTimeForDistance(vdot, runDistM);
     const totalSeconds = swimSeconds + bikeSeconds + runSeconds + transitions.t1 + transitions.t2;
@@ -103,7 +111,7 @@ export function estimateTriathlonTime(input: TriathlonTimeInput): TriathlonTimeP
     const runDistM = (input.customRunDistM && input.customRunDistM > 0) ? input.customRunDistM : (TRI_RACE_RUN[fallbackRace] ?? TRI_RACE_RUN.SPRINT_TRI!);
     const transitions = TRI_TRANSITIONS[fallbackRace] ?? DEFAULT_TRANSITION;
 
-    const optimal = computeTriathlonSplits(input.vdot, swimDistM, bikeDistM, runDistM, transitions);
+    const optimal = computeTriathlonSplits(input.vdot, swimDistM, bikeDistM, runDistM, transitions, input.weightKg ?? 70);
 
     const isLongCourse = (swimDistM + bikeDistM + runDistM) / 1000 >= 100;
     const projRunMult = isLongCourse ? 1.15 : 1.10;

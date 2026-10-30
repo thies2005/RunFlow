@@ -143,7 +143,10 @@ data class UserDto(
     val ftpWatts: Int? = null,
     val autoEstimateFtp: Boolean? = null,
     val swimCssSecPer100m: Int? = null,
+    val primaryLoadMetric: String? = null,
 )
+
+typealias UserProfileDto = UserDto
 
 // ---------- activities ----------
 
@@ -271,6 +274,7 @@ data class UpdateProfileRequest(
     val ftpWatts: Int? = null,
     val autoEstimateFtp: Boolean? = null,
     val swimCssSecPer100m: Int? = null,
+    val primaryLoadMetric: String? = null,
 )
 
 @Serializable
@@ -323,6 +327,8 @@ data class PlanWorkoutDto(
     val targetRpe: Int? = null,
     val plannedTss: Double? = null,
     val sport: String? = null,
+    // ---- v16 linking & adaptation ----
+    val adaptationType: String? = null,
 )
 
 @Serializable
@@ -426,6 +432,8 @@ data class ImportWorkoutRequest(
     val targetRpe: Int? = null,
     val plannedTss: Double? = null,
     val sport: String? = null,
+    // ---- v16 linking & adaptation ----
+    val adaptationType: String? = null,
 )
 
 /** Response of POST /api/plans/import: new goal id + localId → server workout id. */
@@ -505,6 +513,9 @@ data class PatchWorkoutRequest(
     val targetRpe: Int? = null,
     val plannedTss: Double? = null,
     val sport: String? = null,
+    // ---- v16 linking & adaptation ----
+    val linkedActivityId: String? = null,
+    val adaptationType: String? = null,
 )
 
 @Serializable
@@ -540,6 +551,8 @@ data class CreateWorkoutRequest(
     val targetRpe: Int? = null,
     val plannedTss: Double? = null,
     val sport: String? = null,
+    // ---- v16 linking & adaptation ----
+    val adaptationType: String? = null,
 )
 
 /** Outbox payload for workout_create: the create body plus the owning goal. */

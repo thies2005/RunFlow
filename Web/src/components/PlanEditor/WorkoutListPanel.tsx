@@ -97,7 +97,10 @@ function DraggableWorkoutItem({
             </div>
 
             <div className={`w-2 h-2 rounded-full shrink-0 ${colors.dot}`} />
-            <span className={`truncate max-w-[110px] font-medium ${colors.text}`}>{name}</span>
+            {workout.isCompleted && (
+                <span className="text-positive font-bold text-xs shrink-0" title="Completed">✓</span>
+            )}
+            <span className={`truncate max-w-[220px] sm:max-w-[280px] font-medium ${colors.text}`}>{name}</span>
 
             {workout.description && (
                 <span className="text-foreground-muted truncate max-w-[130px] hidden sm:inline">
@@ -229,19 +232,41 @@ export function WorkoutListPanel({
     let runDistance = 0;
     let swimDistance = 0;
     let bikeDuration = 0;
+    let strengthDuration = 0;
     let totalPlannedTss = 0;
+    let actualWeekTss = 0;
 
     for (const w of week.workouts) {
-        if (w.workoutType.includes('SWIM')) {
+        const isBike =
+            w.sport === 'BIKE' ||
+            w.workoutType.includes('RIDE') ||
+            w.workoutType === 'BRICK' ||
+            (w.customName && /mywhoosh|zwift|indoor bike|trainer/i.test(w.customName));
+        const isSwim = w.sport === 'SWIM' || w.workoutType.includes('SWIM');
+        const isStrength =
+            w.sport === 'STRENGTH' ||
+            w.workoutType === 'STRENGTH' ||
+            (w.customName && /strength|gym|core|weights/i.test(w.customName));
+
+        if (isSwim) {
             swimDistance += w.targetDistance || 0;
-        } else if (w.workoutType.includes('RIDE') || w.workoutType === 'BRICK') {
+        } else if (isBike) {
             bikeDuration += w.targetDuration || 0;
-        } else if (w.workoutType !== 'STRENGTH' && w.workoutType !== 'CROSS_TRAINING' && w.workoutType !== 'REST') {
+        } else if (isStrength) {
+            strengthDuration += w.targetDuration || 0;
+        } else if (w.workoutType !== 'CROSS_TRAINING' && w.workoutType !== 'REST') {
             runDistance += w.targetDistance || 0;
         }
 
         const tss = w.plannedTss ?? calculateWorkoutPlannedTss(w as any);
         if (tss) totalPlannedTss += tss;
+
+        if (w.isCompleted) {
+            const actTss =
+                (w as any).actualTss ??
+                (w.plannedTss ?? (isStrength ? Math.round(((w.targetDuration || 3000) / 3600) * 36) : (tss || 40)));
+            actualWeekTss += actTss;
+        }
     }
 
     const weekPhase = (week.workouts[0]?.phase as PlanPhase) || 'BASE';
@@ -450,6 +475,9 @@ export function WorkoutListPanel({
                 runDistance={runDistance}
                 swimDistance={swimDistance}
                 bikeDuration={bikeDuration}
+                strengthDuration={strengthDuration}
+                actualWeekTss={actualWeekTss}
+                plannedTss={totalPlannedTss}
                 focusGoal={focusGoal}
                 goalId={goalId}
                 onPhaseChange={onPhaseChange}

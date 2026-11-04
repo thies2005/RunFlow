@@ -113,8 +113,10 @@ export function MobileLayout() {
     // Activities Query
     const { data: activitiesData } = useQuery({
         queryKey: ['all-activities'],
+        staleTime: 0,
+        refetchOnWindowFocus: true,
         queryFn: async () => {
-            const res = await fetch('/api/activities?limit=500');
+            const res = await fetch('/api/activities?limit=500', { cache: 'no-store' });
             if (!res.ok) throw new Error('Failed to fetch activities');
             return res.json();
         },

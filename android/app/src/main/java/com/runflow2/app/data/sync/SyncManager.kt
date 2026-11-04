@@ -119,7 +119,8 @@ class SyncManager(
         fastPushJob?.cancel()
         fastPushJob = syncScope.launch {
             delay(250)
-            pushPendingNow(reason)
+            // Cancel only the debounce, not an in-flight server write.
+            syncScope.launch { pushPendingNow(reason) }
         }
     }
 
@@ -358,14 +359,19 @@ class SyncManager(
             val batch = db.syncQueueDao().nextBatch(20)
             if (batch.isEmpty()) break
             var progress = false
-            for (item in batch) {
+            var retryLater = false
+            for (candidate in batch) {
+                // Creating/remapping a workout or a newer local edit can
+                // replace rows already read into this batch.
+                val item = db.syncQueueDao().pendingById(candidate.id) ?: continue
                 val now = System.currentTimeMillis()
                 try {
-                    handleOutboxItem(item.entityType, item.localId, item.payloadJson)
+                    handleOutboxItem(item.id, item.entityType, item.localId, item.payloadJson)
                     db.syncQueueDao().markCompleted(item.id)
                     pushed++
                     progress = true
                 } catch (e: HttpException) {
+                    if (e.code() == 401) throw e
                     failed++
                     if (e.code() in 400..499 && e.code() != 408 && e.code() != 429) {
                         // Client error: retrying can never succeed — dead-letter,
@@ -378,16 +384,18 @@ class SyncManager(
                     } else {
                         AppLog.w(TAG, "outbox ${item.entityType}(${item.localId}) retry ${item.retryCount + 1}/${item.maxRetries}: HTTP ${e.code()}", e)
                         db.syncQueueDao().incrementRetry(item.id, now)
+                        retryLater = true
                     }
                     progress = true
                 } catch (e: IOException) {
                     // Connection dropped: stop draining, retry next window.
                     AppLog.w(TAG, "outbox push interrupted (${e.message ?: "io error"}) — will retry", e)
                     db.syncQueueDao().incrementRetry(item.id, now)
+                    retryLater = true
                     break
                 }
             }
-            if (!progress) break
+            if (!progress || retryLater) break
         }
         if (pushed > 0) AppLog.i(TAG, "pushed $pushed outbox item(s)")
         return pushed to failed
@@ -510,7 +518,7 @@ class SyncManager(
         if (uploaded > 0) AppLog.i(TAG, "uploaded $uploaded local plan(s)")
     }
 
-    private suspend fun handleOutboxItem(type: String, localId: String, payloadJson: String) {
+    private suspend fun handleOutboxItem(queueId: Long, type: String, localId: String, payloadJson: String) {
         val api = client.api()
         when (type) {
             TYPE_ACTIVITY_CREATE -> {
@@ -559,7 +567,10 @@ class SyncManager(
                     }
                 }
                 client.api().patchWorkout(localId, req.toWireBody())
-                db.workoutDao().byId(localId)?.let { db.workoutDao().upsert(it.copy(dirty = false)) }
+                db.withTransaction {
+                    val newer = db.syncQueueDao().pendingFor(TYPE_WORKOUT_UPDATE, localId).any { it.id != queueId }
+                    if (!newer) db.workoutDao().byId(localId)?.let { db.workoutDao().upsert(it.copy(dirty = false)) }
+                }
             }
             TYPE_WORKOUT_CREATE -> {
                 val payload = json.decodeFromString(WorkoutCreatePayload.serializer(), payloadJson)
@@ -579,14 +590,20 @@ class SyncManager(
                             // server row in: drop the temp row, server wins.
                             db.workoutDao().delete(local.id)
                         } else {
-                            db.workoutDao().upsert(reconcileCreatedWorkout(local, server))
-                            db.workoutDao().delete(local.id)
-                            // Re-point queued full-state PATCHes from the temp
-                            // id to the server id so later edits still land.
-                            db.syncQueueDao().pendingFor(TYPE_WORKOUT_UPDATE, local.id).forEach { item ->
-                                db.syncQueueDao().insert(item.copy(id = 0, localId = dto.id))
-                                db.syncQueueDao().markCompleted(item.id)
+                            val remapped = db.withTransaction {
+                                val fresh = db.workoutDao().byId(local.id) ?: return@withTransaction false
+                                val updates = db.syncQueueDao().pendingFor(TYPE_WORKOUT_UPDATE, local.id)
+                                db.workoutDao().upsert(reconcileCreatedWorkout(fresh, server).copy(dirty = updates.isNotEmpty()))
+                                db.workoutDao().delete(local.id)
+                                // Keep queued edits on the real server ID and
+                                // protect them from a pull until acknowledged.
+                                updates.forEach { item ->
+                                    db.syncQueueDao().insert(item.copy(id = 0, localId = dto.id))
+                                    db.syncQueueDao().markCompleted(item.id)
+                                }
+                                true
                             }
+                            if (!remapped) runCatching { api.deleteWorkout(payload.goalId, dto.id) }
                         }
                     }
                 } catch (e: HttpException) {

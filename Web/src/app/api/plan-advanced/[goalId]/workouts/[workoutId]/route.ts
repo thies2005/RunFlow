@@ -1,3 +1,4 @@
+import { invalidateUserDashboardCache } from '@/lib/redis';
 import { prisma } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { NextResponse } from 'next/server';
@@ -148,6 +149,8 @@ export async function PATCH(req: Request, ctx: RouteContext) {
             });
         }
 
+        await invalidateUserDashboardCache(user.id);
+
         return NextResponse.json({ workout: updated, warnings });
     } catch (error) {
         console.error('Advanced plan workout update error:', error);
@@ -193,6 +196,8 @@ export async function DELETE(req: Request, ctx: RouteContext) {
         await createSnapshot(goalId, 'Before workout delete', 'delete_workout');
 
         await prisma.workout.delete({ where: { id: workoutId } });
+
+        await invalidateUserDashboardCache(user.id);
 
         return NextResponse.json({ success: true });
     } catch (error) {

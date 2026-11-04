@@ -218,7 +218,11 @@ class PlanUploadTest {
 
         val w1 = remap.workouts.first { it.id == "sw1" }
         assertEquals("server-goal", w1.goalId)
-        assertFalse(w1.dirty)
+        assertTrue(w1.dirty)
+        val patch = remap.reQueued.single()
+        assertEquals("sw1", patch.localId)
+        assertEquals("workout_update", patch.entityType)
+        assertTrue(patch.payloadJson.contains("\"linkedActivityId\":\"act-1\""))
         // local-only state the import response cannot know carries over
         assertEquals(4, w1.sortIndex)
         assertTrue(w1.isCompleted)

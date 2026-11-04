@@ -1,3 +1,4 @@
+import { invalidateUserDashboardCache } from '@/lib/redis';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
@@ -227,6 +228,8 @@ export async function POST(request: NextRequest) {
             }
             throw error;
         }
+
+        await invalidateUserDashboardCache(user.id);
 
         // Initial snapshot so the imported plan starts with a clean undo
         // baseline, same as the plan-advanced routes snapshot before mutations.

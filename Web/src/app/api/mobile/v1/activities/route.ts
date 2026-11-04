@@ -1,3 +1,4 @@
+import { invalidateUserDashboardCache } from '@/lib/redis';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import crypto from 'crypto';
@@ -304,6 +305,8 @@ export async function POST(request: NextRequest) {
         } catch {
             // cache refresh is best-effort; the upload itself already succeeded
         }
+
+        await invalidateUserDashboardCache(user.id);
 
         const serialized = enriched
             ? { ...enriched, stravaId: enriched.stravaId.toString(), startDate: enriched.startDate.toISOString() }

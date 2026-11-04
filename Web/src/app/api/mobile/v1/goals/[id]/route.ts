@@ -1,3 +1,4 @@
+import { invalidateUserDashboardCache } from '@/lib/redis';
 /**
  * Mobile Goal Detail Endpoint
  * 
@@ -128,6 +129,8 @@ export async function PUT(
             }
         });
 
+        await invalidateUserDashboardCache(user.id);
+
         return NextResponse.json({
             goal: {
                 ...goal,
@@ -177,6 +180,7 @@ export async function DELETE(
             where: { id }
         });
 
+        await invalidateUserDashboardCache(user.id);
         return NextResponse.json({ success: true }, { headers: rateLimitHeaders(rateLimitResult) });
 
     } catch (error) {

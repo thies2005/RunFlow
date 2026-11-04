@@ -452,6 +452,16 @@ fun remapUploadedPlan(
     /** Pending goal_update / goal_delete items (localId = old goal id). */
     goalQueueItems: List<SyncQueueEntity>,
 ): PlanRemap {
+    // Plan import creates the schedule only; completion/link state must
+    // follow as a workout PATCH once the server workout IDs exist.
+    val completionUpdates = workouts.filter { w ->
+        idMap[w.id] != null && (w.isCompleted || w.activityId != null) &&
+            workoutQueueItems[w.id].orEmpty().none { it.entityType == SyncManager.TYPE_WORKOUT_UPDATE }
+    }
+    val dirtyWorkoutIds = completionUpdates.mapTo(mutableSetOf()) { it.id }
+    workoutQueueItems.forEach { (id, items) ->
+        if (items.any { it.entityType == SyncManager.TYPE_WORKOUT_UPDATE }) dirtyWorkoutIds += id
+    }
     val remappedWorkouts = workouts.map { w ->
         val serverId = idMap[w.id]
         w.copy(
@@ -461,7 +471,7 @@ fun remapUploadedPlan(
             // create is queued below.
             id = serverId ?: w.id,
             goalId = serverGoalId,
-            dirty = serverId == null,
+            dirty = serverId == null || w.id in dirtyWorkoutIds,
         )
     }
     val reQueued = mutableListOf<SyncQueueEntity>()
@@ -478,6 +488,13 @@ fun remapUploadedPlan(
                 ),
             )
         }
+    }
+    for (w in completionUpdates) {
+        reQueued += SyncQueueEntity(
+            entityType = SyncManager.TYPE_WORKOUT_UPDATE,
+            localId = idMap.getValue(w.id),
+            payloadJson = Api.json.encodeToString(PatchWorkoutRequest.serializer(), w.toPatchRequest()),
+        )
     }
     for ((oldWorkoutId, items) in workoutQueueItems) {
         val newId = idMap[oldWorkoutId] ?: oldWorkoutId

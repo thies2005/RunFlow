@@ -451,6 +451,9 @@ interface SyncQueueDao {
     @Query("SELECT * FROM sync_queue WHERE dead = 0 ORDER BY id ASC LIMIT :limit")
     suspend fun nextBatch(limit: Int): List<SyncQueueEntity>
 
+    @Query("SELECT * FROM sync_queue WHERE id = :id AND dead = 0")
+    suspend fun pendingById(id: Long): SyncQueueEntity?
+
     @Query("DELETE FROM sync_queue WHERE id = :id")
     suspend fun markCompleted(id: Long)
 

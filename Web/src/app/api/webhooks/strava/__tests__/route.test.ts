@@ -2,6 +2,8 @@
 import { GET, POST } from '../route';
 import { logger } from '@/lib/logging/logger';
 import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/db';
+import { enqueueStravaWebhook, scheduleStravaWebhookDrain } from '@/lib/strava/webhookQueue';
 
 // Mock dependencies
 jest.mock('@/lib/db', () => ({
@@ -18,8 +20,9 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
-jest.mock('@/lib/strava/sync', () => ({
-  syncActivityById: jest.fn(),
+jest.mock('@/lib/strava/webhookQueue', () => ({
+  enqueueStravaWebhook: jest.fn(),
+  scheduleStravaWebhookDrain: jest.fn(),
 }));
 
 jest.mock('@/lib/rateLimit', () => ({
@@ -96,6 +99,32 @@ describe('Strava Webhook Route', () => {
   });
 
   describe('POST', () => {
+    function requestActivityUpdate() {
+      return new NextRequest('http://localhost/api/webhooks/strava', {
+        method: 'POST',
+        headers: { 'x-hub-signature': 'mock-signature' },
+        body: JSON.stringify({
+          object_type: 'activity', aspect_type: 'update', object_id: 100,
+          owner_id: 200, event_time: 300, updates: { title: 'Renamed' },
+        }),
+      });
+    }
+
+    it('persists an authenticated event before starting its drain', async () => {
+      jest.mocked(prisma.account.findFirst).mockResolvedValue({ userId: 'user-1' } as never);
+      jest.mocked(enqueueStravaWebhook).mockResolvedValue(true);
+      expect((await POST(requestActivityUpdate())).status).toBe(200);
+      expect(enqueueStravaWebhook).toHaveBeenCalledWith('user-1', '200', 100, 300, 'update', { title: 'Renamed' });
+      expect(scheduleStravaWebhookDrain).toHaveBeenCalledWith('user-1', false);
+    });
+
+    it('returns a retryable error when the event could not be persisted', async () => {
+      jest.mocked(prisma.account.findFirst).mockResolvedValue({ userId: 'user-1' } as never);
+      jest.mocked(enqueueStravaWebhook).mockRejectedValueOnce(new Error('Database unavailable'));
+      expect((await POST(requestActivityUpdate())).status).toBe(500);
+      expect(scheduleStravaWebhookDrain).not.toHaveBeenCalled();
+    });
+
     it('should log warning if signature is missing', async () => {
       const req = new NextRequest('http://localhost/api/webhooks/strava', {
         method: 'POST',

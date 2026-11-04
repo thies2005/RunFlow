@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { syncActivityById } from '@/lib/strava/sync';
+import { enqueueStravaWebhook, scheduleStravaWebhookDrain } from '@/lib/strava/webhookQueue';
 import { createHmac } from 'crypto';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { safeBigInt } from '@/lib/utils/bigint';
 import { runBackgroundTask } from '@/lib/utils/backgroundTask';
 import { logger } from '@/lib/logging/logger';
-import { enqueueFeedbackJobsForActivities } from '@/lib/ai/feedback';
 import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 
 export const dynamic = 'force-dynamic';
@@ -58,6 +56,7 @@ function isValidWebhookPayload(body: unknown): body is {
     object_type: string;
     aspect_type?: string;
     object_id?: number;
+    event_time?: number;
     owner_id: number;
     updates?: Record<string, unknown>;
 } {
@@ -65,7 +64,8 @@ function isValidWebhookPayload(body: unknown): body is {
     const payload = body as Record<string, unknown>;
 
     if (typeof payload.object_type !== 'string') return false;
-    if (typeof payload.owner_id !== 'number') return false;
+    if (typeof payload.owner_id !== 'number' || !Number.isSafeInteger(payload.owner_id) || payload.owner_id <= 0) return false;
+    if (payload.updates !== undefined && (!payload.updates || typeof payload.updates !== 'object' || Array.isArray(payload.updates))) return false;
 
     return true;
 }
@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
             return new NextResponse('Bad Request', { status: 400 });
         }
 
-        const { object_type, aspect_type, object_id, owner_id, updates } = body;
+        const { object_type, aspect_type, object_id, owner_id, event_time, updates } = body;
 
         logger.info('Webhook received:', { object_type, aspect_type, owner_id });
 
@@ -197,60 +197,20 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Handle Activity Events (create, update, delete)
-        if (object_type === 'activity' && object_id && aspect_type) {
-            const stravaAthleteId = owner_id.toString();
-
-            // Find user by Strava account
+        // Acknowledge only after the inbox write commits. Strava retries if
+        // delivery failed; the queue handles failures after acknowledgement.
+        if (object_type === 'activity' && (aspect_type === 'create' || aspect_type === 'update' || aspect_type === 'delete')) {
+            if (!object_id || !Number.isSafeInteger(object_id) || object_id <= 0 ||
+                !event_time || !Number.isSafeInteger(event_time) || event_time <= 0) {
+                return new NextResponse('Bad Request', { status: 400 });
+            }
+            const ownerId = owner_id.toString();
             const account = await prisma.account.findFirst({
-                where: {
-                    provider: 'strava',
-                    providerAccountId: stravaAthleteId
-                }
+                where: { provider: 'strava', providerAccountId: ownerId },
+                select: { userId: true },
             });
-
-            if (account) {
-                if (aspect_type === 'create' || aspect_type === 'update') {
-                    // Use background task utility for reliable sync in serverless
-                    // This ensures the sync survives the response lifecycle on Vercel
-                    // NOTE: For guaranteed execution, upgrade to Next.js 15+ and use after() API
-                    const userId = account.userId;
-                    const stravaActivityId = safeBigInt(object_id);
-                    runBackgroundTask(async () => {
-                        try {
-                            // The syncActivityById function takes strava userId and activityId (both standard numbers from strava API payload)
-                            await syncActivityById(userId, object_id);
-                            logger.info(`[BackgroundTask] Synced activity ${object_id} for user ${userId}`);
-
-                            const activity = await prisma.activity.findFirst({
-                                where: { stravaId: stravaActivityId },
-                                select: { id: true }
-                            });
-
-                            if (activity) {
-                                try {
-                                    const enqueued = await enqueueFeedbackJobsForActivities(userId, [activity.id]);
-                                    if (enqueued > 0) {
-                                        logger.info(`[BackgroundTask] Enqueued AI feedback job for activity ${activity.id}`);
-                                    }
-                                } catch (aiError) {
-                                    logger.error(`[BackgroundTask] Failed to enqueue AI feedback job for activity ${activity.id}:`, { error: aiError instanceof Error ? aiError.message : String(aiError) });
-                                }
-                            }
-
-                        } catch (error) {
-                            logger.error(`[BackgroundTask] Failed to sync activity ${object_id}:`, { error: error instanceof Error ? error.message : String(error) });
-                        }
-                    });
-                } else if (aspect_type === 'delete') {
-                    // Delete the activity from our database
-                    await prisma.activity.deleteMany({
-                        where: { stravaId: safeBigInt(object_id) }
-                    });
-                    logger.info(`Deleted activity ${object_id} due to Strava webhook.`);
-                }
-            } else {
-                logger.warn(`Webhook: No user found for Strava athlete ${stravaAthleteId}`);
+            if (account && await enqueueStravaWebhook(account.userId, ownerId, object_id, event_time, aspect_type, updates)) {
+                runBackgroundTask(() => scheduleStravaWebhookDrain(account.userId, aspect_type === 'delete'));
             }
         }
 

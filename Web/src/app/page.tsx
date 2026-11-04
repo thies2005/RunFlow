@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, AlertCircle, BarChart3, CalendarRange, Hand, Target } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { LinkIcon } from 'lucide-react';
@@ -16,7 +16,7 @@ import RaceResultModal from '@/components/RaceResultModal';
 import TrainingStatusCard, { readDashboardLayoutMode, EVENT_DASHBOARD_LAYOUT_CHANGE, type DashboardStatusLayoutMode } from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
-import { useAutoStravaSync } from '@/hooks/useAutoStravaSync';
+import { useStravaSync } from '@/hooks/useStravaSync';
 import type { Workout, Goal } from '@/lib/types';
 import type { SuggestedRaceActivity } from '@/lib/types';
 
@@ -70,41 +70,13 @@ export default function Dashboard() {
             return res.json();
         },
         enabled: status === 'authenticated',
-        refetchInterval: (query) => query.state.data?.syncStatus?.syncInProgress ? 2000 : false,
-    });
-
-    const syncMutation = useMutation({
-        mutationFn: async () => {
-            const res = await fetch('/api/sync', { method: 'POST' });
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                if (errorData.details) {
-                    throw new Error(`${errorData.error}: ${errorData.details}`);
-                }
-                throw new Error(errorData.error || 'Failed to start sync');
-            }
-            return res.json();
-        },
-        onSuccess: () => {
-            // Immediate + delayed: the sync POST returns before the background
-            // task bumps the dashboard cache version, so a single immediate
-            // invalidate can still read the pre-sync cached response and never
-            // start the 2s sync polling.
-            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
-            setTimeout(() => {
-                queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
-            }, 2000);
-        },
     });
 
     // Data extraction with safe defaults
     const statsData = dashboardData?.stats;
     const recentActivities = dashboardData?.recentActivities?.activities || [];
     const goalsList = dashboardData?.goals?.goals || [];
-    const syncStatus = dashboardData?.syncStatus;
-
-    // Auto-sync with Strava on page open when the last sync is stale.
-    useAutoStravaSync(syncStatus);
+    const { syncStatus, syncMutation } = useStravaSync(dashboardData?.syncStatus, session?.user?.id);
 
     // Find active goal
     const activeGoal: Goal | undefined = goalsList.find((g: Goal) => g.isActive);

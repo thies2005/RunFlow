@@ -445,7 +445,10 @@ export const ModelName = {
   GuidedPlanSession: 'GuidedPlanSession',
   McpOAuthClient: 'McpOAuthClient',
   McpOAuthCode: 'McpOAuthCode',
-  McpOAuthToken: 'McpOAuthToken'
+  McpOAuthToken: 'McpOAuthToken',
+  StravaWebhookJob: 'StravaWebhookJob',
+  ActivityFeedClock: 'ActivityFeedClock',
+  ActivityFeedChange: 'ActivityFeedChange'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -461,7 +464,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "foodFavorite" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord" | "planSnapshot" | "weekTemplate" | "workoutTemplate" | "intervalProgression" | "aiPlanAnalysis" | "planPaceProfile" | "guidedPlanSession" | "mcpOAuthClient" | "mcpOAuthCode" | "mcpOAuthToken"
+    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "foodFavorite" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord" | "planSnapshot" | "weekTemplate" | "workoutTemplate" | "intervalProgression" | "aiPlanAnalysis" | "planPaceProfile" | "guidedPlanSession" | "mcpOAuthClient" | "mcpOAuthCode" | "mcpOAuthToken" | "stravaWebhookJob" | "activityFeedClock" | "activityFeedChange"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -5053,6 +5056,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    StravaWebhookJob: {
+      payload: Prisma.$StravaWebhookJobPayload<ExtArgs>
+      fields: Prisma.StravaWebhookJobFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StravaWebhookJobFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StravaWebhookJobFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload>
+        }
+        findFirst: {
+          args: Prisma.StravaWebhookJobFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StravaWebhookJobFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload>
+        }
+        findMany: {
+          args: Prisma.StravaWebhookJobFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload>[]
+        }
+        create: {
+          args: Prisma.StravaWebhookJobCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload>
+        }
+        createMany: {
+          args: Prisma.StravaWebhookJobCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StravaWebhookJobCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload>[]
+        }
+        delete: {
+          args: Prisma.StravaWebhookJobDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload>
+        }
+        update: {
+          args: Prisma.StravaWebhookJobUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload>
+        }
+        deleteMany: {
+          args: Prisma.StravaWebhookJobDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StravaWebhookJobUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StravaWebhookJobUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload>[]
+        }
+        upsert: {
+          args: Prisma.StravaWebhookJobUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StravaWebhookJobPayload>
+        }
+        aggregate: {
+          args: Prisma.StravaWebhookJobAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStravaWebhookJob>
+        }
+        groupBy: {
+          args: Prisma.StravaWebhookJobGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StravaWebhookJobGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StravaWebhookJobCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StravaWebhookJobCountAggregateOutputType> | number
+        }
+      }
+    }
+    ActivityFeedClock: {
+      payload: Prisma.$ActivityFeedClockPayload<ExtArgs>
+      fields: Prisma.ActivityFeedClockFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ActivityFeedClockFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ActivityFeedClockFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload>
+        }
+        findFirst: {
+          args: Prisma.ActivityFeedClockFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ActivityFeedClockFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload>
+        }
+        findMany: {
+          args: Prisma.ActivityFeedClockFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload>[]
+        }
+        create: {
+          args: Prisma.ActivityFeedClockCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload>
+        }
+        createMany: {
+          args: Prisma.ActivityFeedClockCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ActivityFeedClockCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload>[]
+        }
+        delete: {
+          args: Prisma.ActivityFeedClockDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload>
+        }
+        update: {
+          args: Prisma.ActivityFeedClockUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload>
+        }
+        deleteMany: {
+          args: Prisma.ActivityFeedClockDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ActivityFeedClockUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ActivityFeedClockUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload>[]
+        }
+        upsert: {
+          args: Prisma.ActivityFeedClockUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedClockPayload>
+        }
+        aggregate: {
+          args: Prisma.ActivityFeedClockAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateActivityFeedClock>
+        }
+        groupBy: {
+          args: Prisma.ActivityFeedClockGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ActivityFeedClockGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ActivityFeedClockCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ActivityFeedClockCountAggregateOutputType> | number
+        }
+      }
+    }
+    ActivityFeedChange: {
+      payload: Prisma.$ActivityFeedChangePayload<ExtArgs>
+      fields: Prisma.ActivityFeedChangeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ActivityFeedChangeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ActivityFeedChangeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload>
+        }
+        findFirst: {
+          args: Prisma.ActivityFeedChangeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ActivityFeedChangeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload>
+        }
+        findMany: {
+          args: Prisma.ActivityFeedChangeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload>[]
+        }
+        create: {
+          args: Prisma.ActivityFeedChangeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload>
+        }
+        createMany: {
+          args: Prisma.ActivityFeedChangeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ActivityFeedChangeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload>[]
+        }
+        delete: {
+          args: Prisma.ActivityFeedChangeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload>
+        }
+        update: {
+          args: Prisma.ActivityFeedChangeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload>
+        }
+        deleteMany: {
+          args: Prisma.ActivityFeedChangeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ActivityFeedChangeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ActivityFeedChangeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload>[]
+        }
+        upsert: {
+          args: Prisma.ActivityFeedChangeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ActivityFeedChangePayload>
+        }
+        aggregate: {
+          args: Prisma.ActivityFeedChangeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateActivityFeedChange>
+        }
+        groupBy: {
+          args: Prisma.ActivityFeedChangeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ActivityFeedChangeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ActivityFeedChangeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ActivityFeedChangeCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -5136,6 +5361,9 @@ export const UserScalarFieldEnum = {
   uiPreferences: 'uiPreferences',
   lastSyncAt: 'lastSyncAt',
   syncInProgress: 'syncInProgress',
+  stravaSyncToken: 'stravaSyncToken',
+  stravaSyncExpiresAt: 'stravaSyncExpiresAt',
+  stravaSyncRange: 'stravaSyncRange',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   healthTrackingEnabled: 'healthTrackingEnabled',
@@ -6286,6 +6514,43 @@ export const McpOAuthTokenScalarFieldEnum = {
 export type McpOAuthTokenScalarFieldEnum = (typeof McpOAuthTokenScalarFieldEnum)[keyof typeof McpOAuthTokenScalarFieldEnum]
 
 
+export const StravaWebhookJobScalarFieldEnum = {
+  userId: 'userId',
+  activityId: 'activityId',
+  ownerId: 'ownerId',
+  eventTime: 'eventTime',
+  eventKey: 'eventKey',
+  kind: 'kind',
+  title: 'title',
+  version: 'version',
+  dueAt: 'dueAt',
+  attempts: 'attempts',
+  completedAt: 'completedAt',
+  fitnessFrom: 'fitnessFrom'
+} as const
+
+export type StravaWebhookJobScalarFieldEnum = (typeof StravaWebhookJobScalarFieldEnum)[keyof typeof StravaWebhookJobScalarFieldEnum]
+
+
+export const ActivityFeedClockScalarFieldEnum = {
+  userId: 'userId',
+  version: 'version',
+  minimum: 'minimum'
+} as const
+
+export type ActivityFeedClockScalarFieldEnum = (typeof ActivityFeedClockScalarFieldEnum)[keyof typeof ActivityFeedClockScalarFieldEnum]
+
+
+export const ActivityFeedChangeScalarFieldEnum = {
+  userId: 'userId',
+  activityId: 'activityId',
+  version: 'version',
+  deletedAt: 'deletedAt'
+} as const
+
+export type ActivityFeedChangeScalarFieldEnum = (typeof ActivityFeedChangeScalarFieldEnum)[keyof typeof ActivityFeedChangeScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -6727,6 +6992,9 @@ export type GlobalOmitConfig = {
   mcpOAuthClient?: Prisma.McpOAuthClientOmit
   mcpOAuthCode?: Prisma.McpOAuthCodeOmit
   mcpOAuthToken?: Prisma.McpOAuthTokenOmit
+  stravaWebhookJob?: Prisma.StravaWebhookJobOmit
+  activityFeedClock?: Prisma.ActivityFeedClockOmit
+  activityFeedChange?: Prisma.ActivityFeedChangeOmit
 }
 
 /* Types for Logging */

@@ -255,6 +255,15 @@ data class ActivitiesResponse(
 )
 
 @Serializable
+data class ActivityChangesResponse(
+    val activities: List<ActivityDto> = emptyList(),
+    val deletedIds: List<String> = emptyList(),
+    val cursor: String,
+    val hasMore: Boolean = false,
+    val reset: Boolean = false,
+)
+
+@Serializable
 data class ActivityWrapper(val activity: ActivityDto)
 
 // ---------- profile ----------
@@ -575,11 +584,18 @@ data class GoalWrapper(val goal: PlanGoalDto)
 // ---------- server-side sync trigger ----------
 
 @Serializable
+data class TriggerSyncRequest(val automatic: Boolean)
+
+@Serializable
 data class TriggerSyncResponse(
     val success: Boolean = false,
     val activitiesSynced: Int = 0,
     val lastSyncAt: String? = null,
+    val syncStarted: Boolean = false,
 )
+
+@Serializable
+data class ServerSyncProgress(val syncInProgress: Boolean, val lastSyncAt: String? = null)
 
 // ---------- AI activity feedback (web's "AI overview") ----------
 
@@ -823,6 +839,9 @@ interface RunFlowApi {
         @Query("offset") offset: Int = 0,
     ): ActivitiesResponse
 
+    @GET("/api/mobile/v1/activities/changes")
+    suspend fun activityChanges(@Query("cursor") cursor: String? = null): ActivityChangesResponse
+
     @POST("/api/mobile/v1/activities")
     suspend fun createActivity(@Body body: CreateActivityRequest): ActivityWrapper
 
@@ -892,7 +911,10 @@ interface RunFlowApi {
 
     // server-side sync (e.g. Strava import); 409 = already running
     @POST("/api/mobile/v1/sync")
-    suspend fun triggerServerSync(): TriggerSyncResponse
+    suspend fun triggerServerSync(@Body request: TriggerSyncRequest): TriggerSyncResponse
+
+    @GET("/api/mobile/v1/sync?progress=1")
+    suspend fun serverSyncProgress(): ServerSyncProgress
 
     // analytics — the server's two-metric stats (web-parity computation).
     // Cached on-device after a sync and preferred while fresh; offline or

@@ -351,3 +351,18 @@ export type McpOAuthCode = Prisma.McpOAuthCodeModel
  * 
  */
 export type McpOAuthToken = Prisma.McpOAuthTokenModel
+/**
+ * Model StravaWebhookJob
+ * Latest event per activity, kept briefly after processing for retry deduplication.
+ */
+export type StravaWebhookJob = Prisma.StravaWebhookJobModel
+/**
+ * Model ActivityFeedClock
+ *
+ */
+export type ActivityFeedClock = Prisma.ActivityFeedClockModel
+/**
+ * Model ActivityFeedChange
+ *
+ */
+export type ActivityFeedChange = Prisma.ActivityFeedChangeModel

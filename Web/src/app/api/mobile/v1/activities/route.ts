@@ -10,6 +10,7 @@ import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { enrichActivityMetrics, type MetricsInput } from '@/lib/strava/transform';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { MINUTE_MS } from '@/lib/constants';
+import { mobileActivitySelect, serializeMobileActivity } from '@/lib/mobile/activityList';
 
 type ActivityWhereClause = {
     userId: string;
@@ -55,60 +56,12 @@ export async function GET(request: NextRequest) {
                 orderBy: { startDate: 'desc' },
                 take: limit,
                 skip: offset,
-                select: {
-                    id: true,
-                    stravaId: true,
-                    type: true,
-                    sportType: true,
-                    name: true,
-                    startDate: true,
-                    distance: true,
-                    movingTime: true,
-                    averageSpeed: true,
-                    averageHr: true,
-                    maxHr: true,
-                    averageCadence: true,
-                    hasHeartrate: true,
-                    totalElevation: true,
-                    trimp: true,
-                    runningTss: true,
-                    estimatedVdot: true,
-                    trainingType: true,
-                    calories: true,
-                    hrZone1Time: true,
-                    hrZone2Time: true,
-                    hrZone3Time: true,
-                    hrZone4Time: true,
-                    hrZone5Time: true,
-                    hrZone6Time: true,
-                    hrZone7Time: true,
-                    averageWatts: true,
-                    weightedAverageWatts: true,
-                    maxWatts: true,
-                    deviceWatts: true,
-                    npWatts: true,
-                    intensityFactor: true,
-                    variabilityIndex: true,
-                    bikeTss: true,
-                    efficiencyFactor: true,
-                    aerobicDecoupling: true,
-                    powerZone1Time: true,
-                    powerZone2Time: true,
-                    powerZone3Time: true,
-                    powerZone4Time: true,
-                    powerZone5Time: true,
-                    powerZone6Time: true,
-                    powerZone7Time: true,
-                },
+                select: mobileActivitySelect,
             }),
             prisma.activity.count({ where }),
         ]);
 
-        const serialized = activities.map(a => ({
-            ...a,
-            stravaId: a.stravaId.toString(),
-            startDate: a.startDate.toISOString()
-        }));
+        const serialized = activities.map(serializeMobileActivity);
 
         return NextResponse.json({
             activities: serialized,

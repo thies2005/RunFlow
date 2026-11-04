@@ -128,13 +128,14 @@ export async function upsertActivity(
     userId: string,
     activityId: number,
     data: ActivityData
-): Promise<{ created: boolean }> {
+): Promise<{ created: boolean; id: string }> {
     const existing = await prisma.activity.findUnique({
         where: { stravaId: safeBigInt(activityId) },
-        select: { id: true }
+        select: { id: true, userId: true }
     });
 
     if (existing) {
+        if (existing.userId !== userId) throw new Error("Strava activity belongs to another user");
         await prisma.activity.update({
             where: { id: existing.id },
             data: {
@@ -143,7 +144,7 @@ export async function upsertActivity(
                 updatedAt: new Date()
             }
         });
-        return { created: false };
+        return { created: false, id: existing.id };
     } else {
         // Deduplicate against manual/Health Connect activities (stravaId < 0)
         const fiveMinutes = 5 * 60 * 1000;
@@ -172,9 +173,9 @@ export async function upsertActivity(
                     updatedAt: new Date()
                 }
             });
-            return { created: false };
+            return { created: false, id: duplicate.id };
         } else {
-            await prisma.activity.create({
+            const activity = await prisma.activity.create({
                 data: {
                     userId,
                     stravaId: safeBigInt(activityId),
@@ -182,7 +183,7 @@ export async function upsertActivity(
                     type: validateActivityType(data.type),
                 }
             });
-            return { created: true };
+            return { created: true, id: activity.id };
         }
     }
 }
@@ -245,9 +246,9 @@ export async function updateSyncStatus(
     }
 }
 
-export async function fetchExistingActivities(stravaIds: bigint[]): Promise<Map<string, any>> {
+export async function fetchExistingActivities(stravaIds: bigint[], userId?: string): Promise<Map<string, any>> {
     const existingActivities = await prisma.activity.findMany({
-        where: { stravaId: { in: stravaIds } },
+        where: { stravaId: { in: stravaIds }, userId },
     });
 
     const existingMap = new Map();

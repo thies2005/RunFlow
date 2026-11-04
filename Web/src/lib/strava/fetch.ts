@@ -14,7 +14,7 @@ import { logger } from '@/lib/logging/logger';
 import { decryptToken } from '@/lib/crypto';
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
-const MAX_PER_PAGE = 200;
+export const MAX_PER_PAGE = 200;
 const RATE_LIMIT_REQUESTS = 95;
 const RATE_LIMIT_WINDOW_MS = 15 * MINUTE_MS;
 const MAX_RETRIES = 3;
@@ -184,6 +184,8 @@ export async function fetchStravaActivities(
     return response.json();
 }
 
+export class StravaActivityUnavailableError extends Error {}
+
 export async function fetchSingleActivity(accessToken: string, activityId: number): Promise<StravaActivity> {
     await rateLimiter.checkAndWait();
 
@@ -194,6 +196,9 @@ export async function fetchSingleActivity(accessToken: string, activityId: numbe
         }
     );
 
+    if (response.status === 404 || response.status === 410) {
+        throw new StravaActivityUnavailableError('Strava activity is unavailable');
+    }
     if (!response.ok) {
         throw new Error(`Strava API error: ${response.status} ${await response.text()}`);
     }
@@ -203,7 +208,8 @@ export async function fetchSingleActivity(accessToken: string, activityId: numbe
 
 export async function fetchActivityStreams(
     accessToken: string,
-    activityId: number
+    activityId: number,
+    retryTransientFailure = false,
 ): Promise<{ time: number[]; heartrate?: number[]; velocity_smooth?: number[]; altitude?: number[]; cadence?: number[]; watts?: number[] } | null> {
     await rateLimiter.checkAndWait();
 
@@ -214,6 +220,9 @@ export async function fetchActivityStreams(
         }
     );
 
+    if (retryTransientFailure && (response.status === 429 || response.status >= 500)) {
+        throw new Error(`Strava streams temporarily unavailable: ${response.status}`);
+    }
     if (response.status === 429) {
         logger.warn('Strava rate limit exceeded for streams', { activityId });
         return null;

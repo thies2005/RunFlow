@@ -28,6 +28,7 @@ class LocalBackupManagerTest {
         // AppDatabase is not invoked if JSON is corrupt or has invalid format
         val fakeDb = object : AppDatabase() {
             override fun activityDao() = throw UnsupportedOperationException()
+            override fun activitySyncCursorDao() = throw UnsupportedOperationException()
             override fun goalDao() = throw UnsupportedOperationException()
             override fun workoutDao() = throw UnsupportedOperationException()
             override fun profileDao() = throw UnsupportedOperationException()
@@ -52,6 +53,7 @@ class LocalBackupManagerTest {
     fun `importFrom fails gracefully on corrupt json`() = runTest {
         val fakeDb = object : AppDatabase() {
             override fun activityDao() = throw UnsupportedOperationException()
+            override fun activitySyncCursorDao() = throw UnsupportedOperationException()
             override fun goalDao() = throw UnsupportedOperationException()
             override fun workoutDao() = throw UnsupportedOperationException()
             override fun profileDao() = throw UnsupportedOperationException()

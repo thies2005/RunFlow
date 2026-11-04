@@ -15,10 +15,12 @@ export interface ModifiedActivity {
 
 export async function calculateAndSaveFitnessMetrics(
     userId: string,
-    modifiedActivities: ModifiedActivity[]
+    modifiedActivities: ModifiedActivity[],
+    throwOnError = false,
 ): Promise<void> {
     if (modifiedActivities.length > 0) {
-        await updateFitnessCache(userId, modifiedActivities);
+        if (throwOnError) await updateFitnessCache(userId, modifiedActivities, true);
+        else await updateFitnessCache(userId, modifiedActivities);
     }
 }
 

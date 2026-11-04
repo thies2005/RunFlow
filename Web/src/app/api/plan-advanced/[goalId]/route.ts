@@ -79,7 +79,7 @@ export async function GET(req: Request, ctx: RouteContext) {
                 ...goal,
                 workouts: transformedWorkouts,
             },
-        });
+        }, { headers: { 'Cache-Control': 'private, no-store' } });
     } catch (error) {
         console.error('Advanced plan get error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -44,8 +44,11 @@ export default function GoalEditorPage() {
 
     const { data, isLoading, error } = useQuery<PlanData>({
         queryKey: ['plan-advanced', params.goalId],
+        // Workout links can change in the Android app while this view is idle.
+        staleTime: 0,
+        refetchOnWindowFocus: true,
         queryFn: async () => {
-            const res = await fetch(`/api/plan-advanced/${params.goalId}`);
+            const res = await fetch(`/api/plan-advanced/${params.goalId}`, { cache: 'no-store' });
             if (res.status === 404) throw new Error('Plan not found');
             if (!res.ok) throw new Error('Failed to fetch plan');
             return res.json();

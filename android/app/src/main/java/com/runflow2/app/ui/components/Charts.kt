@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.runflow2.app.core.math.TrainingLoad
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.DailyEntryEntity
+import com.runflow2.app.domain.analytics.VdotPoint
 import com.runflow2.app.domain.analytics.WeekVolume
 import com.runflow2.app.ui.theme.semanticColors
 import java.time.LocalDate
@@ -597,10 +598,10 @@ private fun paddedRange(values: List<Double>, step: Double): Pair<Double, Double
 
 /** Three small y-axis value labels (top/middle/bottom) beside a chart of [height] dp. */
 @Composable
-private fun AxisLabels(top: String, mid: String, bottom: String, height: Int) {
+private fun AxisLabels(top: String, mid: String, bottom: String, height: Int, width: androidx.compose.ui.unit.Dp = 34.dp) {
     Column(
         Modifier
-            .width(34.dp)
+            .width(width)
             .height(height.dp)
             .padding(vertical = 2.dp),
         horizontalAlignment = Alignment.End,
@@ -609,6 +610,65 @@ private fun AxisLabels(top: String, mid: String, bottom: String, height: Int) {
         Text(top, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(mid, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(bottom, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Weekly best VDOT on a calendar scale, including weeks without an estimate. */
+@Composable
+fun VdotTrendChart(points: List<VdotPoint>, firstWeek: LocalDate, lastWeek: LocalDate) {
+    val trend = remember(points) { points.filter { it.vdot.isFinite() }.sortedBy { it.date } }
+    if (trend.isEmpty()) return
+
+    val color = MaterialTheme.semanticColors.vo2
+    val grid = MaterialTheme.colorScheme.outlineVariant
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val (lo, hi) = paddedRange(trend.map { it.vdot }, step = 1.0)
+    val firstDay = minOf(firstWeek, trend.first().date).toEpochDay()
+    val lastDay = maxOf(lastWeek, trend.last().date).toEpochDay()
+    val span = (lastDay - firstDay).coerceAtLeast(1L)
+    val height = 140
+    val gutter = 42.dp
+    val inset = 10.dp
+
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AxisLabels(
+                top = Format.oneDecimal(hi),
+                mid = Format.oneDecimal((hi + lo) / 2),
+                bottom = Format.oneDecimal(lo),
+                height = height,
+                width = gutter,
+            )
+            Canvas(
+                Modifier.weight(1f).height(height.dp)
+                    .semantics {
+                        contentDescription = "Weekly best VDOT, " +
+                            "${Format.oneDecimal(trend.first().vdot)} to ${Format.oneDecimal(trend.last().vdot)}"
+                    },
+            ) {
+                val top = inset.toPx()
+                val bottom = (size.height - top).coerceAtLeast(top)
+                val left = 3.dp.toPx()
+                val right = (size.width - left).coerceAtLeast(left)
+                for (fraction in listOf(0f, 0.5f, 1f)) {
+                    val y = top + (bottom - top) * fraction
+                    drawLine(grid, Offset(left, y), Offset(right, y), 1.dp.toPx())
+                }
+                val offsets = trend.map { point ->
+                    val x = (point.date.toEpochDay() - firstDay).toFloat() / span
+                    val y = ((hi - point.vdot) / (hi - lo)).toFloat()
+                    Offset(left + (right - left) * x, top + (bottom - top) * y)
+                }
+                drawTrendSeries(offsets, color, GraphStyle.LINE_FILL, pointRadiusDp = 2.5f)
+            }
+        }
+        Row(
+            Modifier.fillMaxWidth().padding(start = gutter + 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(LocalDate.ofEpochDay(firstDay).format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+            Text(LocalDate.ofEpochDay(lastDay).format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+        }
     }
 }
 

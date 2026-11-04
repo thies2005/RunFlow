@@ -204,6 +204,13 @@ class ComplianceCalculatorTest {
             zoneId = zone,
         )
 
+        val recorded = ComplianceCalculator.recordedTotals(
+            listOf(act1, act1, act2, act2.copy(id = "unlinked", distanceMeters = 3_000.0, trimp = 20.0)),
+            useTrimp = false,
+        )
+        assertEquals(act1.distanceKm + act2.distanceKm + 3.0, recorded.km, 0.01)
+        assertEquals(132.0, recorded.load, 0.01)
+
         assertEquals(120.0, aggregate.plannedTss, 0.01)
         assertEquals(2, aggregate.completedCount)
         assertEquals(ComplianceCalculator.ComplianceStatus.ON_TARGET, aggregate.status)

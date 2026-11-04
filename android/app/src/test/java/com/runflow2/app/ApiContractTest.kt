@@ -1,5 +1,6 @@
 package com.runflow2.app
 
+import com.runflow2.app.data.net.toWireBody
 import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.net.BaselineDto
 import com.runflow2.app.data.net.CreateActivityRequest
@@ -238,11 +239,11 @@ class ApiContractTest {
                 """{"id":"w1","scheduledDate":"2026-06-02T00:00:00.000Z","isCompleted":true,"warnings":[]}"""
             )
         )
-        val w = api.patchWorkout("w1", PatchWorkoutRequest(isCompleted = true))
+        val w = api.patchWorkout("w1", PatchWorkoutRequest(isCompleted = true).toWireBody())
         var recorded = server.takeRequest()
         assertEquals("/api/mobile/v1/workouts/w1", recorded.path)
         assertEquals("PATCH", recorded.method)
-        assertEquals("""{"isCompleted":true}""", recorded.body.readUtf8())
+        assertEquals("""{"isCompleted":true,"linkedActivityId":null}""", recorded.body.readUtf8())
         assertEquals(true, w.isCompleted)
 
         server.enqueue(MockResponse().setBody("""{"goal":{"id":"g1","isActive":false}}"""))

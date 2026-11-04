@@ -16,6 +16,7 @@ import com.runflow2.app.data.net.PatchWorkoutRequest
 import com.runflow2.app.data.net.UpdateActivityRequest
 import com.runflow2.app.data.net.UpdateGoalRequest
 import com.runflow2.app.data.net.UpdateProfileRequest
+import com.runflow2.app.data.net.toWireBody
 import com.runflow2.app.data.net.WorkoutCreatePayload
 import com.runflow2.app.data.net.WorkoutDeletePayload
 import com.runflow2.app.data.repo.RunFlowRepository
@@ -557,7 +558,7 @@ class SyncManager(
                         }
                     }
                 }
-                client.api().patchWorkout(localId, req)
+                client.api().patchWorkout(localId, req.toWireBody())
                 db.workoutDao().byId(localId)?.let { db.workoutDao().upsert(it.copy(dirty = false)) }
             }
             TYPE_WORKOUT_CREATE -> {

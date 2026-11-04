@@ -82,6 +82,9 @@ export function MobileLayout() {
     // Dashboard Query
     const { data: dashboardData, isLoading: isDashboardLoading, error: dashboardError } = useQuery({
         queryKey: ['dashboard-data'],
+        // Workout links can change in the Android app while this view is idle.
+        staleTime: 0,
+        refetchOnWindowFocus: true,
         queryFn: async () => {
             const todayStr = format(new Date(), 'yyyy-MM-dd');
             const res = await fetch(`/api/dashboard?date=${todayStr}`, { cache: 'no-store' });
@@ -94,6 +97,9 @@ export function MobileLayout() {
     // Plan Query
     const { data: planData, isLoading: isPlanLoading, refetch: refetchPlan } = useQuery<PlanResponse>({
         queryKey: ['plan', showUnlinked],
+        // Workout links can change in the Android app while this view is idle.
+        staleTime: 0,
+        refetchOnWindowFocus: true,
         queryFn: async () => {
             const url = showUnlinked ? '/api/plan?includeUnlinked=true' : '/api/plan';
             const res = await fetch(url, { cache: 'no-store' });

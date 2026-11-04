@@ -1,5 +1,6 @@
 package com.runflow2.app.domain.plan
 
+import com.runflow2.app.core.math.TrainingLoad
 import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.data.db.WorkoutEntity
 import java.time.Instant
@@ -53,6 +54,25 @@ object ComplianceCalculator {
         val status: ComplianceStatus,
         val statusColor: ComplianceColor,
     )
+
+    data class RecordedTotals(val km: Double, val load: Double)
+
+    /** Physical training totals are independent of plan adherence or links. */
+    fun recordedTotals(activities: List<ActivityEntity>, useTrimp: Boolean): RecordedTotals {
+        val unique = activities.distinctBy { it.serverId ?: it.id }
+        return RecordedTotals(
+            km = unique.sumOf { it.distanceKm },
+            load = unique.sumOf {
+                if (useTrimp) it.trimp else TrainingLoad.resolveEffectiveTss(
+                    type = it.type,
+                    movingTimeSec = it.movingTimeSec,
+                    bikeTss = it.bikeTss ?: 0.0,
+                    trimp = it.trimp,
+                    trainingType = it.trainingType,
+                )
+            },
+        )
+    }
 
     fun evaluateRatio(ratio: Double): Pair<ComplianceStatus, ComplianceColor> {
         return when {

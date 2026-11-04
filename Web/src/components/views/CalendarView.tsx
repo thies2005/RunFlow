@@ -156,8 +156,11 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
     // 2. Plan workouts (planned training) — only if there's an active goal
     const { data: planData } = useQuery<PlanResponse>({
         queryKey: ['plan-advanced', activeGoal?.id],
+        // Workout links can change in the Android app while this view is idle.
+        staleTime: 0,
+        refetchOnWindowFocus: true,
         queryFn: async () => {
-            const res = await fetch(`/api/plan-advanced/${activeGoal!.id}`);
+            const res = await fetch(`/api/plan-advanced/${activeGoal!.id}`, { cache: 'no-store' });
             if (!res.ok) throw new Error('Failed to load plan');
             return res.json();
         },

@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { cachedResponse } from '@/lib/api/apiResponse';
+import { noCacheResponse } from '@/lib/api/apiResponse';
 import type { ActivityListItem } from '@/lib/types';
 
 export async function GET(req: Request) {
@@ -105,7 +105,7 @@ export async function GET(req: Request) {
         });
 
         if (!activeGoal) {
-            return NextResponse.json({ goal: null, unlinkedActivities: [] });
+            return noCacheResponse({ goal: null, unlinkedActivities: [] });
         }
 
 
@@ -154,13 +154,13 @@ export async function GET(req: Request) {
             } : null
         }));
 
-        return cachedResponse({
+        return noCacheResponse({
             goal: {
                 ...activeGoal,
                 workouts: transformedWorkouts
             },
             unlinkedActivities
-        }, { maxAge: 60, staleWhileRevalidate: 30 });
+        });
     } catch (error) {
         console.error('Plan fetch error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -527,6 +527,15 @@ data class PatchWorkoutRequest(
     val adaptationType: String? = null,
 )
 
+/** The outbox sends full workout state; null explicitly removes an old link. */
+fun PatchWorkoutRequest.toWireBody(): kotlinx.serialization.json.JsonObject {
+    val fields = Api.json.encodeToJsonElement(PatchWorkoutRequest.serializer(), this)
+        as kotlinx.serialization.json.JsonObject
+    if (isCompleted == null || linkedActivityId != null) return fields
+    return kotlinx.serialization.json.JsonObject(fields + ("linkedActivityId" to kotlinx.serialization.json.JsonNull))
+}
+
+
 @Serializable
 data class UpdateGoalRequest(
     val name: String? = null,
@@ -889,7 +898,7 @@ interface RunFlowApi {
 
     // workout-level edits (targets, description, date shift, completion)
     @PATCH("/api/mobile/v1/workouts/{id}")
-    suspend fun patchWorkout(@Path("id") id: String, @Body body: PatchWorkoutRequest): PlanWorkoutDto
+    suspend fun patchWorkout(@Path("id") id: String, @Body body: kotlinx.serialization.json.JsonObject): PlanWorkoutDto
 
     // workout create/delete on existing plans (goal-scoped web routes that
     // accept the mobile JWT; create snapshots, returns 201 + { workout })

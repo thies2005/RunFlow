@@ -58,6 +58,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
@@ -99,6 +101,7 @@ import android.widget.Toast
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import java.time.DayOfWeek
+import com.runflow2.app.ui.theme.semanticColors
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -141,6 +144,9 @@ fun PlanScreen(
                 it.serverId?.let { s -> put(s, it) }
             }
         }
+    }
+    val activitiesByWeek = remember(activities) {
+        activities.groupBy { Format.localDate(it.startDate).with(DayOfWeek.MONDAY) }
     }
     val loadMetric = when (settings.primaryLoadMetric.uppercase()) {
         "TRIMP" -> "TRIMP"
@@ -281,7 +287,9 @@ fun PlanScreen(
                             weekNumber = if (firstWeek != null)
                                 ChronoUnit.WEEKS.between(firstWeek, weekMonday).toInt() + 1 else 1,
                             phase = phase,
-                            totalKm = weekWorkouts.sumOf { it.targetDistanceKm ?: 0.0 },
+                            recorded = ComplianceCalculator.recordedTotals(
+                                activitiesByWeek[weekMonday].orEmpty(), useTrimp = loadMetric == "TRIMP",
+                            ),
                             unit = unit,
                             isCurrent = weekMonday == today.with(DayOfWeek.MONDAY),
                             compliance = weekCompliance,
@@ -456,8 +464,8 @@ private fun GoalHeaderCard(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
         ),
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -477,6 +485,8 @@ private fun GoalHeaderCard(
             LinearProgressIndicator(
                 progress = { if (total > 0) done.toFloat() / total else 0f },
                 modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.onPrimary,
+                trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.28f),
             )
             Row(
                 Modifier.fillMaxWidth(),
@@ -486,25 +496,24 @@ private fun GoalHeaderCard(
                 Text("$done / $total workouts · ${Format.distance(weeklyKm, unit)}/wk")
                 if (targetTime != null) {
                     Text("Target ${Format.duration(targetTime)}")
+                } else {
+                    Text("Use prediction")
                 }
             }
 
             if (blockCompliance != null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.15f))
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                    Column(
+                        modifier = Modifier.padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         Text(
-                            "4-Week Block Load",
+                            "4-Week Progress",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -513,19 +522,22 @@ private fun GoalHeaderCard(
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                         )
+                        ComplianceProgressBar(
+                            ratio = blockCompliance.complianceRatio,
+                            color = complianceColorToComposeColor(blockCompliance.statusColor),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp),
+                        )
                     }
-                    ComplianceProgressBar(
-                        ratio = blockCompliance.complianceRatio,
-                        color = complianceColorToComposeColor(blockCompliance.statusColor),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp),
-                    )
                 }
             }
 
             if (daysToGo <= 2) {
-                TextButton(onClick = onRecordResult) {
+                TextButton(
+                    onClick = onRecordResult,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onPrimary),
+                ) {
                     Icon(Icons.Outlined.Check, null)
                     Spacer(Modifier.width(6.dp))
                     Text("Record race result")
@@ -539,7 +551,7 @@ private fun GoalHeaderCard(
 private fun WeekHeader(
     weekNumber: Int,
     phase: PlanPhase?,
-    totalKm: Double,
+    recorded: ComplianceCalculator.RecordedTotals,
     unit: DistanceUnit,
     isCurrent: Boolean,
     compliance: ComplianceCalculator.WeeklyCompliance? = null,
@@ -576,13 +588,22 @@ private fun WeekHeader(
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    Format.distance(totalKm, unit),
+                    "${Format.distance(recorded.km, unit)} / ${Format.distance(compliance?.plannedKm ?: 0.0, unit)}",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
+                Text(
+                    if (loadMetric == "TSS" && compliance != null && compliance.plannedTss > 0) {
+                        "${recorded.load.roundToInt()} / ${compliance.plannedTss.roundToInt()} TSS"
+                    } else {
+                        "${recorded.load.roundToInt()} $loadMetric recorded"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 if (compliance != null && compliance.plannedTss > 0) {
                     Text(
-                        "${compliance.actualTss.roundToInt()} / ${compliance.plannedTss.roundToInt()} $loadMetric · ${compliance.compliancePct}%",
+                        "${compliance.compliancePct}% plan adherence",
                         style = MaterialTheme.typography.labelSmall,
                         color = complianceColorToComposeColor(compliance.statusColor),
                         fontWeight = FontWeight.SemiBold,
@@ -1207,11 +1228,12 @@ private fun PlanFitExporter.exportWorkoutToFit(context: android.content.Context,
     share(context, workout)
 }
 
+@Composable
 private fun complianceColorToComposeColor(color: ComplianceCalculator.ComplianceColor): Color = when (color) {
-    ComplianceCalculator.ComplianceColor.GREEN -> Color(0xFF10B981)
-    ComplianceCalculator.ComplianceColor.AMBER -> Color(0xFFF59E0B)
-    ComplianceCalculator.ComplianceColor.RED -> Color(0xFFEF4444)
-    ComplianceCalculator.ComplianceColor.GRAY -> Color.Gray.copy(alpha = 0.5f)
+    ComplianceCalculator.ComplianceColor.GREEN -> MaterialTheme.semanticColors.good
+    ComplianceCalculator.ComplianceColor.AMBER -> MaterialTheme.semanticColors.warn
+    ComplianceCalculator.ComplianceColor.RED -> MaterialTheme.colorScheme.error
+    ComplianceCalculator.ComplianceColor.GRAY -> MaterialTheme.colorScheme.outline
 }
 
 @Composable

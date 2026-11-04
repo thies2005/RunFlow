@@ -60,6 +60,9 @@ export default function Dashboard() {
     // 1. Unified Dashboard Query
     const { data: dashboardData, isLoading, error } = useQuery({
         queryKey: ['dashboard-data'],
+        // Workout links can change in the Android app while this view is idle.
+        staleTime: 0,
+        refetchOnWindowFocus: true,
         queryFn: async () => {
             const todayStr = format(new Date(), 'yyyy-MM-dd');
             const res = await fetch(`/api/dashboard?date=${todayStr}`, { cache: 'no-store' });

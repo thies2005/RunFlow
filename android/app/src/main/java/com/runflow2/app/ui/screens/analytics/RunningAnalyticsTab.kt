@@ -67,7 +67,7 @@ import com.runflow2.app.domain.model.PaceZone
 import com.runflow2.app.ui.components.FitnessChart
 import com.runflow2.app.ui.components.ProgressRing
 import com.runflow2.app.ui.components.SectionTitle
-import com.runflow2.app.ui.components.Sparkline
+import com.runflow2.app.ui.components.VdotTrendChart
 import com.runflow2.app.ui.components.StatTile
 import com.runflow2.app.ui.components.WeeklyVolumeBars
 import com.runflow2.app.ui.theme.semanticColors
@@ -152,20 +152,18 @@ fun RunningAnalyticsTab(
                     )
                 }
 
-                // VDOT Trend sparkline
-                if (bundle.vdotTrend.size >= 2) {
+                // Weekly best VDOT on a labeled scale
+                if (bundle.vdotTrend.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             "26-Week VDOT Progression",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Sparkline(
-                            values = bundle.vdotTrend.map { it.vdot },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            color = sem.vo2,
+                        VdotTrendChart(
+                            points = bundle.vdotTrend,
+                            firstWeek = bundle.weeklyVolume.firstOrNull()?.weekStart ?: bundle.vdotTrend.first().date,
+                            lastWeek = bundle.weeklyVolume.lastOrNull()?.weekStart ?: bundle.vdotTrend.last().date,
                         )
                     }
                 }
@@ -269,7 +267,7 @@ fun RunningAnalyticsTab(
                                         .fillMaxWidth()
                                         .height(6.dp)
                                         .clip(RoundedCornerShape(3.dp)),
-                                    color = if (ratio >= 0.98f) sem.good else if (ratio >= 0.90f) MaterialTheme.colorScheme.primary else Color(0xFFFFA726),
+                                    color = if (ratio >= 0.98f) sem.good else if (ratio >= 0.90f) MaterialTheme.colorScheme.primary else sem.warn,
                                 )
                             }
                         }
@@ -374,7 +372,7 @@ fun RunningAnalyticsTab(
                         ProgressRing(
                             progress = (shapeScore / 100f).coerceIn(0f, 1f),
                             modifier = Modifier.size(44.dp),
-                            color = if (shapeScore >= 70) sem.good else if (shapeScore >= 45) Color(0xFFFFA726) else MaterialTheme.colorScheme.error,
+                            color = if (shapeScore >= 70) sem.good else if (shapeScore >= 45) sem.warn else MaterialTheme.colorScheme.error,
                         )
                         Text(
                             "$shapeScore%",
@@ -484,7 +482,7 @@ fun RunningAnalyticsTab(
                             Icon(
                                 Icons.Outlined.EmojiEvents,
                                 contentDescription = null,
-                                tint = Color(0xFFFFD700),
+                                tint = sem.warn,
                             )
                         },
                     )

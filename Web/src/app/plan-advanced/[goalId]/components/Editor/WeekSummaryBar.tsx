@@ -86,7 +86,7 @@ export function WeekSummaryBar({
                 )}
                 {hasTss && (
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono font-medium border ${complianceBadgeClass}`}>
-                        Effort: {actualWeekTss} / {plannedTss} TSS ({pct}%)
+                        Completed / planned effort: {actualWeekTss} / {plannedTss} TSS ({pct}%)
                     </span>
                 )}
                 {focusGoal && (

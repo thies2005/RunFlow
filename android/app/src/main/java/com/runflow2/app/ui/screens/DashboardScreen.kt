@@ -95,6 +95,7 @@ import com.runflow2.app.domain.readiness.DataConfidence
 import com.runflow2.app.domain.readiness.ReadinessResult
 import com.runflow2.app.domain.readiness.ReadinessScoring
 import com.runflow2.app.domain.readiness.ReadinessState
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -126,7 +127,9 @@ fun DashboardScreen(
         container.repository.workoutsForGoal(goal.id).collectAsState(initial = emptyList()).value
     } ?: emptyList()
     // Athlete profile powers the greeting + initials avatar (same pattern as AthleteScreen).
-    val profile by container.repository.profile.collectAsState(initial = null)
+    val profileFlow = remember(container) { container.repository.profile.map { Pair(true, it) } }
+    val profileState by profileFlow.collectAsState(initial = Pair(false, null))
+    val profile = profileState.second
 
     // ---- sign-in nudge: shows until signed in, permanently dismissed, or snoozed ----
     // Gated on auth.initialized so the dialog can't flash for an already
@@ -208,6 +211,12 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 // ---- Greeting header ----
+                if (activities.any { it.isDemo }) {
+                    item { Text("Sample history is displayed. Sample activities are excluded from training calibration. Use Settings → Reset local data to start empty.") }
+                }
+                if (profileState.first && profile == null) {
+                    item { Text("Welcome. Add your profile and record or import an activity to personalize training.") }
+                }
                 item {
                     val nameWords = (profile?.name?.trim() ?: "")
                         .split(Regex("\\s+"))
@@ -302,7 +311,7 @@ fun DashboardScreen(
                                 )
                                 StatTile(
                                     label = "Fitness",
-                                    value = Format.intOrDash(a?.ctl),
+                                    value = Format.roundedIntOrDash(a?.ctl),
                                     icon = Icons.Outlined.Favorite,
                                     accent = MaterialTheme.colorScheme.primary,
                                     caption = ctlDelta?.let {
@@ -427,7 +436,7 @@ fun DashboardScreen(
                                     color = status.themedColor(),
                                 )
                                 Text(
-                                    "TSB ${if (a != null && a.tsb > 0) "+" else ""}${Format.intOrDash(a?.tsb)} · CTL ${Format.intOrDash(a?.ctl)} · ATL ${Format.intOrDash(a?.atl)}",
+                                    "TSB ${if (a != null && a.tsb > 0) "+" else ""}${Format.roundedIntOrDash(a?.tsb)} · CTL ${Format.roundedIntOrDash(a?.ctl)} · ATL ${Format.roundedIntOrDash(a?.atl)}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1,
@@ -688,7 +697,7 @@ fun DashboardScreen(
                                         Column(Modifier.weight(1f)) {
                                             Text(type.label, style = MaterialTheme.typography.titleMedium)
                                             Text(
-                                                w.description,
+                                                Format.workoutInstructions(w.description, unit, w.webWorkoutType != null),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 maxLines = 2,

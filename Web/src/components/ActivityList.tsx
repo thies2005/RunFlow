@@ -66,6 +66,9 @@ interface ActivityListProps {
     isLoading?: boolean;
     userHrMax?: number;
     vdotCorrectionFactor?: number;
+    selectionDisabled?: boolean;
+    selectedIds?: Set<string>;
+    onSelectionChange?: (id: string, selected: boolean) => void;
 }
 
 const activityIcons: Record<string, React.ReactNode> = {
@@ -359,7 +362,7 @@ const ActivityRow = ({ index, style, activities, onClick, ariaAttributes }: Acti
     );
 };
 
-export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionFactor }: ActivityListProps) {
+export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionFactor, selectedIds, onSelectionChange, selectionDisabled }: ActivityListProps) {
     const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
     const [windowHeight, setWindowHeight] = useState(800);
 
@@ -417,7 +420,7 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
     return (
         <>
             <div className={activities.length > 50 ? "" : "space-y-3"}>
-                {activities.length > 50 ? (
+                {activities.length > 50 && !onSelectionChange ? (
                     <List
                         style={{ height: windowHeight }}
                         rowCount={activities.length}
@@ -427,16 +430,25 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
                     />
                 ) : (
                     activities.map((activity, index) => (
-                        <button
-                            key={activity.id}
-                            type="button"
-                            className="animate-slide-in appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
-                            style={{ animationDelay: `${index * 0.05}s` }}
-                            onClick={() => handleActivityClick(activity)}
-                            aria-label={`View details for ${getDisplayActivityName(activity)}`}
-                        >
-                            <ActivityCard activity={activity} />
-                        </button>
+                        <div key={activity.id} className="flex items-center gap-3">
+                            {onSelectionChange && (
+                                <input type="checkbox"
+                                    aria-label={`Select ${getDisplayActivityName(activity)}`}
+                                    disabled={selectionDisabled}
+                                    checked={selectedIds?.has(activity.id) ?? false}
+                                    onChange={(event) => onSelectionChange(activity.id, event.target.checked)}
+                                    className="h-5 w-5 shrink-0 accent-accent-orange" />
+                            )}
+                            <button
+                                type="button"
+                                className="animate-slide-in appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-md"
+                                style={{ animationDelay: `${Math.min(index * 0.05, 0.5)}s` }}
+                                onClick={() => handleActivityClick(activity)}
+                                aria-label={`View details for ${getDisplayActivityName(activity)}`}
+                            >
+                                <ActivityCard activity={activity} />
+                            </button>
+                        </div>
                     ))
                 )}
             </div>

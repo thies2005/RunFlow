@@ -54,6 +54,17 @@ object ComplianceCalculator {
         val statusColor: ComplianceColor,
     )
 
+    fun WeeklyCompliance.displaySummary(loadMetric: String): String {
+        if (status == ComplianceStatus.PENDING) return "Not started · $totalCount workouts"
+        val basis = when {
+            plannedTss > 0 -> "${actualTss.roundToInt()} / ${plannedTss.roundToInt()} $loadMetric"
+            plannedKm > 0 -> "Load unavailable · Distance adherence"
+            plannedDurationSec > 0 -> "Load unavailable · Duration adherence"
+            else -> "Load unavailable · Workout completion"
+        }
+        return "$basis · $compliancePct%"
+    }
+
     fun evaluateRatio(ratio: Double): Pair<ComplianceStatus, ComplianceColor> {
         return when {
             ratio in 0.85..1.15 -> ComplianceStatus.ON_TARGET to ComplianceColor.GREEN
@@ -194,7 +205,9 @@ object ComplianceCalculator {
         }
 
         val compliancePct = (complianceRatio * 100.0).roundToInt()
-        val (status, color) = evaluateRatio(complianceRatio)
+        val (status, color) = if (completedCount == 0 && workouts.none { epochMillisToLocalDate(it.scheduledDate, zoneId).isBefore(today) }) {
+            ComplianceStatus.PENDING to ComplianceColor.GRAY
+        } else evaluateRatio(complianceRatio)
 
         return WeeklyCompliance(
             plannedTss = (plannedTss * 10.0).roundToInt() / 10.0,

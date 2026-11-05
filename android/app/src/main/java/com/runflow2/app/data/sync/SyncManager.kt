@@ -1,6 +1,7 @@
 package com.runflow2.app.data.sync
 
 import com.runflow2.app.core.util.AppLog
+import androidx.room.withTransaction
 import com.runflow2.app.data.db.AppDatabase
 import com.runflow2.app.data.db.ProfileEntity
 import com.runflow2.app.data.net.AuthStore
@@ -21,6 +22,7 @@ import com.runflow2.app.data.sync.mergeInto
 import com.runflow2.app.data.sync.reconcileCreatedWorkout
 import com.runflow2.app.data.sync.toDailyEntry
 import com.runflow2.app.data.sync.toWorkoutEntity
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -29,6 +31,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -36,9 +39,12 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import retrofit2.HttpException
 import java.io.IOException
 import java.time.LocalDate
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 data class SyncStatus(
     val running: Boolean = false,
@@ -58,9 +64,9 @@ data class SyncResult(
  * Offline-first reconciliation against the RunFlow server.
  *
  * Room is the single source of truth for the UI; this manager only
- * reconciles it with the server: local pending edits are pushed first
- * (outbox), then server deltas overwrite everything else (server wins),
- * and rows the server no longer has are pruned. The outbox survives
+ * reconciles it with the server: server data is pulled first, preserving
+ * dirty edits and queued deletion tombstones, then pending edits are pushed.
+ * Completed pulls prune rows the server no longer has. The outbox survives
  * process death, reboots and indefinite offline periods.
  */
 class SyncManager(
@@ -82,13 +88,14 @@ class SyncManager(
         const val TYPE_WORKOUT_DELETE = "workout_delete"
         const val TYPE_GOAL_UPDATE = "goal_update"
         const val TYPE_GOAL_DELETE = "goal_delete"
+        private const val MAX_OUTBOX_PER_SYNC = 100
         private const val PAGE_SIZE = 100
         private const val MAX_PAGES = 60
         private const val STRAVA_TRIGGER_INTERVAL_MS = 6 * 60 * 60 * 1000L // 6h
         /** Device-plan uploads per sync cycle, bounding the work per drain. */
         private const val MAX_PLAN_UPLOADS_PER_SYNC = 5
         /** Readiness day-records pushed per sync cycle (a backlog after long offline periods). */
-        private const val MAX_READINESS_PUSHES_PER_SYNC = 60
+        private const val MAX_READINESS_PUSHES_PER_SYNC = 8
         /** History window pulled on the first readiness sync. */
         private const val READINESS_PULL_DAYS = 90L
     }
@@ -116,7 +123,9 @@ class SyncManager(
         }
     }
 
-    suspend fun pushPendingNow(reason: String): SyncResult = mutex.withLock {
+    suspend fun pushPendingNow(reason: String): SyncResult = guardSync("fast push", reason) { mutex.withLock {
+        client.awaitReady()
+        client.awaitOrigin(settings.settings.map { it.serverUrl })
         authStore.state.first { it.initialized }
         if (!authStore.state.value.loggedIn) {
             AppLog.d(TAG, "pushPendingNow skipped (not signed in), reason=$reason")
@@ -127,14 +136,15 @@ class SyncManager(
         val result = try {
             withContext(Dispatchers.IO) {
                 cleanDemoDataOnFirstLogin()
-                uploadLocalPlans()
+                if (uploadsAllowed()) uploadLocalPlans()
                 val (pushed, failed) = drainOutbox()
                 try {
-                    pushDirtyReadiness()
+                    if (uploadsAllowed()) pushDirtyReadiness()
                 } catch (e: IOException) {
                     AppLog.w(TAG, "readiness fast-push skipped (${e.message ?: "io error"})")
                 } catch (e: HttpException) {
                     if (e.code() == 401) throw e
+                    if (e.code() == 429) deferUploads(e, general = true)
                     AppLog.w(TAG, "readiness fast-push failed: HTTP ${e.code()}", e)
                 }
                 SyncResult(pushed = pushed, failed = failed)
@@ -163,15 +173,20 @@ class SyncManager(
         val msg = buildString {
             append(if (result.pushed > 0) "↑${result.pushed} " else "")
             append(if (result.failed > 0) "⚠${result.failed}" else "")
+            val pending = db.syncQueueDao().pendingCount()
+            if (pending > 0) append(" $pending queued")
+            if (!generalReadsAllowed()) append(" Server rate limited — retry later")
             if (isEmpty()) append("Up to date")
         }
         _status.value = SyncStatus(running = false, lastSyncAt = now, lastMessage = msg.trim())
         settings.setLastSync(now, msg.trim())
         AppLog.i(TAG, "pushPendingNow done (${msg.trim()}), reason=$reason")
         result
-    }
+    } }
 
-    suspend fun syncNow(reason: String, forceStrava: Boolean = false): SyncResult = mutex.withLock {
+    suspend fun syncNow(reason: String, forceStrava: Boolean = false): SyncResult = guardSync("sync", reason) { mutex.withLock {
+        client.awaitReady()
+        client.awaitOrigin(settings.settings.map { it.serverUrl })
         // Wait for the persisted session to be restored: without this, the
         // startup sync races AuthStore's DataStore read and no-ops even for
         // signed-in users.
@@ -180,6 +195,7 @@ class SyncManager(
         // sign-in state. Cheap no-op unless the setting is enabled.
         healthConnect?.let { hc ->
             runCatching { hc.importIfEnabled() }.onFailure {
+                if (it is CancellationException) throw it
                 AppLog.w(TAG, "Health Connect import error (${it.message})")
             }
         }
@@ -210,27 +226,109 @@ class SyncManager(
         // believable max HR, auto zone boundaries) — best-effort so a failure
         // here can never fail the sync.
         runCatching { repository.refreshBodyFromData() }
-            .onFailure { AppLog.w(TAG, "body auto-refresh failed (${it.message})") }
+            .onFailure { if (it is CancellationException) throw it; AppLog.w(TAG, "body auto-refresh failed (${it.message})") }
 
         // The server's two-metric VDOT/VO2max stats — fetched after the pull so
         // the server's fresh computation reflects the data just synced.
         // Best-effort: a failure keeps the previous snapshot and analytics fall
         // back to the on-device engine (offline port) when it goes stale.
-        repository.refreshServerMetrics()
-            .onFailure { AppLog.w(TAG, "server metrics refresh failed (${it.message})") }
+        if (generalReadsAllowed()) repository.refreshServerMetrics()
+            .onFailure {
+                if (it is CancellationException) throw it
+                if (it is HttpException && it.code() == 429) deferUploads(it, general = true)
+                if (it is HttpException && it.code() == 401) throw it
+                AppLog.w(TAG, "server metrics refresh failed (${it.message})")
+            }
 
         val now = System.currentTimeMillis()
         val msg = buildString {
             append(if (result.pushed > 0) "↑${result.pushed} " else "")
             append(if (result.pulled > 0) "↓${result.pulled} " else "")
             append(if (result.failed > 0) "⚠${result.failed}" else "")
+            val pending = db.syncQueueDao().pendingCount()
+            if (pending > 0) append(" $pending queued")
+            if (!generalReadsAllowed()) append(" Server rate limited — retry later")
             if (isEmpty()) append("Up to date")
         }
         _status.value = SyncStatus(running = false, lastSyncAt = now, lastMessage = msg.trim())
         settings.setLastSync(now, msg.trim())
         AppLog.i(TAG, "sync done (${msg.trim()}), reason=$reason")
         result
+    } }
+
+    /** Explicit recovery: download first, archive local edits, then replace only the profile. */
+    suspend fun restoreWebProfile(context: android.content.Context): java.io.File = mutex.withLock {
+        withContext(Dispatchers.IO) {
+            client.awaitReady()
+            client.awaitOrigin(settings.settings.map { it.serverUrl })
+            val account = authStore.state.first { it.initialized }
+            check(account.loggedIn && !account.userId.isNullOrBlank()) { "Sign in before restoring your web profile." }
+            val before = settings.settingsOnce()
+            val origin = com.runflow2.app.data.net.Api.normalizeServerUrl(before.serverUrl)
+            if (!generalReadsAllowed()) {
+                val seconds = ((before.generalReadCooldownUntil - System.currentTimeMillis()) / 1000 + 1).coerceAtLeast(1)
+                throw IOException("Server rate limited. Try again in $seconds seconds.")
+            }
+            val snapshot = db.withTransaction {
+                ProfileRecoverySnapshot(db.profileDao().get(), db.syncQueueDao().allForType(TYPE_PROFILE_UPDATE))
+            }
+            _status.value = _status.value.copy(running = true, lastMessage = "Downloading web profile…")
+            try {
+                val server = client.api().profile().user
+                check(server.id == account.userId) { "Server returned a different account. Local profile was kept." }
+                check(profilePreferences(settings.settingsOnce()) == profilePreferences(before)) {
+                    "Profile settings changed during download. Try again."
+                }
+                check(com.runflow2.app.data.net.Api.normalizeServerUrl(settings.settingsOnce().serverUrl) == origin) {
+                    "Server changed during download. Try again."
+                }
+                val backupSettings = org.json.JSONObject().apply {
+                    put("accountId", account.userId); put("server", origin)
+                    put("ftpWatts", before.ftpWatts); put("autoEstimateFtp", before.autoEstimateFtp)
+                    put("includeCrossTraining", before.includeCrossTraining)
+                    put("effectiveVo2maxCorrection", before.effectiveVo2maxCorrection)
+                    put("primaryLoadMetric", before.primaryLoadMetric)
+                }
+                val archive = ProfileRecovery(context.applicationContext, db).replaceFromWeb(
+                    server, account.email, snapshot, backupSettings,
+                ) {
+                    check(authStore.state.value.loggedIn && authStore.state.value.userId == account.userId && client.baseUrl == origin) {
+                        "Account or server changed during download. Local profile was kept."
+                    }
+                }
+                applyProfileSettings(server)
+                settings.markProfileHydrated(settings.profileHydrationKey(account.userId, origin))
+                authStore.updateEmailIfMissing(server.email)
+                repository.invalidateAnalyticsCache()
+                _status.value = _status.value.copy(lastMessage = "Web profile restored")
+                AppLog.i(TAG, "Web profile restored; previous local profile archived")
+                archive
+            } catch (e: HttpException) {
+                if (e.code() == 429) deferUploads(e, general = true)
+                _status.value = _status.value.copy(lastMessage = "Web profile restore deferred")
+                throw e
+            } finally {
+                _status.value = _status.value.copy(running = false)
+            }
+        }
     }
+
+    private fun profilePreferences(s: com.runflow2.app.data.repo.AppSettings): List<Any> =
+        listOf(s.ftpWatts, s.autoEstimateFtp, s.includeCrossTraining, s.effectiveVo2maxCorrection, s.primaryLoadMetric)
+
+    private suspend fun applyProfileSettings(server: com.runflow2.app.data.net.UserDto) {
+        server.ftpWatts?.let { settings.setFtpWatts(it) }
+        server.autoEstimateFtp?.let { settings.setAutoEstimateFtp(it) }
+        server.effectiveVo2maxCorrectionFactor?.let { settings.setEffectiveVo2maxCorrection(it) }
+        server.includeCrossTraining?.let { settings.setIncludeCrossTraining(it) }
+        server.primaryLoadMetric?.let { settings.setPrimaryLoadMetric(it) }
+    }
+
+    private suspend inline fun guardSync(operation: String, reason: String, block: () -> SyncResult): SyncResult =
+        guardSyncFailures(block) { e ->
+            AppLog.e(TAG, "$operation failed unexpectedly, reason=$reason", e)
+            _status.value = _status.value.copy(running = false, lastMessage = "Sync failed — changes stay queued")
+        }
 
     private suspend fun runSync(forceStrava: Boolean): SyncResult {
         var pushed = 0
@@ -238,41 +336,88 @@ class SyncManager(
 
         cleanDemoDataOnFirstLogin()
 
-        // ---- upload: device-created plans the server has never seen ----
-        // Runs BEFORE the outbox drain: the plan must exist server-side
-        // before any queued workout_create/workout_update items drain against
-        // it (their routes are goal-scoped and would 404 against a goal the
-        // server doesn't know). Pull comes last so the freshly imported plan
-        // round-trips as ordinary server truth.
-        uploadLocalPlans()
+        AppLog.i(TAG, "sync account=${authStore.state.value.userId ?: "unknown"} origin=${com.runflow2.app.data.net.Api.normalizeServerUrl(settings.settingsOnce().serverUrl)}")
+        // ---- profile ----
+        try {
+            val profile = db.profileDao().get()
+            if (!generalReadsAllowed()) {
+                AppLog.i(TAG, "profile pull deferred by server rate limit")
+            } else if (profile == null || !profile.dirty) {
+                val userId = authStore.state.value.userId
+                val origin = settings.settingsOnce().serverUrl
+                val server = client.api().profile().user
+                if (userId.isNullOrBlank() || authStore.state.value.userId != userId ||
+                    settings.settingsOnce().serverUrl != origin || server.id != userId) {
+                    throw IOException("Profile account or origin changed during pull")
+                }
+                val stored = db.withTransaction {
+                    val current = db.profileDao().get()
+                    if (current != profile || current?.dirty == true) false
+                    else { db.profileDao().upsert(server.applyTo(current ?: ProfileEntity(), authStore.state.value.email)); true }
+                }
+                if (!stored) throw IOException("Profile changed during pull")
+                settings.markProfileHydrated(settings.profileHydrationKey(userId, origin))
+                applyProfileSettings(server)
+                // A Strava account may only get its email server-side later
+                // (profile:read_all scope) — persist it once it shows up.
+                authStore.updateEmailIfMissing(server.email)
+                AppLog.i(TAG, "profile pull succeeded")
+            } else {
+                AppLog.i(TAG, "profile pull skipped: local edits pending")
+            }
+        } catch (e: IOException) {
+            // offline mid-sync: fine
+            failed++
+            AppLog.w(TAG, "profile pull skipped (${e.message ?: "io error"})")
+        } catch (e: HttpException) {
+            if (e.code() == 401) throw e
+            if (e.code() == 429) deferUploads(e, general = true)
+            failed++
+            AppLog.w(TAG, "profile pull failed: HTTP ${e.code()}", e)
+        } catch (e: CancellationException) { throw e
+        } catch (e: Exception) { failed++; AppLog.e(TAG, "profile pull failed", e) }
 
-        // ---- push: drain the outbox, oldest first ----
+        var pulled = 0
+        var pruned = 0
+        try {
+            val (count, removed) = if (generalReadsAllowed()) pullPlans() else {
+                AppLog.i(TAG, "plan pull deferred by server rate limit")
+                0 to 0
+            }
+            pulled += count
+            pruned += removed
+            if (generalReadsAllowed()) AppLog.i(TAG, "plan pull succeeded: $count plan(s), $removed pruned")
+        } catch (e: CancellationException) { throw e
+        } catch (e: HttpException) {
+            if (e.code() == 401) throw e
+            if (e.code() == 429) deferUploads(e, general = true)
+            failed++
+            AppLog.w(TAG, "plan pull failed: HTTP ${e.code()}", e)
+        } catch (e: Exception) { failed++; AppLog.e(TAG, "plan pull failed", e) }
+
+        try {
+            val (count, removed) = pullActivities()
+            pulled += count
+            pruned += removed
+            AppLog.i(TAG, "activity pull succeeded: $count activity(ies), $removed pruned")
+        } catch (e: CancellationException) { throw e
+        } catch (e: HttpException) {
+            if (e.code() == 401) throw e
+            if (e.code() == 429) deferUploads(e)
+            failed++
+            AppLog.w(TAG, "activity pull failed: HTTP ${e.code()}", e)
+        } catch (e: Exception) { failed++; AppLog.e(TAG, "activity pull failed", e) }
+
+        if (uploadsAllowed()) uploadLocalPlans()
         val (outboxPushed, outboxFailed) = drainOutbox()
         pushed += outboxPushed
         failed += outboxFailed
-
-        // ---- pull: server state wins ----
-        var (pulled, pruned) = pullActivities()
-        if (pulled > 0 || pruned > 0) AppLog.i(TAG, "pulled $pulled activity(ies), pruned $pruned")
-
-        // ---- pull plans (server-generated goals + workouts) ----
-        try {
-            val (planPulled, planPruned) = pullPlans()
-            if (planPulled > 0 || planPruned > 0) AppLog.i(TAG, "pulled $planPulled plan(s), pruned $planPruned")
-            pulled += planPulled
-            pruned += planPruned
-        } catch (e: IOException) {
-            AppLog.w(TAG, "plan pull skipped (${e.message ?: "io error"})")
-        } catch (e: HttpException) {
-            if (e.code() == 401) throw e
-            AppLog.w(TAG, "plan pull failed: HTTP ${e.code()}", e)
-        }
 
         // ---- server-side Strava import. Throttled to every 6h for the
         // periodic/startup path; explicit user pulls (pull-to-refresh, manual
         // "Sync now") force it so fresh Strava activities show up on demand. ----
         val lastTrigger = settings.settingsOnce().lastStravaTriggerAt
-        if (forceStrava || System.currentTimeMillis() - lastTrigger > STRAVA_TRIGGER_INTERVAL_MS) {
+        if (uploadsAllowed() && (forceStrava || System.currentTimeMillis() - lastTrigger > STRAVA_TRIGGER_INTERVAL_MS)) {
             try {
                 val imported = client.api().triggerServerSync().activitiesSynced
                 settings.setLastStravaTrigger(System.currentTimeMillis())
@@ -283,6 +428,8 @@ class SyncManager(
                     pruned += again.second
                 }
             } catch (e: HttpException) {
+                if (e.code() == 401) throw e
+                if (e.code() == 429) deferUploads(e)
                 if (e.code() == 409) settings.setLastStravaTrigger(System.currentTimeMillis())
                 // otherwise ignore: import is best-effort
                 AppLog.w(TAG, "server Strava import failed: HTTP ${e.code()}", e)
@@ -292,45 +439,23 @@ class SyncManager(
             }
         }
 
-        // ---- profile ----
-        try {
-            val profile = db.profileDao().get()
-            if (profile == null || !profile.dirty) {
-                val server = client.api().profile().user
-                db.profileDao().upsert(server.applyTo(profile ?: ProfileEntity(), authStore.state.value.email))
-                if (server.ftpWatts != null) settings.setFtpWatts(server.ftpWatts)
-                if (server.autoEstimateFtp != null) settings.setAutoEstimateFtp(server.autoEstimateFtp)
-                // Calibration factors set on the web must reach the on-device
-                // engine too (they live in DataStore for fast UI reads).
-                server.effectiveVo2maxCorrectionFactor?.let { settings.setEffectiveVo2maxCorrection(it) }
-                server.includeCrossTraining?.let { settings.setIncludeCrossTraining(it) }
-                server.primaryLoadMetric?.let { settings.setPrimaryLoadMetric(it) }
-                // A Strava account may only get its email server-side later
-                // (profile:read_all scope) — persist it once it shows up.
-                authStore.updateEmailIfMissing(server.email)
-            }
-        } catch (e: IOException) {
-            // offline mid-sync: fine
-            AppLog.w(TAG, "profile pull skipped (${e.message ?: "io error"})")
-        } catch (e: HttpException) {
-            if (e.code() == 401) throw e
-            AppLog.w(TAG, "profile pull failed: HTTP ${e.code()}", e)
-        }
-
         // ---- readiness: daily health metrics + score push / history pull ----
         try {
-            syncReadiness()
+            if (generalReadsAllowed()) syncReadiness()
         } catch (e: IOException) {
             // offline mid-sync: whatever was pushed stays queued (dirty)
             AppLog.w(TAG, "readiness sync skipped (${e.message ?: "io error"})")
         } catch (e: HttpException) {
             if (e.code() == 401) throw e
+            if (e.code() == 429) deferUploads(e, general = true)
             AppLog.w(TAG, "readiness sync failed: HTTP ${e.code()}", e)
         }
 
         // ---- workout auto-link suggestions (Decision U2 / D6) ----
         try {
             repository.matchWorkoutsWithActivities()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             AppLog.w(TAG, "workout auto-link matching failed: ${e.message}", e)
         }
@@ -338,43 +463,72 @@ class SyncManager(
         return SyncResult(pushed = pushed, pulled = pulled, pruned = pruned, failed = failed)
     }
 
+    private suspend fun generalReadsAllowed(): Boolean = settings.settingsOnce().generalReadCooldownUntil <= System.currentTimeMillis()
+
+    private suspend fun uploadsAllowed(): Boolean {
+        val s = settings.settingsOnce()
+        val now = System.currentTimeMillis()
+        return s.uploadCooldownUntil <= now && s.generalReadCooldownUntil <= now
+    }
+
+    private suspend fun deferUploads(error: HttpException, general: Boolean = false) {
+        val response = error.response()
+        val body = runCatching {
+            response?.errorBody()?.source()?.peek()?.let { source ->
+                source.request(16_385)
+                source.readUtf8(minOf(source.buffer.size, 16_384))
+            }
+        }.getOrNull()
+        val until = maxOf(settings.settingsOnce().uploadCooldownUntil,
+            retryAfterUntil(response?.headers()?.get("Retry-After"), System.currentTimeMillis(), body))
+        settings.setUploadCooldownUntil(until)
+        if (general) settings.setGeneralReadCooldownUntil(maxOf(settings.settingsOnce().generalReadCooldownUntil, until))
+        AppLog.w(TAG, "${if (general) "general requests and uploads" else "uploads"} deferred until $until after HTTP 429")
+    }
+
     private suspend fun drainOutbox(): Pair<Int, Int> {
         var pushed = 0
         var failed = 0
-        while (true) {
-            val batch = db.syncQueueDao().nextBatch(20)
-            if (batch.isEmpty()) break
-            var progress = false
-            for (item in batch) {
-                val now = System.currentTimeMillis()
-                try {
-                    handleOutboxItem(item.entityType, item.localId, item.payloadJson)
-                    db.syncQueueDao().markCompleted(item.id)
-                    pushed++
-                    progress = true
-                } catch (e: HttpException) {
-                    failed++
-                    if (e.code() in 400..499 && e.code() != 408 && e.code() != 429) {
-                        // Client error: retrying can never succeed — dead-letter,
-                        // but retain the row so nothing is silently lost.
-                        AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered: HTTP ${e.code()}", e)
-                        db.syncQueueDao().markDead(item.id, now)
-                    } else if (item.retryCount + 1 >= item.maxRetries) {
-                        AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered after ${item.retryCount + 1} tries: HTTP ${e.code()}", e)
-                        db.syncQueueDao().markDead(item.id, now)
-                    } else {
-                        AppLog.w(TAG, "outbox ${item.entityType}(${item.localId}) retry ${item.retryCount + 1}/${item.maxRetries}: HTTP ${e.code()}", e)
-                        db.syncQueueDao().incrementRetry(item.id, now)
-                    }
-                    progress = true
-                } catch (e: IOException) {
-                    // Connection dropped: stop draining, retry next window.
-                    AppLog.w(TAG, "outbox push interrupted (${e.message ?: "io error"}) — will retry", e)
-                    db.syncQueueDao().incrementRetry(item.id, now)
-                    break
+        if (!uploadsAllowed()) return 0 to 0
+        val batch = db.syncQueueDao().nextBatch(MAX_OUTBOX_PER_SYNC)
+        for (item in batch) {
+            if (item.entityType == TYPE_PROFILE_UPDATE) {
+                val s = settings.settingsOnce()
+                val account = authStore.state.value
+                val profile = db.profileDao().get()
+                val hydrated = !account.userId.isNullOrBlank() && s.profileHydrationKey == settings.profileHydrationKey(account.userId, s.serverUrl)
+                if (!hydrated && (profile == null || profile.name.trim().equals("RunFlow Athlete", ignoreCase = true))) {
+                    AppLog.w(TAG, "Profile update deferred: use web profile in Settings")
+                    continue
                 }
             }
-            if (!progress) break
+            val now = System.currentTimeMillis()
+            try {
+                handleOutboxItem(item.entityType, item.localId, item.payloadJson)
+                db.syncQueueDao().markCompleted(item.id)
+                pushed++
+            } catch (e: HttpException) {
+                if (e.code() == 401) throw e
+                failed++
+                if (e.code() == 429) {
+                    deferUploads(e, general = item.entityType !in setOf(TYPE_ACTIVITY_CREATE, TYPE_ACTIVITY_UPDATE, TYPE_ACTIVITY_DELETE))
+                    AppLog.w(TAG, "outbox rate limited; queued items retained", e)
+                    break
+                } else if (e.code() in 400..499 && e.code() != 408) {
+                    AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered: HTTP ${e.code()}", e)
+                    db.syncQueueDao().markDead(item.id, now)
+                } else if (item.retryCount + 1 >= item.maxRetries) {
+                    AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered after ${item.retryCount + 1} tries: HTTP ${e.code()}", e)
+                    db.syncQueueDao().markDead(item.id, now)
+                } else {
+                    db.syncQueueDao().incrementRetry(item.id, now)
+                    AppLog.w(TAG, "outbox ${item.entityType}(${item.localId}) deferred: HTTP ${e.code()}", e)
+                }
+            } catch (e: IOException) {
+                AppLog.w(TAG, "outbox push interrupted — will retry", e)
+                db.syncQueueDao().incrementRetry(item.id, now)
+                break
+            }
         }
         if (pushed > 0) AppLog.i(TAG, "pushed $pushed outbox item(s)")
         return pushed to failed
@@ -399,6 +553,7 @@ class SyncManager(
                 client.api().postReadinessDaily(repository.readinessPayloadFor(entry, series))
                 pushedDates += entry.date
             } catch (e: HttpException) {
+                if (e.code() == 401 || e.code() == 429) throw e
                 // one bad day must not starve the rest of the queue
                 AppLog.w(TAG, "readiness push for ${entry.date} failed: HTTP ${e.code()}", e)
             }
@@ -440,7 +595,7 @@ class SyncManager(
         if (!s.healthMetricsSyncEnabled) return
         val isFirstSync = s.readinessLastPushAt == 0L
 
-        pushDirtyReadiness()
+        if (uploadsAllowed()) pushDirtyReadiness()
 
         // ---- first-sync pull: backfill from the server's history ----
         if (isFirstSync) {
@@ -487,7 +642,11 @@ class SyncManager(
             } catch (e: IOException) {
                 AppLog.w(TAG, "plan ${goal.id} upload offline (${e.message ?: "io error"}) — stays local", e)
             } catch (e: HttpException) {
+                if (e.code() == 401) throw e
+                if (e.code() == 429) { deferUploads(e, general = true); break }
                 AppLog.w(TAG, "plan ${goal.id} upload failed: HTTP ${e.code()} — stays local", e)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 // Unexpected (mapping/serialization bug): log and keep going —
                 // one bad plan must not abort the whole sync.
@@ -558,6 +717,7 @@ class SyncManager(
                         // was in flight): remove the just-created server row so
                         // the server doesn't keep an orphan the user deleted.
                         runCatching { api.deleteWorkout(payload.goalId, dto.id) }
+                            .onFailure { if (it is CancellationException) throw it }
                     } else {
                         val server = dto.toWorkoutEntity(payload.goalId)
                         val dup = db.workoutDao().byId(dto.id)
@@ -613,13 +773,16 @@ class SyncManager(
      */
     private suspend fun pullPlans(): Pair<Int, Int> {
         val serverGoals = client.api().plans().goals
+        val deletedGoals = db.syncQueueDao().allForType(TYPE_GOAL_DELETE).map { it.localId }.toSet()
+        val deletedWorkouts = db.syncQueueDao().allForType(TYPE_WORKOUT_DELETE).map { it.localId }.toSet()
         var pulled = 0
         var pruned = 0
         val seenIds = HashSet<String>(serverGoals.size)
         for (g in serverGoals) {
             seenIds += g.id
+            if (g.id in deletedGoals) continue
             val (goal, rawServerWorkouts) = g.toEntities() ?: continue
-            val serverWorkouts = rawServerWorkouts.map { sw ->
+            val serverWorkouts = rawServerWorkouts.filterNot { it.id in deletedWorkouts }.map { sw ->
                 if (sw.activityId != null) {
                     val localActId = db.activityDao().byServerId(sw.activityId)?.id ?: sw.activityId
                     sw.copy(activityId = localActId)
@@ -632,8 +795,13 @@ class SyncManager(
             val localWorkouts = db.workoutDao().forGoal(goal.id)
             db.workoutDao().upsertAll(mergeServerWorkouts(localWorkouts, serverWorkouts))
             val serverIds = serverWorkouts.map { it.id }.toSet()
-            localWorkouts.filter { it.id !in serverIds && !it.dirty }.forEach {
-                db.workoutDao().delete(it.id)
+            // An unmappable workout means this goal was only partially pulled.
+            if (rawServerWorkouts.size == g.workouts.size) {
+                localWorkouts.filter { it.id !in serverIds && !it.dirty }.forEach {
+                    db.workoutDao().delete(it.id)
+                }
+            } else {
+                AppLog.w(TAG, "plan ${g.id} contains unmappable workouts; pruning skipped")
             }
             pulled++
         }
@@ -652,6 +820,9 @@ class SyncManager(
     private suspend fun pullActivities(): Pair<Int, Int> {
         var offset = 0
         val seen = mutableSetOf<String>()
+        val deletedIds = db.syncQueueDao().allForType(TYPE_ACTIVITY_DELETE).map { item ->
+            runCatching { json.parseToJsonElement(item.payloadJson).jsonObject["activityId"]?.jsonPrimitive?.content }.getOrNull() ?: item.localId
+        }.toSet()
         var pulled = 0
         var page = 0
         while (page < MAX_PAGES) {
@@ -660,6 +831,7 @@ class SyncManager(
             val now = System.currentTimeMillis()
             for (dto in res.activities) {
                 seen += dto.id
+                if (dto.id in deletedIds) continue
                 val existing = db.activityDao().byServerId(dto.id)
                 // dirty = an unpushed local edit (rename): local wins until the
                 // outbox item drains, mirroring the plan pull guard.
@@ -671,6 +843,8 @@ class SyncManager(
             offset += res.activities.size
             page++
         }
+        // A page cap is not a complete pull; never prune unseen rows.
+        if (page >= MAX_PAGES) return pulled to 0
         // prune synced non-demo rows the server no longer returns (deleted there)
         var pruned = 0
         db.activityDao().all().forEach { local ->
@@ -703,4 +877,30 @@ class SyncManager(
             AppLog.i(TAG, "demo data cleared on first login (account=${accountEmail ?: "unknown"})")
         }
     }
+}
+
+/** Converts unexpected sync failures into a retryable result, while preserving cancellation. */
+internal suspend inline fun guardSyncFailures(block: () -> SyncResult, onFailure: (Exception) -> Unit): SyncResult =
+    try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        onFailure(e)
+        SyncResult(failed = 1)
+    }
+
+/** Retry-After permits delta seconds or an RFC 7231 date. Invalid values fall back to one minute. */
+internal fun retryAfterUntil(header: String?, now: Long, body: String? = null): Long {
+    fun secondsUntil(seconds: Long?): Long? = seconds?.takeIf { it >= 0 }?.let {
+        now + it.coerceAtMost((Long.MAX_VALUE - now) / 1000) * 1000
+    }
+    secondsUntil(header?.trim()?.toLongOrNull())?.let { return it }
+    val date = runCatching { ZonedDateTime.parse(header, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant().toEpochMilli() }.getOrNull()
+    if (date != null && date > now) return date
+    val bodySeconds = runCatching {
+        val root = Json.parseToJsonElement(body ?: return@runCatching null).jsonObject
+        root["details"]?.jsonObject?.get("retryAfter")?.jsonPrimitive?.longOrNull
+    }.getOrNull()
+    return secondsUntil(bodySeconds) ?: now + 60_000L
 }

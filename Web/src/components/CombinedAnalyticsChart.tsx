@@ -50,6 +50,7 @@ const SeriesToggleButtons = memo(({
                 <button
                     key={key}
                     onClick={() => onToggle(key)}
+                    aria-pressed={visibleSeries[key]}
                     className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors flex items-center gap-2 border ${visibleSeries[key]
                         ? 'bg-background-tertiary text-foreground border-line-strong'
                         : 'bg-transparent text-foreground-muted border-line hover:text-foreground'
@@ -81,11 +82,12 @@ const TimeRangeButtons = memo(({
     const ranges: TimeRange[] = ['1M', '3M', '6M', '1Y', 'ALL'];
 
     return (
-        <div className="flex bg-background-secondary rounded-md p-1 border border-line">
+        <div role="group" aria-label="Analytics history range" className="flex bg-background-secondary rounded-md p-1 border border-line">
             {ranges.map(range => (
                 <button
                     key={range}
                     onClick={() => onTimeRangeChange(range)}
+                    aria-pressed={timeRange === range}
                     className={`px-3 py-1 text-xs font-medium rounded transition-colors ${timeRange === range
                         ? 'bg-background-tertiary text-foreground'
                         : 'text-foreground-muted hover:text-foreground'

@@ -58,6 +58,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
@@ -91,6 +93,7 @@ import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.model.PlanPhase
 import com.runflow2.app.domain.model.WorkoutType
 import com.runflow2.app.domain.person.Personalization
+import com.runflow2.app.domain.plan.ComplianceCalculator.displaySummary
 import com.runflow2.app.domain.plan.ComplianceCalculator
 import com.runflow2.app.domain.plan.vdotFromThresholdPaceSecPerKm
 import com.runflow2.app.ui.components.InfoChip
@@ -99,6 +102,7 @@ import android.widget.Toast
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import java.time.DayOfWeek
+import com.runflow2.app.ui.theme.semanticColors
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -456,8 +460,8 @@ private fun GoalHeaderCard(
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
         ),
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -477,6 +481,8 @@ private fun GoalHeaderCard(
             LinearProgressIndicator(
                 progress = { if (total > 0) done.toFloat() / total else 0f },
                 modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.onPrimary,
+                trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.28f),
             )
             Row(
                 Modifier.fillMaxWidth(),
@@ -486,46 +492,48 @@ private fun GoalHeaderCard(
                 Text("$done / $total workouts · ${Format.distance(weeklyKm, unit)}/wk")
                 if (targetTime != null) {
                     Text("Target ${Format.duration(targetTime)}")
+                } else {
+                    Text("Use prediction")
                 }
             }
 
             if (blockCompliance != null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.15f))
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                    Column(
+                        modifier = Modifier.padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         Text(
-                            "4-Week Block Load",
+                            "4-Week Progress",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
                         Text(
-                            "${blockCompliance.actualTss.roundToInt()} / ${blockCompliance.plannedTss.roundToInt()} $loadMetric · ${blockCompliance.compliancePct}% Adherence",
+                            blockCompliance.displaySummary(loadMetric),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                         )
+                        ComplianceProgressBar(
+                            ratio = blockCompliance.complianceRatio,
+                            color = complianceColorToComposeColor(blockCompliance.statusColor),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp),
+                        )
                     }
-                    ComplianceProgressBar(
-                        ratio = blockCompliance.complianceRatio,
-                        color = complianceColorToComposeColor(blockCompliance.statusColor),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp),
-                    )
                 }
             }
 
             if (daysToGo <= 2) {
-                TextButton(onClick = onRecordResult) {
+                TextButton(
+                    onClick = onRecordResult,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onPrimary),
+                ) {
                     Icon(Icons.Outlined.Check, null)
                     Spacer(Modifier.width(6.dp))
                     Text("Record race result")
@@ -648,7 +656,7 @@ private fun WorkoutCard(
                     }
                 }
                 Text(
-                    workout.description,
+                    Format.workoutInstructions(workout.description, unit, workout.webWorkoutType != null),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
@@ -726,7 +734,7 @@ private fun WorkoutActionSheet(
                 )
             }
         }
-        Text(workout.description, style = MaterialTheme.typography.bodyMedium)
+        Text(Format.workoutInstructions(workout.description, unit, workout.webWorkoutType != null), style = MaterialTheme.typography.bodyMedium)
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1207,11 +1215,12 @@ private fun PlanFitExporter.exportWorkoutToFit(context: android.content.Context,
     share(context, workout)
 }
 
+@Composable
 private fun complianceColorToComposeColor(color: ComplianceCalculator.ComplianceColor): Color = when (color) {
-    ComplianceCalculator.ComplianceColor.GREEN -> Color(0xFF10B981)
-    ComplianceCalculator.ComplianceColor.AMBER -> Color(0xFFF59E0B)
-    ComplianceCalculator.ComplianceColor.RED -> Color(0xFFEF4444)
-    ComplianceCalculator.ComplianceColor.GRAY -> Color.Gray.copy(alpha = 0.5f)
+    ComplianceCalculator.ComplianceColor.GREEN -> MaterialTheme.semanticColors.good
+    ComplianceCalculator.ComplianceColor.AMBER -> MaterialTheme.semanticColors.warn
+    ComplianceCalculator.ComplianceColor.RED -> MaterialTheme.colorScheme.error
+    ComplianceCalculator.ComplianceColor.GRAY -> MaterialTheme.colorScheme.outline
 }
 
 @Composable

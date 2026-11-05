@@ -311,7 +311,7 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
 
     private suspend fun saveAndStop() {
         val s = controller.state.value
-        if (s.status != RecStatus.IDLE && s.distanceM > 10) {
+        if (s.isSaveable()) {
             val profile = container.repository.profileOnce()
             val entity = buildActivity(
                 s, profile.thresholdPaceSecPerKm, profile.weightKg,
@@ -339,7 +339,7 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
             "RIDE" -> "Ride"
             "SWIM" -> "Swim"
             "WALK" -> "Walk"
-            "WORKOUT" -> "Workout"
+            "WORKOUT" -> "Strength session"
             else -> "Run"
         }
         val now = LocalDateTime.now()

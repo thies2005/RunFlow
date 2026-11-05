@@ -54,6 +54,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -208,6 +210,7 @@ fun PlanWizardScreen(
     // route backfills missing HR fields from the user profile)
     LaunchedEffect(Unit) {
         val p = container.repository.profile.first() ?: return@LaunchedEffect
+        if (p.email == com.runflow2.app.data.seed.DemoSeeder.DEMO_EMAIL) return@LaunchedEffect
         data = data.copy(
             hrMaxText = if (p.hrMax > 0) p.hrMax.toString() else "",
             hrRestText = if (p.hrRest > 0) p.hrRest.toString() else "",
@@ -312,7 +315,9 @@ fun PlanWizardScreen(
                                 val isCycling = data.category == EventCategory.CYCLING
                                 val noRace = data.raceType == RaceType.NONE || isCycling
                                 val profile = container.repository.profileOnce()
-                                val weightKg = profile.weightKg.takeIf { it > 0.0 } ?: 70.0
+                                val weightKg = profile.weightKg.takeIf {
+                                    it > 0.0 && profile.email != com.runflow2.app.data.seed.DemoSeeder.DEMO_EMAIL
+                                } ?: 70.0
                                 val activeFtp = settings.ftpWatts.takeIf { it > 0 }
                                     ?: analytics?.cycling?.eFtpWatts
                                     ?: effectiveVdot?.let { AnalyticsEngine.estimateBikeFtpFromVdot(it, weightKg) }
@@ -334,7 +339,7 @@ fun PlanWizardScreen(
                                     taperWeeks = data.taperWeeks,
                                     vdot = effectiveVdot,
                                     calibrationTimeSec = data.calibrationVdot?.let { parseDuration(data.calibTimeText) },
-                                    calibrationDistance = calibrationDistanceFor(data.calibDistance.first),
+                                    calibrationDistance = data.calibrationVdot?.let { calibrationDistanceFor(data.calibDistance.first) },
                                     ridesPerWeek = data.ridesPerWeek,
                                     swimsPerWeek = data.swimsPerWeek,
                                     startWeeklyKm = data.startWeeklyKm,
@@ -398,6 +403,7 @@ fun PlanWizardScreen(
                     modifier = Modifier.weight(2f),
                     enabled = when (steps[step]) {
                         WizardStep.EVENT_TYPE -> data.name.isNotBlank()
+                        WizardStep.CALIBRATION -> data.calibrationVdot != null || analytics?.effectiveVdot != null
                         WizardStep.RACE ->
                             data.raceType != RaceType.CUSTOM_DISTANCE || (data.customDistanceKm() ?: 0.0) > 0.0
                         else -> true
@@ -511,7 +517,7 @@ private fun EventCard(
     onClick: () -> Unit,
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.semantics { this.selected = selected },
         onClick = onClick,
         colors = CardDefaults.cardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer
@@ -522,14 +528,15 @@ private fun EventCard(
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(
                 icon, null,
-                tint = if (selected) MaterialTheme.colorScheme.primary
+                tint = if (selected) MaterialTheme.colorScheme.onSecondaryContainer
                 else MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                color = if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface)
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -725,6 +732,10 @@ private fun StepDate(data: WizardData, update: (WizardData) -> Unit) {
     }
 }
 
+internal fun calibrationVdot(distanceMeters: Double, timeText: String): Double? =
+    parseDuration(timeText)?.let { VdotMath.vdot(distanceMeters, it.toDouble()) }
+        ?.takeIf { it in 20.0..85.0 }
+
 @Composable
 private fun StepCalibration(
     data: WizardData,
@@ -748,7 +759,10 @@ private fun StepCalibration(
             )
         }
     }
-    Text("Recent race (optional)", style = MaterialTheme.typography.titleSmall)
+    Text(
+        if (analytics?.effectiveVdot == null) "Recent race (required)" else "Recent race (optional)",
+        style = MaterialTheme.typography.titleSmall,
+    )
     Row(
         Modifier
             .fillMaxWidth()
@@ -758,7 +772,7 @@ private fun StepCalibration(
         RaceDefaultsTable.calibrationRaces.forEach { r ->
             FilterChip(
                 selected = data.calibDistance == r,
-                onClick = { update(data.copy(calibDistance = r)) },
+                onClick = { update(data.copy(calibDistance = r, calibrationVdot = calibrationVdot(r.third, data.calibTimeText))) },
                 label = { Text(r.first) },
             )
         }
@@ -766,8 +780,7 @@ private fun StepCalibration(
     OutlinedTextField(
         value = data.calibTimeText,
         onValueChange = { t ->
-            val vdot = parseDuration(t)?.let { VdotMath.vdot(data.calibDistance.third * 1000.0, it.toDouble()) }
-            update(data.copy(calibTimeText = t, calibrationVdot = vdot?.takeIf { v -> v in 20.0..85.0 }))
+            update(data.copy(calibTimeText = t, calibrationVdot = calibrationVdot(data.calibDistance.third, t)))
         },
         label = { Text("Time at ${data.calibDistance.first} (h:mm:ss)") },
         modifier = Modifier.fillMaxWidth(),
@@ -813,6 +826,7 @@ private fun StepTarget(
     val current = data.targetTimeSec ?: ((predicted / 30).toInt() * 30).coerceIn(minSec, maxSec)
 
     StepHeader("Target time", "Based on VDOT ${Format.oneDecimal(vdot)} we predict ${Format.duration(predicted.toInt())}.")
+    Text(if (data.targetTimeSec == null) "Prediction selected · suggested fixed target below" else "Fixed target selected", style = MaterialTheme.typography.titleSmall)
     Text(
         Format.duration(current),
         style = MaterialTheme.typography.displayMedium,
@@ -828,6 +842,7 @@ private fun StepTarget(
         Text("Ambitious", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text("Conservative", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+    TextButton(onClick = { update(data.copy(targetTimeSec = current)) }) { Text("Set target to ${Format.duration(current)}") }
     val targetPace = current / raceKm
     Text(
         "That is ${Format.pace(targetPace)} /km for ${Format.distance(raceKm)}",
@@ -835,7 +850,7 @@ private fun StepTarget(
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     TextButton(onClick = { update(data.copy(targetTimeSec = null)) }) {
-        Text("Skip — let the plan use prediction")
+        Text("Use prediction instead of a fixed target")
     }
 }
 
@@ -866,6 +881,7 @@ private fun StepTargetTriathlon(data: WizardData, vdot: Double, update: (WizardD
         "The whole race — swim, both transitions, bike and run. " +
             "Projected from VDOT ${Format.oneDecimal(vdot)}: ${Format.duration(projection.projected.totalSeconds)}.",
     )
+    Text(if (data.targetTimeSec == null) "Prediction selected · suggested fixed target below" else "Fixed target selected", style = MaterialTheme.typography.titleSmall)
     Text(
         Format.duration(current),
         style = MaterialTheme.typography.displayMedium,
@@ -881,6 +897,7 @@ private fun StepTargetTriathlon(data: WizardData, vdot: Double, update: (WizardD
         Text("Optimal", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text("Conservative", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+    TextButton(onClick = { update(data.copy(targetTimeSec = current)) }) { Text("Set target to ${Format.duration(current)}") }
     Card {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("Projected race day", style = MaterialTheme.typography.titleSmall)
@@ -899,7 +916,7 @@ private fun StepTargetTriathlon(data: WizardData, vdot: Double, update: (WizardD
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     TextButton(onClick = { update(data.copy(targetTimeSec = null)) }) {
-        Text("Skip — let the plan use prediction")
+        Text("Use prediction instead of a fixed target")
     }
 }
 
@@ -1205,7 +1222,7 @@ private fun StepAdvanced(
         )
     }
     Text(
-        "Used for zone targets. Blank fields fall back to your athlete profile.",
+        "Used for zone targets. Enter your own values for personalized zones; blank fields may use generic estimates.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -1214,6 +1231,7 @@ private fun StepAdvanced(
 @Composable
 private fun StepSchedule(data: WizardData, update: (WizardData) -> Unit) {
     StepHeader("Weekly schedule", "Pick your long run, quality session, and rest days.")
+    Text("Long run: ${data.longRunDay.name.lowercase().replaceFirstChar { it.uppercase() }} · Quality: ${data.workoutDay.name.lowercase().replaceFirstChar { it.uppercase() }}", style = MaterialTheme.typography.bodyMedium)
 
     Text("Long run day", style = MaterialTheme.typography.titleSmall)
     DayPicker(selected = data.longRunDay, exclude = emptySet()) { update(data.copy(longRunDay = it)) }
@@ -1275,10 +1293,8 @@ private fun DayPicker(
     exclude: Set<DayOfWeek>,
     onSelect: (DayOfWeek) -> Unit,
 ) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
+    FlowRow(
+        Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         DayOfWeek.entries.forEach { d ->

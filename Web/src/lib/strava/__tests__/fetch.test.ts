@@ -1,4 +1,4 @@
-import { fetchActivityStreams, rateLimiter } from '../fetch';
+import { fetchActivityStreams, rateLimiter, shouldFetchActivityStreams } from '../fetch';
 import { logger } from '@/lib/logging/logger';
 
 // Mock the logger
@@ -11,6 +11,14 @@ jest.mock('@/lib/logging/logger', () => ({
 }));
 
 describe('fetchActivityStreams', () => {
+    it('imports GPS for outdoor variants and other located sports without fetching indoor strength streams', () => {
+        for (const type of ['TrailRun', 'GravelRide', 'MountainBikeRide', 'Walk', 'Hike', 'Swim']) {
+            expect(shouldFetchActivityStreams({type})).toBe(true);
+        }
+        expect(shouldFetchActivityStreams({type: 'Kayaking', start_latlng: [0, 0]})).toBe(true);
+        expect(shouldFetchActivityStreams({type: 'EBikeRide', map: {summary_polyline: 'stored-route'}})).toBe(true);
+        expect(shouldFetchActivityStreams({type: 'WeightTraining'})).toBe(false);
+    });
     const mockAccessToken = 'mock-token';
     const mockActivityId = 12345;
 
@@ -28,7 +36,8 @@ describe('fetchActivityStreams', () => {
             heartrate: { data: [120, 125, 130] },
             velocity_smooth: { data: [3.5, 3.6, 3.7] },
             altitude: { data: [100, 101, 102] },
-            cadence: { data: [85, 86, 87] }
+            cadence: { data: [85, 86, 87] },
+            latlng: { data: [[50, 6], [50.1, 6.1]] }
         };
 
         (global.fetch as jest.Mock).mockResolvedValue({
@@ -41,7 +50,7 @@ describe('fetchActivityStreams', () => {
 
         expect(rateLimiter.checkAndWait).toHaveBeenCalledTimes(1);
         expect(global.fetch).toHaveBeenCalledWith(
-            expect.stringContaining(`/activities/${mockActivityId}/streams?keys=time,heartrate,velocity_smooth,altitude,cadence,watts&key_by_type=true`),
+            expect.stringContaining(`/activities/${mockActivityId}/streams?keys=time,heartrate,velocity_smooth,altitude,cadence,watts,latlng&key_by_type=true`),
             expect.objectContaining({
                 headers: { Authorization: `Bearer ${mockAccessToken}` }
             })
@@ -51,7 +60,8 @@ describe('fetchActivityStreams', () => {
             heartrate: [120, 125, 130],
             velocity_smooth: [3.5, 3.6, 3.7],
             altitude: [100, 101, 102],
-            cadence: [85, 86, 87]
+            cadence: [85, 86, 87],
+            latlng: [[50, 6], [50.1, 6.1]]
         });
     });
 

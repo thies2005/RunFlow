@@ -1,6 +1,6 @@
 'use client';
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, ArrowLeft, Plus } from 'lucide-react';
 import { ActivityList, Footer, ErrorBoundary, PullToRefresh } from '@/components';
@@ -14,6 +14,11 @@ const ManualActivityModal = lazy(() => import('@/components/ManualActivityModal'
 export default function ActivitiesPage() {
     const { status } = useSession();
     const router = useRouter();
+    const queryClient = useQueryClient();
+    const [source, setSource] = useState('all');
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
     const [filter, setFilter] = useState('RUN'); // Default to RUN
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 
@@ -38,11 +43,11 @@ export default function ActivitiesPage() {
         refetch,
         isRefetching
     } = useInfiniteQuery<ActivitiesResponse>({
-        queryKey: ['activities', 'infinite', filter],
+        queryKey: ['activities', 'infinite', filter, source],
         queryFn: async ({ pageParam = 0 }) => {
             const param = pageParam as number;
             const typeParam = filter !== 'ALL' ? `&type=${filter}` : '';
-            const res = await fetch(`/api/activities?limit=50&offset=${param}${typeParam}`);
+            const res = await fetch(`/api/activities?limit=50&offset=${param}${typeParam}&source=${source}`, { cache: 'no-store' });
             if (!res.ok) throw new Error('Failed to fetch activities');
             return res.json();
         },
@@ -57,6 +62,27 @@ export default function ActivitiesPage() {
 
     const allActivities = data?.pages.flatMap((page) => page.activities) || [];
     const totalCount = data?.pages[0]?.total || 0;
+    const changeFilter = (value: string) => { setFilter(value); setSelectedIds(new Set()); };
+    const deleteSelected = async () => {
+        if (selectedIds.size > 1000) {
+            setDeleteError('Select at most 1,000 activities at a time.');
+            return;
+        }
+        if (!selectedIds.size || !window.confirm(`Delete ${selectedIds.size} selected ${selectedIds.size === 1 ? 'activity' : 'activities'} from RunFlow? Linked workouts will be unlinked. Imported activities may return on a future sync.`)) return;
+        setDeleting(true);
+        setDeleteError('');
+        try {
+            const res = await fetch('/api/activities', {
+                method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: Array.from(selectedIds) }),
+            });
+            if (!res.ok) throw new Error('Could not delete the selected activities. Please try again.');
+            setSelectedIds(new Set());
+            await Promise.all(['activities', 'dashboard', 'analytics-stats', 'plan', 'plans', 'plan-advanced'].map(key => queryClient.invalidateQueries({ queryKey: [key] })));
+        } catch (error) {
+            setDeleteError(error instanceof Error ? error.message : 'Could not delete the selected activities.');
+        } finally { setDeleting(false); }
+    };
 
     if (isLoading) {
         return (
@@ -91,19 +117,22 @@ export default function ActivitiesPage() {
                                 {/* Type Filter */}
                                 <div className="flex bg-surface p-1 rounded-md border border-line">
                                     <button
-                                        onClick={() => setFilter('RUN')}
+                                        disabled={deleting}
+                                        onClick={() => changeFilter('RUN')}
                                         className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'RUN' ? 'bg-accent-orange text-white' : 'text-foreground-muted hover:text-foreground'}`}
                                     >
                                         Runs
                                     </button>
                                     <button
-                                        onClick={() => setFilter('RIDE')}
+                                        disabled={deleting}
+                                        onClick={() => changeFilter('RIDE')}
                                         className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'RIDE' ? 'bg-accent-orange text-white' : 'text-foreground-muted hover:text-foreground'}`}
                                     >
                                         Rides
                                     </button>
                                     <button
-                                        onClick={() => setFilter('ALL')}
+                                        disabled={deleting}
+                                        onClick={() => changeFilter('ALL')}
                                         className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-accent-orange text-white' : 'text-foreground-muted hover:text-foreground'}`}
                                     >
                                         All
@@ -132,7 +161,32 @@ export default function ActivitiesPage() {
                             <p className="text-foreground-muted mb-4 text-sm">
                                 Showing {allActivities.length} of {totalCount} {filter.toLowerCase() === 'all' ? 'activities' : filter.toLowerCase() + 's'}.
                             </p>
+                            <div className="flex flex-wrap items-center gap-4 mb-4">
+                                <label className="text-sm text-foreground" htmlFor="activity-source">Source</label>
+                                <select id="activity-source" disabled={deleting} value={source} onChange={event => { setSource(event.target.value); setSelectedIds(new Set()); }} className="bg-surface text-foreground border border-line rounded-md p-2">
+                                    <option value="all">All sources</option>
+                                    <option value="strava">Strava</option>
+                                    <option value="runflow">RunFlow entries and uploads</option>
+                                </select>
+                                <label className="flex items-center gap-2 text-sm text-foreground">
+                                    <input type="checkbox" checked={allActivities.length > 0 && allActivities.every(a => selectedIds.has(a.id))}
+                                        onChange={event => setSelectedIds(event.target.checked ? new Set(allActivities.map(a => a.id)) : new Set())}
+                                        disabled={!allActivities.length || deleting} /> Select loaded activities
+                                </label>
+                                <button type="button" onClick={deleteSelected} disabled={!selectedIds.size || deleting}
+                                    className="px-3 py-2 border border-line rounded-md text-foreground disabled:opacity-50">
+                                    {deleting ? 'Deleting…' : `Delete selected (${selectedIds.size})`}
+                                </button>
+                            </div>
+                            {deleteError && <p role="alert" className="text-red-500 mb-4">{deleteError}</p>}
                             <ActivityList
+                                selectionDisabled={deleting}
+                                selectedIds={selectedIds}
+                                onSelectionChange={(id, selected) => setSelectedIds(previous => {
+                                    const next = new Set(previous);
+                                    if (selected) next.add(id); else next.delete(id);
+                                    return next;
+                                })}
                                 activities={allActivities}
                                 isLoading={isLoading}
                                 userHrMax={userHrMax}
@@ -143,7 +197,7 @@ export default function ActivitiesPage() {
                                 <div className="mt-8 flex justify-center">
                                     <button
                                         onClick={() => fetchNextPage()}
-                                        disabled={isFetchingNextPage}
+                                        disabled={isFetchingNextPage || deleting}
                                         className="px-6 py-2 bg-surface hover:bg-surface-hover text-foreground rounded-md transition-colors flex items-center gap-2 border border-line"
                                     >
                                         {isFetchingNextPage ? (

@@ -173,6 +173,15 @@ fun RunFlowTheme(
     val colorScheme = if (darkTheme) baseScheme.withAmoledBlack(amoledBlack) else baseScheme
     val semanticColors = remember(colorScheme) { createSemanticColors(colorScheme) }
 
+    val view = androidx.compose.ui.platform.LocalView.current
+    androidx.compose.runtime.SideEffect {
+        (view.context as? android.app.Activity)?.window?.let { window ->
+            androidx.core.view.WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
+            }
+        }
+    }
     CompositionLocalProvider(LocalRunFlowColors provides semanticColors) {
         MaterialExpressiveTheme(
             colorScheme = colorScheme,

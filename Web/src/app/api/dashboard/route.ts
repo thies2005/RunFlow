@@ -1,9 +1,11 @@
+import { resolveActiveFtp } from '@/lib/metrics/activeFtp';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
-import { calculateCyclingVo2Max, calculateBikeTss, calculateIntensityFactor } from '@/lib/metrics/power';
+import { calculateBikeTss, calculateIntensityFactor } from '@/lib/metrics/power';
+import { getCyclingAnalytics } from '@/lib/metrics/cyclingAnalytics';
 import { startOfWeek, endOfWeek, subDays, addDays, format } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
@@ -347,41 +349,27 @@ export async function GET(req: NextRequest) {
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
         // Compute Cycling Dashboard Metrics
-        const weightKg = user?.weight && user.weight > 0 ? user.weight : 75;
-        let bestRideFtp = user?.ftpWatts ?? null;
+        const cyclingAnalytics = await getCyclingAnalytics(userId, '90d');
+        const activeFtp = resolveActiveFtp(cyclingAnalytics.ftp.ftpWatts, cyclingAnalytics.ftp.eFtpWatts, cyclingAnalytics.ftp.autoEstimateFtp);
+        const bestRideFtp = activeFtp.watts;
         let weeklyBikeMeters = 0;
         let weeklyBikeTss = 0;
+        let weeklyBikeTssMissing = 0;
         let efSum = 0;
         let efCount = 0;
 
-        for (const ca of crossTrainingActivities) {
-            if (ca.type === 'RIDE' || ca.type === 'VIRTUAL_RIDE') {
-                const titleMatch = (ca.name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
-                const titleW = titleMatch ? parseInt(titleMatch[1], 10) : null;
-                const validTitleW = titleW && titleW >= 40 && titleW <= 1500 ? titleW : null;
-                const rideSustained = ca.npWatts ?? ca.weightedAverageWatts ?? ca.averageWatts ?? validTitleW;
-                if (rideSustained && rideSustained > 0) {
-                    const estFtp = /\bftp\s*test\b/i.test(ca.name || '') && validTitleW
-                        ? validTitleW
-                        : Math.round(rideSustained * 0.95);
-                    if (!bestRideFtp || estFtp > bestRideFtp) {
-                        bestRideFtp = estFtp;
-                    }
-                }
-            }
-        }
-
-        const resolvedFtp = bestRideFtp || 200;
+        const resolvedFtp = bestRideFtp;
         for (const ca of crossTrainingActivities) {
             if (ca.type === 'RIDE' || ca.type === 'VIRTUAL_RIDE') {
                 const rideDate = new Date(ca.startDate);
                 const np = ca.npWatts ?? ca.weightedAverageWatts ?? ca.averageWatts ?? null;
-                const tss = ca.bikeTss ?? (np && ca.movingTime > 0
+                const tss = ca.bikeTss ?? (np && ca.movingTime > 0 && resolvedFtp
                     ? calculateBikeTss(ca.movingTime, np, calculateIntensityFactor(np, resolvedFtp) || 0, resolvedFtp)
-                    : Math.round((ca.movingTime / 3600) * 50));
+                    : null);
                 if (rideDate >= weekStart) {
                     weeklyBikeMeters += ca.distance || 0;
                     weeklyBikeTss += tss || 0;
+                    if (tss == null) weeklyBikeTssMissing++;
                 }
                 const ef = ca.efficiencyFactor ?? (np && ca.averageHr && ca.averageHr > 0 ? Number((np / ca.averageHr).toFixed(2)) : null);
                 if (ef && ef > 0) {
@@ -391,10 +379,8 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        const cyclingVo2max = bestRideFtp
-            ? calculateCyclingVo2Max({ ftpWatts: bestRideFtp, weightKg })
-            : null;
-        const wPerKg = bestRideFtp ? Number((bestRideFtp / weightKg).toFixed(2)) : null;
+        const cyclingVo2max = cyclingAnalytics.ftp.cyclingVo2max;
+        const wPerKg = cyclingAnalytics.ftp.wPerKg;
         const weeklyBikeKm = Math.round((weeklyBikeMeters / 1000) * 10) / 10;
         const avgEfficiencyFactor = efCount > 0 ? Number((efSum / efCount).toFixed(2)) : null;
         const ctlBike = Math.round((currentFitness as { ctlBike?: number } | null)?.ctlBike || 0);
@@ -615,8 +601,10 @@ export async function GET(req: NextRequest) {
             rawVO2max,
             cyclingVo2max,
             activeFtpWatts: bestRideFtp,
+            activeFtpSource: activeFtp.source,
             wPerKg,
             weeklyBikeTss: Math.round(weeklyBikeTss),
+            weeklyBikeTssMissing,
             weeklyBikeKm,
             ctlBike,
             atlBike,

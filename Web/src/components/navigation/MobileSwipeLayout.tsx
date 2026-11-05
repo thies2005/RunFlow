@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { MobileBottomNav } from './MobileBottomNav';
-import { Home, CalendarDays, BarChart3 } from 'lucide-react';
+import { Home, CalendarDays, BarChart3, HeartPulse } from 'lucide-react';
 import StravaPoweredFooter from '@/components/StravaPoweredFooter';
 
 interface MobileSwipeLayoutProps {
@@ -18,6 +19,7 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange }: Mobi
         { icon: Home, label: 'Home', path: '/' },
         { icon: CalendarDays, label: 'Calendar', path: '/calendar' },
         { icon: BarChart3, label: 'Analytics', path: '/analytics' },
+        { icon: HeartPulse, label: 'Health', path: '/health' },
     ], []);
 
     const paths = useMemo(() => tabs.map(t => t.path), [tabs]);
@@ -27,7 +29,13 @@ export function MobileSwipeLayout({ children, onPageChange, onPathChange }: Mobi
         return _index >= 0 ? _index : 0;
     }, [paths]);
 
+    const pathname = usePathname();
+
     const [activeIndex, setActiveIndex] = useState(() => getIndexFromPath(typeof window !== 'undefined' ? window.location.pathname : '/'));
+
+    useEffect(() => {
+        setActiveIndex(getIndexFromPath(pathname));
+    }, [pathname, getIndexFromPath]);
 
     useEffect(() => {
         if (activeIndex >= paths.length) {

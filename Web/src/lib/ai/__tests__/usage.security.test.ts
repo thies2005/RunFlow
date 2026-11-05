@@ -241,6 +241,12 @@ describe('SEC-2 Security: BYOK Quota Bypass & Unified Daily Reset', () => {
     });
 
     describe('Test 3: ensurePeriodUsageReset resets ALL daily counters together atomically', () => {
+        // Keep the daily-only case inside a month regardless of the execution date.
+        beforeEach(() => {
+            jest.useFakeTimers();
+            jest.setSystemTime(new Date('2026-11-15T12:00:00Z'));
+        });
+        afterEach(() => jest.useRealTimers());
         it('resets all 6 daily counters when called on a new day', async () => {
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);

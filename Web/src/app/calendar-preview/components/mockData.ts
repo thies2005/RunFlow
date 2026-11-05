@@ -58,7 +58,11 @@ export interface MockWorkout {
 
 /** Day key helper (yyyy-MM-dd, local) */
 export function dayKey(d: Date | string): string {
-    return new Date(d).toISOString().split('T')[0];
+    const date = new Date(d);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 const DAY = 24 * 60 * 60 * 1000;

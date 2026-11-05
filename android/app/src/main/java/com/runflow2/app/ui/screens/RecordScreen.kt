@@ -58,11 +58,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.toShape
 import com.runflow2.app.ui.components.PixelSwitch
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -104,16 +106,32 @@ fun RecordScreen(
     var hasLocation by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED,
         )
     }
     var showStopDialog by remember { mutableStateOf(false) }
+    val finishDialogOpen by rememberUpdatedState(showStopDialog)
+    DisposableEffect(container.recording) {
+        onDispose { if (finishDialogOpen) container.recording.cancelFinish() }
+    }
 
+    var pendingStart by remember { mutableStateOf(false) }
+    fun startSession() {
+        RecordingService.start(context, container.recording.pendingWorkoutId, settings.autoPause, settings.voiceCoach)
+    }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
-    ) { grants ->
-        hasLocation = grants[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            grants[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    ) { _ ->
+        hasLocation = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (pendingStart && hasLocation) startSession()
+        pendingStart = false
+    }
+    fun closeFinish() {
+        showStopDialog = false
+        container.recording.cancelFinish()
     }
 
     // after a save, open the summary
@@ -136,18 +154,10 @@ fun RecordScreen(
         val missing = want.filter {
             ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
         }
-        val missingLocation = missing.any {
-            it == Manifest.permission.ACCESS_FINE_LOCATION || it == Manifest.permission.ACCESS_COARSE_LOCATION
-        }
-        if (missingLocation) {
+        if (missing.isNotEmpty()) {
+            pendingStart = true
             permissionLauncher.launch(missing.toTypedArray())
-        } else {
-            if (missing.isNotEmpty()) {
-                permissionLauncher.launch(missing.toTypedArray())
-            }
-            val workoutId = container.recording.pendingWorkoutId
-            RecordingService.start(context, workoutId, settings.autoPause, settings.voiceCoach)
-        }
+        } else startSession()
     }
 
     when (rec.status) {
@@ -167,7 +177,10 @@ fun RecordScreen(
             onPauseResume = {
                 RecordingService.send(context, if (rec.status == RecStatus.RUNNING) RecordingService.ACTION_PAUSE else RecordingService.ACTION_RESUME)
             },
-            onStop = { showStopDialog = true },
+            onStop = {
+                container.recording.beginFinish()
+                showStopDialog = true
+            },
             onLap = {
                 RecordingService.lap(context)
             },
@@ -176,7 +189,7 @@ fun RecordScreen(
 
     if (showStopDialog) {
         AlertDialog(
-            onDismissRequest = { showStopDialog = false },
+            onDismissRequest = ::closeFinish,
             title = { Text("Finish workout?") },
             text = {
                 Text(
@@ -202,7 +215,7 @@ fun RecordScreen(
                             contentColor = MaterialTheme.colorScheme.error,
                         ),
                     ) { Text("Discard") }
-                    TextButton(onClick = { showStopDialog = false }) { Text("Keep going") }
+                    TextButton(onClick = ::closeFinish) { Text("Keep going") }
                 }
             },
         )
@@ -234,7 +247,11 @@ private fun RecordIdle(
                     Column {
                         Text("Record")
                         Text(
-                            "GPS run with live pace coaching",
+                            when (selectedSport) {
+                                "WORKOUT" -> "Strength session · location required"
+                                "SWIM" -> "Outdoor swim · GPS route"
+                                else -> "${Format.activityNoun(selectedSport).replaceFirstChar { it.uppercase() }} recording · outdoor GPS"
+                            },
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -265,7 +282,7 @@ private fun RecordIdle(
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text("Location permission needed", style = MaterialTheme.typography.titleSmall)
-                            Text("GPS is required to record distance and pace.", style = MaterialTheme.typography.bodySmall)
+                            Text("Location is used for outdoor routes, distance and pace. Strength records session time with location.", style = MaterialTheme.typography.bodySmall)
                         }
                         TextButton(onClick = onRequestPermission) { Text("Grant") }
                     }
@@ -301,7 +318,7 @@ private fun RecordIdle(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SectionTitle("Planned workout")
-                        Text(wk.description, style = MaterialTheme.typography.bodyMedium)
+                        Text(Format.workoutInstructions(wk.description, unit, wk.webWorkoutType != null), style = MaterialTheme.typography.bodyMedium)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             wk.targetDistanceKm?.let { InfoChip(Format.distance(it, unit)) }
                             Format.paceLabelFor(wk.workoutType, wk.targetPaceSecPerKm?.toDouble(), unit)?.let {
@@ -325,7 +342,7 @@ private fun RecordIdle(
             ) {
                 androidx.compose.material3.IconButton(onClick = onStart, modifier = Modifier.fillMaxSize()) {
                     Icon(
-                        Icons.Outlined.PlayArrow, "Start run",
+                        Icons.Outlined.PlayArrow, if (selectedSport == "WORKOUT") "Start strength session" else "Start ${Format.activityNoun(selectedSport)}",
                         modifier = Modifier.size(72.dp),
                         tint = MaterialTheme.colorScheme.onPrimary,
                     )
@@ -352,7 +369,7 @@ private fun RecordIdle(
                         Column(Modifier.weight(1f)) {
                             Text("Auto-pause", style = MaterialTheme.typography.titleSmall)
                             Text(
-                                "Pauses when you stop moving",
+                                if (selectedSport == "WORKOUT") "Turn off for stationary strength sessions" else "Pauses when you stop moving",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -373,7 +390,7 @@ private fun RecordIdle(
                         Column(Modifier.weight(1f)) {
                             Text("Voice coach", style = MaterialTheme.typography.titleSmall)
                             Text(
-                                "Km splits, pace warnings & step cues",
+                                if (selectedSport == "RUN") "Distance splits, pace warnings & step cues" else "Distance splits for outdoor activities",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -436,7 +453,7 @@ private fun RecordRunning(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    rec.workoutName ?: "Free run",
+                    rec.workoutName ?: if (rec.sportType == "WORKOUT") "Strength session" else "Free ${Format.activityNoun(rec.sportType)}",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
@@ -455,24 +472,35 @@ private fun RecordRunning(
             )
         }
 
-        // hero pace
+        // Show the metric appropriate to the selected sport.
         Column(
             Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                Format.pace(rec.currentPaceSecPerKm, unit),
+                if (rec.sportType == "WORKOUT") Format.duration(rec.elapsedMovingSec.toLong())
+                else if (rec.sportType == "RIDE") rec.currentPaceSecPerKm?.takeIf { it > 0 }?.let {
+                    String.format(java.util.Locale.ENGLISH, "%.1f", 3600.0 / it * if (unit == DistanceUnit.IMPERIAL) 0.621371 else 1.0)
+                } ?: "—"
+                else Format.activityPaceLabel(rec.sportType, rec.currentPaceSecPerKm, unit) ?: "—",
                 style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                "min / ${Format.distanceUnitLabel(unit)}   (avg ${Format.pace(rec.avgPaceSecPerKm, unit)})",
+                when (rec.sportType) {
+                    "WORKOUT" -> "Session time"
+                    "RIDE" -> if (unit == DistanceUnit.IMPERIAL) "mph" else "km/h"
+                    "SWIM" -> if (unit == DistanceUnit.IMPERIAL) "Pace /100yd" else "Pace /100m"
+                    else -> "Pace · avg ${Format.activityPaceLabel(rec.sportType, rec.avgPaceSecPerKm, unit) ?: "—"}"
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
-        PaceZoneIndicator(rec.paceZone, rec.targetPaceSecPerKm, unit)
+        if (rec.sportType == "RUN" || rec.sportType == "WALK") {
+            PaceZoneIndicator(rec.paceZone, rec.targetPaceSecPerKm, unit)
+        }
 
         // metric grid
         Card(
@@ -630,44 +658,21 @@ private fun RecordRunning(
 
         Spacer(Modifier.height(8.dp))
 
-        // control buttons
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            androidx.compose.material3.OutlinedButton(
-                onClick = onStop,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp),
-            ) {
-                Icon(Icons.Outlined.Stop, null)
-                Spacer(Modifier.width(4.dp))
-                Text("Finish")
-            }
-            androidx.compose.material3.OutlinedButton(
-                onClick = onLap,
-                modifier = Modifier
-                    .weight(1.2f)
-                    .height(56.dp),
-            ) {
-                Icon(Icons.Outlined.Flag, null)
-                Spacer(Modifier.width(4.dp))
-                Text(if (rec.steps.isNotEmpty() && rec.activeStepIndex < rec.steps.size) "Lap / Next" else "Lap")
-            }
-            Button(
-                onClick = onPauseResume,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp),
-            ) {
-                Icon(
-                    if (rec.status == RecStatus.RUNNING) Icons.Outlined.Pause else Icons.Outlined.PlayArrow,
-                    null,
-                )
-                Spacer(Modifier.width(4.dp))
-                Text(if (rec.status == RecStatus.RUNNING) "Pause" else "Resume")
-            }
+        // Full-width primary action keeps exercise controls readable at large text sizes.
+        Button(onClick = onPauseResume, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
+            Icon(if (rec.status == RecStatus.RUNNING) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, null)
+            Spacer(Modifier.width(8.dp))
+            Text(if (rec.status == RecStatus.RUNNING) "Pause" else "Resume", maxLines = 1)
+        }
+        androidx.compose.material3.OutlinedButton(onClick = onLap, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
+            Icon(Icons.Outlined.Flag, null)
+            Spacer(Modifier.width(8.dp))
+            Text(if (rec.steps.isNotEmpty() && rec.activeStepIndex < rec.steps.size) "Lap / Next" else "Lap", maxLines = 1)
+        }
+        androidx.compose.material3.OutlinedButton(onClick = onStop, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
+            Icon(Icons.Outlined.Stop, null)
+            Spacer(Modifier.width(8.dp))
+            Text("Finish", maxLines = 1)
         }
     }
 }

@@ -241,7 +241,7 @@ export function GoalTimeline({
                         {/* Current Week Effort */}
                         <div className="flex items-center gap-2">
                             <span className="font-semibold text-foreground-secondary uppercase tracking-wider text-[10px]">
-                                Week {currentWeek} Effort:
+                                Plan week {currentWeek} completed / planned effort:
                             </span>
                             <span className="font-mono tabular-nums text-foreground font-medium">
                                 {actualTss} / {plannedTss} TSS
@@ -292,7 +292,7 @@ export function GoalTimeline({
                 >
                     <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-accent-blue" />
                     <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[8px] font-semibold text-accent-blue whitespace-nowrap mt-2.5">
-                        Now (W{currentWeek})
+                        Current plan week {currentWeek}
                     </span>
                 </div>
 

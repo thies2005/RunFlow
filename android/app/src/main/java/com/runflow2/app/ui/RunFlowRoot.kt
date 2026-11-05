@@ -121,7 +121,8 @@ private val tabRoutes = tabs.map { it.route }.toSet()
 
 @Composable
 fun RunFlowRoot(container: AppContainer) {
-    val settings by container.settings.settings.collectAsState(initial = AppSettings())
+    val loadedSettings by container.settings.settings.collectAsState(initial = null)
+    val settings = loadedSettings ?: return
 
     RunFlowTheme(
         darkTheme = when (settings.themeMode) {

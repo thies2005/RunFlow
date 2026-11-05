@@ -14,6 +14,7 @@ interface PlanData {
         planStartDate: string | null;
         currentVdot: number | null;
         phaseBlocks?: any;
+        planWeeks?: number | null;
         workouts: Array<{
             id: string;
             scheduledDate: string;
@@ -93,6 +94,7 @@ export default function GoalEditorPage() {
             planStartDate={planStartDate}
             currentVdot={plan.currentVdot}
             phaseBlocks={plan.phaseBlocks || []}
+            planWeeks={plan.planWeeks}
         />
     );
 }

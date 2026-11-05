@@ -63,12 +63,9 @@ import com.runflow2.app.domain.person.Personalization
 import com.runflow2.app.domain.readiness.ReadinessComposer
 import com.runflow2.app.domain.readiness.ReadinessPayload
 import androidx.room.withTransaction
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -101,54 +98,6 @@ class RunFlowRepository(
 ) {
     @Volatile
     var onMutationCommitted: ((String) -> Unit)? = null
-
-    private val streamBackfillInFlight = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
-    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    private fun backfillMissingStreamsAsync(candidates: List<ActivityEntity>) {
-        if (!authStore.state.value.loggedIn) return
-        val eligible = candidates.filter { it.streamsJson == null && it.serverId != null && !it.isDemo && !streamBackfillInFlight.contains(it.id) }
-        val sorted = eligible.sortedWith(
-            compareByDescending<ActivityEntity> {
-                val t = it.type.uppercase()
-                (t == "RIDE" || t == "VIRTUAL_RIDE" || t == "CYCLING") && (it.averageWatts != null || it.deviceWatts)
-            }.thenByDescending {
-                val t = it.type.uppercase()
-                t == "RIDE" || t == "VIRTUAL_RIDE" || t == "CYCLING"
-            }.thenByDescending {
-                it.startDate
-            }
-        )
-        val toFetch = mutableListOf<ActivityEntity>()
-        for (act in sorted) {
-            if (streamBackfillInFlight.add(act.id)) {
-                toFetch.add(act)
-                if (toFetch.size >= 8) break
-            }
-        }
-        if (toFetch.isEmpty()) return
-
-        repositoryScope.launch {
-            var anyUpdated = false
-            try {
-                for (act in toFetch) {
-                    val serverId = act.serverId ?: continue
-                    try {
-                        if (fetchAndCacheStreams(act.id, serverId)) {
-                            anyUpdated = true
-                        }
-                    } catch (e: Exception) {
-                        AppLog.w("RunFlowRepo", "Stream backfill failed for ${act.id}: ${e.message}")
-                    }
-                }
-                if (anyUpdated) {
-                    invalidateAnalyticsCache()
-                }
-            } finally {
-                toFetch.forEach { streamBackfillInFlight.remove(it.id) }
-            }
-        }
-    }
 
     // ---------- profile ----------
     val profile: Flow<ProfileEntity?> = profileDao.observe()
@@ -229,7 +178,15 @@ class RunFlowRepository(
         val lastDay = settings?.bodyAutoRefreshDay?.first()
         if (lastDay != null && lastDay == today.toEpochDay()) return
 
-        val profile = profileOnce()
+        val account = authStore.state.value
+        val stored = profileDao.get()
+        if (account.loggedIn) {
+            val store = settings ?: return
+            val s = store.settingsOnce()
+            if (account.userId.isNullOrBlank() || stored == null || stored.dirty ||
+                s.profileHydrationKey != store.profileHydrationKey(account.userId, s.serverUrl)) return
+        }
+        val profile = stored ?: profileOnce()
         val rhrValues = dailyEntryDao.range(
             startDate = today.minusDays(29).toString(),
             endDate = today.toString(),
@@ -263,8 +220,7 @@ class RunFlowRepository(
         val zoneChanged = newZoneMaxes != null && newZoneMaxes != currentZoneMaxes
         if (updates.hrRest == null && updates.hrMax == null && !zoneChanged) return
 
-        saveProfile(
-            profile.copy(
+        val derived = profile.copy(
                 hrRest = newHrRest,
                 hrMax = newHrMax,
                 hrZone1Max = newZoneMaxes?.getOrNull(0) ?: profile.hrZone1Max,
@@ -273,8 +229,13 @@ class RunFlowRepository(
                 hrZone4Max = newZoneMaxes?.getOrNull(3) ?: profile.hrZone4Max,
                 hrZone5Max = newZoneMaxes?.getOrNull(4) ?: profile.hrZone5Max,
                 hrZone6Max = newZoneMaxes?.getOrNull(5) ?: profile.hrZone6Max,
-            ),
-        )
+            )
+        // Only update the derived fields locally, never enqueue a full profile
+        // assembled from defaults or overwrite a concurrent manual edit.
+        db.withTransaction {
+            val current = profileDao.get()
+            if (current != null && current == profile && !current.dirty) profileDao.upsert(derived)
+        }
         settings?.setBodyAutoRefreshDay(today.toEpochDay())
         AppLog.i("Body", "auto-refresh: hrRest=$newHrRest hrMax=$newHrMax zones=$newZoneMaxes")
     }
@@ -356,7 +317,7 @@ class RunFlowRepository(
         // max HR) — refresh in the background; a failure here must never
         // fail or delay the save itself.
         runCatching { refreshBodyFromData() }
-            .onFailure { AppLog.w("Body", "auto-refresh after save failed (${it.message})") }
+            .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it; AppLog.w("Body", "auto-refresh after save failed (${it.message})") }
 
         onMutationCommitted?.invoke("save_activity")
     }
@@ -522,7 +483,7 @@ class RunFlowRepository(
             }
             AppLog.i("Activity", "cached ${streams.time.size} stream samples for $activityId")
             true
-        }.getOrDefault(false)
+        }.onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }.getOrDefault(false)
     }
 
     // ---------- AI activity feedback (web's "AI overview") ----------
@@ -1230,6 +1191,7 @@ class RunFlowRepository(
             AppLog.w("Plan", "plan upload offline (${e.message ?: "io error"}) — stays local, retried next sync", e)
             return@withContext UploadResult.Retryable
         } catch (e: HttpException) {
+            if (e.code() == 401 || e.code() == 429) throw e
             if (e.code() in 400..499 && e.code() != 408 && e.code() != 429) {
                 // Permanent rejection (bad payload, auth): retrying can never
                 // succeed. The plan stays local and un-mapped; a later sync
@@ -1485,8 +1447,7 @@ class RunFlowRepository(
     suspend fun analytics(rangeDays: Int = 365): AnalyticsBundle = withContext(Dispatchers.Default) {
         val profile = profileOnce()
         val s = settings?.settingsOnce()
-        val allRows = activityDao.all()
-        backfillMissingStreamsAsync(allRows)
+        val allRows = activityDao.all().filterNot { it.isDemo }
         val today = LocalDate.now()
         val maxUpdated = allRows.maxOfOrNull { it.updatedAt } ?: 0L
         val key = "$rangeDays|${today}|${allRows.size}|$maxUpdated|${profile.vdotCorrection}|${profile.weightKg}|${profile.hrMax}|${s?.ftpWatts}|${s?.includeCrossTraining}|${s?.effectiveVo2maxCorrection}"

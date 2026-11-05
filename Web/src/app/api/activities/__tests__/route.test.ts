@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { GET, POST } from '../route';
+import { GET, POST, DELETE } from '../route';
 import { NextRequest } from 'next/server';
 
 jest.mock('@/auth', () => ({
@@ -16,10 +16,13 @@ jest.mock('@/lib/db', () => ({
             count: jest.fn(),
             findFirst: jest.fn(),
             create: jest.fn(),
+            deleteMany: jest.fn(),
         },
         workout: {
             findMany: jest.fn(),
+            updateMany: jest.fn(),
         },
+        $transaction: jest.fn(),
     },
 }));
 
@@ -39,6 +42,8 @@ jest.mock('@/lib/api/apiResponse', () => ({
 jest.mock('@/lib/validation/validator', () => ({
     validateBody: jest.fn(),
 }));
+
+jest.mock('@/lib/metrics/fitnessCache', () => ({ updateFitnessCache: jest.fn() }));
 
 jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
@@ -124,6 +129,16 @@ describe('GET /api/activities', () => {
 
         expect(prisma.activity.findMany).toHaveBeenCalled();
     });
+
+    it.each([['strava', { gt: BigInt(0) }], ['runflow', { lt: BigInt(0) }]])(
+        'filters %s before pagination and count', async (source, stravaId) => {
+            await GET(new NextRequest(`http://localhost/api/activities?source=${source}&limit=10&offset=20`));
+            expect(prisma.activity.findMany).toHaveBeenCalledWith(expect.objectContaining({
+                where: expect.objectContaining({ userId: 'user-1', stravaId }), take: 10, skip: 20,
+            }));
+            expect(prisma.activity.count).toHaveBeenCalledWith({ where: expect.objectContaining({ userId: 'user-1', stravaId }) });
+        },
+    );
 
     it('should handle raceEligible filter', async () => {
         const mockRequest = new NextRequest('http://localhost:3000/api/activities?raceEligible=true');
@@ -278,5 +293,43 @@ describe('POST /api/activities', () => {
         const response = await POST(mockRequest);
 
         expect(handleError).toHaveBeenCalled();
+    });
+});
+
+
+describe('DELETE /api/activities', () => {
+    const request = (ids: unknown) => new NextRequest('http://localhost/api/activities', {
+        method: 'DELETE', body: JSON.stringify({ ids }), headers: { 'Content-Type': 'application/json' },
+    });
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (getClientIdentifier as jest.Mock).mockReturnValue('client');
+        (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
+        (auth as jest.Mock).mockResolvedValue({ user: { id: 'user-1' } });
+        (prisma.$transaction as jest.Mock).mockImplementation(callback => callback(prisma));
+    });
+    it('unlinks and deletes the selected owned activities', async () => {
+        const date = new Date();
+        (prisma.activity.findMany as jest.Mock).mockResolvedValue([{ id: 'a', startDate: date }]);
+        (prisma.activity.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
+        const response = await DELETE(request(['a']));
+        expect(response.status).toBe(200);
+        expect(prisma.workout.updateMany).toHaveBeenCalledWith({
+            where: { linkedActivityId: { in: ['a'] }, goal: { userId: 'user-1' } }, data: { linkedActivityId: null },
+        });
+        expect(prisma.activity.deleteMany).toHaveBeenCalledWith({ where: { userId: 'user-1', id: { in: ['a'] } } });
+    });
+    it('rejects mixed ownership without deleting anything', async () => {
+        (prisma.activity.findMany as jest.Mock).mockResolvedValue([{ id: 'a', startDate: new Date() }]);
+        const response = await DELETE(request(['a', 'other']));
+        expect(response.status).toBe(404);
+        expect(prisma.workout.updateMany).not.toHaveBeenCalled();
+        expect(prisma.activity.deleteMany).not.toHaveBeenCalled();
+    });
+    it('rejects missing selection and unauthenticated requests', async () => {
+        expect((await DELETE(request([]))).status).toBe(400);
+        (auth as jest.Mock).mockResolvedValue(null);
+        expect((await DELETE(request(['a']))).status).toBe(401);
+        expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 });

@@ -65,7 +65,7 @@ function WeekCard({
             {/* 7-day rows */}
             <div className="divide-y divide-glass-border">
                 {days.map((day, i) => {
-                    const key = day.toISOString().split('T')[0];
+                    const key = format(day, 'yyyy-MM-dd');
                     const dayEntry = week.days.find((d) => d.date === key);
                     return (
                         <DayRow

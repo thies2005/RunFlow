@@ -33,6 +33,11 @@ data class AppSettings(
     val lastSyncSummary: String = "",
     val demoCleaned: Boolean = false,
     val lastStravaTriggerAt: Long = 0L,
+    val uploadCooldownUntil: Long = 0L,
+    val generalReadCooldownUntil: Long = 0L,
+    /** Account/origin that last supplied a successful signed-in profile GET. */
+    val profileHydrationKey: String = "",
+    val profileHydratedAt: Long = 0L,
     val aiSessionId: String = "",
     // ---- login nudge ----
     val loginPromptDismissed: Boolean = false,
@@ -92,6 +97,10 @@ class SettingsRepository(private val context: Context) {
         val LAST_SYNC_SUMMARY = stringPreferencesKey("last_sync_summary")
         val DEMO_CLEANED = booleanPreferencesKey("demo_cleaned")
         val LAST_STRAVA_TRIGGER = longPreferencesKey("last_strava_trigger")
+        val UPLOAD_COOLDOWN_UNTIL = longPreferencesKey("upload_cooldown_until")
+        val GENERAL_READ_COOLDOWN_UNTIL = longPreferencesKey("general_read_cooldown_until")
+        val PROFILE_HYDRATION_KEY = stringPreferencesKey("profile_hydration_key")
+        val PROFILE_HYDRATED_AT = longPreferencesKey("profile_hydrated_at")
         val AI_SESSION_ID = stringPreferencesKey("ai_session_id")
         val LOGIN_PROMPT_DISMISSED = booleanPreferencesKey("login_prompt_dismissed")
         val LOGIN_PROMPT_REMIND_AT = longPreferencesKey("login_prompt_remind_at")
@@ -139,6 +148,10 @@ class SettingsRepository(private val context: Context) {
             lastSyncSummary = p[Keys.LAST_SYNC_SUMMARY] ?: "",
             demoCleaned = p[Keys.DEMO_CLEANED] ?: false,
             lastStravaTriggerAt = p[Keys.LAST_STRAVA_TRIGGER] ?: 0L,
+            uploadCooldownUntil = p[Keys.UPLOAD_COOLDOWN_UNTIL] ?: 0L,
+            generalReadCooldownUntil = p[Keys.GENERAL_READ_COOLDOWN_UNTIL] ?: 0L,
+            profileHydrationKey = p[Keys.PROFILE_HYDRATION_KEY] ?: "",
+            profileHydratedAt = p[Keys.PROFILE_HYDRATED_AT] ?: 0L,
             aiSessionId = p[Keys.AI_SESSION_ID] ?: "",
             loginPromptDismissed = p[Keys.LOGIN_PROMPT_DISMISSED] ?: false,
             loginPromptRemindAt = p[Keys.LOGIN_PROMPT_REMIND_AT] ?: 0L,
@@ -207,6 +220,32 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setLastStravaTrigger(at: Long) =
         context.dataStore.edit { it[Keys.LAST_STRAVA_TRIGGER] = at }
+
+    suspend fun setUploadCooldownUntil(at: Long) =
+        context.dataStore.edit { it[Keys.UPLOAD_COOLDOWN_UNTIL] = at }
+
+    /**
+     * Stable provenance for "this account successfully hydrated its profile from
+     * this server origin". A row inherited from another account or origin is
+     * never treated as a signed-in server profile.
+     */
+    fun profileHydrationKey(userId: String?, serverUrl: String): String {
+        val origin = com.runflow2.app.data.net.Api.normalizeServerUrl(serverUrl)
+        return "${userId?.trim().orEmpty()}@$origin"
+    }
+
+    suspend fun markProfileHydrated(key: String) = context.dataStore.edit {
+        it[Keys.PROFILE_HYDRATION_KEY] = key
+        it[Keys.PROFILE_HYDRATED_AT] = System.currentTimeMillis()
+    }
+
+    suspend fun clearProfileHydration() = context.dataStore.edit {
+        it.remove(Keys.PROFILE_HYDRATION_KEY)
+        it.remove(Keys.PROFILE_HYDRATED_AT)
+    }
+
+    suspend fun setGeneralReadCooldownUntil(at: Long) =
+        context.dataStore.edit { it[Keys.GENERAL_READ_COOLDOWN_UNTIL] = at }
 
     suspend fun setAiSessionId(id: String) =
         context.dataStore.edit { it[Keys.AI_SESSION_ID] = id }

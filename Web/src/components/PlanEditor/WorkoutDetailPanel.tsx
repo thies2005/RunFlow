@@ -318,7 +318,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
     const colors = WORKOUT_COLORS[form.workoutType] || WORKOUT_COLORS.OTHER;
 
     return (
-        <div className="w-88 border-l border-glass-border bg-background-secondary flex flex-col overflow-hidden shrink-0">
+        <div className="absolute inset-0 z-30 w-full md:static md:w-88 border-l border-glass-border bg-background-secondary flex flex-col overflow-hidden shrink-0">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-glass-border shrink-0">
                 <div className="flex items-center gap-2">
@@ -788,7 +788,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
             <div className="border-t border-glass-border p-4 space-y-2 shrink-0">
                 {/* Export Buttons */}
                 <div className="flex items-center gap-2 pb-1">
-                    <button
+                    {form.workoutType !== 'REST' && <button
                         type="button"
                         onClick={() => downloadWorkoutFit(form)}
                         className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border border-glass-border bg-background-tertiary text-foreground text-xs font-medium hover:bg-surface-hover transition-colors"
@@ -796,7 +796,7 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                     >
                         <Download className="w-3.5 h-3.5 text-accent-cyan" />
                         Export .FIT
-                    </button>
+                    </button>}
                     {(effectiveSport === 'BIKE' || CYCLING_WORKOUT_TYPES.has(form.workoutType)) && (
                         <button
                             type="button"

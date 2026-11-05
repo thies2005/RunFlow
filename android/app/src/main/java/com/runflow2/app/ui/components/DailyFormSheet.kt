@@ -19,6 +19,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -92,9 +93,7 @@ private fun DailyFormContent(
     var sleepText by remember { mutableStateOf(base?.sleepMinutes?.toString().orEmpty()) }
     var note by remember { mutableStateOf(base?.note.orEmpty()) }
 
-    // The sliders display 5 when nothing was ever recorded, but a null
-    // answer stays null until the user actually moves the slider — moving
-    // one marks it "touched" and only touched answers are saved.
+    // Unanswered sliders start at 5, but require an explicit choice to save it.
     var exhaustion by remember { mutableStateOf(base?.exhaustionLevel ?: SLIDER_DEFAULT) }
     var exhaustionTouched by remember { mutableStateOf(false) }
     var soreness by remember { mutableStateOf(base?.muscleSoreness ?: SLIDER_DEFAULT) }
@@ -193,15 +192,15 @@ private fun DailyFormContent(
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             SectionTitle("How do you feel?")
             Spacer(Modifier.height(4.dp))
-            SliderQuestion("Exhaustion", exhaustion) {
+            SliderQuestion("Exhaustion", exhaustion, answered = exhaustionTouched || base?.exhaustionLevel != null, onConfirm = { exhaustionTouched = true }) {
                 exhaustion = it
                 exhaustionTouched = true
             }
-            SliderQuestion("Muscle soreness", soreness) {
+            SliderQuestion("Muscle soreness", soreness, answered = sorenessTouched || base?.muscleSoreness != null, onConfirm = { sorenessTouched = true }) {
                 soreness = it
                 sorenessTouched = true
             }
-            SliderQuestion("Stress", stress) {
+            SliderQuestion("Stress", stress, answered = stressTouched || base?.stressLevel != null, onConfirm = { stressTouched = true }) {
                 stress = it
                 stressTouched = true
             }
@@ -217,6 +216,10 @@ private fun DailyFormContent(
         )
 
         Button(
+            enabled = rhrText != base?.restingHr?.toString().orEmpty() ||
+                hrvText != base?.hrvMs.toFieldText() ||
+                sleepText != base?.sleepMinutes?.toString().orEmpty() ||
+                note != base?.note.orEmpty() || exhaustionTouched || sorenessTouched || stressTouched,
             onClick = {
                 val existing = base
                 val entry = existing ?: DailyEntryEntity(
@@ -282,9 +285,12 @@ private fun SourceBadge() {
 private fun SliderQuestion(
     label: String,
     value: Int,
+    answered: Boolean,
+    onConfirm: () -> Unit,
     onChange: (Int) -> Unit,
 ) {
     Column {
+        if (!answered) TextButton(onClick = onConfirm) { Text("Use $value / 10 for $label") }
         Row(
             Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -292,7 +298,7 @@ private fun SliderQuestion(
         ) {
             Text(label, style = MaterialTheme.typography.titleSmall)
             Text(
-                "$value / 10",
+                if (answered) "$value / 10" else "Not answered",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,

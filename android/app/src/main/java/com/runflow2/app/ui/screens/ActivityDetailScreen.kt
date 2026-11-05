@@ -69,6 +69,7 @@ import com.runflow2.app.data.net.Api
 import com.runflow2.app.data.repo.RunFlowRepository
 import com.runflow2.app.data.sync.streams
 import com.runflow2.app.domain.analytics.AnalyticsEngine
+import com.runflow2.app.ui.components.validRoute
 import com.runflow2.app.ui.components.RouteCanvas
 import com.runflow2.app.ui.components.RouteColorMode
 import com.runflow2.app.ui.components.SectionTitle
@@ -108,8 +109,8 @@ fun ActivityDetailScreen(
     )
     val u = if (settings.useImperial) DistanceUnit.IMPERIAL else DistanceUnit.METRIC
 
-    var activity by remember { mutableStateOf<ActivityEntity?>(null) }
-    var loaded by remember { mutableStateOf(false) }
+    var activity by remember(activityId) { mutableStateOf<ActivityEntity?>(null) }
+    var loaded by remember(activityId) { mutableStateOf(false) }
     LaunchedEffect(activityId) {
         activity = container.repository.activity(activityId)
         loaded = true
@@ -141,7 +142,13 @@ fun ActivityDetailScreen(
     var showDelete by remember { mutableStateOf(false) }
     var showRename by remember { mutableStateOf(false) }
 
-    val route = remember(a.id, a.routeJson) { parseRoute(a.routeJson) }
+    val route = remember(a.id, a.routeJson, a.streamsJson) {
+        val streamRoute = a.streams()?.latlng.orEmpty().map {
+            if (it.size >= 2) it[0] to it[1] else Double.NaN to Double.NaN
+        }
+        if (validRoute(streamRoute).size >= 2) streamRoute else parseRoute(a.routeJson)
+    }
+    val hasRoute = remember(route) { validRoute(route).size >= 2 }
     val laps = remember(a.id, a.lapsJson) { parseLaps(a.lapsJson) }
 
     val isRide = remember(a.type) { Format.isRideType(a.type) }
@@ -152,20 +159,28 @@ fun ActivityDetailScreen(
     val hasPower = remember(a.averageWatts, a.npWatts, series) {
         (a.averageWatts ?: 0.0) > 0.0 || (a.npWatts ?: 0.0) > 0.0 || !(series?.watts).isNullOrEmpty()
     }
-    var routeColorMode by remember { mutableStateOf(RouteColorMode.ROUTE) }
-    var scrubFraction by remember { mutableStateOf<Float?>(null) }
+    var routeColorMode by remember(activityId) { mutableStateOf(RouteColorMode.ROUTE) }
+    var scrubFraction by remember(activityId) { mutableStateOf<Float?>(null) }
 
     val allActivities by container.repository.activities.collectAsState(initial = emptyList())
+    LaunchedEffect(allActivities, activityId) {
+        allActivities.firstOrNull { it.id == activityId }?.let { activity = it }
+    }
     val prBadges = remember(a.id, series, allActivities) {
         calculatePrBadges(a, series, allActivities, isRide, hasPower, u)
     }
-    var loadingStreams by remember(activityId) { mutableStateOf(false) }
-    LaunchedEffect(a.id, a.serverId, a.streamsJson) {
-        if (series == null && a.serverId != null && (a.type == "RUN" || Format.isRideType(a.type))) {
+    var loadingStreams by remember(activityId) { mutableStateOf(a.streamsJson == null && a.serverId != null) }
+    var streamReloadKey by remember(activityId) { mutableStateOf(0) }
+    LaunchedEffect(a.id, a.serverId, a.streamsJson, streamReloadKey) {
+        if (a.streamsJson == null && a.serverId != null) {
             loadingStreams = true
-            val cached = container.repository.fetchAndCacheStreams(a.id, a.serverId)
-            loadingStreams = false
-            if (cached) activity = container.repository.activity(activityId)
+            try {
+                container.repository.fetchAndCacheStreams(a.id, a.serverId)
+            } finally {
+                loadingStreams = false
+            }
+            // Another backfill may have cached this row while the request was in flight.
+            activity = container.repository.activity(activityId)
         }
     }
 
@@ -400,6 +415,8 @@ fun ActivityDetailScreen(
                         Column(Modifier.padding(16.dp)) {
                             SectionTitle("Analysis")
                             Spacer(Modifier.height(12.dp))
+                            Text("Recorded samples only · gaps may occur while paused or without GPS", style = MaterialTheme.typography.bodySmall)
+                            Text("Session moving time: ${Format.duration(a.movingTimeSec.toLong())}", style = MaterialTheme.typography.bodySmall)
                             StreamsChart(
                                 series = series,
                                 unit = u,
@@ -435,7 +452,7 @@ fun ActivityDetailScreen(
             }
 
             // route
-            if (route.size > 2) {
+            if (hasRoute) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -444,13 +461,16 @@ fun ActivityDetailScreen(
                         ),
                     ) {
                         Column(Modifier.padding(16.dp)) {
+                            SectionTitle("Route")
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                SectionTitle("Route")
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(
+                                    modifier = Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
                                     FilterChip(
                                         selected = routeColorMode == RouteColorMode.ROUTE,
                                         onClick = { routeColorMode = RouteColorMode.ROUTE },
@@ -483,6 +503,27 @@ fun ActivityDetailScreen(
                                 hrValues = series?.heartrate?.map { it.roundToInt() },
                                 scrubFraction = scrubFraction,
                             )
+                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                Text("● Start", color = MaterialTheme.semanticColors.good, style = MaterialTheme.typography.labelSmall)
+                                Text("● Finish", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
+                }
+            } else {
+                item {
+                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                        SectionTitle("Route")
+                        Text(
+                            when {
+                                loadingStreams -> "Loading route…"
+                                a.serverId != null && a.streamsJson == null -> "GPS route unavailable. Try loading it again."
+                                else -> "No GPS route available"
+                            },
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        if (!loadingStreams && a.serverId != null && a.streamsJson == null) {
+                            TextButton(onClick = { streamReloadKey++ }) { Text("Retry") }
                         }
                     }
                 }

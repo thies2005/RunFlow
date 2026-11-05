@@ -1,5 +1,7 @@
 'use client';
 
+import { calendarDate } from '@/lib/plans/calendar-date';
+
 import React, { useCallback, useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -81,7 +83,7 @@ function DraggableWorkoutItem({
             ref={setNodeRef}
             style={style}
             onClick={onClick}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs cursor-pointer select-none transition-all ${
+            className={`flex flex-wrap min-w-0 max-w-full items-center gap-1.5 px-2 py-1 rounded-md text-xs cursor-pointer select-none transition-all ${
                 isSelected
                     ? `${colors.bg} ring-1 ring-foreground-muted`
                     : `${colors.bg} hover:brightness-125`
@@ -100,7 +102,7 @@ function DraggableWorkoutItem({
             {workout.isCompleted && (
                 <span className="text-positive font-bold text-xs shrink-0" title="Completed">✓</span>
             )}
-            <span className={`truncate max-w-[220px] sm:max-w-[280px] font-medium ${colors.text}`}>{name}</span>
+            <span className={`min-w-0 break-words max-w-full sm:max-w-[280px] font-medium ${colors.text}`}>{name}</span>
 
             {workout.description && (
                 <span className="text-foreground-muted truncate max-w-[130px] hidden sm:inline">
@@ -117,7 +119,7 @@ function DraggableWorkoutItem({
             )}
 
             {workout.plannedTss != null && workout.plannedTss > 0 && (
-                <span className="text-workout-tempo/80 font-mono text-[10px] shrink-0">
+                <span className="text-workout-tempo/80 font-mono text-xs shrink-0">
                     {workout.plannedTss} TSS
                 </span>
             )}
@@ -171,7 +173,7 @@ function DroppableDayRow({
                 <span className="text-xs text-foreground-secondary ml-1.5 font-mono">{format(day, 'd')}</span>
             </div>
 
-            <div className="flex-1 flex flex-wrap items-center gap-1.5 min-h-[28px]">
+            <div className="flex-1 min-w-0 flex flex-wrap items-center gap-1.5 min-h-[28px]">
                 {workouts.length === 0 ? (
                     <span className="text-xs text-foreground-muted italic">Rest</span>
                 ) : (
@@ -189,7 +191,7 @@ function DroppableDayRow({
             <button
                 type="button"
                 onClick={() => onAddWorkout(day)}
-                className="ml-auto p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                className="ml-auto p-1 rounded text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary sm:opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shrink-0"
                 title="Add workout"
             >
                 <Plus className="w-3.5 h-3.5" />
@@ -310,7 +312,7 @@ export function WorkoutListPanel({
 
         if (workout && targetDayIso) {
             const targetDate = new Date(targetDayIso);
-            const currentDate = new Date(workout.scheduledDate);
+            const currentDate = calendarDate(workout.scheduledDate);
             if (!isSameDay(targetDate, currentDate)) {
                 targetDate.setHours(currentDate.getHours(), currentDate.getMinutes(), currentDate.getSeconds());
                 moveWorkoutMutation.mutate({
@@ -443,7 +445,7 @@ export function WorkoutListPanel({
     // Mini PMC metrics calculation
     const miniPmcMetrics = useMemo(() => {
         const loads: PlannedDailyLoad[] = days.map((d) => {
-            const dayWorkouts = week.workouts.filter((w) => isSameDay(new Date(w.scheduledDate), d));
+            const dayWorkouts = week.workouts.filter((w) => isSameDay(calendarDate(w.scheduledDate), d));
             let planned = 0;
             for (const w of dayWorkouts) {
                 const tss = w.plannedTss ?? calculateWorkoutPlannedTss(w as any);
@@ -493,13 +495,14 @@ export function WorkoutListPanel({
                             onChange={() => selectAllInWeek(week.workouts)}
                             className="w-3.5 h-3.5 rounded border-foreground/25 bg-background-tertiary text-foreground-secondary focus:ring-foreground-muted"
                         />
-                        <span className="text-[10px] text-foreground-muted">Select all</span>
+                        <span className="text-xs text-foreground-muted">Select all</span>
                     </label>
 
                     <button
                         type="button"
                         onClick={() => setShowPmcStrip(!showPmcStrip)}
-                        className="flex items-center gap-1 text-[10px] text-foreground-muted hover:text-foreground font-mono"
+                        aria-expanded={showPmcStrip}
+                        className="flex items-center gap-1 text-xs text-foreground-muted hover:text-foreground font-mono"
                     >
                         <Activity className="w-3 h-3 text-workout-tempo" />
                         <span>PMC: {miniPmcMetrics.plannedTss} TSS</span>
@@ -511,7 +514,7 @@ export function WorkoutListPanel({
                     <button
                         type="button"
                         onClick={handleCopyWeek}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-background-tertiary hover:bg-background-tertiary/80 text-foreground-secondary hover:text-foreground border border-glass-border transition-colors"
+                        className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-background-tertiary hover:bg-background-tertiary/80 text-foreground-secondary hover:text-foreground border border-glass-border transition-colors"
                         title="Copy Week"
                     >
                         <Copy className="w-3 h-3" />
@@ -521,7 +524,7 @@ export function WorkoutListPanel({
                     <button
                         type="button"
                         onClick={handlePasteClick}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-background-tertiary hover:bg-background-tertiary/80 text-foreground-secondary hover:text-foreground border border-glass-border transition-colors"
+                        className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-background-tertiary hover:bg-background-tertiary/80 text-foreground-secondary hover:text-foreground border border-glass-border transition-colors"
                         title="Paste Week"
                     >
                         <Clipboard className="w-3 h-3 text-accent-blue" />
@@ -532,18 +535,18 @@ export function WorkoutListPanel({
 
             {/* Collapsible Mini-PMC Strip */}
             {showPmcStrip && (
-                <div className="px-4 py-2 bg-background-tertiary/50 border-b border-glass-border flex items-center justify-between text-[11px] font-mono">
+                <div className="px-4 py-2 bg-background-tertiary/50 border-b border-glass-border flex flex-wrap gap-2 items-center justify-between text-xs font-mono">
                     <div className="flex items-center gap-4">
                         <div>
-                            <span className="text-foreground-muted text-[10px] uppercase block">Proj. CTL</span>
+                            <span className="text-foreground-muted text-xs uppercase block">Proj. CTL</span>
                             <span className="text-accent-blue font-semibold">{miniPmcMetrics.ctl}</span>
                         </div>
                         <div>
-                            <span className="text-foreground-muted text-[10px] uppercase block">Proj. ATL</span>
+                            <span className="text-foreground-muted text-xs uppercase block">Proj. ATL</span>
                             <span className="text-workout-tempo font-semibold">{miniPmcMetrics.atl}</span>
                         </div>
                         <div>
-                            <span className="text-foreground-muted text-[10px] uppercase block">Proj. TSB</span>
+                            <span className="text-foreground-muted text-xs uppercase block">Proj. TSB</span>
                             <span
                                 className={`font-semibold ${
                                     miniPmcMetrics.tsb >= 0 ? 'text-positive' : 'text-negative'
@@ -553,7 +556,7 @@ export function WorkoutListPanel({
                             </span>
                         </div>
                     </div>
-                    <div className="text-[10px] text-foreground-muted font-sans">
+                    <div className="text-xs text-foreground-muted font-sans">
                         Week load: {miniPmcMetrics.plannedTss} TSS
                     </div>
                 </div>
@@ -564,7 +567,7 @@ export function WorkoutListPanel({
                 <div className="divide-y divide-glass-border">
                     {days.map((day, dayIdx) => {
                         const dayWorkouts = week.workouts.filter((w) =>
-                            isSameDay(new Date(w.scheduledDate), day)
+                            isSameDay(calendarDate(w.scheduledDate), day)
                         );
 
                         return (

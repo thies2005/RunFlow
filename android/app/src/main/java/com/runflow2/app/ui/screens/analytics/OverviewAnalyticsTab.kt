@@ -333,7 +333,7 @@ fun OverviewAnalyticsTab(
                 ) {
                     val rampColor = when {
                         bundle.ctlRampRate7d > 8.0 -> MaterialTheme.colorScheme.error
-                        bundle.ctlRampRate7d > 5.0 -> Color(0xFFFFA726)
+                        bundle.ctlRampRate7d > 5.0 -> sem.warn
                         else -> sem.good
                     }
                     StatTile(
@@ -345,8 +345,8 @@ fun OverviewAnalyticsTab(
 
                     val acwrColor = when {
                         bundle.acwr > 1.5 -> MaterialTheme.colorScheme.error
-                        bundle.acwr > 1.3 -> Color(0xFFFFA726)
-                        bundle.acwr < 0.8 -> Color(0xFF42A5F5)
+                        bundle.acwr > 1.3 -> sem.warn
+                        bundle.acwr < 0.8 -> sem.ctl
                         else -> sem.good
                     }
                     StatTile(
@@ -363,7 +363,7 @@ fun OverviewAnalyticsTab(
                 ) {
                     val monotonyColor = when {
                         bundle.fosterMonotony > 2.0 -> MaterialTheme.colorScheme.error
-                        bundle.fosterMonotony > 1.5 -> Color(0xFFFFA726)
+                        bundle.fosterMonotony > 1.5 -> sem.warn
                         else -> sem.good
                     }
                     StatTile(

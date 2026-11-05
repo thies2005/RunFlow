@@ -101,7 +101,7 @@ export interface MetricsInput {
         ftpWatts?: number | null;
     };
     currentHrMax: number | null;
-    streams: { time: number[]; heartrate?: number[]; velocity_smooth?: number[]; altitude?: number[]; cadence?: number[]; watts?: number[] } | null;
+    streams: { time: number[]; heartrate?: number[]; velocity_smooth?: number[]; altitude?: number[]; cadence?: number[]; watts?: number[]; latlng?: [number, number][] } | null;
     goals?: Array<{ currentVdot: number | null; isActive: boolean }>;
 }
 

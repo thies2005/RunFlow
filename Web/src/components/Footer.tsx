@@ -1,4 +1,5 @@
 import React from 'react';
+import { version } from '../../package.json';
 import Link from 'next/link';
 import { PoweredByStravaLogo } from './StravaLogos';
 import { Heart } from 'lucide-react';
@@ -26,8 +27,8 @@ export const Footer: React.FC = () => {
                         Impressum
                     </Link>
                 </div>
-                <p className="text-foreground-muted text-xs flex items-center gap-1">RunFlow • Built with <Heart className="w-3 h-3 text-accent-pink" /> for runners</p>
-                <span className="text-foreground-muted text-[10px] font-mono">v1.2.0</span>
+                <p className="text-foreground-muted text-xs flex items-center gap-1">RunFlow • Built with <Heart className="w-3 h-3 text-accent-pink" /> for athletes</p>
+                <span className="text-foreground-muted text-xs font-mono">v{version}</span>
             </div>
         </footer>
     );

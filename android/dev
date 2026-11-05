@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# Repository-local Android CLI entry point. Does not edit shell profiles or secrets.
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+if [[ -z "$sdk" && -f local.properties ]]; then
+    sdk=$(sed -n 's/^sdk.dir=//p' local.properties | head -1)
+fi
+sdk="${sdk:-$HOME/Android/Sdk}"
+export ANDROID_HOME="$sdk"
+export PATH="$sdk/platform-tools:$sdk/emulator:$sdk/cmdline-tools/latest/bin:$PATH"
+
+gradle() {
+    # JAVA_HOME makes the checked-in machine-specific JDK setting overridable.
+    if [[ -n "${JAVA_HOME:-}" ]]; then
+        ./gradlew "-Dorg.gradle.java.home=$JAVA_HOME" "$@"
+    else
+        ./gradlew "$@"
+    fi
+}
+
+device() {
+    if [[ -n "${ANDROID_SERIAL:-}" ]]; then
+        adb -s "$ANDROID_SERIAL" get-state >/dev/null
+        serial="$ANDROID_SERIAL"
+    else
+        mapfile -t devices < <(adb devices | awk 'NR>1 && $2 == "device" {print $1}')
+        if [[ ${#devices[@]} -ne 1 ]]; then
+            echo 'Connect one device, or set ANDROID_SERIAL to choose one.' >&2
+            adb devices -l
+            exit 1
+        fi
+        serial="${devices[0]}"
+    fi
+    export ANDROID_SERIAL="$serial"
+}
+
+case "${1:-help}" in
+    doctor)
+        java -version
+        gradle --version
+        printf '\nSDK: %s\n' "$sdk"
+        for path in platforms/android-36 build-tools/36.0.0 platform-tools/adb emulator/emulator; do
+            [[ -e "$sdk/$path" ]] || { echo "Missing: $sdk/$path" >&2; exit 1; }
+        done
+        adb version
+        adb devices -l
+        emulator -list-avds
+        emulator -accel-check
+        ;;
+    check)
+        shift
+        gradle :app:compileDebugKotlin testDebugUnitTest lintDebug :app:compileDebugAndroidTestKotlin "$@"
+        ;;
+    emulator)
+        avd="${2:-RunFlow_Test_API35}"
+        shift
+        if [[ $# -gt 0 ]]; then shift; fi
+        exec emulator -avd "$avd" -no-snapshot-save "$@"
+        ;;
+    wait)
+        device
+        deadline=$((SECONDS + 180))
+        until [[ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" == 1 ]]; do
+            if (( SECONDS >= deadline )); then echo 'Device boot timed out.' >&2; exit 1; fi
+            sleep 2
+        done
+        ;;
+    device-test)
+        device
+        shift
+        gradle connectedDebugAndroidTest "$@"
+        ;;
+    release)
+        shift
+        gradle assembleRelease "$@"
+        ;;
+    run)
+        device
+        gradle assembleRelease
+        apk=app/build/outputs/apk/release/app-release.apk
+        [[ -f "$apk" ]] || { echo 'A signed release requires android/key.properties; see README.' >&2; exit 1; }
+        adb install -r "$apk"
+        adb shell am start -W -n com.runflow2.app/.MainActivity
+        ;;
+    local-backend)
+        device
+        adb reverse tcp:3000 tcp:3000
+        echo 'Set the app Settings server URL to http://localhost:3000 (debug builds only).'
+        ;;
+    logcat)
+        device
+        pid=$(adb shell pidof -s com.runflow2.app | tr -d '\r')
+        [[ -n "$pid" ]] || { echo 'Start RunFlow first.' >&2; exit 1; }
+        exec adb logcat --pid="$pid"
+        ;;
+    *)
+        echo 'Usage: ./dev {doctor|check|emulator [AVD] [flags...]|wait|device-test|release|run|local-backend|logcat}'
+        ;;
+esac

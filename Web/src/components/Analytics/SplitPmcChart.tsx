@@ -256,16 +256,17 @@ function SplitPmcChartComponent({
                         </h3>
                     </div>
                     <p className="text-xs text-foreground-muted mt-1">
-                        Track long-term fitness adaptation, acute fatigue, and race readiness
+                        Daily fitness cache: CTL (blue), ATL (orange) and TSB (green, dashed). Split overlay compares CTL by sport.
                     </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                     {/* View Switcher: Combined | Running | Cycling | Split Overlay */}
-                    <div className="inline-flex rounded-lg bg-background-tertiary p-1 border border-line text-xs">
+                    <div role="group" aria-label="PMC sport scope" className="inline-flex rounded-lg bg-background-tertiary p-1 border border-line text-xs">
                         <button
                             type="button"
                             onClick={() => setViewMode('combined')}
+                            aria-pressed={viewMode === 'combined'}
                             className={`px-2.5 py-1 font-medium rounded-md transition-all ${
                                 viewMode === 'combined'
                                     ? 'bg-accent-cyan text-background shadow-xs font-semibold'
@@ -277,6 +278,7 @@ function SplitPmcChartComponent({
                         <button
                             type="button"
                             onClick={() => setViewMode('running')}
+                            aria-pressed={viewMode === 'running'}
                             className={`px-2.5 py-1 font-medium rounded-md transition-all ${
                                 viewMode === 'running'
                                     ? 'bg-accent-blue text-white shadow-xs font-semibold'
@@ -288,6 +290,7 @@ function SplitPmcChartComponent({
                         <button
                             type="button"
                             onClick={() => setViewMode('cycling')}
+                            aria-pressed={viewMode === 'cycling'}
                             className={`px-2.5 py-1 font-medium rounded-md transition-all ${
                                 viewMode === 'cycling'
                                     ? 'bg-accent-orange text-white shadow-xs font-semibold'
@@ -299,6 +302,7 @@ function SplitPmcChartComponent({
                         <button
                             type="button"
                             onClick={() => setViewMode('split')}
+                            aria-pressed={viewMode === 'split'}
                             className={`px-2.5 py-1 font-medium rounded-md transition-all ${
                                 viewMode === 'split'
                                     ? 'bg-accent-purple text-white shadow-xs font-semibold'
@@ -311,12 +315,13 @@ function SplitPmcChartComponent({
 
                     {/* Range Switcher (42d | 90d | 1y | All) */}
                     {!hideRangeSelector && (
-                        <div className="inline-flex rounded-lg bg-background-tertiary p-1 border border-line text-xs">
+                        <div role="group" aria-label="PMC date range" className="inline-flex rounded-lg bg-background-tertiary p-1 border border-line text-xs">
                             {(['42d', '90d', '180d', '1y', 'all'] as PmcRange[]).map(r => (
                                 <button
                                     key={r}
                                     type="button"
                                     onClick={() => handleRangeClick(r)}
+                                    aria-pressed={activeRange === r}
                                     className={`px-2 py-1 uppercase rounded-md transition-all ${
                                         activeRange === r
                                             ? 'bg-surface-hover text-foreground font-semibold'
@@ -344,16 +349,16 @@ function SplitPmcChartComponent({
                     <ComposedChart data={chartData} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
                         <defs>
                             <linearGradient id="ctlCombinedGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0} />
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
                             </linearGradient>
                             <linearGradient id="ctlRunGrad" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
                                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
                             </linearGradient>
                             <linearGradient id="ctlBikeGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#f97316" stopOpacity={0.0} />
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
                             </linearGradient>
                         </defs>
 
@@ -416,7 +421,7 @@ function SplitPmcChartComponent({
                                 type="monotone"
                                 dataKey="ctlCombined"
                                 name="Fitness (CTL)"
-                                stroke="#06b6d4"
+                                stroke="#3b82f6"
                                 strokeWidth={2.5}
                                 fill="url(#ctlCombinedGrad)"
                                 dot={false}
@@ -428,7 +433,7 @@ function SplitPmcChartComponent({
                                 type="monotone"
                                 dataKey="atlCombined"
                                 name="Fatigue (ATL)"
-                                stroke="#ec4899"
+                                stroke="#f97316"
                                 strokeWidth={1.8}
                                 dot={false}
                             />
@@ -439,7 +444,7 @@ function SplitPmcChartComponent({
                                 type="monotone"
                                 dataKey="tsbCombined"
                                 name="Form (TSB)"
-                                stroke="#eab308"
+                                stroke="#10b981"
                                 strokeWidth={1.8}
                                 strokeDasharray="3 3"
                                 dot={false}
@@ -475,7 +480,7 @@ function SplitPmcChartComponent({
                                 type="monotone"
                                 dataKey="atlRunning"
                                 name="Running ATL"
-                                stroke="#ec4899"
+                                stroke="#f97316"
                                 strokeWidth={1.8}
                                 dot={false}
                             />
@@ -499,7 +504,7 @@ function SplitPmcChartComponent({
                                 yAxisId="right"
                                 dataKey="bikeTss"
                                 name="Bike TSS"
-                                fill="#f97316"
+                                fill="#64748b"
                                 opacity={0.35}
                                 maxBarSize={8}
                             />
@@ -510,7 +515,7 @@ function SplitPmcChartComponent({
                                 type="monotone"
                                 dataKey="ctlBike"
                                 name="Cycling CTL"
-                                stroke="#f97316"
+                                stroke="#3b82f6"
                                 strokeWidth={2.5}
                                 fill="url(#ctlBikeGrad)"
                                 dot={false}
@@ -522,7 +527,7 @@ function SplitPmcChartComponent({
                                 type="monotone"
                                 dataKey="atlBike"
                                 name="Cycling ATL"
-                                stroke="#ec4899"
+                                stroke="#f97316"
                                 strokeWidth={1.8}
                                 dot={false}
                             />
@@ -533,7 +538,7 @@ function SplitPmcChartComponent({
                                 type="monotone"
                                 dataKey="tsbBike"
                                 name="Cycling TSB"
-                                stroke="#eab308"
+                                stroke="#10b981"
                                 strokeWidth={1.8}
                                 strokeDasharray="3 3"
                                 dot={false}
@@ -558,8 +563,9 @@ function SplitPmcChartComponent({
                                 type="monotone"
                                 dataKey="ctlBike"
                                 name="Cycling CTL"
-                                stroke="#f97316"
+                                stroke="#3b82f6"
                                 strokeWidth={2.5}
+                                strokeDasharray="6 3"
                                 dot={false}
                             />
                         )}
@@ -569,7 +575,7 @@ function SplitPmcChartComponent({
                                 type="monotone"
                                 dataKey="ctlCombined"
                                 name="Combined CTL"
-                                stroke="#06b6d4"
+                                stroke="#3b82f6"
                                 strokeWidth={2}
                                 strokeDasharray="4 4"
                                 dot={false}

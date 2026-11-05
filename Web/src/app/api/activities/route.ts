@@ -20,6 +20,7 @@ type ActivityWhereClause = {
     type?: ActivityType;
     distance?: { gte: number };
     startDate?: { gte: Date };
+    stravaId?: { gt?: bigint; lt?: bigint };
 };
 
 export async function GET(request: NextRequest) {
@@ -48,8 +49,11 @@ export async function GET(request: NextRequest) {
         const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
         const type = searchParams.get('type');
         const raceEligible = searchParams.get('raceEligible') === 'true';
+        const source = searchParams.get('source');
 
         const where: ActivityWhereClause = { userId: session.user.id };
+        if (source === 'strava') where.stravaId = { gt: BigInt(0) };
+        if (source === 'runflow') where.stravaId = { lt: BigInt(0) };
         if (type) {
             // Validate type against allowed values to prevent Prisma errors
             const validTypes: ActivityType[] = ['RUN', 'VIRTUAL_RIDE', 'RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER'];
@@ -288,3 +292,46 @@ export async function POST(request: NextRequest) {
     }
 }
 
+
+// Delete only explicitly selected, owned activities and unlink their planned workouts.
+export async function DELETE(request: NextRequest) {
+    try {
+        const clientId = getClientIdentifier(request);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.activities);
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(rateLimitResult) });
+        }
+        const session = await auth();
+        if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const body = await request.json().catch(() => null);
+        if (!Array.isArray(body?.ids) || body.ids.length === 0 || body.ids.length > 1000 ||
+            body.ids.some((id: unknown) => typeof id !== 'string' || !id || id.length > 200)) {
+            return NextResponse.json({ error: 'Select between 1 and 1000 activities.' }, { status: 400 });
+        }
+        const ids: string[] = [...new Set<string>(body.ids)];
+        const userId = session.user.id;
+        const deleted = await prisma.$transaction(async (tx) => {
+            const owned = await tx.activity.findMany({
+                where: { userId, id: { in: ids } }, select: { id: true, startDate: true },
+            });
+            // Fail as a unit if any ID is missing or belongs to another user.
+            if (owned.length !== ids.length) return null;
+            await tx.workout.updateMany({
+                where: { linkedActivityId: { in: ids }, goal: { userId } },
+                data: { linkedActivityId: null },
+            });
+            const result = await tx.activity.deleteMany({ where: { userId, id: { in: ids } } });
+            if (result.count !== ids.length) throw new Error('ACTIVITY_DELETE_CONFLICT');
+            return owned;
+        });
+        if (!deleted) return NextResponse.json({ error: 'One or more activities were not found.' }, { status: 404 });
+        await updateFitnessCache(userId, deleted);
+        return NextResponse.json({ success: true, deleted: deleted.length });
+    } catch (error) {
+        if (error instanceof Error && error.message === 'ACTIVITY_DELETE_CONFLICT') {
+            return NextResponse.json({ error: 'Activities changed. Refresh and try again.' }, { status: 409 });
+        }
+        return handleError(error);
+    }
+}

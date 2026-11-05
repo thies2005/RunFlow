@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.runflow2.app.core.util.AppLog
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -32,7 +33,13 @@ data class AuthState(
  * Bearer-token session storage. Tokens live in a private DataStore; a
  * single-flight mutex guards refresh so concurrent 401s trigger one refresh.
  */
-class AuthStore(private val context: Context) {
+interface SessionTokenStore {
+    fun accessToken(): String?
+    suspend fun clear()
+    suspend fun refreshWith(apiProvider: suspend () -> RunFlowApi): String?
+}
+
+class AuthStore(private val context: Context) : SessionTokenStore {
 
     private object Keys {
         val ACCESS = stringPreferencesKey("access_token")
@@ -128,7 +135,7 @@ class AuthStore(private val context: Context) {
         )
     }
 
-    fun accessToken(): String? = cachedAccess
+    override fun accessToken(): String? = cachedAccess
     fun refreshToken(): String? = cachedRefresh
 
     suspend fun saveSession(auth: AuthResponse) {
@@ -173,7 +180,7 @@ class AuthStore(private val context: Context) {
         }
     }
 
-    suspend fun clear() {
+    override suspend fun clear() = refreshMutex.withLock {
         cachedAccess = null
         cachedRefresh = null
         _state.value = AuthState(initialized = true)
@@ -185,13 +192,15 @@ class AuthStore(private val context: Context) {
      * Single-flight refresh: the first caller refreshes, the rest reuse the
      * result. Returns the new access token or null when the session is gone.
      */
-    suspend fun refreshWith(apiProvider: suspend () -> RunFlowApi): String? = refreshMutex.withLock {
+    override suspend fun refreshWith(apiProvider: suspend () -> RunFlowApi): String? = refreshMutex.withLock {
         val refresh = refreshToken() ?: return@withLock null
         return@withLock try {
             val resp = apiProvider().refresh(RefreshRequest(refreshToken = refresh))
             updateTokens(resp.accessToken, resp.refreshToken)
             AppLog.i("Auth", "token refreshed")
             resp.accessToken
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             AppLog.w("Auth", "token refresh failed — session likely expired", e)
             null

@@ -44,6 +44,7 @@ import Link from 'next/link';
 
 import { UserAvatar } from '@/components/UserAvatar';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import AiSettingsModal from '@/components/AiSettingsModal';
 import { ReminderSettingsModal } from '@/components/views/ReminderSettingsModal';
 import PastRacesSection from '@/components/PastRacesSection';
@@ -86,7 +87,7 @@ export function MinimalistPillsMenu({ trigger }: MinimalistPillsMenuProps) {
         <>
             <div onClick={() => setIsOpen(true)} className="cursor-pointer">
                 {trigger || (
-                    <button className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-hover transition-colors border border-transparent hover:border-line">
+                    <button aria-label="Open profile settings" aria-expanded={isOpen} className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-hover transition-colors border border-transparent hover:border-line">
                         <UserAvatar
                             image={session.user.image}
                             name={session.user.name}
@@ -187,7 +188,7 @@ function MobilePanel({
                 {subPage ? (
                     <>
                         <div className="flex items-center gap-2 px-4 pt-safe pb-2 border-b border-line">
-                            <button onClick={handleBack} className="text-foreground-muted hover:text-foreground p-1 -ml-1">
+                            <button aria-label="Back to settings" onClick={handleBack} className="text-foreground-muted hover:text-foreground p-1 -ml-1">
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
                             <span className="text-sm font-semibold text-foreground">{currentSubPageLabel}</span>
@@ -204,7 +205,7 @@ function MobilePanel({
                         <div className="flex items-center justify-between px-4 pt-safe pb-2">
                             <div className="w-8" />
                             <h2 className="text-sm font-semibold text-foreground-muted">Settings</h2>
-                            <button onClick={onClose} className="text-foreground-muted hover:text-foreground p-1">
+                            <button aria-label="Close settings" onClick={onClose} className="text-foreground-muted hover:text-foreground p-1">
                                 <ChevronRight className="w-5 h-5 rotate-180" />
                             </button>
                         </div>
@@ -321,10 +322,7 @@ function DesktopPopover({
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                if (subPage) setSubPage(null);
-                else onClose();
-            }
+            if (e.key === 'Escape' && !subPage) onClose();
         };
         document.addEventListener('keydown', handleEsc);
         return () => document.removeEventListener('keydown', handleEsc);
@@ -334,22 +332,11 @@ function DesktopPopover({
 
     if (subPage) {
         return (
-            <div
-                ref={popoverRef}
-                className="fixed top-16 right-4 z-[200] w-80 bg-background-secondary border border-line shadow-lg rounded-md overflow-hidden animate-slide-in"
-            >
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-line">
-                    <button onClick={() => setSubPage(null)} className="text-foreground-muted hover:text-foreground">
-                        <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <span className="text-sm font-semibold text-foreground">
-                        {menuItems.find(i => i.subPage === subPage)?.label || 'Settings'}
-                    </span>
-                </div>
+            <Modal isOpen onClose={() => setSubPage(null)} title={menuItems.find(i => i.subPage === subPage)?.label || 'Settings'} maxWidth="2xl">
                 <div className="max-h-[70vh] overflow-y-auto">
                     <SubPageContent subPage={subPage} onBack={() => setSubPage(null)} />
                 </div>
-            </div>
+            </Modal>
         );
     }
 
@@ -1067,6 +1054,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
     return (
         <div className="p-5 space-y-5">
             <h3 className="text-lg font-bold text-foreground">Biometrics</h3>
+            <p className="text-sm text-foreground-secondary">Profile fields are saved with Save Profile. Display choices update immediately; calibration has its own Save Factor button.</p>
 
             <div className="grid grid-cols-2 gap-4">
                 <Input
@@ -1101,6 +1089,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                     <button
                         type="button"
                         onClick={() => setIncludeCrossTraining(!includeCrossTraining)}
+                        role="switch" aria-checked={includeCrossTraining} aria-label="Include cross-training"
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeCrossTraining ? 'bg-accent-orange' : 'bg-line-strong'}`}
                     >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeCrossTraining ? 'translate-x-6' : 'translate-x-1'}`} />
@@ -1211,6 +1200,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 key={opt.id}
                                 type="button"
                                 onClick={() => handleSelectDashboardLayoutMode(opt.id)}
+                                aria-pressed={active}
                                 className={`p-2.5 rounded-md border text-left transition-all ${
                                     active
                                         ? 'border-accent-cyan bg-accent-cyan/10 text-foreground'
@@ -1239,6 +1229,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                     key={opt.id}
                                     type="button"
                                     onClick={() => handleToggleDashboardCyclingMetric(opt.id)}
+                                    aria-pressed={checked}
                                     className={`flex items-center justify-between px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
                                         checked
                                             ? 'bg-accent-cyan/10 border-accent-cyan/40 text-foreground font-medium'
@@ -1263,6 +1254,7 @@ function BiometricsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                     key={opt.id}
                                     type="button"
                                     onClick={() => handleToggleDashboardRunningMetric(opt.id)}
+                                    aria-pressed={checked}
                                     className={`flex items-center justify-between px-2.5 py-1.5 rounded text-left text-[11px] border transition-colors ${
                                         checked
                                             ? 'bg-workout-recovery/10 border-workout-recovery/40 text-foreground font-medium'
@@ -1945,6 +1937,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                 key={opt.id}
                                 type="button"
                                 onClick={() => handleSelectDashboardLayoutMode(opt.id)}
+                                aria-pressed={active}
                                 className={`p-2.5 rounded-md border text-left transition-all ${
                                     active
                                         ? 'border-accent-cyan bg-accent-cyan/10 text-foreground'
@@ -1972,6 +1965,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                     key={opt.id}
                                     type="button"
                                     onClick={() => handleToggleDashboardCyclingMetric(opt.id)}
+                                    aria-pressed={checked}
                                     className={`flex items-center justify-between px-2 py-1 rounded text-left text-[10px] border transition-colors ${
                                         checked
                                             ? 'bg-accent-cyan/10 border-accent-cyan/40 text-foreground font-medium'
@@ -1996,6 +1990,7 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
                                     key={opt.id}
                                     type="button"
                                     onClick={() => handleToggleDashboardRunningMetric(opt.id)}
+                                    aria-pressed={checked}
                                     className={`flex items-center justify-between px-2 py-1 rounded text-left text-[10px] border transition-colors ${
                                         checked
                                             ? 'bg-workout-recovery/10 border-workout-recovery/40 text-foreground font-medium'
@@ -2531,7 +2526,7 @@ function ApiSection({ onBack }: { onBack: () => void }) {
     return (
         <div className="p-5 space-y-5">
             <div className="flex items-center gap-2">
-                <button onClick={onBack} className="text-foreground-muted hover:text-foreground"><ChevronLeft className="w-4 h-4" /></button>
+                <button aria-label="Back to settings" onClick={onBack} className="text-foreground-muted hover:text-foreground"><ChevronLeft className="w-4 h-4" /></button>
                 <h3 className="text-lg font-bold text-foreground">API Access</h3>
             </div>
 
@@ -2550,7 +2545,7 @@ function ApiSection({ onBack }: { onBack: () => void }) {
                     </p>
                     <div className="flex items-center gap-2">
                         <code className="flex-1 bg-background-tertiary px-3 py-2 rounded-md text-xs text-positive font-mono break-all">{generatedApiKey}</code>
-                        <button onClick={() => { navigator.clipboard.writeText(generatedApiKey); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="p-2 bg-positive/15 rounded-md hover:bg-positive/25">
+                        <button aria-label="Copy API key" onClick={() => { navigator.clipboard.writeText(generatedApiKey); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="p-2 bg-positive/15 rounded-md hover:bg-positive/25">
                             {copied ? <Check className="w-4 h-4 text-positive" /> : <Copy className="w-4 h-4 text-positive" />}
                         </button>
                     </div>
@@ -2604,7 +2599,7 @@ function PrivacySection({ healthTrackingEnabled: initialHealth, onBack }: { heal
     return (
         <div className="p-5 space-y-5">
             <div className="flex items-center gap-2">
-                <button onClick={onBack} className="text-foreground-muted hover:text-foreground"><ChevronLeft className="w-4 h-4" /></button>
+                <button aria-label="Back to settings" onClick={onBack} className="text-foreground-muted hover:text-foreground"><ChevronLeft className="w-4 h-4" /></button>
                 <h3 className="text-lg font-bold text-foreground">Privacy & Consent</h3>
             </div>
 
@@ -2684,7 +2679,7 @@ function DangerSection({ onBack }: { onBack: () => void }) {
     return (
         <div className="p-5 space-y-5">
             <div className="flex items-center gap-2">
-                <button onClick={onBack} className="text-foreground-muted hover:text-foreground"><ChevronLeft className="w-4 h-4" /></button>
+                <button aria-label="Back to settings" onClick={onBack} className="text-foreground-muted hover:text-foreground"><ChevronLeft className="w-4 h-4" /></button>
                 <h3 className="text-lg font-bold text-negative">Danger Zone</h3>
             </div>
             <DangerShortcut />

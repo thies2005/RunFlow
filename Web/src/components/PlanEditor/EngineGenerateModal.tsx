@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Workout } from './WorkoutDetailPanel';
+import { replacementStart, isReplaceableWorkout, lastProtectedDate } from '@/lib/plans/replacement-scope';
 
 interface EngineGenerateModalProps {
     isOpen: boolean;
@@ -13,6 +15,7 @@ interface EngineGenerateModalProps {
     initialRaceDate?: Date | null;
     initialVdot?: number | null;
     onSuccess?: () => void;
+    workouts?: Workout[];
 }
 
 const RACE_TYPES = [
@@ -44,6 +47,7 @@ export function EngineGenerateModal({
     initialRaceDate,
     initialVdot = 45,
     onSuccess,
+    workouts = [],
 }: EngineGenerateModalProps) {
     const [sport, setSport] = useState<'RUN' | 'CYCLING' | 'TRIATHLON'>(
         initialSport === 'TRIATHLON' ? 'TRIATHLON' : initialSport === 'CYCLING' ? 'CYCLING' : 'RUN'
@@ -68,6 +72,7 @@ export function EngineGenerateModal({
     const [peakWeeks, setPeakWeeks] = useState(3);
     const [taperWeeks, setTaperWeeks] = useState(3);
 
+    const [review, setReview] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -102,17 +107,7 @@ export function EngineGenerateModal({
 
         try {
             if (goalId) {
-                // 1. Snapshot first
-                await fetch(`/api/plan-advanced/${goalId}/snapshot`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        description: 'Auto-snapshot before Engine generation',
-                        operation: 'engine_generate',
-                    }),
-                });
-
-                // 2. Call regenerate
+                // The server snapshots the plan before applying regeneration.
                 const res = await fetch(`/api/plan-advanced/${goalId}/regenerate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -191,6 +186,11 @@ export function EngineGenerateModal({
         }
     };
 
+    const cutoff = replacementStart();
+    const protectedDate = lastProtectedDate(workouts);
+    const affected = workouts.filter((w) => isReplaceableWorkout(w, cutoff, protectedDate));
+    const affectedDates = affected.map((w) => new Date(w.scheduledDate).toISOString().slice(0, 10)).sort();
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div className="bg-background-secondary border border-glass-border rounded-lg max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
@@ -209,7 +209,8 @@ export function EngineGenerateModal({
                     </div>
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={() => { setReview(false); onClose(); }}
+                        aria-label="Close generation dialog"
                         disabled={isGenerating}
                         className="p-1 rounded text-foreground-muted hover:text-foreground hover:bg-background-tertiary transition-colors"
                     >
@@ -217,8 +218,17 @@ export function EngineGenerateModal({
                     </button>
                 </div>
 
+                {review && goalId && (
+                    <div className="mx-5 mt-4 rounded border border-accent-orange/50 p-4 text-sm text-foreground" role="status">
+                        <h3 className="font-semibold">Review plan replacement</h3>
+                        {error && <p role="alert" className="mt-2 text-negative">{error}</p>}
+                        <p className="mt-2">{affected.length} incomplete, unlinked workouts from today (UTC) and after the last completed or linked workout will be removed{affectedDates.length ? ` (${affectedDates[0]} to ${affectedDates[affectedDates.length - 1]})` : ''}. Earlier workouts, completed workouts, and linked workouts are kept. New workouts are generated for the eligible dates; their number and load may differ.</p>
+                        <p className="mt-2">{sport} · {sport !== 'CYCLING' ? `${raceType.replace(/_/g, ' ')} · ${raceDate} · ` : ''}{runsPerWeek} runs, {ridesPerWeek} rides, {swimsPerWeek} swims and {strengthPerWeek} strength sessions per week · {weeklyMileageGoal} km weekly target · build {buildWeeks}, peak {peakWeeks}, taper {taperWeeks} weeks.</p>
+                        <p className="mt-2">A workout snapshot is saved before replacement. Undo restores workouts, but not the plan settings or phase metadata.</p>
+                    </div>
+                )}
                 {/* Form Content */}
-                <div className="overflow-y-auto p-5 space-y-4 text-xs font-sans">
+                <div className={`overflow-y-auto p-5 space-y-4 text-xs font-sans ${review ? 'hidden' : ''}`}>
                     {error && (
                         <div className="p-3 bg-negative/10 border border-negative/30 rounded-md flex items-center gap-2 text-negative text-xs">
                             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -461,9 +471,10 @@ export function EngineGenerateModal({
 
                 {/* Footer */}
                 <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-glass-border bg-background-tertiary/20 shrink-0">
+                    {review && <button type="button" onClick={() => setReview(false)} disabled={isGenerating} className="px-3 py-1.5 text-xs border border-glass-border rounded-md">Edit parameters</button>}
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={() => { setReview(false); onClose(); }}
                         disabled={isGenerating}
                         className="px-3 py-1.5 rounded-md border border-glass-border text-xs text-foreground-secondary hover:text-foreground hover:bg-background-tertiary transition-colors"
                     >
@@ -471,7 +482,7 @@ export function EngineGenerateModal({
                     </button>
                     <button
                         type="button"
-                        onClick={handleGenerate}
+                        onClick={() => { if (goalId && !review) setReview(true); else void handleGenerate(); }}
                         disabled={isGenerating}
                         className="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-workout-tempo hover:bg-workout-tempo/90 text-white font-medium text-xs transition-colors shadow disabled:opacity-50"
                     >
@@ -483,7 +494,7 @@ export function EngineGenerateModal({
                         ) : (
                             <>
                                 <Sparkles className="w-3.5 h-3.5" />
-                                <span>Generate Plan</span>
+                                <span>{goalId ? (review ? 'Confirm replacement' : 'Review replacement') : 'Generate Plan'}</span>
                             </>
                         )}
                     </button>

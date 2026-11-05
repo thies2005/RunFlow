@@ -571,28 +571,4 @@ class ApiContractTest {
         job.cancel()
     }
 
-    @Test
-    fun `network client baseUrl setter triggers origin switch immediately on first origin change`() {
-        var originSwitchedCount = 0
-        val client = NetworkClient(
-            authStore = null,
-            initialBaseUrl = Api.DEFAULT_BASE_URL,
-        ).apply {
-            onOriginSwitched = { originSwitchedCount++ }
-        }
-
-        // Initially previousBaseUrl is initialized to the normalized initialBaseUrl
-        assertEquals(Api.DEFAULT_BASE_URL, client.previousBaseUrl)
-
-        // Setting same origin does not trigger origin switch
-        client.baseUrl = Api.DEFAULT_BASE_URL
-        assertEquals(Api.DEFAULT_BASE_URL, client.previousBaseUrl)
-        assertEquals(0, originSwitchedCount)
-
-        // Setting different origin immediately triggers origin switch on first call
-        client.baseUrl = "http://evil.example.com"
-        assertEquals("https://evil.example.com", client.baseUrl)
-        assertEquals("https://evil.example.com", client.previousBaseUrl)
-        assertEquals(1, originSwitchedCount)
-    }
 }

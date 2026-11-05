@@ -21,8 +21,10 @@ interface UserMetrics {
     aerobicVo2max: number;
     cyclingVo2max: number;
     activeFtpWatts: number;
+    activeFtpSource: 'manual' | 'estimated' | 'missing';
     wPerKg: number;
     weeklyBikeTss: number;
+    weeklyBikeTssMissing: number;
     weeklyBikeKm: number;
     ctlBike: number;
     atlBike: number;
@@ -123,8 +125,10 @@ export function UserMetricsProvider({ children, stats }: UserMetricsProviderProp
         aerobicVo2max: stats?.effectiveVO2max || 0,
         cyclingVo2max: stats?.cyclingVo2max || 0,
         activeFtpWatts: stats?.activeFtpWatts || 0,
+        activeFtpSource: stats?.activeFtpSource ?? 'missing',
         wPerKg: stats?.wPerKg || 0,
         weeklyBikeTss: stats?.weeklyBikeTss || 0,
+        weeklyBikeTssMissing: stats?.weeklyBikeTssMissing || 0,
         weeklyBikeKm: stats?.weeklyBikeKm || 0,
         ctlBike: stats?.ctlBike || 0,
         atlBike: stats?.atlBike || 0,

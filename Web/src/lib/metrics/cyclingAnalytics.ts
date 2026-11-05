@@ -1,3 +1,4 @@
+import { resolveActiveFtp } from './activeFtp';
 import { prisma } from '@/lib/db';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 import {
@@ -311,12 +312,12 @@ export async function getCyclingAnalytics(
     });
 
     // Resolve FTP & Cycling VO2max
-    const resolvedFtp = user?.ftpWatts ?? allTimeEftp ?? 200;
+    const resolvedFtp = resolveActiveFtp(user?.ftpWatts, allTimeEftp, user?.autoEstimateFtp ?? true).watts ?? 0;
     const wPerKg = (resolvedFtp && weightKg) ? Number((resolvedFtp / weightKg).toFixed(2)) : null;
-    const zones = calculateCogganPowerZones(resolvedFtp, weightKg);
+    const zones = resolvedFtp > 0 ? calculateCogganPowerZones(resolvedFtp, weightKg) : [];
     const dur300Idx = STANDARD_POWER_DURATIONS.indexOf(300);
     const peak5MinWatts = dur300Idx !== -1 ? Math.max(rangePeakWatts[dur300Idx] || 0, allTimePeakWatts[dur300Idx] || 0) : 0;
-    const cyclingVo2max = (user?.ftpWatts || allTimeEftp || allRides.length > 0)
+    const cyclingVo2max = (resolvedFtp > 0 && weightKg != null)
         ? calculateCyclingVo2Max({
               ftpWatts: resolvedFtp,
               peak5MinWatts: peak5MinWatts > 0 ? peak5MinWatts : null,
@@ -352,13 +353,13 @@ export async function getCyclingAnalytics(
             if (npWatts == null) {
                 npWatts = calculateNormalizedPower(wattsStream, timeStream, r.weightedAverageWatts, r.averageWatts);
             }
-            if ((intensityFactor == null || hasStaleIf) && npWatts != null) {
+            if ((intensityFactor == null || hasStaleIf) && npWatts != null && resolvedFtp > 0) {
                 intensityFactor = calculateIntensityFactor(npWatts, resolvedFtp);
             }
             if (variabilityIndex == null && npWatts != null && r.averageWatts) {
                 variabilityIndex = calculateVariabilityIndex(npWatts, r.averageWatts);
             }
-            if ((bikeTss == null || hasStaleIf) && npWatts != null && intensityFactor != null) {
+            if ((bikeTss == null || hasStaleIf) && npWatts != null && intensityFactor != null && resolvedFtp > 0) {
                 bikeTss = calculateBikeTss(r.movingTime, npWatts, intensityFactor, resolvedFtp);
             }
             if (efficiencyFactor == null && npWatts != null) {
@@ -370,7 +371,7 @@ export async function getCyclingAnalytics(
             if (aerobicDecoupling == null && hrStream && hrStream.length > 0) {
                 aerobicDecoupling = calculateAerobicDecoupling(wattsStream, hrStream, timeStream);
             }
-            if (powerZone1Time == null) {
+            if (powerZone1Time == null && resolvedFtp > 0) {
                 const zTimes = calculatePowerZoneTimes(wattsStream, timeStream, resolvedFtp);
                 powerZone1Time = zTimes[0];
                 powerZone2Time = zTimes[1];
@@ -391,7 +392,7 @@ export async function getCyclingAnalytics(
             if ((intensityFactor == null || staleNoStreamIf) && npWatts != null) {
                 intensityFactor = recomputedIf;
             }
-            if ((bikeTss == null || staleNoStreamIf) && npWatts != null) {
+            if ((bikeTss == null || staleNoStreamIf) && npWatts != null && resolvedFtp > 0) {
                 const ifFactor = intensityFactor ?? (npWatts / resolvedFtp);
                 bikeTss = calculateBikeTss(r.movingTime, npWatts, ifFactor, resolvedFtp);
             }

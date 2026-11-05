@@ -69,6 +69,16 @@ export interface StravaActivity {
     device_watts?: boolean;
     max_watts?: number;
     kilojoules?: number;
+    start_latlng?: number[] | null;
+    map?: { summary_polyline?: string | null } | null;
+}
+
+/** Keep GPS imports available for supported outdoor sports and other located activities. */
+export function shouldFetchActivityStreams(activity: Pick<StravaActivity, 'type' | 'start_latlng' | 'map'>): boolean {
+    return ['Run', 'VirtualRun', 'TrailRun', 'Ride', 'VirtualRide', 'GravelRide', 'MountainBikeRide',
+        'Handcycle', 'Velomobile', 'Walk', 'Hike', 'Swim'].includes(activity.type)
+        || Boolean(activity.map?.summary_polyline)
+        || (activity.start_latlng?.length === 2 && activity.start_latlng.every(Number.isFinite));
 }
 
 export const rateLimiter = {
@@ -204,11 +214,11 @@ export async function fetchSingleActivity(accessToken: string, activityId: numbe
 export async function fetchActivityStreams(
     accessToken: string,
     activityId: number
-): Promise<{ time: number[]; heartrate?: number[]; velocity_smooth?: number[]; altitude?: number[]; cadence?: number[]; watts?: number[] } | null> {
+): Promise<{ time: number[]; heartrate?: number[]; velocity_smooth?: number[]; altitude?: number[]; cadence?: number[]; watts?: number[]; latlng?: [number, number][] } | null> {
     await rateLimiter.checkAndWait();
 
     const response = await fetch(
-        `${STRAVA_API_BASE}/activities/${activityId}/streams?keys=time,heartrate,velocity_smooth,altitude,cadence,watts&key_by_type=true`,
+        `${STRAVA_API_BASE}/activities/${activityId}/streams?keys=time,heartrate,velocity_smooth,altitude,cadence,watts,latlng&key_by_type=true`,
         {
             headers: { Authorization: `Bearer ${accessToken}` },
         }
@@ -231,6 +241,7 @@ export async function fetchActivityStreams(
         altitude: streams.altitude?.data,
         cadence: streams.cadence?.data,
         watts: streams.watts?.data,
+        latlng: streams.latlng?.data,
     };
 }
 

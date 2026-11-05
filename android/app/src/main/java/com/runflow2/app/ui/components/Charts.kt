@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.runflow2.app.core.math.TrainingLoad
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.DailyEntryEntity
+import com.runflow2.app.domain.analytics.VdotPoint
 import com.runflow2.app.domain.analytics.WeekVolume
 import com.runflow2.app.ui.theme.semanticColors
 import java.time.LocalDate
@@ -95,6 +96,13 @@ fun FitnessChart(
     val totalCount = fullSeries.size
     val point = scrubIndex?.let { fullSeries.getOrNull(it) }
     val isScrubFuture = scrubIndex != null && scrubIndex!! >= daily.size
+    val visibleValues = fullSeries.flatMap { d -> buildList {
+        if (showCtl) add(d.ctl)
+        if (showAtl) add(d.atl)
+        if (showTsb) add(d.tsb)
+    } }.filter { it.isFinite() }
+    val minLoad = minOf(0.0, visibleValues.minOrNull() ?: 0.0)
+    val maxLoad = maxOf(1.0, visibleValues.maxOrNull() ?: 1.0)
 
     Column(modifier = modifier) {
         Row(
@@ -132,12 +140,26 @@ fun FitnessChart(
 
         val latestLoad = daily.lastOrNull()
         val chartSummary = if (latestLoad != null) {
-            "Fitness chart: latest CTL ${latestLoad.ctl.roundToInt()}, ATL ${latestLoad.atl.roundToInt()}, TSB ${latestLoad.tsb.roundToInt()}"
-        } else "Fitness chart"
+            "Fitness chart, ${fullSeries.first().date.format(monthFmt)} to ${fullSeries.last().date.format(monthFmt)}. " +
+                "Load scale ${floor(minLoad).toInt()} to ${ceil(maxLoad).toInt()}. " +
+                "Latest CTL ${latestLoad.ctl.roundToInt()}, ATL ${latestLoad.atl.roundToInt()}, TSB ${latestLoad.tsb.roundToInt()}"
+        } else "Fitness chart: no training load data"
 
+        if (totalCount < 2) {
+            Text("Not enough training load data to plot", style = MaterialTheme.typography.bodySmall)
+        }
+        Row(Modifier.fillMaxWidth()) {
+            Column(
+                Modifier.height(height.dp).padding(end = 6.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                listOf(maxLoad, (minLoad + maxLoad) / 2, minLoad).forEach { value ->
+                    Text(Format.oneDecimal(value), style = MaterialTheme.typography.labelSmall, color = labelColor)
+                }
+            }
         Canvas(
             modifier = Modifier
-                .fillMaxWidth()
+                .weight(1f)
                 .height(height.dp)
                 .semantics { contentDescription = chartSummary }
                 .pointerInput(totalCount) {
@@ -159,20 +181,15 @@ fun FitnessChart(
             val padTop = 8f
             val padBottom = 6f
 
-            var minV = 0.0
-            var maxV = 1.0
-            fullSeries.forEach { d ->
-                if (showCtl) { minV = minOf(minV, d.ctl); maxV = maxOf(maxV, d.ctl) }
-                if (showAtl) { minV = minOf(minV, d.atl); maxV = maxOf(maxV, d.atl) }
-                if (showTsb) { minV = minOf(minV, d.tsb); maxV = maxOf(maxV, d.tsb) }
-            }
+            val minV = minLoad
+            val maxV = maxLoad
             val range = (maxV - minV).coerceAtLeast(1.0)
 
             fun px(i: Int) = i.toFloat() / (totalCount - 1) * w
             fun py(v: Double) = (padTop + (1f - ((v - minV) / range).toFloat()) * (h - padTop - padBottom))
 
             // gridlines at 0 and max/2
-            listOf(0.0, minV + range / 2, maxV).forEach { v ->
+            listOf(minV, minV + range / 2, maxV).forEach { v ->
                 if (showTsb || v >= 0) {
                     drawLine(
                         lineColor.copy(alpha = 0.5f),
@@ -276,6 +293,7 @@ fun FitnessChart(
                     drawCircle(c, radius = 5.dp.toPx(), center = Offset(x, py(v)))
                 }
             }
+        }
         }
         // x-axis labels
         Row(Modifier.fillMaxWidth()) {
@@ -597,10 +615,10 @@ private fun paddedRange(values: List<Double>, step: Double): Pair<Double, Double
 
 /** Three small y-axis value labels (top/middle/bottom) beside a chart of [height] dp. */
 @Composable
-private fun AxisLabels(top: String, mid: String, bottom: String, height: Int) {
+private fun AxisLabels(top: String, mid: String, bottom: String, height: Int, width: androidx.compose.ui.unit.Dp = 34.dp) {
     Column(
         Modifier
-            .width(34.dp)
+            .width(width)
             .height(height.dp)
             .padding(vertical = 2.dp),
         horizontalAlignment = Alignment.End,
@@ -609,6 +627,65 @@ private fun AxisLabels(top: String, mid: String, bottom: String, height: Int) {
         Text(top, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(mid, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(bottom, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Weekly best VDOT on a calendar scale, including weeks without an estimate. */
+@Composable
+fun VdotTrendChart(points: List<VdotPoint>, firstWeek: LocalDate, lastWeek: LocalDate) {
+    val trend = remember(points) { points.filter { it.vdot.isFinite() }.sortedBy { it.date } }
+    if (trend.isEmpty()) return
+
+    val color = MaterialTheme.semanticColors.vo2
+    val grid = MaterialTheme.colorScheme.outlineVariant
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val (lo, hi) = paddedRange(trend.map { it.vdot }, step = 1.0)
+    val firstDay = minOf(firstWeek, trend.first().date).toEpochDay()
+    val lastDay = maxOf(lastWeek, trend.last().date).toEpochDay()
+    val span = (lastDay - firstDay).coerceAtLeast(1L)
+    val height = 140
+    val gutter = 42.dp
+    val inset = 10.dp
+
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AxisLabels(
+                top = Format.oneDecimal(hi),
+                mid = Format.oneDecimal((hi + lo) / 2),
+                bottom = Format.oneDecimal(lo),
+                height = height,
+                width = gutter,
+            )
+            Canvas(
+                Modifier.weight(1f).height(height.dp)
+                    .semantics {
+                        contentDescription = "Weekly best VDOT, " +
+                            "${Format.oneDecimal(trend.first().vdot)} to ${Format.oneDecimal(trend.last().vdot)}"
+                    },
+            ) {
+                val top = inset.toPx()
+                val bottom = (size.height - top).coerceAtLeast(top)
+                val left = 3.dp.toPx()
+                val right = (size.width - left).coerceAtLeast(left)
+                for (fraction in listOf(0f, 0.5f, 1f)) {
+                    val y = top + (bottom - top) * fraction
+                    drawLine(grid, Offset(left, y), Offset(right, y), 1.dp.toPx())
+                }
+                val offsets = trend.map { point ->
+                    val x = (point.date.toEpochDay() - firstDay).toFloat() / span
+                    val y = ((hi - point.vdot) / (hi - lo)).toFloat()
+                    Offset(left + (right - left) * x, top + (bottom - top) * y)
+                }
+                drawTrendSeries(offsets, color, GraphStyle.LINE_FILL, pointRadiusDp = 2.5f)
+            }
+        }
+        Row(
+            Modifier.fillMaxWidth().padding(start = gutter + 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(LocalDate.ofEpochDay(firstDay).format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+            Text(LocalDate.ofEpochDay(lastDay).format(monthFmt), style = MaterialTheme.typography.labelSmall, color = labelColor)
+        }
     }
 }
 

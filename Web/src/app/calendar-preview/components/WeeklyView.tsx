@@ -68,7 +68,7 @@ function WeekCard({
             {/* 7-day rows */}
             <div className="divide-y divide-glass-border">
                 {days.map((day, i) => {
-                    const key = day.toISOString().split('T')[0];
+                    const key = format(day, 'yyyy-MM-dd');
                     const dayEntry = week.days.find((d) => d.date === key);
                     return (
                         <DayRow
@@ -372,14 +372,14 @@ function DraggableWorkoutPill({
                 <span className="text-foreground-muted font-mono">TSS {workout.plannedTss.toFixed(0)}</span>
             )}
             <div className="flex items-center gap-1 ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
+                {workout.type !== 'REST' && <button
                     type="button"
                     onClick={handleExportFit}
                     className="px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-background-tertiary hover:bg-background border border-line text-foreground-muted hover:text-foreground"
                     title="Export as Garmin/Wahoo/Coros .fit"
                 >
                     .FIT
-                </button>
+                </button>}
                 {isBike && (
                     <button
                         type="button"

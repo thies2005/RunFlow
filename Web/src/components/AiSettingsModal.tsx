@@ -133,7 +133,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
     const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
     // Fetch current settings
-    const { data, isLoading } = useQuery({
+    const { data, isLoading, isError } = useQuery({
         queryKey: ['ai-settings'],
         queryFn: async () => {
             const res = await fetch('/api/ai/settings');
@@ -199,7 +199,12 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
         },
     });
 
+    const validBaseUrl = !customBaseUrl.trim() || (() => {
+        try { const url = new URL(customBaseUrl); return url.protocol === 'https:' && !url.username && !url.password; } catch { return false; }
+    })();
+
     const handleSave = () => {
+        if (!validBaseUrl) { setError('Enter a valid HTTPS provider URL without credentials.'); return; }
         const updates: Record<string, unknown> = {
             aiEnabled,
             feedbackMode,
@@ -239,6 +244,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
     };
 
     const handleTestApiKey = async () => {
+        if (!validBaseUrl) { setTestResult({ success: false, message: 'Enter a valid HTTPS provider URL without credentials.' }); return; }
         if (!customApiKey) {
             setTestResult({ success: false, message: 'Please enter an API key to test' });
             return;
@@ -289,6 +295,8 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="w-8 h-8 text-accent-purple animate-spin" />
                         </div>
+                    ) : isError ? (
+                        <p role="alert" className="text-sm text-negative">Unable to load AI access settings. Close and try again.</p>
                     ) : (
                         <>
                             {/* Master Toggle */}
@@ -310,7 +318,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         </p>
                                     </div>
                                     <button
-                                        onClick={() => setAiEnabled(!aiEnabled)}
+                                        onClick={() => setAiEnabled(!aiEnabled)} role="switch" aria-checked={aiEnabled} aria-label="Enable AI features"
                                         disabled={!data?.settings?.adminAllowed}
                                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-hidden ${aiEnabled ? 'bg-accent-purple' : 'bg-foreground/15'
                                             } ${!data?.settings?.adminAllowed ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -325,12 +333,12 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                 {!data?.settings?.adminAllowed && (
                                     <div className="mt-3 flex items-start gap-2 text-[11px] text-workout-tempo bg-workout-tempo/10 p-2 rounded-md border border-workout-tempo/30">
                                         <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                                        <span>Your administrator needs to enable AI access for your account before you can opt-in.</span>
+                                        <span>Contact your administrator to request AI access. Once granted, you can enable the shared service or configure a personal provider key.</span>
                                     </div>
                                 )}
                             </div>
 
-                            <div className={`space-y-6 transition-all ${!aiEnabled || !data?.settings?.adminAllowed ? 'opacity-50 pointer-events-none' : ''}`}>
+                            {data?.settings?.adminAllowed && <div className="space-y-6">
 
                                 {/* Usage Stats (if enabled and not using own key) */}
                                 {data?.settings?.aiEnabled && !data?.settings?.hasCustomApiKey && data?.usage && (
@@ -360,18 +368,18 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         Your API Key (Optional)
                                     </h3>
                                     <p className="text-xs text-foreground-muted">
-                                        Add your own OpenAI-compatible API key for unlimited usage
+                                        Optionally use your own OpenAI-compatible provider. Provider charges and limits may apply.
                                     </p>
 
                                     <div className="space-y-2">
-                                        <div className="flex gap-2 mb-1">
+                                        <div className="flex flex-wrap gap-2 mb-1">
                                             <button
                                                 type="button"
                                                 onClick={() => {
                                                     setCustomBaseUrl('https://api.openai.com/v1');
                                                     setCustomModel('gpt-4o-mini');
                                                 }}
-                                                className="text-[10px] px-2 py-0.5 bg-background-tertiary hover:bg-surface-hover text-foreground-muted rounded border border-line transition"
+                                                className="text-xs px-2 py-0.5 bg-background-tertiary hover:bg-surface-hover text-foreground-muted rounded border border-line transition"
                                             >
                                                 OpenAI Preset
                                             </button>
@@ -381,7 +389,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                     setCustomBaseUrl('https://integrate.api.nvidia.com/v1');
                                                     setCustomModel('moonshotai/kimi-k2.5');
                                                 }}
-                                                className="text-[10px] px-2 py-0.5 bg-background-tertiary hover:bg-surface-hover text-foreground-muted rounded border border-line transition"
+                                                className="text-xs px-2 py-0.5 bg-background-tertiary hover:bg-surface-hover text-foreground-muted rounded border border-line transition"
                                             >
                                                 NVIDIA (Kimi) Preset
                                             </button>
@@ -391,7 +399,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                     setCustomBaseUrl('https://open.bigmodel.cn/api/paas/v4');
                                                     setCustomModel('glm-4-plus');
                                                 }}
-                                                className="text-[10px] px-2 py-0.5 bg-background-tertiary hover:bg-surface-hover text-foreground-muted rounded border border-line transition"
+                                                className="text-xs px-2 py-0.5 bg-background-tertiary hover:bg-surface-hover text-foreground-muted rounded border border-line transition"
                                             >
                                                 Zhipu AI (GLM) Preset
                                             </button>
@@ -401,25 +409,26 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                     setCustomBaseUrl('https://openrouter.ai/api/v1');
                                                     setCustomModel('deepseek/deepseek-r1:free');
                                                 }}
-                                                className="text-[10px] px-2 py-0.5 bg-background-tertiary hover:bg-surface-hover text-foreground-muted rounded border border-line transition"
+                                                className="text-xs px-2 py-0.5 bg-background-tertiary hover:bg-surface-hover text-foreground-muted rounded border border-line transition"
                                             >
                                                 OpenRouter Preset
                                             </button>
                                         </div>
 
                                         <Input
-                                            id="customBaseUrl"
-                                            type="text"
+                                            id="customBaseUrl" label="Provider base URL" name="ai-provider-base-url" autoComplete="off" aria-invalid={!validBaseUrl} aria-describedby={!validBaseUrl ? "provider-url-error" : undefined}
+                                            type="url"
                                             placeholder="Base URL (default: https://api.openai.com/v1)"
                                             value={customBaseUrl}
                                             onChange={(e) => setCustomBaseUrl(e.target.value)}
                                             className="!bg-background-tertiary border-line"
                                         />
 
+                                        {!validBaseUrl && <p id="provider-url-error" role="alert" className="text-sm text-negative">Enter a valid HTTPS URL without credentials.</p>}
                                         <div className="relative">
-                                            <label htmlFor="customApiKey" className="sr-only">API Key</label>
+                                            <label htmlFor="customApiKey" className="block text-sm font-medium mb-1">Provider API key</label>
                                             <input
-                                                id="customApiKey"
+                                                id="customApiKey" name="ai-provider-secret" autoComplete="new-password"
                                                 type={showApiKey ? 'text' : 'password'}
                                                 placeholder={data?.settings?.hasCustomApiKey ? '••••••••••••••••' : 'API Key'}
                                                 value={customApiKey}
@@ -428,15 +437,15 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             />
                                             <button
                                                 type="button"
-                                                onClick={() => setShowApiKey(!showApiKey)}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground-muted"
+                                                onClick={() => setShowApiKey(!showApiKey)} aria-label={showApiKey ? "Hide API key" : "Show API key"} aria-pressed={showApiKey}
+                                                className="absolute right-2 bottom-2.5 text-foreground-muted hover:text-foreground-muted"
                                             >
                                                 {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                             </button>
                                         </div>
 
                                         <Input
-                                            id="customModel"
+                                            id="customModel" label="Provider model" name="ai-provider-model" autoComplete="off"
                                             type="text"
                                             placeholder="Model (default: gpt-4o-mini)"
                                             value={customModel}
@@ -447,7 +456,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         {/* Test API Key Button */}
                                         <button
                                             onClick={handleTestApiKey}
-                                            disabled={testingKey || !customApiKey}
+                                            disabled={testingKey || !customApiKey || !validBaseUrl || !aiEnabled}
                                             className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-foreground hover:bg-foreground/85 disabled:bg-foreground/15 disabled:text-foreground-muted text-background rounded-md text-sm font-medium transition"
                                         >
                                             {testingKey ? (
@@ -551,6 +560,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             <button
                                                 key={mode.value}
                                                 onClick={() => setFeedbackMode(mode.value)}
+                                                aria-pressed={feedbackMode === mode.value}
                                                 className={`p-3 rounded-md border text-left transition-colors ${feedbackMode === mode.value
                                                     ? 'border-accent-purple bg-accent-purple/10'
                                                     : 'border-line hover:border-line-strong'
@@ -598,7 +608,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         {success}
                                     </div>
                                 )}
-                            </div>
+                            </div>}
                         </>
                     )}
                 </div>
@@ -613,7 +623,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={saveMutation.isPending}
+                        disabled={saveMutation.isPending || !validBaseUrl || !data?.settings?.adminAllowed}
                         className="px-4 py-2 bg-foreground hover:bg-foreground/85 text-background rounded-md flex items-center gap-2 disabled:opacity-50 transition-colors"
                     >
                         {saveMutation.isPending ? (

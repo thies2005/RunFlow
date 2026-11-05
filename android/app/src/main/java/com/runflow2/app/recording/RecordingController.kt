@@ -20,6 +20,10 @@ import kotlin.math.sqrt
 
 enum class RecStatus { IDLE, COUNTDOWN, RUNNING, PAUSED, FINISHED }
 
+/** Strength sessions can be stationary; distance sports retain the GPS noise threshold. */
+internal fun RecordingState.isSaveable(): Boolean =
+    status != RecStatus.IDLE && if (sportType == "WORKOUT") elapsedMovingSec > 0.0 else distanceM > 10.0
+
 data class GeoPt(val lat: Double, val lng: Double, val ele: Double, val t: Long, val speed: Double)
 
 data class Lap(val km: Int, val durSec: Int, val paceSecPerKm: Int)
@@ -177,6 +181,7 @@ class RecordingController(
     private var slowSinceMs: Long? = null
     private var paceWarnSinceMs: Long? = null
     private var autoPaused = false
+    private var finishPreviousStatus: RecStatus? = null
     private var lastTick: Long = 0
 
     // step engine
@@ -266,6 +271,7 @@ class RecordingController(
     }
 
     fun pause() {
+        if (finishPreviousStatus != null) return
         val s = _state.value
         if (s.status != RecStatus.RUNNING) return
         autoPaused = false
@@ -274,6 +280,7 @@ class RecordingController(
     }
 
     fun resume() {
+        if (finishPreviousStatus != null) return
         val s = _state.value
         if (s.status != RecStatus.PAUSED) return
         gpsFilter.reset() // fresh anchor after the pause (manual or auto-pause)
@@ -282,8 +289,30 @@ class RecordingController(
         lastTick = System.currentTimeMillis()
     }
 
+    /** Freeze both elapsed clocks and GPS while the finish decision is open. */
+    fun beginFinish() {
+        val status = _state.value.status
+        if (finishPreviousStatus != null || status !in setOf(RecStatus.RUNNING, RecStatus.PAUSED)) return
+        tick()
+        finishPreviousStatus = status
+        _state.value = _state.value.copy(status = RecStatus.PAUSED)
+    }
+
+    fun cancelFinish() {
+        val previous = finishPreviousStatus ?: return
+        finishPreviousStatus = null
+        lastTick = System.currentTimeMillis()
+        if (previous == RecStatus.RUNNING) {
+            gpsFilter.reset()
+            lastPt = null
+            slowSinceMs = null
+        }
+        _state.value = _state.value.copy(status = previous)
+    }
+
     /** Called by the service ticker roughly every second. */
     fun tick() {
+        if (finishPreviousStatus != null) return
         val s = _state.value
         when (s.status) {
             RecStatus.COUNTDOWN -> beginCountdownTick()
@@ -308,6 +337,7 @@ class RecordingController(
 
     /** GPS sample from the location client. */
     fun onLocation(lat: Double, lng: Double, ele: Double, speed: Double, accuracy: Float, t: Long = System.currentTimeMillis()) {
+        if (finishPreviousStatus != null) return
         val s = _state.value
         if (s.status != RecStatus.RUNNING && s.status != RecStatus.PAUSED) return
 
@@ -506,6 +536,7 @@ class RecordingController(
      * otherwise records a manual lap split.
      */
     fun onLapPressed() {
+        if (finishPreviousStatus != null) return
         val s = _state.value
         if (s.status != RecStatus.RUNNING && s.status != RecStatus.PAUSED) return
 
@@ -561,6 +592,7 @@ class RecordingController(
     }
 
     fun reset() {
+        finishPreviousStatus = null
         gpsFilter.reset()
         pointsBuffer.clear()
         previewBuffer.clear()

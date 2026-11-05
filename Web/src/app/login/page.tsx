@@ -16,6 +16,7 @@ export default function LoginPage() {
     const [authMode, setAuthMode] = useState<AuthMode>('strava');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
 
     const [isLoading, setIsLoading] = useState(false);
@@ -68,23 +69,23 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen bg-background flex flex-col lg:flex-row">
             {/* Left: ink panel */}
-            <div className="lg:w-1/2 bg-[color:var(--topbar-bg)] text-[color:var(--topbar-fg)] flex flex-col justify-between p-8 lg:p-16 border-b lg:border-b-0 lg:border-r border-line">
+            <div className="lg:w-1/2 bg-[color:var(--topbar-bg)] text-[color:var(--topbar-fg)] flex flex-col justify-between p-4 lg:p-16 border-b lg:border-b-0 lg:border-r border-line">
                 <h1 className="text-2xl font-bold">
                     Run<span className="text-accent-orange">Flow</span>
                 </h1>
 
-                <div className="py-12 lg:py-0">
+                <div className="hidden lg:block lg:py-0">
                     <p className="text-lg mb-8 max-w-sm">
-                        Your running performance dashboard
+                        Your training dashboard for running, cycling, and more
                     </p>
                     <ul className="space-y-4 max-w-sm font-mono text-sm">
-                        <li className="border-l-2 border-accent-orange pl-3">CTL / ATL / TSB</li>
-                        <li className="border-l-2 border-accent-orange pl-3">Effective VO2max</li>
-                        <li className="border-l-2 border-accent-orange pl-3">Daniels plans</li>
+                        <li className="border-l-2 border-accent-orange pl-3">Understand your training load</li>
+                        <li className="border-l-2 border-accent-orange pl-3">Track your fitness over time</li>
+                        <li className="border-l-2 border-accent-orange pl-3">Plan your next goal</li>
                     </ul>
                 </div>
 
-                <footer className="py-6 lg:py-0">
+                <footer className="hidden lg:block lg:py-0">
                     <p className="text-[color:var(--topbar-muted)] text-sm">
                         RunFlow respects your privacy. We only read your activity data.
                     </p>
@@ -92,12 +93,13 @@ export default function LoginPage() {
             </div>
 
             {/* Right: auth panel */}
-            <div className="lg:w-1/2 bg-background flex items-center justify-center px-4 py-12">
+            <div className="lg:w-1/2 bg-background flex items-center justify-center px-4 py-6 lg:py-12">
                 <div className="max-w-md w-full text-center">
                     {/* Auth Mode Tabs */}
                     <div className="flex rounded-md border border-line bg-background-secondary p-1 mb-6">
                         <button
                             onClick={() => setAuthMode('strava')}
+                            aria-pressed={authMode === 'strava'}
                             className={`flex-1 py-2 px-4 rounded-sm text-sm font-semibold transition-colors ${authMode === 'strava'
                                 ? 'bg-background-tertiary text-foreground'
                                 : 'text-foreground-muted hover:text-foreground'
@@ -107,6 +109,7 @@ export default function LoginPage() {
                         </button>
                         <button
                             onClick={() => setAuthMode('email')}
+                            aria-pressed={authMode === 'email'}
                             className={`flex-1 py-2 px-4 rounded-sm text-sm font-semibold transition-colors ${authMode === 'email'
                                 ? 'bg-background-tertiary text-foreground'
                                 : 'text-foreground-muted hover:text-foreground'
@@ -202,8 +205,8 @@ export default function LoginPage() {
                     {authMode === 'email' && (
                         <form onSubmit={handleEmailLogin} className="space-y-4 animate-fade-in">
                             <div className="relative">
-                                <label htmlFor="login-email" className="sr-only">Email</label>
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                                <label htmlFor="login-email" className="block text-left text-sm font-medium mb-1">Email</label>
+                                <Mail className="absolute left-3 bottom-3.5 w-5 h-5 text-foreground-muted" />
                                 <input
                                     id="login-email"
                                     name="email"
@@ -217,12 +220,12 @@ export default function LoginPage() {
                                 />
                             </div>
                             <div className="relative">
-                                <label htmlFor="login-password" className="sr-only">Password</label>
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                                <label htmlFor="login-password" className="block text-left text-sm font-medium mb-1">Password</label>
+                                <Lock className="absolute left-3 bottom-3.5 w-5 h-5 text-foreground-muted" />
                                 <input
                                     id="login-password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     autoComplete="current-password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -232,18 +235,19 @@ export default function LoginPage() {
                                 />
                             </div>
 
-                            <div className="flex justify-end">
+                            <div className="flex justify-between">
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} aria-pressed={showPassword} className="text-sm text-accent-orange hover:underline">{showPassword ? 'Hide password' : 'Show password'}</button>
                                 <button
                                     type="button"
                                     onClick={() => setShowForgotPwd(true)}
-                                    className="text-xs text-accent-orange hover:underline"
+                                    className="text-sm text-accent-orange hover:underline"
                                 >
                                     Forgot password?
                                 </button>
                             </div>
 
                             {error && (
-                                <p className="text-negative text-sm">{error}</p>
+                                <p role="alert" className="text-negative text-sm">{error}</p>
                             )}
 
                             <button

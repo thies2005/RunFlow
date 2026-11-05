@@ -1,6 +1,6 @@
 import { Activity, Calendar, Target, Trophy, CheckCircle, Loader2, Trash2, Info } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { differenceInDays, differenceInWeeks, format, startOfWeek, endOfWeek, subDays, addDays } from 'date-fns';
+import { differenceInDays, differenceInWeeks, differenceInCalendarWeeks, format, startOfWeek, endOfWeek, subDays, addDays } from 'date-fns';
 import { detectEffectivePlanSport, getEffectiveSportLabel, estimateFallbackWorkoutTss } from '@/lib/plan/sportDetection';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
@@ -215,7 +215,8 @@ export function RaceCountdown({
     const exactWeeks = Math.floor(Math.max(0, daysToRace) / 7);
     const remDays = Math.max(0, daysToRace) % 7;
     const totalWeeks = goal.planWeeks || 12;
-    const weeksCompleted = Math.max(0, Math.min(totalWeeks, totalWeeks - weeksToRace));
+    const planWeek = goal.planStartDate ? Math.max(1, differenceInCalendarWeeks(today, new Date(goal.planStartDate), { weekStartsOn: 1 }) + 1) : null;
+    const weeksCompleted = planWeek == null ? Math.max(0, Math.min(totalWeeks, totalWeeks - weeksToRace)) : Math.min(totalWeeks, Math.max(0, planWeek - 1));
     const progressPercent = Math.min(100, (weeksCompleted / totalWeeks) * 100);
 
     // Effort calculations
@@ -235,8 +236,8 @@ export function RaceCountdown({
         }
     }
 
-    const weeklyActualTss = Math.max(statsData?.weeklyActualTss ?? 0, fallbackWeeklyActualTss);
-    const weeklyActualDurationSec = Math.max(statsData?.weeklyActualDurationSec ?? 0, fallbackWeeklyActualDuration);
+    const weeklyActualTss = statsData?.weeklyActualTss ?? fallbackWeeklyActualTss;
+    const weeklyActualDurationSec = statsData?.weeklyActualDurationSec ?? fallbackWeeklyActualDuration;
     const weeklyPlannedTss = (statsData?.weeklyPlannedTss && statsData.weeklyPlannedTss > 0)
         ? statsData.weeklyPlannedTss
         : fallbackWeeklyPlannedTss;
@@ -398,7 +399,7 @@ export function RaceCountdown({
                     <div className="mb-4">
                         <div className="flex items-center justify-between text-sm mb-2">
                             <span className="text-foreground-muted">Training Progress</span>
-                            <span className="text-foreground font-medium tabular-nums">Week {weeksCompleted} of {totalWeeks}</span>
+                            <span className="text-foreground font-medium tabular-nums">{planWeek != null ? `Plan week ${planWeek} of ${totalWeeks}` : `Estimated plan progress: ${weeksCompleted} of ${totalWeeks} weeks`}</span>
                         </div>
                         <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
                             <div
@@ -416,7 +417,7 @@ export function RaceCountdown({
                             {daysToRace} days to go <span className="font-mono text-foreground-muted text-[11px]">({exactWeeks}w {remDays}d)</span>
                         </span>
                         <span className="font-mono text-foreground-muted text-xs">
-                            Week {weeksCompleted} of {totalWeeks}
+                            {planWeek != null ? `Plan week ${planWeek} of ${totalWeeks}` : `Estimated plan progress: ${weeksCompleted} of ${totalWeeks} weeks`}
                         </span>
                     </div>
                     <div className="h-2 bg-background rounded-full overflow-hidden">
@@ -434,7 +435,7 @@ export function RaceCountdown({
                     {/* This Week Effort Bar */}
                     <div>
                         <div className="flex items-center justify-between text-xs mb-1.5">
-                            <span className="text-foreground-muted font-medium">This Week Effort</span>
+                            <span className="text-foreground-muted font-medium">This Week: actual / planned effort</span>
                             <span className="font-mono tabular-nums text-foreground font-semibold text-xs">
                                 {primaryLoadMetric === 'TRIMP'
                                     ? `${weeklyActualTrimp} / ${weeklyPlannedTrimp} TRIMP`
@@ -444,6 +445,7 @@ export function RaceCountdown({
                                 <span className="ml-1 text-[11px] text-accent-cyan">({weeklyPct}%)</span>
                             </span>
                         </div>
+                        <p className="text-xs text-foreground-muted mb-1">All sports; actual includes recorded activities and estimates for completed workouts without a counted linked activity.</p>
                         <div className="relative h-2 bg-background rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full transition-all duration-500 ${

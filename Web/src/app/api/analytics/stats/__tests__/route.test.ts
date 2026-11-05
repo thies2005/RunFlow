@@ -54,6 +54,10 @@ jest.mock('@/lib/metrics/fitness', () => ({
     getActivityContribution: jest.fn(() => ({ contributesToCtl: true })),
 }));
 
+jest.mock('@/lib/metrics/cyclingAnalytics', () => ({
+    getCyclingAnalytics: jest.fn(),
+}));
+
 jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
 }));
@@ -64,10 +68,14 @@ import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
 import { handleError } from '@/lib/errors/handler';
 import { AnalyticsService } from '@/lib/services/analytics';
+import { getCyclingAnalytics } from '@/lib/metrics/cyclingAnalytics';
 
 describe('GET /api/analytics/stats', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        (getCyclingAnalytics as jest.Mock).mockResolvedValue({
+            ftp: { ftpWatts: null, eFtpWatts: null, autoEstimateFtp: true, cyclingVo2max: null },
+        });
         (getClientIdentifier as jest.Mock).mockReturnValue('test-client');
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
         (auth as jest.Mock).mockResolvedValue({
@@ -168,6 +176,17 @@ describe('GET /api/analytics/stats', () => {
         expect(data).toHaveProperty('hrMax');
         expect(data).toHaveProperty('maxCtl');
         expect(data).toHaveProperty('maxAtl');
+    });
+
+    it('uses the shared cycling estimate and provenance', async () => {
+        (getCyclingAnalytics as jest.Mock).mockResolvedValue({
+            ftp: { ftpWatts: null, eFtpWatts: 240, autoEstimateFtp: true, cyclingVo2max: 50 },
+        });
+        const response = await GET(new NextRequest('http://localhost:3000/api/analytics/stats'));
+        const data = await response.json();
+        expect(data.activeFtpWatts).toBe(240);
+        expect(data.activeFtpSource).toBe('estimated');
+        expect(data.cyclingVo2max).toBe(50);
     });
 
     it('should handle new user with no fitness cache', async () => {

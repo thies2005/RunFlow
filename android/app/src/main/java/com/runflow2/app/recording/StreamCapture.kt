@@ -18,20 +18,23 @@ object StreamCapture {
     fun build(points: List<GeoPt>): ActivityStreamsDto? {
         if (points.size < 2) return null
         val step = if (points.size > MAX_SAMPLES) {
-            ceil(points.size / MAX_SAMPLES.toDouble()).toInt()
+            ceil((points.size - 1).toDouble() / (MAX_SAMPLES - 1)).toInt()
         } else 1
         val t0 = points.first().t
         val time = ArrayList<Double>(points.size / step + 1)
         val altitude = ArrayList<Double>(points.size / step + 1)
         val velocity = ArrayList<Double>(points.size / step + 1)
+        val latlng = ArrayList<List<Double>>(points.size / step + 1)
         var i = 0
         while (i < points.size) {
             val p = points[i]
             time += (p.t - t0) / 1000.0
             altitude += p.ele
             velocity += p.speed
-            i += step
+            latlng += listOf(p.lat, p.lng)
+            if (i == points.lastIndex) break
+            i = (i + step).coerceAtMost(points.lastIndex)
         }
-        return ActivityStreamsDto(time = time, altitude = altitude, velocitySmooth = velocity)
+        return ActivityStreamsDto(time = time, altitude = altitude, velocitySmooth = velocity, latlng = latlng)
     }
 }

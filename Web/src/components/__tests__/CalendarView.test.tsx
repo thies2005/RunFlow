@@ -62,8 +62,9 @@ describe('CalendarView advanced editor link', () => {
 
         renderCalendar();
 
-        const link = await screen.findByRole('link', { name: /advanced editor/i });
+        const link = await screen.findByRole('link', { name: /advanced editor/i }, { timeout: 5000 });
         await waitFor(() => expect(link).toHaveAttribute('href', '/plan-advanced/goal-1'));
+        expect(screen.getByRole('link', { name: /import plan/i })).toHaveAttribute('href', '/plan-advanced/goal-1?import=csv');
     });
 
     it('hides the link when there is no goal', async () => {

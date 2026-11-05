@@ -9,6 +9,16 @@ import type { MockActivity, MockWorkout } from '../components/mockData';
 import { resolveDeepLink } from '@/components/DeepLinkHandler';
 
 describe('Calendar Metrics & Formatting', () => {
+    it('places an activity on its local calendar day, including the last day of a range', () => {
+        const localLastDay = new Date(2026, 9, 31, 23, 30);
+        const activity = { id: 'late', name: 'Late run', type: 'EASY', startDate: localLastDay.toISOString(), distance: 1, duration: 1, averageHr: null, trimp: null, tss: null, vdot: null, totalElevation: 0 } as MockActivity;
+        const from = new Date(2026, 9, 26);
+        const to = new Date(2026, 9, 31);
+        const days = buildDays([activity], [], from, to);
+        expect(days.get('2026-10-31')?.activities.map(a => a.id)).toEqual(['late']);
+        expect(buildWeeks(days, from, to)[0].days.find(d => d.date === '2026-10-31')?.activities[0].id).toBe('late');
+    });
+
     it('formats pace correctly for runs and swims', () => {
         expect(fmtPace(290)).toBe('4:50/km');
         expect(fmtPace(290, 'km')).toBe('4:50/km');

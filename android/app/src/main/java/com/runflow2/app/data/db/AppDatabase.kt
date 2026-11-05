@@ -457,6 +457,12 @@ interface SyncQueueDao {
     @Query("SELECT COUNT(*) FROM sync_queue WHERE dead = 0")
     fun observePendingCount(): Flow<Int>
 
+    @Query("SELECT * FROM sync_queue WHERE entityType = :type")
+    suspend fun allForType(type: String): List<SyncQueueEntity>
+
+    @Query("SELECT COUNT(*) FROM sync_queue WHERE dead = 1")
+    suspend fun failedCount(): Int
+
     @Query("SELECT COUNT(*) FROM sync_queue WHERE dead = 0")
     suspend fun pendingCount(): Int
 

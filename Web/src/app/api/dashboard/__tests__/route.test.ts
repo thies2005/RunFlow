@@ -58,6 +58,10 @@ jest.mock('@/lib/metrics/fitnessCache', () => ({
     ensureFitnessCacheUpToDate: jest.fn(() => ({ ctl: 50, atl: 40, tsb: 10 })),
 }));
 
+jest.mock('@/lib/metrics/cyclingAnalytics', () => ({
+    getCyclingAnalytics: jest.fn(),
+}));
+
 jest.mock('@/lib/redis', () => ({
     getRedisClient: jest.fn(async () => null),
 }));
@@ -72,10 +76,14 @@ import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
 import { handleError } from '@/lib/errors/handler';
 import { calculateVdot } from '@/lib/metrics/vdot';
+import { getCyclingAnalytics } from '@/lib/metrics/cyclingAnalytics';
 
 describe('GET /api/dashboard', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        (getCyclingAnalytics as jest.Mock).mockResolvedValue({
+            ftp: { ftpWatts: null, eFtpWatts: null, autoEstimateFtp: true, cyclingVo2max: null, wPerKg: null },
+        });
         (getClientIdentifier as jest.Mock).mockReturnValue('test-client');
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
         (auth as jest.Mock).mockResolvedValue({
@@ -173,6 +181,31 @@ describe('GET /api/dashboard', () => {
         expect(data.stats).toHaveProperty('workloadRatio');
         expect(data.stats).toHaveProperty('easyTrimp');
         expect(data.stats).toHaveProperty('hrMax');
+    });
+
+    it('reports unavailable FTP and counts rides without enough data for load', async () => {
+        (prisma.activity.findMany as jest.Mock).mockResolvedValue([{
+            id: 'ride-1', stravaId: BigInt(7), type: 'RIDE', name: 'Ride',
+            startDate: new Date(), distance: 10000, movingTime: 1800, averageWatts: 180,
+        }]);
+        const response = await GET(new NextRequest('http://localhost:3000/api/dashboard'));
+        const { stats } = await response.json();
+        expect(stats.activeFtpWatts).toBeNull();
+        expect(stats.cyclingVo2max).toBeNull();
+        expect(stats.weeklyBikeTss).toBe(0);
+        expect(stats.weeklyBikeTssMissing).toBe(1);
+    });
+
+    it('uses the shared estimated FTP and derived cycling values', async () => {
+        (getCyclingAnalytics as jest.Mock).mockResolvedValue({
+            ftp: { ftpWatts: null, eFtpWatts: 240, autoEstimateFtp: true, cyclingVo2max: 50, wPerKg: 3 },
+        });
+        const response = await GET(new NextRequest('http://localhost:3000/api/dashboard'));
+        const { stats } = await response.json();
+        expect(stats.activeFtpWatts).toBe(240);
+        expect(stats.activeFtpSource).toBe('estimated');
+        expect(stats.cyclingVo2max).toBe(50);
+        expect(stats.wPerKg).toBe(3);
     });
 
     it('returns BOTH metrics: live best-effort VDOT must not be overridden by the stale persisted value', async () => {

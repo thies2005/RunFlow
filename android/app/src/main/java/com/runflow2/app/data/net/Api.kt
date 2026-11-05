@@ -15,7 +15,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Streaming
 import java.time.Instant
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -51,7 +50,7 @@ object Api {
         DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(epochMillis))
 
     fun localDateString(epochMillis: Long): String {
-        val d = LocalDate.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault())
+        val d = Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).toLocalDate()
         return "%04d-%02d-%02d".format(d.year, d.monthValue, d.dayOfMonth)
     }
 
@@ -144,6 +143,14 @@ data class UserDto(
     val autoEstimateFtp: Boolean? = null,
     val swimCssSecPer100m: Int? = null,
     val primaryLoadMetric: String? = null,
+    val hrZone1Max: Int? = null,
+    val hrZone2Max: Int? = null,
+    val hrZone3Max: Int? = null,
+    val hrZone4Max: Int? = null,
+    val hrZone5Max: Int? = null,
+    val hrZone6Max: Int? = null,
+    val thresholdHeartRate: Int? = null,
+    val thresholdPace: Int? = null,
 )
 
 typealias UserProfileDto = UserDto

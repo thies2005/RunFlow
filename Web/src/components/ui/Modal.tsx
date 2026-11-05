@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useEffect, useRef, ReactNode } from 'react';
+import React, { useEffect, useRef, useId, ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
+
+const openDialogs: HTMLElement[] = [];
+let previousBodyOverflow = '';
 
 export interface ModalProps {
     isOpen: boolean;
@@ -25,11 +28,18 @@ export function Modal({
 }: ModalProps) {
     const dialogRef = useRef<HTMLDivElement>(null);
     const previouslyFocused = useRef<Element | null>(null);
-    const titleId = 'modal-title';
+    const titleId = useId();
+    const onCloseRef = useRef(onClose);
+    onCloseRef.current = onClose;
 
     // Focus trap and escape key handler
     useEffect(() => {
         if (!isOpen) return;
+
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+        if (openDialogs.length === 0) previousBodyOverflow = document.body.style.overflow;
+        openDialogs.push(dialog);
 
         // Save the element that had focus before opening
         previouslyFocused.current = document.activeElement;
@@ -37,17 +47,25 @@ export function Modal({
         // Move focus into the modal so keyboard users land inside
         const focusTimer = setTimeout(() => {
             const node = dialogRef.current;
-            if (!node) return;
+            if (!node || openDialogs[openDialogs.length - 1] !== node) return;
             // Prefer the first focusable element, otherwise focus the container
-            const focusable = node.querySelector<HTMLElement>(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-            );
+            const focusable = Array.from(node.querySelectorAll<HTMLElement>(
+                'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )).find(el => el.getClientRects().length > 0);
             (focusable ?? node).focus();
         }, 0);
 
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (openDialogs[openDialogs.length - 1] !== dialog) return;
             if (e.key === 'Escape') {
-                onClose();
+                e.preventDefault();
+                onCloseRef.current();
+            } else if (e.key === 'Tab' && dialogRef.current) {
+                const items = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')).filter(el => el.getClientRects().length > 0);
+                if (!items.length) { e.preventDefault(); dialogRef.current.focus(); return; }
+                const first = items[0], last = items[items.length - 1];
+                if (e.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+                else if (!e.shiftKey && (document.activeElement === last || !dialogRef.current.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
             }
         };
 
@@ -64,7 +82,7 @@ export function Modal({
                 if (Capacitor.isNativePlatform()) {
                     const { App } = await import('@capacitor/app');
                     const listener = await App.addListener('backButton', () => {
-                        onClose();
+                        if (openDialogs[openDialogs.length - 1] === dialog) onCloseRef.current();
                     });
                     if (isCancelled) {
                         listener.remove();
@@ -81,17 +99,19 @@ export function Modal({
         return () => {
             clearTimeout(focusTimer);
             isCancelled = true;
-            document.body.style.overflow = '';
+            const index = openDialogs.indexOf(dialog);
+            if (index !== -1) openDialogs.splice(index, 1);
+            if (openDialogs.length === 0) document.body.style.overflow = previousBodyOverflow;
             document.removeEventListener('keydown', handleKeyDown);
             // Restore focus to the element that opened the modal
-            if (previouslyFocused.current instanceof HTMLElement && typeof previouslyFocused.current.focus === 'function') {
+            if (index === openDialogs.length && previouslyFocused.current instanceof HTMLElement && typeof previouslyFocused.current.focus === 'function') {
                 previouslyFocused.current.focus();
             }
             if (backListener) {
                 backListener.remove();
             }
         };
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -107,7 +127,7 @@ export function Modal({
     const modalContent = (
         <div
             ref={dialogRef}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity,0.55)] animate-fade-in p-4 sm:p-4 pt-safe pb-safe overflow-y-auto"
+            className="fixed inset-0 z-[210] flex items-center justify-center bg-black/[var(--modal-backdrop-opacity,0.55)] animate-fade-in p-4 sm:p-4 pt-safe pb-safe overflow-y-auto"
             role="dialog"
             aria-modal="true"
             tabIndex={-1}

@@ -234,10 +234,11 @@ export function AnalyticsView({
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 {/* === SPORT SELECTOR & RANGE BAR === */}
                 <div className="flex flex-col gap-3 pb-2 border-b border-line">
-                    <div className="inline-flex self-start rounded-lg bg-background-tertiary p-1 border border-line text-xs sm:text-sm">
+                    <div role="group" aria-label="Analytics sport" className="inline-flex self-start rounded-lg bg-background-tertiary p-1 border border-line text-xs sm:text-sm">
                         <button
                             type="button"
                             onClick={() => setSelectedSport('COMBINED')}
+                            aria-pressed={selectedSport === 'COMBINED'}
                             className={`flex items-center gap-2 px-3 py-2 font-medium rounded-md transition-all ${
                                 selectedSport === 'COMBINED'
                                     ? 'bg-accent-cyan text-background font-semibold shadow-xs'
@@ -251,6 +252,7 @@ export function AnalyticsView({
                             <button
                                 type="button"
                                 onClick={() => setSelectedSport('RUNNING')}
+                                aria-pressed={selectedSport === 'RUNNING'}
                                 className={`flex items-center gap-2 px-3 py-2 font-medium rounded-md transition-all ${
                                     selectedSport === 'RUNNING'
                                         ? 'bg-accent-blue text-white font-semibold shadow-xs'
@@ -265,6 +267,7 @@ export function AnalyticsView({
                             <button
                                 type="button"
                                 onClick={() => setSelectedSport('CYCLING')}
+                                aria-pressed={selectedSport === 'CYCLING'}
                                 className={`flex items-center gap-2 px-3 py-2 font-medium rounded-md transition-all ${
                                     selectedSport === 'CYCLING'
                                         ? 'bg-accent-orange text-white font-semibold shadow-xs'
@@ -278,7 +281,7 @@ export function AnalyticsView({
                     </div>
 
                     {/* Range Selector */}
-                    <div className="inline-flex self-start rounded-lg bg-background-tertiary p-1 border border-line text-xs">
+                    <div role="group" aria-label="Analytics history range (cycling detail has its own range)" className="inline-flex self-start rounded-lg bg-background-tertiary p-1 border border-line text-xs">
                         {(['42d', '90d', '180d', '1y', 'all'] as const).map((r) => {
                             const mappedRange: TimeRange = r === '42d' ? '1M' : r === '90d' ? '3M' : r === '180d' ? '6M' : r === '1y' ? '1Y' : 'ALL';
                             const isActive = timeRange === mappedRange;
@@ -287,13 +290,14 @@ export function AnalyticsView({
                                     key={r}
                                     type="button"
                                     onClick={() => setTimeRange(mappedRange)}
+                                    aria-pressed={isActive}
                                     className={`px-3 py-1.5 uppercase font-medium rounded-md transition-all ${
                                         isActive
                                             ? 'bg-surface-hover text-foreground font-semibold'
                                             : 'text-foreground-muted hover:text-foreground'
                                     }`}
                                 >
-                                    {r}
+                                    {mappedRange}
                                 </button>
                             );
                         })}

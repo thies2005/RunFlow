@@ -57,7 +57,7 @@ fun serverDateToEpochMillis(raw: String?): Long? {
 
 /** Epoch millis (local midnight) → "yyyy-MM-dd", the server's date-only form. */
 fun epochMillisToServerDate(millis: Long): String =
-    LocalDate.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault()).toString()
+    Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate().toString()
 
 private fun parseWorkoutType(raw: String?): WorkoutType =
     raw?.let { runCatching { WorkoutType.valueOf(it) }.getOrNull() }

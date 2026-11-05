@@ -1,5 +1,7 @@
 'use client';
 
+import { calendarDate } from '@/lib/plans/calendar-date';
+
 import { useState, useMemo, useCallback } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, addDays, addMonths, subMonths } from 'date-fns';
 import { CalendarHeader } from './CalendarHeader';
@@ -20,9 +22,9 @@ export function MiniCalendar({ workouts, raceDate, onDayClick }: MiniCalendarPro
     const workoutsByDate = useMemo(() => {
         const map = new Map<string, Array<{ workoutType: string }>>();
         for (const w of workouts) {
-            const d = new Date(w.scheduledDate);
+            const d = calendarDate(w.scheduledDate);
             if (isNaN(d.getTime())) continue;
-            const key = d.toISOString().split('T')[0];
+            const key = format(d, 'yyyy-MM-dd');
             if (!map.has(key)) map.set(key, []);
             map.get(key)!.push({ workoutType: w.workoutType });
         }

@@ -36,6 +36,7 @@ const AnalyticsView = dynamic(() => import('@/components/views/AnalyticsView'), 
     ssr: false,
     loading: () => <div className="h-full w-full bg-background" />,
 });
+const HealthView = dynamic(() => import('@/components/views/HealthView'), { ssr: false });
 const SettingsModal = dynamic(() => import('@/components/SettingsModal'), { ssr: false, loading: () => null });
 const EditWorkoutModal = dynamic(() => import('@/components/EditWorkoutModal'), { ssr: false, loading: () => null });
 const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false, loading: () => null });
@@ -148,10 +149,6 @@ export function MobileLayout() {
         },
         enabled: status === 'authenticated' && isAnalyticsPath,
     });
-
-    // Determine if Health should be shown
-    const showHealth = userData?.healthTrackingEnabled === true;
-    void showHealth; // Health tab temporarily hidden from nav; retained for re-enable
 
     // Analytics History Query
     const { data: historyData } = useQuery({
@@ -412,6 +409,7 @@ export function MobileLayout() {
                         showHeader={false}
                     />
                 ) : <div className="h-full w-full" />}
+                {activePath === '/health' ? <HealthView /> : <div className="h-full w-full" />}
             </MobileSwipeLayout>
 
             {/* Modals */}

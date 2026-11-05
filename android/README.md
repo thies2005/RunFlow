@@ -12,6 +12,9 @@ reconciles with `https://runflow.schuelken.uk` whenever one is available.
 
 ## Build & run
 
+For CLI setup, emulator/device testing, local backend connections, and troubleshooting,
+see [DEVELOPMENT.md](DEVELOPMENT.md). Start with `./dev doctor`, then `./dev check`.
+
 ```bash
 cd android
 ./gradlew assembleDebug          # debug APK  → app/build/outputs/apk/debug/
@@ -21,9 +24,8 @@ cd android
                                  # sync/plan mappers, SSE parser, Strava OAuth, API contract, Health Connect mapping, …)
 ```
 
-No API keys or backend required — the app is **fully local-first** (Room + DataStore) and seeds
-~6 months of realistic demo data (progressive fitness ramp, completed half-marathon goal,
-active marathon plan) on first launch.
+No API keys or backend required — the app is **fully local-first** (Room + DataStore) and starts with an empty profile and activity history. Add a recent race result to calibrate
+training paces before creating your first running plan.
 
 ## Feature set
 

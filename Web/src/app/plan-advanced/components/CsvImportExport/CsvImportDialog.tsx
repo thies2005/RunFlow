@@ -167,15 +167,16 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className="bg-background-secondary border border-glass-border rounded-md w-full max-w-lg mx-4 max-h-[85vh] flex flex-col">
+            <div role="dialog" aria-modal="true" aria-labelledby="csv-import-title" className="bg-background-secondary border border-glass-border rounded-md w-full max-w-lg mx-4 max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b border-glass-border shrink-0">
-                    <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <h2 id="csv-import-title" className="text-sm font-semibold text-foreground flex items-center gap-2">
                         <Upload className="w-4 h-4 text-accent-orange" />
                         Import CSV
                     </h2>
                     <button
                         type="button"
                         onClick={handleClose}
+                        aria-label="Close CSV import"
                         className="p-1 rounded-md text-foreground-muted hover:text-foreground-secondary hover:bg-background-tertiary transition-colors"
                     >
                         <X className="w-4 h-4" />
@@ -200,9 +201,7 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                                 <p className="text-sm text-foreground-secondary font-medium">
                                     Drop your CSV file here
                                 </p>
-                                <p className="text-xs text-foreground-muted mt-1">
-                                    or click to browse
-                                </p>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} className="block mx-auto mt-1 text-sm text-accent-cyan underline">Choose CSV file</button>
                                 <p className="text-[10px] text-foreground-muted mt-2">
                                     Supports .csv files from MyWhoosh/Custom schedules, TrainingPeaks, FinalSurge, or RunFlow
                                 </p>

@@ -124,7 +124,7 @@ export function Toolbar({
 
     return (
         <>
-            <div className="h-14 border-b border-glass-border flex items-center px-4 gap-3 shrink-0 bg-background-secondary/50 backdrop-blur-sm">
+            <div className="min-h-14 border-b border-glass-border flex flex-wrap items-center px-3 py-2 gap-2 shrink-0 bg-background-secondary/50 backdrop-blur-sm">
                 <button
                     type="button"
                     onClick={() => router.push('/')}
@@ -142,7 +142,7 @@ export function Toolbar({
                 <ModeToggle mode={mode} onModeChange={onModeChange} isPremium={isPremium} />
 
                 {/* Plan Name Center Block */}
-                <div className="flex-1 flex items-center justify-center min-w-0">
+                <div className="w-full md:w-auto md:flex-1 flex items-center justify-center min-w-0">
                     {isEditingName ? (
                         <div className="flex items-center gap-1.5">
                             <input
@@ -162,6 +162,7 @@ export function Toolbar({
                             <button
                                 type="button"
                                 onClick={handleNameSubmit}
+                                aria-label="Save plan name"
                                 className="p-1 rounded hover:bg-background-tertiary text-foreground-secondary hover:text-foreground transition-colors"
                             >
                                 <Check className="w-3.5 h-3.5" />
@@ -172,12 +173,12 @@ export function Toolbar({
                             <button
                                 type="button"
                                 onClick={() => setIsEditingName(true)}
-                                className="flex items-center gap-1.5 group max-w-xs"
+                                className="flex items-center gap-1.5 group max-w-full"
                             >
                                 <h1 className="text-sm font-semibold text-foreground truncate">{planName}</h1>
                                 <Pencil className="w-3 h-3 text-foreground-muted group-hover:text-foreground-secondary transition-colors shrink-0" />
                             </button>
-                            <span className="text-[10px] font-mono text-foreground-muted tracking-wider uppercase">
+                            <span className="text-xs font-mono text-foreground-muted tracking-wider uppercase">
                                 {sportBadgeLabel}
                             </span>
                         </div>
@@ -188,6 +189,7 @@ export function Toolbar({
                 <button
                     type="button"
                     onClick={() => setIsEngineModalOpen(true)}
+                    aria-label="Engine Generator"
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-workout-tempo/15 hover:bg-workout-tempo/25 text-workout-tempo border border-workout-tempo/30 transition-colors shadow-sm"
                     title="Generate / Adapt with Engine"
                 >
@@ -234,6 +236,7 @@ export function Toolbar({
                 initialRaceType={raceType}
                 initialRaceDate={raceDate}
                 initialVdot={currentVdot}
+                workouts={workouts}
                 onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId] });
                     queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId, 'planned-fitness'] });

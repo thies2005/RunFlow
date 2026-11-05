@@ -1,6 +1,6 @@
 'use client';
 
-import { addDays } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { CalendarDay } from './CalendarDay';
 
 interface CalendarWeekProps {
@@ -17,7 +17,7 @@ export function CalendarWeek({ weekStart, workoutsByDate, raceDate, selectedDate
     return (
         <div className="grid grid-cols-7 gap-0.5">
             {days.map((day) => {
-                const dateKey = day.toISOString().split('T')[0];
+                const dateKey = format(day, 'yyyy-MM-dd');
                 const dayWorkouts = workoutsByDate.get(dateKey) || [];
                 return (
                     <CalendarDay

@@ -17,6 +17,7 @@ import {
 import { mapWorkoutsForDb, computePlanWeeklyVolumeGoals } from '@/lib/services/plan-creation';
 import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
 import { createSnapshot } from '@/lib/plan/snapshot';
+import { replacementStart } from '@/lib/plans/replacement-scope';
 
 type RouteContext = { params: Promise<{ goalId: string }> };
 const MAX_REGENERATE_WEEKS = 104;
@@ -227,20 +228,22 @@ export async function POST(req: Request, ctx: RouteContext) {
             const phaseBlocks = buildPlanPhaseBlocks(planConfig, generated);
             const weeklyGoals = computePlanWeeklyVolumeGoals(planConfig, generated);
 
+            // Calendar schedules are stored as UTC dates. Keep past and linked history.
+            const cutoff = replacementStart();
             const lastCompletedWorkout = await prisma.workout.findFirst({
-                where: { goalId, isCompleted: true },
+                where: { goalId, OR: [{ isCompleted: true }, { linkedActivityId: { not: null } }] },
                 orderBy: { scheduledDate: 'desc' },
                 select: { scheduledDate: true },
             });
             const workoutsToInsert = lastCompletedWorkout?.scheduledDate
-                ? generated.filter((w) => new Date(w.date).getTime() > new Date(lastCompletedWorkout.scheduledDate).getTime())
-                : generated;
+                ? generated.filter((w) => new Date(w.date).getTime() >= cutoff.getTime() && new Date(w.date).getTime() > new Date(lastCompletedWorkout.scheduledDate).getTime())
+                : generated.filter((w) => new Date(w.date).getTime() >= cutoff.getTime());
 
             await createSnapshot(goalId, 'Before plan regeneration', 'engine_regenerate');
 
             await prisma.$transaction(async (tx) => {
                 await tx.workout.deleteMany({
-                    where: { goalId, isCompleted: false },
+                    where: { goalId, isCompleted: false, linkedActivityId: null, scheduledDate: { gte: cutoff, ...(lastCompletedWorkout?.scheduledDate && { gt: lastCompletedWorkout.scheduledDate }) } },
                 });
                 await tx.goal.update({
                     where: { id: goalId },

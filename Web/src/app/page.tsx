@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, AlertCircle, BarChart3, CalendarRange, Hand, Target } from 'lucide-react';
+import { RefreshCw, AlertCircle, BarChart3, CalendarRange, HeartPulse, Hand, Target } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { LinkIcon } from 'lucide-react';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
@@ -197,13 +197,17 @@ export default function Dashboard() {
                                 </div>
 
                                 <div className="flex items-center gap-4">
-                                    <button onClick={() => router.push('/analytics')} className="topbar-btn flex items-center gap-2">
+                                    <button onClick={() => router.push('/analytics')} aria-label="Analytics" className="topbar-btn flex items-center gap-2">
                                         <BarChart3 className="w-5 h-5" />
                                         <span className="hidden sm:inline">Analytics</span>
                                     </button>
-                                    <button onClick={() => router.push('/calendar')} className="topbar-btn flex items-center gap-2">
+                                    <button onClick={() => router.push('/calendar')} aria-label="Calendar" className="topbar-btn flex items-center gap-2">
                                         <CalendarRange className="w-5 h-5" />
                                         <span className="hidden sm:inline">Calendar</span>
+                                    </button>
+                                    <button onClick={() => router.push('/health')} className="topbar-btn flex items-center gap-2" aria-label="Health">
+                                        <HeartPulse className="w-5 h-5" />
+                                        <span className="hidden sm:inline">Health</span>
                                     </button>
                                     <div className="flex items-center gap-3">
                                         <MinimalistPillsMenu />

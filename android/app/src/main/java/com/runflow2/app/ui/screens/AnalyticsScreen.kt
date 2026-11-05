@@ -159,62 +159,17 @@ fun AnalyticsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // ---- 4-Tab Top Segment Selector ----
-            SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth(),
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                SegmentedButton(
-                    selected = selectedTab == AnalyticsTab.OVERVIEW,
-                    onClick = { selectedTab = AnalyticsTab.OVERVIEW },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 4),
-                    icon = {
-                        Icon(
-                            Icons.Outlined.Insights,
-                            contentDescription = null,
-                            modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
-                        )
-                    },
-                    label = { Text("Overview") },
-                )
-                SegmentedButton(
-                    selected = selectedTab == AnalyticsTab.RUNNING,
-                    onClick = { selectedTab = AnalyticsTab.RUNNING },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 4),
-                    icon = {
-                        Icon(
-                            Icons.AutoMirrored.Outlined.DirectionsRun,
-                            contentDescription = null,
-                            modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
-                        )
-                    },
-                    label = { Text("Run") },
-                )
-                SegmentedButton(
-                    selected = selectedTab == AnalyticsTab.CYCLING,
-                    onClick = { selectedTab = AnalyticsTab.CYCLING },
-                    shape = SegmentedButtonDefaults.itemShape(index = 2, count = 4),
-                    icon = {
-                        Icon(
-                            Icons.AutoMirrored.Outlined.DirectionsBike,
-                            contentDescription = null,
-                            modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
-                        )
-                    },
-                    label = { Text("Bike") },
-                )
-                SegmentedButton(
-                    selected = selectedTab == AnalyticsTab.RECOVERY,
-                    onClick = { selectedTab = AnalyticsTab.RECOVERY },
-                    shape = SegmentedButtonDefaults.itemShape(index = 3, count = 4),
-                    icon = {
-                        Icon(
-                            Icons.Outlined.Favorite,
-                            contentDescription = null,
-                            modifier = Modifier.size(SegmentedButtonDefaults.IconSize),
-                        )
-                    },
-                    label = { Text("Recovery") },
-                )
+                listOf(AnalyticsTab.OVERVIEW to "Overview", AnalyticsTab.RUNNING to "Run",
+                    AnalyticsTab.CYCLING to "Bike", AnalyticsTab.RECOVERY to "Recovery").forEach { (tab, label) ->
+                    androidx.compose.material3.FilterChip(
+                        selected = selectedTab == tab,
+                        onClick = { selectedTab = tab },
+                        label = { Text(label, maxLines = 1) },
+                    )
+                }
             }
 
             // ---- Tab Content ----

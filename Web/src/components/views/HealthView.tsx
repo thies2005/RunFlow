@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { HeartPulse, Info, Bell, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, HeartPulse, Info, Bell, RefreshCw } from 'lucide-react';
 import { isMobile, syncHistoricalHealthData, SyncHistoricalResult, isHealthConnectAvailable } from '@/lib/mobile/healthConnect';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
@@ -339,36 +340,49 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                 <>
                     {showHeader && (
                         <header className="topbar sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
-                            <div className="flex items-center justify-between px-4 py-3">
-                                <span className="brand text-lg flex items-center gap-2">
-                                    <HeartPulse className="w-5 h-5 text-accent-orange" /> Health
-                                </span>
-                                <div className="flex items-center gap-2">
-                                    {isMobileDevice && (
-                                        <button
-                                            onClick={handleSyncHistoricalData}
-                                            disabled={isSyncingHistory}
-                                            className="topbar-btn p-2 -mr-2 rounded-full"
-                                            aria-label="Sync Health Data"
+                            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                                <div className="flex items-center justify-between h-16">
+                                    <div className="flex items-center gap-4">
+                                        <Link
+                                            href="/"
+                                            className="p-2 transition-colors hover:text-accent-orange"
+                                            title="Back to Dashboard"
+                                            aria-label="Back to Dashboard"
                                         >
-                                            <RefreshCw className={`w-5 h-5 ${isSyncingHistory ? 'animate-spin' : ''}`} />
+                                            <ArrowLeft className="w-5 h-5" />
+                                        </Link>
+                                        <div className="flex items-center gap-2">
+                                            <HeartPulse className="w-5 h-5 text-accent-orange" />
+                                            <h1 className="text-xl font-bold">Health</h1>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {isMobileDevice && (
+                                            <button
+                                                onClick={handleSyncHistoricalData}
+                                                disabled={isSyncingHistory}
+                                                className="topbar-btn p-2 -mr-2 rounded-full"
+                                                aria-label="Sync Health Data"
+                                            >
+                                                <RefreshCw className={`w-5 h-5 ${isSyncingHistory ? 'animate-spin' : ''}`} />
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => setIsRemindersOpen(true)}
+                                            className="topbar-btn p-2 -mr-2 rounded-full"
+                                            aria-label="Notification Reminders"
+                                        >
+                                            <Bell className="w-5 h-5" />
                                         </button>
-                                    )}
-                                    <button
-                                        onClick={() => setIsRemindersOpen(true)}
-                                        className="topbar-btn p-2 -mr-2 rounded-full"
-                                        aria-label="Notification Reminders"
-                                    >
-                                        <Bell className="w-5 h-5" />
-                                    </button>
+                                    </div>
                                 </div>
                             </div>
                         </header>
                     )}
 
-                    <div className={`mx-auto w-full max-w-md flex flex-col gap-4 pb-24 p-4 ${!showHeader ? 'pt-8' : ''}`}>
+                    <div className={`health-dashboard mx-auto w-full max-w-md flex flex-col gap-4 pb-24 p-4 lg:max-w-7xl lg:px-8 lg:py-8 ${!showHeader ? 'pt-8' : ''}`}>
                         {!isMobileDevice && !bannerDismissed && (
-                            <div className="bg-accent-blue/10 border border-accent-blue/20 p-4 rounded-md flex items-start gap-3">
+                            <div className="health-notice bg-accent-blue/10 border border-accent-blue/20 p-4 rounded-md flex items-start gap-3">
                                 <Info className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
                                 <div className="text-sm flex-1">
                                     <p className="font-semibold text-accent-blue mb-1">Mobile App Recommended</p>
@@ -386,129 +400,148 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                             </div>
                         )}
 
-                        {isTargetLoading ? (
-                            <SectionLoadingCard label="Loading nutrition summary..." />
-                        ) : isTargetError ? (
-                            <SectionErrorCard title="Nutrition summary unavailable" message={(targetError as Error)?.message || 'Failed to load nutrition targets.'} onRetry={() => refetchTarget()} />
-                        ) : (
-                            <NutritionSummary
-                                targetData={targetData}
-                                effectiveTarget={effectiveTarget}
-                                totalCalories={totalCalories}
-                                exerciseBudget={exerciseBudget}
-                                exerciseCalories={exerciseCalories}
-                                exerciseFactor={exerciseFactor}
-                                totalProtein={totalProtein}
-                                totalCarbs={totalCarbs}
-                                totalFats={totalFats}
-                                targetProtein={targetProtein}
-                                targetCarbs={targetCarbs}
-                                targetFats={targetFats}
-                                onOpenGoals={() => setIsGoalsOpen(true)}
-                                onOpenAnalytics={() => setShowAnalytics(true)}
-                                onOpenMealSuggestion={() => setIsMealSuggestionOpen(true)}
-                            />
-                        )}
+                        <div className="health-nutrition flex min-w-0 flex-col gap-4">
+                            {isTargetLoading ? (
+                                <SectionLoadingCard label="Loading nutrition summary..." />
+                            ) : isTargetError ? (
+                                <SectionErrorCard title="Nutrition summary unavailable" message={(targetError as Error)?.message || 'Failed to load nutrition targets.'} onRetry={() => refetchTarget()} />
+                            ) : (
+                                <NutritionSummary
+                                    targetData={targetData}
+                                    effectiveTarget={effectiveTarget}
+                                    totalCalories={totalCalories}
+                                    exerciseBudget={exerciseBudget}
+                                    exerciseCalories={exerciseCalories}
+                                    exerciseFactor={exerciseFactor}
+                                    totalProtein={totalProtein}
+                                    totalCarbs={totalCarbs}
+                                    totalFats={totalFats}
+                                    targetProtein={targetProtein}
+                                    targetCarbs={targetCarbs}
+                                    targetFats={targetFats}
+                                    onOpenGoals={() => setIsGoalsOpen(true)}
+                                    onOpenAnalytics={() => setShowAnalytics(true)}
+                                    onOpenMealSuggestion={() => setIsMealSuggestionOpen(true)}
+                                />
+                            )}
 
-                        {isDailyLoading ? (
-                            <SectionLoadingCard label="Loading body metrics..." />
-                        ) : isDailyError ? (
-                            <SectionErrorCard title="Body metrics unavailable" message={(dailyError as Error)?.message || 'Failed to load health data.'} onRetry={() => refetchDaily()} />
-                        ) : (
-                            <BodyMetricsCard
-                                showSteps={showSteps}
-                                dailyHealth={dailyHealth}
-                                targetData={targetData}
-                                waterMutationPending={waterMutation.isPending}
-                                onOpenTrend={(metric) => setActiveTrendMetric(metric)}
-                                onAdjustWater={(amount) => waterMutation.mutate(amount)}
-                            />
-                        )}
+                        </div>
 
-                        <ReadinessCard />
+                        <div className="health-overview flex min-w-0 flex-col gap-4">
+                            <div className="health-metrics flex min-w-0 flex-col gap-4">
+                                {isDailyLoading ? (
+                                    <SectionLoadingCard label="Loading body metrics..." />
+                                ) : isDailyError ? (
+                                    <SectionErrorCard title="Body metrics unavailable" message={(dailyError as Error)?.message || 'Failed to load health data.'} onRetry={() => refetchDaily()} />
+                                ) : (
+                                    <BodyMetricsCard
+                                        showSteps={showSteps}
+                                        dailyHealth={dailyHealth}
+                                        targetData={targetData}
+                                        waterMutationPending={waterMutation.isPending}
+                                        onOpenTrend={(metric) => setActiveTrendMetric(metric)}
+                                        onAdjustWater={(amount) => waterMutation.mutate(amount)}
+                                    />
+                                )}
 
-                        <QuickActions
-                            onOpenAiScan={() => setIsFoodScannerOpen(true)}
-                            onOpenBarcode={async () => {
-                                if (!IS_NATIVE) {
-                                    try {
-                                        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                                        setCameraStream(stream);
-                                    } catch {
-                                        toast.error('Camera permission is required to scan barcodes. Please allow camera access in your browser settings.');
-                                        return;
+                            </div>
+
+                            <div className="health-readiness min-w-0">
+                                <ReadinessCard />
+                            </div>
+
+                        </div>
+
+                        <div className="health-actions min-w-0">
+                            <QuickActions
+                                onOpenAiScan={() => setIsFoodScannerOpen(true)}
+                                onOpenBarcode={async () => {
+                                    if (!IS_NATIVE) {
+                                        try {
+                                            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                                            setCameraStream(stream);
+                                        } catch {
+                                            toast.error('Camera permission is required to scan barcodes. Please allow camera access in your browser settings.');
+                                            return;
+                                        }
                                     }
-                                }
-                                setIsScannerOpen(true);
-                            }}
-                            onOpenSearch={() => {
-                                setQuickAddProps({ tab: 'search' });
-                                setIsManualEntryOpen(true);
-                            }}
-                            onOpenLibrary={() => setIsMealLibraryOpen(true)}
-                        />
-
-                        {isDailyLoading ? (
-                            <SectionLoadingCard label="Loading meals..." />
-                        ) : isDailyError ? (
-                            <SectionErrorCard title="Meals unavailable" message={(dailyError as Error)?.message || 'Failed to load meals.'} onRetry={() => refetchDaily()} />
-                        ) : (
-                            <MealSection
-                                foodLogs={dailyData?.foodLogs || []}
-                                copyYesterdayMutation={copyYesterdayMutation}
-                                onOpenHistory={() => setIsHistoryOpen(true)}
-                                onQuickAddMeal={(mealType) => {
-                                    setQuickAddProps({ tab: 'search', mealType });
+                                    setIsScannerOpen(true);
+                                }}
+                                onOpenSearch={() => {
+                                    setQuickAddProps({ tab: 'search' });
                                     setIsManualEntryOpen(true);
                                 }}
+                                onOpenLibrary={() => setIsMealLibraryOpen(true)}
                             />
-                        )}
 
-                        {isSupplementsError || isStacksError ? (
-                            <SectionErrorCard
-                                title="Supplements unavailable"
-                                message={(supplementsError as Error)?.message || (stacksError as Error)?.message || 'Failed to load supplements.'}
-                                onRetry={() => {
-                                    refetchSupplements();
-                                    refetchStacks();
-                                }}
-                            />
-                        ) : (
-                            <SupplementsSection
-                                supplements={supplements || []}
-                                stacks={(stacks || []).map((stack: SupplementStack) => ({
-                                    ...stack,
-                                    supplements: (stack.supplements || []).filter(isSuppActiveToday),
-                                }))}
-                                morningStandalone={morningStandalone}
-                                noonStandalone={noonStandalone}
-                                eveningStandalone={eveningStandalone}
-                                isLoading={isSupplementsLoading || isStacksLoading}
-                                getSupplementLog={getSupplementLog}
-                                onOpenAnalytics={() => setShowSupplementAnalytics(true)}
-                                onAddStack={() => {
-                                    setStackToEdit(null);
-                                    setIsAddStackModalOpen(true);
-                                }}
-                                onAddSupplement={() => {
-                                    setSupplementToEdit(null);
-                                    setIsAddModalOpen(true);
-                                }}
-                                onEditStack={(stack) => {
-                                    setStackToEdit(stack);
-                                    setIsAddStackModalOpen(true);
-                                }}
-                                onEditSupplement={(supplement) => {
-                                    setSupplementToEdit(supplement);
-                                    setIsAddModalOpen(true);
-                                }}
-                                onToggleStack={(stackId, taken) => toggleStackMutation.mutate({ stackId, taken })}
-                                onToggleSupplement={(supplementId, taken) => toggleSupplementMutation.mutate({ supplementId, taken })}
-                                onShowStats={(config) => setStatsConfig({ isOpen: true, ...config })}
-                                pendingSupplementId={toggleSupplementMutation.isPending ? toggleSupplementMutation.variables?.supplementId : null}
-                                pendingStackId={toggleStackMutation.isPending ? toggleStackMutation.variables?.stackId : null}
-                            />
-                        )}
+                        </div>
+
+                        <div className="health-meals min-w-0">
+                            {isDailyLoading ? (
+                                <SectionLoadingCard label="Loading meals..." />
+                            ) : isDailyError ? (
+                                <SectionErrorCard title="Meals unavailable" message={(dailyError as Error)?.message || 'Failed to load meals.'} onRetry={() => refetchDaily()} />
+                            ) : (
+                                <MealSection
+                                    foodLogs={dailyData?.foodLogs || []}
+                                    copyYesterdayMutation={copyYesterdayMutation}
+                                    onOpenHistory={() => setIsHistoryOpen(true)}
+                                    onQuickAddMeal={(mealType) => {
+                                        setQuickAddProps({ tab: 'search', mealType });
+                                        setIsManualEntryOpen(true);
+                                    }}
+                                />
+                            )}
+
+                        </div>
+
+                        <div className="health-supplements min-w-0">
+                            {isSupplementsError || isStacksError ? (
+                                <SectionErrorCard
+                                    title="Supplements unavailable"
+                                    message={(supplementsError as Error)?.message || (stacksError as Error)?.message || 'Failed to load supplements.'}
+                                    onRetry={() => {
+                                        refetchSupplements();
+                                        refetchStacks();
+                                    }}
+                                />
+                            ) : (
+                                <SupplementsSection
+                                    supplements={supplements || []}
+                                    stacks={(stacks || []).map((stack: SupplementStack) => ({
+                                        ...stack,
+                                        supplements: (stack.supplements || []).filter(isSuppActiveToday),
+                                    }))}
+                                    morningStandalone={morningStandalone}
+                                    noonStandalone={noonStandalone}
+                                    eveningStandalone={eveningStandalone}
+                                    isLoading={isSupplementsLoading || isStacksLoading}
+                                    getSupplementLog={getSupplementLog}
+                                    onOpenAnalytics={() => setShowSupplementAnalytics(true)}
+                                    onAddStack={() => {
+                                        setStackToEdit(null);
+                                        setIsAddStackModalOpen(true);
+                                    }}
+                                    onAddSupplement={() => {
+                                        setSupplementToEdit(null);
+                                        setIsAddModalOpen(true);
+                                    }}
+                                    onEditStack={(stack) => {
+                                        setStackToEdit(stack);
+                                        setIsAddStackModalOpen(true);
+                                    }}
+                                    onEditSupplement={(supplement) => {
+                                        setSupplementToEdit(supplement);
+                                        setIsAddModalOpen(true);
+                                    }}
+                                    onToggleStack={(stackId, taken) => toggleStackMutation.mutate({ stackId, taken })}
+                                    onToggleSupplement={(supplementId, taken) => toggleSupplementMutation.mutate({ supplementId, taken })}
+                                    onShowStats={(config) => setStatsConfig({ isOpen: true, ...config })}
+                                    pendingSupplementId={toggleSupplementMutation.isPending ? toggleSupplementMutation.variables?.supplementId : null}
+                                    pendingStackId={toggleStackMutation.isPending ? toggleStackMutation.variables?.stackId : null}
+                                />
+                            )}
+                        </div>
                     </div>
 
                     <AddSupplementModal

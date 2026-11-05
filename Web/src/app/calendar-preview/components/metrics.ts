@@ -1,3 +1,4 @@
+import { calendarDate } from '@/lib/plans/calendar-date';
 /**
  * Training-load metrics for the calendar preview.
  *
@@ -117,7 +118,7 @@ export function buildDays(
 
     for (const a of activities) {
         const d = new Date(a.startDate);
-        if (d < from || d > to) continue;
+        if (dayKey(d) < dayKey(from) || dayKey(d) > dayKey(to)) continue;
         const e = ensure(d);
         e.activities.push(a);
         e.trimp += a.trimp ?? 0;
@@ -130,8 +131,8 @@ export function buildDays(
     }
 
     for (const w of workouts) {
-        const d = new Date(w.scheduledDate);
-        if (d < from || d > to) continue;
+        const d = calendarDate(w.scheduledDate);
+        if (dayKey(d) < dayKey(from) || dayKey(d) > dayKey(to)) continue;
         const e = ensure(d);
         e.workouts.push(w);
         e.plannedTss += w.plannedTss ?? 0;

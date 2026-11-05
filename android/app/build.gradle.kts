@@ -23,8 +23,9 @@ android {
         applicationId = "com.runflow2.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 21
-        versionName = "2.8.0"
+        versionCode = 24
+        versionName = "2.8.3"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -51,6 +52,8 @@ android {
             }
         }
     }
+
+    testOptions { unitTests.isIncludeAndroidResources = true }
 
     buildFeatures {
         compose = true
@@ -113,7 +116,14 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("androidx.test:core:1.6.1")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+
+    androidTestImplementation(composeBom)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
 }

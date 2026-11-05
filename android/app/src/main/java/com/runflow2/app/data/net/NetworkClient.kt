@@ -2,11 +2,16 @@ package com.runflow2.app.data.net
 
 import com.runflow2.app.core.util.AppLog
 import com.runflow2.app.data.repo.SettingsRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -20,16 +25,18 @@ import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
+import java.io.IOException
 
 /**
  * OkHttp + Retrofit wiring: bearer-token header injection, single-flight 401
  * refresh with one automatic retry, and a hot-swappable base URL (settings).
  */
 class NetworkClient(
-    private val authStore: AuthStore?,
+    private val authStore: SessionTokenStore?,
     initialBaseUrl: String = Api.DEFAULT_BASE_URL,
     settings: SettingsRepository? = null,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    serverUrlFlow: Flow<String>? = settings?.settings?.map { it.serverUrl },
 ) {
     @Volatile
     var previousBaseUrl: String? = Api.normalizeServerUrl(initialBaseUrl)
@@ -40,83 +47,109 @@ class NetworkClient(
 
     @Volatile
     var baseUrl: String = Api.normalizeServerUrl(initialBaseUrl)
-        set(value) {
-            val normalized = Api.normalizeServerUrl(value)
-            val prev = previousBaseUrl
-            if (prev != null && prev != normalized) {
-                AppLog.i("Net", "Server origin changed from $prev to $normalized via baseUrl setter — clearing session")
-                scope.launch { runCatching { authStore?.clear() } }
-                onOriginSwitched?.invoke()
-            }
-            previousBaseUrl = normalized
-            field = normalized
-        }
+        private set
 
     @Volatile private var cachedApi: RunFlowApi? = null
     private val apiLock = Any()
+    private val originReady = CompletableDeferred<Unit>()
+    private val originState = MutableStateFlow<Result<String>?>(null)
 
     init {
-        val targetSettings = settings ?: SettingsRepository.instance
-        if (targetSettings != null) {
-            observeSettings(targetSettings, scope)
+        if (serverUrlFlow == null) {
+            originState.value = Result.success(baseUrl)
+            originReady.complete(Unit)
         }
+        else observeServerUrl(serverUrlFlow, scope)
     }
 
-    fun observeSettings(settings: SettingsRepository, scope: CoroutineScope): Job =
-        observeServerUrl(settings.settings.map { it.serverUrl }, scope)
+    suspend fun awaitReady() = originReady.await()
 
-    fun observeServerUrl(serverUrlFlow: Flow<String>, scope: CoroutineScope): Job {
-        return scope.launch {
-            var isFirstEmission = true
+    suspend fun awaitOrigin(serverUrls: Flow<String>) {
+        combine(originState, serverUrls) { origin, url -> origin to Api.normalizeServerUrl(url) }
+            .first { (origin, desired) -> origin != null && (origin.isFailure || origin.getOrNull() == desired) }
+            .first!!.getOrThrow()
+    }
+
+    internal fun observeServerUrl(serverUrlFlow: Flow<String>, scope: CoroutineScope): Job = scope.launch {
+        var first = true
+        try {
             serverUrlFlow.collect { rawUrl ->
                 val normalized = Api.normalizeServerUrl(rawUrl)
-                val prev = previousBaseUrl
-                if (!isFirstEmission && prev != null && prev != normalized) {
-                    AppLog.i("Net", "Server origin changed from $prev to $normalized — clearing session")
-                    runCatching { authStore?.clear() }
+                if (!first && previousBaseUrl != normalized) {
+                    AppLog.i("Net", "Server origin changed from $previousBaseUrl to $normalized — clearing session")
+                    authStore?.clear()
                     onOriginSwitched?.invoke()
                 }
-                isFirstEmission = false
                 previousBaseUrl = normalized
-                if (baseUrl != normalized) {
-                    baseUrl = normalized
-                    reset()
+                synchronized(apiLock) {
+                    if (baseUrl != normalized) {
+                        baseUrl = normalized
+                        cachedApi = null
+                    }
                 }
+                first = false
+                originState.value = Result.success(normalized)
+                originReady.complete(Unit)
             }
+        } catch (e: CancellationException) {
+            originState.value = Result.failure(e)
+            originReady.cancel(e)
+            throw e
+        } catch (e: Exception) {
+            AppLog.e("Net", "Server settings observation failed", e)
+            originState.value = Result.failure(e)
+            originReady.completeExceptionally(e)
         }
     }
+
+    private fun isAuthEndpoint(path: String): Boolean =
+        path.endsWith("/auth/refresh") || path.endsWith("/auth/email-login") ||
+            path.endsWith("/auth/register") || path.endsWith("/auth/login") ||
+            path.endsWith("/auth/forgot-password") ||
+            path.endsWith("/auth/reset-password")
 
     private val authHeaderInterceptor = Interceptor { chain ->
         val request = chain.request()
-        val token = authStore?.accessToken()
-        val skipAuth = request.url.encodedPath.let {
-            it.endsWith("/auth/refresh") ||
-                it.endsWith("/auth/email-login") ||
-                it.endsWith("/auth/register") ||
-                it.endsWith("/auth/forgot-password")
-        }
-        val authed = if (!skipAuth && !token.isNullOrEmpty()) {
-            request.newBuilder().header("Authorization", "Bearer $token").build()
-        } else {
-            request
+        val authed = synchronized(apiLock) {
+            if (Api.normalizeServerUrl(request.url.toString()) != baseUrl) {
+                throw IOException("Server origin changed; retry the request")
+            }
+            val token = authStore?.accessToken()
+            val skipAuth = isAuthEndpoint(request.url.encodedPath)
+            if (!skipAuth && !token.isNullOrEmpty()) {
+                request.newBuilder().header("Authorization", "Bearer $token").build()
+            } else {
+                request
+            }
         }
         chain.proceed(authed)
     }
 
     private val tokenAuthenticator = object : Authenticator {
         override fun authenticate(route: Route?, response: Response): Request? {
+            if (isAuthEndpoint(response.request.url.encodedPath)) return null
             // One retry per request: give up if we already refreshed for it.
             if (responseCount(response) >= 2) {
                 AppLog.w("Net", "giving up on ${response.request.url.encodedPath} after repeated 401s")
                 return null
             }
-            AppLog.i("Net", "401 on ${response.request.url.encodedPath} — refreshing session")
+            val requestUrl = response.request.url
+            val requestOrigin = requestUrl.newBuilder().encodedPath("/").query(null).fragment(null).build()
+            val origin = requestOrigin.toString().removeSuffix("/")
+            if (baseUrl != origin) return null
+            // Bind refresh to the server which issued the 401, never a later setting.
+            val originalApi = createApi(requestOrigin.toString())
+            AppLog.i("Net", "401 on ${requestUrl.encodedPath} — refreshing session")
             val newToken = runBlocking {
-                authStore?.refreshWith { api() }
+                authStore?.refreshWith {
+                    if (baseUrl != origin) throw IOException("Server origin changed during refresh")
+                    originalApi
+                }
             } ?: run {
                 AppLog.w("Net", "token refresh failed — request left unauthenticated")
                 return null
             }
+            if (baseUrl != origin) return null
             return response.request.newBuilder()
                 .header("Authorization", "Bearer $newToken")
                 .build()
@@ -145,14 +178,16 @@ class NetworkClient(
         cachedApi?.let { return it }
         synchronized(apiLock) {
             cachedApi?.let { return it }
-            val retrofit = Retrofit.Builder()
-                .baseUrl(if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/")
-                .client(okHttp)
-                .addConverterFactory(Api.json.asConverterFactory("application/json".toMediaType()))
-                .build()
-            return retrofit.create(RunFlowApi::class.java).also { cachedApi = it }
+            return createApi(baseUrl).also { cachedApi = it }
         }
     }
+
+    private fun createApi(origin: String): RunFlowApi = Retrofit.Builder()
+        .baseUrl(if (origin.endsWith("/")) origin else "$origin/")
+        .client(okHttp)
+        .addConverterFactory(Api.json.asConverterFactory("application/json".toMediaType()))
+        .build()
+        .create(RunFlowApi::class.java)
 
     /** Force a rebuild after the server URL setting changes. */
     fun reset() = synchronized(apiLock) { cachedApi = null }

@@ -312,8 +312,10 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
         aerobicVo2max,
         cyclingVo2max,
         activeFtpWatts,
+        activeFtpSource,
         wPerKg,
         weeklyBikeTss,
+        weeklyBikeTssMissing,
         weeklyBikeKm,
         ctlBike,
         atlBike,
@@ -653,7 +655,7 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
                                 <Zap className="w-5 h-5 text-accent-orange" />
                             </div>
                             <div>
-                                <p className="text-xs text-foreground-muted font-semibold leading-tight">Active FTP</p>
+                                <p className="text-xs text-foreground-muted font-semibold leading-tight">Active FTP {activeFtpSource === 'manual' ? '(manual)' : activeFtpSource === 'estimated' ? '(estimated)' : '(unavailable)'}</p>
                                 <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
                                     {activeFtpWatts > 0 ? `${activeFtpWatts}W` : '-'}
                                 </p>
@@ -712,6 +714,8 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
         <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px] relative">
             <h2 className="text-lg font-semibold text-foreground-muted mb-5 shrink-0">
                 {layoutMode === 'CYCLING_HERO' ? 'Cycling Status' : 'Training Status'}
+                <span className="block text-xs font-normal text-foreground-muted">Daily fitness cache as of latest update; activity-based load, distinct from completed-plan effort.</span>
+                {weeklyBikeTssMissing > 0 && <span className="block text-xs font-normal text-foreground-muted">Weekly bike TSS excludes {weeklyBikeTssMissing} {weeklyBikeTssMissing === 1 ? 'ride' : 'rides'} without load data.</span>}
             </h2>
 
             {/* Top Metrics Grid */}
@@ -722,7 +726,7 @@ export default function TrainingStatusCard({ stats }: TrainingStatusCardProps = 
                             <Zap className="w-5 h-5 text-accent-orange" />
                         </div>
                         <div>
-                            <p className="text-xs text-foreground-muted font-semibold leading-tight">Active FTP</p>
+                            <p className="text-xs text-foreground-muted font-semibold leading-tight">Active FTP {activeFtpSource === 'manual' ? '(manual)' : activeFtpSource === 'estimated' ? '(estimated)' : '(unavailable)'}</p>
                             <p className="text-2xl font-mono tabular-nums font-semibold text-foreground leading-tight">
                                 {activeFtpWatts > 0 ? `${activeFtpWatts}W` : '-'}
                             </p>

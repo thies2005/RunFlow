@@ -4,7 +4,8 @@ import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { computeCoreMetrics } from '@/lib/metrics/coreMetrics';
 import { getActivityContribution } from '@/lib/metrics/fitness';
-import { calculateCyclingVo2Max } from '@/lib/metrics/power';
+import { getCyclingAnalytics } from '@/lib/metrics/cyclingAnalytics';
+import { resolveActiveFtp } from '@/lib/metrics/activeFtp';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
 
@@ -182,26 +183,10 @@ export async function GET(req: Request) {
         }
         const avgWeeklyKmLast4Weeks = Math.round((last4WeeksRunDistM / 4 / 1000) * 10) / 10;
 
-        let bestRideFtp = user?.ftpWatts ?? null;
-        for (const ca of crossTrainingActivities) {
-            if (ca.type === 'RIDE' || ca.type === 'VIRTUAL_RIDE') {
-                const titleMatch = ((ca as any).name || '').match(/\b(\d{2,4})\s*w(?:atts)?\b/i);
-                const titleW = titleMatch ? parseInt(titleMatch[1], 10) : null;
-                const validTitleW = titleW && titleW >= 40 && titleW <= 1500 ? titleW : null;
-                const rideSustained = (ca as any).npWatts ?? (ca as any).weightedAverageWatts ?? (ca as any).averageWatts ?? validTitleW;
-                if (rideSustained && rideSustained > 0) {
-                    const estFtp = /\bftp\s*test\b/i.test((ca as any).name || '') && validTitleW
-                        ? validTitleW
-                        : Math.round(rideSustained * 0.95);
-                    if (!bestRideFtp || estFtp > bestRideFtp) {
-                        bestRideFtp = estFtp;
-                    }
-                }
-            }
-        }
-        const cyclingVo2max = bestRideFtp
-            ? calculateCyclingVo2Max({ ftpWatts: bestRideFtp, weightKg: user?.weight ?? 75 })
-            : null;
+        const cyclingAnalytics = await getCyclingAnalytics(userId, '90d');
+        const activeFtp = resolveActiveFtp(cyclingAnalytics.ftp.ftpWatts, cyclingAnalytics.ftp.eFtpWatts, cyclingAnalytics.ftp.autoEstimateFtp);
+        const bestRideFtp = activeFtp.watts;
+        const cyclingVo2max = cyclingAnalytics.ftp.cyclingVo2max;
 
         return cachedResponse({
             currentWeekMileage,
@@ -210,6 +195,7 @@ export async function GET(req: Request) {
             rawVO2max,
             cyclingVo2max,
             activeFtpWatts: bestRideFtp,
+            activeFtpSource: activeFtp.source,
             vdotCorrectionFactor,
             effectiveVo2maxCorrectionFactor,
             autoRevolvingVo2max,

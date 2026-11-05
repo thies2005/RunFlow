@@ -22,6 +22,8 @@ export function CalendarDay({ date, workouts, raceDate, selectedDate, onClick }:
         <button
             type="button"
             onClick={() => onClick?.(date)}
+            aria-label={`${format(date, 'EEEE, MMMM d, yyyy')}, ${workouts.length} ${workouts.length === 1 ? 'workout' : 'workouts'}${isRaceDay ? ', race day' : ''}`}
+            aria-pressed={isSelected}
             className={`
                 flex flex-col items-center justify-center p-0.5 rounded-md transition-colors
                 ${today ? 'ring-1 ring-accent-orange/50 bg-accent-orange/10' : ''}

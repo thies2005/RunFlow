@@ -18,6 +18,15 @@ object Format {
     private val dayFmtWithYear = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
     private val timeOfDayFmt = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH)
 
+    @Suppress("UNUSED_PARAMETER")
+    fun workoutInstructions(description: String, unit: DistanceUnit, generated: Boolean): String {
+        // Workout text may have been edited or imported, even on locally generated
+        // rows. Its provenance is not stored, so leave it intact and identify it
+        // as original text when it contains metric units. Structured chips convert.
+        val hasMetric = Regex("""(?:\b\d+(?:\.\d+)?\s*(?:km|kilomet(?:er|re)s?)\b|/\s*km\b)""", RegexOption.IGNORE_CASE).containsMatchIn(description)
+        return if (unit == DistanceUnit.IMPERIAL && hasMetric) "Original instructions (metric): $description" else description
+    }
+
     fun distance(km: Double, unit: DistanceUnit = DistanceUnit.METRIC, decimals: Int = 1): String =
         when (unit) {
             DistanceUnit.METRIC -> String.format(Locale.ENGLISH, "%.${decimals}f km", km)

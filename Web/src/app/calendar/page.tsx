@@ -37,7 +37,7 @@ export default function CalendarPage() {
                             onClick={() => router.push('/plan-advanced')}
                             className="btn-secondary flex items-center gap-2 py-2 px-4 text-xs sm:text-sm"
                         >
-                            Import CSV / AI Plan Studio
+                            Open Plan Studio
                         </button>
                     </div>
                 </div>

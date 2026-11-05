@@ -1,5 +1,8 @@
 package com.runflow2.app.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -79,6 +82,44 @@ fun SettingsScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var backupStatusMessage by remember { mutableStateOf<String?>(null) }
+    var diagnosticsFallback by remember { mutableStateOf<String?>(null) }
+    var diagnosticsMessage by remember { mutableStateOf<String?>(null) }
+    val diagnosticsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/plain"),
+    ) { uri ->
+        if (uri != null) {
+            val report = diagnosticsFallback
+            runCatching {
+                requireNotNull(report)
+                requireNotNull(context.contentResolver.openOutputStream(uri)).bufferedWriter().use { it.write(report) }
+            }.onSuccess { diagnosticsMessage = "Diagnostics saved." }
+                .onFailure { diagnosticsMessage = "Could not save diagnostics. Try again." }
+        }
+    }
+    var restoringProfile by remember { mutableStateOf(false) }
+    var profileRecoveryMessage by remember { mutableStateOf<String?>(null) }
+    fun latestProfileBackup(): java.io.File? = java.io.File(context.filesDir, "profile-recovery")
+        .listFiles()?.filter { it.isFile && it.extension == "json" }?.maxByOrNull { it.lastModified() }
+    var profileBackup by remember { mutableStateOf(latestProfileBackup()) }
+    val profileBackupLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) scope.launch {
+            try {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    requireNotNull(profileBackup).inputStream().use { input ->
+                        requireNotNull(context.contentResolver.openOutputStream(uri)).use { input.copyTo(it) }
+                    }
+                }
+                profileRecoveryMessage = "Previous local profile backup saved."
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e
+            } catch (_: Exception) { profileRecoveryMessage = "Could not export the profile backup. Try again." }
+        }
+    }
+    if (restoringProfile) AlertDialog(
+        onDismissRequest = {}, title = { Text("Restoring web profile") },
+        text = { Text("Downloading your account profile and syncing plans…") }, confirmButton = {},
+    )
     var importSummaryDialog by remember { mutableStateOf<LocalBackupManager.Summary?>(null) }
     var importErrorDialog by remember { mutableStateOf<String?>(null) }
 
@@ -189,61 +230,6 @@ fun SettingsScreen(
                         }
                     }
                 }
-            }
-
-            SettingSection("Diagnostics") {
-                var logRevision by remember { mutableStateOf(0) }
-                val logs = remember(logRevision, syncStatus.lastMessage, settings.lastSyncAt) {
-                    com.runflow2.app.core.util.AppLog.recentNewestFirst(50)
-                }
-                Text(
-                    "Recent app, sign-in and sync events (same lines appear in logcat under RunFlow/*).",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                ) {
-                    Column(
-                        Modifier
-                            .heightIn(max = 260.dp)
-                            .verticalScroll(rememberScrollState())
-                            .padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        if (logs.isEmpty()) {
-                            Text(
-                                "No events recorded yet.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        logs.forEach { entry ->
-                            Text(
-                                buildString {
-                                    append("[")
-                                    append(com.runflow2.app.core.util.FormatRelative.timeAgo(entry.at))
-                                    append("] ")
-                                    append(entry.tag)
-                                    append(" · ")
-                                    append(entry.message)
-                                    entry.error?.let { append(" (").append(it.take(80)).append(")") }
-                                },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (entry.isError) MaterialTheme.colorScheme.error
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-                TextButton(
-                    onClick = {
-                        com.runflow2.app.core.util.AppLog.clear()
-                        logRevision++
-                    },
-                    enabled = logs.isNotEmpty(),
-                ) { Text("Clear log") }
             }
 
             SettingSection("Units") {
@@ -568,6 +554,126 @@ fun SettingsScreen(
                 )
             }
 
+            SettingSection("Troubleshooting") {
+                if (auth.loggedIn) {
+                    Text("Use the profile saved on the website. This replaces this device's profile and pending profile changes; a backup is saved first.", style = MaterialTheme.typography.bodySmall)
+                    OutlinedButton(enabled = !syncStatus.running && !restoringProfile, onClick = {
+                        restoringProfile = true
+                        scope.launch {
+                            try {
+                                profileBackup = container.syncManager.restoreWebProfile(context)
+                                container.syncManager.syncNow("profile_recovery")
+                                profileRecoveryMessage = "Web profile restored. Previous local profile backed up. ${container.syncManager.status.value.lastMessage.orEmpty()}"
+                            } catch (e: kotlinx.coroutines.CancellationException) { throw e
+                            } catch (e: Exception) {
+                                profileBackup = latestProfileBackup()
+                                profileRecoveryMessage = when {
+                                    e is retrofit2.HttpException && e.code() == 429 -> "Server rate limited. Wait a minute, then try Use web profile again."
+                                    e is java.io.IOException -> e.message ?: "Connection failed. Try again."
+                                    else -> e.message ?: "Could not complete profile recovery. Try again."
+                                }
+                            } finally { restoringProfile = false }
+                        }
+                    }) { Text("Use web profile") }
+                }
+                profileRecoveryMessage?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                if (profileBackup != null) OutlinedButton(onClick = {
+                    profileBackupLauncher.launch("runflow-previous-local-profile.json")
+                }) { Text("Export previous profile backup") }
+                var expanded by remember { mutableStateOf(false) }
+                var copied by remember { mutableStateOf(false) }
+                OutlinedButton(onClick = {
+                    scope.launch {
+                        val report = com.runflow2.app.core.util.formatDiagnostics(
+                            com.runflow2.app.core.util.DiagnosticsInfo(
+                                version = BuildConfig.VERSION_NAME,
+                                serverOrigin = com.runflow2.app.data.net.Api.normalizeServerUrl(settings.serverUrl),
+                                accountId = auth.userId, accountName = auth.name,
+                                syncStatus = if (syncStatus.running) "Syncing" else syncStatus.lastMessage ?: settings.lastSyncSummary,
+                                pending = container.database.syncQueueDao().pendingCount(),
+                                failed = container.database.syncQueueDao().failedCount(),
+                            ),
+                            com.runflow2.app.core.util.AppLog.recent(),
+                        )
+                        runCatching {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("RunFlow diagnostics", report))
+                        }.onSuccess {
+                            copied = true
+                            diagnosticsFallback = null
+                            diagnosticsMessage = null
+                        }.onFailure {
+                            copied = false
+                            diagnosticsFallback = report
+                            diagnosticsMessage = "Could not copy diagnostics. Save the full report instead."
+                        }
+                    }
+                }) { Text(if (copied) "Copied" else "Copy diagnostics") }
+                diagnosticsMessage?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                if (diagnosticsFallback != null) {
+                    OutlinedButton(onClick = { diagnosticsLauncher.launch("runflow-diagnostics.txt") }) {
+                        Text("Save diagnostics")
+                    }
+                }
+                TextButton(onClick = { expanded = !expanded }) {
+                    Text(if (expanded) "Hide diagnostic log" else "Show diagnostic log")
+                }
+                if (expanded) {
+                var logRevision by remember { mutableStateOf(0) }
+                val logs = remember(logRevision, syncStatus.lastMessage, settings.lastSyncAt) {
+                    com.runflow2.app.core.util.AppLog.recentNewestFirst(50)
+                }
+                Text(
+                    "Recent app, sign-in and sync events (same lines appear in logcat under RunFlow/*).",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                ) {
+                    Column(
+                        Modifier
+                            .heightIn(max = 260.dp)
+                            .verticalScroll(rememberScrollState())
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        if (logs.isEmpty()) {
+                            Text(
+                                "No events recorded yet.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        logs.forEach { entry ->
+                            Text(
+                                buildString {
+                                    append("[")
+                                    append(com.runflow2.app.core.util.FormatRelative.timeAgo(entry.at))
+                                    append("] ")
+                                    append(entry.tag)
+                                    append(" · ")
+                                    append(entry.message)
+                                    entry.error?.let { append(" (").append(it.take(80)).append(")") }
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (entry.isError) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+                TextButton(
+                    onClick = {
+                        com.runflow2.app.core.util.AppLog.clear()
+                        logRevision++
+                    },
+                    enabled = logs.isNotEmpty(),
+                ) { Text("Clear log") }
+                }
+            }
+
             SettingSection("Data sources") {
                 val hc = container.healthConnect
                 val availability = remember { hc.availability() }
@@ -866,7 +972,7 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 TextButton(onClick = { showResetDialog = true }) {
-                    Text("Reset demo data & restart", color = MaterialTheme.colorScheme.error)
+                    Text("Reset local data", color = MaterialTheme.colorScheme.error)
                 }
             }
 
@@ -913,23 +1019,16 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
             title = { Text("Reset all data?") },
-            text = { Text("Deletes all activities, plans and profile data on this device and reseeds the demo dataset.") },
+            text = { Text("Deletes activities, plans and profile data on this device. If sync is enabled, server data may be downloaded again.") },
             confirmButton = {
                 TextButton(
                     onClick = {
                         showResetDialog = false
                         scope.launch {
-                            container.database.clearAllTables()
-                            container.settings.setSeeded() // keep flag true; reseed manually
-                            container.settings.setDemoCleanedFalseForReset()
-                            // trigger reseed by writing profile anew
-                            com.runflow2.app.data.seed.DemoSeeder(
-                                container.database.profileDao(),
-                                container.database.workoutDao(),
-                            ).seed(
-                                insertActivity = { container.database.activityDao().upsert(it.copy(isDemo = true)) },
-                                insertGoal = { container.database.goalDao().upsert(it.copy(isDemo = true)) },
-                            )
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { container.database.clearAllTables() }
+                            container.repository.invalidateAnalyticsCache()
+                            container.settings.setSeeded() // keep the next launch empty
+
                         }
                     },
                 ) { Text("Reset") }

@@ -10,7 +10,7 @@ interface Props {
 
 export function MealSection({ foodLogs, copyYesterdayMutation, onOpenHistory, onQuickAddMeal }: Props) {
     return (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2">
             {['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'].map(mealName => {
                 const logsForMeal = foodLogs.filter((l: NutritionLog) =>
                     mealName === 'SNACK' ? (l.mealType === 'SNACK' || !l.mealType) : l.mealType === mealName

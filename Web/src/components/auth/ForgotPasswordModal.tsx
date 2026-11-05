@@ -83,7 +83,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} maxWidth="md" hideCloseButton>
+        <Modal isOpen={isOpen} onClose={onClose} maxWidth="md" title={step === 'EMAIL' ? 'Reset Password' : 'New Password'}>
             <div className="mb-6">
                 {step === 'CODE_PASSWORD' && (
                     <button
@@ -93,9 +93,6 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                         <ArrowLeft className="w-4 h-4" /> Back
                     </button>
                 )}
-                <h2 className="text-2xl font-bold text-foreground">
-                    {step === 'EMAIL' ? 'Reset Password' : 'New Password'}
-                </h2>
                 <p className="text-foreground-secondary mt-2 text-sm">
                     {step === 'EMAIL'
                         ? "Enter your email address and we'll send you a verification code."
@@ -107,8 +104,9 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
             {step === 'EMAIL' ? (
                 <form onSubmit={handleSendCode} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Email</label>
+                        <label htmlFor="recovery-email" className="block text-sm font-medium text-foreground-secondary mb-1">Email</label>
                         <input
+                            id="recovery-email" autoComplete="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -128,7 +126,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                         <button
                             type="submit"
                             disabled={isLoading || !email}
-                            className="flex-1 py-2 px-4 text-sm font-medium text-white bg-accent-orange hover:bg-accent-orange/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors flex items-center justify-center gap-2"
+                            className="flex-1 py-2 px-4 text-sm font-medium btn-primary disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors flex items-center justify-center gap-2"
                         >
                             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                             Send Code
@@ -138,8 +136,9 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
             ) : (
                 <form onSubmit={handleResetPassword} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-foreground-secondary mb-1">Verification Code</label>
+                        <label htmlFor="recovery-code" className="block text-sm font-medium text-foreground-secondary mb-1">Verification Code</label>
                         <input
+                            id="recovery-code" autoComplete="one-time-code"
                             type="text"
                             value={code}
                             onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -150,8 +149,9 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-foreground-secondary mb-1">New Password</label>
+                        <label htmlFor="recovery-password" className="block text-sm font-medium text-foreground-secondary mb-1">New Password</label>
                         <input
+                            id="recovery-password" autoComplete="new-password" aria-describedby="recovery-rules"
                             type="password"
                             value={newPassword}
                             onChange={handlePasswordChange}
@@ -159,6 +159,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                             placeholder="••••••••"
                             required
                         />
+                        <p id="recovery-rules" className="text-sm text-foreground-secondary mt-1">Use at least 8 characters, including uppercase and lowercase letters, a number, and a special character. Avoid common patterns such as password, 123456, qwerty, admin, and test.</p>
                         {newPassword && (
                             <div className="mt-2">
                                 <div className="flex gap-1">
@@ -192,7 +193,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                         <button
                             type="submit"
                             disabled={isLoading || code.length !== 6 || !newPassword}
-                            className="flex-1 py-2 px-4 text-sm font-medium text-white bg-accent-orange hover:bg-accent-orange/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors flex items-center justify-center gap-2"
+                            className="flex-1 py-2 px-4 text-sm font-medium btn-primary disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors flex items-center justify-center gap-2"
                         >
                             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                             Reset Password

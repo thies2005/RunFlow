@@ -1,5 +1,7 @@
 'use client';
 
+import { calendarDate } from '@/lib/plans/calendar-date';
+
 import React, { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -20,7 +22,7 @@ import { useIsPremium } from '@/app/plan-advanced/[goalId]/hooks/useIsPremium';
 import { GuidedTipCard } from '@/app/plan-advanced/[goalId]/components/AI/GuidedTipCard';
 import { GuidedWeekSuggest } from '@/app/plan-advanced/[goalId]/components/AI/GuidedWeekSuggest';
 import { AiSuggestionCard } from '@/app/plan-advanced/[goalId]/components/AI/AiSuggestionCard';
-import { startOfWeek, addDays } from 'date-fns';
+import { startOfWeek, addDays, format, differenceInCalendarWeeks } from 'date-fns';
 import { calculateWorkoutPlannedTss } from '@/lib/metrics/plannedTss';
 import type { PlanPhase } from '@/app/plan-advanced/[goalId]/components/Editor/PhaseSelector';
 import type { Goal } from '@/app/plan-advanced/[goalId]/components/Progression/types';
@@ -117,6 +119,7 @@ export interface PlanEditorLayoutProps {
     planEndDate?: Date | null;
     currentVdot?: number | null;
     phaseBlocks?: PhaseBlock[];
+    planWeeks?: number | null;
 }
 
 function EditorContent({
@@ -131,9 +134,10 @@ function EditorContent({
     planEndDate,
     currentVdot,
     phaseBlocks = [],
+    planWeeks,
 }: PlanEditorLayoutProps) {
     const queryClient = useQueryClient();
-    const [calendarOpen, setCalendarOpen] = useState(true);
+    const [calendarOpen, setCalendarOpen] = useState(false);
     const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
     const [addSubGoalOpen, setAddSubGoalOpen] = useState(false);
     const [editingSubGoal, setEditingSubGoal] = useState<Goal | null>(null);
@@ -185,29 +189,30 @@ function EditorContent({
     const isNoRace = raceType === null || raceType === undefined;
     const parentSport = sport === 'TRIATHLON' ? 'TRIATHLON' : 'RUN';
 
+    const timelineStart = useMemo(() => planStartDate || (raceDate ? addDays(raceDate, -16 * 7) : workouts.length ? calendarDate(workouts[0].scheduledDate) : new Date()), [planStartDate, raceDate, workouts]);
     const weeks = useMemo<WeekData[]>(() => {
         const weekMap = new Map<string, Workout[]>();
         for (const w of workouts) {
-            const d = new Date(w.scheduledDate);
+            const d = calendarDate(w.scheduledDate);
             if (isNaN(d.getTime())) continue;
             const monday = startOfWeek(d, { weekStartsOn: 1 });
-            const key = monday.toISOString().split('T')[0];
+            const key = format(monday, 'yyyy-MM-dd');
             if (!weekMap.has(key)) weekMap.set(key, []);
             weekMap.get(key)!.push(w);
         }
         return Array.from(weekMap.entries())
             .sort(([a], [b]) => a.localeCompare(b))
-            .map(([_key, weekWorkouts], index) => {
-                const monday = new Date(weekWorkouts[0].scheduledDate);
+            .map(([_key, weekWorkouts]) => {
+                const monday = calendarDate(weekWorkouts[0].scheduledDate);
                 const weekStart = startOfWeek(monday, { weekStartsOn: 1 });
                 const weekEnd = addDays(weekStart, 6);
-                return { weekStart, weekEnd, weekNumber: index + 1, workouts: weekWorkouts };
+                return { weekStart, weekEnd, weekNumber: Math.max(1, differenceInCalendarWeeks(weekStart, timelineStart, { weekStartsOn: 1 }) + 1), workouts: weekWorkouts };
             });
-    }, [workouts]);
+    }, [workouts, timelineStart]);
 
     const handleDayClick = useCallback((date: Date) => {
         const monday = startOfWeek(date, { weekStartsOn: 1 });
-        const weekKey = monday.toISOString().split('T')[0];
+        const weekKey = format(monday, 'yyyy-MM-dd');
         const el = document.getElementById(`week-${weekKey}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, []);
@@ -328,7 +333,7 @@ function EditorContent({
 
     const renderWeek = useCallback(
         (week: WeekData, index: number) => {
-            const weekKey = week.weekStart.toISOString().split('T')[0];
+            const weekKey = format(week.weekStart, 'yyyy-MM-dd');
 
             return (
                 <div key={weekKey} id={`week-${weekKey}`}>
@@ -452,14 +457,11 @@ function EditorContent({
         [goals]
     );
 
-    const timelineStart =
-        planStartDate || (raceDate ? new Date(raceDate.getTime() - 16 * 7 * 24 * 60 * 60 * 1000) : new Date());
     const timelineEnd = planEndDate || raceDate || new Date();
     const currentWeek = useMemo(() => {
         if (!timelineStart) return 1;
         const now = new Date();
-        const diffMs = now.getTime() - timelineStart.getTime();
-        return Math.max(1, Math.ceil(diffMs / (7 * 24 * 60 * 60 * 1000)));
+        return Math.max(1, differenceInCalendarWeeks(now, timelineStart, { weekStartsOn: 1 }) + 1);
     }, [timelineStart]);
 
     const effectiveSport = useMemo(() => {
@@ -511,10 +513,10 @@ function EditorContent({
         if (wk) {
             wkWorkouts = wk.workouts;
         } else {
-            const wStart = new Date(timelineStart.getTime() + (currentWeek - 1) * 7 * 86400000);
-            const wEnd = new Date(timelineStart.getTime() + currentWeek * 7 * 86400000);
+            const wStart = addDays(startOfWeek(timelineStart, { weekStartsOn: 1 }), (currentWeek - 1) * 7);
+            const wEnd = addDays(wStart, 7);
             wkWorkouts = workouts.filter((w) => {
-                const d = new Date(w.scheduledDate);
+                const d = calendarDate(w.scheduledDate);
                 return d >= wStart && d < wEnd;
             });
         }
@@ -533,10 +535,10 @@ function EditorContent({
             if (wk) {
                 wkWorkouts = wk.workouts;
             } else {
-                const wStart = new Date(timelineStart.getTime() + (wNum - 1) * 7 * 86400000);
-                const wEnd = new Date(timelineStart.getTime() + wNum * 7 * 86400000);
+                const wStart = addDays(startOfWeek(timelineStart, { weekStartsOn: 1 }), (wNum - 1) * 7);
+                const wEnd = addDays(wStart, 7);
                 wkWorkouts = workouts.filter((w) => {
-                    const d = new Date(w.scheduledDate);
+                    const d = calendarDate(w.scheduledDate);
                     return d >= wStart && d < wEnd;
                 });
             }
@@ -580,6 +582,9 @@ function EditorContent({
                 onRemoveSubGoal={handleRemoveSubGoal}
             />
 
+            {planWeeks && currentPhaseBlocks.length > 0 && Math.max(...currentPhaseBlocks.map((b) => b.endWeek)) !== planWeeks && (
+                <p role="status" className="px-4 py-2 text-sm text-foreground-secondary">Phase metadata ends at week {Math.max(...currentPhaseBlocks.map((b) => b.endWeek))}, but this plan is {planWeeks} weeks long. Review the phase blocks or regenerate the plan after checking the replacement summary.</p>
+            )}
             {!isNoRace && (
                 <GoalTimeline
                     goals={goals || []}
@@ -594,16 +599,15 @@ function EditorContent({
                 />
             )}
 
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex overflow-hidden relative min-h-0">
                 {viewMode === 'calendar' ? (
                     <>
-                        {calendarOpen && (
-                            <div className="w-64 border-r border-glass-border overflow-y-auto shrink-0">
+                        <div className={`${calendarOpen ? 'block absolute z-20 top-10 left-0 shadow-xl bg-background-secondary' : 'hidden'} md:static md:block md:shadow-none w-64 border-r border-glass-border overflow-y-auto shrink-0`}>
                                 <MiniCalendar workouts={workouts} raceDate={raceDate} onDayClick={handleDayClick} />
                             </div>
-                        )}
 
-                        <div className="flex-1 overflow-y-auto py-3" ref={mainScrollRef}>
+                        <div className="flex-1 min-w-0 overflow-y-auto py-3" ref={mainScrollRef}>
+                            <button type="button" className="md:hidden mx-4 mb-2 rounded border border-glass-border px-3 py-2 text-sm" aria-expanded={calendarOpen} onClick={() => setCalendarOpen(!calendarOpen)}>{calendarOpen ? 'Hide calendar' : 'Show calendar'}</button>
                             <InfiniteScroll
                                 items={weeks}
                                 renderItem={renderWeek}

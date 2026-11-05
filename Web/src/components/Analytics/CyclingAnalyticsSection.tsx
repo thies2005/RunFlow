@@ -32,6 +32,7 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 import PowerDurationCurveChart from './PowerDurationCurveChart';
+import { resolveActiveFtp } from '@/lib/metrics/activeFtp';
 import SplitPmcChart, { type PmcRange } from './SplitPmcChart';
 
 export interface CyclingAnalyticsSectionProps {
@@ -192,9 +193,10 @@ export default function CyclingAnalyticsSection({
 
     // Calculate recent 4-week totals
     const fourWeekStats = useMemo(() => {
-        if (!data?.ridesSeries) return { tss: 0, kj: 0, distanceKm: 0, count: 0 };
+        if (!data?.ridesSeries) return { tss: 0, kj: 0, distanceKm: 0, count: 0, missingTss: 0 };
         const fourWeeksAgo = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
         const recentRides = data.ridesSeries.filter(r => new Date(r.date) >= fourWeeksAgo);
+        const missingTss = recentRides.filter(r => r.bikeTss == null).length;
         const tss = Math.round(recentRides.reduce((acc, r) => acc + (r.bikeTss || 0), 0));
         const kj = Math.round(
             (data.summary.totalKilojoules && data.ridesSeries.length > 0)
@@ -202,7 +204,7 @@ export default function CyclingAnalyticsSection({
                 : 0
         );
         const distanceKm = Number((recentRides.reduce((acc, r) => acc + r.distanceM, 0) / 1000).toFixed(1));
-        return { tss, kj, distanceKm, count: recentRides.length };
+        return { tss, kj, distanceKm, count: recentRides.length, missingTss };
     }, [data]);
 
     // Latest PMC metrics
@@ -212,7 +214,8 @@ export default function CyclingAnalyticsSection({
     }, [data?.pmcSeries]);
 
     // Active FTP resolution
-    const activeFtpWatts = data?.ftp.ftpWatts ?? data?.ftp.eFtpWatts ?? null;
+    const activeFtp = data ? resolveActiveFtp(data.ftp.ftpWatts, data.ftp.eFtpWatts, data.ftp.autoEstimateFtp) : null;
+    const activeFtpWatts = activeFtp?.watts ?? null;
     const activeWPerKg = data?.ftp.wPerKg ?? null;
 
     // Format power trend chart points
@@ -272,6 +275,7 @@ export default function CyclingAnalyticsSection({
 
     return (
         <div className="space-y-8 animate-fade-in">
+            <p className="text-sm text-foreground-muted">Cycling detail range: {range.toUpperCase()}. Change it using the PMC date range below; the page history range is separate.</p>
             {/* === HERO KPI STRIP === */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {/* Active FTP */}
@@ -282,8 +286,9 @@ export default function CyclingAnalyticsSection({
                         </span>
                         <button
                             onClick={openEditModal}
-                            className="p-1 text-foreground-muted opacity-0 group-hover:opacity-100 hover:text-accent-orange transition-all"
+                            className="p-1 text-foreground-muted hover:text-accent-orange transition-all"
                             title="Edit FTP or auto-estimation"
+                            aria-label="Edit FTP or auto-estimation"
                         >
                             <Edit2 className="w-3 h-3" />
                         </button>
@@ -296,10 +301,10 @@ export default function CyclingAnalyticsSection({
                             <span className="text-xs text-foreground-muted font-medium">W</span>
                         </div>
                         <div className="text-xs text-foreground-muted mt-0.5 flex items-center justify-between">
-                            <span>{activeWPerKg ? `${activeWPerKg} W/kg` : 'Set weight'}</span>
-                            {data.ftp.eFtpWatts && !data.ftp.ftpWatts && (
-                                <span className="text-[10px] bg-accent-orange/15 text-accent-orange px-1.5 py-0.2 rounded-sm font-medium">
-                                    Auto-eFTP
+                            <span>{activeWPerKg != null ? `${activeWPerKg} W/kg` : !activeFtpWatts ? 'Set FTP or enable estimation' : 'Set weight for W/kg'}</span>
+                            {activeFtpWatts && (
+                                <span className="text-xs bg-accent-orange/15 text-accent-orange px-1.5 py-0.2 rounded-sm font-medium">
+                                    {activeFtp?.source === 'manual' ? 'Manual FTP' : 'Estimated FTP'}
                                 </span>
                             )}
                         </div>
@@ -338,9 +343,9 @@ export default function CyclingAnalyticsSection({
                             <span className="text-xs text-foreground-muted font-medium">CTL</span>
                         </div>
                         <div className="text-xs text-foreground-muted mt-0.5 flex items-center gap-2">
-                            <span>ATL: <span className="text-foreground font-mono font-medium">{latestPmc?.atlBike?.toFixed(0) ?? 0}</span></span>
+                            <span>ATL: <span className="text-foreground font-mono font-medium">{latestPmc?.atlBike?.toFixed(0) ?? '–'}</span></span>
                             <span>TSB: <span className={`font-mono font-medium ${(latestPmc?.tsbBike ?? 0) >= 0 ? 'text-positive' : 'text-accent-pink'}`}>
-                                {latestPmc?.tsbBike !== undefined ? (latestPmc.tsbBike > 0 ? `+${latestPmc.tsbBike.toFixed(0)}` : latestPmc.tsbBike.toFixed(0)) : 0}
+                                {latestPmc?.tsbBike !== undefined ? (latestPmc.tsbBike > 0 ? `+${latestPmc.tsbBike.toFixed(0)}` : latestPmc.tsbBike.toFixed(0)) : '–'}
                             </span></span>
                         </div>
                     </div>
@@ -359,7 +364,7 @@ export default function CyclingAnalyticsSection({
                             <span className="text-xs text-foreground-muted font-medium">pts</span>
                         </div>
                         <div className="text-xs text-foreground-muted mt-0.5">
-                            {fourWeekStats.count} rides ({fourWeekStats.distanceKm} km)
+                            {fourWeekStats.count} {fourWeekStats.count === 1 ? 'ride' : 'rides'} ({fourWeekStats.distanceKm} km){fourWeekStats.missingTss > 0 ? ` · ${fourWeekStats.missingTss} without TSS` : ''}
                         </div>
                     </div>
                 </div>
@@ -570,15 +575,15 @@ export default function CyclingAnalyticsSection({
                             </h3>
                         </div>
                         <p className="text-xs text-foreground-muted mt-1">
-                            Time spent in physiological power zones relative to Active FTP ({activeFtpWatts || 250} W)
+                            {activeFtpWatts ? `Stored or estimated time in power zones; current ${activeFtp?.source === 'manual' ? 'manual' : 'estimated'} FTP is ${activeFtpWatts} W. Stored zones may use a previous FTP.` : 'Set FTP or enable estimation to calculate power zones.'}
                         </p>
                     </div>
                 </div>
 
-                {totalZoneSec === 0 ? (
+                {!activeFtpWatts || totalZoneSec === 0 ? (
                     <div className="h-40 flex flex-col items-center justify-center text-center">
                         <ActivityIcon className="w-10 h-10 text-foreground-muted opacity-40 mb-2" />
-                        <p className="text-foreground-muted text-sm">No power zone data recorded in this period</p>
+                        <p className="text-foreground-muted text-sm">{activeFtpWatts ? 'No power zone data recorded in this period' : 'Power zones unavailable without active FTP'}</p>
                     </div>
                 ) : (
                     <div className="space-y-6">
@@ -866,7 +871,7 @@ export default function CyclingAnalyticsSection({
                                     </span>
                                 </div>
                                 <p className="text-[11px] text-foreground-muted mt-1">
-                                    Leave blank to use auto-estimated eFTP ({data.ftp.eFtpWatts || 200} W).
+                                    Leave blank to use an estimate when enabled{data.ftp.eFtpWatts ? ` (currently ${data.ftp.eFtpWatts} W)` : ' (no estimate available)' }.
                                 </p>
                             </div>
 

@@ -20,6 +20,7 @@ import {
     calculateCyclingVo2Max,
 } from '@/lib/metrics/power';
 import InteractiveStreamsChart from './InteractiveStreamsChart';
+import ActivityRoute from './ActivityRoute';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
@@ -87,7 +88,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     const [isSavingName, setIsSavingName] = useState(false);
     const [detailedActivity, setDetailedActivity] = useState<Activity | null>(null);
     const [cyclingSettings, setCyclingSettings] = useState<{ weightKg: number | null; ftpWatts: number | null } | null>(null);
-    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(true);
+    const [detailsError, setDetailsError] = useState<string | null>(null);
+    const [detailsReloadKey, setDetailsReloadKey] = useState(0);
     const [aiFeedback, setAiFeedback] = useState<any>(null);
     const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
     const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
@@ -105,22 +108,6 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             setFeedbackError(null);
             // Prevent body scroll when modal is open
             document.body.style.overflow = 'hidden';
-
-            // Fetch full details including streams
-            const fetchDetails = async () => {
-                setIsLoadingDetails(true);
-                try {
-                    const res = await fetch(`/api/activities/${activity.id}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        setDetailedActivity(data);
-                    }
-                } catch (error) {
-                    console.error('Failed to fetch activity details:', error);
-                } finally {
-                    setIsLoadingDetails(false);
-                }
-            };
 
             const fetchCyclingSettings = async () => {
                 try {
@@ -155,7 +142,6 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                 }
             };
             
-            fetchDetails();
             fetchCyclingSettings();
             fetchFeedback();
         }
@@ -163,6 +149,35 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             document.body.style.overflow = 'unset';
         };
     }, [activity]);
+
+    // Details retry is isolated so an in-progress name or type edit stays intact.
+    useEffect(() => {
+        const controller = new AbortController();
+        setDetailedActivity(null);
+        setDetailsError(null);
+        if (!activity) {
+            setIsLoadingDetails(false);
+            return () => controller.abort();
+        }
+        const fetchDetails = async () => {
+            setIsLoadingDetails(true);
+            try {
+                const res = await fetch(`/api/activities/${activity.id}`, { signal: controller.signal });
+                if (!res.ok) throw new Error('Failed to load activity details');
+                const data = await res.json();
+                if (!controller.signal.aborted) setDetailedActivity(data);
+            } catch (error) {
+                if (!controller.signal.aborted) {
+                    setDetailsError('Could not load GPS route. Please try again.');
+                    console.error('Failed to fetch activity details:', error);
+                }
+            } finally {
+                if (!controller.signal.aborted) setIsLoadingDetails(false);
+            }
+        };
+        fetchDetails();
+        return () => controller.abort();
+    }, [activity, detailsReloadKey]);
 
     // All useCallback hooks must be called before any early returns (React hooks rules)
     const handleTypeChange = useCallback(async (newType: WorkoutType) => {
@@ -1001,6 +1016,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             </div>
                         );
                     })()}
+
+                    <ActivityRoute loading={isLoadingDetails} error={detailsError} onRetry={() => setDetailsReloadKey(key => key + 1)} latlng={detailedActivity?.id === activity.id ? detailedActivity.streams?.latlng : undefined} />
 
                     {/* Detailed Analysis Chart */}
                     <div className="mb-8">

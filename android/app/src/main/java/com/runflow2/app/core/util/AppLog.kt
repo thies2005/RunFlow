@@ -51,11 +51,11 @@ object AppLog {
             level = level,
             tag = tag,
             message = message,
-            error = error?.toString(),
+            error = error?.stackTraceToString(),
         )
         offer(entry)
         runCatching {
-            val line = if (error != null) "$message — $error" else message
+            val line = if (error != null) "$message — ${error.stackTraceToString()}" else message
             Log.println(level, "RunFlow/$tag", line)
         }
     }

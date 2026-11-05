@@ -381,14 +381,14 @@ export function CalendarView({ showHeader: _showHeader = true }: CalendarViewPro
                     onNext={() => setCursor((c) => (is4Weeks ? addDays(c, 28) : addMonths(c, 1)))}
                     onToday={() => setCursor(is4Weeks ? startOfWeek(new Date(), { weekStartsOn: 1 }) : startOfMonth(new Date()))}
                     actions={activeGoal ? (
-                        <Link
+                        <><Link href={`/plan-advanced/${activeGoal.id}?import=csv`} className="px-2.5 py-1.5 rounded-md text-xs font-medium border border-accent-orange/30 text-accent-orange">Import plan</Link><Link
                             href={`/plan-advanced/${activeGoal.id}`}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 ml-1 rounded-md text-xs font-medium text-accent-orange hover:text-accent-pink hover:bg-accent-orange/10 border border-accent-orange/30 transition-colors"
                             title="Open this plan in the advanced editor"
                         >
                             <PencilRuler className="w-3.5 h-3.5" />
                             Advanced Editor
-                        </Link>
+                        </Link></>
                     ) : undefined}
                 />
                 <SummaryStats period={period} fitness={fitness} />

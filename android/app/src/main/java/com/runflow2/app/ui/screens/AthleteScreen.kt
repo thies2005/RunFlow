@@ -133,6 +133,12 @@ fun AthleteScreen(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            if (profile == null) {
+                item { Text("Profile not set up. Edit your profile before using personalized body estimates.") }
+            }
+            if (activities.any { it.isDemo }) {
+                item { Text("Sample history — use Settings → Reset local data to start empty.") }
+            }
             // ---- profile header ----
             item {
                 Card(

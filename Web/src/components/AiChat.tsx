@@ -155,7 +155,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     }, []);
 
     // Check if AI is enabled
-    const { data: settingsData, isLoading: settingsLoading } = useQuery({
+    const { data: settingsData, isLoading: settingsLoading, isError: settingsError } = useQuery({
         queryKey: ['ai-settings'],
         queryFn: async () => {
             const res = await fetch('/api/ai/settings');
@@ -197,7 +197,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     }, [historyData, isStreaming, sessionId, messages.length]);
 
     const adminAllowed = settingsData?.settings?.adminAllowed;
-    const aiEnabled = settingsData?.settings?.aiEnabled || settingsData?.settings?.hasCustomApiKey;
+    const aiEnabled = settingsData?.settings?.aiEnabled;
 
     // Permission checks
     const accessActivityLogs = settingsData?.settings?.accessActivityLogs;
@@ -388,7 +388,11 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
         }
     };
 
-    if (adminAllowed === false) return null;
+    if (adminAllowed === false && compact) return null;
+
+    if (settingsError) {
+        return <p role="alert" className="p-4 text-sm text-negative">Unable to load AI access settings. Please try again later.</p>;
+    }
 
     if (compact) {
         return (
@@ -429,7 +433,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 disabled={isStreaming}
                                 className="flex-1 bg-background-secondary border border-line rounded-md px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus:border-accent-orange focus:outline-hidden disabled:opacity-50"
                             />
-                            <button onClick={handleSend} disabled={!input.trim() || isStreaming} className="p-2 bg-accent-orange hover:bg-accent-orange/90 rounded-md disabled:opacity-50">
+                            <button aria-label="Send message" onClick={handleSend} disabled={!input.trim() || isStreaming} className="p-2 bg-accent-orange hover:bg-accent-orange/90 rounded-md disabled:opacity-50">
                                 {isStreaming ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Send className="w-4 h-4 text-white" />}
                             </button>
                         </div>
@@ -448,17 +452,17 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
         );
     }
 
-    if (!aiEnabled) {
+    if (!aiEnabled || adminAllowed === false) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
                 <div className="w-16 h-16 bg-background-tertiary rounded-full flex items-center justify-center mb-4">
                     <Bot className="w-8 h-8 text-foreground-muted" />
                 </div>
                 <h2 className="text-xl font-semibold text-foreground mb-2">AI Coach</h2>
-                <p className="text-foreground-muted mb-6 max-w-sm">Get personalized training advice, analyze your workouts, and ask questions about your fitness data.</p>
+                <p className="text-foreground-muted mb-6 max-w-sm">{adminAllowed ? 'Set up AI coaching to get training advice and ask questions about your fitness data.' : 'AI access requires approval from your administrator. View access details to learn more.'}</p>
                 <button onClick={onOpenSettings} className="px-6 py-3 bg-accent-orange hover:bg-accent-orange/90 text-white rounded-md flex items-center gap-2 transition-colors">
                     <Settings2 className="w-5 h-5" />
-                    Enable AI Features
+                    {adminAllowed ? 'Set up AI features' : 'View AI access'}
                 </button>
             </div>
         );
@@ -598,6 +602,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                         <div className="relative">
                             <button
                                 onClick={() => setShowPlusMenu(!showPlusMenu)}
+                                aria-label="Chat actions" aria-expanded={showPlusMenu}
                                 className="w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center text-foreground-muted hover:text-foreground transition-colors flex-shrink-0"
                             >
                                 <Plus className="w-5 h-5" />
@@ -649,12 +654,13 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Message AI..."
+                        placeholder="Message AI..." aria-label="Message AI"
                         className="flex-1 min-w-0 bg-transparent px-4 py-2 text-foreground placeholder-foreground-muted focus:outline-hidden"
                     />
 
                     {(input.trim() || isStreaming) && (
                         <button
+                            aria-label="Send message"
                             onClick={(e) => handleSend(e)}
                             disabled={!input.trim() || isStreaming}
                             className="w-10 h-10 rounded-full bg-accent-orange flex items-center justify-center disabled:opacity-50 transition-colors flex-shrink-0 disabled:cursor-not-allowed hover:bg-accent-orange/90"

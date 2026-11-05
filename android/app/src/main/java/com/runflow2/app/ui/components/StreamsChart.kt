@@ -1,7 +1,7 @@
 package com.runflow2.app.ui.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.runflow2.app.core.math.StreamMath
@@ -92,9 +94,23 @@ fun StreamsChart(
     val gridColor = MaterialTheme.colorScheme.outlineVariant
     val scrubColor = MaterialTheme.colorScheme.primary
     val n = series.time.size
-    val idx = scrubIndex?.coerceIn(0, n - 1)
+    val idx = scrubIndex?.takeIf { n > 0 }?.coerceIn(0, n - 1)
 
     Column(modifier = modifier) {
+        val sampleRange = if (n == 0) "No recorded samples" else
+            "Sample range: ${Format.duration(series.time.first().toLong())}–${Format.duration(series.time.last().toLong())}"
+        val elevationValues = series.altitude?.filter { it.isFinite() }.orEmpty()
+        val elevationSummary = when {
+            elevationValues.isEmpty() -> "Elevation unavailable"
+            elevationValues.size == 1 -> "Elevation: ${elevationValues.first().roundToInt()} m (one sample)"
+            elevationValues.min() == elevationValues.max() -> "Elevation: ${elevationValues.first().roundToInt()} m (constant samples)"
+            else -> "Elevation: ${elevationValues.min().roundToInt()}–${elevationValues.max().roundToInt()} m"
+        }
+        Text(sampleRange, style = MaterialTheme.typography.bodySmall)
+        Text(elevationSummary, style = MaterialTheme.typography.bodySmall)
+        if (n < 2) Text("Not enough samples to plot", style = MaterialTheme.typography.bodySmall)
+        else Text("Each metric uses its own scale; tap or drag for values", style = MaterialTheme.typography.bodySmall)
+
         // metric toggles
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -159,6 +175,7 @@ fun StreamsChart(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(height.dp)
+                .semantics { contentDescription = "Activity streams chart. $sampleRange. $elevationSummary. Each metric uses its own scale." }
                 .pointerInput(n) {
                     detectTapGestures { offset ->
                         val frac = (offset.x / size.width).coerceIn(0f, 1f)
@@ -167,7 +184,7 @@ fun StreamsChart(
                     }
                 }
                 .pointerInput(n) {
-                    detectDragGestures(
+                    detectHorizontalDragGestures(
                         onDragEnd = {
                             scrubIndex = null
                             onScrubChange?.invoke(null)
@@ -202,7 +219,8 @@ fun StreamsChart(
                         if (v > hi) hi = v
                     }
                 }
-                if (hi <= lo) return null
+                if (hi < lo) return null
+                if (hi == lo) return (lo - 1.0) to (hi + 1.0)
                 val pad = (hi - lo) * 0.08
                 return (lo - pad) to (hi + pad)
             }
@@ -283,7 +301,7 @@ fun StreamsChart(
         }
 
         // x-axis labels
-        Row(Modifier.fillMaxWidth()) {
+        if (n > 0) Row(Modifier.fillMaxWidth()) {
             Text(
                 Format.duration(series.time.first().toLong()),
                 style = MaterialTheme.typography.labelSmall,

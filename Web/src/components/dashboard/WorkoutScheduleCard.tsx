@@ -236,8 +236,8 @@ export default function WorkoutScheduleCard({
             <div className="glass-card p-6 h-full flex flex-col">
                 <div className="flex items-center justify-between mb-4 shrink-0">
                     <h2 className="text-lg font-semibold text-foreground">This Week&apos;s Workouts</h2>
-                    <span className="text-xs font-mono text-foreground-muted">
-                        {completedWorkouts.length}/{currentWeekWorkouts.length} Done
+                    <span aria-live="polite" className="text-xs font-mono text-foreground-muted">
+                        {completedWorkouts.length}/{currentWeekWorkouts.length} completed (includes rest if marked complete)
                     </span>
                 </div>
 
@@ -298,7 +298,7 @@ export default function WorkoutScheduleCard({
                                 }`}
                             >
                                 {/* Line 1 (Top Row): Date + Today pill + Sport icon + Title + Done button */}
-                                <div className="flex items-center gap-2 min-w-0">
+                                <div className="flex items-center flex-wrap gap-2 min-w-0">
                                     <span className="text-xs font-medium text-foreground-muted w-14 shrink-0 font-mono">
                                         {dateLabel}
                                     </span>
@@ -317,7 +317,7 @@ export default function WorkoutScheduleCard({
                                         {getWorkoutIcon(workout.workoutType, isCyclingWorkout, 'w-3.5 h-3.5')}
                                     </div>
                                     <span
-                                        className={`text-sm font-semibold flex-1 min-w-0 break-words leading-snug ${
+                                        className={`text-sm font-semibold flex-[1_1_12rem] min-w-0 break-words leading-snug ${
                                             isTodayPending ? 'text-accent-orange' : 'text-foreground'
                                         }`}
                                         title={title}
@@ -328,15 +328,15 @@ export default function WorkoutScheduleCard({
                                         type="button"
                                         onClick={() => onCompleteWorkout(workout)}
                                         className="shrink-0 ml-2 px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 flex items-center gap-1 transition-colors"
-                                        title="Mark as done"
+                                        title="Open completion and activity linking"
                                     >
                                         <Check className="w-3.5 h-3.5" />
-                                        Done
+                                        Complete…
                                     </button>
                                 </div>
 
                                 {/* Line 2 (Bottom Metadata & Secondary Actions Row, indented pl-14) */}
-                                <div className="flex items-center justify-between gap-2 mt-1.5 pl-14">
+                                <div className="flex flex-wrap items-center justify-between gap-2 mt-1.5 sm:pl-14">
                                     <div className="flex items-center gap-2 text-xs text-foreground-muted font-mono flex-wrap">
                                         {durationStr && <span>{durationStr}</span>}
                                         {tssStr && (
@@ -355,7 +355,8 @@ export default function WorkoutScheduleCard({
                                             type="button"
                                             onClick={() => onCompleteWorkout(workout)}
                                             className="p-1 text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded transition-colors"
-                                            title="Link activity"
+                                            title="Complete or link activity"
+                                            aria-label={`Complete or link activity for ${title}`}
                                         >
                                             <Link2 className="w-3.5 h-3.5" />
                                         </button>
@@ -364,6 +365,7 @@ export default function WorkoutScheduleCard({
                                             onClick={() => onEditWorkout(workout)}
                                             className="p-1 text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded transition-colors"
                                             title="Edit workout"
+                                            aria-label={`Edit ${title}`}
                                         >
                                             <Pencil className="w-3.5 h-3.5" />
                                         </button>
@@ -391,6 +393,7 @@ export default function WorkoutScheduleCard({
                                                 onClick={() => handleDismissAutoLink(workout.id)}
                                                 className="p-0.5 text-foreground-muted hover:text-foreground transition-colors"
                                                 title="Dismiss"
+                                                aria-label="Dismiss activity suggestion"
                                             >
                                                 <X className="w-3.5 h-3.5" />
                                             </button>
@@ -411,6 +414,7 @@ export default function WorkoutScheduleCard({
                                                 onClick={() => handleDismissAdaptation(workout.id)}
                                                 className="p-0.5 text-foreground-muted hover:text-foreground"
                                                 title="Keep Original"
+                                                aria-label="Dismiss adaptation suggestion"
                                             >
                                                 <X className="w-3.5 h-3.5" />
                                             </button>
@@ -482,9 +486,9 @@ export default function WorkoutScheduleCard({
                         return (
                             <div
                                 key={workout.id}
-                                className="group py-2 px-3 rounded-md border border-line/60 bg-surface/30 hover:bg-surface-hover text-xs flex items-center justify-between gap-2 transition-colors"
+                                className="group py-2 px-3 rounded-md border border-line/60 bg-surface/30 hover:bg-surface-hover text-xs flex flex-wrap items-start justify-between gap-2 transition-colors"
                             >
-                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2 min-w-0 flex-[1_1_14rem]">
                                     <span className="font-mono text-[11px] text-foreground-muted w-14 shrink-0">
                                         {dateLabel}
                                     </span>
@@ -498,7 +502,7 @@ export default function WorkoutScheduleCard({
                                         {getWorkoutIcon(workout.workoutType, isCyclingWorkout, 'w-3 h-3')}
                                     </div>
                                     <span
-                                        className={`font-medium truncate ${
+                                        className={`font-medium break-words min-w-0 ${
                                             workout.isCompleted ? 'text-foreground' : 'text-foreground-muted'
                                         }`}
                                         title={title}
@@ -537,14 +541,15 @@ export default function WorkoutScheduleCard({
                                     <button
                                         type="button"
                                         onClick={() => onEditWorkout(workout)}
-                                        className="p-1 text-foreground-muted opacity-0 group-hover:opacity-100 hover:text-foreground hover:bg-background-tertiary rounded transition-opacity"
-                                        title={workout.isCompleted ? 'Link or change activity' : 'Edit workout'}
+                                        className="p-1 text-foreground-muted hover:text-foreground hover:bg-background-tertiary rounded transition-opacity"
+                                        title={workout.isCompleted ? 'Edit completion or linked activity' : 'Edit workout'}
+                                        aria-label={`Edit ${title}`}
                                     >
                                         {workout.isCompleted ? <Link2 className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />}
                                     </button>
                                     {workout.isCompleted ? (
                                         <span className="text-emerald-400 text-[11px] font-medium flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                                            <Check className="w-3 h-3" /> Done
+                                            <Check className="w-3 h-3" /> {workout.linkedActivityId ? 'Completed · linked' : 'Completed · manual'}
                                         </span>
                                     ) : (
                                         <span className="text-foreground-muted text-[11px] font-medium px-1 py-0.5">

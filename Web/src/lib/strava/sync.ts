@@ -17,7 +17,7 @@
 import { prisma } from '@/lib/db';
 import { Prisma } from '@/generated/prisma/client';
 import { refreshStravaToken } from './oauth';
-import { fetchStravaActivities, fetchSingleActivity, fetchActivityStreams, fetchAthleteProfile } from './fetch';
+import { fetchStravaActivities, fetchSingleActivity, fetchActivityStreams, fetchAthleteProfile, shouldFetchActivityStreams } from './fetch';
 import { DAY_MS } from '@/lib/constants';
 import { enrichActivityMetrics, transformActivityData, type MetricsInput } from './transform';
 import { upsertActivity, createNewActivityNotification, updateUserProfile, updateSyncStatus, fetchExistingActivities, getLastActivityDate } from './persistence';
@@ -240,7 +240,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
 
                     let streams = null;
 
-                    if (['Run', 'VirtualRun', 'Ride', 'VirtualRide'].includes(activity.type)) {
+                    if (shouldFetchActivityStreams(activity)) {
                         streams = await fetchActivityStreams(accessToken, activity.id);
                     }
 
@@ -492,7 +492,7 @@ export async function syncActivityById(userId: string, activityId: number): Prom
 
         let streams = null;
 
-        if (['Run', 'VirtualRun', 'Ride', 'VirtualRide'].includes(activity.type)) {
+        if (shouldFetchActivityStreams(activity)) {
             streams = await fetchActivityStreams(accessToken, activity.id);
         }
 

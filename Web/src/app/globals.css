@@ -122,10 +122,12 @@
   --background-tertiary: #edefea;
 
   --foreground: #16181a;
-  --foreground-muted: #6e747b;
+  --foreground-muted: #60676e;
   --foreground-secondary: #3a4147;
 
   --accent-orange: #e8501a;
+  --primary-button-bg: #b83b16;
+  --primary-button-fg: #ffffff;
   --accent-red: #c0392f;
   --accent-ink: #16181a;
   --accent-green: #2e7d5b;
@@ -183,6 +185,8 @@
   --foreground-secondary: #d9ddd7;
 
   --accent-orange: #ff6a3c;
+  --primary-button-bg: #ff6a3c;
+  --primary-button-fg: #121417;
   --accent-red: #e06552;
   --accent-ink: #f6f7f5;
   --accent-green: #4caf82;
@@ -396,8 +400,8 @@ body {
    --------------------------------------------------------------------------- */
 
 .btn-primary {
-  background: var(--accent-orange);
-  color: #ffffff;
+  background: var(--primary-button-bg);
+  color: var(--primary-button-fg);
   font-weight: 600;
   padding: 0.75rem 1.5rem;
   border-radius: 6px;
@@ -407,11 +411,11 @@ body {
 }
 
 .btn-primary:hover {
-  background: color-mix(in srgb, var(--accent-orange) 85%, #000000);
+  background: color-mix(in srgb, var(--primary-button-bg) 85%, #000000);
 }
 
 .dark .btn-primary:hover {
-  background: color-mix(in srgb, var(--accent-orange) 85%, #000000);
+  background: color-mix(in srgb, var(--primary-button-bg) 85%, #000000);
 }
 
 .btn-primary:disabled {
@@ -585,4 +589,26 @@ body.barcode-scanner-active {
 
 body.barcode-scanner-active .barcode-scanner-modal {
   visibility: visible;
+}
+
+/* Health keeps its mobile card order and opens into a desktop dashboard. */
+@media (min-width: 1024px) {
+  .health-dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    grid-template-areas:
+      "nutrition overview"
+      "actions overview"
+      "meals overview"
+      "notice supplements";
+    align-items: start;
+    gap: 1.5rem;
+  }
+
+  .health-nutrition { grid-area: nutrition; }
+  .health-overview { grid-area: overview; }
+  .health-actions { grid-area: actions; }
+  .health-meals { grid-area: meals; }
+  .health-supplements { grid-area: supplements; }
+  .health-notice { grid-area: notice; }
 }

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Mail, Lock, User, ArrowRight, ArrowLeft, Check } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import VerificationModal from '@/components/auth/VerificationModal';
 
@@ -15,6 +14,7 @@ export default function RegisterPage() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const [isLoading, setIsLoading] = useState(false);
     const [showVerification, setShowVerification] = useState(false);
@@ -28,6 +28,8 @@ export default function RegisterPage() {
         { label: 'One uppercase letter', met: /[A-Z]/.test(password) },
         { label: 'One lowercase letter', met: /[a-z]/.test(password) },
         { label: 'One number', met: /[0-9]/.test(password) },
+        { label: 'One special character', met: /[^A-Za-z0-9]/.test(password) },
+        { label: 'No common patterns (password, 123456, qwerty, admin, or test)', met: password.length > 0 && !['password', '123456', 'qwerty', 'admin', 'test'].some(pattern => password.toLowerCase().includes(pattern)) },
     ];
 
     const allRequirementsMet = passwordRequirements.every(r => r.met);
@@ -107,26 +109,20 @@ export default function RegisterPage() {
                 <div className="max-w-md w-full">
                     {/* Logo */}
                     <div className="text-center mb-8">
-                        <Image
-                            src="/icons/app-icon-192.png"
-                            alt="RunFlow"
-                            width={64}
-                            height={64}
-                            className="rounded-md mx-auto mb-4"
-                        />
+                        <p className="text-2xl font-bold mb-4">Run<span className="text-accent-orange">Flow</span></p>
                         <h1 className="text-3xl font-bold text-foreground mb-2">
                             Create your account
                         </h1>
                         <p className="text-foreground-muted">
-                            Join RunFlow to track your running performance
+                            Track your training across running, cycling, and more
                         </p>
                     </div>
 
                     <form onSubmit={handleRegister} className="space-y-4">
                         {/* Name (optional) */}
                         <div className="relative">
-                            <label htmlFor="register-name" className="sr-only">Name (optional)</label>
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                            <label htmlFor="register-name" className="block text-sm font-medium mb-1">Name (optional)</label>
+                            <User className="absolute left-3 top-[2.35rem] w-5 h-5 text-foreground-muted" />
                             <input
                                 id="register-name"
                                 name="name"
@@ -141,8 +137,8 @@ export default function RegisterPage() {
 
                             {/* Email */}
                         <div className="relative">
-                            <label htmlFor="register-email" className="sr-only">Email</label>
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                            <label htmlFor="register-email" className="block text-sm font-medium mb-1">Email</label>
+                            <Mail className="absolute left-3 top-[2.35rem] w-5 h-5 text-foreground-muted" />
                             <input
                                 id="register-email"
                                 name="email"
@@ -158,12 +154,12 @@ export default function RegisterPage() {
 
                             {/* Password */}
                         <div className="relative">
-                            <label htmlFor="register-password" className="sr-only">Password</label>
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                            <label htmlFor="register-password" className="block text-sm font-medium mb-1">Password</label>
+                            <Lock className="absolute left-3 top-[2.35rem] w-5 h-5 text-foreground-muted" />
                             <input
-                                id="register-password"
+                                id="register-password" aria-describedby="password-requirements"
                                 name="new-password"
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 autoComplete="new-password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -174,13 +170,13 @@ export default function RegisterPage() {
                             </div>
 
                             {/* Password Requirements */}
-                        {password.length > 0 && (
-                            <div className="glass-card p-3 space-y-1">
+                        {(
+                            <div id="password-requirements" className="glass-card p-3 space-y-1">
                                 {passwordRequirements.map((req, idx) => (
                                     <div key={idx} className="flex items-center gap-2 text-sm">
                                         <Check className={`w-4 h-4 ${req.met ? 'text-positive' : 'text-foreground-muted'}`} />
                                         <span className={req.met ? 'text-positive' : 'text-foreground-muted'}>
-                                            {req.label}
+                                            {req.label} {req.met ? '— met' : '— needed'}
                                         </span>
                                     </div>
                                 ))}
@@ -189,12 +185,12 @@ export default function RegisterPage() {
 
                         {/* Confirm Password */}
                         <div className="relative">
-                            <label htmlFor="register-confirm-password" className="sr-only">Confirm password</label>
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                            <label htmlFor="register-confirm-password" className="block text-sm font-medium mb-1">Confirm password</label>
+                            <Lock className="absolute left-3 top-[2.35rem] w-5 h-5 text-foreground-muted" />
                             <input
-                                id="register-confirm-password"
+                                id="register-confirm-password" aria-describedby="password-match" aria-invalid={confirmPassword.length > 0 && !passwordsMatch}
                                 name="new-password"
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 autoComplete="new-password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -209,8 +205,10 @@ export default function RegisterPage() {
                             />
                         </div>
 
+                        <p id="password-match" className="text-sm text-foreground-secondary">{confirmPassword && !passwordsMatch ? 'Passwords do not match.' : ''}</p>
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} aria-pressed={showPassword} className="text-sm text-accent-orange hover:underline">{showPassword ? 'Hide passwords' : 'Show passwords'}</button>
                         {error && (
-                            <p className="text-negative text-sm text-center">{error}</p>
+                            <p role="alert" className="text-negative text-sm text-center">{error}</p>
                         )}
 
                         <div className="bg-background-secondary p-4 rounded-md border border-line space-y-3 text-left">

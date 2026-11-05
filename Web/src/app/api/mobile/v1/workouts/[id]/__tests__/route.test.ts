@@ -3,6 +3,7 @@
  */
 
 import { PATCH } from '../route';
+import { POST as completeWorkout } from '../complete/route';
 import { NextRequest } from 'next/server';
 
 jest.mock('@/lib/mobile/auth', () => ({
@@ -11,12 +12,15 @@ jest.mock('@/lib/mobile/auth', () => ({
 
 jest.mock('@/lib/db', () => ({
     prisma: {
+        activity: { findFirst: jest.fn(), findUnique: jest.fn() },
         workout: {
             findUnique: jest.fn(),
             update: jest.fn(),
         },
     },
 }));
+
+jest.mock('@/lib/redis', () => ({ invalidateUserDashboardCache: jest.fn() }));
 
 jest.mock('@/lib/rateLimit', () => ({
     checkRateLimitAsync: jest.fn(),
@@ -27,6 +31,7 @@ jest.mock('@/lib/rateLimit', () => ({
 
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
+import { invalidateUserDashboardCache } from '@/lib/redis';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 
 const baseWorkout = {
@@ -59,9 +64,47 @@ describe('PATCH /api/mobile/v1/workouts/[id] builder fields', () => {
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
         (getAuthenticatedUser as jest.Mock).mockResolvedValue({ id: 'user-1' });
         (prisma.workout.findUnique as jest.Mock).mockResolvedValue(baseWorkout);
+        (prisma.activity.findFirst as jest.Mock).mockResolvedValue({ id: 'act-1', userId: 'user-1' });
+        (prisma.activity.findUnique as jest.Mock).mockResolvedValue({ id: 'act-1', userId: 'user-1' });
         (prisma.workout.update as jest.Mock).mockImplementation(({ data }) =>
             Promise.resolve({ ...baseWorkout, ...data }),
         );
+    });
+
+    it('invalidates the dashboard after an Android link or unlink is stored', async () => {
+        const params = Promise.resolve({ id: 'wk-1' });
+        for (const linkedActivityId of ['act-1', null]) {
+            (invalidateUserDashboardCache as jest.Mock).mockClear();
+            const response = await PATCH(buildRequest({ linkedActivityId }), { params });
+            expect(response.status).toBe(200);
+            expect(prisma.workout.update).toHaveBeenLastCalledWith(expect.objectContaining({
+                data: expect.objectContaining({ linkedActivityId }),
+            }));
+            expect(invalidateUserDashboardCache).toHaveBeenCalledWith('user-1');
+        }
+    });
+
+    it('invalidates the dashboard after the mobile completion endpoint links an activity', async () => {
+        const request = new NextRequest('http://localhost/api/mobile/v1/workouts/wk-1/complete', {
+            method: 'POST',
+            body: JSON.stringify({ activityId: 'act-1' }),
+        });
+        const response = await completeWorkout(request, { params: Promise.resolve({ id: 'wk-1' }) });
+        expect(response.status).toBe(200);
+        expect(prisma.workout.update).toHaveBeenLastCalledWith(expect.objectContaining({
+            data: expect.objectContaining({ linkedActivityId: 'act-1', isCompleted: true }),
+        }));
+        expect(invalidateUserDashboardCache).toHaveBeenCalledWith('user-1');
+    });
+
+    it('does not invalidate the dashboard for a rejected link', async () => {
+        (prisma.activity.findFirst as jest.Mock).mockResolvedValueOnce(null);
+        const response = await PATCH(buildRequest({ linkedActivityId: 'foreign-activity' }), {
+            params: Promise.resolve({ id: 'wk-1' }),
+        });
+        expect(response.status).toBe(404);
+        expect(prisma.workout.update).not.toHaveBeenCalled();
+        expect(invalidateUserDashboardCache).not.toHaveBeenCalled();
     });
 
     it('sets builder field values (structuredSteps, customName, hr and pace ranges)', async () => {

@@ -68,7 +68,9 @@ export { resolveActivityEffectiveTss } from './effectiveTss';
  * @param userId - The user ID
  * @param modifiedActivities - Array of activities that were added/updated
  */
-export async function updateFitnessCache(userId: string, modifiedActivities: Partial<Activity>[]) {
+export async function updateFitnessCache(
+    userId: string, modifiedActivities: Partial<Activity>[], throwOnError = false,
+) {
     if (modifiedActivities.length === 0) return;
 
     try {
@@ -320,8 +322,8 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             latestAtl: parseFloat(currentAtl.toFixed(1))
         });
     } catch (error) {
-        // Log error but don't throw - fitness cache updates are non-critical
         logger.error('[FitnessCache] Error updating fitness cache', { error });
+        if (throwOnError) throw error;
     }
 }
 

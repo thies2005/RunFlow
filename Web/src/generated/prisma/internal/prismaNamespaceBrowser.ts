@@ -112,7 +112,10 @@ export const ModelName = {
   GuidedPlanSession: 'GuidedPlanSession',
   McpOAuthClient: 'McpOAuthClient',
   McpOAuthCode: 'McpOAuthCode',
-  McpOAuthToken: 'McpOAuthToken'
+  McpOAuthToken: 'McpOAuthToken',
+  StravaWebhookJob: 'StravaWebhookJob',
+  ActivityFeedClock: 'ActivityFeedClock',
+  ActivityFeedChange: 'ActivityFeedChange'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -175,6 +178,9 @@ export const UserScalarFieldEnum = {
   uiPreferences: 'uiPreferences',
   lastSyncAt: 'lastSyncAt',
   syncInProgress: 'syncInProgress',
+  stravaSyncToken: 'stravaSyncToken',
+  stravaSyncExpiresAt: 'stravaSyncExpiresAt',
+  stravaSyncRange: 'stravaSyncRange',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   healthTrackingEnabled: 'healthTrackingEnabled',
@@ -1323,6 +1329,43 @@ export const McpOAuthTokenScalarFieldEnum = {
 } as const
 
 export type McpOAuthTokenScalarFieldEnum = (typeof McpOAuthTokenScalarFieldEnum)[keyof typeof McpOAuthTokenScalarFieldEnum]
+
+
+export const StravaWebhookJobScalarFieldEnum = {
+  userId: 'userId',
+  activityId: 'activityId',
+  ownerId: 'ownerId',
+  eventTime: 'eventTime',
+  eventKey: 'eventKey',
+  kind: 'kind',
+  title: 'title',
+  version: 'version',
+  dueAt: 'dueAt',
+  attempts: 'attempts',
+  completedAt: 'completedAt',
+  fitnessFrom: 'fitnessFrom'
+} as const
+
+export type StravaWebhookJobScalarFieldEnum = (typeof StravaWebhookJobScalarFieldEnum)[keyof typeof StravaWebhookJobScalarFieldEnum]
+
+
+export const ActivityFeedClockScalarFieldEnum = {
+  userId: 'userId',
+  version: 'version',
+  minimum: 'minimum'
+} as const
+
+export type ActivityFeedClockScalarFieldEnum = (typeof ActivityFeedClockScalarFieldEnum)[keyof typeof ActivityFeedClockScalarFieldEnum]
+
+
+export const ActivityFeedChangeScalarFieldEnum = {
+  userId: 'userId',
+  activityId: 'activityId',
+  version: 'version',
+  deletedAt: 'deletedAt'
+} as const
+
+export type ActivityFeedChangeScalarFieldEnum = (typeof ActivityFeedChangeScalarFieldEnum)[keyof typeof ActivityFeedChangeScalarFieldEnum]
 
 
 export const SortOrder = {

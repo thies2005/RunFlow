@@ -184,6 +184,7 @@ class ProfileRecoveryIntegrationTest {
         val requests = java.util.Collections.synchronizedList(mutableListOf<okhttp3.mockwebserver.RecordedRequest>())
         server.dispatcher = object : okhttp3.mockwebserver.Dispatcher() {
             override fun dispatch(request: okhttp3.mockwebserver.RecordedRequest): MockResponse {
+                if (request.path?.substringBefore('?') == "/api/mobile/v1/activities/changes") return MockResponse().setResponseCode(404)
                 requests.add(request)
                 if (request.path == "/api/mobile/v1/user/profile" && limited)
                     return MockResponse().setResponseCode(429).addHeader("Retry-After", "60")
@@ -202,7 +203,7 @@ class ProfileRecoveryIntegrationTest {
         assertEquals(1, db.activityDao().all().size)
         assertTrue(db.syncQueueDao().allForType(SyncManager.TYPE_PROFILE_UPDATE).isEmpty())
         assertFalse(requests.any { it.path == "/api/plans" }) // shared general bucket is deferred
-        assertFalse(requests.any { it.path?.contains("/activities/") == true })
+        assertFalse(requests.any { it.path?.substringBefore('?')?.let { path -> path.startsWith("/api/mobile/v1/activities/") && !path.endsWith("/changes") } == true })
         limited = false
         settings.setGeneralReadCooldownUntil(0); settings.setUploadCooldownUntil(0)
         manager.syncNow("after retry window")

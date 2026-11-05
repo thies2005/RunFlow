@@ -175,6 +175,7 @@ export async function resetRateLimit(identifier: string, prefix = ''): Promise<v
 export const RATE_LIMITS = {
     sync: { limit: 10, windowSeconds: 60, prefix: 'sync' },
     activities: { limit: 30, windowSeconds: 60, prefix: 'activities' },
+    activityChanges: { limit: 60, windowSeconds: 60, prefix: 'activity-changes' },
     settings: { limit: 10, windowSeconds: 60, prefix: 'settings' },
     webhooks: { limit: 100, windowSeconds: 60, prefix: 'webhooks' },
     general: { limit: 60, windowSeconds: 60, prefix: 'general' },

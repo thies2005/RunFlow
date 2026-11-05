@@ -314,6 +314,12 @@ interface ActivityDao {
     @Query("SELECT * FROM activities ORDER BY startDate DESC")
     suspend fun all(): List<ActivityEntity>
 
+    @Query("SELECT serverId FROM activities WHERE serverId IS NOT NULL AND dirty = 0 AND isDemo = 0")
+    suspend fun cleanServerIds(): List<String>
+
+    @Query("DELETE FROM activities WHERE serverId = :serverId AND dirty = 0 AND isDemo = 0")
+    suspend fun deleteCleanByServerId(serverId: String): Int
+
     @Query("SELECT * FROM activities WHERE dirty = 1")
     suspend fun dirty(): List<ActivityEntity>
 
@@ -445,6 +451,9 @@ interface SyncQueueDao {
     @Query("SELECT * FROM sync_queue WHERE dead = 0 ORDER BY id ASC LIMIT :limit")
     suspend fun nextBatch(limit: Int): List<SyncQueueEntity>
 
+    @Query("SELECT * FROM sync_queue WHERE id = :id AND dead = 0")
+    suspend fun pendingById(id: Long): SyncQueueEntity?
+
     @Query("DELETE FROM sync_queue WHERE id = :id")
     suspend fun markCompleted(id: Long)
 
@@ -471,6 +480,9 @@ interface SyncQueueDao {
 
     @Query("SELECT * FROM sync_queue WHERE entityType = :type AND dead = 0 AND localId = :localId")
     suspend fun pendingFor(type: String, localId: String): List<SyncQueueEntity>
+
+    @Query("SELECT payloadJson FROM sync_queue WHERE entityType = :type AND dead = 0")
+    suspend fun pendingPayloads(type: String): List<String>
 
     @Query("DELETE FROM sync_queue")
     suspend fun clear()
@@ -573,17 +585,60 @@ interface DailyEntryDao {
     suspend fun clear()
 }
 
+@Entity(tableName = "activity_sync_cursor")
+data class ActivitySyncCursor(@PrimaryKey val scope: String, val cursor: String, val snapshot: Boolean)
+
+@Entity(tableName = "activity_sync_unseen", primaryKeys = ["scope", "serverId"])
+data class ActivitySyncUnseen(val scope: String, val serverId: String)
+
+@Dao
+interface ActivitySyncCursorDao {
+    @Query("SELECT * FROM activity_sync_cursor WHERE scope = :scope")
+    suspend fun get(scope: String): ActivitySyncCursor?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun put(cursor: ActivitySyncCursor)
+
+    @Query("DELETE FROM activity_sync_cursor WHERE scope = :scope")
+    suspend fun remove(scope: String)
+
+    @Query("DELETE FROM activity_sync_cursor")
+    suspend fun clear()
+
+    @Query("""
+        INSERT OR IGNORE INTO activity_sync_unseen (scope, serverId)
+        SELECT :scope, serverId FROM activities WHERE serverId IS NOT NULL AND dirty = 0 AND isDemo = 0
+    """)
+    suspend fun beginSnapshot(scope: String)
+
+    @Query("DELETE FROM activity_sync_unseen WHERE scope = :scope AND serverId IN (:ids)")
+    suspend fun markSeen(scope: String, ids: List<String>)
+
+    @Query("""
+        DELETE FROM activities WHERE dirty = 0 AND isDemo = 0 AND serverId IN
+        (SELECT serverId FROM activity_sync_unseen WHERE scope = :scope)
+    """)
+    suspend fun pruneUnseen(scope: String): Int
+
+    @Query("DELETE FROM activity_sync_unseen WHERE scope = :scope")
+    suspend fun clearUnseen(scope: String)
+
+    @Query("DELETE FROM activity_sync_unseen")
+    suspend fun clearAllUnseen()
+}
+
 @Database(
     entities = [
         ActivityEntity::class, GoalEntity::class, WorkoutEntity::class, ProfileEntity::class,
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
-        DailyEntryEntity::class,
+        DailyEntryEntity::class, ActivitySyncCursor::class, ActivitySyncUnseen::class,
     ],
-    version = 16,
+    version = 17,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun activityDao(): ActivityDao
+    abstract fun activitySyncCursorDao(): ActivitySyncCursorDao
     abstract fun goalDao(): GoalDao
     abstract fun workoutDao(): WorkoutDao
     abstract fun profileDao(): ProfileDao
@@ -850,6 +905,13 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE workouts ADD COLUMN suggestedActivityId TEXT")
                 db.execSQL("ALTER TABLE workouts ADD COLUMN dismissedActivityId TEXT")
                 db.execSQL("ALTER TABLE workouts ADD COLUMN adaptationType TEXT")
+            }
+        }
+
+        val MIGRATION_16_17: Migration = object : Migration(16, 17) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE activity_sync_cursor (scope TEXT NOT NULL PRIMARY KEY, cursor TEXT NOT NULL, snapshot INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE activity_sync_unseen (scope TEXT NOT NULL, serverId TEXT NOT NULL, PRIMARY KEY(scope, serverId))")
             }
         }
     }

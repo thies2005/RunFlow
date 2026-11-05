@@ -75,7 +75,7 @@ describe('syncUserActivities Performance', () => {
         jest.clearAllMocks();
     });
 
-    it('should query the database for each activity (N+1 issue)', async () => {
+    it('batches existence checks and stops after a partial upstream page', async () => {
         const userId = 'user-123';
         const mockToken = 'mock-token';
 
@@ -103,6 +103,8 @@ describe('syncUserActivities Performance', () => {
             total_elevation_gain: 50,
             has_heartrate: false,
         }));
+
+        (prisma.activity.create as jest.Mock).mockResolvedValue({ id: 'new-activity' });
 
         // Mock findMany to return empty array (no existing activities)
         (prisma.activity.findMany as jest.Mock).mockResolvedValue([]);
@@ -139,7 +141,8 @@ describe('syncUserActivities Performance', () => {
         });
 
         // Execute sync
-        await syncUserActivities(userId);
+        await expect(syncUserActivities(userId)).resolves.toMatchObject({ synced: mockActivitiesCount, errors: 0 });
+        expect((global.fetch as jest.Mock).mock.calls.filter(([url]) => url.includes('/athlete/activities'))).toHaveLength(1);
 
         // Verify N+1 optimization
         const findUniqueCalls = (prisma.activity.findUnique as jest.Mock).mock.calls.length;

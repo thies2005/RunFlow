@@ -17,10 +17,10 @@
 import { prisma } from '@/lib/db';
 import { Prisma } from '@/generated/prisma/client';
 import { refreshStravaToken } from './oauth';
-import { fetchStravaActivities, fetchSingleActivity, fetchActivityStreams, fetchAthleteProfile, shouldFetchActivityStreams } from './fetch';
+import { fetchStravaActivities, fetchSingleActivity, fetchActivityStreams, fetchAthleteProfile, shouldFetchActivityStreams, MAX_PER_PAGE } from './fetch';
 import { DAY_MS } from '@/lib/constants';
 import { enrichActivityMetrics, transformActivityData, type MetricsInput } from './transform';
-import { upsertActivity, createNewActivityNotification, updateUserProfile, updateSyncStatus, fetchExistingActivities, getLastActivityDate } from './persistence';
+import { upsertActivity, createNewActivityNotification, updateUserProfile, fetchExistingActivities, getLastActivityDate } from './persistence';
 import { calculateAndSaveFitnessMetrics, type ModifiedActivity } from './fitness';
 import { logger } from '@/lib/logging/logger';
 import { bestEffortVdot } from '@/lib/metrics/effectiveVdot';
@@ -46,14 +46,15 @@ function getRangeStartTimestamp(range?: string): number | undefined {
     }
 }
 
-export async function syncUserActivities(userId: string, range?: string): Promise<{
+export async function syncUserActivities(
+    userId: string, range?: string, assertLease: () => void = () => {}, recovering = false,
+): Promise<{
     synced: number;
     skipped: number;
     errors: number;
     syncedActivityIds: string[];
 }> {
-    await updateSyncStatus(userId, { syncInProgress: true });
-
+    const syncStartedAt = new Date();
     try {
         let user = await prisma.user.findUnique({
             where: { id: userId },
@@ -137,12 +138,11 @@ export async function syncUserActivities(userId: string, range?: string): Promis
             if (range === 'ALL') {
                 after = undefined;
             } else if (range === 'SINCE_LAST_ACTIVITY') {
-                const lastActivity = await getLastActivityDate(userId);
-                if (lastActivity) {
-                    after = Math.floor(lastActivity.getTime() / 1000);
-                } else {
-                    after = undefined;
-                }
+                // Webhooks can insert a newer activity before a delayed or
+                // missed one. Base catch-up on the last successful scan, and
+                // overlap to recover uploads dated before that scan.
+                const watermark = user?.lastSyncAt ?? await getLastActivityDate(userId);
+                if (watermark) after = Math.floor((watermark.getTime() - 2 * DAY_MS) / 1000);
             } else {
                 after = getRangeStartTimestamp(range);
             }
@@ -159,10 +159,13 @@ export async function syncUserActivities(userId: string, range?: string): Promis
         let page = 1;
         let hasMore = true;
         const modifiedActivities: ModifiedActivity[] = [];
+        let earliestRecoveredActivity: Date | undefined;
         let currentHrMax = user?.hrMax || null;
 
         while (hasMore) {
+            assertLease();
             const activities = await fetchStravaActivities(accessToken, page, after);
+            assertLease();
 
             logger.info('Sync page fetched', { page, activityCount: activities.length, after });
 
@@ -171,8 +174,20 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 break;
             }
 
+            // A crashed worker may have saved activities without rebuilding
+            // fitness. Rebuild from the oldest row in the replay window even
+            // when every activity already has its metrics.
+            if (recovering) {
+                for (const activity of activities) {
+                    const date = new Date(activity.start_date);
+                    if (Number.isFinite(+date) && (!earliestRecoveredActivity || date < earliestRecoveredActivity)) {
+                        earliestRecoveredActivity = date;
+                    }
+                }
+            }
+
             const stravaIds = activities.map(a => BigInt(a.id));
-            const existingMap = await fetchExistingActivities(stravaIds);
+            const existingMap = await fetchExistingActivities(stravaIds, userId);
 
             const limit = pLimit(SYNC_CONCURRENCY);
 
@@ -241,9 +256,10 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     let streams = null;
 
                     if (shouldFetchActivityStreams(activity)) {
-                        streams = await fetchActivityStreams(accessToken, activity.id);
+                        streams = await fetchActivityStreams(accessToken, activity.id, true);
                     }
 
+                    assertLease();
                     const metricsInput: MetricsInput = {
                         activity,
                         user: {
@@ -327,50 +343,49 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 }
             }
 
+            if (activities.length < MAX_PER_PAGE) break;
             page++;
 
             if (page > 50) {
                 logger.warn('Reached max pages limit', { userId, page });
+                errors++;
                 break;
             }
         }
 
         // Commit derived maximum heart rate if we detected a new one (H-04 fix)
+        assertLease();
         if (currentHrMax !== null && currentHrMax > (user?.hrMax || 0)) {
             await updateUserProfile(userId, { hrMax: currentHrMax });
         }
 
-        // Only advance the sync cursor when every activity write succeeded.
-        // If any write failed (errors > 0), leave lastSyncAt unchanged so the
-        // failed activities are retried on the next sync rather than skipped.
-        if (errors > 0) {
-            logger.warn('Sync completed with errors; not advancing lastSyncAt so failed activities are retried', { userId, errors });
-            await updateSyncStatus(userId, { syncInProgress: false });
-        } else {
-            await updateSyncStatus(userId, {
-                lastSyncAt: new Date(),
-                syncInProgress: false,
-            });
-        }
-
+        assertLease();
+        if (earliestRecoveredActivity) modifiedActivities.push({ startDate: earliestRecoveredActivity });
         if (modifiedActivities.length > 0) {
-            await calculateAndSaveFitnessMetrics(userId, modifiedActivities);
-            logger.info('Updated fitness cache', { userId, activityCount: modifiedActivities.length });
-            await updateAutoRevolvingVo2max(userId);
+            await recomputeStravaFitness(userId, modifiedActivities);
         }
-
+        assertLease();
+        // Publish completion after dependent metrics are ready. Failed pages
+        // retain the previous successful catch-up timestamp.
+        if (errors === 0) {
+            await prisma.user.update({ where: { id: userId }, data: { lastSyncAt: syncStartedAt } });
+        } else {
+            logger.warn('Sync completed with errors; not advancing lastSyncAt', { userId, errors });
+        }
         return { synced, skipped, errors, syncedActivityIds };
-    } catch (err) {
-        try {
-            await updateSyncStatus(userId, { syncInProgress: false });
-        } catch (resetErr) {
-            logger.error('Failed to reset syncInProgress flag', { userId, error: resetErr instanceof Error ? resetErr.message : String(resetErr) });
-        }
-        throw err;
+    } catch (error) {
+        logger.error('Strava activity scan failed', { userId, error: error instanceof Error ? error.message : String(error) });
+        throw error;
     }
 }
 
-async function updateAutoRevolvingVo2max(userId: string): Promise<void> {
+export async function recomputeStravaFitness(userId: string, activities: ModifiedActivity[], throwOnError = false) {
+    if (activities.length === 0) return;
+    await calculateAndSaveFitnessMetrics(userId, activities, throwOnError);
+    await updateAutoRevolvingVo2max(userId, throwOnError);
+}
+
+async function updateAutoRevolvingVo2max(userId: string, throwOnError: boolean): Promise<void> {
     try {
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -414,137 +429,112 @@ async function updateAutoRevolvingVo2max(userId: string): Promise<void> {
         }
     } catch (err) {
         logger.error('Failed to update auto revolving VO2max', { userId, error: err instanceof Error ? err.message : String(err) });
+        if (throwOnError) throw err;
     }
 }
 
-export async function getSyncStatus(userId: string): Promise<{
-    syncInProgress: boolean;
-    lastSyncAt: Date | null;
-    totalActivities: number;
-}> {
+function leaseIsActive(expiresAt: Date | null | undefined): boolean {
+    return Boolean(expiresAt && expiresAt.getTime() > Date.now());
+}
+
+export async function getSyncProgress(userId: string) {
     const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: {
-            syncInProgress: true,
-            lastSyncAt: true,
-            _count: {
-                select: { activities: true },
-            },
-        },
+        select: { stravaSyncExpiresAt: true, stravaSyncRange: true, lastSyncAt: true },
     });
+    return { syncInProgress: Boolean(user?.stravaSyncRange) || leaseIsActive(user?.stravaSyncExpiresAt), lastSyncAt: user?.lastSyncAt ?? null };
+}
 
-    let syncInProgress = user?.syncInProgress ?? false;
-
-    const SYNC_TIMEOUT_MS = 10 * 60 * 1000;
-    if (syncInProgress && user?.lastSyncAt) {
-        const timeSinceLastSync = Date.now() - user.lastSyncAt.getTime();
-        if (timeSinceLastSync > SYNC_TIMEOUT_MS) {
-            await prisma.user.update({
-                where: { id: userId },
-                data: { syncInProgress: false },
-            });
-            syncInProgress = false;
-            logger.warn('Auto-reset stuck syncInProgress flag', { userId, minutesSinceLastSync: Math.round(timeSinceLastSync / 1000 / 60) });
-        }
-    }
-
+export async function getSyncStatus(userId: string) {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { stravaSyncExpiresAt: true, stravaSyncRange: true, lastSyncAt: true, _count: { select: { activities: true } } },
+    });
     return {
-        syncInProgress,
+        syncInProgress: Boolean(user?.stravaSyncRange) || leaseIsActive(user?.stravaSyncExpiresAt),
         lastSyncAt: user?.lastSyncAt ?? null,
         totalActivities: user?._count?.activities ?? 0,
     };
 }
 
-export async function syncActivityById(userId: string, activityId: number): Promise<void> {
-    try {
-        const accessToken = await refreshStravaToken(userId);
-        if (!accessToken) {
-            logger.error('syncActivityById: Failed to refresh token', { userId });
-            return;
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: {
-                id: true,
-                hrMax: true,
-                hrRest: true,
-                sex: true,
-                weight: true,
-                birthDate: true,
-                hrZone1Max: true,
-                hrZone2Max: true,
-                hrZone3Max: true,
-                hrZone4Max: true,
-                hrZone5Max: true,
-                hrZone6Max: true,
-                ftpWatts: true,
-                autoEstimateFtp: true,
-            },
-        });
-
-        if (!user) {
-            logger.error('syncActivityById: User not found', { userId });
-            return;
-        }
-
-        const activity = await fetchSingleActivity(accessToken, activityId);
-
-        let streams = null;
-
-        if (shouldFetchActivityStreams(activity)) {
-            streams = await fetchActivityStreams(accessToken, activity.id);
-        }
-
-        const metricsInput: MetricsInput = {
-            activity,
-            user: {
-                hrMax: user.hrMax,
-                hrRest: user.hrRest,
-                sex: user.sex,
-                weight: user.weight,
-                birthDate: user.birthDate,
-                hrZone1Max: user.hrZone1Max,
-                hrZone2Max: user.hrZone2Max,
-                hrZone3Max: user.hrZone3Max,
-                hrZone4Max: user.hrZone4Max,
-                hrZone5Max: user.hrZone5Max,
-                hrZone6Max: user.hrZone6Max,
-                ftpWatts: user.ftpWatts ?? null,
-            },
-            currentHrMax: user.hrMax,
-            streams,
-        };
-
-        const metrics = enrichActivityMetrics(metricsInput);
-        const activityData = transformActivityData(activity, metrics);
-        activityData.streams = streams ?? Prisma.JsonNull;
-
-        if (streams?.watts && streams.watts.length > 0) {
-            const powerCurve = calculatePowerCurve(streams.watts, streams.time);
-            const eFtp = estimateFtpFromPowerCurve(powerCurve, activity.weighted_average_watts ?? activity.average_watts);
-            if (user.autoEstimateFtp && eFtp && eFtp > (user.ftpWatts || 0)) {
-                await prisma.user.update({
-                    where: { id: userId },
-                    data: { ftpWatts: eFtp },
-                });
-                logger.info('Auto-estimated higher cycling FTP (syncActivityById)', { userId, oldFtp: user.ftpWatts, newFtp: eFtp });
-                user.ftpWatts = eFtp;
-            }
-        }
-
-        const { created } = await upsertActivity(userId, activity.id, activityData);
-
-        if (created) {
-            await createNewActivityNotification(userId, activityData.name);
-        }
-
-        logger.info('syncActivityById: Successfully synced activity', { userId, activityId });
-
-        await calculateAndSaveFitnessMetrics(userId, [{ startDate: new Date(activity.start_date) }]);
-        await updateAutoRevolvingVo2max(userId);
-
-    } catch (error) {
-        logger.error('syncActivityById: Error syncing activity', { userId, activityId, error: error instanceof Error ? error.message : String(error) });
+export async function syncActivityById(userId: string, activityId: number, assertLease: () => void) {
+    const accessToken = await refreshStravaToken(userId);
+    if (!accessToken) {
+        throw new Error('Strava access token unavailable');
     }
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+            id: true,
+            hrMax: true,
+            hrRest: true,
+            sex: true,
+            weight: true,
+            birthDate: true,
+            hrZone1Max: true,
+            hrZone2Max: true,
+            hrZone3Max: true,
+            hrZone4Max: true,
+            hrZone5Max: true,
+            hrZone6Max: true,
+            ftpWatts: true,
+            autoEstimateFtp: true,
+        },
+    });
+
+    if (!user) {
+        throw new Error('Strava user unavailable');
+    }
+
+    const activity = await fetchSingleActivity(accessToken, activityId);
+
+    let streams = null;
+
+    if (shouldFetchActivityStreams(activity)) {
+        streams = await fetchActivityStreams(accessToken, activity.id, true);
+    }
+    assertLease();
+
+    const metricsInput: MetricsInput = {
+        activity,
+        user: {
+            hrMax: user.hrMax,
+            hrRest: user.hrRest,
+            sex: user.sex,
+            weight: user.weight,
+            birthDate: user.birthDate,
+            hrZone1Max: user.hrZone1Max,
+            hrZone2Max: user.hrZone2Max,
+            hrZone3Max: user.hrZone3Max,
+            hrZone4Max: user.hrZone4Max,
+            hrZone5Max: user.hrZone5Max,
+            hrZone6Max: user.hrZone6Max,
+            ftpWatts: user.ftpWatts ?? null,
+        },
+        currentHrMax: user.hrMax,
+        streams,
+    };
+
+    const metrics = enrichActivityMetrics(metricsInput);
+    const activityData = transformActivityData(activity, metrics);
+    activityData.streams = streams ?? Prisma.JsonNull;
+
+    if (streams?.watts && streams.watts.length > 0) {
+        const powerCurve = calculatePowerCurve(streams.watts, streams.time);
+        const eFtp = estimateFtpFromPowerCurve(powerCurve, activity.weighted_average_watts ?? activity.average_watts);
+        if (user.autoEstimateFtp && eFtp && eFtp > (user.ftpWatts || 0)) {
+            await prisma.user.update({
+                where: { id: userId },
+                data: { ftpWatts: eFtp },
+            });
+            logger.info('Auto-estimated higher cycling FTP (syncActivityById)', { userId, oldFtp: user.ftpWatts, newFtp: eFtp });
+            user.ftpWatts = eFtp;
+        }
+    }
+
+    assertLease();
+    const { created, id } = await upsertActivity(userId, activity.id, activityData);
+    if (created) await createNewActivityNotification(userId, activityData.name);
+    return { id, startDate: activityData.startDate };
 }

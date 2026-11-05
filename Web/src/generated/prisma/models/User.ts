@@ -113,6 +113,9 @@ export type UserMinAggregateOutputType = {
   primaryLoadMetric: string | null
   lastSyncAt: Date | null
   syncInProgress: boolean | null
+  stravaSyncToken: string | null
+  stravaSyncExpiresAt: Date | null
+  stravaSyncRange: string | null
   createdAt: Date | null
   updatedAt: Date | null
   healthTrackingEnabled: boolean | null
@@ -163,6 +166,9 @@ export type UserMaxAggregateOutputType = {
   primaryLoadMetric: string | null
   lastSyncAt: Date | null
   syncInProgress: boolean | null
+  stravaSyncToken: string | null
+  stravaSyncExpiresAt: Date | null
+  stravaSyncRange: string | null
   createdAt: Date | null
   updatedAt: Date | null
   healthTrackingEnabled: boolean | null
@@ -214,6 +220,9 @@ export type UserCountAggregateOutputType = {
   uiPreferences: number
   lastSyncAt: number
   syncInProgress: number
+  stravaSyncToken: number
+  stravaSyncExpiresAt: number
+  stravaSyncRange: number
   createdAt: number
   updatedAt: number
   healthTrackingEnabled: number
@@ -310,6 +319,9 @@ export type UserMinAggregateInputType = {
   primaryLoadMetric?: true
   lastSyncAt?: true
   syncInProgress?: true
+  stravaSyncToken?: true
+  stravaSyncExpiresAt?: true
+  stravaSyncRange?: true
   createdAt?: true
   updatedAt?: true
   healthTrackingEnabled?: true
@@ -360,6 +372,9 @@ export type UserMaxAggregateInputType = {
   primaryLoadMetric?: true
   lastSyncAt?: true
   syncInProgress?: true
+  stravaSyncToken?: true
+  stravaSyncExpiresAt?: true
+  stravaSyncRange?: true
   createdAt?: true
   updatedAt?: true
   healthTrackingEnabled?: true
@@ -411,6 +426,9 @@ export type UserCountAggregateInputType = {
   uiPreferences?: true
   lastSyncAt?: true
   syncInProgress?: true
+  stravaSyncToken?: true
+  stravaSyncExpiresAt?: true
+  stravaSyncRange?: true
   createdAt?: true
   updatedAt?: true
   healthTrackingEnabled?: true
@@ -549,6 +567,9 @@ export type UserGroupByOutputType = {
   uiPreferences: runtime.JsonValue | null
   lastSyncAt: Date | null
   syncInProgress: boolean
+  stravaSyncToken: string | null
+  stravaSyncExpiresAt: Date | null
+  stravaSyncRange: string | null
   createdAt: Date
   updatedAt: Date
   healthTrackingEnabled: boolean
@@ -623,6 +644,9 @@ export type UserWhereInput = {
   uiPreferences?: Prisma.JsonNullableFilter<"User">
   lastSyncAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolFilter<"User"> | boolean
+  stravaSyncToken?: Prisma.StringNullableFilter<"User"> | string | null
+  stravaSyncExpiresAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  stravaSyncRange?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   healthTrackingEnabled?: Prisma.BoolFilter<"User"> | boolean
@@ -630,8 +654,11 @@ export type UserWhereInput = {
   tokenVersion?: Prisma.IntFilter<"User"> | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeListRelationFilter
   mcpOAuthTokens?: Prisma.McpOAuthTokenListRelationFilter
+  stravaWebhookJobs?: Prisma.StravaWebhookJobListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
   activities?: Prisma.ActivityListRelationFilter
+  activityFeedClock?: Prisma.XOR<Prisma.ActivityFeedClockNullableScalarRelationFilter, Prisma.ActivityFeedClockWhereInput> | null
+  activityFeedChanges?: Prisma.ActivityFeedChangeListRelationFilter
   usageHistory?: Prisma.AiUsageHistoryListRelationFilter
   apiKey?: Prisma.XOR<Prisma.ApiKeyNullableScalarRelationFilter, Prisma.ApiKeyWhereInput> | null
   chatMessages?: Prisma.ChatMessageListRelationFilter
@@ -708,6 +735,9 @@ export type UserOrderByWithRelationInput = {
   uiPreferences?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
+  stravaSyncToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  stravaSyncExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  stravaSyncRange?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   healthTrackingEnabled?: Prisma.SortOrder
@@ -715,8 +745,11 @@ export type UserOrderByWithRelationInput = {
   tokenVersion?: Prisma.SortOrder
   mcpOAuthCodes?: Prisma.McpOAuthCodeOrderByRelationAggregateInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenOrderByRelationAggregateInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobOrderByRelationAggregateInput
   accounts?: Prisma.AccountOrderByRelationAggregateInput
   activities?: Prisma.ActivityOrderByRelationAggregateInput
+  activityFeedClock?: Prisma.ActivityFeedClockOrderByWithRelationInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeOrderByRelationAggregateInput
   usageHistory?: Prisma.AiUsageHistoryOrderByRelationAggregateInput
   apiKey?: Prisma.ApiKeyOrderByWithRelationInput
   chatMessages?: Prisma.ChatMessageOrderByRelationAggregateInput
@@ -796,6 +829,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   uiPreferences?: Prisma.JsonNullableFilter<"User">
   lastSyncAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolFilter<"User"> | boolean
+  stravaSyncToken?: Prisma.StringNullableFilter<"User"> | string | null
+  stravaSyncExpiresAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  stravaSyncRange?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   healthTrackingEnabled?: Prisma.BoolFilter<"User"> | boolean
@@ -803,8 +839,11 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   tokenVersion?: Prisma.IntFilter<"User"> | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeListRelationFilter
   mcpOAuthTokens?: Prisma.McpOAuthTokenListRelationFilter
+  stravaWebhookJobs?: Prisma.StravaWebhookJobListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
   activities?: Prisma.ActivityListRelationFilter
+  activityFeedClock?: Prisma.XOR<Prisma.ActivityFeedClockNullableScalarRelationFilter, Prisma.ActivityFeedClockWhereInput> | null
+  activityFeedChanges?: Prisma.ActivityFeedChangeListRelationFilter
   usageHistory?: Prisma.AiUsageHistoryListRelationFilter
   apiKey?: Prisma.XOR<Prisma.ApiKeyNullableScalarRelationFilter, Prisma.ApiKeyWhereInput> | null
   chatMessages?: Prisma.ChatMessageListRelationFilter
@@ -881,6 +920,9 @@ export type UserOrderByWithAggregationInput = {
   uiPreferences?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
+  stravaSyncToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  stravaSyncExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  stravaSyncRange?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   healthTrackingEnabled?: Prisma.SortOrder
@@ -940,6 +982,9 @@ export type UserScalarWhereWithAggregatesInput = {
   uiPreferences?: Prisma.JsonNullableWithAggregatesFilter<"User">
   lastSyncAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   syncInProgress?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  stravaSyncToken?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  stravaSyncExpiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  stravaSyncRange?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   healthTrackingEnabled?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
@@ -991,6 +1036,9 @@ export type UserCreateInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -998,8 +1046,11 @@ export type UserCreateInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -1076,6 +1127,9 @@ export type UserUncheckedCreateInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -1083,8 +1137,11 @@ export type UserUncheckedCreateInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -1161,6 +1218,9 @@ export type UserUpdateInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1168,8 +1228,11 @@ export type UserUpdateInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -1246,6 +1309,9 @@ export type UserUncheckedUpdateInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1253,8 +1319,11 @@ export type UserUncheckedUpdateInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -1331,6 +1400,9 @@ export type UserCreateManyInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -1382,6 +1454,9 @@ export type UserUpdateManyMutationInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1433,6 +1508,9 @@ export type UserUncheckedUpdateManyInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1484,6 +1562,9 @@ export type UserCountOrderByAggregateInput = {
   uiPreferences?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
+  stravaSyncToken?: Prisma.SortOrder
+  stravaSyncExpiresAt?: Prisma.SortOrder
+  stravaSyncRange?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   healthTrackingEnabled?: Prisma.SortOrder
@@ -1556,6 +1637,9 @@ export type UserMaxOrderByAggregateInput = {
   primaryLoadMetric?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
+  stravaSyncToken?: Prisma.SortOrder
+  stravaSyncExpiresAt?: Prisma.SortOrder
+  stravaSyncRange?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   healthTrackingEnabled?: Prisma.SortOrder
@@ -1606,6 +1690,9 @@ export type UserMinOrderByAggregateInput = {
   primaryLoadMetric?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
   syncInProgress?: Prisma.SortOrder
+  stravaSyncToken?: Prisma.SortOrder
+  stravaSyncExpiresAt?: Prisma.SortOrder
+  stravaSyncRange?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   healthTrackingEnabled?: Prisma.SortOrder
@@ -2172,6 +2259,48 @@ export type UserUpdateOneRequiredWithoutMcpOAuthTokensNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMcpOAuthTokensInput, Prisma.UserUpdateWithoutMcpOAuthTokensInput>, Prisma.UserUncheckedUpdateWithoutMcpOAuthTokensInput>
 }
 
+export type UserCreateNestedOneWithoutStravaWebhookJobsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutStravaWebhookJobsInput, Prisma.UserUncheckedCreateWithoutStravaWebhookJobsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutStravaWebhookJobsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutStravaWebhookJobsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutStravaWebhookJobsInput, Prisma.UserUncheckedCreateWithoutStravaWebhookJobsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutStravaWebhookJobsInput
+  upsert?: Prisma.UserUpsertWithoutStravaWebhookJobsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutStravaWebhookJobsInput, Prisma.UserUpdateWithoutStravaWebhookJobsInput>, Prisma.UserUncheckedUpdateWithoutStravaWebhookJobsInput>
+}
+
+export type UserCreateNestedOneWithoutActivityFeedClockInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutActivityFeedClockInput, Prisma.UserUncheckedCreateWithoutActivityFeedClockInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutActivityFeedClockInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutActivityFeedClockNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutActivityFeedClockInput, Prisma.UserUncheckedCreateWithoutActivityFeedClockInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutActivityFeedClockInput
+  upsert?: Prisma.UserUpsertWithoutActivityFeedClockInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutActivityFeedClockInput, Prisma.UserUpdateWithoutActivityFeedClockInput>, Prisma.UserUncheckedUpdateWithoutActivityFeedClockInput>
+}
+
+export type UserCreateNestedOneWithoutActivityFeedChangesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutActivityFeedChangesInput, Prisma.UserUncheckedCreateWithoutActivityFeedChangesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutActivityFeedChangesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutActivityFeedChangesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutActivityFeedChangesInput, Prisma.UserUncheckedCreateWithoutActivityFeedChangesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutActivityFeedChangesInput
+  upsert?: Prisma.UserUpsertWithoutActivityFeedChangesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutActivityFeedChangesInput, Prisma.UserUpdateWithoutActivityFeedChangesInput>, Prisma.UserUncheckedUpdateWithoutActivityFeedChangesInput>
+}
+
 export type UserCreateWithoutConsentsInput = {
   id?: string
   email?: string | null
@@ -2216,6 +2345,9 @@ export type UserCreateWithoutConsentsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -2223,8 +2355,11 @@ export type UserCreateWithoutConsentsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -2300,6 +2435,9 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -2307,8 +2445,11 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -2400,6 +2541,9 @@ export type UserUpdateWithoutConsentsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2407,8 +2551,11 @@ export type UserUpdateWithoutConsentsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -2484,6 +2631,9 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2491,8 +2641,11 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -2568,6 +2721,9 @@ export type UserCreateWithoutAiSettingsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -2575,8 +2731,11 @@ export type UserCreateWithoutAiSettingsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -2652,6 +2811,9 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -2659,8 +2821,11 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -2752,6 +2917,9 @@ export type UserUpdateWithoutAiSettingsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2759,8 +2927,11 @@ export type UserUpdateWithoutAiSettingsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -2836,6 +3007,9 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2843,8 +3017,11 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -2920,6 +3097,9 @@ export type UserCreateWithoutFeedbackJobsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -2927,8 +3107,11 @@ export type UserCreateWithoutFeedbackJobsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -3004,6 +3187,9 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -3011,8 +3197,11 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -3104,6 +3293,9 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3111,8 +3303,11 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -3188,6 +3383,9 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3195,8 +3393,11 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -3272,6 +3473,9 @@ export type UserCreateWithoutAccountsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -3279,7 +3483,10 @@ export type UserCreateWithoutAccountsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -3356,6 +3563,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -3363,7 +3573,10 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -3456,6 +3669,9 @@ export type UserUpdateWithoutAccountsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3463,7 +3679,10 @@ export type UserUpdateWithoutAccountsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -3540,6 +3759,9 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3547,7 +3769,10 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -3624,6 +3849,9 @@ export type UserCreateWithoutSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -3631,8 +3859,11 @@ export type UserCreateWithoutSessionsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -3708,6 +3939,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -3715,8 +3949,11 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -3808,6 +4045,9 @@ export type UserUpdateWithoutSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3815,8 +4055,11 @@ export type UserUpdateWithoutSessionsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -3892,6 +4135,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -3899,8 +4145,11 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -3976,6 +4225,9 @@ export type UserCreateWithoutActivitiesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -3983,7 +4235,10 @@ export type UserCreateWithoutActivitiesInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -4060,6 +4315,9 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -4067,7 +4325,10 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -4160,6 +4421,9 @@ export type UserUpdateWithoutActivitiesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4167,7 +4431,10 @@ export type UserUpdateWithoutActivitiesInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -4244,6 +4511,9 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4251,7 +4521,10 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -4328,6 +4601,9 @@ export type UserCreateWithoutDailyFitnessInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -4335,8 +4611,11 @@ export type UserCreateWithoutDailyFitnessInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -4412,6 +4691,9 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -4419,8 +4701,11 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -4512,6 +4797,9 @@ export type UserUpdateWithoutDailyFitnessInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4519,8 +4807,11 @@ export type UserUpdateWithoutDailyFitnessInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -4596,6 +4887,9 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4603,8 +4897,11 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -4680,6 +4977,9 @@ export type UserCreateWithoutSupplementStacksInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -4687,8 +4987,11 @@ export type UserCreateWithoutSupplementStacksInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -4764,6 +5067,9 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -4771,8 +5077,11 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -4864,6 +5173,9 @@ export type UserUpdateWithoutSupplementStacksInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4871,8 +5183,11 @@ export type UserUpdateWithoutSupplementStacksInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -4948,6 +5263,9 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4955,8 +5273,11 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -5032,6 +5353,9 @@ export type UserCreateWithoutSupplementsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -5039,8 +5363,11 @@ export type UserCreateWithoutSupplementsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -5116,6 +5443,9 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -5123,8 +5453,11 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -5216,6 +5549,9 @@ export type UserUpdateWithoutSupplementsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5223,8 +5559,11 @@ export type UserUpdateWithoutSupplementsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -5300,6 +5639,9 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5307,8 +5649,11 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -5384,6 +5729,9 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -5391,8 +5739,11 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -5468,6 +5819,9 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -5475,8 +5829,11 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -5568,6 +5925,9 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5575,8 +5935,11 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -5652,6 +6015,9 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5659,8 +6025,11 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -5736,6 +6105,9 @@ export type UserCreateWithoutGoalsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -5743,8 +6115,11 @@ export type UserCreateWithoutGoalsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -5820,6 +6195,9 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -5827,8 +6205,11 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -5920,6 +6301,9 @@ export type UserUpdateWithoutGoalsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5927,8 +6311,11 @@ export type UserUpdateWithoutGoalsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -6004,6 +6391,9 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6011,8 +6401,11 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -6088,6 +6481,9 @@ export type UserCreateWithoutNotificationsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -6095,8 +6491,11 @@ export type UserCreateWithoutNotificationsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -6172,6 +6571,9 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -6179,8 +6581,11 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -6272,6 +6677,9 @@ export type UserUpdateWithoutNotificationsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6279,8 +6687,11 @@ export type UserUpdateWithoutNotificationsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -6356,6 +6767,9 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6363,8 +6777,11 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -6440,6 +6857,9 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -6447,8 +6867,11 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -6524,6 +6947,9 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -6531,8 +6957,11 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -6624,6 +7053,9 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6631,8 +7063,11 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -6708,6 +7143,9 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6715,8 +7153,11 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -6792,6 +7233,9 @@ export type UserCreateWithoutReminderSettingsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -6799,8 +7243,11 @@ export type UserCreateWithoutReminderSettingsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -6876,6 +7323,9 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -6883,8 +7333,11 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -6976,6 +7429,9 @@ export type UserUpdateWithoutReminderSettingsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6983,8 +7439,11 @@ export type UserUpdateWithoutReminderSettingsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -7060,6 +7519,9 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7067,8 +7529,11 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -7144,6 +7609,9 @@ export type UserCreateWithoutApiKeyInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -7151,8 +7619,11 @@ export type UserCreateWithoutApiKeyInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
   chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
@@ -7228,6 +7699,9 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -7235,8 +7709,11 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
   chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
@@ -7328,6 +7805,9 @@ export type UserUpdateWithoutApiKeyInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7335,8 +7815,11 @@ export type UserUpdateWithoutApiKeyInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
   chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
@@ -7412,6 +7895,9 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7419,8 +7905,11 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
   chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -7496,6 +7985,9 @@ export type UserCreateWithoutChatMessagesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -7503,8 +7995,11 @@ export type UserCreateWithoutChatMessagesInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
@@ -7580,6 +8075,9 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -7587,8 +8085,11 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
@@ -7680,6 +8181,9 @@ export type UserUpdateWithoutChatMessagesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7687,8 +8191,11 @@ export type UserUpdateWithoutChatMessagesInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
@@ -7764,6 +8271,9 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7771,8 +8281,11 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -7848,6 +8361,9 @@ export type UserCreateWithoutChatSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -7855,8 +8371,11 @@ export type UserCreateWithoutChatSessionsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -7932,6 +8451,9 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -7939,8 +8461,11 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -8032,6 +8557,9 @@ export type UserUpdateWithoutChatSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8039,8 +8567,11 @@ export type UserUpdateWithoutChatSessionsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -8116,6 +8647,9 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8123,8 +8657,11 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -8200,6 +8737,9 @@ export type UserCreateWithoutUsageHistoryInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -8207,8 +8747,11 @@ export type UserCreateWithoutUsageHistoryInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
   chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
@@ -8284,6 +8827,9 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -8291,8 +8837,11 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
   chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
@@ -8384,6 +8933,9 @@ export type UserUpdateWithoutUsageHistoryInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8391,8 +8943,11 @@ export type UserUpdateWithoutUsageHistoryInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
   chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
@@ -8468,6 +9023,9 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8475,8 +9033,11 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
   chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
@@ -8552,6 +9113,9 @@ export type UserCreateWithoutNutritionLogsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -8559,8 +9123,11 @@ export type UserCreateWithoutNutritionLogsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -8636,6 +9203,9 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -8643,8 +9213,11 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -8736,6 +9309,9 @@ export type UserUpdateWithoutNutritionLogsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8743,8 +9319,11 @@ export type UserUpdateWithoutNutritionLogsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -8820,6 +9399,9 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8827,8 +9409,11 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -8904,6 +9489,9 @@ export type UserCreateWithoutNutritionTargetInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -8911,8 +9499,11 @@ export type UserCreateWithoutNutritionTargetInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -8988,6 +9579,9 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -8995,8 +9589,11 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -9088,6 +9685,9 @@ export type UserUpdateWithoutNutritionTargetInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9095,8 +9695,11 @@ export type UserUpdateWithoutNutritionTargetInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -9172,6 +9775,9 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9179,8 +9785,11 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -9256,6 +9865,9 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -9263,8 +9875,11 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -9340,6 +9955,9 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -9347,8 +9965,11 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -9440,6 +10061,9 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9447,8 +10071,11 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -9524,6 +10151,9 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9531,8 +10161,11 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -9608,6 +10241,9 @@ export type UserCreateWithoutFastingSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -9615,8 +10251,11 @@ export type UserCreateWithoutFastingSessionsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -9692,6 +10331,9 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -9699,8 +10341,11 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -9792,6 +10437,9 @@ export type UserUpdateWithoutFastingSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9799,8 +10447,11 @@ export type UserUpdateWithoutFastingSessionsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -9876,6 +10527,9 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9883,8 +10537,11 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -9960,6 +10617,9 @@ export type UserCreateWithoutHealthInsightsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -9967,8 +10627,11 @@ export type UserCreateWithoutHealthInsightsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -10044,6 +10707,9 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -10051,8 +10717,11 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -10144,6 +10813,9 @@ export type UserUpdateWithoutHealthInsightsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10151,8 +10823,11 @@ export type UserUpdateWithoutHealthInsightsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -10228,6 +10903,9 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10235,8 +10913,11 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -10312,6 +10993,9 @@ export type UserCreateWithoutSavedMealsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -10319,8 +11003,11 @@ export type UserCreateWithoutSavedMealsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -10396,6 +11083,9 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -10403,8 +11093,11 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -10496,6 +11189,9 @@ export type UserUpdateWithoutSavedMealsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10503,8 +11199,11 @@ export type UserUpdateWithoutSavedMealsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -10580,6 +11279,9 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10587,8 +11289,11 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -10664,6 +11369,9 @@ export type UserCreateWithoutFoodFavoritesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -10671,8 +11379,11 @@ export type UserCreateWithoutFoodFavoritesInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -10748,6 +11459,9 @@ export type UserUncheckedCreateWithoutFoodFavoritesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -10755,8 +11469,11 @@ export type UserUncheckedCreateWithoutFoodFavoritesInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -10848,6 +11565,9 @@ export type UserUpdateWithoutFoodFavoritesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10855,8 +11575,11 @@ export type UserUpdateWithoutFoodFavoritesInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -10932,6 +11655,9 @@ export type UserUncheckedUpdateWithoutFoodFavoritesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10939,8 +11665,11 @@ export type UserUncheckedUpdateWithoutFoodFavoritesInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -11016,6 +11745,9 @@ export type UserCreateWithoutDeviceTokensInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -11023,8 +11755,11 @@ export type UserCreateWithoutDeviceTokensInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -11100,6 +11835,9 @@ export type UserUncheckedCreateWithoutDeviceTokensInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -11107,8 +11845,11 @@ export type UserUncheckedCreateWithoutDeviceTokensInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -11200,6 +11941,9 @@ export type UserUpdateWithoutDeviceTokensInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11207,8 +11951,11 @@ export type UserUpdateWithoutDeviceTokensInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -11284,6 +12031,9 @@ export type UserUncheckedUpdateWithoutDeviceTokensInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11291,8 +12041,11 @@ export type UserUncheckedUpdateWithoutDeviceTokensInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -11368,6 +12121,9 @@ export type UserCreateWithoutDailyReadinessRecordsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -11375,8 +12131,11 @@ export type UserCreateWithoutDailyReadinessRecordsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -11452,6 +12211,9 @@ export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -11459,8 +12221,11 @@ export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -11552,6 +12317,9 @@ export type UserUpdateWithoutDailyReadinessRecordsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11559,8 +12327,11 @@ export type UserUpdateWithoutDailyReadinessRecordsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -11636,6 +12407,9 @@ export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11643,8 +12417,11 @@ export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -11720,6 +12497,9 @@ export type UserCreateWithoutReadinessBaselinesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -11727,8 +12507,11 @@ export type UserCreateWithoutReadinessBaselinesInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -11804,6 +12587,9 @@ export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -11811,8 +12597,11 @@ export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -11904,6 +12693,9 @@ export type UserUpdateWithoutReadinessBaselinesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11911,8 +12703,11 @@ export type UserUpdateWithoutReadinessBaselinesInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -11988,6 +12783,9 @@ export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -11995,8 +12793,11 @@ export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -12072,6 +12873,9 @@ export type UserCreateWithoutAdaptedWorkoutsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -12079,8 +12883,11 @@ export type UserCreateWithoutAdaptedWorkoutsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -12156,6 +12963,9 @@ export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -12163,8 +12973,11 @@ export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -12256,6 +13069,9 @@ export type UserUpdateWithoutAdaptedWorkoutsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12263,8 +13079,11 @@ export type UserUpdateWithoutAdaptedWorkoutsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -12340,6 +13159,9 @@ export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12347,8 +13169,11 @@ export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -12424,6 +13249,9 @@ export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -12431,8 +13259,11 @@ export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -12508,6 +13339,9 @@ export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -12515,8 +13349,11 @@ export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -12608,6 +13445,9 @@ export type UserUpdateWithoutWeeklyReconciliationRecordsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12615,8 +13455,11 @@ export type UserUpdateWithoutWeeklyReconciliationRecordsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -12692,6 +13535,9 @@ export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12699,8 +13545,11 @@ export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -12776,6 +13625,9 @@ export type UserCreateWithoutWeekTemplatesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -12783,8 +13635,11 @@ export type UserCreateWithoutWeekTemplatesInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -12860,6 +13715,9 @@ export type UserUncheckedCreateWithoutWeekTemplatesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -12867,8 +13725,11 @@ export type UserUncheckedCreateWithoutWeekTemplatesInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -12960,6 +13821,9 @@ export type UserUpdateWithoutWeekTemplatesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -12967,8 +13831,11 @@ export type UserUpdateWithoutWeekTemplatesInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -13044,6 +13911,9 @@ export type UserUncheckedUpdateWithoutWeekTemplatesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -13051,8 +13921,11 @@ export type UserUncheckedUpdateWithoutWeekTemplatesInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -13128,6 +14001,9 @@ export type UserCreateWithoutGuidedPlanSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -13135,8 +14011,11 @@ export type UserCreateWithoutGuidedPlanSessionsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -13212,6 +14091,9 @@ export type UserUncheckedCreateWithoutGuidedPlanSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
@@ -13219,8 +14101,11 @@ export type UserUncheckedCreateWithoutGuidedPlanSessionsInput = {
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -13312,6 +14197,9 @@ export type UserUpdateWithoutGuidedPlanSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -13319,8 +14207,11 @@ export type UserUpdateWithoutGuidedPlanSessionsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -13396,6 +14287,9 @@ export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -13403,8 +14297,11 @@ export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -13480,14 +14377,20 @@ export type UserCreateWithoutMcpOAuthCodesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
   mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -13564,14 +14467,20 @@ export type UserUncheckedCreateWithoutMcpOAuthCodesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -13664,14 +14573,20 @@ export type UserUpdateWithoutMcpOAuthCodesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -13748,14 +14663,20 @@ export type UserUncheckedUpdateWithoutMcpOAuthCodesInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -13832,14 +14753,20 @@ export type UserCreateWithoutMcpOAuthTokensInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
@@ -13916,14 +14843,20 @@ export type UserUncheckedCreateWithoutMcpOAuthTokensInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Date | string | null
   syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   healthTrackingEnabled?: boolean
   isAdmin?: boolean
   tokenVersion?: number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
   apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -14016,14 +14949,20 @@ export type UserUpdateWithoutMcpOAuthTokensInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
@@ -14100,14 +15039,1148 @@ export type UserUncheckedUpdateWithoutMcpOAuthTokensInput = {
   uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
   mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUncheckedUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUncheckedUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUncheckedUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedUpdateManyWithoutUserNestedInput
+  foodFavorites?: Prisma.FoodFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutStravaWebhookJobsInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  hrZoneMethod?: string | null
+  vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
+  swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordCreateNestedManyWithoutUserInput
+  foodFavorites?: Prisma.FoodFavoriteCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutStravaWebhookJobsInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  hrZoneMethod?: string | null
+  vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
+  swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementUncheckedCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackUncheckedCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentUncheckedCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedCreateNestedManyWithoutUserInput
+  foodFavorites?: Prisma.FoodFavoriteUncheckedCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutStravaWebhookJobsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutStravaWebhookJobsInput, Prisma.UserUncheckedCreateWithoutStravaWebhookJobsInput>
+}
+
+export type UserUpsertWithoutStravaWebhookJobsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutStravaWebhookJobsInput, Prisma.UserUncheckedUpdateWithoutStravaWebhookJobsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutStravaWebhookJobsInput, Prisma.UserUncheckedCreateWithoutStravaWebhookJobsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutStravaWebhookJobsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutStravaWebhookJobsInput, Prisma.UserUncheckedUpdateWithoutStravaWebhookJobsInput>
+}
+
+export type UserUpdateWithoutStravaWebhookJobsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUpdateManyWithoutUserNestedInput
+  foodFavorites?: Prisma.FoodFavoriteUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutStravaWebhookJobsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUncheckedUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUncheckedUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUncheckedUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedUpdateManyWithoutUserNestedInput
+  foodFavorites?: Prisma.FoodFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutActivityFeedClockInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  hrZoneMethod?: string | null
+  vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
+  swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordCreateNestedManyWithoutUserInput
+  foodFavorites?: Prisma.FoodFavoriteCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutActivityFeedClockInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  hrZoneMethod?: string | null
+  vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
+  swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementUncheckedCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackUncheckedCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentUncheckedCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedCreateNestedManyWithoutUserInput
+  foodFavorites?: Prisma.FoodFavoriteUncheckedCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutActivityFeedClockInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutActivityFeedClockInput, Prisma.UserUncheckedCreateWithoutActivityFeedClockInput>
+}
+
+export type UserUpsertWithoutActivityFeedClockInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutActivityFeedClockInput, Prisma.UserUncheckedUpdateWithoutActivityFeedClockInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutActivityFeedClockInput, Prisma.UserUncheckedCreateWithoutActivityFeedClockInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutActivityFeedClockInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutActivityFeedClockInput, Prisma.UserUncheckedUpdateWithoutActivityFeedClockInput>
+}
+
+export type UserUpdateWithoutActivityFeedClockInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUpdateManyWithoutUserNestedInput
+  foodFavorites?: Prisma.FoodFavoriteUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutActivityFeedClockInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedChanges?: Prisma.ActivityFeedChangeUncheckedUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUncheckedUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUncheckedUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUncheckedUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedUpdateManyWithoutUserNestedInput
+  foodFavorites?: Prisma.FoodFavoriteUncheckedUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutActivityFeedChangesInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  hrZoneMethod?: string | null
+  vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
+  swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockCreateNestedOneWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordCreateNestedManyWithoutUserInput
+  foodFavorites?: Prisma.FoodFavoriteCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutActivityFeedChangesInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  hrZoneMethod?: string | null
+  vdotCorrectionFactor?: number
+  effectiveVo2maxCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  ftpWatts?: number | null
+  autoEstimateFtp?: boolean
+  matchToMyWhoosh?: boolean
+  swimCssSecPer100m?: number | null
+  primaryLoadMetric?: string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  stravaSyncToken?: string | null
+  stravaSyncExpiresAt?: Date | string | null
+  stravaSyncRange?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  tokenVersion?: number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedCreateNestedManyWithoutUserInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedCreateNestedManyWithoutUserInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedCreateNestedOneWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementUncheckedCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackUncheckedCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentUncheckedCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedCreateNestedManyWithoutUserInput
+  foodFavorites?: Prisma.FoodFavoriteUncheckedCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutActivityFeedChangesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutActivityFeedChangesInput, Prisma.UserUncheckedCreateWithoutActivityFeedChangesInput>
+}
+
+export type UserUpsertWithoutActivityFeedChangesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutActivityFeedChangesInput, Prisma.UserUncheckedUpdateWithoutActivityFeedChangesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutActivityFeedChangesInput, Prisma.UserUncheckedCreateWithoutActivityFeedChangesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutActivityFeedChangesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutActivityFeedChangesInput, Prisma.UserUncheckedUpdateWithoutActivityFeedChangesInput>
+}
+
+export type UserUpdateWithoutActivityFeedChangesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUpdateOneWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUpdateManyWithoutUserNestedInput
+  foodFavorites?: Prisma.FoodFavoriteUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutActivityFeedChangesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZoneMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  effectiveVo2maxCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ftpWatts?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  autoEstimateFtp?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  matchToMyWhoosh?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  swimCssSecPer100m?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  primaryLoadMetric?: Prisma.StringFieldUpdateOperationsInput | string
+  uiPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  stravaSyncToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaSyncExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  stravaSyncRange?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  mcpOAuthCodes?: Prisma.McpOAuthCodeUncheckedUpdateManyWithoutUserNestedInput
+  mcpOAuthTokens?: Prisma.McpOAuthTokenUncheckedUpdateManyWithoutUserNestedInput
+  stravaWebhookJobs?: Prisma.StravaWebhookJobUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  activityFeedClock?: Prisma.ActivityFeedClockUncheckedUpdateOneWithoutUserNestedInput
   usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
   apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -14148,8 +16221,10 @@ export type UserUncheckedUpdateWithoutMcpOAuthTokensInput = {
 export type UserCountOutputType = {
   mcpOAuthCodes: number
   mcpOAuthTokens: number
+  stravaWebhookJobs: number
   accounts: number
   activities: number
+  activityFeedChanges: number
   usageHistory: number
   chatMessages: number
   chatSessions: number
@@ -14181,8 +16256,10 @@ export type UserCountOutputType = {
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   mcpOAuthCodes?: boolean | UserCountOutputTypeCountMcpOAuthCodesArgs
   mcpOAuthTokens?: boolean | UserCountOutputTypeCountMcpOAuthTokensArgs
+  stravaWebhookJobs?: boolean | UserCountOutputTypeCountStravaWebhookJobsArgs
   accounts?: boolean | UserCountOutputTypeCountAccountsArgs
   activities?: boolean | UserCountOutputTypeCountActivitiesArgs
+  activityFeedChanges?: boolean | UserCountOutputTypeCountActivityFeedChangesArgs
   usageHistory?: boolean | UserCountOutputTypeCountUsageHistoryArgs
   chatMessages?: boolean | UserCountOutputTypeCountChatMessagesArgs
   chatSessions?: boolean | UserCountOutputTypeCountChatSessionsArgs
@@ -14238,6 +16315,13 @@ export type UserCountOutputTypeCountMcpOAuthTokensArgs<ExtArgs extends runtime.T
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountStravaWebhookJobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StravaWebhookJobWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.AccountWhereInput
 }
@@ -14247,6 +16331,13 @@ export type UserCountOutputTypeCountAccountsArgs<ExtArgs extends runtime.Types.E
  */
 export type UserCountOutputTypeCountActivitiesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.ActivityWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountActivityFeedChangesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ActivityFeedChangeWhereInput
 }
 
 /**
@@ -14476,6 +16567,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   uiPreferences?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
+  stravaSyncToken?: boolean
+  stravaSyncExpiresAt?: boolean
+  stravaSyncRange?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   healthTrackingEnabled?: boolean
@@ -14483,8 +16577,11 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   tokenVersion?: boolean
   mcpOAuthCodes?: boolean | Prisma.User$mcpOAuthCodesArgs<ExtArgs>
   mcpOAuthTokens?: boolean | Prisma.User$mcpOAuthTokensArgs<ExtArgs>
+  stravaWebhookJobs?: boolean | Prisma.User$stravaWebhookJobsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
+  activityFeedClock?: boolean | Prisma.User$activityFeedClockArgs<ExtArgs>
+  activityFeedChanges?: boolean | Prisma.User$activityFeedChangesArgs<ExtArgs>
   usageHistory?: boolean | Prisma.User$usageHistoryArgs<ExtArgs>
   apiKey?: boolean | Prisma.User$apiKeyArgs<ExtArgs>
   chatMessages?: boolean | Prisma.User$chatMessagesArgs<ExtArgs>
@@ -14562,6 +16659,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   uiPreferences?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
+  stravaSyncToken?: boolean
+  stravaSyncExpiresAt?: boolean
+  stravaSyncRange?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   healthTrackingEnabled?: boolean
@@ -14613,6 +16713,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   uiPreferences?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
+  stravaSyncToken?: boolean
+  stravaSyncExpiresAt?: boolean
+  stravaSyncRange?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   healthTrackingEnabled?: boolean
@@ -14664,6 +16767,9 @@ export type UserSelectScalar = {
   uiPreferences?: boolean
   lastSyncAt?: boolean
   syncInProgress?: boolean
+  stravaSyncToken?: boolean
+  stravaSyncExpiresAt?: boolean
+  stravaSyncRange?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   healthTrackingEnabled?: boolean
@@ -14671,12 +16777,15 @@ export type UserSelectScalar = {
   tokenVersion?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "effectiveVo2maxCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "ftpWatts" | "autoEstimateFtp" | "matchToMyWhoosh" | "swimCssSecPer100m" | "primaryLoadMetric" | "uiPreferences" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin" | "tokenVersion", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "hrZoneMethod" | "vdotCorrectionFactor" | "effectiveVo2maxCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "ftpWatts" | "autoEstimateFtp" | "matchToMyWhoosh" | "swimCssSecPer100m" | "primaryLoadMetric" | "uiPreferences" | "lastSyncAt" | "syncInProgress" | "stravaSyncToken" | "stravaSyncExpiresAt" | "stravaSyncRange" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin" | "tokenVersion", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   mcpOAuthCodes?: boolean | Prisma.User$mcpOAuthCodesArgs<ExtArgs>
   mcpOAuthTokens?: boolean | Prisma.User$mcpOAuthTokensArgs<ExtArgs>
+  stravaWebhookJobs?: boolean | Prisma.User$stravaWebhookJobsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
+  activityFeedClock?: boolean | Prisma.User$activityFeedClockArgs<ExtArgs>
+  activityFeedChanges?: boolean | Prisma.User$activityFeedChangesArgs<ExtArgs>
   usageHistory?: boolean | Prisma.User$usageHistoryArgs<ExtArgs>
   apiKey?: boolean | Prisma.User$apiKeyArgs<ExtArgs>
   chatMessages?: boolean | Prisma.User$chatMessagesArgs<ExtArgs>
@@ -14717,8 +16826,11 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   objects: {
     mcpOAuthCodes: Prisma.$McpOAuthCodePayload<ExtArgs>[]
     mcpOAuthTokens: Prisma.$McpOAuthTokenPayload<ExtArgs>[]
+    stravaWebhookJobs: Prisma.$StravaWebhookJobPayload<ExtArgs>[]
     accounts: Prisma.$AccountPayload<ExtArgs>[]
     activities: Prisma.$ActivityPayload<ExtArgs>[]
+    activityFeedClock: Prisma.$ActivityFeedClockPayload<ExtArgs> | null
+    activityFeedChanges: Prisma.$ActivityFeedChangePayload<ExtArgs>[]
     usageHistory: Prisma.$AiUsageHistoryPayload<ExtArgs>[]
     apiKey: Prisma.$ApiKeyPayload<ExtArgs> | null
     chatMessages: Prisma.$ChatMessagePayload<ExtArgs>[]
@@ -14794,6 +16906,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     uiPreferences: runtime.JsonValue | null
     lastSyncAt: Date | null
     syncInProgress: boolean
+    stravaSyncToken: string | null
+    stravaSyncExpiresAt: Date | null
+    stravaSyncRange: string | null
     createdAt: Date
     updatedAt: Date
     healthTrackingEnabled: boolean
@@ -15195,8 +17310,11 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   readonly [Symbol.toStringTag]: "PrismaPromise"
   mcpOAuthCodes<T extends Prisma.User$mcpOAuthCodesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mcpOAuthCodesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$McpOAuthCodePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   mcpOAuthTokens<T extends Prisma.User$mcpOAuthTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mcpOAuthTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$McpOAuthTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  stravaWebhookJobs<T extends Prisma.User$stravaWebhookJobsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$stravaWebhookJobsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StravaWebhookJobPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   accounts<T extends Prisma.User$accountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   activities<T extends Prisma.User$activitiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$activitiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ActivityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  activityFeedClock<T extends Prisma.User$activityFeedClockArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$activityFeedClockArgs<ExtArgs>>): Prisma.Prisma__ActivityFeedClockClient<runtime.Types.Result.GetResult<Prisma.$ActivityFeedClockPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  activityFeedChanges<T extends Prisma.User$activityFeedChangesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$activityFeedChangesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ActivityFeedChangePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   usageHistory<T extends Prisma.User$usageHistoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$usageHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiUsageHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   apiKey<T extends Prisma.User$apiKeyArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$apiKeyArgs<ExtArgs>>): Prisma.Prisma__ApiKeyClient<runtime.Types.Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   chatMessages<T extends Prisma.User$chatMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$chatMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChatMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -15299,6 +17417,9 @@ export interface UserFieldRefs {
   readonly uiPreferences: Prisma.FieldRef<"User", 'Json'>
   readonly lastSyncAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly syncInProgress: Prisma.FieldRef<"User", 'Boolean'>
+  readonly stravaSyncToken: Prisma.FieldRef<"User", 'String'>
+  readonly stravaSyncExpiresAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly stravaSyncRange: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly healthTrackingEnabled: Prisma.FieldRef<"User", 'Boolean'>
@@ -15745,6 +17866,30 @@ export type User$mcpOAuthTokensArgs<ExtArgs extends runtime.Types.Extensions.Int
 }
 
 /**
+ * User.stravaWebhookJobs
+ */
+export type User$stravaWebhookJobsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StravaWebhookJob
+   */
+  select?: Prisma.StravaWebhookJobSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StravaWebhookJob
+   */
+  omit?: Prisma.StravaWebhookJobOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StravaWebhookJobInclude<ExtArgs> | null
+  where?: Prisma.StravaWebhookJobWhereInput
+  orderBy?: Prisma.StravaWebhookJobOrderByWithRelationInput | Prisma.StravaWebhookJobOrderByWithRelationInput[]
+  cursor?: Prisma.StravaWebhookJobWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StravaWebhookJobScalarFieldEnum | Prisma.StravaWebhookJobScalarFieldEnum[]
+}
+
+/**
  * User.accounts
  */
 export type User$accountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -15790,6 +17935,49 @@ export type User$activitiesArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.ActivityScalarFieldEnum | Prisma.ActivityScalarFieldEnum[]
+}
+
+/**
+ * User.activityFeedClock
+ */
+export type User$activityFeedClockArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ActivityFeedClock
+   */
+  select?: Prisma.ActivityFeedClockSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ActivityFeedClock
+   */
+  omit?: Prisma.ActivityFeedClockOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ActivityFeedClockInclude<ExtArgs> | null
+  where?: Prisma.ActivityFeedClockWhereInput
+}
+
+/**
+ * User.activityFeedChanges
+ */
+export type User$activityFeedChangesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ActivityFeedChange
+   */
+  select?: Prisma.ActivityFeedChangeSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ActivityFeedChange
+   */
+  omit?: Prisma.ActivityFeedChangeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ActivityFeedChangeInclude<ExtArgs> | null
+  where?: Prisma.ActivityFeedChangeWhereInput
+  orderBy?: Prisma.ActivityFeedChangeOrderByWithRelationInput | Prisma.ActivityFeedChangeOrderByWithRelationInput[]
+  cursor?: Prisma.ActivityFeedChangeWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ActivityFeedChangeScalarFieldEnum | Prisma.ActivityFeedChangeScalarFieldEnum[]
 }
 
 /**

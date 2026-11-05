@@ -54,6 +54,10 @@ model User {
   mcpOAuthTokens            McpOAuthToken[]
   lastSyncAt            DateTime?
   syncInProgress        Boolean              @default(false)
+  stravaSyncToken       String?
+  stravaSyncExpiresAt   DateTime?
+  stravaSyncRange       String?
+  stravaWebhookJobs     StravaWebhookJob[]
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
   healthTrackingEnabled Boolean              @default(false)
@@ -61,6 +65,8 @@ model User {
   tokenVersion          Int                  @default(0)
   accounts              Account[]
   activities            Activity[]
+  activityFeedClock     ActivityFeedClock?
+  activityFeedChanges   ActivityFeedChange[]
   usageHistory          AiUsageHistory[]
   apiKey                ApiKey?
   chatMessages          ChatMessage[]
@@ -381,6 +387,7 @@ model Activity {
   aiFeedback         ActivityAiFeedback?
   feedbackJob        FeedbackJob?
 
+  @@index([userId, id])
   @@index([userId, startDate])
   @@index([type])
   @@index([userId, type, startDate])
@@ -1406,3 +1413,45 @@ model McpOAuthToken {
   @@index([accessTokenHash])
 }
 
+
+/// Latest event per activity, kept briefly after processing for retry deduplication.
+model StravaWebhookJob {
+  userId           String
+  activityId       BigInt
+  ownerId          String
+  eventTime        BigInt
+  eventKey         String
+  kind             String
+  title            String?
+  version          String
+  dueAt            DateTime
+  attempts         Int      @default(0)
+  completedAt      DateTime?
+  fitnessFrom      DateTime?
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, activityId])
+  @@index([completedAt, dueAt])
+  @@index([userId, completedAt, dueAt])
+}
+
+
+// The trigger in the activity change feed migration maintains these rows.
+model ActivityFeedClock {
+  userId       String @id
+  version      BigInt @default(0)
+  minimum      BigInt @default(0)
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ActivityFeedChange {
+  userId       String
+  activityId   String
+  version      BigInt
+  deletedAt    DateTime?
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, activityId])
+  @@index([userId, version])
+  @@index([userId, deletedAt])
+}

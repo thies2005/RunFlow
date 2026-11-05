@@ -85,12 +85,15 @@ jest.mock('@/lib/rateLimit', () => ({
     rateLimitHeaders: jest.fn(() => ({})),
 }));
 
+jest.mock('@/lib/redis', () => ({ invalidateUserDashboardCache: jest.fn() }));
+
 jest.mock('@/lib/plan/snapshot', () => ({
     createSnapshot: jest.fn(),
 }));
 
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
+import { invalidateUserDashboardCache } from '@/lib/redis';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { createSnapshot } from '@/lib/plan/snapshot';
 
@@ -171,6 +174,7 @@ describe('POST /api/plans/import', () => {
     it('creates the goal + workouts verbatim and returns the id map', async () => {
         const res = await POST(buildRequest(validBody()));
         expect(res.status).toBe(201);
+        expect(invalidateUserDashboardCache).toHaveBeenCalledWith('user-1');
 
         const json = await res.json();
         expect(json.goalId).toBe('goal-server-1');

@@ -56,17 +56,22 @@ Base: `/api/mobile/v1` (JWT unless noted)
 |---|---|---|
 | `auth` | `email-login`, `login`, `register`, `verify-email`, `resend-verification`, `forgot-password`, `refresh`, `logout` | Account & token lifecycle |
 | `dashboard` | `GET /dashboard` | Dashboard payload for the app home screen |
-| `activities` | `GET /activities`, `GET /activities/{id}` (detail incl. stored streams), create/update/delete | Activity access; phone-recorded streams are uploaded here so the web can chart them |
+| `activities` | `GET /activities`, `GET /activities/changes`, `GET /activities/{id}` (detail incl. stored streams), create/update/delete | Activity access; phone-recorded streams are uploaded here so the web can chart them |
 | `analytics` | `GET /analytics/stats`, `GET /analytics/history`, `GET /analytics/cycling` | Running analytics snapshot, PMC history, cycling analytics |
 | `goals` | `GET /goals`, `POST /goals`, `GET/PUT/DELETE /goals/{id}`, `GET /goals/{id}/export` | Plan CRUD. `POST /api/plans` / `POST /api/plans/import` (web routes, mobile-JWT capable) upload locally generated plans verbatim |
 | `workouts` | `GET /workouts`, `PUT /workouts/{id}`, `POST /workouts/{id}/complete`, `POST /workouts/reorder` | Workout edits, completion, day shifts |
-| `sync` | `POST /sync`, `GET /sync` | Outbox drain + server delta pull; `POST` also triggers server-side Strava import |
+| `sync` | `POST /sync`, `GET /sync?progress=1` | Starts or follows a server-side Strava import |
 | `health` | `GET /health/daily`, `/health/history`, `/health/body-composition`, `/health/fasting`, `/health/insights`, `/health/supplements` (+ `/analytics`), `/health/sync-batch`, `/health/nutrition/*` (log, meals, target, suggest, search, scan, ai-scan, analytics, favorites) | Health metrics ingestion & nutrition/supplement tracking |
 | `readiness` | `GET /readiness/daily` (+ `/{date}`), `/readiness/weekly` (+ `/{weekStart}`), `/readiness/history`, `/readiness/baseline` | The Android app scores readiness **on-device** and syncs the resulting records up |
 | `ai` | `POST /ai/activity-feedback` | On-demand AI overview for a run (same generation as the web's AI Coach Feedback card); queued fallback when the LLM run exceeds the 30 s client read timeout. AI chat streams from the web route `/api/ai/chat` (SSE) |
 | `settings` | `GET/PUT /settings/api-key` | Server API key for MCP/external use |
 | `user` | `GET/PUT /user/profile`, `/user/consent` (+ `/check`) | Profile & consent management |
 | `device` | `POST /device/token` | Push notification device registration |
+
+`POST /api/mobile/v1/sync` accepts `{"automatic":true}` for background catch-up.
+User-initiated imports omit it or send `false`. A conflict means an import
+already holds the account's lease. `GET /api/mobile/v1/sync?progress=1` returns
+only `syncInProgress` and `lastSyncAt`; it does not count activities.
 
 ---
 
@@ -78,6 +83,20 @@ Base: `/api/mobile/v1` (JWT unless noted)
 3. Failures dead-letter after 8 retries or on permanent 4xx — nothing is silently dropped.
 4. WorkManager runs a periodic sync every 30 minutes (network-constrained); explicit user
    actions (pull-to-refresh, "Sync now") force a sync past the Strava import throttle.
+
+### Activity changes
+
+`GET /api/mobile/v1/activities/changes?cursor=<opaque>` returns
+`{ activities, deletedIds, cursor, hasMore }`. The activity rows use the same
+shape as `GET /activities`; `deletedIds` contains server activity IDs. Omit the
+cursor to start a full snapshot. Keep following its continuation cursor while
+`hasMore` is true, and only prune missing local rows when the snapshot finishes.
+The final snapshot cursor starts incremental sync, including writes that landed
+during pagination. Save each cursor in the same local transaction as its changes.
+
+Cursors are account-scoped. A response with `reset: true` means to start a new
+snapshot; for example, the cursor may predate retained deletions. Keep the legacy
+activity list for servers that do not expose the change feed.
 
 Plans are bridged between web and app via pure mappers (`PlanMappers`): units, JS weekdays
 0–6, ISO dates and `restDays` arrays are converted, and raw web workout types/phases (BRICK,

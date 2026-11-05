@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
+import { invalidateUserDashboardCache } from '@/lib/redis';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
@@ -84,6 +85,8 @@ export async function POST(
                 linkedActivityId: activityId
             }
         });
+
+        await invalidateUserDashboardCache(user.id);
 
         // Serialize dates
         const serialized = {

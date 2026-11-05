@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
+import { invalidateUserDashboardCache } from '@/lib/redis';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
@@ -170,6 +171,8 @@ export async function PATCH(
       where: { id },
       data: updateData,
     });
+
+    await invalidateUserDashboardCache(user.id);
 
     const justCompleted = body.isCompleted === true && !workout.isCompleted;
     if (justCompleted) {

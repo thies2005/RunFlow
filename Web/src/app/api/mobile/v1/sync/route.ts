@@ -9,12 +9,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
-import { syncUserActivities, getSyncStatus } from '@/lib/strava/sync';
+import { getSyncProgress, getSyncStatus } from '@/lib/strava/sync';
+import { startStravaSync } from '@/lib/strava/startSync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
-import { logger } from '@/lib/logging/logger';
-import { enqueueFeedbackJobsForActivities } from '@/lib/ai/feedback';
-import { runBackgroundTask } from '@/lib/utils/backgroundTask';
 
 export async function POST(request: NextRequest) {
     try {
@@ -34,55 +32,18 @@ export async function POST(request: NextRequest) {
             return errorResponses.unauthorized();
         }
 
-        // Check if sync already in progress
-        const status = await getSyncStatus(user.id);
-        if (status.syncInProgress) {
-            return errorResponses.conflict(
-                'Sync already in progress',
-                status
-            );
-        }
-
-        // Get options
-        const body = await request.json().catch(() => ({}));
-        const range = body.range || 'SINCE_LAST_ACTIVITY';
-
-        // Start sync
-        logger.info('Starting background sync', { userId: user.id, range, source: 'Mobile API' });
-        runBackgroundTask(async () => {
-            try {
-                const result = await syncUserActivities(user.id, range);
-                logger.info('Mobile sync completed, checking for feedback jobs to enqueue', {
-                    userId: user.id,
-                    synced: result.synced,
-                    activityCount: result.syncedActivityIds.length,
-                    source: 'Mobile API'
-                });
-                try {
-                    await enqueueFeedbackJobsForActivities(user.id, result.syncedActivityIds);
-                } catch (err) {
-                    logger.error('Failed to enqueue feedback jobs after mobile sync', { userId: user.id, error: err instanceof Error ? err.message : String(err) });
-                }
-            } catch (err) {
-                logger.error('Background sync failed', { userId: user.id, error: err, source: 'Mobile API' });
-            }
-        });
-
-        // Get updated sync status for response
-        const updatedStatus = await getSyncStatus(user.id);
+        const body = await request.json().catch(() => null);
+        const result = await startStravaSync(user.id, body?.range, body?.automatic === true);
+        if (result.status === 'busy') return errorResponses.conflict('Sync already in progress', result);
 
         return NextResponse.json({
             success: true,
-            // Android QuickSyncResponse compatibility
-            syncStarted: true,
-            activitiesSynced: 0, // Not available synchronously
-            lastSyncAt: updatedStatus.lastSyncAt?.toISOString() || null,
-            // Original fields for backward compatibility
+            syncStarted: result.status === 'started',
+            activitiesSynced: 0, // Background imports are not available synchronously.
+            lastSyncAt: result.lastSyncAt?.toISOString() ?? null,
             synced: 0,
             skipped: 0,
         }, { headers: rateLimitHeaders(rateLimitResult) });
-
-
     } catch (error) {
         return handleApiError(error, {
             path: '/api/mobile/v1/sync'
@@ -98,8 +59,10 @@ export async function GET(request: NextRequest) {
             return errorResponses.unauthorized();
         }
 
-        const status = await getSyncStatus(user.id);
-        return NextResponse.json(status);
+        const status = request.nextUrl.searchParams.get('progress') === '1'
+            ? await getSyncProgress(user.id)
+            : await getSyncStatus(user.id);
+        return NextResponse.json(status, { headers: { 'Cache-Control': 'private, no-store' } });
 
     } catch (error) {
         return handleApiError(error, {

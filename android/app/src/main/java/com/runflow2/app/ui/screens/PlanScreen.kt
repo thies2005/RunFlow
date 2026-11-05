@@ -146,6 +146,9 @@ fun PlanScreen(
             }
         }
     }
+    val activitiesByWeek = remember(activities) {
+        activities.groupBy { Format.localDate(it.startDate).with(DayOfWeek.MONDAY) }
+    }
     val loadMetric = when (settings.primaryLoadMetric.uppercase()) {
         "TRIMP" -> "TRIMP"
         "DUAL" -> "TSS"
@@ -285,7 +288,9 @@ fun PlanScreen(
                             weekNumber = if (firstWeek != null)
                                 ChronoUnit.WEEKS.between(firstWeek, weekMonday).toInt() + 1 else 1,
                             phase = phase,
-                            totalKm = weekWorkouts.sumOf { it.targetDistanceKm ?: 0.0 },
+                            recorded = ComplianceCalculator.recordedTotals(
+                                activitiesByWeek[weekMonday].orEmpty(), useTrimp = loadMetric == "TRIMP",
+                            ),
                             unit = unit,
                             isCurrent = weekMonday == today.with(DayOfWeek.MONDAY),
                             compliance = weekCompliance,
@@ -547,7 +552,7 @@ private fun GoalHeaderCard(
 private fun WeekHeader(
     weekNumber: Int,
     phase: PlanPhase?,
-    totalKm: Double,
+    recorded: ComplianceCalculator.RecordedTotals,
     unit: DistanceUnit,
     isCurrent: Boolean,
     compliance: ComplianceCalculator.WeeklyCompliance? = null,
@@ -584,13 +589,22 @@ private fun WeekHeader(
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    Format.distance(totalKm, unit),
+                    "${Format.distance(recorded.km, unit)} / ${Format.distance(compliance?.plannedKm ?: 0.0, unit)}",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
+                Text(
+                    if (loadMetric == "TSS" && compliance != null && compliance.plannedTss > 0) {
+                        "${recorded.load.roundToInt()} / ${compliance.plannedTss.roundToInt()} TSS"
+                    } else {
+                        "${recorded.load.roundToInt()} $loadMetric recorded"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 if (compliance != null && compliance.plannedTss > 0) {
                     Text(
-                        "${compliance.actualTss.roundToInt()} / ${compliance.plannedTss.roundToInt()} $loadMetric · ${compliance.compliancePct}%",
+                        "${compliance.compliancePct}% plan adherence",
                         style = MaterialTheme.typography.labelSmall,
                         color = complianceColorToComposeColor(compliance.statusColor),
                         fontWeight = FontWeight.SemiBold,

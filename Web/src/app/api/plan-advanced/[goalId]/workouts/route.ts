@@ -1,3 +1,4 @@
+import { invalidateUserDashboardCache } from '@/lib/redis';
 import { prisma } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { NextResponse } from 'next/server';
@@ -265,6 +266,8 @@ export async function POST(req: Request, ctx: RouteContext) {
                 linkedActivityId: linkedActivityId || null,
             },
         });
+
+        await invalidateUserDashboardCache(user.id);
 
         return NextResponse.json({ workout }, { status: 201 });
     } catch (error) {

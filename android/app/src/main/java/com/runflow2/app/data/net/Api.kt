@@ -262,6 +262,15 @@ data class ActivitiesResponse(
 )
 
 @Serializable
+data class ActivityChangesResponse(
+    val activities: List<ActivityDto> = emptyList(),
+    val deletedIds: List<String> = emptyList(),
+    val cursor: String,
+    val hasMore: Boolean = false,
+    val reset: Boolean = false,
+)
+
+@Serializable
 data class ActivityWrapper(val activity: ActivityDto)
 
 // ---------- profile ----------
@@ -525,6 +534,15 @@ data class PatchWorkoutRequest(
     val adaptationType: String? = null,
 )
 
+/** The outbox sends full workout state; null explicitly removes an old link. */
+fun PatchWorkoutRequest.toWireBody(): kotlinx.serialization.json.JsonObject {
+    val fields = Api.json.encodeToJsonElement(PatchWorkoutRequest.serializer(), this)
+        as kotlinx.serialization.json.JsonObject
+    if (isCompleted == null || linkedActivityId != null) return fields
+    return kotlinx.serialization.json.JsonObject(fields + ("linkedActivityId" to kotlinx.serialization.json.JsonNull))
+}
+
+
 @Serializable
 data class UpdateGoalRequest(
     val name: String? = null,
@@ -582,11 +600,18 @@ data class GoalWrapper(val goal: PlanGoalDto)
 // ---------- server-side sync trigger ----------
 
 @Serializable
+data class TriggerSyncRequest(val automatic: Boolean)
+
+@Serializable
 data class TriggerSyncResponse(
     val success: Boolean = false,
     val activitiesSynced: Int = 0,
     val lastSyncAt: String? = null,
+    val syncStarted: Boolean = false,
 )
+
+@Serializable
+data class ServerSyncProgress(val syncInProgress: Boolean, val lastSyncAt: String? = null)
 
 // ---------- AI activity feedback (web's "AI overview") ----------
 
@@ -830,6 +855,9 @@ interface RunFlowApi {
         @Query("offset") offset: Int = 0,
     ): ActivitiesResponse
 
+    @GET("/api/mobile/v1/activities/changes")
+    suspend fun activityChanges(@Query("cursor") cursor: String? = null): ActivityChangesResponse
+
     @POST("/api/mobile/v1/activities")
     suspend fun createActivity(@Body body: CreateActivityRequest): ActivityWrapper
 
@@ -877,7 +905,7 @@ interface RunFlowApi {
 
     // workout-level edits (targets, description, date shift, completion)
     @PATCH("/api/mobile/v1/workouts/{id}")
-    suspend fun patchWorkout(@Path("id") id: String, @Body body: PatchWorkoutRequest): PlanWorkoutDto
+    suspend fun patchWorkout(@Path("id") id: String, @Body body: kotlinx.serialization.json.JsonObject): PlanWorkoutDto
 
     // workout create/delete on existing plans (goal-scoped web routes that
     // accept the mobile JWT; create snapshots, returns 201 + { workout })
@@ -899,7 +927,10 @@ interface RunFlowApi {
 
     // server-side sync (e.g. Strava import); 409 = already running
     @POST("/api/mobile/v1/sync")
-    suspend fun triggerServerSync(): TriggerSyncResponse
+    suspend fun triggerServerSync(@Body request: TriggerSyncRequest): TriggerSyncResponse
+
+    @GET("/api/mobile/v1/sync?progress=1")
+    suspend fun serverSyncProgress(): ServerSyncProgress
 
     // analytics — the server's two-metric stats (web-parity computation).
     // Cached on-device after a sync and preferred while fresh; offline or

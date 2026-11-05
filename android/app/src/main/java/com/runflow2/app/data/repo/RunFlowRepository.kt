@@ -443,7 +443,11 @@ class RunFlowRepository(
     suspend fun renameActivity(id: String, newName: String) =
         updateActivityDetails(id = id, newName = newName)
 
-    suspend fun clearActivities() = activityDao.clear()
+    suspend fun clearActivities() = db.withTransaction {
+        activityDao.clear()
+        db.activitySyncCursorDao().clear()
+        db.activitySyncCursorDao().clearAllUnseen()
+    }
 
     /**
      * Fetches the full server record for a synced activity and caches its
@@ -1482,6 +1486,8 @@ class RunFlowRepository(
             authStore.clear()
             db.withTransaction {
                 activityDao.clear()
+                db.activitySyncCursorDao().clear()
+                db.activitySyncCursorDao().clearAllUnseen()
                 workoutDao.clear()
                 goalDao.clear()
                 db.chatDao().clear()

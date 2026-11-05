@@ -1,3 +1,4 @@
+import { invalidateUserDashboardCache } from '@/lib/redis';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
@@ -47,6 +48,7 @@ export async function PATCH(request: NextRequest) {
             data: { scheduledDate: new Date(newDate) },
         });
 
+        await invalidateUserDashboardCache(user.id);
         return NextResponse.json({ success: true, workout: updatedWorkout });
     } catch (error) {
         console.error('Mobile workout reorder error:', error);

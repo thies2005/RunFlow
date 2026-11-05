@@ -38,13 +38,14 @@ class SyncHydrationIntegrationTest {
         var profileLimited = false
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
+                if (request.path?.substringBefore('?') == "/api/mobile/v1/activities/changes") return MockResponse().setResponseCode(404)
                 requests.add(request)
                 val response = when {
                     request.path == "/api/mobile/v1/user/profile" && profileLimited -> return MockResponse().setResponseCode(429).addHeader("Retry-After", "180").setBody("""{"error":"Too many requests. Please try again later.","code":"RATE_LIMITED","details":{"retryAfter":120}}""")
                     request.path == "/api/mobile/v1/user/profile" -> """{"user":{"id":"user1","name":"Thies Schuelken","weight":68.5,"hrMax":185}}"""
                     request.path == "/api/plans" -> """{"goals":[{"id":"goal1","name":"Web plan","raceDate":"2027-05-01","isActive":true,"workouts":[{"id":"deleted-workout","scheduledDate":"2027-01-01"},{"id":"kept-workout","scheduledDate":"2027-01-02"}]},{"id":"deleted-goal","raceDate":"2027-05-01"}]}"""
                     request.path?.startsWith("/api/mobile/v1/activities?") == true -> when {
-                        !malformedActivities -> """{"activities":[{"id":"deleted-activity"}]}"""
+                        !malformedActivities -> """{"activities":[{"id":"deleted-activity"}],"total":1}"""
                         request.path?.contains("offset=0") == true -> """{"activities":[{"id":"partial-page"}],"hasMore":true}"""
                         else -> "not-json"
                     }

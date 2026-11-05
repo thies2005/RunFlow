@@ -75,6 +75,22 @@ The `/api/health` endpoint provides real-time system status:
 
 ---
 
+## Strava sync rollout
+
+Apply Prisma migrations before deploying the new web server. Use
+`prisma migrate deploy`: the mobile activity feed depends on database
+triggers, which schema push alone does not install. Deploy the server
+before distributing the Android build. The Docker and Coolify cron service
+retries the Strava queue; deployments without that service should
+call `POST /api/cron/strava-webhooks` with the existing `CRON_SECRET` every minute.
+
+Watch the age of the oldest due webhook job and repeated
+`Strava webhook job delayed` logs. Compare upstream requests per imported
+activity and time from webhook receipt to visible activity before and
+after rollout. Compare dashboard requests during a manual sync and
+mobile activity response bytes after the first snapshot. Check that
+manual sync, missed-event catch-up, and deletion all still work.
+
 ## How to Access Dashboards
 
 ### Sentry

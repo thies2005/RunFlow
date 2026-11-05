@@ -150,6 +150,8 @@ class LocalBackupManager(
             }
 
             db.activityDao().clear()
+            db.activitySyncCursorDao().clear()
+            db.activitySyncCursorDao().clearAllUnseen()
             if (activities.isNotEmpty()) {
                 db.activityDao().upsertAll(activities)
             }

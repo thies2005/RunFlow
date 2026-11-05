@@ -1,3 +1,4 @@
+import { invalidateUserDashboardCache } from '@/lib/redis';
 /**
  * Mobile Activity Detail Endpoint
  * 
@@ -188,6 +189,11 @@ export async function PUT(
             powerZone7Time: activity.powerZone7Time ?? null,
         };
 
+        if (type !== undefined || trainingType !== undefined || npWatts !== undefined || bikeTss !== undefined) {
+            await updateFitnessCache(user.id, [{ startDate: activity.startDate }]);
+        }
+        await invalidateUserDashboardCache(user.id);
+
         return NextResponse.json({
             activity: serialized
         }, { headers: rateLimitHeaders(rateLimitResult) });
@@ -226,21 +232,16 @@ export async function DELETE(
             return errorResponses.notFound('Activity');
         }
 
-        await prisma.workout.updateMany({
-            where: {
-                linkedActivityId: id,
-                goal: { userId: user.id },
-            },
-            data: {
-                linkedActivityId: null,
-            },
-        });
-
-        await prisma.activity.delete({
-            where: { id },
-        });
+        await prisma.$transaction([
+            prisma.workout.updateMany({
+                where: { linkedActivityId: id, goal: { userId: user.id } },
+                data: { linkedActivityId: null },
+            }),
+            prisma.activity.delete({ where: { id } }),
+        ]);
 
         await updateFitnessCache(user.id, [{ startDate: existing.startDate }]);
+        await invalidateUserDashboardCache(user.id);
 
         return NextResponse.json(
             { success: true },

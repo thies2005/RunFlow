@@ -1,17 +1,22 @@
 package com.runflow2.app.data.sync
 
-import com.runflow2.app.core.util.AppLog
 import androidx.room.withTransaction
+import com.runflow2.app.core.util.AppLog
+import com.runflow2.app.data.db.ActivitySyncCursor
 import com.runflow2.app.data.db.AppDatabase
 import com.runflow2.app.data.db.ProfileEntity
+import com.runflow2.app.data.net.ActivityDto
 import com.runflow2.app.data.net.AuthStore
 import com.runflow2.app.data.net.BaselineDto
 import com.runflow2.app.data.net.CreateActivityRequest
 import com.runflow2.app.data.net.NetworkClient
+import com.runflow2.app.data.net.RunFlowApi
+import com.runflow2.app.data.net.TriggerSyncRequest
 import com.runflow2.app.data.net.PatchWorkoutRequest
 import com.runflow2.app.data.net.UpdateActivityRequest
 import com.runflow2.app.data.net.UpdateGoalRequest
 import com.runflow2.app.data.net.UpdateProfileRequest
+import com.runflow2.app.data.net.toWireBody
 import com.runflow2.app.data.net.WorkoutCreatePayload
 import com.runflow2.app.data.net.WorkoutDeletePayload
 import com.runflow2.app.data.repo.RunFlowRepository
@@ -36,6 +41,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -119,7 +125,8 @@ class SyncManager(
         fastPushJob?.cancel()
         fastPushJob = syncScope.launch {
             delay(250)
-            pushPendingNow(reason)
+            // Cancel only the debounce, not an in-flight server write.
+            syncScope.launch { pushPendingNow(reason) }
         }
     }
 
@@ -419,10 +426,19 @@ class SyncManager(
         val lastTrigger = settings.settingsOnce().lastStravaTriggerAt
         if (uploadsAllowed() && (forceStrava || System.currentTimeMillis() - lastTrigger > STRAVA_TRIGGER_INTERVAL_MS)) {
             try {
-                val imported = client.api().triggerServerSync().activitiesSynced
+                val api = client.api()
+                val started = try {
+                    api.triggerServerSync(TriggerSyncRequest(automatic = !forceStrava))
+                } catch (error: HttpException) {
+                    if (error.code() != 409) throw error
+                    null // Another client already started the same import.
+                }
                 settings.setLastStravaTrigger(System.currentTimeMillis())
-                AppLog.i(TAG, "server Strava import: $imported activity(ies)")
-                if (imported > 0) {
+                val imported = started?.activitiesSynced ?: 0
+                // Startup and periodic sync stay nonblocking. A manual sync can
+                // follow a short import and fetch its changes before returning.
+                if (imported > 0 || (forceStrava && (started == null || started.syncStarted) &&
+                        awaitStravaImport(api, started?.lastSyncAt))) {
                     val again = pullActivities()
                     pulled += again.first
                     pruned += again.second
@@ -430,11 +446,8 @@ class SyncManager(
             } catch (e: HttpException) {
                 if (e.code() == 401) throw e
                 if (e.code() == 429) deferUploads(e)
-                if (e.code() == 409) settings.setLastStravaTrigger(System.currentTimeMillis())
-                // otherwise ignore: import is best-effort
                 AppLog.w(TAG, "server Strava import failed: HTTP ${e.code()}", e)
             } catch (e: IOException) {
-                // best-effort only
                 AppLog.w(TAG, "server Strava import unreachable (${e.message ?: "io error"})", e)
             }
         }
@@ -491,7 +504,8 @@ class SyncManager(
         var failed = 0
         if (!uploadsAllowed()) return 0 to 0
         val batch = db.syncQueueDao().nextBatch(MAX_OUTBOX_PER_SYNC)
-        for (item in batch) {
+        for (candidate in batch) {
+            val item = db.syncQueueDao().pendingById(candidate.id) ?: continue
             if (item.entityType == TYPE_PROFILE_UPDATE) {
                 val s = settings.settingsOnce()
                 val account = authStore.state.value
@@ -504,7 +518,7 @@ class SyncManager(
             }
             val now = System.currentTimeMillis()
             try {
-                handleOutboxItem(item.entityType, item.localId, item.payloadJson)
+                handleOutboxItem(item.id, item.entityType, item.localId, item.payloadJson)
                 db.syncQueueDao().markCompleted(item.id)
                 pushed++
             } catch (e: HttpException) {
@@ -516,10 +530,10 @@ class SyncManager(
                     break
                 } else if (e.code() in 400..499 && e.code() != 408) {
                     AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered: HTTP ${e.code()}", e)
-                    db.syncQueueDao().markDead(item.id, now)
+                    markOutboxDead(item.id, item.entityType, now)
                 } else if (item.retryCount + 1 >= item.maxRetries) {
                     AppLog.e(TAG, "outbox ${item.entityType}(${item.localId}) dead-lettered after ${item.retryCount + 1} tries: HTTP ${e.code()}", e)
-                    db.syncQueueDao().markDead(item.id, now)
+                    markOutboxDead(item.id, item.entityType, now)
                 } else {
                     db.syncQueueDao().incrementRetry(item.id, now)
                     AppLog.w(TAG, "outbox ${item.entityType}(${item.localId}) deferred: HTTP ${e.code()}", e)
@@ -656,7 +670,7 @@ class SyncManager(
         if (uploaded > 0) AppLog.i(TAG, "uploaded $uploaded local plan(s)")
     }
 
-    private suspend fun handleOutboxItem(type: String, localId: String, payloadJson: String) {
+    private suspend fun handleOutboxItem(queueId: Long, type: String, localId: String, payloadJson: String) {
         val api = client.api()
         when (type) {
             TYPE_ACTIVITY_CREATE -> {
@@ -704,8 +718,11 @@ class SyncManager(
                         }
                     }
                 }
-                client.api().patchWorkout(localId, req)
-                db.workoutDao().byId(localId)?.let { db.workoutDao().upsert(it.copy(dirty = false)) }
+                client.api().patchWorkout(localId, req.toWireBody())
+                db.withTransaction {
+                    val newer = db.syncQueueDao().pendingFor(TYPE_WORKOUT_UPDATE, localId).any { it.id != queueId }
+                    if (!newer) db.workoutDao().byId(localId)?.let { db.workoutDao().upsert(it.copy(dirty = false)) }
+                }
             }
             TYPE_WORKOUT_CREATE -> {
                 val payload = json.decodeFromString(WorkoutCreatePayload.serializer(), payloadJson)
@@ -726,14 +743,20 @@ class SyncManager(
                             // server row in: drop the temp row, server wins.
                             db.workoutDao().delete(local.id)
                         } else {
-                            db.workoutDao().upsert(reconcileCreatedWorkout(local, server))
-                            db.workoutDao().delete(local.id)
-                            // Re-point queued full-state PATCHes from the temp
-                            // id to the server id so later edits still land.
-                            db.syncQueueDao().pendingFor(TYPE_WORKOUT_UPDATE, local.id).forEach { item ->
-                                db.syncQueueDao().insert(item.copy(id = 0, localId = dto.id))
-                                db.syncQueueDao().markCompleted(item.id)
+                            val remapped = db.withTransaction {
+                                val fresh = db.workoutDao().byId(local.id) ?: return@withTransaction false
+                                val updates = db.syncQueueDao().pendingFor(TYPE_WORKOUT_UPDATE, local.id)
+                                db.workoutDao().upsert(reconcileCreatedWorkout(fresh, server).copy(dirty = updates.isNotEmpty()))
+                                db.workoutDao().delete(local.id)
+                                // Keep queued edits on the real server ID and
+                                // protect them from a pull until acknowledged.
+                                updates.forEach { item ->
+                                    db.syncQueueDao().insert(item.copy(id = 0, localId = dto.id))
+                                    db.syncQueueDao().markCompleted(item.id)
+                                }
+                                true
                             }
+                            if (!remapped) runCatching { api.deleteWorkout(payload.goalId, dto.id) }
                         }
                     }
                 } catch (e: HttpException) {
@@ -816,44 +839,165 @@ class SyncManager(
         return pulled to pruned
     }
 
-    /** Returns pulled count and pruned count. */
-    private suspend fun pullActivities(): Pair<Int, Int> {
-        var offset = 0
-        val seen = mutableSetOf<String>()
-        val deletedIds = db.syncQueueDao().allForType(TYPE_ACTIVITY_DELETE).map { item ->
-            runCatching { json.parseToJsonElement(item.payloadJson).jsonObject["activityId"]?.jsonPrimitive?.content }.getOrNull() ?: item.localId
-        }.toSet()
-        var pulled = 0
-        var page = 0
-        while (page < MAX_PAGES) {
-            val res = client.api().activities(limit = PAGE_SIZE, offset = offset)
-            if (res.activities.isEmpty()) break
-            val now = System.currentTimeMillis()
-            for (dto in res.activities) {
-                seen += dto.id
-                if (dto.id in deletedIds) continue
-                val existing = db.activityDao().byServerId(dto.id)
-                // dirty = an unpushed local edit (rename): local wins until the
-                // outbox item drains, mirroring the plan pull guard.
-                if (existing?.dirty == true) continue
-                db.activityDao().upsert(dto.mergeInto(existing, now))
-                pulled++
+    private suspend fun markOutboxDead(id: Long, type: String, now: Long) {
+        db.withTransaction {
+            db.syncQueueDao().markDead(id, now)
+            // If a local deletion was rejected, its server row may have
+            // been intentionally skipped earlier. Reconcile that history.
+            if (type == TYPE_ACTIVITY_DELETE) {
+                authStore.state.value.userId?.let { userId ->
+                    val scope = "${client.baseUrl}|$userId"
+                    db.activitySyncCursorDao().remove(scope)
+                    db.activitySyncCursorDao().clearUnseen(scope)
+                }
             }
-            if (!res.hasMore) break
-            offset += res.activities.size
-            page++
         }
-        // A page cap is not a complete pull; never prune unseen rows.
-        if (page >= MAX_PAGES) return pulled to 0
-        // prune synced non-demo rows the server no longer returns (deleted there)
+    }
+
+    private suspend fun awaitStravaImport(api: RunFlowApi, lastSyncAt: String?): Boolean =
+        withTimeoutOrNull(20_000L) {
+            var sawRunning = false
+            repeat(9) { attempt ->
+                delay(2_000L)
+                val status = api.serverSyncProgress()
+                if (status.syncInProgress) {
+                    sawRunning = true
+                } else if (sawRunning || (status.lastSyncAt != null && status.lastSyncAt != lastSyncAt) || attempt >= 2) {
+                    return@withTimeoutOrNull true
+                }
+            }
+            false
+        } ?: false
+
+    /** Returns the number of changed rows and tombstones applied. */
+    private suspend fun pullActivities(): Pair<Int, Int> {
+        val userId = authStore.state.value.userId ?: return 0 to 0
+        val origin = client.baseUrl
+        val scope = "$origin|$userId"
+        val api = client.api()
+        val cursorDao = db.activitySyncCursorDao()
+        fun requireCurrentAccount() {
+            if (authStore.state.value.userId != userId || client.baseUrl != origin) {
+                throw IOException("Activity sync session changed")
+            }
+        }
+
+        suspend fun requireCurrentCheckpoint(expected: String?) {
+            requireCurrentAccount()
+            if (cursorDao.get(scope)?.cursor != expected) {
+                throw IOException("Activity sync checkpoint changed")
+            }
+        }
+
+        val checkpoint = cursorDao.get(scope)
+        var cursor = checkpoint?.cursor
+        var snapshot = checkpoint?.snapshot ?: true
+        var resetUsed = false
+        var pulled = 0
         var pruned = 0
-        db.activityDao().all().forEach { local ->
-            if (local.serverId != null && !local.dirty && !local.isDemo && local.serverId !in seen) {
-                db.activityDao().delete(local.id)
-                pruned++
+        repeat(MAX_PAGES) { pageIndex ->
+            requireCurrentAccount()
+            val page = try {
+                api.activityChanges(cursor)
+            } catch (error: HttpException) {
+                // Older servers don't have this route. Clear the cursor so an
+                // upgrade/rollback cannot resume from a stale checkpoint.
+                if (pageIndex == 0 && error.code() in setOf(404, 405, 501)) {
+                    db.withTransaction {
+                        requireCurrentCheckpoint(cursor)
+                        cursorDao.remove(scope)
+                        cursorDao.clearUnseen(scope)
+                    }
+                    return pullLegacyActivities(api, ::requireCurrentAccount)
+                }
+                throw error
+            }
+            if (page.reset) {
+                if (resetUsed) throw IOException("Activity change feed repeatedly requested a reset")
+                resetUsed = true
+                snapshot = true
+                db.withTransaction {
+                    requireCurrentCheckpoint(cursor)
+                    cursorDao.remove(scope)
+                    cursorDao.clearUnseen(scope)
+                }
+                cursor = null
+                return@repeat
+            }
+            if (page.cursor.isBlank() || (page.hasMore && page.cursor == cursor)) {
+                throw IOException("Invalid activity change cursor")
+            }
+            db.withTransaction {
+                requireCurrentCheckpoint(cursor)
+                if (snapshot && cursor == null) cursorDao.beginSnapshot(scope)
+                pulled += applyActivityRows(page.activities)
+                for (id in page.deletedIds) pruned += db.activityDao().deleteCleanByServerId(id)
+                if (snapshot) {
+                    page.activities.map { it.id }.chunked(500).forEach { cursorDao.markSeen(scope, it) }
+                    if (!page.hasMore) {
+                        pruned += cursorDao.pruneUnseen(scope)
+                        cursorDao.clearUnseen(scope)
+                    }
+                }
+                cursorDao.put(ActivitySyncCursor(scope, page.cursor, snapshot && page.hasMore))
+            }
+            cursor = page.cursor
+            if (!page.hasMore) {
+                if (!snapshot) return pulled to pruned
+                // Replay writes made while the snapshot was being paginated.
+                snapshot = false
             }
         }
         return pulled to pruned
+    }
+
+    /** Compatibility with servers that only expose offset pagination. */
+    private suspend fun pullLegacyActivities(api: RunFlowApi, requireCurrentAccount: () -> Unit): Pair<Int, Int> {
+        var offset = 0
+        val seen = mutableSetOf<String>()
+        var pulled = 0
+        var expectedTotal: Int? = null
+        var stable = true
+        repeat(MAX_PAGES) {
+            requireCurrentAccount()
+            val page = api.activities(limit = PAGE_SIZE, offset = offset)
+            if (page.hasMore && page.activities.isEmpty()) throw IOException("Invalid legacy activity page")
+            if (expectedTotal == null) expectedTotal = page.total
+            if (expectedTotal != page.total || page.activities.any { !seen.add(it.id) }) stable = false
+            val pruned = db.withTransaction {
+                requireCurrentAccount()
+                pulled += applyActivityRows(page.activities)
+                if (!page.hasMore && stable && seen.size == expectedTotal) pruneMissingActivities(seen) else 0
+            }
+            if (!page.hasMore) return pulled to pruned
+            offset += page.activities.size
+        }
+        // A bounded partial scan cannot prove any rows were deleted.
+        return pulled to 0
+    }
+
+    /** Called inside the same Room transaction as the cursor checkpoint. */
+    private suspend fun applyActivityRows(rows: List<ActivityDto>): Int {
+        if (rows.isEmpty()) return 0
+        val pendingDeletes = db.syncQueueDao().pendingPayloads(TYPE_ACTIVITY_DELETE).mapNotNull { payload ->
+            runCatching { json.parseToJsonElement(payload).jsonObject["activityId"]?.jsonPrimitive?.content }.getOrNull()
+        }.toHashSet()
+        val dao = db.activityDao()
+        val now = System.currentTimeMillis()
+        var count = 0
+        for (dto in rows) {
+            if (dto.id in pendingDeletes) continue
+            val existing = dao.byServerId(dto.id)
+            if (existing?.dirty == true) continue
+            dao.upsert(dto.mergeInto(existing, now))
+            count++
+        }
+        return count
+    }
+
+    private suspend fun pruneMissingActivities(seen: Set<String>): Int {
+        val dao = db.activityDao()
+        return dao.cleanServerIds().filterNot { it in seen }.sumOf { dao.deleteCleanByServerId(it) }
     }
 
     /**

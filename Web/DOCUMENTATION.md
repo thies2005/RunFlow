@@ -336,7 +336,7 @@ A 0–100 readiness score for marathon-specific fitness combining mileage, long-
 
 ## 5. Structured Workouts v2
 
-**Source**: `src/lib/plans/structured.ts` (Zod schema), design doc: [`docs/archive/structured-workout-schema-v2-design.md`](../docs/archive/structured-workout-schema-v2-design.md) (archived design; the implementation is authoritative).
+**Source**: [`src/lib/plans/structured.ts`](src/lib/plans/structured.ts) contains the authoritative Zod schema.
 
 A workout's `structuredSteps` JSON is a tree of steps and repeat groups:
 

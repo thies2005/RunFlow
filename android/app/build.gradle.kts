@@ -25,6 +25,9 @@ android {
         targetSdk = 36
         versionCode = 24
         versionName = "2.8.3"
+        // CI assigns monotonic channel codes without changing committed defaults.
+        System.getenv("ANDROID_VERSION_CODE")?.let { versionCode = it.toInt() }
+        System.getenv("ANDROID_VERSION_NAME")?.let { versionName = it }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

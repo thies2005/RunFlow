@@ -123,3 +123,11 @@ Pre-push checklist for Android changes: compile check + unit tests, both green.
 | [COOLIFY_DEPLOY.md](COOLIFY_DEPLOY.md) | Production deployment on Coolify |
 | [CODING_STANDARDS.md](CODING_STANDARDS.md) | Code conventions for web and Android |
 | [AGENTS.md](AGENTS.md) | Notes for coding agents working in this repo |
+
+## License
+
+SPDX-License-Identifier: GPL-3.0-or-later
+
+RunFlow is licensed under the GNU General Public License, version 3 or (at your
+option) any later version. See [LICENSE](LICENSE). Existing third-party code
+retains its respective notices and licenses.

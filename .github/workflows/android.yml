@@ -2,10 +2,10 @@ name: Android
 
 on:
   push:
-    branches: [main]
-    paths: ['android/**', '.github/workflows/android.yml']
+    branches: ["**"]
+    paths: ['android/**', '.github/workflows/android.yml', '.github/workflows/android-release.yml', 'scripts/android_release.py', 'scripts/tests/**']
   pull_request:
-    paths: ['android/**', '.github/workflows/android.yml']
+    paths: ['android/**', '.github/workflows/android.yml', '.github/workflows/android-release.yml', 'scripts/android_release.py', 'scripts/tests/**']
   workflow_dispatch:
 
 permissions:

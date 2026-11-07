@@ -1,0 +1,1 @@
+RunFlow is a native Android running dashboard for planning training, reviewing activities, and following progress. It includes workout planning, training analytics, and optional account synchronization with a self-hosted web service.

@@ -42,3 +42,9 @@ gh_2.67.0_linux_amd64.tar.gz
 .opencode/
 .zcode/
 .superpowers/
+
+# Android release automation scratch output
+release-plan.json
+release-assets/
+scripts/__pycache__/
+scripts/tests/__pycache__/

@@ -1,0 +1,28 @@
+# Disabled draft: this is not an accepted or verified F-Droid build recipe.
+Categories:
+  - Sports & Health
+License: GPL-3.0-or-later
+AuthorName: thies2005
+SourceCode: https://github.com/thies2005/RunFlow
+IssueTracker: https://github.com/thies2005/RunFlow/issues
+Name: RunFlow
+Summary: Plan runs, track training, and review progress
+Description: Native Android running dashboard with workout planning, activity analytics, and optional synchronization.
+Disabled: >-
+  Dependency/source review and a verified immutable
+  release build are required before submission. Reproducibility is unverified.
+RepoType: git
+Repo: https://github.com/thies2005/RunFlow.git
+AutoUpdateMode: None
+UpdateCheckMode: None
+Builds:
+  - versionName: 2.8.3
+    versionCode: 24
+    commit: REPLACE_WITH_VERIFIED_IMMUTABLE_RELEASE_COMMIT
+    subdir: android
+    gradle:
+      - yes
+MaintainerNotes: |-
+  Draft only; verify dependencies/buildability and packaging first.
+  CI version overrides are absent during source builds; use committed stable
+  version defaults. Do not enable automatic updates until a real build passes.

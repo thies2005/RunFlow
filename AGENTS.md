@@ -38,3 +38,14 @@ Before pushing changes to the Android app, always run:
 - JDK 17 and the Android SDK path come from `android/gradle.properties` (`org.gradle.java.home`).
 - Release signing reads the gitignored `android/key.properties`; without it the release build is unsigned.
 - The plan engine is the web engine only (server when signed in, on-device port otherwise) — the classic Daniels engine was removed in v2.3.0.
+
+## Android release policy
+
+Follow `docs/releases/README.md` and the `github-release-publishing` skill for release
+work. Pushes to master update the rolling development prerelease. Create or push a
+stable `vX.Y.Z` tag **only after the user explicitly requests that stable release**;
+setup, routine fixes and ordinary pushes are not a stable release instruction.
+Preserve the native app signing identity. Before release, calculate the source
+versionCode from the final full-history commit count (including preparation commits),
+verify tag/version/notes and checks, then monitor publication and verify downloads.
+Do not choose a project license or delete old releases without explicit user approval.

@@ -48,12 +48,13 @@ fun DataSourceSetupScreen(
      * disposes this screen's composition and its coroutine scopes) can't
      * cancel them midway.
      */
-    fun finishOfflineSetup() {
+    fun finishOfflineSetup(granted: Set<String> = emptySet()) {
         container.appScope.launch {
-            container.settings.setHealthConnectImportEnabled(true)
-            container.settings.setHcRestingHrEnabled(true)
-            container.settings.setHcHrvEnabled(true)
-            container.settings.setHcSleepEnabled(true)
+            if (granted.any { it in hc.permissions }) container.settings.observeHealthConnectGrant()
+            container.settings.setHealthConnectImportEnabled(androidx.health.connect.client.permission.HealthPermission.getReadPermission(androidx.health.connect.client.records.ExerciseSessionRecord::class) in granted)
+            container.settings.setHcRestingHrEnabled(androidx.health.connect.client.permission.HealthPermission.getReadPermission(androidx.health.connect.client.records.RestingHeartRateRecord::class) in granted)
+            container.settings.setHcHrvEnabled(androidx.health.connect.client.permission.HealthPermission.getReadPermission(androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord::class) in granted)
+            container.settings.setHcSleepEnabled(androidx.health.connect.client.permission.HealthPermission.getReadPermission(androidx.health.connect.client.records.SleepSessionRecord::class) in granted)
             container.settings.setOfflineModeChosen(true)
         }
         onDone()
@@ -61,11 +62,7 @@ fun DataSourceSetupScreen(
 
     val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.health.connect.client.PermissionController.createRequestPermissionResultContract(),
-    ) { _ ->
-        // Granted or not — continue either way; imports simply no-op
-        // until the permissions are granted.
-        finishOfflineSetup()
-    }
+    ) { granted -> finishOfflineSetup(granted) }
 
     Scaffold { padding ->
         Column(
@@ -85,7 +82,7 @@ fun DataSourceSetupScreen(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "RunFlow works fully offline, or signs in to sync with the web. You can change this any time in Settings → Data sources.",
+                "Training plans and recording work on this phone. You can optionally connect Health Connect or your own server.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -143,19 +140,19 @@ fun DataSourceSetupScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Text(
-                        "Sign in · Strava & cloud",
+                        "Optional self-hosted server",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        "Sync runs and health metrics through your RunFlow account, import activities from Strava, and get training plans and the AI coach on the server.",
+                        "Connect your own RunFlow server for optional sync, Strava and AI coach. Training plans already work locally.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Button(
                         onClick = onSignIn,
                         modifier = Modifier.fillMaxWidth(),
-                    ) { Text("Sign in") }
+                    ) { Text("Configure server") }
                 }
             }
 

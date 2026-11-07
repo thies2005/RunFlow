@@ -106,7 +106,7 @@ class RunFlowRepository(
 
     /** Saves locally immediately; queues an upload when logged in. */
     suspend fun saveProfile(profile: ProfileEntity) {
-        if (authStore.state.value.loggedIn) {
+        if (authStore.state.value.loggedIn && settings?.settingsOnce()?.let { it.connectionEnabled && it.uploadPlansEnabled } == true) {
             val s = settings?.settingsOnce()
             val payload = Api.json.encodeToString(
                 com.runflow2.app.data.net.UpdateProfileRequest.serializer(),
@@ -136,7 +136,7 @@ class RunFlowRepository(
     /** Sets the primary load metric and syncs to server if logged in (Decision U1). */
     suspend fun setPrimaryLoadMetric(metric: String) {
         settings?.setPrimaryLoadMetric(metric)
-        if (authStore.state.value.loggedIn) {
+        if (authStore.state.value.loggedIn && settings?.settingsOnce()?.let { it.connectionEnabled && it.uploadPlansEnabled } == true) {
             val payload = Api.json.encodeToString(
                 com.runflow2.app.data.net.UpdateProfileRequest.serializer(),
                 com.runflow2.app.data.net.UpdateProfileRequest(primaryLoadMetric = metric),
@@ -255,7 +255,7 @@ class RunFlowRepository(
 
     /** Saves locally immediately; queues an upload when logged in. */
     suspend fun saveActivity(a: ActivityEntity) {
-        if (authStore.state.value.loggedIn && a.serverId == null) {
+        if (authStore.state.value.loggedIn && settings?.settingsOnce()?.mayUploadActivity(a.startDate) == true && a.serverId == null) {
             val payload = Api.json.encodeToString(
                 com.runflow2.app.data.net.CreateActivityRequest.serializer(),
                 a.toCreateRequest(),
@@ -367,7 +367,7 @@ class RunFlowRepository(
 
     suspend fun deleteActivity(id: String) {
         val a = activityDao.byId(id) ?: return
-        if (authStore.state.value.loggedIn) {
+        if (authStore.state.value.loggedIn && settings?.settingsOnce()?.let { it.connectionEnabled && it.uploadActivitiesEnabled } == true) {
             val pendingCreates = syncQueueDao.pendingFor(SyncManager.TYPE_ACTIVITY_CREATE, id)
             db.withTransaction {
                 pendingCreates.forEach { syncQueueDao.markCompleted(it.id) }
@@ -415,7 +415,7 @@ class RunFlowRepository(
             trainingType = resolvedTraining,
             updatedAt = System.currentTimeMillis(),
         )
-        if (authStore.state.value.loggedIn && a.serverId != null) {
+        if (authStore.state.value.loggedIn && settings?.settingsOnce()?.let { it.connectionEnabled && it.uploadActivitiesEnabled } == true && a.serverId != null) {
             val payload = buildJsonObject {
                 put("activityId", a.serverId!!)
                 put("name", name)
@@ -462,7 +462,7 @@ class RunFlowRepository(
             if (streams.time.size < 2) return@runCatching false
             val json = streams.toJsonOrNull() ?: return@runCatching false
             val existing = activityDao.byId(activityId) ?: return@runCatching false
-            if (existing.streamsJson != null) return@runCatching false
+            if (existing.streamsJson != null || existing.serverId != serverId || settings?.settingsOnce()?.connectionEnabled != true) return@runCatching false
             activityDao.updateStreams(activityId, json)
             // Compute and cache 7-zone Coggan power seconds when watts stream is present
             if (!streams.watts.isNullOrEmpty() && existing.powerZoneSeconds.sum() == 0) {
@@ -1182,7 +1182,9 @@ class RunFlowRepository(
      * local; nothing is half-remapped.
      */
     suspend fun uploadLocalPlan(goalId: String): UploadResult = withContext(Dispatchers.IO) {
+        val policy = settings?.settingsOnce() ?: return@withContext UploadResult.Skipped
         val goal = goalDao.byId(goalId) ?: return@withContext UploadResult.Skipped
+        if (!policy.mayUploadLocalPlan(goal.createdAt)) return@withContext UploadResult.Skipped
         if (!goal.isLocalOnly) return@withContext UploadResult.Skipped
         val workouts = workoutDao.forGoal(goalId)
         if (workouts.isEmpty()) return@withContext UploadResult.Skipped // server rejects empty plans
@@ -1389,15 +1391,20 @@ class RunFlowRepository(
     suspend fun readinessPayloadFor(
         entry: DailyEntryEntity,
         loadSeries: List<TrainingLoad.DailyLoad>,
+        healthConsentSince: Long? = null,
     ): ReadinessPayload {
         val date = LocalDate.parse(entry.date)
         val prior = dailyEntryDao.range(
             startDate = date.minusDays(ReadinessComposer.RHR_BASELINE_WINDOW_DAYS).toString(),
             endDate = date.minusDays(1).toString(),
         )
+        val eligiblePrior = if (healthConsentSince == null) prior else {
+            val consentDate = Instant.ofEpochMilli(healthConsentSince).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+            prior.filter { runCatching { LocalDate.parse(it.date).isAfter(consentDate) }.getOrDefault(false) }
+        }
         val profile = profileOnce()
-        val rhrBaseline = ReadinessComposer.rhrBaselineOf(prior, date)
-        val hrvBaseline = ReadinessComposer.hrvBaselineOf(prior, date)
+        val rhrBaseline = ReadinessComposer.rhrBaselineOf(eligiblePrior, date)
+        val hrvBaseline = ReadinessComposer.hrvBaselineOf(eligiblePrior, date)
         val inputs = ReadinessComposer.buildInputs(
             date = date,
             entry = entry,
@@ -1480,28 +1487,37 @@ class RunFlowRepository(
      * purges user-scoped tables so signing into a different account never leaks
      * the previous user's cached activities, plans, or AI chat history.
      */
-    suspend fun signOutAndClearUserData() {
-        withContext(Dispatchers.IO) {
-            runCatching { network.api().logout() }
-            authStore.clear()
-            db.withTransaction {
-                activityDao.clear()
-                db.activitySyncCursorDao().clear()
-                db.activitySyncCursorDao().clearAllUnseen()
-                workoutDao.clear()
-                goalDao.clear()
-                db.chatDao().clear()
-                dailyEntryDao.clear()
-                syncQueueDao.clear()
-            }
-            invalidateAnalyticsCache()
+    suspend fun detachRemoteState() {
+        db.withTransaction {
+            val sql = db.openHelper.writableDatabase
+            sql.execSQL("UPDATE activities SET serverId = NULL, dirty = 0")
+            sql.execSQL("UPDATE goals SET isLocalOnly = 1, dirty = 0")
+            sql.execSQL("UPDATE workouts SET dirty = 0")
+            sql.execSQL("UPDATE profile SET dirty = 0")
+            syncQueueDao.clear()
+            db.activitySyncCursorDao().clear()
+            db.activitySyncCursorDao().clearAllUnseen()
         }
+        settings?.setAiSessionId("")
+        settings?.clearProfileHydration()
+        settings?.clearServerMetrics()
+        invalidateAnalyticsCache()
+    }
+
+    suspend fun signOutAndClearUserData() {
+        settings?.setConnectionEnabled(false)
+        network.okHttp.dispatcher.cancelAll()
+        settings?.setUploadActivitiesEnabled(false)
+        settings?.setUploadPlansEnabled(false)
+        settings?.setHealthMetricsSyncEnabled(false)
+        authStore.clear()
+        detachRemoteState()
     }
 
     /** Updates local cycling settings and syncs FTP/auto-estimate to the user profile on server. */
     suspend fun updateCyclingFtp(watts: Int, autoEstimate: Boolean) {
         settings?.setCyclingFtpSettings(watts, autoEstimate)
-        if (authStore.state.value.loggedIn) {
+        if (authStore.state.value.loggedIn && settings?.settingsOnce()?.let { it.connectionEnabled && it.uploadPlansEnabled } == true) {
             val profile = profileOnce()
             val payload = Api.json.encodeToString(
                 com.runflow2.app.data.net.UpdateProfileRequest.serializer(),
@@ -1583,17 +1599,18 @@ class RunFlowRepository(
     suspend fun refreshServerMetrics(): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             check(authStore.state.value.loggedIn) { "not signed in" }
+            val generation = network.connectionGeneration()
             val dto = network.api().analyticsStats()
             val vdot = dto.bestEffortVdot
             val computedAt = Api.parseInstant(dto.computedAt)
             if (vdot == null || computedAt == null) return@runCatching
-            settings?.setServerMetrics(
+            network.withConnectionFence(generation) { settings?.setServerMetrics(
                 ServerMetricSnapshot(
                     bestEffortVdot = vdot,
                     aerobicVo2max = dto.aerobicVo2max?.takeIf { it > 0.0 },
                     computedAtMs = computedAt,
                 ),
-            )
+            ) }
             AppLog.i("Analytics", "server metrics cached: vdot=$vdot aerobic=${dto.aerobicVo2max} at=$computedAt")
         }
     }
@@ -1679,3 +1696,8 @@ sealed interface UploadResult {
     /** Nothing to do: goal missing, already synced, or no workouts. */
     data object Skipped : UploadResult
 }
+
+/** Older or restored plans require an additional, explicit history choice. */
+internal fun com.runflow2.app.data.repo.AppSettings.mayUploadLocalPlan(createdAt: Long): Boolean =
+    connectionEnabled && uploadPlansEnabled && uploadPlansConsentSince > 0L &&
+        (uploadExistingPlansEnabled || createdAt > uploadPlansConsentSince)

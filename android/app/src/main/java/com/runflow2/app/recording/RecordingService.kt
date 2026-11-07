@@ -395,8 +395,14 @@ class RecordingService : Service(), TextToSpeech.OnInitListener {
 
     // ---------- TTS ----------
     override fun onInit(status: Int) {
-        ttsReady = status == TextToSpeech.SUCCESS
-        if (ttsReady) tts?.language = Locale.ENGLISH
+        ttsReady = false
+        if (status == TextToSpeech.SUCCESS) {
+            val engine = tts ?: return
+            val voice = engine.voices?.firstOrNull {
+                !it.isNetworkConnectionRequired && it.locale.language == Locale.ENGLISH.language
+            }
+            if (voice != null) ttsReady = engine.setVoice(voice) == TextToSpeech.SUCCESS
+        }
     }
 
     private fun speak(text: String) {

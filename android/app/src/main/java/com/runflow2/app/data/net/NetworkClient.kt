@@ -26,6 +26,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicLong
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * OkHttp + Retrofit wiring: bearer-token header injection, single-flight 401
@@ -33,8 +36,8 @@ import java.io.IOException
  */
 class NetworkClient(
     private val authStore: SessionTokenStore?,
-    initialBaseUrl: String = Api.DEFAULT_BASE_URL,
-    settings: SettingsRepository? = null,
+    initialBaseUrl: String = "",
+    private val settings: SettingsRepository? = null,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
     serverUrlFlow: Flow<String>? = settings?.settings?.map { it.serverUrl },
 ) {
@@ -51,6 +54,23 @@ class NetworkClient(
 
     @Volatile private var cachedApi: RunFlowApi? = null
     private val apiLock = Any()
+    private val generation = AtomicLong(0)
+    private val lifecycleMutex = Mutex()
+
+    fun connectionGeneration(): Long = generation.get()
+    fun invalidateConnection() {
+        generation.incrementAndGet()
+        okHttp.dispatcher.cancelAll()
+    }
+    suspend fun <T> withConnectionFence(expected: Long, block: suspend () -> T): T = lifecycleMutex.withLock {
+        val policy = settings?.settingsOnce()
+        if (generation.get() != expected || (policy != null && (!policy.connectionEnabled || policy.serverUrl.isBlank()))) {
+            throw IOException("Server connection changed")
+        }
+        block()
+    }
+    suspend fun awaitConnectionWrites() = lifecycleMutex.withLock { }
+
     private val originReady = CompletableDeferred<Unit>()
     private val originState = MutableStateFlow<Result<String>?>(null)
 
@@ -60,6 +80,7 @@ class NetworkClient(
             originReady.complete(Unit)
         }
         else observeServerUrl(serverUrlFlow, scope)
+        settings?.let { store -> scope.launch { store.settings.collect { if (!it.connectionEnabled || it.serverUrl.isBlank()) okHttp.dispatcher.cancelAll() } } }
     }
 
     suspend fun awaitReady() = originReady.await()
@@ -77,6 +98,8 @@ class NetworkClient(
                 val normalized = Api.normalizeServerUrl(rawUrl)
                 if (!first && previousBaseUrl != normalized) {
                     AppLog.i("Net", "Server origin changed from $previousBaseUrl to $normalized — clearing session")
+                    invalidateConnection()
+                    awaitConnectionWrites()
                     authStore?.clear()
                     onOriginSwitched?.invoke()
                 }
@@ -102,6 +125,18 @@ class NetworkClient(
         }
     }
 
+    internal fun requestAllowed(policy: com.runflow2.app.data.repo.AppSettings, method: String, path: String): Boolean {
+        if (method == "GET" || method == "HEAD") return true
+        return when {
+            path.startsWith("/api/mobile/v1/activities") -> policy.uploadActivitiesEnabled
+            path.startsWith("/api/mobile/v1/readiness") -> policy.healthMetricsSyncEnabled
+            path.startsWith("/api/mobile/v1/user/profile") || path.startsWith("/api/mobile/v1/workouts") ||
+                path.startsWith("/api/mobile/v1/goals") || path.startsWith("/api/plans") ||
+                path.startsWith("/api/plan-advanced/") -> policy.uploadPlansEnabled
+            else -> true
+        }
+    }
+
     private fun isAuthEndpoint(path: String): Boolean =
         path.endsWith("/auth/refresh") || path.endsWith("/auth/email-login") ||
             path.endsWith("/auth/register") || path.endsWith("/auth/login") ||
@@ -110,8 +145,14 @@ class NetworkClient(
 
     private val authHeaderInterceptor = Interceptor { chain ->
         val request = chain.request()
+        val requestGeneration = generation.get()
+        val policy = settings?.let { runBlocking { it.settingsOnce() } }
+        if (policy != null && (!policy.connectionEnabled || policy.serverUrl.isBlank())) throw IOException("Server connection is disabled")
+        val origin = request.url.newBuilder().encodedPath("/").query(null).fragment(null).build().toString().removeSuffix("/")
+        if (policy != null && Api.normalizeServerUrl(policy.serverUrl) != origin) throw IOException("Server origin changed")
+        if (policy != null && !requestAllowed(policy, request.method, request.url.encodedPath)) throw IOException("Upload consent is disabled")
         val authed = synchronized(apiLock) {
-            if (Api.normalizeServerUrl(request.url.toString()) != baseUrl) {
+            if (request.url.newBuilder().encodedPath("/").query(null).fragment(null).build().toString().removeSuffix("/") != baseUrl) {
                 throw IOException("Server origin changed; retry the request")
             }
             val token = authStore?.accessToken()
@@ -122,7 +163,15 @@ class NetworkClient(
                 request
             }
         }
-        chain.proceed(authed)
+        val response = chain.proceed(authed)
+        val currentPolicy = settings?.let { runBlocking { it.settingsOnce() } }
+        if (generation.get() != requestGeneration || (currentPolicy != null &&
+                (!currentPolicy.connectionEnabled || currentPolicy.serverUrl.isBlank() || Api.normalizeServerUrl(currentPolicy.serverUrl) != origin ||
+                    !requestAllowed(currentPolicy, request.method, request.url.encodedPath)))) {
+            response.close()
+            throw IOException("Server connection changed")
+        }
+        response
     }
 
     private val tokenAuthenticator = object : Authenticator {
@@ -140,11 +189,16 @@ class NetworkClient(
             // Bind refresh to the server which issued the 401, never a later setting.
             val originalApi = createApi(requestOrigin.toString())
             AppLog.i("Net", "401 on ${requestUrl.encodedPath} — refreshing session")
+            val refreshGeneration = generation.get()
             val newToken = runBlocking {
-                authStore?.refreshWith {
-                    if (baseUrl != origin) throw IOException("Server origin changed during refresh")
-                    originalApi
-                }
+                try {
+                    withConnectionFence(refreshGeneration) {
+                        authStore?.refreshWith {
+                            if (baseUrl != origin) throw IOException("Server origin changed during refresh")
+                            originalApi
+                        }
+                    }
+                } catch (_: IOException) { null }
             } ?: run {
                 AppLog.w("Net", "token refresh failed — request left unauthenticated")
                 return null
@@ -166,15 +220,18 @@ class NetworkClient(
         }
     }
 
-    val okHttp: OkHttpClient = OkHttpClient.Builder()
+    val okHttp: OkHttpClient by lazy { OkHttpClient.Builder()
+        .followRedirects(false)
+        .followSslRedirects(false)
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .addInterceptor(authHeaderInterceptor)
         .authenticator(tokenAuthenticator)
-        .build()
+        .build() }
 
     fun api(): RunFlowApi {
+        if (baseUrl.isBlank()) throw IOException("No server configured")
         cachedApi?.let { return it }
         synchronized(apiLock) {
             cachedApi?.let { return it }

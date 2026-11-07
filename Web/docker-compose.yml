@@ -4,13 +4,14 @@ services:
     container_name: runflow-app
     restart: unless-stopped
     ports:
-      # Loopback-only: external ingress is the cloudflared tunnel service below.
+      # Loopback-only: put a local reverse proxy or the optional tunnel in front.
       # Remove this mapping entirely if you never need local host access.
       - "127.0.0.1:3000:3000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-runflow}?schema=public
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:?Set NEXTAUTH_URL to your public HTTPS origin}
+      - NEXT_PUBLIC_APP_URL=${NEXTAUTH_URL:?Set NEXTAUTH_URL to your public HTTPS origin}
       - STRAVA_CLIENT_ID=${STRAVA_CLIENT_ID}
       - STRAVA_CLIENT_SECRET=${STRAVA_CLIENT_SECRET}
       - STRAVA_VERIFY_TOKEN=${STRAVA_VERIFY_TOKEN}
@@ -210,6 +211,7 @@ services:
         max-file: "3"
 
   tunnel:
+    profiles: ["tunnel"]
     # M-11 fix: Pin cloudflared version for reproducible builds
     image: cloudflare/cloudflared:2024.12.2
     container_name: runflow-tunnel

@@ -4,6 +4,9 @@ import android.database.Cursor
 import androidx.room.withTransaction
 import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.data.db.AppDatabase
+import com.runflow2.app.data.db.ChatMessageEntity
+import com.runflow2.app.data.repo.SettingsRepository
+import com.runflow2.app.data.sync.parseSnapshotJson
 import com.runflow2.app.data.db.DailyEntryEntity
 import com.runflow2.app.data.db.GoalEntity
 import com.runflow2.app.data.db.PlanSnapshotEntity
@@ -45,6 +48,7 @@ import java.io.OutputStream
  */
 class LocalBackupManager(
     private val db: AppDatabase,
+    private val settings: SettingsRepository? = null,
 ) {
 
     data class Summary(
@@ -59,6 +63,23 @@ class LocalBackupManager(
             get() = profilesCount + goalsCount + workoutsCount + activitiesCount + dailyEntriesCount + planSnapshotsCount
     }
 
+    /** Parsed and validated without modifying the database or settings. */
+    data class PreparedBackup internal constructor(
+        internal val profiles: List<ProfileEntity>,
+        internal val goals: List<GoalEntity>,
+        internal val workouts: List<WorkoutEntity>,
+        internal val activities: List<ActivityEntity>,
+        internal val dailyEntries: List<DailyEntryEntity>,
+        internal val planSnapshots: List<PlanSnapshotEntity>,
+        internal val messages: List<ChatMessageEntity>,
+        internal val analytics: AnalyticsSettings?,
+    )
+
+    data class AnalyticsSettings internal constructor(
+        val ftp: Int, val autoFtp: Boolean, val crossTraining: Boolean,
+        val myWhoosh: Boolean, val correction: Double, val loadMetric: String, val effortMode: String,
+    )
+
     private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -72,6 +93,8 @@ class LocalBackupManager(
     }
 
     suspend fun exportToString(): String {
+        val localSettings = settings?.settingsOnce()
+        val root = db.withTransaction {
         val profile = db.profileDao().get()
         val goals = db.goalDao().observeAll().first()
         val activities = db.activityDao().all()
@@ -79,11 +102,34 @@ class LocalBackupManager(
         val dailyEntries = readAllDailyEntries()
         val planSnapshots = readAllPlanSnapshots()
 
-        val root = buildJsonObject {
+        buildJsonObject {
             put("format", JsonPrimitive("runflow-backup"))
-            put("version", JsonPrimitive(1))
+            put("version", JsonPrimitive(2))
             put("exportedAt", JsonPrimitive(System.currentTimeMillis()))
 
+            localSettings?.let { settings ->
+                put("analyticsSettings", buildJsonObject {
+                    put("ftpWatts", JsonPrimitive(settings.ftpWatts))
+                    put("autoEstimateFtp", JsonPrimitive(settings.autoEstimateFtp))
+                    put("includeCrossTraining", JsonPrimitive(settings.includeCrossTraining))
+                    put("matchToMyWhoosh", JsonPrimitive(settings.matchToMyWhoosh))
+                    put("effectiveVo2maxCorrection", JsonPrimitive(settings.effectiveVo2maxCorrection))
+                    put("primaryLoadMetric", JsonPrimitive(settings.primaryLoadMetric))
+                    put("effortCardMode", JsonPrimitive(settings.effortCardMode))
+                })
+            }
+            put("chatMessages", buildJsonArray {
+                db.openHelper.readableDatabase.query("SELECT * FROM chat_messages ORDER BY createdAt, id").use { c ->
+                    while (c.moveToNext()) add(buildJsonObject {
+                        put("id", JsonPrimitive(c.reqString("id")))
+                        put("sessionId", JsonPrimitive(c.reqString("sessionId")))
+                        put("role", JsonPrimitive(c.reqString("role")))
+                        put("content", JsonPrimitive(c.reqString("content")))
+                        put("createdAt", JsonPrimitive(c.reqLong("createdAt")))
+                        c.optString("activityId")?.let { put("activityId", JsonPrimitive(it)) }
+                    })
+                }
+            })
             put("profiles", buildJsonArray {
                 profile?.let { add(mapProfileToJson(it)) }
             })
@@ -104,21 +150,31 @@ class LocalBackupManager(
             })
         }
 
+        }
         return json.encodeToString(JsonObject.serializer(), root)
     }
 
     suspend fun importFrom(inputStream: InputStream): Result<Summary> = runCatching {
         val content = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-        importFromString(content)
+        applyPrepared(prepareImport(content))
     }
 
-    suspend fun importFromString(content: String): Summary {
+    suspend fun importFromString(content: String): Summary = applyPrepared(prepareImport(content))
+
+    /** Must be called before disconnecting or performing any other destructive operation. */
+    fun prepareImport(content: String): PreparedBackup {
         val root = json.parseToJsonElement(content).jsonObject
 
         val format = root["format"]?.jsonPrimitive?.content
         if (format != "runflow-backup") {
             throw IllegalArgumentException("Unsupported backup format: $format")
         }
+
+        val version = root["version"]?.jsonPrimitive?.intOrNull
+        require(version == 1 || version == 2) { "Unsupported backup version: $version" }
+        val requiredArrays = listOf("profiles", "goals", "workouts", "activities", "dailyEntries", "planSnapshots")
+        require(requiredArrays.all { root[it] is JsonArray }) { "Backup is missing required tables" }
+        if (version == 2) require(root["chatMessages"] is JsonArray) { "Backup is missing chat messages" }
 
         val profileElements = root["profiles"]?.jsonArray.orEmpty()
         val goalElements = root["goals"]?.jsonArray.orEmpty()
@@ -127,46 +183,136 @@ class LocalBackupManager(
         val dailyEntryElements = root["dailyEntries"]?.jsonArray.orEmpty()
         val snapshotElements = root["planSnapshots"]?.jsonArray.orEmpty()
 
+        fun requireFields(rows: List<JsonElement>, fields: List<String>) {
+            require(rows.all { row -> row is JsonObject && fields.all { row[it] is JsonPrimitive && row[it] !is JsonNull } }) {
+                "Backup row is missing required fields"
+            }
+        }
+        requireFields(profileElements, listOf("id", "name"))
+        requireFields(goalElements, listOf("id", "name", "raceDate"))
+        requireFields(workoutElements, listOf("id", "goalId", "scheduledDate", "workoutType"))
+        requireFields(activityElements, listOf("id", "name", "type", "startDate", "distanceMeters", "movingTimeSec"))
+        requireFields(dailyEntryElements, listOf("date"))
+        requireFields(snapshotElements, listOf("id", "goalId", "createdAtEpochMs", "workoutsJson"))
+
         val profiles = profileElements.map { mapJsonToProfile(it.jsonObject) }
         val goals = goalElements.map { mapJsonToGoal(it.jsonObject) }
         val workouts = workoutElements.map { mapJsonToWorkout(it.jsonObject) }
         val activities = activityElements.map { mapJsonToActivity(it.jsonObject) }
         val dailyEntries = dailyEntryElements.map { mapJsonToDailyEntry(it.jsonObject) }
         val planSnapshots = snapshotElements.map { mapJsonToPlanSnapshot(it.jsonObject) }
+        val messages = root["chatMessages"]?.jsonArray.orEmpty().map { element ->
+            val o = element.jsonObject
+            ChatMessageEntity(id = o.getValue("id").jsonPrimitive.content,
+                sessionId = o.getValue("sessionId").jsonPrimitive.content,
+                role = o.getValue("role").jsonPrimitive.content,
+                content = o.getValue("content").jsonPrimitive.content,
+                createdAt = o.getValue("createdAt").jsonPrimitive.long,
+                activityId = o["activityId"]?.jsonPrimitive?.content)
+        }
+        fun unique(values: List<String>) = values.all { it.isNotBlank() } && values.distinct().size == values.size
+        require(profiles.size <= 1 && profiles.all { it.id == 1 }) { "Invalid profile" }
+        require(unique(goals.map { it.id }) && unique(workouts.map { it.id }) &&
+            unique(activities.map { it.id }) && unique(dailyEntries.map { it.date }) &&
+            unique(messages.map { it.id })) { "Invalid or duplicate backup identifiers" }
+        require(planSnapshots.all { it.id > 0 } && planSnapshots.map { it.id }.distinct().size == planSnapshots.size) { "Invalid snapshots" }
+        require(planSnapshots.all { parseSnapshotJson(it.workoutsJson) != null }) { "Invalid snapshot contents" }
+        val localActivityIds = activities.map { it.id }.toSet()
+        val remoteIds = activities.mapNotNull { activity -> activity.serverId?.let { it to activity.id } }
+        require(remoteIds.map { it.first }.distinct().size == remoteIds.size) { "Ambiguous remote activity identifiers" }
+        val remoteToLocal = remoteIds.toMap()
+        // Local identifiers take precedence. Reject missing references before any
+        // restore mutation so an incomplete backup cannot silently lose links.
+        fun localActivityId(id: String?): String? = when {
+            id == null -> null
+            id in localActivityIds -> id
+            else -> requireNotNull(remoteToLocal[id]) { "Backup references a missing activity: $id" }
+        }
+        val normalizedWorkouts = workouts.map { workout -> workout.copy(
+            activityId = localActivityId(workout.activityId),
+            suggestedActivityId = localActivityId(workout.suggestedActivityId),
+            dismissedActivityId = localActivityId(workout.dismissedActivityId),
+        ) }
+        val normalizedSnapshots = planSnapshots.map { snapshot ->
+            val rows = json.parseToJsonElement(snapshot.workoutsJson).jsonArray.map { row ->
+                val fields = row.jsonObject.toMutableMap()
+                for (key in listOf("activityId", "suggestedActivityId", "dismissedActivityId")) {
+                    if (key in fields) {
+                        val value = fields[key]
+                        val id = if (value == null || value is JsonNull) null else value.jsonPrimitive.content
+                        fields[key] = localActivityId(id)?.let(::JsonPrimitive) ?: JsonNull
+                    }
+                }
+                JsonObject(fields)
+            }
+            snapshot.copy(workoutsJson = json.encodeToString(JsonArray.serializer(), JsonArray(rows)))
+        }
+        val analytics = root["analyticsSettings"]?.jsonObject
+        // Validate all settings before replacing any tables.
+        val ftp = analytics?.getValue("ftpWatts")?.jsonPrimitive?.int
+        val autoFtp = analytics?.getValue("autoEstimateFtp")?.jsonPrimitive?.boolean
+        val crossTraining = analytics?.getValue("includeCrossTraining")?.jsonPrimitive?.boolean
+        val myWhoosh = analytics?.getValue("matchToMyWhoosh")?.jsonPrimitive?.boolean
+        val correction = analytics?.getValue("effectiveVo2maxCorrection")?.jsonPrimitive?.double
+        val loadMetric = analytics?.getValue("primaryLoadMetric")?.jsonPrimitive?.content
+        val effortMode = analytics?.getValue("effortCardMode")?.jsonPrimitive?.content
+        require(ftp == null || ftp >= 0) { "Invalid FTP" }
+        require(correction == null || (correction.isFinite() && correction > 0)) { "Invalid calibration" }
 
+        val parsedAnalytics = if (analytics == null) null else AnalyticsSettings(
+            ftp!!, autoFtp!!, crossTraining!!, myWhoosh!!, correction!!, loadMetric!!, effortMode!!,
+        )
+        return PreparedBackup(profiles, goals, normalizedWorkouts, activities, dailyEntries, normalizedSnapshots, messages, parsedAnalytics)
+    }
+
+    /** Apply only after sync has stopped and the durable restore marker has been set. */
+    suspend fun applyPrepared(backup: PreparedBackup): Summary {
+        val (profiles, goals, workouts, activities, dailyEntries, planSnapshots, messages, analytics) = backup
         db.withTransaction {
+            db.syncQueueDao().clear()
+            db.openHelper.writableDatabase.execSQL("DELETE FROM chat_messages")
+            db.openHelper.writableDatabase.execSQL("DELETE FROM profile")
             profiles.firstOrNull()?.let {
-                db.profileDao().upsert(it)
+                db.profileDao().upsert(it.copy(dirty = false))
             }
 
             db.goalDao().clear()
             for (g in goals) {
-                db.goalDao().upsert(g)
+                db.goalDao().upsert(g.copy(isLocalOnly = true, dirty = false))
             }
 
             db.workoutDao().clear()
             if (workouts.isNotEmpty()) {
-                db.workoutDao().upsertAll(workouts)
+                db.workoutDao().upsertAll(workouts.map { it.copy(dirty = false) })
             }
 
             db.activityDao().clear()
             db.activitySyncCursorDao().clear()
             db.activitySyncCursorDao().clearAllUnseen()
             if (activities.isNotEmpty()) {
-                db.activityDao().upsertAll(activities)
+                db.activityDao().upsertAll(activities.map { it.copy(serverId = null, dirty = false) })
             }
 
             db.dailyEntryDao().clear()
             for (e in dailyEntries) {
-                db.dailyEntryDao().upsert(e)
+                db.dailyEntryDao().upsert(e.copy(dirty = false))
             }
 
+            db.chatDao().upsertAll(messages)
             db.openHelper.writableDatabase.execSQL("DELETE FROM plan_snapshots")
             for (s in planSnapshots) {
                 db.planSnapshotDao().insertSnapshot(s)
             }
         }
 
+        if (analytics != null && settings != null) {
+            settings.setCyclingFtpSettings(analytics.ftp, analytics.autoFtp)
+            settings.setIncludeCrossTraining(analytics.crossTraining)
+            settings.setMatchToMyWhoosh(analytics.myWhoosh)
+            settings.setEffectiveVo2maxCorrection(analytics.correction)
+            settings.setPrimaryLoadMetric(analytics.loadMetric)
+            settings.setEffortCardMode(analytics.effortMode)
+        }
         return Summary(
             profilesCount = profiles.size,
             goalsCount = goals.size,
@@ -552,6 +698,7 @@ class LocalBackupManager(
         put("dirty", JsonPrimitive(a.dirty))
         put("isDemo", JsonPrimitive(a.isDemo))
         a.hcRecordId?.let { put("hcRecordId", JsonPrimitive(it)) }
+        a.hcSourceSnapshotJson?.let { put("hcSourceSnapshotJson", JsonPrimitive(it)) }
         a.averageWatts?.let { put("averageWatts", JsonPrimitive(it)) }
         a.weightedAverageWatts?.let { put("weightedAverageWatts", JsonPrimitive(it)) }
         a.maxWatts?.let { put("maxWatts", JsonPrimitive(it)) }
@@ -602,6 +749,7 @@ class LocalBackupManager(
         dirty = o["dirty"]?.jsonPrimitive?.boolean ?: false,
         isDemo = o["isDemo"]?.jsonPrimitive?.boolean ?: false,
         hcRecordId = o["hcRecordId"]?.jsonPrimitive?.content,
+        hcSourceSnapshotJson = o["hcSourceSnapshotJson"]?.jsonPrimitive?.content,
         averageWatts = o["averageWatts"]?.jsonPrimitive?.doubleOrNull,
         weightedAverageWatts = o["weightedAverageWatts"]?.jsonPrimitive?.doubleOrNull,
         maxWatts = o["maxWatts"]?.jsonPrimitive?.doubleOrNull,

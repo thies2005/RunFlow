@@ -66,21 +66,24 @@ object Api {
      */
     fun normalizeServerUrl(input: String): String {
         val raw = input.trim()
-        if (raw.isEmpty()) return DEFAULT_BASE_URL
+        if (raw.isEmpty()) return ""
         val withScheme = if (raw.startsWith("http://", ignoreCase = true) || raw.startsWith("https://", ignoreCase = true)) {
             raw
         } else {
             "https://$raw"
         }
-        return runCatching {
-            val uri = java.net.URI(withScheme)
-            val host = uri.host?.lowercase() ?: error("Missing host")
+        return run {
+            val uri = try { java.net.URI(withScheme) } catch (e: java.net.URISyntaxException) { throw IllegalArgumentException("Invalid server URL", e) }
+            require(uri.userInfo == null && uri.query == null && uri.fragment == null && (uri.path.isNullOrEmpty() || uri.path == "/")) { "Enter a server origin without a path, credentials, query or fragment" }
+            require(uri.scheme.equals("http", true) || uri.scheme.equals("https", true)) { "Unsupported scheme" }
+            val host = uri.host?.lowercase() ?: throw IllegalArgumentException("Missing host")
+            require(uri.port in -1..65535) { "Invalid port" }
             val isLoopback = host == "10.0.2.2" || host == "localhost" || host == "127.0.0.1" ||
                 host == "::1" || host == "[::1]"
             val scheme = if (isLoopback && uri.scheme?.equals("http", ignoreCase = true) == true) "http" else "https"
             val port = if (uri.port > 0 && !(scheme == "https" && uri.port == 443) && !(scheme == "http" && uri.port == 80)) ":${uri.port}" else ""
             "$scheme://$host$port"
-        }.getOrDefault(DEFAULT_BASE_URL)
+        }
     }
 }
 

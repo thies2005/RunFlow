@@ -1,9 +1,10 @@
 package com.runflow2.app.data.health
 
 import android.content.Context
+import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.HealthConnectClient
-import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ElevationGainedRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
@@ -18,6 +19,7 @@ import androidx.health.connect.client.time.TimeRangeFilter
 import com.runflow2.app.core.util.AppLog
 import com.runflow2.app.data.repo.RunFlowRepository
 import com.runflow2.app.data.repo.SettingsRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -25,6 +27,8 @@ import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.reflect.KClass
+import kotlin.math.roundToLong
 
 /** Read-only Health Connect integration: pulls runs and daily recovery metrics into the local DB. */
 class HealthConnectManager(
@@ -99,10 +103,7 @@ class HealthConnectManager(
         data class Failed(val message: String) : ImportResult
     }
 
-    /** Re-import overlap so late-written records are still picked up. */
-    private val reimportWindowMs = 7L * 24 * 3600 * 1000
     /** First-ever import reach-back. */
-    private val initialWindowMs = 90L * 24 * 3600 * 1000
 
     /** Runs the import when the run toggle or any metric toggle is enabled; cheap no-op otherwise. */
     suspend fun importIfEnabled(): ImportResult {
@@ -119,8 +120,8 @@ class HealthConnectManager(
     }
 
     /**
-     * Reads running sessions from Health Connect and stores every new one as
-     * a local activity (queued for server upload when signed in). Idempotent:
+     * Reads sessions from Health Connect and stores every new one as
+     * a local activity. Idempotent:
      * the record id + fuzzy duplicate check make re-runs free of duplicates.
      */
     suspend fun importRuns(nowMs: Long = System.currentTimeMillis()): ImportResult =
@@ -172,9 +173,13 @@ class HealthConnectManager(
                 // Health Connect service and can throw (provider updating,
                 // process death) — callers from UI coroutines must not crash.
                 val granted = client.permissionController.getGrantedPermissions()
-                val last = settings.settingsOnce().healthConnectLastImportAt
-                val sinceMs = (if (last > 0) last - reimportWindowMs else nowMs - initialWindowMs)
-                    .coerceAtLeast(0)
+                if (granted.any { it in permissions }) settings.observeHealthConnectGrant(nowMs)
+                // Re-read the complete accessible window for every category. A shared
+                // cursor cannot represent categories granted/enabled at different times.
+                val history = supportsHistoryRead(client) &&
+                    HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY in granted
+                val observed = settings.settingsOnce().hcFirstGrantObservedAt
+                val sinceMs = healthReadStart(nowMs, observed, history)
 
                 val summary = mutableListOf<String>()
                 var imported = 0
@@ -182,11 +187,11 @@ class HealthConnectManager(
                 var runsDenied = false
 
                 if (runs) {
-                    if (!granted.containsAll(activityPermissions)) {
+                    if (HealthPermission.getReadPermission(ExerciseSessionRecord::class) !in granted) {
                         runsDenied = true
                         AppLog.d(TAG, "run import skipped — permissions not granted")
                     } else {
-                        val (runImported, runDuplicates, runsPart) = importRunsLocked(client, sinceMs, nowMs)
+                        val (runImported, runDuplicates, runsPart) = importRunsLocked(client, granted, sinceMs, nowMs)
                         imported = runImported
                         duplicates = runDuplicates
                         summary += runsPart
@@ -214,6 +219,8 @@ class HealthConnectManager(
                 runCatching { repository.refreshBodyFromData() }
                     .onFailure { AppLog.w(TAG, "body auto-refresh failed (${it.message})") }
                 ImportResult.Imported(imported, duplicates)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 AppLog.w(TAG, "Health Connect import failed (${e.message})", e)
                 ImportResult.Failed(e.message ?: "error")
@@ -227,6 +234,7 @@ class HealthConnectManager(
      */
     private suspend fun importRunsLocked(
         client: HealthConnectClient,
+        granted: Set<String>,
         sinceMs: Long,
         nowMs: Long,
     ): Triple<Int, Int, String> {
@@ -235,19 +243,19 @@ class HealthConnectManager(
             Instant.ofEpochMilli(nowMs + 60_000),
         )
 
-        val sessions = client.readRecords(ReadRecordsRequest(ExerciseSessionRecord::class, range))
-            .records
+        val sessions = readAll(client, ExerciseSessionRecord::class, range)
             .filter { mapExerciseType(it.exerciseType) != null }
             .sortedBy { it.startTime }
         if (sessions.isEmpty()) return Triple(0, 0, "no new runs")
 
-        val distances = client.readRecords(ReadRecordsRequest(DistanceRecord::class, range)).records
-        val steps = client.readRecords(ReadRecordsRequest(StepsRecord::class, range)).records
-        val heartRates = client.readRecords(ReadRecordsRequest(HeartRateRecord::class, range)).records
-        val elevations = client.readRecords(ReadRecordsRequest(ElevationGainedRecord::class, range)).records
-        val calories = client.readRecords(ReadRecordsRequest(TotalCaloriesBurnedRecord::class, range)).records
+        val distances = if (HealthPermission.getReadPermission(DistanceRecord::class) in granted) readAll(client, DistanceRecord::class, range) else emptyList()
+        val steps = if (HealthPermission.getReadPermission(StepsRecord::class) in granted) readAll(client, StepsRecord::class, range) else emptyList()
+        val heartRates = if (HealthPermission.getReadPermission(HeartRateRecord::class) in granted) readAll(client, HeartRateRecord::class, range) else emptyList()
+        val elevations = if (HealthPermission.getReadPermission(ElevationGainedRecord::class) in granted) readAll(client, ElevationGainedRecord::class, range) else emptyList()
+        val calories = if (HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class) in granted) readAll(client, TotalCaloriesBurnedRecord::class, range) else emptyList()
 
         var imported = 0
+        var updated = 0
         var duplicates = 0
         sessions.forEach { session ->
             val start = session.startTime
@@ -264,10 +272,10 @@ class HealthConnectManager(
 
             val distance = distances.fromOrigin { it.metadata }
                 .overlapping(start, end, { it.startTime }, { it.endTime })
-                .sumOf { it.distance.inMeters }
+                .sumOf { it.distance.inMeters * overlapFraction(it.startTime, it.endTime, start, end) }
             val stepCount = steps.fromOrigin { it.metadata }
                 .overlapping(start, end, { it.startTime }, { it.endTime })
-                .takeIf { it.isNotEmpty() }?.sumOf { it.count }
+                .takeIf { it.isNotEmpty() }?.sumOf { (it.count * overlapFraction(it.startTime, it.endTime, start, end)).roundToLong() }
             val hrSamples = heartRates.fromOrigin { it.metadata }
                 .overlapping(start, end, { it.startTime }, { it.endTime })
                 .flatMap { r -> r.samples.filter { !it.time.isBefore(start) && !it.time.isAfter(end) } }
@@ -277,10 +285,10 @@ class HealthConnectManager(
             val maxHr = hrSamples.maxOfOrNull { it.beatsPerMinute.toInt() }
             val elevation = elevations.fromOrigin { it.metadata }
                 .overlapping(start, end, { it.startTime }, { it.endTime })
-                .takeIf { it.isNotEmpty() }?.sumOf { it.elevation.inMeters }
+                .takeIf { it.isNotEmpty() }?.sumOf { it.elevation.inMeters * overlapFraction(it.startTime, it.endTime, start, end) }
             val kcal = calories.fromOrigin { it.metadata }
                 .overlapping(start, end, { it.startTime }, { it.endTime })
-                .takeIf { it.isNotEmpty() }?.sumOf { it.energy.inKilocalories }?.toInt()
+                .takeIf { it.isNotEmpty() }?.sumOf { it.energy.inKilocalories * overlapFraction(it.startTime, it.endTime, start, end) }?.toInt()
 
             val mappedType = mapExerciseType(session.exerciseType) ?: "RUN"
             val snapshot = HcRunSnapshot(
@@ -299,6 +307,21 @@ class HealthConnectManager(
             if (!HealthConnectMapping.isImportable(snapshot)) return@forEach
 
             val existingById = repository.activityByHcRecordId(snapshot.recordId)
+            if (existingById != null) {
+                val access = HcMetricAccess(
+                    distance = HealthPermission.getReadPermission(DistanceRecord::class) in granted,
+                    steps = HealthPermission.getReadPermission(StepsRecord::class) in granted,
+                    heartRate = HealthPermission.getReadPermission(HeartRateRecord::class) in granted,
+                    elevation = HealthPermission.getReadPermission(ElevationGainedRecord::class) in granted,
+                    calories = HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class) in granted,
+                )
+                val merged = HealthConnectMapping.mergeImportedActivity(existingById, snapshot, repository.profileOnce().weightKg, access)
+                if (merged != existingById) {
+                    repository.saveActivity(merged)
+                    updated++
+                } else duplicates++
+                return@forEach
+            }
             val neighbours = repository.activitiesBetweenStart(
                 snapshot.startEpochMs - HealthConnectMapping.DUPLICATE_START_TOLERANCE_MS,
                 snapshot.startEpochMs + HealthConnectMapping.DUPLICATE_START_TOLERANCE_MS,
@@ -313,9 +336,10 @@ class HealthConnectManager(
             imported++
         }
 
-        val summary = if (imported == 0 && duplicates == 0) "no new runs"
-        else "$imported imported" + if (duplicates > 0) " · $duplicates already known" else ""
-        return Triple(imported, duplicates, summary)
+        val summary = if (imported == 0 && updated == 0 && duplicates == 0) "no new runs"
+        else "$imported imported" + (if (updated > 0) " · $updated updated" else "") +
+            (if (duplicates > 0) " · $duplicates already known" else "")
+        return Triple(imported + updated, duplicates, summary)
     }
 
     /**
@@ -348,7 +372,7 @@ class HealthConnectManager(
         if (wantRestingHr) {
             if (HealthPermission.getReadPermission(RestingHeartRateRecord::class) in granted) {
                 rhrByDay += HealthConnectMapping.aggregateRestingHr(
-                    client.readRecords(ReadRecordsRequest(RestingHeartRateRecord::class, range)).records.map { r ->
+                    readAll(client, RestingHeartRateRecord::class, range).map { r ->
                         HcRhrSample(
                             day = r.time.atZone(zone).toLocalDate(),
                             bpm = r.beatsPerMinute.toDouble(),
@@ -363,7 +387,7 @@ class HealthConnectManager(
         if (wantHrv) {
             if (HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class) in granted) {
                 hrvByDay += HealthConnectMapping.aggregateHrv(
-                    client.readRecords(ReadRecordsRequest(HeartRateVariabilityRmssdRecord::class, range)).records.map { r ->
+                    readAll(client, HeartRateVariabilityRmssdRecord::class, range).map { r ->
                         HcHrvSample(
                             day = r.time.atZone(zone).toLocalDate(),
                             rmssdMs = r.heartRateVariabilityMillis,
@@ -378,7 +402,7 @@ class HealthConnectManager(
         if (wantSleep) {
             if (HealthPermission.getReadPermission(SleepSessionRecord::class) in granted) {
                 sleepByDay += HealthConnectMapping.aggregateSleep(
-                    client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, range)).records.map { s ->
+                    readAll(client, SleepSessionRecord::class, range).map { s ->
                         HealthConnectMapping.toSleepSession(
                             startEpochMs = s.startTime.toEpochMilli(),
                             endEpochMs = s.endTime.toEpochMilli(),
@@ -419,6 +443,38 @@ class HealthConnectManager(
         if (hrvByDay.isNotEmpty()) summary += "HRV ${hrvByDay.size}d"
         if (sleepByDay.isNotEmpty()) summary += "sleep ${sleepByDay.size}d"
         return written
+    }
+
+    /** Read all pages before advancing the displayed import timestamp. */
+    private suspend fun <T : Record> readAll(client: HealthConnectClient, type: KClass<T>, range: TimeRangeFilter): List<T> {
+        return collectHealthPages { token ->
+            val page = client.readRecords(ReadRecordsRequest(type, range, pageToken = token))
+            HealthPage(page.records, page.pageToken)
+        }
+    }
+
+    fun supportsBackgroundRead(client: HealthConnectClient): Boolean =
+        client.features.getFeatureStatus(HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_IN_BACKGROUND) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+
+    fun supportsHistoryRead(client: HealthConnectClient): Boolean =
+        client.features.getFeatureStatus(HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_HISTORY) == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+
+    /** Request these only after declaring their matching manifest permissions. */
+    fun optionalPermissions(client: HealthConnectClient): Set<String> = buildSet {
+        if (supportsBackgroundRead(client)) add(HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND)
+        if (supportsHistoryRead(client)) add(HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY)
+    }
+
+    suspend fun canReadInBackground(): Boolean {
+        val client = clientOrNull() ?: return false
+        return supportsBackgroundRead(client) && HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND in client.permissionController.getGrantedPermissions()
+    }
+
+    private fun overlapFraction(recordStart: Instant, recordEnd: Instant, start: Instant, end: Instant): Double {
+        val duration = recordEnd.toEpochMilli() - recordStart.toEpochMilli()
+        if (duration <= 0) return 0.0
+        val overlap = (minOf(recordEnd.toEpochMilli(), end.toEpochMilli()) - maxOf(recordStart.toEpochMilli(), start.toEpochMilli())).coerceAtLeast(0)
+        return overlap.toDouble() / duration
     }
 
     /** Stage types RunFlow doesn't track (awake, out-of-bed, unknown) fall into OTHER and are ignored. */

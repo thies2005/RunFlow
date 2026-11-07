@@ -491,10 +491,9 @@ class ApiContractTest {
             "https://evil.example.com:8443",
             Api.normalizeServerUrl("http://evil.example.com:8443"),
         )
-        assertEquals(
-            "https://evil.example.com",
-            Api.normalizeServerUrl("http://evil.example.com/api/v1?token=secret"),
-        )
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            Api.normalizeServerUrl("http://evil.example.com/api/v1?token=secret")
+        }
 
         // Loopback / emulator addresses must remain HTTP
         assertEquals(
@@ -524,7 +523,7 @@ class ApiContractTest {
             Api.normalizeServerUrl("runflow.schuelken.uk/"),
         )
         assertEquals(
-            Api.DEFAULT_BASE_URL,
+            "",
             Api.normalizeServerUrl(""),
         )
     }
@@ -532,7 +531,7 @@ class ApiContractTest {
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Test
     fun `network client tracks previousBaseUrl and clears authStore when server origin switches`() = runTest {
-        val serverUrlFlow = MutableStateFlow("")
+        val serverUrlFlow = MutableStateFlow(Api.DEFAULT_BASE_URL)
         var originSwitchedCount = 0
         val client = NetworkClient(
             authStore = null,
@@ -550,7 +549,7 @@ class ApiContractTest {
         assertEquals(0, originSwitchedCount)
 
         // 2. Same origin variation should not trigger origin switch
-        serverUrlFlow.value = "${Api.DEFAULT_BASE_URL}/api/mobile/v1"
+        serverUrlFlow.value = "${Api.DEFAULT_BASE_URL}/"
         advanceUntilIdle()
         assertEquals(Api.DEFAULT_BASE_URL, client.previousBaseUrl)
         assertEquals(0, originSwitchedCount)

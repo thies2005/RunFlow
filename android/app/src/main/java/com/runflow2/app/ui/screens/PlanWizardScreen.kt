@@ -362,32 +362,7 @@ fun PlanWizardScreen(
                                     mywhooshPlanId = data.mywhooshPlanId,
                                 )
 
-                                // The engine is picked automatically, never by the
-                                // user: the server generator when signed in (same
-                                // engine as the website, syncs instantly), the
-                                // on-device port of it otherwise. There is no
-                                // classic fallback any more — the on-device web
-                                // engine IS the offline path.
-                                var created = false
-                                var note: String? = null
-                                if (auth.loggedIn) {
-                                    val viaServer = runCatching { container.repository.createPlanViaServer(spec) }
-                                    if (viaServer.isSuccess) {
-                                        created = true
-                                    } else {
-                                        AppLog.w(
-                                            "Wizard",
-                                            "server engine unavailable (${viaServer.exceptionOrNull()?.message}) — falling back to the on-device engine",
-                                        )
-                                        note = "Couldn't reach the server — generated the plan on this phone with the same engine as the website."
-                                    }
-                                }
-                                if (!created) {
-                                    created = runCatching { container.repository.createPlanOffline(spec) }.isSuccess
-                                }
-                                note?.let {
-                                    Toast.makeText(container.appContext, it, Toast.LENGTH_LONG).show()
-                                }
+                                val created = runCatching { container.repository.createPlanOffline(spec) }.isSuccess
                                 if (!created) {
                                     Toast.makeText(
                                         container.appContext,

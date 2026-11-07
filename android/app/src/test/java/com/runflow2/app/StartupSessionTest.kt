@@ -63,11 +63,11 @@ class StartupSessionTest {
         val ready = async { client.awaitReady() }
         advanceUntilIdle()
         assertFalse(ready.isCompleted)
-        urls.emit("https://custom.example/path")
+        urls.emit("https://custom.example/")
         ready.await()
         assertEquals("https://custom.example", client.baseUrl)
         assertEquals("old", tokens.access)
-        urls.emit("https://CUSTOM.example:443/another")
+        urls.emit("https://CUSTOM.example:443/")
         advanceUntilIdle()
         assertEquals(0, tokens.clears)
         urls.emit("https://other.example")
@@ -206,9 +206,12 @@ class StartupSessionTest {
                 assertTrue(cleared.await(5, TimeUnit.SECONDS))
                 assertFalse(switched.await(200, TimeUnit.MILLISECONDS))
                 release.countDown()
-                request.get(5, TimeUnit.SECONDS)
+                try { request.get(5, TimeUnit.SECONDS) } catch (expected: ExecutionException) {
+                    assertTrue(expected.cause is IOException)
+                }
                 signIn.get(5, TimeUnit.SECONDS)
-                assertNotEquals("Bearer new-host-token", oldServer.takeRequest(5, TimeUnit.SECONDS)!!.getHeader("Authorization"))
+                val oldRequest = oldServer.takeRequest(200, TimeUnit.MILLISECONDS)
+                if (oldRequest != null) assertNotEquals("Bearer new-host-token", oldRequest.getHeader("Authorization"))
                 assertEquals(0, newServer.requestCount)
             } finally {
                 release.countDown()

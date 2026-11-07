@@ -169,10 +169,10 @@ fun ActivityDetailScreen(
     val prBadges = remember(a.id, series, allActivities) {
         calculatePrBadges(a, series, allActivities, isRide, hasPower, u)
     }
-    var loadingStreams by remember(activityId) { mutableStateOf(a.streamsJson == null && a.serverId != null) }
+    var loadingStreams by remember(activityId) { mutableStateOf(settings.connectionEnabled && a.streamsJson == null && a.serverId != null) }
     var streamReloadKey by remember(activityId) { mutableStateOf(0) }
-    LaunchedEffect(a.id, a.serverId, a.streamsJson, streamReloadKey) {
-        if (a.streamsJson == null && a.serverId != null) {
+    LaunchedEffect(a.id, a.serverId, a.streamsJson, streamReloadKey, settings.connectionEnabled) {
+        if (settings.connectionEnabled && a.streamsJson == null && a.serverId != null) {
             loadingStreams = true
             try {
                 container.repository.fetchAndCacheStreams(a.id, a.serverId)
@@ -186,10 +186,10 @@ fun ActivityDetailScreen(
 
     // ---- AI overview (server-generated; only exists for synced activities) ----
     var aiState by remember(activityId) {
-        mutableStateOf<AiUiState>(if (a.serverId != null) AiUiState.Loading else AiUiState.Missing)
+        mutableStateOf<AiUiState>(if (settings.connectionEnabled && a.serverId != null) AiUiState.Loading else AiUiState.Missing)
     }
-    LaunchedEffect(a.id, a.serverId) {
-        if (a.serverId != null) {
+    LaunchedEffect(a.id, a.serverId, settings.connectionEnabled) {
+        if (settings.connectionEnabled && a.serverId != null) {
             aiState = when (val r = container.repository.loadActivityFeedback(a.serverId)) {
                 is RunFlowRepository.AiFeedbackResult.Ready -> AiUiState.Ready(r.feedback)
                 is RunFlowRepository.AiFeedbackResult.Error -> AiUiState.Error(r.message)

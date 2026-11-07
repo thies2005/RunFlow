@@ -3,6 +3,7 @@ package com.runflow2.app
 import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.data.health.HealthConnectMapping
 import com.runflow2.app.data.health.HcRunSnapshot
+import com.runflow2.app.data.health.HcMetricAccess
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -62,9 +63,9 @@ class HealthConnectMappingTest {
     // ---- importability ----
 
     @Test
-    fun `runs below 1 km or 5 minutes are ignored`() {
-        assertFalse(HealthConnectMapping.isImportable(snapshot(distanceM = 900.0)))
-        assertFalse(HealthConnectMapping.isImportable(snapshot(minutes = 3)))
+    fun `short completed runs are imported`() {
+        assertTrue(HealthConnectMapping.isImportable(snapshot(distanceM = 900.0)))
+        assertTrue(HealthConnectMapping.isImportable(snapshot(minutes = 3)))
         assertTrue(HealthConnectMapping.isImportable(snapshot()))
     }
 
@@ -127,6 +128,52 @@ class HealthConnectMappingTest {
             sameStartWindow = emptyList(), // window query would not return the old run
         )
         assertFalse(dup)
+    }
+
+    @Test
+    fun `different sports at same time and distance are distinct`() {
+        assertFalse(HealthConnectMapping.isDuplicate(snapshot(), null, listOf(existing().copy(type = "RIDE"))))
+    }
+
+    @Test
+    fun `source corrections preserve edited fields and rich content`() {
+        val first = HealthConnectMapping.toActivityEntity(snapshot(), id = "fixed")
+            .copy(name = "My title", notes = "My notes", routeJson = "route")
+        val changed = HealthConnectMapping.mergeImportedActivity(first, snapshot(title = "Corrected", distanceM = 9000.0), 72.0)
+        assertEquals("My title", changed.name)
+        assertEquals(9000.0, changed.distanceMeters, 0.0)
+        assertEquals("My notes", changed.notes)
+        assertEquals("route", changed.routeJson)
+    }
+
+    @Test
+    fun `edited distance remains while untouched title follows source`() {
+        val first = HealthConnectMapping.toActivityEntity(snapshot(), id = "fixed").copy(distanceMeters = 8500.0)
+        val merged = HealthConnectMapping.mergeImportedActivity(first, snapshot(title = "New title", distanceM = 9000.0), 72.0)
+        assertEquals("New title", merged.name)
+        assertEquals(8500.0, merged.distanceMeters, 0.0)
+    }
+
+    @Test
+    fun `distance correction works without elevation and revoked heart rate keeps its baseline`() {
+        val first = HealthConnectMapping.toActivityEntity(snapshot(), id = "fixed")
+        val partial = snapshot(distanceM = 9000.0, avgHr = null, maxHr = null).copy(elevationMeters = null)
+        val merged = HealthConnectMapping.mergeImportedActivity(first, partial, 72.0,
+            HcMetricAccess(heartRate = false, elevation = false))
+        assertEquals(9000.0, merged.distanceMeters, 0.0)
+        assertEquals(152.0, merged.averageHr!!, 0.0)
+        assertEquals(120.0, merged.totalElevation, 0.0)
+        val restored = HealthConnectMapping.mergeImportedActivity(merged, snapshot(distanceM = 9000.0, avgHr = 160), 72.0)
+        assertEquals(160.0, restored.averageHr!!, 0.0)
+    }
+
+    @Test
+    fun `legacy source record gains baseline without changing its fields`() {
+        val old = existing(hcRecordId = "hc-1")
+        val merged = HealthConnectMapping.mergeImportedActivity(old, snapshot(distanceM = 9000.0), 72.0)
+        assertEquals(old.distanceMeters, merged.distanceMeters, 0.0)
+        assertEquals(old.name, merged.name)
+        assertNotNull(merged.hcSourceSnapshotJson)
     }
 
     // ---- mapping ----

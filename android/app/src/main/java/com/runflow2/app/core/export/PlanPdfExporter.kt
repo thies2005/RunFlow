@@ -200,7 +200,7 @@ class PlanPdfExporter(private val unit: DistanceUnit = DistanceUnit.METRIC) {
 
     private fun drawFooter(canvas: Canvas, pageNo: Int) {
         val p = paint(8f, color = Color.GRAY)
-        canvas.drawText("RunFlow · runflow.schuelken.uk", MARGIN.toFloat(), PAGE_H - 30f, p)
+        canvas.drawText("RunFlow", MARGIN.toFloat(), PAGE_H - 30f, p)
         val label = "$pageNo"
         val w = p.measureText(label)
         canvas.drawText(label, PAGE_W - MARGIN - w, PAGE_H - 30f, p)

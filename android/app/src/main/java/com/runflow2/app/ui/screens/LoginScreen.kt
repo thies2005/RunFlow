@@ -76,12 +76,15 @@ fun LoginScreen(
     var infoMessage by remember { mutableStateOf<String?>(null) }
     var showForgotDialog by remember { mutableStateOf(false) }
 
+    val connectionSettings by container.settings.settings.collectAsState(initial = com.runflow2.app.data.repo.AppSettings())
+    val connected = connectionSettings.connectionEnabled && connectionSettings.serverUrl.isNotBlank()
     val oauthCode by container.authStore.pendingOAuthCode.collectAsState()
     val oauthError by container.authStore.pendingOAuthError.collectAsState()
 
-    fun completeSession(auth: com.runflow2.app.data.net.AuthResponse) {
+    fun completeSession(auth: com.runflow2.app.data.net.AuthResponse, generation: Long) {
         scope.launch {
-            container.authStore.saveSession(auth)
+            try { container.network.withConnectionFence(generation) { container.authStore.saveSession(auth) } }
+            catch (_: IOException) { busy = false; error = "Server connection changed. Sign in again."; return@launch }
             // Logging in undoes any "use offline" choice so the sign-in nudge
             // can return after a future sign-out.
             container.settings.setOfflineModeChosen(false)
@@ -98,8 +101,10 @@ fun LoginScreen(
         container.authStore.pendingOAuthCode.collect { code ->
             if (code == null) return@collect
             container.authStore.consumeOAuthCode()
+            if (!connected) { error = "Enable a server connection in Settings first."; return@collect }
             busy = true
             error = null
+            val generation = container.network.connectionGeneration()
             try {
                 val resp = container.network.api().stravaLogin(
                     StravaLoginRequest(
@@ -107,7 +112,7 @@ fun LoginScreen(
                         redirectUri = StravaAuth.callbackUriFor(container.network.baseUrl),
                     )
                 )
-                completeSession(resp)
+                completeSession(resp, generation)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: HttpException) {
@@ -169,6 +174,7 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
+            if (!connected) Text("Enable a self-hosted server connection in Settings to sign in.")
             val context = androidx.compose.ui.platform.LocalContext.current
             OutlinedButton(
                 onClick = {
@@ -178,7 +184,7 @@ fun LoginScreen(
                     val opened = StravaAuth.openForAuthorization(context, container.network.baseUrl)
                     if (!opened) error = "No browser available to open Strava sign-in."
                 },
-                enabled = !busy,
+                enabled = connected && !busy,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(Icons.AutoMirrored.Outlined.Send, null)
@@ -253,7 +259,7 @@ fun LoginScreen(
 
                     if (!isRegisterMode) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            TextButton(onClick = { showForgotDialog = true }) {
+                            TextButton(onClick = { showForgotDialog = true }, enabled = connected) {
                                 Text("Forgot password?")
                             }
                         }
@@ -281,6 +287,7 @@ fun LoginScreen(
                             error = null
                             infoMessage = null
                             scope.launch {
+                                val generation = container.network.connectionGeneration()
                                 try {
                                     val resp = if (isRegisterMode) {
                                         container.network.api().register(
@@ -294,7 +301,7 @@ fun LoginScreen(
                                         container.network.api()
                                             .emailLogin(EmailLoginRequest(email.trim(), password))
                                     }
-                                    completeSession(resp)
+                                    completeSession(resp, generation)
                                 } catch (e: kotlinx.coroutines.CancellationException) {
                                     throw e
                                 } catch (e: HttpException) {
@@ -320,7 +327,7 @@ fun LoginScreen(
                                 }
                             }
                         },
-                        enabled = !busy && email.isNotBlank() && password.isNotBlank(),
+                        enabled = connected && !busy && email.isNotBlank() && password.isNotBlank(),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         if (busy) {

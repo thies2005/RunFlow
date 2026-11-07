@@ -4,6 +4,10 @@ import com.runflow2.app.core.util.Format
 import com.runflow2.app.data.db.ActivityEntity
 import com.runflow2.app.data.db.DailyEntryEntity
 import com.runflow2.app.data.repo.RunFlowRepository
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -17,6 +21,7 @@ import kotlin.math.roundToInt
  * the Health Connect SDK records and the local [ActivityEntity]. Kept free of
  * SDK/Android types so mapping + dedupe are unit-testable.
  */
+@Serializable
 data class HcRunSnapshot(
     val recordId: String,
     val title: String?,
@@ -72,6 +77,15 @@ data class HcSleepAggregate(
     val lightMinutes: Int,
 )
 
+/** Metric permissions available during this import pass. */
+data class HcMetricAccess(
+    val distance: Boolean = true,
+    val steps: Boolean = true,
+    val heartRate: Boolean = true,
+    val elevation: Boolean = true,
+    val calories: Boolean = true,
+)
+
 /**
  * Pure mapping/dedupe logic for the Health Connect import.
  * [isDuplicate] implements two layers of protection:
@@ -83,10 +97,6 @@ data class HcSleepAggregate(
  */
 object HealthConnectMapping {
 
-    /** Sessions must be at least this long/far to be worth importing. */
-    const val MIN_IMPORT_DISTANCE_M = 1000.0
-    const val MIN_IMPORT_DURATION_SEC = 300
-
     const val DUPLICATE_START_TOLERANCE_MS = 2 * 60 * 1000L
     const val DUPLICATE_DISTANCE_TOLERANCE = 0.10
 
@@ -94,8 +104,7 @@ object HealthConnectMapping {
         ((s.endEpochMs - s.startEpochMs) / 1000L).toInt().coerceAtLeast(1)
 
     fun isImportable(s: HcRunSnapshot): Boolean =
-        movingTimeSec(s) >= MIN_IMPORT_DURATION_SEC &&
-            (s.activityType != "RUN" || s.distanceMeters >= MIN_IMPORT_DISTANCE_M)
+        s.endEpochMs > s.startEpochMs
 
     /**
      * True when the session is already known: by Health Connect record id, or
@@ -108,7 +117,7 @@ object HealthConnectMapping {
     ): Boolean {
         if (existingByRecordId != null) return true
         return sameStartWindow.any { e ->
-            e.distanceMeters > 0 &&
+            e.type == s.activityType && e.distanceMeters > 0 &&
                 abs(e.distanceMeters - s.distanceMeters) / max(e.distanceMeters, s.distanceMeters) <=
                 DUPLICATE_DISTANCE_TOLERANCE
         }
@@ -147,6 +156,41 @@ object HealthConnectMapping {
             routeJson = null,
             lapsJson = null,
             hcRecordId = s.recordId,
+            hcSourceSnapshotJson = Json.encodeToString(s),
+        )
+    }
+
+    /** Update only fields which still match the previously imported source value. */
+    fun mergeImportedActivity(existing: ActivityEntity, snapshot: HcRunSnapshot, weightKg: Double, access: HcMetricAccess = HcMetricAccess()): ActivityEntity {
+        val previous = existing.hcSourceSnapshotJson?.let {
+            runCatching { Json.decodeFromString<HcRunSnapshot>(it) }.getOrNull()
+        }
+        val effective = if (previous == null) snapshot else snapshot.copy(
+            distanceMeters = if (access.distance) snapshot.distanceMeters else previous.distanceMeters,
+            steps = if (access.steps) snapshot.steps else previous.steps,
+            avgHr = if (access.heartRate) snapshot.avgHr else previous.avgHr,
+            maxHr = if (access.heartRate) snapshot.maxHr else previous.maxHr,
+            elevationMeters = if (access.elevation) snapshot.elevationMeters else previous.elevationMeters,
+            caloriesKcal = if (access.calories) snapshot.caloriesKcal else previous.caloriesKcal,
+        )
+        val serialized = Json.encodeToString(effective)
+        // Older records lack a trustworthy baseline. Preserve their content.
+        if (previous == null) return existing.copy(hcSourceSnapshotJson = serialized)
+        val old = toActivityEntity(previous, existing.id, weightKg)
+        val fresh = toActivityEntity(effective, existing.id, weightKg)
+        return existing.copy(
+            name = if (existing.name == old.name) fresh.name else existing.name,
+            type = if (existing.type == old.type) fresh.type else existing.type,
+            startDate = if (existing.startDate == old.startDate) fresh.startDate else existing.startDate,
+            distanceMeters = if (existing.distanceMeters == old.distanceMeters) fresh.distanceMeters else existing.distanceMeters,
+            movingTimeSec = if (existing.movingTimeSec == old.movingTimeSec) fresh.movingTimeSec else existing.movingTimeSec,
+            averageHr = if (access.heartRate && existing.averageHr == old.averageHr) fresh.averageHr else existing.averageHr,
+            maxHr = if (access.heartRate && existing.maxHr == old.maxHr) fresh.maxHr else existing.maxHr,
+            averageCadence = if (access.steps && existing.averageCadence == old.averageCadence) fresh.averageCadence else existing.averageCadence,
+            totalElevation = if (access.elevation && existing.totalElevation == old.totalElevation) fresh.totalElevation else existing.totalElevation,
+            calories = if (access.calories && existing.calories == old.calories) fresh.calories else existing.calories,
+            estimatedVdot = if (existing.estimatedVdot == old.estimatedVdot) fresh.estimatedVdot else existing.estimatedVdot,
+            hcSourceSnapshotJson = serialized,
         )
     }
 

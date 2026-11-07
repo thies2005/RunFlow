@@ -51,6 +51,13 @@ class ProfileRecoveryIntegrationTest {
         server = MockWebServer().apply { start() }
         settings = com.runflow2.app.data.repo.SettingsRepository(ctx)
         settings.setServerUrl(server.url("/").toString())
+        settings.setConnectionEnabled(true)
+        settings.setUploadActivitiesEnabled(true)
+        settings.setUploadExistingActivitiesEnabled(true)
+        settings.setUploadPlansEnabled(true)
+        settings.setUploadExistingPlansEnabled(true)
+        settings.setHealthMetricsSyncEnabled(true)
+        settings.setUploadExistingHealthEnabled(true)
         settings.setDemoCleaned()
         settings.setUploadCooldownUntil(0)
         settings.setGeneralReadCooldownUntil(0)

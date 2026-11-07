@@ -305,7 +305,7 @@ fun RunFlowRoot(container: AppContainer) {
                         },
                         onSignIn = {
                             container.appScope.launch { container.settings.setOnboardingDone() }
-                            navController.navigate(Routes.LOGIN) {
+                            navController.navigate(Routes.SETTINGS) {
                                 popUpTo(Routes.ONBOARDING) { inclusive = true }
                                 launchSingleTop = true
                             }

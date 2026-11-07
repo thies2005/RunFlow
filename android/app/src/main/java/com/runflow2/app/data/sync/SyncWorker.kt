@@ -33,6 +33,7 @@ class SyncWorker(appContext: Context, params: WorkerParameters) :
         private const val UNIQUE_NAME = "runflow_periodic_sync"
 
         fun schedule(context: Context) {
+            LocalHealthImportWorker.schedule(context)
             val request = PeriodicWorkRequestBuilder<SyncWorker>(30, TimeUnit.MINUTES)
                 .setConstraints(
                     Constraints.Builder()

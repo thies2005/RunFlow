@@ -23,6 +23,7 @@ describe('POST /api/mobile/auth/login', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         process.env = { ...originalEnv };
+        process.env.NEXTAUTH_URL = "http://localhost:3000";
         // Default mock implementation for success
         mockExchangeStravaCodeForTokens.mockResolvedValue({
             accessToken: 'at-123',
@@ -72,8 +73,8 @@ describe('POST /api/mobile/auth/login', () => {
         expect(mockExchangeStravaCodeForTokens).not.toHaveBeenCalled();
     });
 
-    it('should use process.env.NEXT_PUBLIC_APP_URL if providedRedirectUri is missing', async () => {
-        process.env.NEXT_PUBLIC_APP_URL = 'http://env-url.com';
+    it('should use the configured origin if providedRedirectUri is missing', async () => {
+        process.env.NEXTAUTH_URL = 'https://env-url.com';
 
         const body = {
             code: 'auth-code'
@@ -87,27 +88,17 @@ describe('POST /api/mobile/auth/login', () => {
 
         expect(mockExchangeStravaCodeForTokens).toHaveBeenCalledWith(
             'auth-code',
-            'http://env-url.com/api/auth/strava/callback'
+            'https://env-url.com/api/auth/strava/callback'
         );
     });
 
-    it('should use fallback URL if providedRedirectUri is missing and NEXT_PUBLIC_APP_URL is not set', async () => {
-        delete process.env.NEXT_PUBLIC_APP_URL;
-
-        const body = {
-            code: 'auth-code'
-        };
+    it('fails closed when the canonical origin is missing', async () => {
+        delete process.env.NEXTAUTH_URL;
         const req = new NextRequest('http://localhost/api/mobile/auth/login', {
-            method: 'POST',
-            body: JSON.stringify(body)
+            method: 'POST', body: JSON.stringify({ code: 'auth-code' }),
         });
-
-        await POST(req);
-
-        expect(mockExchangeStravaCodeForTokens).toHaveBeenCalledWith(
-            'auth-code',
-            'https://runflow.schuelken.uk/api/auth/strava/callback'
-        );
+        expect((await POST(req)).status).toBe(500);
+        expect(mockExchangeStravaCodeForTokens).not.toHaveBeenCalled();
     });
 
     it('should return 400 if code is missing', async () => {

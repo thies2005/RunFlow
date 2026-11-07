@@ -1,11 +1,8 @@
+import { serverOrigin } from '@/lib/server-origin';
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logging/logger';
 
-function getAppBaseUrl(): string {
-    return process.env.NEXT_PUBLIC_APP_URL
-        || process.env.NEXTAUTH_URL
-        || 'https://runflow.schuelken.uk';
-}
+
 
 const STATE_MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -50,7 +47,7 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const error = searchParams.get('error');
     const scope = searchParams.get('scope');
-    const baseUrl = getAppBaseUrl();
+    const baseUrl = serverOrigin();
 
     if (error) {
         logger.error('Strava Callback Error', { error, state: state || 'unknown' });
@@ -80,7 +77,7 @@ export async function GET(request: NextRequest) {
         const timestamp = parseMobileStateTimestamp(state!);
         const now = Date.now();
 
-        if (timestamp === null || (now - timestamp) > STATE_MAX_AGE_MS) {
+        if (timestamp === null || (now - timestamp) > STATE_MAX_AGE_MS || timestamp > now + 60_000) {
             logger.warn('Strava Callback: stale or invalid state timestamp', {
                 state,
                 age: timestamp === null ? undefined : now - timestamp,

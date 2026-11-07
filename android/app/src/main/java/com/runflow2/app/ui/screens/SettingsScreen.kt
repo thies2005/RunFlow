@@ -130,7 +130,7 @@ fun SettingsScreen(
             scope.launch {
                 runCatching {
                     context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                        LocalBackupManager(container.database).exportTo(outputStream)
+                        LocalBackupManager(container.database, container.settings).exportTo(outputStream)
                     }
                 }.onSuccess {
                     backupStatusMessage = "Backup exported successfully."
@@ -147,9 +147,17 @@ fun SettingsScreen(
         if (uri != null) {
             scope.launch {
                 runCatching {
-                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                        LocalBackupManager(container.database).importFrom(inputStream).getOrThrow()
+                    val manager = LocalBackupManager(container.database, container.settings)
+                    val prepared = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        val content = requireNotNull(context.contentResolver.openInputStream(uri)) { "Could not open backup" }
+                            .bufferedReader().use { it.readText() }
+                        manager.prepareImport(content)
                     }
+                    container.syncManager.disconnect(restore = true)
+                    val summary = manager.applyPrepared(prepared)
+                    container.repository.invalidateAnalyticsCache()
+                    container.settings.finishRestore()
+                    summary
                 }.onSuccess { summary ->
                     importSummaryDialog = summary
                     backupStatusMessage = "Restored ${summary?.totalCount ?: 0} records."
@@ -194,7 +202,7 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    OutlinedButton(onClick = onLogin) { Text("Sign in") }
+                    OutlinedButton(onClick = onLogin, enabled = settings.connectionEnabled) { Text("Sign in") }
                 } else {
                     Text(
                         auth.name ?: auth.email ?: "Signed in",
@@ -256,7 +264,7 @@ fun SettingsScreen(
 
                 Text(
                     "Save or share the active training plan — one section per training week with every scheduled session. " +
-                        "Signed in, the PDF is rendered by the server with the website's layout; offline it is rendered on this phone.",
+                        "Plans are exported on this phone.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -274,34 +282,7 @@ fun SettingsScreen(
                     try {
                         val workouts = container.repository.workoutsForGoal(g.id).firstOrNull().orEmpty()
                         var note: String? = null
-                        val file = if (auth.loggedIn) {
-                            runCatching {
-                                val body = container.network.api().exportPlan(g.id, format)
-                                val dir = java.io.File(context.cacheDir, "exports").apply { mkdirs() }
-                                val f = java.io.File(dir, "runflow-${g.raceType.lowercase()}-plan.$format")
-                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                                    body.byteStream().use { input -> f.outputStream().use { input.copyTo(it) } }
-                                }
-                                f
-                            }.getOrElse {
-                                note = when {
-                                    it is retrofit2.HttpException && it.code() == 404 ->
-                                        "This plan hasn't been synced to your account yet — rendered it on this phone."
-                                    else ->
-                                        "Couldn't reach the server — rendered the plan on this phone."
-                                }
-                                if (format == "pdf") {
-                                    val unit = if (settings.useImperial) {
-                                        com.runflow2.app.core.util.DistanceUnit.IMPERIAL
-                                    } else {
-                                        com.runflow2.app.core.util.DistanceUnit.METRIC
-                                    }
-                                    com.runflow2.app.core.export.PlanPdfExporter(unit).exportToCache(context, g, workouts)
-                                } else {
-                                    com.runflow2.app.core.export.exportCsvToCache(context, g, workouts)
-                                }
-                            }
-                        } else {
+                        val file = run {
                             if (format == "pdf") {
                                 val unit = if (settings.useImperial) {
                                     com.runflow2.app.core.util.DistanceUnit.IMPERIAL
@@ -680,28 +661,53 @@ fun SettingsScreen(
                 val hcUnavailable =
                     availability is com.runflow2.app.data.health.HealthConnectManager.Availability.Unavailable
                 var importRunning by remember { mutableStateOf(false) }
-                var permissionGranted by remember { mutableStateOf(false) }
+                var grantedPermissions by remember { mutableStateOf(emptySet<String>()) }
+                var optionalPermissions by remember { mutableStateOf(emptySet<String>()) }
+                var pendingCategory by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
                 var importError by remember { mutableStateOf<String?>(null) }
+                val exercisePermission = androidx.health.connect.client.permission.HealthPermission.getReadPermission(
+                    androidx.health.connect.client.records.ExerciseSessionRecord::class)
+                val rhrPermission = androidx.health.connect.client.permission.HealthPermission.getReadPermission(
+                    androidx.health.connect.client.records.RestingHeartRateRecord::class)
+                val hrvPermission = androidx.health.connect.client.permission.HealthPermission.getReadPermission(
+                    androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord::class)
+                val sleepPermission = androidx.health.connect.client.permission.HealthPermission.getReadPermission(
+                    androidx.health.connect.client.records.SleepSessionRecord::class)
+                val backgroundPermission = androidx.health.connect.client.permission.HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
+                val historyPermission = androidx.health.connect.client.permission.HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY
 
                 LaunchedEffect(availability) {
-                    if (availability is com.runflow2.app.data.health.HealthConnectManager.Availability.Available) {
-                        hc.clientOrNull()?.let { client ->
-                            permissionGranted = hc.hasAllPermissions(client)
-                        }
+                    hc.clientOrNull()?.let { client ->
+                        grantedPermissions = client.permissionController.getGrantedPermissions()
+                        optionalPermissions = hc.optionalPermissions(client)
+                        if (grantedPermissions.any { it in hc.permissions }) container.settings.observeHealthConnectGrant()
                     }
                 }
 
                 val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
                     androidx.health.connect.client.PermissionController.createRequestPermissionResultContract(),
                 ) { granted ->
-                    permissionGranted = granted.containsAll(hc.permissions)
-                    if (permissionGranted) {
-                        scope.launch {
-                            container.settings.setHealthConnectImportEnabled(true)
-                            importRunning = true
-                            hc.importRuns()
-                            importRunning = false
+                    scope.launch {
+                        val all = hc.clientOrNull()?.permissionController?.getGrantedPermissions() ?: granted
+                        grantedPermissions = all
+                        if (all.any { it in hc.permissions }) container.settings.observeHealthConnectGrant()
+                        when (pendingCategory) {
+                            "runs" -> if (exercisePermission in all) container.settings.setHealthConnectImportEnabled(true)
+                            "rhr" -> if (rhrPermission in all) container.settings.setHcRestingHrEnabled(true)
+                            "hrv" -> if (hrvPermission in all) container.settings.setHcHrvEnabled(true)
+                            "sleep" -> if (sleepPermission in all) container.settings.setHcSleepEnabled(true)
                         }
+                        val required = when (pendingCategory) {
+                            "runs" -> exercisePermission
+                            "rhr" -> rhrPermission
+                            "hrv" -> hrvPermission
+                            "sleep" -> sleepPermission
+                            "background" -> backgroundPermission
+                            "history" -> historyPermission
+                            else -> null
+                        }
+                        importError = if (required != null && required !in all) "Access was not granted for this category." else null
+                        pendingCategory = ""
                     }
                 }
 
@@ -736,7 +742,7 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier.weight(1f),
                             )
-                            Button(onClick = onLogin) { Text("Connect") }
+                            Button(onClick = onLogin, enabled = settings.connectionEnabled) { Text("Sign in") }
                         }
                         if (!settings.offlineModeChosen) {
                             TextButton(
@@ -767,73 +773,65 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                    } else {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                if (permissionGranted) "Access granted"
-                                else "Grant read access to import your data",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f),
-                            )
-                            if (!permissionGranted) {
-                                OutlinedButton(onClick = { permissionLauncher.launch(hc.permissions) }) {
-                                    Text("Grant access")
-                                }
-                            }
-                        }
                     }
                     SwitchRow(
-                        title = "Runs",
-                        subtitle = "Import runs recorded by other apps",
+                        title = "Activities",
+                        subtitle = "Import completed activities recorded by other apps",
                         checked = settings.healthConnectImportEnabled,
                         enabled = !hcUnavailable,
                         onChecked = { on ->
-                            if (!on) {
-                                scope.launch { container.settings.setHealthConnectImportEnabled(false) }
-                            } else if (permissionGranted) {
-                                scope.launch {
-                                    container.settings.setHealthConnectImportEnabled(true)
-                                    importRunning = true
-                                    hc.importRuns()
-                                    importRunning = false
-                                }
-                            } else {
-                                permissionLauncher.launch(hc.permissions)
-                            }
+                            if (!on) scope.launch { container.settings.setHealthConnectImportEnabled(false) }
+                            else { pendingCategory = "runs"; permissionLauncher.launch(hc.activityPermissions) }
                         },
                     )
-                    if (settings.healthConnectImportEnabled && !permissionGranted && !hcUnavailable) {
-                        Text(
-                            "Read permission missing — turn the toggle off and on to grant it in Health Connect.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
-                        )
+                    if (settings.healthConnectImportEnabled && exercisePermission !in grantedPermissions && !hcUnavailable) {
+                        Text("Activity access is missing — turn the toggle off and on to grant it.",
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                     }
                     SwitchRow(
                         title = "Resting heart rate",
                         subtitle = "Daily resting HR from wearable data",
                         checked = settings.hcRestingHrEnabled,
                         enabled = !hcUnavailable,
-                        onChecked = { scope.launch { container.settings.setHcRestingHrEnabled(it) } },
+                        onChecked = { on ->
+                            if (!on) scope.launch { container.settings.setHcRestingHrEnabled(false) }
+                            else { pendingCategory = "rhr"; permissionLauncher.launch(setOf(rhrPermission)) }
+                        },
                     )
                     SwitchRow(
                         title = "Heart-rate variability",
                         subtitle = "RMSSD values from wearable data",
                         checked = settings.hcHrvEnabled,
                         enabled = !hcUnavailable,
-                        onChecked = { scope.launch { container.settings.setHcHrvEnabled(it) } },
+                        onChecked = { on ->
+                            if (!on) scope.launch { container.settings.setHcHrvEnabled(false) }
+                            else { pendingCategory = "hrv"; permissionLauncher.launch(setOf(hrvPermission)) }
+                        },
                     )
                     SwitchRow(
                         title = "Sleep",
                         subtitle = "Nightly sleep sessions and stages",
                         checked = settings.hcSleepEnabled,
                         enabled = !hcUnavailable,
-                        onChecked = { scope.launch { container.settings.setHcSleepEnabled(it) } },
+                        onChecked = { on ->
+                            if (!on) scope.launch { container.settings.setHcSleepEnabled(false) }
+                            else { pendingCategory = "sleep"; permissionLauncher.launch(setOf(sleepPermission)) }
+                        },
                     )
+                    if (backgroundPermission in optionalPermissions) {
+                        Text(if (backgroundPermission in grantedPermissions) "Background access granted" else "Background access is off; manual import is available.", style = MaterialTheme.typography.bodySmall)
+                        if (backgroundPermission !in grantedPermissions) OutlinedButton(onClick = {
+                            pendingCategory = "background"; permissionLauncher.launch(setOf(backgroundPermission))
+                        }) { Text("Allow background import") }
+                    } else if (!hcUnavailable) {
+                        Text("Background import is unavailable on this device; use Import now.", style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (historyPermission in optionalPermissions) {
+                        Text(if (historyPermission in grantedPermissions) "Full history access granted" else "Older history requires additional access.", style = MaterialTheme.typography.bodySmall)
+                        if (historyPermission !in grantedPermissions) OutlinedButton(onClick = {
+                            pendingCategory = "history"; permissionLauncher.launch(setOf(historyPermission))
+                        }) { Text("Allow older history") }
+                    }
                     OutlinedButton(
                         onClick = {
                             scope.launch {
@@ -875,49 +873,55 @@ fun SettingsScreen(
                         fontWeight = FontWeight.SemiBold,
                     )
                     SwitchRow(
-                        title = "Sync health metrics to web",
-                        subtitle = "Pushes daily readiness to your account when signed in",
+                        title = "Upload new health metrics",
+                        subtitle = "Upload readiness days after today to your server",
                         checked = settings.healthMetricsSyncEnabled,
                         onChecked = { scope.launch { container.settings.setHealthMetricsSyncEnabled(it) } },
                     )
+                    SwitchRow(title = "Upload existing health history", subtitle = "Include earlier health days and historical baselines",
+                        checked = settings.uploadExistingHealthEnabled,
+                        onChecked = { if (settings.healthMetricsSyncEnabled) scope.launch { container.settings.setUploadExistingHealthEnabled(it) } })
                 }
             }
 
-            SettingSection("Advanced") {
-                val normalized = com.runflow2.app.data.net.Api.normalizeServerUrl(settings.serverUrl)
-                var serverUrl by remember(normalized) {
-                    mutableStateOf(normalized)
-                }
-                OutlinedTextField(
-                    value = serverUrl,
-                    onValueChange = { serverUrl = it },
-                    label = { Text("Server URL") },
-                    placeholder = { Text(com.runflow2.app.data.net.Api.DEFAULT_BASE_URL) },
-                    supportingText = {
-                        Text(
-                            if (serverUrl.trim() == normalized) "Sync, sign-in and Strava use: $normalized"
-                            else "Unsaved — tap Apply to switch servers"
-                        )
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                TextButton(onClick = {
-                    scope.launch {
-                        container.settings.setServerUrl(serverUrl)
-                        container.syncManager.syncNow("server-changed")
-                        // reflect the normalized stored value in the field
-                        serverUrl = com.runflow2.app.data.net.Api.normalizeServerUrl(serverUrl)
-                    }
-                }) { Text("Apply server URL") }
-                Text(
-                    "The default is your RunFlow server (${com.runflow2.app.data.net.Api.DEFAULT_BASE_URL}). Only change this for a self-hosted or staging instance — all data on this device syncs with the server configured here.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            SettingSection("Server connection") {
+                var serverUrl by remember(settings.serverUrl) { mutableStateOf(settings.serverUrl) }
+                var serverError by remember { mutableStateOf<String?>(null) }
+                OutlinedTextField(value = serverUrl, onValueChange = { serverUrl = it; serverError = null },
+                    label = { Text("Self-hosted server URL") }, placeholder = { Text("https://your-server.example") },
+                    isError = serverError != null, supportingText = { Text(serverError ?: "Optional. Enter your own server origin.") },
+                    singleLine = true, modifier = Modifier.fillMaxWidth())
+                TextButton(onClick = { scope.launch {
+                    try {
+                        val normalized = com.runflow2.app.data.net.Api.normalizeServerUrl(serverUrl)
+                        require(normalized.isNotBlank()) { "Enter a server URL" }
+                        container.syncManager.disconnect()
+                        container.settings.setServerUrl(normalized)
+                        container.settings.setConnectionEnabled(true)
+                        serverUrl = normalized
+                    } catch (e: Exception) { serverError = e.message ?: "Invalid server URL" }
+                } }) { Text("Enable connection") }
+                if (settings.connectionEnabled) TextButton(onClick = { scope.launch {
+                    container.syncManager.disconnect()
+                } }) { Text("Disconnect") }
+                SwitchRow(title = "Upload new activities", subtitle = "Upload activities started after enabling this option", checked = settings.uploadActivitiesEnabled,
+                    onChecked = { scope.launch { container.settings.setUploadActivitiesEnabled(it) } })
+                SwitchRow(title = "Upload existing activities", subtitle = "Also upload earlier and restored activities, including Health Connect imports", checked = settings.uploadExistingActivitiesEnabled,
+                    onChecked = { if (settings.uploadActivitiesEnabled) scope.launch { container.settings.setUploadExistingActivitiesEnabled(it) } })
+                SwitchRow(title = "Upload new plans and profile", subtitle = "Upload plans created after enabling this option, and profile changes", checked = settings.uploadPlansEnabled,
+                    onChecked = { scope.launch { container.settings.setUploadPlansEnabled(it) } })
+                SwitchRow(title = "Upload existing plans", subtitle = "Also upload plans already on this device, including restored plans", checked = settings.uploadExistingPlansEnabled,
+                    onChecked = { if (settings.uploadPlansEnabled) scope.launch { container.settings.setUploadExistingPlansEnabled(it) } })
             }
 
             SettingSection("Data & backups") {
+                if (settings.restoreInProgress) {
+                    Text(
+                        "A restore did not finish. Server access remains disabled. Select Restore backup and retry to finish restoring your data.",
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+
                 Text(
                     "Local .runflow.json Backup",
                     style = MaterialTheme.typography.titleSmall,
@@ -981,36 +985,12 @@ fun SettingsScreen(
     }
 
     if (showLogoutDialog) {
-        var keepLocalCopy by remember { mutableStateOf(false) }
         AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Sign out?") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Signing out revokes this device's session token on the server.")
-                    SwitchRow(
-                        title = "Keep local copy of activities",
-                        subtitle = "Turn off when switching to a different account on this phone",
-                        checked = keepLocalCopy,
-                        onChecked = { keepLocalCopy = it },
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showLogoutDialog = false
-                        scope.launch {
-                            if (keepLocalCopy) {
-                                runCatching { container.network.api().logout() }
-                                container.authStore.clear()
-                            } else {
-                                container.repository.signOutAndClearUserData()
-                            }
-                        }
-                    },
-                ) { Text("Sign out") }
-            },
+            onDismissRequest = { showLogoutDialog = false }, title = { Text("Disconnect?") },
+            text = { Text("Your training data stays on this device.") },
+            confirmButton = { TextButton(onClick = { showLogoutDialog = false; scope.launch {
+                container.syncManager.disconnect()
+            } }) { Text("Disconnect") } },
             dismissButton = { TextButton(onClick = { showLogoutDialog = false }) { Text("Cancel") } },
         )
     }

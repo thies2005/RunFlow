@@ -5,6 +5,7 @@ import com.runflow2.app.core.util.AppLog
 import com.runflow2.app.data.db.ActivitySyncCursor
 import com.runflow2.app.data.db.AppDatabase
 import com.runflow2.app.data.db.ProfileEntity
+import com.runflow2.app.data.db.SyncQueueEntity
 import com.runflow2.app.data.net.ActivityDto
 import com.runflow2.app.data.net.AuthStore
 import com.runflow2.app.data.net.BaselineDto
@@ -22,6 +23,8 @@ import com.runflow2.app.data.net.WorkoutDeletePayload
 import com.runflow2.app.data.repo.RunFlowRepository
 import com.runflow2.app.data.repo.SettingsRepository
 import com.runflow2.app.data.repo.UploadResult
+import com.runflow2.app.data.repo.mayUploadActivity
+import com.runflow2.app.data.repo.mayUploadHealthDate
 import com.runflow2.app.data.sync.applyTo
 import com.runflow2.app.data.sync.mergeInto
 import com.runflow2.app.data.sync.reconcileCreatedWorkout
@@ -121,6 +124,21 @@ class SyncManager(
     /** Outbox depth for UI badges. */
     val pendingCount = db.syncQueueDao().observePendingCount()
 
+    /** Stop new traffic before waiting for in-flight reconciliation to leave the mutex. */
+    suspend fun disconnect(restore: Boolean = false) {
+        client.invalidateConnection()
+        if (restore) settings.beginRestore() else settings.setConnectionEnabled(false)
+        client.awaitConnectionWrites()
+        fastPushJob?.cancel()
+        mutex.withLock {
+            authStore.clear()
+            settings.setUploadActivitiesEnabled(false)
+            settings.setUploadPlansEnabled(false)
+            settings.setHealthMetricsSyncEnabled(false)
+            repository.detachRemoteState()
+        }
+    }
+
     fun triggerFastPush(reason: String = "mutation") {
         fastPushJob?.cancel()
         fastPushJob = syncScope.launch {
@@ -131,6 +149,7 @@ class SyncManager(
     }
 
     suspend fun pushPendingNow(reason: String): SyncResult = guardSync("fast push", reason) { mutex.withLock {
+        if (!settings.settingsOnce().connectionEnabled) return SyncResult(skipped = true)
         client.awaitReady()
         client.awaitOrigin(settings.settings.map { it.serverUrl })
         authStore.state.first { it.initialized }
@@ -192,20 +211,19 @@ class SyncManager(
     } }
 
     suspend fun syncNow(reason: String, forceStrava: Boolean = false): SyncResult = guardSync("sync", reason) { mutex.withLock {
-        client.awaitReady()
-        client.awaitOrigin(settings.settings.map { it.serverUrl })
-        // Wait for the persisted session to be restored: without this, the
-        // startup sync races AuthStore's DataStore read and no-ops even for
-        // signed-in users.
-        authStore.state.first { it.initialized }
-        // Health Connect import is a local feature — run it regardless of
-        // sign-in state. Cheap no-op unless the setting is enabled.
         healthConnect?.let { hc ->
             runCatching { hc.importIfEnabled() }.onFailure {
                 if (it is CancellationException) throw it
                 AppLog.w(TAG, "Health Connect import error (${it.message})")
             }
         }
+        if (!settings.settingsOnce().connectionEnabled) return SyncResult(skipped = true)
+        client.awaitReady()
+        client.awaitOrigin(settings.settings.map { it.serverUrl })
+        // Wait for the persisted session to be restored: without this, the
+        // startup sync races AuthStore's DataStore read and no-ops even for
+        // signed-in users.
+        authStore.state.first { it.initialized }
         if (!authStore.state.value.loggedIn) {
             AppLog.d(TAG, "sync skipped (not signed in), reason=$reason")
             return SyncResult(skipped = true)
@@ -503,9 +521,19 @@ class SyncManager(
         var pushed = 0
         var failed = 0
         if (!uploadsAllowed()) return 0 to 0
+        val policy = settings.settingsOnce()
+        if (policy.uploadActivitiesEnabled && policy.uploadExistingActivitiesEnabled) queueExistingActivities()
         val batch = db.syncQueueDao().nextBatch(MAX_OUTBOX_PER_SYNC)
         for (candidate in batch) {
             val item = db.syncQueueDao().pendingById(candidate.id) ?: continue
+            if (!settings.settingsOnce().connectionEnabled) break
+            if (item.entityType.startsWith("activity_")) {
+                if (!policy.uploadActivitiesEnabled) continue
+                val activity = db.activityDao().byId(item.localId)
+                if (activity == null && !policy.uploadExistingActivitiesEnabled) continue
+                if (activity != null && !policy.mayUploadActivity(activity.startDate)) continue
+            }
+            if ((item.entityType.startsWith("workout_") || item.entityType.startsWith("goal_") || item.entityType == TYPE_PROFILE_UPDATE) && !policy.uploadPlansEnabled) continue
             if (item.entityType == TYPE_PROFILE_UPDATE) {
                 val s = settings.settingsOnce()
                 val account = authStore.state.value
@@ -548,6 +576,22 @@ class SyncManager(
         return pushed to failed
     }
 
+    private suspend fun queueExistingActivities() {
+        val candidates = db.activityDao().pendingHistoryUploads(MAX_OUTBOX_PER_SYNC)
+        for (activity in candidates) {
+            if (settings.settingsOnce().let { !it.connectionEnabled || !it.uploadActivitiesEnabled || !it.uploadExistingActivitiesEnabled }) return
+            db.withTransaction {
+                val current = db.activityDao().byId(activity.id)
+                if (current != null && current.serverId == null && !current.isDemo &&
+                    db.syncQueueDao().pendingFor(TYPE_ACTIVITY_CREATE, current.id).isEmpty()) {
+                    db.activityDao().upsert(current.copy(dirty = true))
+                    db.syncQueueDao().insert(SyncQueueEntity(entityType = TYPE_ACTIVITY_CREATE, localId = current.id,
+                        payloadJson = json.encodeToString(CreateActivityRequest.serializer(), current.toCreateRequest())))
+                }
+            }
+        }
+    }
+
     /**
      * Pushes dirty readiness day records and baseline (no history pull).
      */
@@ -559,12 +603,13 @@ class SyncManager(
         repository.recomputeDailyReadiness(LocalDate.now(), series)
 
         // ---- push: dirty days, oldest first, bounded like the plan uploads ----
-        val dirty = db.dailyEntryDao().dirtyEntries().sortedBy { it.date }
+        val dirty = db.dailyEntryDao().dirtyEntries().filter { s.mayUploadHealthDate(it.date) }.sortedBy { it.date }
         val pushedDates = ArrayList<String>(dirty.size)
         for (entry in dirty) {
             if (pushedDates.size >= MAX_READINESS_PUSHES_PER_SYNC) break
             try {
-                client.api().postReadinessDaily(repository.readinessPayloadFor(entry, series))
+                client.api().postReadinessDaily(repository.readinessPayloadFor(entry, if (s.uploadExistingHealthEnabled) series else emptyList(),
+                    if (s.uploadExistingHealthEnabled) null else s.healthMetricsConsentSince))
                 pushedDates += entry.date
             } catch (e: HttpException) {
                 if (e.code() == 401 || e.code() == 429) throw e
@@ -579,7 +624,7 @@ class SyncManager(
         }
 
         // ---- baseline upload after a successful push (best-effort) ----
-        if (pushedDates.isNotEmpty()) {
+        if (pushedDates.isNotEmpty() && s.uploadExistingHealthEnabled) {
             val baseline = BaselineDto(
                 rhrMedian30Day = repository.rhrBaseline30d(),
                 sleepAverage28Day = repository.sleepAverage28d(),
@@ -637,9 +682,11 @@ class SyncManager(
      * same way (the plan remains device-only instead of poisoning the sync).
      */
     private suspend fun uploadLocalPlans() {
+        val policy = settings.settingsOnce()
+        if (!policy.connectionEnabled || !policy.uploadPlansEnabled || policy.uploadPlansConsentSince <= 0L) return
         // Wide query, success-capped loop: a permanently rejected plan must
         // not occupy an upload slot and starve later goals.
-        val goals = db.goalDao().localOnlyGoals(50)
+        val goals = db.goalDao().localOnlyGoals(50, policy.uploadExistingPlansEnabled, policy.uploadPlansConsentSince)
         if (goals.isEmpty()) return
         var uploaded = 0
         for (goal in goals) {

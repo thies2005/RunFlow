@@ -124,20 +124,18 @@ class StravaAuthTest {
     fun `server urls are normalized to origin only`() {
         // The bug: an API path in the server URL leaked into the OAuth
         // redirect_uri and Strava returned to a nonexistent callback.
-        assertEquals(
-            "https://runflow.schuelken.uk",
-            com.runflow2.app.data.net.Api.normalizeServerUrl("https://runflow.schuelken.uk/api/mobile/v1"),
-        )
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            com.runflow2.app.data.net.Api.normalizeServerUrl("https://runflow.schuelken.uk/api/mobile/v1")
+        }
         assertEquals(
             "https://runflow.schuelken.uk",
             com.runflow2.app.data.net.Api.normalizeServerUrl("runflow.schuelken.uk/"),
         )
+        org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            com.runflow2.app.data.net.Api.normalizeServerUrl("http://staging.local:8080/api")
+        }
         assertEquals(
-            "https://staging.local:8080",
-            com.runflow2.app.data.net.Api.normalizeServerUrl("http://staging.local:8080/api"),
-        )
-        assertEquals(
-            com.runflow2.app.data.net.Api.DEFAULT_BASE_URL,
+            "",
             com.runflow2.app.data.net.Api.normalizeServerUrl(""),
         )
     }
@@ -147,7 +145,7 @@ class StravaAuthTest {
         assertEquals(
             "https://runflow.schuelken.uk/api/auth/strava/callback",
             StravaAuth.callbackUriFor(
-                com.runflow2.app.data.net.Api.normalizeServerUrl("https://runflow.schuelken.uk/api/mobile/v1")
+                com.runflow2.app.data.net.Api.normalizeServerUrl("https://runflow.schuelken.uk")
             ),
         )
     }

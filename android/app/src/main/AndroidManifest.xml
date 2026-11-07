@@ -22,6 +22,8 @@
     <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
 
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
@@ -63,12 +65,7 @@
             </intent-filter>
             <!-- Verified App Link (assetlinks.json on the server): browsers open
                  this https URL straight into the app, no custom scheme needed. -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="runflow.schuelken.uk" android:path="/auth/app-callback" />
-            </intent-filter>
+
             <!-- Health Connect permission rationale entry point (API 33 and below) -->
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />

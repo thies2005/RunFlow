@@ -28,7 +28,15 @@ data class AppSettings(
     val autoPause: Boolean = true,
     val gpsSmoothing: Boolean = true,
     // ---- account / sync ----
-    val serverUrl: String = "", // empty = default production server
+    val serverUrl: String = "", // empty = no server
+    val connectionEnabled: Boolean = false,
+    val restoreInProgress: Boolean = false,
+    val uploadActivitiesEnabled: Boolean = false,
+    val uploadExistingActivitiesEnabled: Boolean = false,
+    val uploadActivitiesConsentSince: Long = 0L,
+    val uploadPlansEnabled: Boolean = false,
+    val uploadExistingPlansEnabled: Boolean = false,
+    val uploadPlansConsentSince: Long = 0L,
     val lastSyncAt: Long = 0L,
     val lastSyncSummary: String = "",
     val demoCleaned: Boolean = false,
@@ -45,13 +53,16 @@ data class AppSettings(
     // ---- Health Connect ----
     val healthConnectImportEnabled: Boolean = false,
     val healthConnectLastImportAt: Long = 0L,
+    val hcFirstGrantObservedAt: Long = 0L,
     val healthConnectLastImportSummary: String = "",
     // ---- Health Connect metrics + readiness ----
     val hcRestingHrEnabled: Boolean = false,
     val hcHrvEnabled: Boolean = false,
     val hcSleepEnabled: Boolean = false,
-    val healthMetricsSyncEnabled: Boolean = true,
-    val offlineModeChosen: Boolean = false,
+    val healthMetricsSyncEnabled: Boolean = false,
+    val uploadExistingHealthEnabled: Boolean = false,
+    val healthMetricsConsentSince: Long = 0L,
+    val offlineModeChosen: Boolean = true,
     val readinessLastPushAt: Long = 0L,
     // ---- body auto-refresh (hrRest/hrMax/zones from recorded data) ----
     val bodyAutoRefreshDay: Long = 0L, // epoch day of the last refresh; 0 = never
@@ -93,6 +104,16 @@ class SettingsRepository(private val context: Context) {
         val AUTO_PAUSE = booleanPreferencesKey("auto_pause")
         val GPS_SMOOTHING = booleanPreferencesKey("gps_smoothing")
         val SERVER_URL = stringPreferencesKey("server_url")
+        val CONNECTION_ENABLED = booleanPreferencesKey("connection_enabled")
+        val RESTORE_IN_PROGRESS = booleanPreferencesKey("restore_in_progress")
+        val UPLOAD_ACTIVITIES = booleanPreferencesKey("upload_activities_enabled")
+        val UPLOAD_EXISTING_ACTIVITIES = booleanPreferencesKey("upload_existing_activities_enabled")
+        val UPLOAD_ACTIVITIES_CONSENT_SINCE = longPreferencesKey("upload_activities_consent_since")
+        val UPLOAD_EXISTING_HEALTH = booleanPreferencesKey("upload_existing_health_enabled")
+        val HEALTH_METRICS_CONSENT_SINCE = longPreferencesKey("health_metrics_consent_since")
+        val UPLOAD_PLANS = booleanPreferencesKey("upload_plans_enabled")
+        val UPLOAD_EXISTING_PLANS = booleanPreferencesKey("upload_existing_plans_enabled")
+        val UPLOAD_PLANS_CONSENT_SINCE = longPreferencesKey("upload_plans_consent_since")
         val LAST_SYNC_AT = longPreferencesKey("last_sync_at")
         val LAST_SYNC_SUMMARY = stringPreferencesKey("last_sync_summary")
         val DEMO_CLEANED = booleanPreferencesKey("demo_cleaned")
@@ -106,11 +127,12 @@ class SettingsRepository(private val context: Context) {
         val LOGIN_PROMPT_REMIND_AT = longPreferencesKey("login_prompt_remind_at")
         val HC_IMPORT_ENABLED = booleanPreferencesKey("health_connect_import_enabled")
         val HC_LAST_IMPORT_AT = longPreferencesKey("health_connect_last_import_at")
+        val HC_FIRST_GRANT_OBSERVED_AT = longPreferencesKey("hc_first_grant_observed_at")
         val HC_LAST_IMPORT_SUMMARY = stringPreferencesKey("health_connect_last_import_summary")
         val HC_RESTING_HR_ENABLED = booleanPreferencesKey("hc_resting_hr_enabled")
         val HC_HRV_ENABLED = booleanPreferencesKey("hc_hrv_enabled")
         val HC_SLEEP_ENABLED = booleanPreferencesKey("hc_sleep_enabled")
-        val HEALTH_METRICS_SYNC_ENABLED = booleanPreferencesKey("health_metrics_sync_enabled")
+        val HEALTH_METRICS_SYNC_ENABLED = booleanPreferencesKey("health_metrics_upload_consent_v2")
         val OFFLINE_MODE_CHOSEN = booleanPreferencesKey("offline_mode_chosen")
         val READINESS_LAST_PUSH_AT = longPreferencesKey("readiness_last_push_at")
         val READINESS_SCORE_ENGINE = intPreferencesKey("readiness_score_engine")
@@ -144,6 +166,14 @@ class SettingsRepository(private val context: Context) {
             autoPause = p[Keys.AUTO_PAUSE] ?: true,
             gpsSmoothing = p[Keys.GPS_SMOOTHING] ?: true,
             serverUrl = p[Keys.SERVER_URL] ?: "",
+            connectionEnabled = (p[Keys.CONNECTION_ENABLED] ?: false) && !(p[Keys.RESTORE_IN_PROGRESS] ?: false),
+            restoreInProgress = p[Keys.RESTORE_IN_PROGRESS] ?: false,
+            uploadActivitiesEnabled = p[Keys.UPLOAD_ACTIVITIES] ?: false,
+            uploadExistingActivitiesEnabled = p[Keys.UPLOAD_EXISTING_ACTIVITIES] ?: false,
+            uploadActivitiesConsentSince = p[Keys.UPLOAD_ACTIVITIES_CONSENT_SINCE] ?: 0L,
+            uploadPlansEnabled = p[Keys.UPLOAD_PLANS] ?: false,
+            uploadExistingPlansEnabled = p[Keys.UPLOAD_EXISTING_PLANS] ?: false,
+            uploadPlansConsentSince = p[Keys.UPLOAD_PLANS_CONSENT_SINCE] ?: 0L,
             lastSyncAt = p[Keys.LAST_SYNC_AT] ?: 0L,
             lastSyncSummary = p[Keys.LAST_SYNC_SUMMARY] ?: "",
             demoCleaned = p[Keys.DEMO_CLEANED] ?: false,
@@ -157,12 +187,15 @@ class SettingsRepository(private val context: Context) {
             loginPromptRemindAt = p[Keys.LOGIN_PROMPT_REMIND_AT] ?: 0L,
             healthConnectImportEnabled = p[Keys.HC_IMPORT_ENABLED] ?: false,
             healthConnectLastImportAt = p[Keys.HC_LAST_IMPORT_AT] ?: 0L,
+            hcFirstGrantObservedAt = p[Keys.HC_FIRST_GRANT_OBSERVED_AT] ?: 0L,
             healthConnectLastImportSummary = p[Keys.HC_LAST_IMPORT_SUMMARY] ?: "",
             hcRestingHrEnabled = p[Keys.HC_RESTING_HR_ENABLED] ?: false,
             hcHrvEnabled = p[Keys.HC_HRV_ENABLED] ?: false,
             hcSleepEnabled = p[Keys.HC_SLEEP_ENABLED] ?: false,
-            healthMetricsSyncEnabled = p[Keys.HEALTH_METRICS_SYNC_ENABLED] ?: true,
-            offlineModeChosen = p[Keys.OFFLINE_MODE_CHOSEN] ?: false,
+            healthMetricsSyncEnabled = p[Keys.HEALTH_METRICS_SYNC_ENABLED] ?: false,
+            uploadExistingHealthEnabled = p[Keys.UPLOAD_EXISTING_HEALTH] ?: false,
+            healthMetricsConsentSince = p[Keys.HEALTH_METRICS_CONSENT_SINCE] ?: 0L,
+            offlineModeChosen = p[Keys.OFFLINE_MODE_CHOSEN] ?: true,
             readinessLastPushAt = p[Keys.READINESS_LAST_PUSH_AT] ?: 0L,
             bodyAutoRefreshDay = p[Keys.BODY_AUTO_REFRESH_DAY] ?: 0L,
             ftpWatts = p[Keys.FTP_WATTS] ?: 0,
@@ -201,10 +234,51 @@ class SettingsRepository(private val context: Context) {
     suspend fun setGpsSmoothing(enabled: Boolean) =
         context.dataStore.edit { it[Keys.GPS_SMOOTHING] = enabled }
 
-    /** Stores an origin-only server URL; the default server is stored as "". */
+    /** Stores an explicit origin; an empty value means no server. */
     suspend fun setServerUrl(url: String) = context.dataStore.edit {
         val normalized = com.runflow2.app.data.net.Api.normalizeServerUrl(url)
-        it[Keys.SERVER_URL] = if (normalized == com.runflow2.app.data.net.Api.DEFAULT_BASE_URL) "" else normalized
+        it[Keys.SERVER_URL] = normalized
+        it[Keys.CONNECTION_ENABLED] = false
+    }
+
+    suspend fun setConnectionEnabled(enabled: Boolean) = context.dataStore.edit {
+        require(!enabled || (it[Keys.RESTORE_IN_PROGRESS] != true && !it[Keys.SERVER_URL].isNullOrBlank())) { "Configure a server first" }
+        it[Keys.CONNECTION_ENABLED] = enabled
+    }
+    suspend fun beginRestore() = context.dataStore.edit {
+        it[Keys.RESTORE_IN_PROGRESS] = true
+        it[Keys.CONNECTION_ENABLED] = false
+        it[Keys.UPLOAD_ACTIVITIES] = false
+        it[Keys.UPLOAD_EXISTING_ACTIVITIES] = false
+        it.remove(Keys.UPLOAD_ACTIVITIES_CONSENT_SINCE)
+        it[Keys.UPLOAD_EXISTING_HEALTH] = false
+        it.remove(Keys.HEALTH_METRICS_CONSENT_SINCE)
+        it[Keys.UPLOAD_PLANS] = false
+        it[Keys.UPLOAD_EXISTING_PLANS] = false
+        it.remove(Keys.UPLOAD_PLANS_CONSENT_SINCE)
+        it[Keys.HEALTH_METRICS_SYNC_ENABLED] = false
+    }
+    suspend fun finishRestore() = context.dataStore.edit { it[Keys.RESTORE_IN_PROGRESS] = false }
+    suspend fun setUploadActivitiesEnabled(enabled: Boolean) = context.dataStore.edit {
+        if (enabled && it[Keys.UPLOAD_ACTIVITIES] != true) it[Keys.UPLOAD_ACTIVITIES_CONSENT_SINCE] = System.currentTimeMillis()
+        if (!enabled) { it.remove(Keys.UPLOAD_ACTIVITIES_CONSENT_SINCE); it[Keys.UPLOAD_EXISTING_ACTIVITIES] = false }
+        it[Keys.UPLOAD_ACTIVITIES] = enabled
+    }
+    suspend fun setUploadExistingActivitiesEnabled(enabled: Boolean) = context.dataStore.edit {
+        require(!enabled || it[Keys.UPLOAD_ACTIVITIES] == true)
+        it[Keys.UPLOAD_EXISTING_ACTIVITIES] = enabled
+    }
+    suspend fun setUploadPlansEnabled(enabled: Boolean) = context.dataStore.edit {
+        if (enabled && it[Keys.UPLOAD_PLANS] != true) it[Keys.UPLOAD_PLANS_CONSENT_SINCE] = System.currentTimeMillis()
+        if (!enabled) {
+            it.remove(Keys.UPLOAD_PLANS_CONSENT_SINCE)
+            it[Keys.UPLOAD_EXISTING_PLANS] = false
+        }
+        it[Keys.UPLOAD_PLANS] = enabled
+    }
+    suspend fun setUploadExistingPlansEnabled(enabled: Boolean) = context.dataStore.edit {
+        require(!enabled || it[Keys.UPLOAD_PLANS] == true) { "Enable plan uploads first" }
+        it[Keys.UPLOAD_EXISTING_PLANS] = enabled
     }
 
     suspend fun setLastSync(at: Long, summary: String) = context.dataStore.edit {
@@ -272,6 +346,12 @@ class SettingsRepository(private val context: Context) {
         it[Keys.HC_LAST_IMPORT_SUMMARY] = summary
     }
 
+    /** Keep the earliest observed grant; HC does not expose its original grant date. */
+    suspend fun observeHealthConnectGrant(at: Long = System.currentTimeMillis()) = context.dataStore.edit {
+        val previous = it[Keys.HC_FIRST_GRANT_OBSERVED_AT] ?: 0L
+        if (previous <= 0 || at < previous) it[Keys.HC_FIRST_GRANT_OBSERVED_AT] = at
+    }
+
     /** Per-metric Health Connect import toggles feeding the readiness score. */
     suspend fun setHcRestingHrEnabled(enabled: Boolean) =
         context.dataStore.edit { it[Keys.HC_RESTING_HR_ENABLED] = enabled }
@@ -283,8 +363,15 @@ class SettingsRepository(private val context: Context) {
         context.dataStore.edit { it[Keys.HC_SLEEP_ENABLED] = enabled }
 
     /** When true, daily health metrics sync to the server for signed-in users. */
-    suspend fun setHealthMetricsSyncEnabled(enabled: Boolean) =
-        context.dataStore.edit { it[Keys.HEALTH_METRICS_SYNC_ENABLED] = enabled }
+    suspend fun setHealthMetricsSyncEnabled(enabled: Boolean) = context.dataStore.edit {
+        if (enabled && it[Keys.HEALTH_METRICS_SYNC_ENABLED] != true) it[Keys.HEALTH_METRICS_CONSENT_SINCE] = System.currentTimeMillis()
+        if (!enabled) { it.remove(Keys.HEALTH_METRICS_CONSENT_SINCE); it[Keys.UPLOAD_EXISTING_HEALTH] = false }
+        it[Keys.HEALTH_METRICS_SYNC_ENABLED] = enabled
+    }
+    suspend fun setUploadExistingHealthEnabled(enabled: Boolean) = context.dataStore.edit {
+        require(!enabled || it[Keys.HEALTH_METRICS_SYNC_ENABLED] == true)
+        it[Keys.UPLOAD_EXISTING_HEALTH] = enabled
+    }
 
     /** "Use offline" on the login nudge: suppress the sign-in prompt until login. */
     suspend fun setOfflineModeChosen(chosen: Boolean) =
@@ -327,6 +414,12 @@ class SettingsRepository(private val context: Context) {
     }
 
     /** Replaces the cached snapshot; a null aerobic value clears the previous one. */
+    suspend fun clearServerMetrics() = context.dataStore.edit {
+        it.remove(Keys.SERVER_METRICS_VDOT)
+        it.remove(Keys.SERVER_METRICS_AEROBIC_VO2MAX)
+        it.remove(Keys.SERVER_METRICS_COMPUTED_AT)
+    }
+
     suspend fun setServerMetrics(snapshot: ServerMetricSnapshot) = context.dataStore.edit {
         it[Keys.SERVER_METRICS_VDOT] = snapshot.bestEffortVdot
         it[Keys.SERVER_METRICS_COMPUTED_AT] = snapshot.computedAtMs
@@ -380,4 +473,14 @@ class SettingsRepository(private val context: Context) {
     suspend fun setEffortCardMode(mode: String) = context.dataStore.edit {
         it[Keys.EFFORT_CARD_MODE] = mode
     }
+}
+
+internal fun AppSettings.mayUploadActivity(startDate: Long): Boolean = connectionEnabled && uploadActivitiesEnabled &&
+    uploadActivitiesConsentSince > 0L && (uploadExistingActivitiesEnabled || startDate > uploadActivitiesConsentSince)
+
+internal fun AppSettings.mayUploadHealthDate(date: String): Boolean {
+    if (!connectionEnabled || !healthMetricsSyncEnabled || healthMetricsConsentSince <= 0L) return false
+    if (uploadExistingHealthEnabled) return true
+    val consentDay = java.time.Instant.ofEpochMilli(healthMetricsConsentSince).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+    return runCatching { java.time.LocalDate.parse(date).isAfter(consentDay) }.getOrDefault(false)
 }

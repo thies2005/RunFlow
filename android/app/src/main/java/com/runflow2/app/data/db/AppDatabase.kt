@@ -61,6 +61,7 @@ data class ActivityEntity(
     // ---- Health Connect (v9): record id of the imported ExerciseSession,
     // the dedupe key so re-imports never duplicate a run. ----
     val hcRecordId: String? = null,
+    val hcSourceSnapshotJson: String? = null,
     // ---- v13: cycling power metrics ----
     val averageWatts: Double? = null,
     val weightedAverageWatts: Double? = null,
@@ -314,6 +315,9 @@ interface ActivityDao {
     @Query("SELECT * FROM activities ORDER BY startDate DESC")
     suspend fun all(): List<ActivityEntity>
 
+    @Query("SELECT * FROM activities WHERE serverId IS NULL AND isDemo = 0 AND NOT EXISTS (SELECT 1 FROM sync_queue WHERE entityType = 'activity_create' AND localId = activities.id) ORDER BY startDate ASC LIMIT :limit")
+    suspend fun pendingHistoryUploads(limit: Int): List<ActivityEntity>
+
     @Query("SELECT serverId FROM activities WHERE serverId IS NOT NULL AND dirty = 0 AND isDemo = 0")
     suspend fun cleanServerIds(): List<String>
 
@@ -376,8 +380,8 @@ interface GoalDao {
     suspend fun serverGoals(): List<GoalEntity>
 
     /** Device-created plans the server has never seen, oldest first. */
-    @Query("SELECT * FROM goals WHERE isLocalOnly = 1 ORDER BY createdAt ASC LIMIT :limit")
-    suspend fun localOnlyGoals(limit: Int): List<GoalEntity>
+    @Query("SELECT * FROM goals WHERE isLocalOnly = 1 AND (:includeExisting = 1 OR createdAt > :createdAfter) ORDER BY createdAt ASC LIMIT :limit")
+    suspend fun localOnlyGoals(limit: Int, includeExisting: Boolean, createdAfter: Long): List<GoalEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(goal: GoalEntity)
@@ -490,6 +494,9 @@ interface SyncQueueDao {
 
 @Dao
 interface ChatDao {
+    @Query("SELECT * FROM chat_messages ORDER BY createdAt ASC, id ASC")
+    fun observeAll(): Flow<List<ChatMessageEntity>>
+
     @Query("SELECT * FROM chat_messages WHERE sessionId = :sessionId ORDER BY createdAt ASC, id ASC")
     fun observeForSession(sessionId: String): Flow<List<ChatMessageEntity>>
 
@@ -633,7 +640,7 @@ interface ActivitySyncCursorDao {
         SyncQueueEntity::class, ChatMessageEntity::class, PlanSnapshotEntity::class,
         DailyEntryEntity::class, ActivitySyncCursor::class, ActivitySyncUnseen::class,
     ],
-    version = 17,
+    version = 18,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -914,5 +921,11 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("CREATE TABLE activity_sync_unseen (scope TEXT NOT NULL, serverId TEXT NOT NULL, PRIMARY KEY(scope, serverId))")
             }
         }
+        val MIGRATION_17_18: Migration = object : Migration(17, 18) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE activities ADD COLUMN hcSourceSnapshotJson TEXT")
+            }
+        }
+
     }
 }

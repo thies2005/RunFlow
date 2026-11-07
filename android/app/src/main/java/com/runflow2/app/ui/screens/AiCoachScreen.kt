@@ -69,6 +69,8 @@ fun AiCoachScreen(
     activityId: String? = null,
 ) {
     val auth by container.authStore.state.collectAsState()
+    val settings by container.settings.settings.collectAsState(initial = com.runflow2.app.data.repo.AppSettings())
+    val connected = settings.connectionEnabled && settings.serverUrl.isNotBlank()
     val streaming by container.aiCoach.streaming.collectAsState()
     val error by container.aiCoach.error.collectAsState()
 
@@ -94,8 +96,8 @@ fun AiCoachScreen(
     val listState = rememberLazyListState()
 
     // Resolve / create the chat session and refresh history when opening.
-    LaunchedEffect(auth.loggedIn, chatActivity?.serverId) {
-        if (auth.loggedIn) {
+    LaunchedEffect(auth.loggedIn, connected, chatActivity?.serverId) {
+        if (auth.loggedIn && connected) {
             loadError = null
             val target = chatActivity
             try {
@@ -140,7 +142,7 @@ fun AiCoachScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            if (!streaming && auth.loggedIn) {
+                            if (!streaming && auth.loggedIn && connected) {
                                 container.appScope.launch {
                                     runCatching { container.aiCoach.newChat() }
                                         .onSuccess {
@@ -153,7 +155,7 @@ fun AiCoachScreen(
                                 }
                             }
                         },
-                        enabled = auth.loggedIn && !streaming,
+                        enabled = auth.loggedIn && connected && !streaming,
                     ) {
                         Icon(Icons.Outlined.Add, contentDescription = "New chat")
                     }
@@ -161,13 +163,10 @@ fun AiCoachScreen(
             )
         },
     ) { padding ->
-        if (!auth.loggedIn) {
-            SignInPlaceholder(onLogin)
-            return@Scaffold
-        }
-
+        val offline = !auth.loggedIn || !connected
+        val archived = container.aiCoach.observeArchivedMessages().collectAsState(initial = emptyList()).value
         val target = chatActivity
-        val messages = if (target != null) {
+        val messages = if (offline) archived else if (target != null) {
             container.aiCoach.observeMessagesForActivity(target.serverId)
                 .collectAsState(initial = emptyList()).value
         } else {
@@ -189,10 +188,10 @@ fun AiCoachScreen(
         ) {
             Box(Modifier.weight(1f)) {
                 when {
-                    sessionId == null && loadError == null -> CircularProgressIndicator(
+                    !offline && sessionId == null && loadError == null -> CircularProgressIndicator(
                         Modifier.align(Alignment.Center),
                     )
-                    activityId != null && target == null -> Column(
+                    !offline && activityId != null && target == null -> Column(
                         Modifier
                             .align(Alignment.Center)
                             .padding(horizontal = 32.dp),
@@ -211,7 +210,7 @@ fun AiCoachScreen(
                             .padding(horizontal = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        EmptyConversation(offlineNote = loadError != null, aboutNoun = target?.noun)
+                        EmptyConversation(offlineNote = offline || loadError != null, aboutNoun = target?.noun)
                         val err = error ?: loadError
                         if (err != null) {
                             Text(
@@ -266,7 +265,7 @@ fun AiCoachScreen(
                         modifier = Modifier.weight(1f),
                         maxLines = 4,
                         keyboardOptions = KeyboardOptions.Default,
-                        enabled = !streaming,
+                        enabled = !offline && !streaming,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -283,7 +282,7 @@ fun AiCoachScreen(
                             container.aiCoach.send(id, input, target?.serverId)
                             input = ""
                         },
-                        enabled = !streaming && input.isNotBlank() && sessionId != null,
+                        enabled = !offline && !streaming && input.isNotBlank() && sessionId != null,
                     ) {
                         if (streaming) {
                             CircularProgressIndicator(

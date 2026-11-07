@@ -1,5 +1,6 @@
 package com.runflow2.app.data.ai
 
+import androidx.room.withTransaction
 import com.runflow2.app.data.db.AppDatabase
 import com.runflow2.app.data.db.ChatMessageEntity
 import com.runflow2.app.data.net.Api
@@ -44,6 +45,8 @@ class AiCoachRepository(
 
     private var activeStream: Job? = null
 
+    fun observeArchivedMessages() = db.chatDao().observeAll()
+
     fun observeMessages(sessionId: String) = db.chatDao().observeForSession(sessionId)
 
     /** Messages of an activity thread ("discuss this run"), across sessions. */
@@ -53,12 +56,14 @@ class AiCoachRepository(
 
     /** Returns the active session id, creating or reusing a server session. */
     suspend fun ensureSession(): String {
+        val generation = client.connectionGeneration()
+        client.withConnectionFence(generation) { Unit }
         settings.settingsOnce().aiSessionId.takeIf { it.isNotBlank() }?.let { return it }
         val existing = runCatching { client.api().chatSessions() }.getOrNull()
         val session = existing?.sessions?.maxByOrNull {
             Api.parseInstant(it.updatedAt) ?: Api.parseInstant(it.createdAt) ?: 0L
         } ?: client.api().createChatSession().session
-        settings.setAiSessionId(session.id)
+        client.withConnectionFence(generation) { settings.setAiSessionId(session.id) }
         return session.id
     }
 
@@ -68,14 +73,18 @@ class AiCoachRepository(
      * creates a fresh one. Never touches the general aiSessionId setting, so
      * the main coach conversation is unaffected by activity chats.
      */
-    suspend fun ensureActivitySession(activityId: String): String =
-        db.chatDao().newestForActivity(activityId)?.sessionId
-            ?: client.api().createChatSession().session.id
+    suspend fun ensureActivitySession(activityId: String): String {
+        val generation = client.connectionGeneration()
+        val session = client.api().createChatSession().session.id
+        return client.withConnectionFence(generation) { session }
+    }
 
     /** Replaces the local cache with the server-side history. */
     suspend fun loadHistory(sessionId: String) {
+        val generation = client.connectionGeneration()
         try {
             val history = client.api().chatHistory(sessionId).messages
+            client.withConnectionFence(generation) { db.withTransaction {
             db.chatDao().deleteForSession(sessionId)
             db.chatDao().upsertAll(
                 history.map {
@@ -88,6 +97,7 @@ class AiCoachRepository(
                     )
                 }
             )
+            } }
         } catch (e: IOException) {
             // offline: cached history stays
         } catch (e: HttpException) {
@@ -97,9 +107,10 @@ class AiCoachRepository(
 
     /** Replaces the local cache of an activity thread with the server history. */
     suspend fun loadHistoryForActivity(activityId: String) {
+        val generation = client.connectionGeneration()
         try {
             val history = client.api().chatHistoryByActivity(activityId).messages
-            db.chatDao().deleteForActivity(activityId)
+            client.withConnectionFence(generation) { db.withTransaction {
             db.chatDao().upsertAll(
                 history.mapNotNull { m ->
                     m.sessionId?.let { sid ->
@@ -114,6 +125,7 @@ class AiCoachRepository(
                     }
                 }
             )
+            } }
         } catch (e: IOException) {
             // offline: cached history stays
         } catch (e: HttpException) {
@@ -123,8 +135,9 @@ class AiCoachRepository(
 
     /** Starts a fresh conversation; the old one remains on the server. */
     suspend fun newChat(): String {
+        val generation = client.connectionGeneration()
         val session = client.api().createChatSession().session
-        settings.setAiSessionId(session.id)
+        client.withConnectionFence(generation) { settings.setAiSessionId(session.id) }
         return session.id
     }
 
@@ -148,6 +161,12 @@ class AiCoachRepository(
         _streaming.value = true
         _error.value = null
         activeStream = scope.launch {
+            val generation = client.connectionGeneration()
+            try { client.withConnectionFence(generation) { Unit } } catch (_: IOException) {
+                _streaming.value = false
+                _error.value = "Enable a server connection to use AI coach."
+                return@launch
+            }
             val userId = UUID.randomUUID().toString()
             val assistantId = UUID.randomUUID().toString()
             var assistantText = ""
@@ -172,7 +191,7 @@ class AiCoachRepository(
                     val now = System.currentTimeMillis()
                     if (now - lastDbFlushMs >= 80L) {
                         lastDbFlushMs = now
-                        db.chatDao().updateContent(assistantId, assistantText)
+                        client.withConnectionFence(generation) { db.chatDao().updateContent(assistantId, assistantText) }
                     }
                 }
                 when {

@@ -22,6 +22,16 @@ class AppSmokeTest {
 
     @Test
     fun offlineLaunchAndMainNavigation() {
+        val app = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+            .targetContext.applicationContext as RunFlowApp
+        kotlinx.coroutines.runBlocking {
+            val settings = app.container.settings.settingsOnce()
+            org.junit.Assert.assertTrue("Fresh install must not select a server", settings.serverUrl.isBlank())
+            org.junit.Assert.assertFalse(settings.connectionEnabled)
+            org.junit.Assert.assertFalse(settings.uploadActivitiesEnabled)
+            org.junit.Assert.assertFalse(settings.uploadPlansEnabled)
+            org.junit.Assert.assertFalse(settings.healthMetricsSyncEnabled)
+        }
         compose.waitUntil(timeoutMillis = 30_000) {
             compose.onAllNodes(hasText("Skip")).fetchSemanticsNodes().isNotEmpty() ||
                 compose.onAllNodes(hasText("Decide later")).fetchSemanticsNodes().isNotEmpty() ||

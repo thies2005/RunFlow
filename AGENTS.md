@@ -49,3 +49,12 @@ Preserve the native app signing identity. Before release, calculate the source
 versionCode from the final full-history commit count (including preparation commits),
 verify tag/version/notes and checks, then monitor publication and verify downloads.
 Do not choose a project license or delete old releases without explicit user approval.
+
+## MyWhoosh integration constraint
+
+Use local workout-file import, offline catalog matching, and `.zwo` export only.
+Do not use unofficial MyWhoosh HTTP APIs or contact `mywhoosh.com`,
+`service14.mywhoosh.com`, `service20.mywhoosh.com`, `coaching.mywhoosh.com`,
+or MyWhoosh CDN hosts from this integration. Do not add account connections,
+login/token flows, calendar pulls, cloud pushes, or MyWhoosh-specific database
+models. This preserves the user's October 20, 2026 scope decision.

@@ -4,7 +4,7 @@ Date: 2026-10-13 · Method: three read-only research agents (web planning stack,
 
 This document feeds two separate runs:
 - **Bug-fix run** (owned by a separate agent): §5.
-- **Feature run** (schema v2, view/editor, guided player v2, cycling power, dual-MCP): `docs/plans/2026-10-13-training-planning-round.md` + `docs/structured-workout-schema-v2-design.md`.
+- **Feature run** (schema v2, view/editor, guided player v2, cycling power, dual-MCP): the completed October 13 training-planning round and schema-v2 design (historical execution documents removed; current schema: `Web/src/lib/plans/structured.ts`).
 
 ---
 
@@ -96,7 +96,7 @@ Dead/orphaned inventory (cleanup candidates for the bug run or a hygiene round):
 
 ## 7. Cycling power — known today, to be mapped (task C0)
 
-Known: `Activity.averageWatts` + `weightedAverageWatts` columns exist (schema.prisma:309 block); `DailyFitness` has **no bike-specific fields** (only `ctl, atl, tsb, ctlRunning, trimp, runningTss`); `streams Json?` exists on Activity (whether watts streams are fetched is unmapped). Unknown — first task of the cycling workstream: which power fields Strava sync captures (summary vs stream, device vs estimated), any FTP/power-zone/NP/IF/cycling-TSS logic anywhere, how rides contribute to fitness load today, cycling content of the analytics page, and Android watts display. See `docs/plans/2026-10-13-training-planning-round.md`, workstream C.
+Known: `Activity.averageWatts` + `weightedAverageWatts` columns exist (schema.prisma:309 block); `DailyFitness` has **no bike-specific fields** (only `ctl, atl, tsb, ctlRunning, trimp, runningTss`); `streams Json?` exists on Activity (whether watts streams are fetched is unmapped). Unknown — first task of the cycling workstream: which power fields Strava sync captures (summary vs stream, device vs estimated), any FTP/power-zone/NP/IF/cycling-TSS logic anywhere, how rides contribute to fitness load today, cycling content of the analytics page, and Android watts display. This was workstream C of the completed October 13 training-planning round; its historical execution plan has been removed.
 
 ## 8. Coordination constraints (from the plan-builder run handoff)
 

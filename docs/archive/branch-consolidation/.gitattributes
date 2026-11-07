@@ -1,0 +1,5 @@
+# Preserve original whitespace in archived historical material.
+*.patch -whitespace
+auditopus27.5.md -whitespace
+plan27.5.md -whitespace
+2026-06-06-AGENT.md -whitespace

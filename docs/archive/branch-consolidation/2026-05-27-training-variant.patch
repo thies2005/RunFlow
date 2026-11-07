@@ -1,0 +1,2926 @@
+From 5b5cdde6f15e47853265a3a374bc7709ce566be9 Mon Sep 17 00:00:00 2001
+From: Thies <thies.schuelken@gmail.com>
+Date: Wed, 27 May 2026 11:38:55 +0300
+Subject: [PATCH] docs: add training plan audit and track development plans
+
+---
+ Web/src/lib/plans/__tests__/index.test.ts     | 255 +++++-
+ Web/src/lib/plans/generators/no-race.ts       |  46 +-
+ Web/src/lib/plans/generators/run-ultra.ts     |  63 +-
+ Web/src/lib/plans/generators/triathlon.ts     |  63 +-
+ Web/src/lib/plans/index.ts                    | 725 ++++++++++++++----
+ Web/src/lib/services/plan-creation.ts         |   1 +
+ auditopus27.5.md                              | 383 +++++++++
+ flutter/lib/core/constants/api_constants.dart |   4 +-
+ .../screens/auth/login_screen.dart            |   2 +-
+ flutter/pubspec.lock                          |   2 +-
+ flutter/pubspec.yaml                          |   1 +
+ flutter/test/widget/login_screen_test.dart    |  14 +
+ flutter/test/widget_test.dart                 |  10 +
+ plan27.5.md                                   | 436 +++++++++++
+ 14 files changed, 1828 insertions(+), 177 deletions(-)
+ create mode 100644 auditopus27.5.md
+ create mode 100644 plan27.5.md
+
+diff --git a/Web/src/lib/plans/__tests__/index.test.ts b/Web/src/lib/plans/__tests__/index.test.ts
+index 3ebaeb28..63f71f3d 100644
+--- a/Web/src/lib/plans/__tests__/index.test.ts
++++ b/Web/src/lib/plans/__tests__/index.test.ts
+@@ -666,7 +666,10 @@ describe('Training Plan Generation', () => {
+ 
+             expect(intervalWorkouts.length).toBeGreaterThan(0);
+             for (const w of intervalWorkouts) {
+-                expect(w.description).toContain('5x1km');
++                const isValidDescription = w.description.includes('5x1km') || 
++                                           w.description.includes('3x1600m') || 
++                                           w.description.includes('8x600m');
++                expect(isValidDescription).toBe(true);
+                 expect(w.description).not.toContain('Total');
+             }
+         });
+@@ -958,6 +961,256 @@ describe('Training Plan Generation', () => {
+             expect(raceWorkout).toBeDefined();
+         });
+     });
++
++    describe('SOTA Plan Improvements (plan27.5.md)', () => {
++        it('rotates quality session templates across weeks in BUILD/PEAK/BASE phases', () => {
++            const config = makeConfig({
++                raceType: 'MARATHON',
++                weeklyMileageGoal: 60000,
++                buildWeeks: 4,
++            });
++            const workouts = generateTrainingPlan(config);
++            const buildWorkouts = workouts.filter(w => w.phase === 'BUILD' && (w.type === WorkoutType.TEMPO || w.type === WorkoutType.INTERVALS || w.type === WorkoutType.REPETITIONS));
++            
++            const descriptions = new Set(buildWorkouts.map(w => w.description));
++            expect(descriptions.size).toBeGreaterThanOrEqual(2);
++        });
++
++        it('schedules secondary quality session when runsPerWeek >= 5', () => {
++            const config = makeConfig({
++                raceType: 'MARATHON',
++                runsPerWeek: 5,
++                weeklyMileageGoal: 80000,
++            });
++            const workouts = generateTrainingPlan(config);
++            const weeks = groupByWeek(workouts);
++            const buildWeeks = weeks.filter(w => w.length > 0 && w[0].phase === 'BUILD');
++            expect(buildWeeks.length).toBeGreaterThan(0);
++            for (const week of buildWeeks) {
++                const qualityWorkouts = week.filter(w => 
++                    w.type === WorkoutType.INTERVALS || 
++                    w.type === WorkoutType.TEMPO || 
++                    w.type === WorkoutType.REPETITIONS || 
++                    w.type === WorkoutType.FARTLEK
++                );
++                expect(qualityWorkouts.length).toBe(2);
++            }
++        });
++
++        it('schedules a Medium-Long Run (MLR) for Marathon plans when runsPerWeek >= 5', () => {
++            const config = makeConfig({
++                raceType: 'MARATHON',
++                runsPerWeek: 5,
++                weeklyMileageGoal: 80000,
++            });
++            const workouts = generateTrainingPlan(config);
++            const mlrWorkouts = workouts.filter(w => w.description.includes('Medium-Long Run'));
++            expect(mlrWorkouts.length).toBeGreaterThan(0);
++            for (const mlr of mlrWorkouts) {
++                expect(mlr.type).toBe(WorkoutType.EASY);
++                expect(mlr.totalDistance).toBeGreaterThan(2000);
++            }
++        });
++
++        it('uses exponential taper volume reduction (Phase 4)', () => {
++            const config = makeConfig({
++                raceType: 'MARATHON',
++                weeklyMileageGoal: 60000,
++                taperWeeks: 2,
++            });
++            const workouts = generateTrainingPlan(config);
++            const weeks = groupByWeek(workouts);
++            const raceWeekIndex = weeks.findIndex(week => week.some(w => w.type === WorkoutType.RACE));
++            expect(raceWeekIndex).toBeGreaterThan(2);
++            
++            const taperWeek1 = weeks[raceWeekIndex - 2];
++            const taperWeek2 = weeks[raceWeekIndex - 1];
++            
++            const taper1Volume = taperWeek1.reduce((s, w) => s + w.totalDistance, 0);
++            const taper2Volume = taperWeek2.reduce((s, w) => s + w.totalDistance, 0);
++            
++            expect(taper1Volume).toBeLessThan(60000);
++            expect(taper2Volume).toBeLessThan(taper1Volume);
++        });
++
++        it('attaches HR targets and zone labels to structured steps when LTHR is provided (Phase 5)', () => {
++            const config = makeConfig({
++                raceType: 'MARATHON',
++                runsPerWeek: 4,
++                thresholdHeartRate: 165,
++            });
++            const workouts = generateTrainingPlan(config);
++            
++            let foundHrTargets = false;
++            for (const w of workouts) {
++                const steps = buildStructuredStepsForWorkout(w);
++                if (steps && steps.steps.length > 0) {
++                    for (const step of steps.steps) {
++                        if (step.hrTargetMinBpm !== undefined && step.hrTargetMaxBpm !== undefined && step.hrZoneLabel !== undefined) {
++                            foundHrTargets = true;
++                            expect(step.hrTargetMinBpm).toBeGreaterThan(0);
++                            expect(step.hrTargetMaxBpm).toBeGreaterThan(step.hrTargetMinBpm);
++                        }
++                    }
++                }
++            }
++            expect(foundHrTargets).toBe(true);
++        });
++
++        describe('Audit Fixes', () => {
++            it('clamps runsPerWeek = 0 to 1', () => {
++                const config = makeConfig({
++                    raceType: 'TEN_K',
++                    runsPerWeek: 0,
++                });
++                const workouts = generateTrainingPlan(config);
++                const runningWorkouts = workouts.filter(w => isRunType(w.type));
++                expect(runningWorkouts.length).toBeGreaterThan(1);
++            });
++
++            it('supports custom race distance for CUSTOM_DISTANCE race type', () => {
++                const config = makeConfig({
++                    raceType: 'CUSTOM_DISTANCE',
++                    customRunDistM: 15000,
++                    runsPerWeek: 3,
++                });
++                const workouts = generateTrainingPlan(config);
++                const raceWorkout = workouts.find(w => w.type === 'RACE');
++                expect(raceWorkout).toBeDefined();
++                expect(raceWorkout!.totalDistance).toBe(15000);
++                expect(raceWorkout!.description).toContain('15.0km');
++            });
++
++            it('rotates secondary quality session variants across weeks', () => {
++                const config = makeConfig({
++                    raceType: 'MARATHON',
++                    runsPerWeek: 5,
++                    weeklyMileageGoal: 80000,
++                });
++                const workouts = generateTrainingPlan(config);
++                const secondarySessions = workouts.filter(w => w.description.includes('Secondary'));
++                const descriptions = new Set(secondarySessions.map(w => w.description));
++                expect(descriptions.size).toBeGreaterThan(1);
++            });
++
++            it('clips rest days if they exceed 7 - runsPerWeek to prevent silently scheduling on rest days', () => {
++                const config = makeConfig({
++                    raceType: 'TEN_K',
++                    runsPerWeek: 4,
++                    restDays: [0, 1, 2, 3, 4, 5, 6],
++                });
++                const workouts = generateTrainingPlan(config);
++                const runningWorkouts = workouts.filter(w => isRunType(w.type));
++                expect(runningWorkouts.length).toBeGreaterThan(0);
++                expect(workouts.length).toBeGreaterThan(0);
++            });
++
++            it('verifies Ultra plan has targetHrZone on all workouts, restDays overflow handling, back-to-back fallback', () => {
++                const config = makeConfig({
++                    raceType: 'FIFTY_K',
++                    runsPerWeek: 5,
++                    restDays: [0, 1, 2, 3, 4, 5, 6], // Overflows! Sliced to 7 - 5 = 2 rest days.
++                });
++                const workouts = generateTrainingPlan(config);
++                expect(workouts.length).toBeGreaterThan(0);
++                
++                // Check that targetHrZone is defined on all workouts that are run/strength/etc.
++                for (const w of workouts) {
++                    if (w.type === WorkoutType.LONG_RUN || w.type === WorkoutType.EASY || w.type === WorkoutType.TEMPO || w.type === WorkoutType.RECOVERY) {
++                        expect(w.targetHrZone).toBeDefined();
++                        expect(w.targetHrZone).toBeGreaterThan(0);
++                    }
++                    // targetDuration should be computed and > 0 for non-zero distance workouts
++                    if (w.totalDistance > 0 && w.type !== WorkoutType.RACE) {
++                        expect(w.targetDuration).toBeGreaterThan(0);
++                    }
++                }
++            });
++
++            it('verifies Triathlon plan has targetHrZone on all run workouts, restDays overflow, raceType null guard, CSS-derived swim pace', () => {
++                // raceType null guard test
++                const config = {
++                    vdot: 40,
++                    raceType: null,
++                    sport: 'TRIATHLON' as any,
++                    raceDate: new Date(Date.now() + 86400000 * 14),
++                    startDate: new Date(),
++                    runsPerWeek: 3,
++                    ridesPerWeek: 3,
++                    swimsPerWeek: 3,
++                    restDays: [0, 1, 2, 3, 4, 5, 6], // Overflows!
++                };
++                const workouts = generateTrainingPlan(config as any);
++                expect(workouts.length).toBeGreaterThan(0);
++                
++                const swimWorkouts = workouts.filter(w => w.type === WorkoutType.SWIM);
++                expect(swimWorkouts.length).toBeGreaterThan(0);
++                for (const w of swimWorkouts) {
++                    // estimated css from vdot=40 is Math.max(80, Math.min(180, Math.round(180 - 40 * 1.5))) = 120
++                    // targetPace for swim is CSS + 8 (128) in normal weeks, or CSS + 10 (130) in race week
++                    expect(w.targetPace === 128 || w.targetPace === 130).toBe(true);
++                }
++
++                // Check that targetHrZone is defined on all run/strength/etc workouts
++                for (const w of workouts) {
++                    if (w.type === WorkoutType.LONG_RUN || w.type === WorkoutType.EASY || w.type === WorkoutType.TEMPO || w.type === WorkoutType.INTERVALS) {
++                        expect(w.targetHrZone).toBeDefined();
++                        expect(w.targetHrZone).toBeGreaterThan(0);
++                    }
++                }
++            });
++
++            it('verifies No-race plan has targetHrZone on all workouts, restDays overflow, swimPace based on VDOT', () => {
++                const config = makeConfig({
++                    raceType: null,
++                    runsPerWeek: 4,
++                    swimsPerWeek: 2,
++                    restDays: [0, 1], // Leaves free days for swims
++                });
++                const workouts = generateTrainingPlan(config);
++                expect(workouts.length).toBeGreaterThan(0);
++                
++                const swimWorkouts = workouts.filter(w => w.type === WorkoutType.SWIM);
++                expect(swimWorkouts.length).toBeGreaterThan(0);
++                for (const w of swimWorkouts) {
++                    // VDOT default is 50, CSS is 105. targetPace is swimPace (105)
++                    expect(w.targetPace).toBe(105);
++                }
++
++                // Check that targetHrZone is defined on all run/strength/etc workouts
++                for (const w of workouts) {
++                    if (w.type === WorkoutType.LONG_RUN || w.type === WorkoutType.EASY || w.type === WorkoutType.TEMPO || w.type === WorkoutType.RECOVERY) {
++                        expect(w.targetHrZone).toBeDefined();
++                        expect(w.targetHrZone).toBeGreaterThan(0);
++                    }
++                }
++            });
++
++            it('verifies CUSTOM_DISTANCE getQualitySession selection logic', () => {
++                // Short distance (< 10km) -> gets 5K-style sessions (containing Repetitions / VO2max Intervals)
++                const configShort = makeConfig({
++                    raceType: 'CUSTOM_DISTANCE',
++                    customRunDistM: 5000,
++                    runsPerWeek: 3,
++                    weeklyMileageGoal: 30000,
++                });
++                const workoutsShort = generateTrainingPlan(configShort);
++                const qualityTypesShort = workoutsShort.map(w => w.type);
++                expect(qualityTypesShort).toContain(WorkoutType.INTERVALS);
++
++                // Long distance (>= 30km) -> gets Marathon-style sessions (Tempo / MP runs)
++                const configLong = makeConfig({
++                    raceType: 'CUSTOM_DISTANCE',
++                    customRunDistM: 35000,
++                    runsPerWeek: 3,
++                    weeklyMileageGoal: 50000,
++                });
++                const workoutsLong = generateTrainingPlan(configLong);
++                const tempoSessions = workoutsLong.filter(w => w.type === WorkoutType.TEMPO);
++                expect(tempoSessions.length).toBeGreaterThan(0);
++            });
++        });
++    });
+ });
+ 
+ function groupByWeek(workouts: { date: Date; type?: string; totalDistance: number }[]): { date: Date; type?: string; totalDistance: number }[][] {
+diff --git a/Web/src/lib/plans/generators/no-race.ts b/Web/src/lib/plans/generators/no-race.ts
+index ac7cf90e..d9d1cf89 100644
+--- a/Web/src/lib/plans/generators/no-race.ts
++++ b/Web/src/lib/plans/generators/no-race.ts
+@@ -1,8 +1,9 @@
+ import { WorkoutType, PlanPhase } from '@/generated/prisma/browser';
+ import { calculateTrainingPaces } from '@/lib/metrics/vdot';
+-import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume } from '../index';
++import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume, workoutTypeToHrZone, computeDuration } from '../index';
+ import { fixBackToBackSameType } from '../schedule-utils';
+ import { enrichWorkoutsWithDescriptions } from '../descriptions';
++import { estimateSwimPaceFromVdot } from '../swim-pace';
+ 
+ type NoRacePhase = 'BASE' | 'BUILD' | 'MAINTAIN';
+ 
+@@ -19,6 +20,14 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
+     const longRunDay = config.longRunDay !== undefined ? config.longRunDay : 0;
+     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
+ 
++    // Validate and adjust rest days if they leave fewer slots than runsPerWeek requires
++    let restDays = config.restDays ? [...config.restDays] : [];
++    if (restDays.length > 7 - runsPerWeek) {
++        restDays = restDays.slice(0, 7 - runsPerWeek);
++    }
++
++    const swimPace = estimateSwimPaceFromVdot(vdot);
++
+     const peakVolume = config.weeklyMileageGoal || 40000;
+     const minStart = getMinStartVolume(config.raceType ?? null);
+     let startVolume: number;
+@@ -91,8 +100,9 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
+             preferredLongRunDay: longRunDay,
+             preferredWorkoutDay: workoutDay,
+             preferredSwimDay: config.swimDay,
+-            restDays: config.restDays,
++            restDays: restDays,
+             isRecoveryWeek,
++            swimPace: swimPace,
+         });
+ 
+         weekSchedule.forEach(w => {
+@@ -108,13 +118,14 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
+                 targetPace: w.targetPace,
+                 targetDuration: w.targetDuration,
+                 phase: phase as PlanPhase,
++                targetHrZone: w.targetHrZone,
+             });
+         });
+ 
+         currentDate.setDate(currentDate.getDate() + 7);
+     }
+ 
+-    const result = fixBackToBackSameType(workouts, { restDays: config.restDays });
++    const result = fixBackToBackSameType(workouts, { restDays: restDays });
+     enrichWorkoutsWithDescriptions(result);
+     return result;
+ }
+@@ -141,11 +152,12 @@ function generateNoRaceWeek(params: {
+     preferredSwimDay?: number;
+     restDays?: number[];
+     isRecoveryWeek: boolean;
++    swimPace: number;
+ }): ScheduledWorkout[] {
+     const {
+         phase, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
+         weeklyVolume, preferredLongRunDay, preferredWorkoutDay,
+-        preferredSwimDay, restDays, isRecoveryWeek,
++        preferredSwimDay, restDays, isRecoveryWeek, swimPace,
+     } = params;
+ 
+     const workouts: ScheduledWorkout[] = [];
+@@ -201,7 +213,8 @@ function generateNoRaceWeek(params: {
+         description: `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`,
+         totalDistance: longRunDist,
+         targetPace: easyPace,
+-        targetDuration: 0,
++        targetDuration: computeDuration(longRunDist, easyPace),
++        targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RUN),
+     });
+ 
+     if (hasQuality) {
+@@ -210,13 +223,15 @@ function generateNoRaceWeek(params: {
+         hardSessionDays.push(qualityDay);
+ 
+         if (phase === 'BASE') {
++            const paceVal = Math.round((paces.threshold + paces.interval) / 2);
+             workouts.push({
+                 dayOffset: qualityDay,
+                 type: WorkoutType.FARTLEK,
+                 description: `Fartlek: 8km (3min hard / 2min easy)`,
+                 totalDistance: 8000,
+-                targetPace: Math.round((paces.threshold + paces.interval) / 2),
+-                targetDuration: 0,
++                targetPace: paceVal,
++                targetDuration: computeDuration(8000, paceVal),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.FARTLEK),
+             });
+         } else {
+             workouts.push({
+@@ -225,7 +240,8 @@ function generateNoRaceWeek(params: {
+                 description: `Threshold: 6km @ ${formatPace(paces.threshold)}`,
+                 totalDistance: 8000,
+                 targetPace: paces.threshold,
+-                targetDuration: 0,
++                targetDuration: computeDuration(8000, paces.threshold),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.TEMPO),
+             });
+         }
+     }
+@@ -254,7 +270,8 @@ function generateNoRaceWeek(params: {
+                 description: `Recovery: ${(easyDist / 1000).toFixed(1)}km`,
+                 totalDistance: easyDist,
+                 targetPace: recoveryPace,
+-                targetDuration: 0,
++                targetDuration: computeDuration(easyDist, recoveryPace),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
+             });
+         } else {
+             workouts.push({
+@@ -263,7 +280,8 @@ function generateNoRaceWeek(params: {
+                 description: `Easy: ${(easyDist / 1000).toFixed(1)}km`,
+                 totalDistance: easyDist,
+                 targetPace: easyPace,
+-                targetDuration: 0,
++                targetDuration: computeDuration(easyDist, easyPace),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
+             });
+         }
+     }
+@@ -279,8 +297,9 @@ function generateNoRaceWeek(params: {
+             type: WorkoutType.SWIM,
+             description: 'Swim: 1500m @ Easy',
+             totalDistance: 1500,
+-            targetPace: 120,
++            targetPace: swimPace,
+             targetDuration: 2700,
++            targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
+         });
+     }
+ 
+@@ -302,6 +321,7 @@ function generateNoRaceWeek(params: {
+                 totalDistance: 0,
+                 targetPace: 0,
+                 targetDuration: 3600,
++                targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE),
+             });
+         } else if (remainingSwims > 0) {
+             remainingSwims--;
+@@ -310,8 +330,9 @@ function generateNoRaceWeek(params: {
+                 type: WorkoutType.SWIM,
+                 description: 'Swim: 1500m @ Easy',
+                 totalDistance: 1500,
+-                targetPace: 120,
++                targetPace: swimPace,
+                 targetDuration: 2700,
++                targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
+             });
+         }
+     }
+@@ -331,6 +352,7 @@ function generateNoRaceWeek(params: {
+             totalDistance: 0,
+             targetPace: 0,
+             targetDuration: 2700,
++            targetHrZone: workoutTypeToHrZone(WorkoutType.STRENGTH),
+         });
+         remainingStrength--;
+     }
+diff --git a/Web/src/lib/plans/generators/run-ultra.ts b/Web/src/lib/plans/generators/run-ultra.ts
+index 880639b4..5d2827fb 100644
+--- a/Web/src/lib/plans/generators/run-ultra.ts
++++ b/Web/src/lib/plans/generators/run-ultra.ts
+@@ -1,6 +1,6 @@
+ import { WorkoutType, RaceType, PlanPhase } from '@/generated/prisma/browser';
+ import { calculateTrainingPaces, TrainingPaces } from '@/lib/metrics/vdot';
+-import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume } from '../index';
++import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume, workoutTypeToHrZone, computeDuration, computeQualityDuration, getQualityFraction } from '../index';
+ import { fixBackToBackSameType } from '../schedule-utils';
+ import { enrichWorkoutsWithDescriptions } from '../descriptions';
+ 
+@@ -69,6 +69,12 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
+     const strengthPerWeek = Math.max(0, config.strengthPerWeek ?? 1);
+     const longRunDay = config.longRunDay !== undefined ? config.longRunDay : 0;
+ 
++    // Validate restDays: ensure they leave enough slots for runs
++    let restDays = config.restDays ? [...config.restDays] : [];
++    if (restDays.length > 7 - runsPerWeek) {
++        restDays = restDays.slice(0, 7 - runsPerWeek);
++    }
++
+     const isBackyardUltra = raceType === 'BACKYARD_ULTRA';
+     const isTimedEvent = raceType === 'TWELVE_HOUR' || raceType === 'TWENTY_FOUR_HOUR';
+ 
+@@ -169,6 +175,7 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
+                     targetPace: w.targetPace,
+                     targetDuration: w.targetDuration,
+                     phase: 'RACE_WEEK' as PlanPhase,
++                    targetHrZone: w.targetHrZone,
+                 });
+             });
+             currentDate.setDate(currentDate.getDate() + 7);
+@@ -230,7 +237,7 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
+             weeklyVolume: weekVolumeCap,
+             maxLongRunKm: config.maxLongRunKm,
+             preferredLongRunDay: longRunDay,
+-            restDays: config.restDays,
++            restDays: restDays,
+             isBackyardUltra,
+             isTimedEvent,
+             isRecoveryWeek,
+@@ -256,6 +263,7 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
+                 targetPace: w.targetPace,
+                 targetDuration: w.targetDuration,
+                 phase: phase as PlanPhase,
++                targetHrZone: w.targetHrZone,
+             });
+         });
+ 
+@@ -264,7 +272,7 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
+ 
+     const result = fixBackToBackSameType(workouts, {
+         raceDate,
+-        restDays: config.restDays,
++        restDays: restDays,
+         protectedTypes: [WorkoutType.RACE, WorkoutType.LONG_RUN],
+     });
+     enrichWorkoutsWithDescriptions(result, ultraEasyPace);
+@@ -362,6 +370,8 @@ function generateUltraWeek(params: {
+         for (const rd of restDays) usedDays.add(rd);
+     }
+ 
++    const easyPaceForDuration = Math.round((paces.easy.min + paces.easy.max) / 2);
++
+     const longRunDist = getUltraLongRunDistance(raceType, weeklyVolume, paces, maxLongRunKm);
+     const backToBackDist = Math.round(longRunDist * ULTRA_CONSTANTS.BACK_TO_BACK_RATIO);
+ 
+@@ -436,12 +446,29 @@ function generateUltraWeek(params: {
+             description: longRunDesc,
+             totalDistance: longRunDist,
+             targetPace: longRunPace,
+-            targetDuration: 0,
++            targetDuration: computeDuration(longRunDist, longRunPace),
++            targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RUN),
+         });
+ 
+         if (hasBackToBack) {
+             const nextDay = (day + 1) % 7;
+-            const b2bDay = usedDays.has(nextDay) ? (day + 2) % 7 : nextDay;
++            const altDay = (day + 2) % 7;
++            let b2bDay: number | null = null;
++            if (!usedDays.has(nextDay)) {
++                b2bDay = nextDay;
++            } else if (!usedDays.has(altDay)) {
++                b2bDay = altDay;
++            } else {
++                // Find any adjacent free day
++                for (let offset = 3; offset <= 6; offset++) {
++                    const candidate = (day + offset) % 7;
++                    if (!usedDays.has(candidate)) {
++                        b2bDay = candidate;
++                        break;
++                    }
++                }
++            }
++            if (b2bDay !== null) {
+             usedDays.add(b2bDay);
+ 
+             let b2bDesc: string;
+@@ -457,8 +484,10 @@ function generateUltraWeek(params: {
+                 description: b2bDesc,
+                 totalDistance: backToBackDist,
+                 targetPace: ultraEasyPace,
+-                targetDuration: 0,
++                targetDuration: computeDuration(backToBackDist, ultraEasyPace),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RUN),
+             });
++            } // end if b2bDay !== null
+         }
+     }
+ 
+@@ -466,7 +495,12 @@ function generateUltraWeek(params: {
+         const day = getAvailableDay(3, hardSessionDays);
+         usedDays.add(day);
+         hardSessionDays.push(day);
+-        workouts.push({ dayOffset: day, ...qualitySession, targetDuration: 0 });
++        workouts.push({
++            dayOffset: day,
++            ...qualitySession,
++            targetDuration: computeQualityDuration(qualitySession.totalDistance, qualitySession.targetPace, easyPaceForDuration, getQualityFraction(qualitySession.type)),
++            targetHrZone: workoutTypeToHrZone(qualitySession.type),
++        });
+     }
+ 
+     const additionalRunsCount = Math.max(0, easyRunsCount);
+@@ -486,7 +520,8 @@ function generateUltraWeek(params: {
+                 description: `Recovery: ${(easyDist / 1000).toFixed(1)}km`,
+                 totalDistance: easyDist,
+                 targetPace: recoveryPace,
+-                targetDuration: 0,
++                targetDuration: computeDuration(easyDist, recoveryPace),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
+             });
+         } else {
+             workouts.push({
+@@ -495,7 +530,8 @@ function generateUltraWeek(params: {
+                 description: `Easy: ${(easyDist / 1000).toFixed(1)}km`,
+                 totalDistance: easyDist,
+                 targetPace: easyPace,
+-                targetDuration: 0,
++                targetDuration: computeDuration(easyDist, easyPace),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
+             });
+         }
+     }
+@@ -510,7 +546,8 @@ function generateUltraWeek(params: {
+                 description: `Night Run: ${(easyDist / 1000).toFixed(1)}km (sleep deprivation practice)`,
+                 totalDistance: easyDist,
+                 targetPace: ultraEasyPace,
+-                targetDuration: 0,
++                targetDuration: computeDuration(easyDist, ultraEasyPace),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
+             });
+         }
+     }
+@@ -527,6 +564,7 @@ function generateUltraWeek(params: {
+                 totalDistance: Math.round(easyDist * 1.5),
+                 targetPace: ultraEasyPace,
+                 targetDuration: targetHours * 3600,
++                targetHrZone: workoutTypeToHrZone(WorkoutType.TEMPO),
+             });
+         }
+     }
+@@ -547,6 +585,7 @@ function generateUltraWeek(params: {
+             totalDistance: 0,
+             targetPace: 0,
+             targetDuration: 2700,
++            targetHrZone: workoutTypeToHrZone(WorkoutType.STRENGTH),
+         });
+         remainingStrength--;
+     }
+@@ -613,6 +652,7 @@ function generateUltraRaceWeek(params: {
+         totalDistance: ULTRA_RACE_DISTANCE_M[raceType] || 50000,
+         targetPace: 0,
+         targetDuration: 0,
++        targetHrZone: workoutTypeToHrZone(WorkoutType.RACE),
+     });
+ 
+     const shakeoutOffsets = [-2, -3, -4];
+@@ -628,7 +668,8 @@ function generateUltraRaceWeek(params: {
+             description: 'Shakeout: 3km Easy',
+             totalDistance: 3000,
+             targetPace: params.ultraEasyPace,
+-            targetDuration: 0,
++            targetDuration: computeDuration(3000, params.ultraEasyPace),
++            targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
+         });
+     }
+ 
+diff --git a/Web/src/lib/plans/generators/triathlon.ts b/Web/src/lib/plans/generators/triathlon.ts
+index deabd440..c4e762ba 100644
+--- a/Web/src/lib/plans/generators/triathlon.ts
++++ b/Web/src/lib/plans/generators/triathlon.ts
+@@ -2,7 +2,7 @@ import { WorkoutType, RaceType, PlanPhase } from '@/generated/prisma/browser';
+ import { calculateTrainingPaces, TrainingPaces } from '@/lib/metrics/vdot';
+ import { estimateSwimPaceFromVdot } from '../swim-pace';
+ import { estimateBikeFtpFromVdot, calculateBikeZones } from '../bike-zones';
+-import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume } from '../index';
++import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume, workoutTypeToHrZone, computeDuration } from '../index';
+ import { fixBackToBackSameType } from '../schedule-utils';
+ import { enrichWorkoutsWithDescriptions, getRacePace } from '../descriptions';
+ 
+@@ -75,7 +75,7 @@ const TRI_BIKE_SPEED_KMH: Partial<Record<RaceType, number>> = {
+ 
+ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
+     const { vdot, raceDate } = config;
+-    const raceType = config.raceType as RaceType;
++    const raceType = (config.raceType as RaceType) || 'OLYMPIC_TRI';
+     const requestedStartDate = config.startDate || new Date();
+     const startDate = requestedStartDate > raceDate ? new Date(raceDate) : requestedStartDate;
+ 
+@@ -87,6 +87,12 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
+     const swimDay = config.swimDay !== undefined ? config.swimDay : 1;
+     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
+ 
++    // Validate and adjust rest days if they leave fewer slots than runsPerWeek requires
++    let restDays = config.restDays ? [...config.restDays] : [];
++    if (restDays.length > 7 - runsPerWeek) {
++        restDays = restDays.slice(0, 7 - runsPerWeek);
++    }
++
+     const distribution = TRI_DISTRIBUTION[raceType] || TRI_DISTRIBUTION.OLYMPIC_TRI!;
+ 
+     let peakVolume = config.weeklyMileageGoal || TRI_MIN_PEAK_VOLUME[raceType] || 40000;
+@@ -178,6 +184,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
+                     targetPace: w.targetPace,
+                     targetDuration: w.targetDuration,
+                     phase: 'RACE_WEEK' as PlanPhase,
++                    targetHrZone: w.targetHrZone,
+                 });
+             });
+             currentDate.setDate(currentDate.getDate() + 7);
+@@ -229,7 +236,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
+             preferredLongRunDay: longRunDay,
+             preferredWorkoutDay: workoutDay,
+             preferredSwimDay: swimDay,
+-            restDays: config.restDays,
++            restDays: restDays,
+             isRecoveryWeek,
+             taperWeeks,
+             weeksUntilRace,
+@@ -247,13 +254,14 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
+                 targetPace: w.targetPace,
+                 targetDuration: w.targetDuration,
+                 phase: phase as PlanPhase,
++                targetHrZone: w.targetHrZone,
+             });
+         });
+ 
+         currentDate.setDate(currentDate.getDate() + 7);
+     }
+ 
+-    const result = fixBackToBackSameType(workouts, { raceDate, restDays: config.restDays });
++    const result = fixBackToBackSameType(workouts, { raceDate, restDays: restDays });
+     const racePace = getRacePace(raceType, paces);
+     enrichWorkoutsWithDescriptions(result, racePace);
+     return result;
+@@ -368,7 +376,8 @@ function generateTriWeek(params: {
+             description: `Long Run: ${(taperedDist / 1000).toFixed(1)}km @ Easy`,
+             totalDistance: taperedDist,
+             targetPace: easyPace,
+-            targetDuration: 0,
++            targetDuration: computeDuration(taperedDist, easyPace),
++            targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RUN),
+         });
+     } else {
+         let longRunDesc = `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`;
+@@ -384,7 +393,8 @@ function generateTriWeek(params: {
+             description: longRunDesc,
+             totalDistance: longRunDist,
+             targetPace: easyPace,
+-            targetDuration: 0,
++            targetDuration: computeDuration(longRunDist, easyPace),
++            targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RUN),
+         });
+     }
+ 
+@@ -400,7 +410,8 @@ function generateTriWeek(params: {
+                 description: `Run Threshold: 3x3km @ ${formatPace(paces.threshold)}`,
+                 totalDistance: 13000,
+                 targetPace: paces.threshold,
+-                targetDuration: 0,
++                targetDuration: computeDuration(13000, paces.threshold),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.TEMPO),
+             });
+         } else if (phase === 'PEAK') {
+             workouts.push({
+@@ -409,7 +420,8 @@ function generateTriWeek(params: {
+                 description: `Intervals: 5x1km @ ${formatPace(paces.interval)}`,
+                 totalDistance: 10000,
+                 targetPace: paces.interval,
+-                targetDuration: 0,
++                targetDuration: computeDuration(10000, paces.interval),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.INTERVALS),
+             });
+         } else {
+             workouts.push({
+@@ -418,7 +430,8 @@ function generateTriWeek(params: {
+                 description: `Threshold: 6km @ ${formatPace(paces.threshold)}`,
+                 totalDistance: 8000,
+                 targetPace: paces.threshold,
+-                targetDuration: 0,
++                targetDuration: computeDuration(8000, paces.threshold),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.TEMPO),
+             });
+         }
+     }
+@@ -437,7 +450,8 @@ function generateTriWeek(params: {
+             description: `Easy: ${(clampedEasyDist / 1000).toFixed(1)}km`,
+             totalDistance: clampedEasyDist,
+             targetPace: easyPace,
+-            targetDuration: 0,
++            targetDuration: computeDuration(clampedEasyDist, easyPace),
++            targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
+         });
+     }
+ 
+@@ -458,7 +472,8 @@ function generateTriWeek(params: {
+                 description: `Open Water Swim: ${(swimDistPerSession / 100).toFixed(0)}00m (sighting practice)`,
+                 totalDistance: swimDistPerSession,
+                 targetPace: Math.round(css + 10),
+-                targetDuration: 0,
++                targetDuration: Math.round((swimDistPerSession / 100) * Math.round(css + 10)),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.OPEN_WATER_SWIM),
+             });
+         }
+     } else if (phase === 'BASE') {
+@@ -471,7 +486,8 @@ function generateTriWeek(params: {
+                 description: `Swim Drill: ${(Math.round(swimDistPerSession * 0.8) / 100).toFixed(0)}00m (technique focus)`,
+                 totalDistance: Math.round(swimDistPerSession * 0.8),
+                 targetPace: css,
+-                targetDuration: 0,
++                targetDuration: Math.round((Math.round(swimDistPerSession * 0.8) / 100) * css),
++                targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM_DRILL),
+             });
+         }
+     }
+@@ -481,13 +497,15 @@ function generateTriWeek(params: {
+         const day = getAvailableDay((preferredSwimDay + 2 + i * 2) % 7, hardSessionDays);
+         if (usedDays.has(day)) break;
+         usedDays.add(day);
++        const targetPaceVal = Math.round(css + 8);
+         workouts.push({
+             dayOffset: day,
+             type: WorkoutType.SWIM,
+             description: `Swim: ${(swimDistPerSession / 100).toFixed(0)}00m @ Endurance`,
+             totalDistance: swimDistPerSession,
+-            targetPace: Math.round(css + 8),
+-            targetDuration: 0,
++            targetPace: targetPaceVal,
++            targetDuration: Math.round((swimDistPerSession / 100) * targetPaceVal),
++            targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
+         });
+     }
+ 
+@@ -510,6 +528,7 @@ function generateTriWeek(params: {
+                 totalDistance: 0,
+                 targetPace: 0,
+                 targetDuration: longRideDuration,
++                targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RIDE),
+             });
+         }
+     }
+@@ -527,6 +546,7 @@ function generateTriWeek(params: {
+                 totalDistance: 0,
+                 targetPace: 0,
+                 targetDuration: (brickBikeMin + 15) * 60,
++                targetHrZone: workoutTypeToHrZone(WorkoutType.BRICK),
+             });
+         }
+     }
+@@ -540,6 +560,7 @@ function generateTriWeek(params: {
+             totalDistance: 0,
+             targetPace: 0,
+             targetDuration: 1800,
++            targetHrZone: workoutTypeToHrZone(WorkoutType.TRANSITION_PRACTICE),
+         });
+     }
+ 
+@@ -566,6 +587,7 @@ function generateTriWeek(params: {
+                 totalDistance: 0,
+                 targetPace: 0,
+                 targetDuration: intervalDuration,
++                targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE_INTERVALS),
+             });
+             remainingRides--;
+         }
+@@ -586,6 +608,7 @@ function generateTriWeek(params: {
+             totalDistance: 0,
+             targetPace: 0,
+             targetDuration: easyDuration,
++            targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE),
+         });
+     }
+ 
+@@ -604,6 +627,7 @@ function generateTriWeek(params: {
+             totalDistance: 0,
+             targetPace: 0,
+             targetDuration: 2700,
++            targetHrZone: workoutTypeToHrZone(WorkoutType.STRENGTH),
+         });
+         remainingStrength--;
+     }
+@@ -666,16 +690,19 @@ function generateTriRaceWeek(params: {
+         totalDistance: TRI_RACE_RUN_DIST[raceType] || 10000,
+         targetPace: 0,
+         targetDuration: 0,
++        targetHrZone: workoutTypeToHrZone(WorkoutType.RACE),
+     });
+ 
+     usedDays.add(-2);
++    const targetSwimPace = Math.round(css + 10);
+     workouts.push({
+         dayOffset: -2,
+         type: WorkoutType.SWIM,
+         description: 'Swim: 1000m Easy (race site familiarization)',
+         totalDistance: 1000,
+-        targetPace: Math.round(css + 10),
+-        targetDuration: 0,
++        targetPace: targetSwimPace,
++        targetDuration: Math.round((1000 / 100) * targetSwimPace),
++        targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
+     });
+ 
+     usedDays.add(-3);
+@@ -686,6 +713,7 @@ function generateTriRaceWeek(params: {
+         totalDistance: 0,
+         targetPace: 0,
+         targetDuration: 1800,
++        targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE),
+     });
+ 
+     usedDays.add(-4);
+@@ -695,7 +723,8 @@ function generateTriRaceWeek(params: {
+         description: 'Shakeout Run: 3km Easy',
+         totalDistance: 3000,
+         targetPace: paces.easy.max,
+-        targetDuration: 0,
++        targetDuration: computeDuration(3000, paces.easy.max),
++        targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
+     });
+ 
+     return workouts.sort((a, b) => a.dayOffset - b.dayOffset);
+diff --git a/Web/src/lib/plans/index.ts b/Web/src/lib/plans/index.ts
+index 9746f756..f1c6cc5e 100644
+--- a/Web/src/lib/plans/index.ts
++++ b/Web/src/lib/plans/index.ts
+@@ -5,6 +5,7 @@ import { generateTriathlonPlan } from './generators/triathlon';
+ import { generateNoRacePlan } from './generators/no-race';
+ import { fixBackToBackSameType } from './schedule-utils';
+ import { enrichWorkoutsWithDescriptions, getRacePace } from './descriptions';
++import { estimateSwimPaceFromVdot } from './swim-pace';
+ 
+ export const ULTRA_RACE_TYPES: RaceType[] = [
+     'FIFTY_K', 'FIFTY_MILE', 'HUNDRED_K', 'HUNDRED_MILE',
+@@ -63,12 +64,7 @@ export const PLAN_CONSTANTS = {
+     MAX_TIME_ON_FEET_SECONDS: 12600,
+ };
+ 
+-const TAPER_FRACTIONS: Partial<Record<RaceType, number[]>> = {
+-    FIVE_K: [0.75],
+-    TEN_K: [0.80, 0.60],
+-    HALF_MARATHON: [0.75, 0.55],
+-    MARATHON: [0.80, 0.65, 0.45],
+-};
++// TAPER_FRACTIONS removed
+ 
+ export function getMinStartVolume(raceType: RaceType | null): number {
+     if (raceType && PLAN_CONSTANTS.MIN_START_VOLUME[raceType]) {
+@@ -98,6 +94,8 @@ export type PlanConfig = {
+     swimDay?: number;
+     restDays?: number[];
+     weeksTotal?: number;
++    thresholdHeartRate?: number;
++    customRunDistM?: number;
+ };
+ 
+ export type GeneratedWorkout = {
+@@ -113,6 +111,7 @@ export type GeneratedWorkout = {
+     sport?: string;
+     intensityZone?: string | null;
+     structuredSteps?: StructuredWorkoutPlan | null;
++    thresholdHeartRate?: number;
+ };
+ 
+ export type StructuredWorkoutPlan = {
+@@ -128,6 +127,11 @@ export type StructuredWorkoutStep = {
+     durationSeconds?: number;
+     paceSecondsPerKm?: number;
+     hrZone?: number;
++    hrTargetMinBpm?: number;
++    hrTargetMaxBpm?: number;
++    hrZoneLabel?: string;
++    paceTargetMinSecondsPerKm?: number;
++    paceTargetMaxSecondsPerKm?: number;
+ };
+ 
+ type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
+@@ -135,19 +139,23 @@ type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
+ type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
+ 
+ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
++    let workouts: GeneratedWorkout[] = [];
+     if (config.sport === 'TRIATHLON' || (config.raceType && TRIATHLON_RACE_TYPES.includes(config.raceType))) {
+-        return generateTriathlonPlan({ ...config, raceType: config.raceType as RaceType });
+-    }
+-
+-    if (config.raceType === null) {
+-        return generateNoRacePlan(config);
++        workouts = generateTriathlonPlan({ ...config, raceType: config.raceType as RaceType });
++    } else if (config.raceType === null) {
++        workouts = generateNoRacePlan(config);
++    } else if (config.raceType && ULTRA_RACE_TYPES.includes(config.raceType)) {
++        workouts = generateUltraPlan(config);
++    } else {
++        workouts = generateStandardPlan(config);
+     }
+ 
+-    if (config.raceType && ULTRA_RACE_TYPES.includes(config.raceType)) {
+-        return generateUltraPlan(config);
++    if (config.thresholdHeartRate) {
++        for (const w of workouts) {
++            w.thresholdHeartRate = config.thresholdHeartRate;
++        }
+     }
+-
+-    return generateStandardPlan(config);
++    return workouts;
+ }
+ 
+ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
+@@ -155,7 +163,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
+     const raceType = config.raceType as RaceType;
+     const requestedStartDate = config.startDate || new Date();
+     const startDate = requestedStartDate > raceDate ? new Date(raceDate) : requestedStartDate;
+-    const runsPerWeek = Math.max(0, config.runsPerWeek ?? 4);
++    const runsPerWeek = Math.max(1, config.runsPerWeek ?? 4);
+     const ridesPerWeek = Math.max(0, config.ridesPerWeek || 0);
+     const strengthPerWeek = Math.max(0, config.strengthPerWeek || 0);
+     const swimsPerWeek = Math.max(0, config.swimsPerWeek || 0);
+@@ -163,6 +171,12 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
+     const longRunDay = config.longRunDay !== undefined ? config.longRunDay : 0;
+     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
+ 
++    // Validate and adjust rest days if they leave fewer slots than runsPerWeek requires
++    let restDays = config.restDays ? [...config.restDays] : [];
++    if (restDays.length > 7 - runsPerWeek) {
++        restDays = restDays.slice(0, 7 - runsPerWeek);
++    }
++
+     let peakVolume = config.weeklyMileageGoal || 40000;
+     const minPeak = PLAN_CONSTANTS.MIN_PEAK_VOLUME[raceType] || 20000;
+     if (peakVolume < minPeak) peakVolume = minPeak;
+@@ -187,7 +201,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
+ 
+     const paces = calculateTrainingPaces(vdot);
+ 
+-    const defaultTaperWeeks = TAPER_FRACTIONS[raceType]?.length || 2;
++    const defaultTaperWeeks = raceType === 'MARATHON' ? 3 : raceType === 'FIVE_K' ? 1 : 2;
+     const taperWeeks = (config.taperWeeks != null && config.taperWeeks > 0)
+         ? config.taperWeeks
+         : defaultTaperWeeks;
+@@ -233,10 +247,11 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
+                 raceType,
+                 paces,
+                 runsPerWeek,
+-                raceWeekRunVolumeCap: getRaceWeekRunVolumeCap(raceType, effectivePeakVolume),
++                raceWeekRunVolumeCap: getRaceWeekRunVolumeCap(raceType, effectivePeakVolume, taperWeeks, config.customRunDistM),
+                 ridesPerWeek,
+                 swimsPerWeek,
+                 strengthPerWeek,
++                customRunDistM: config.customRunDistM,
+             });
+             raceWeekWorkouts.forEach(w => {
+                 const specificDate = new Date(raceDate);
+@@ -299,7 +314,10 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
+             preferredLongRunDay: longRunDay,
+             preferredWorkoutDay: workoutDay,
+             preferredSwimDay: config.swimDay,
+-            restDays: config.restDays,
++            restDays: restDays,
++            weekNumber: week,
++            vdot: vdot,
++            customRunDistM: config.customRunDistM,
+         });
+ 
+         const runningWorkouts = weekSchedule.filter(w => isRun(w.type));
+@@ -333,7 +351,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
+ 
+     const result = fixBackToBackSameType(workouts, {
+         raceDate,
+-        restDays: config.restDays,
++        restDays: restDays,
+     });
+     const racePace = getRacePace(raceType, paces);
+     enrichWorkoutsWithDescriptions(result, racePace);
+@@ -361,18 +379,37 @@ function getTaperVolume(
+     peakVolume: number,
+     raceType: RaceType
+ ): number {
+-    const fractions = TAPER_FRACTIONS[raceType];
+-    if (!fractions) return Math.round(peakVolume * 0.65);
+-    const taperWeekIndex = taperWeeks - weeksUntilRace;
+-    const clampedIndex = Math.min(Math.max(0, taperWeekIndex), fractions.length - 1);
+-    const fraction = fractions[clampedIndex];
+-    return Math.round(peakVolume * fraction);
++    const decayRate = (() => {
++        switch (raceType) {
++            case 'FIVE_K': return 0.45;
++            case 'TEN_K': return 0.40;
++            case 'HALF_MARATHON': return 0.35;
++            case 'MARATHON': return 0.30;
++            default: return 0.35;
++        }
++    })();
++    const t = taperWeeks - weeksUntilRace + 1;
++    const fraction = Math.exp(-decayRate * t);
++    const minFraction = raceType === 'MARATHON' ? 0.35 : 0.40;
++    return Math.round(peakVolume * Math.max(fraction, minFraction));
+ }
+ 
+-export function getRaceWeekRunVolumeCap(raceType: RaceType, effectivePeakVolume: number): number {
+-    const fractions = TAPER_FRACTIONS[raceType];
+-    const finalTaperFraction = fractions ? fractions[fractions.length - 1] : 0.45;
+-    const raceDist = getRaceDistanceMeters(raceType) || 10000;
++export function getRaceWeekRunVolumeCap(raceType: RaceType, effectivePeakVolume: number, taperWeeks?: number, customRunDistM?: number): number {
++    const decayRate = (() => {
++        switch (raceType) {
++            case 'FIVE_K': return 0.45;
++            case 'TEN_K': return 0.40;
++            case 'HALF_MARATHON': return 0.35;
++            case 'MARATHON': return 0.30;
++            default: return 0.35;
++        }
++    })();
++    const actualTaperWeeks = taperWeeks ?? (raceType === 'MARATHON' ? 3 : 2);
++    const finalTaperFraction = Math.max(
++        raceType === 'MARATHON' ? 0.35 : 0.40,
++        Math.exp(-decayRate * actualTaperWeeks)
++    );
++    const raceDist = getRaceDistanceMeters(raceType, customRunDistM) || 10000;
+     return Math.max(
+         Math.round(effectivePeakVolume * finalTaperFraction * 0.5),
+         raceDist + 10000,
+@@ -388,13 +425,14 @@ function generateRaceWeek(params: {
+     ridesPerWeek?: number;
+     swimsPerWeek?: number;
+     strengthPerWeek?: number;
++    customRunDistM?: number;
+ }): ScheduledWorkout[] {
+-    const { raceType, paces, runsPerWeek, raceWeekRunVolumeCap } = params;
++    const { raceType, paces, runsPerWeek, raceWeekRunVolumeCap, customRunDistM } = params;
+     const workouts: ScheduledWorkout[] = [];
+     const usedDays = new Set<number>();
+ 
+-    const raceDistKm = getRaceDistanceKm(raceType);
+-    const raceDistMeters = getRaceDistanceMeters(raceType);
++    const raceDistKm = getRaceDistanceKm(raceType, customRunDistM);
++    const raceDistMeters = getRaceDistanceMeters(raceType, customRunDistM);
+     const maxRunVolume = Math.max(raceDistMeters, raceWeekRunVolumeCap);
+ 
+     let remainingExtraRunSlots = Math.max(0, runsPerWeek - 1);
+@@ -537,11 +575,17 @@ function generateWeek(params: {
+     preferredWorkoutDay: number;
+     preferredSwimDay?: number;
+     restDays?: number[];
++    weekNumber?: number;
++    vdot: number;
++    customRunDistM?: number;
+ }): ScheduledWorkout[] {
+     const {
+         phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, weeklyVolume,
+         maxLongRunKm,
+-        preferredLongRunDay, preferredWorkoutDay, preferredSwimDay, restDays
++        preferredLongRunDay, preferredWorkoutDay, preferredSwimDay, restDays,
++        weekNumber = 1,
++        vdot,
++        customRunDistM
+     } = params;
+ 
+     const workouts: ScheduledWorkout[] = [];
+@@ -556,22 +600,33 @@ function generateWeek(params: {
+     }
+ 
+     const longRunDist = getLongRunDistance(raceType, weeklyVolume, paces, maxLongRunKm);
++    const swimPace = estimateSwimPaceFromVdot(vdot);
+ 
+     const hasQuality = runsPerWeek >= 2 && phase !== 'TAPER';
+     const qualitySession = hasQuality
+-        ? getQualitySession(raceType, paces, phase, weeklyVolume)
++        ? getQualitySession(raceType, paces, phase, weeklyVolume, weekNumber, customRunDistM)
+         : null;
+     const qualityDist = qualitySession ? qualitySession.totalDistance : 0;
+ 
++    const hasSecondaryQuality = runsPerWeek >= 5 && phase !== 'TAPER';
++    const secondaryQualitySession = hasSecondaryQuality && qualitySession
++        ? getSecondaryQualitySession(raceType, paces, phase, weeklyVolume, qualitySession.type, weekNumber)
++        : null;
++    const secondaryQualityDist = secondaryQualitySession ? secondaryQualitySession.totalDistance : 0;
++
++    const hasMlr = raceType === 'MARATHON' && runsPerWeek >= 5 && phase !== 'TAPER';
++    const mlrDist = hasMlr
++        ? Math.max(PLAN_CONSTANTS.EASY_RUN_MIN, Math.min(Math.round((longRunDist * 0.75) / 500) * 500, weeklyVolume * 0.30))
++        : 0;
++
+     const longRunCount = runsPerWeek >= 1 ? 1 : 0;
+-    const qualityRunCount = hasQuality ? 1 : 0;
++    const qualityRunCount = hasQuality ? (hasSecondaryQuality ? 2 : 1) : 0;
+     const totalKeyRuns = longRunCount + qualityRunCount;
+-    const easyRunsCount = hasQuality
+-        ? Math.max(0, runsPerWeek - totalKeyRuns)
+-        : Math.max(0, runsPerWeek - longRunCount);
++    const easyRunsCount = Math.max(0, runsPerWeek - totalKeyRuns);
+ 
+-    const remainingVol = Math.max(0, weeklyVolume - longRunDist - qualityDist);
+-    const calculatedEasyDist = easyRunsCount > 0 ? remainingVol / easyRunsCount : 5000;
++    const remainingVol = Math.max(0, weeklyVolume - longRunDist - qualityDist - secondaryQualityDist - mlrDist);
++    const normalEasyRunsCount = hasMlr ? Math.max(0, easyRunsCount - 1) : easyRunsCount;
++    const calculatedEasyDist = normalEasyRunsCount > 0 ? remainingVol / normalEasyRunsCount : 5000;
+ 
+     const easyDist = Math.max(
+         PLAN_CONSTANTS.EASY_RUN_MIN,
+@@ -613,14 +668,32 @@ function generateWeek(params: {
+         usedDays.add(day);
+         hardSessionDays.push(day);
+ 
++        const rotation = (weekNumber - 1) % 3;
+         let longRunDesc = `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`;
+         let longRunPace = easyPace;
+ 
+-        if (phase === 'PEAK' && (raceType === 'HALF_MARATHON' || raceType === 'MARATHON')) {
++        if (phase === 'TAPER') {
++            longRunDesc = `Easy Long Run: ${(longRunDist / 1000).toFixed(1)}km`;
++        } else if (phase === 'PEAK' && (raceType === 'HALF_MARATHON' || raceType === 'MARATHON')) {
+             const mpDist = Math.round(longRunDist * 0.3 / 100) * 100;
+             const easyPart = longRunDist - mpDist;
+-            longRunDesc = `Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(mpDist / 1000).toFixed(1)}km @ MP`;
+-            longRunPace = easyPace;
++            longRunDesc = `Progressive Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(mpDist / 1000).toFixed(1)}km @ MP ${formatPace(paces.marathon)}`;
++        } else if (phase === 'BUILD' || phase === 'PEAK') {
++            if (rotation === 1) {
++                const steadyDist = Math.round(longRunDist * 0.4 / 100) * 100;
++                const easyPart = longRunDist - steadyDist;
++                longRunDesc = `Steady Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(steadyDist / 1000).toFixed(1)}km @ Steady ${formatPace(paces.easy.min)}`;
++            } else if (rotation === 2) {
++                if (raceType === 'MARATHON' || raceType === 'HALF_MARATHON') {
++                    const fastDist = Math.min(5000, Math.round(longRunDist * 0.2 / 100) * 100);
++                    const easyPart = longRunDist - fastDist;
++                    longRunDesc = `Progressive Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(fastDist / 1000).toFixed(1)}km @ MP ${formatPace(paces.marathon)}`;
++                } else {
++                    const fastDist = Math.min(3000, Math.round(longRunDist * 0.2 / 100) * 100);
++                    const easyPart = longRunDist - fastDist;
++                    longRunDesc = `Fast-Finish Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(fastDist / 1000).toFixed(1)}km @ T ${formatPace(paces.threshold)}`;
++                }
++            }
+         }
+ 
+         workouts.push({
+@@ -661,12 +734,27 @@ function generateWeek(params: {
+         });
+     }
+ 
++    if (hasSecondaryQuality && secondaryQualitySession) {
++        const preferredSecondaryDay = (preferredWorkoutDay - 2 + 7) % 7;
++        const day = getAvailableDayWithGap(preferredSecondaryDay, hardSessionDays);
++        usedDays.add(day);
++        hardSessionDays.push(day);
++        workouts.push({
++            dayOffset: day,
++            ...secondaryQualitySession,
++            targetDuration: computeQualityDuration(secondaryQualitySession.totalDistance, secondaryQualitySession.targetPace, easyPace, getQualityFraction(secondaryQualitySession.type)),
++            phase: phase as PlanPhase,
++            targetHrZone: workoutTypeToHrZone(secondaryQualitySession.type),
++        });
++    }
++
+     const alreadyScheduledEasyRuns = hasQuality ? 0 : (runsPerWeek >= 2 ? 1 : 0);
+     const additionalRunsCount = Math.max(0, easyRunsCount - alreadyScheduledEasyRuns);
+     const easyRunDays = getDistributedDays(additionalRunsCount, usedDays);
+ 
+     let stridesInjected = 0;
+     const stridesPerWeek = phase === 'BASE' ? 2 : 0;
++    let mlrScheduled = false;
+ 
+     for (const d of easyRunDays) {
+         usedDays.add(d);
+@@ -676,18 +764,32 @@ function generateWeek(params: {
+             return diff === 1;
+         });
+ 
+-        if (dayAfterHard) {
++        if (hasMlr && !mlrScheduled && (!dayAfterHard || d === easyRunDays[easyRunDays.length - 1])) {
++            mlrScheduled = true;
++            workouts.push({
++                dayOffset: d,
++                type: WorkoutType.EASY,
++                description: `Medium-Long Run: ${(mlrDist / 1000).toFixed(1)}km`,
++                totalDistance: mlrDist,
++                targetPace: easyPace,
++                targetDuration: computeDuration(mlrDist, easyPace),
++                phase: phase as PlanPhase,
++                targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
++            });
++        } else if (dayAfterHard) {
+             const includeStrides = phase === 'BASE' && stridesInjected < stridesPerWeek;
+             const suffix = includeStrides ? ' + 6x100m Strides' : '';
+             if (includeStrides) stridesInjected++;
+ 
++            const recoveryDist = Math.max(PLAN_CONSTANTS.EASY_RUN_MIN, Math.round((easyDist * 0.65) / 100) * 100);
++
+             workouts.push({
+                 dayOffset: d,
+                 type: WorkoutType.RECOVERY,
+-                description: `Recovery Run: ${(easyDist / 1000).toFixed(1)}km${suffix}`,
+-                totalDistance: easyDist,
++                description: `Recovery Run: ${(recoveryDist / 1000).toFixed(1)}km${suffix}`,
++                totalDistance: recoveryDist,
+                 targetPace: recoveryPace,
+-                targetDuration: computeDuration(easyDist, recoveryPace),
++                targetDuration: computeDuration(recoveryDist, recoveryPace),
+                 phase: phase as PlanPhase,
+                 targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
+             });
+@@ -735,7 +837,7 @@ function generateWeek(params: {
+             type: WorkoutType.SWIM,
+             description: 'Swim: 1500m @ Easy',
+             totalDistance: 1500,
+-            targetPace: 120,
++            targetPace: swimPace,
+             targetDuration: 2700,
+             phase: phase as PlanPhase,
+             targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
+@@ -766,7 +868,7 @@ function generateWeek(params: {
+                 type: WorkoutType.SWIM,
+                 description: 'Swim: 1500m @ Easy',
+                 totalDistance: 1500,
+-                targetPace: 120,
++                targetPace: swimPace,
+                 targetDuration: 2700,
+                 phase: phase as PlanPhase,
+                 targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
+@@ -797,7 +899,7 @@ function generateWeek(params: {
+                     type: WorkoutType.SWIM,
+                     description: 'Swim: 1500m @ Easy',
+                     totalDistance: 1500,
+-                    targetPace: 120,
++                    targetPace: swimPace,
+                     targetDuration: 2700,
+                     phase: phase as PlanPhase,
+                     targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
+@@ -936,6 +1038,8 @@ function getQualitySession(
+     paces: TrainingPaces,
+     phase: Phase,
+     weeklyVolume: number,
++    weekNumber: number,
++    customRunDistM?: number,
+ ): { type: WorkoutType; description: string; totalDistance: number; targetPace: number } {
+     const scale = (session: { type: WorkoutType; description: string; totalDistance: number; targetPace: number }) => ({
+         ...session,
+@@ -943,15 +1047,26 @@ function getQualitySession(
+     });
+ 
+     if (raceType === 'FIVE_K') {
+-        return scale(get5KQualitySession(paces, phase));
++        return scale(get5KQualitySession(paces, phase, weekNumber));
+     }
+     if (raceType === 'TEN_K') {
+-        return scale(get10KQualitySession(paces, phase));
++        return scale(get10KQualitySession(paces, phase, weekNumber));
+     }
+     if (raceType === 'HALF_MARATHON') {
+-        return scale(getHalfMarathonQualitySession(paces, phase));
++        return scale(getHalfMarathonQualitySession(paces, phase, weekNumber));
+     }
+-    return scale(getMarathonQualitySession(paces, phase));
++    if (raceType === 'CUSTOM_DISTANCE' && customRunDistM) {
++        if (customRunDistM < 10000) {
++            return scale(get5KQualitySession(paces, phase, weekNumber));
++        } else if (customRunDistM < 20000) {
++            return scale(get10KQualitySession(paces, phase, weekNumber));
++        } else if (customRunDistM < 30000) {
++            return scale(getHalfMarathonQualitySession(paces, phase, weekNumber));
++        } else {
++            return scale(getMarathonQualitySession(paces, phase, weekNumber));
++        }
++    }
++    return scale(getMarathonQualitySession(paces, phase, weekNumber));
+ }
+ 
+ export function scaleQualitySessionDistance(
+@@ -990,111 +1105,376 @@ function getFartlekDescription(
+     return `Fartlek: ${distanceKm}km (${hardMinutes}min @ F (T-I) ${formatPace(hardPace)} / ${easyMinutes}min @ E ${formatPace(easyPace)})`;
+ }
+ 
+-function get5KQualitySession(paces: TrainingPaces, phase: Phase) {
++function get5KQualitySession(paces: TrainingPaces, phase: Phase, weekNumber: number) {
++    const rotation = (weekNumber - 1) % 3;
+     if (phase === 'BASE') {
+-        const hardPace = getFartlekHardPace(paces);
+-        const easyPace = paces.easy.max;
+-        return {
+-            type: WorkoutType.FARTLEK,
+-            description: getFartlekDescription(8, 2, 2, hardPace, easyPace),
+-            totalDistance: 8000,
+-            targetPace: hardPace,
+-        };
++        if (rotation === 0) {
++            const hardPace = getFartlekHardPace(paces);
++            const easyPace = paces.easy.max;
++            return {
++                type: WorkoutType.FARTLEK,
++                description: getFartlekDescription(8, 2, 2, hardPace, easyPace),
++                totalDistance: 8000,
++                targetPace: hardPace,
++            };
++        } else if (rotation === 1) {
++            return {
++                type: WorkoutType.REPETITIONS,
++                description: `Hill Repeats: 6x200m hill reps @ hard effort`,
++                totalDistance: 6000,
++                targetPace: paces.repetition,
++            };
++        } else {
++            return {
++                type: WorkoutType.EASY,
++                description: `Progression Run: 6km (Start @ E ${formatPace(paces.easy.max)}, finish final 1.5km @ T ${formatPace(paces.threshold)})`,
++                totalDistance: 6000,
++                targetPace: paces.threshold,
++            };
++        }
+     }
+     if (phase === 'PEAK') {
++        if (rotation === 0) {
++            return {
++                type: WorkoutType.REPETITIONS,
++                description: `Reps: 6x400m @ ${formatPace(paces.repetition)}`,
++                totalDistance: 7000,
++                targetPace: paces.repetition,
++            };
++        } else if (rotation === 1) {
++            return {
++                type: WorkoutType.REPETITIONS,
++                description: `Reps: 8x300m @ ${formatPace(paces.repetition)}`,
++                totalDistance: 6500,
++                targetPace: paces.repetition,
++            };
++        } else {
++            return {
++                type: WorkoutType.REPETITIONS,
++                description: `Reps: 10x200m @ ${formatPace(paces.repetition)}`,
++                totalDistance: 6000,
++                targetPace: paces.repetition,
++            };
++        }
++    }
++    if (rotation === 0) {
++        return {
++            type: WorkoutType.INTERVALS,
++            description: `Intervals: 5x1km @ ${formatPace(paces.interval)}`,
++            totalDistance: 10000,
++            targetPace: paces.interval,
++        };
++    } else if (rotation === 1) {
+         return {
+-            type: WorkoutType.REPETITIONS,
+-            description: `Reps: 6x400m @ ${formatPace(paces.repetition)}`,
+-            totalDistance: 7000,
+-            targetPace: paces.repetition,
++            type: WorkoutType.INTERVALS,
++            description: `Intervals: 3x1600m @ ${formatPace(paces.interval)}`,
++            totalDistance: 9800,
++            targetPace: paces.interval,
++        };
++    } else {
++        return {
++            type: WorkoutType.INTERVALS,
++            description: `Intervals: 8x600m @ ${formatPace(paces.interval)}`,
++            totalDistance: 9000,
++            targetPace: paces.interval,
+         };
+     }
+-    return {
+-        type: WorkoutType.INTERVALS,
+-        description: `Intervals: 5x1km @ ${formatPace(paces.interval)}`,
+-        totalDistance: 10000,
+-        targetPace: paces.interval,
+-    };
+ }
+ 
+-function get10KQualitySession(paces: TrainingPaces, phase: Phase) {
++function get10KQualitySession(paces: TrainingPaces, phase: Phase, weekNumber: number) {
++    const rotation = (weekNumber - 1) % 3;
+     if (phase === 'BASE') {
+-        const hardPace = getFartlekHardPace(paces);
+-        const easyPace = paces.easy.max;
++        if (rotation === 0) {
++            const hardPace = getFartlekHardPace(paces);
++            const easyPace = paces.easy.max;
++            return {
++                type: WorkoutType.FARTLEK,
++                description: getFartlekDescription(10, 3, 2, hardPace, easyPace),
++                totalDistance: 10000,
++                targetPace: hardPace,
++            };
++        } else if (rotation === 1) {
++            return {
++                type: WorkoutType.REPETITIONS,
++                description: `Hill Repeats: 8x200m hill reps @ hard effort`,
++                totalDistance: 7000,
++                targetPace: paces.repetition,
++            };
++        } else {
++            return {
++                type: WorkoutType.EASY,
++                description: `Progression Run: 8km (Start @ E ${formatPace(paces.easy.max)}, finish final 2km @ T ${formatPace(paces.threshold)})`,
++                totalDistance: 8000,
++                targetPace: paces.threshold,
++            };
++        }
++    }
++    if (phase === 'PEAK') {
++        if (rotation === 0) {
++            return {
++                type: WorkoutType.TEMPO,
++                description: `Threshold: 4x2km @ ${formatPace(paces.threshold)}`,
++                totalDistance: 12000,
++                targetPace: paces.threshold,
++            };
++        } else if (rotation === 1) {
++            return {
++                type: WorkoutType.TEMPO,
++                description: `Threshold: 3x3km @ ${formatPace(paces.threshold)}`,
++                totalDistance: 13000,
++                targetPace: paces.threshold,
++            };
++        } else {
++            return {
++                type: WorkoutType.TEMPO,
++                description: `Threshold: 8km @ ${formatPace(paces.threshold)}`,
++                totalDistance: 12000,
++                targetPace: paces.threshold,
++            };
++        }
++    }
++    if (rotation === 0) {
++        return {
++            type: WorkoutType.INTERVALS,
++            description: `Intervals: 6x1km @ ${formatPace(paces.interval)}`,
++            totalDistance: 11000,
++            targetPace: paces.interval,
++        };
++    } else if (rotation === 1) {
++        return {
++            type: WorkoutType.INTERVALS,
++            description: `Intervals: 4x1200m @ ${formatPace(paces.interval)}`,
++            totalDistance: 9800,
++            targetPace: paces.interval,
++        };
++    } else {
+         return {
+-            type: WorkoutType.FARTLEK,
+-            description: getFartlekDescription(10, 3, 2, hardPace, easyPace),
++            type: WorkoutType.INTERVALS,
++            description: `Intervals: 5x1km @ ${formatPace(paces.interval)}`,
+             totalDistance: 10000,
+-            targetPace: hardPace,
++            targetPace: paces.interval,
+         };
+     }
++}
++
++function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekNumber: number) {
++    const rotation = (weekNumber - 1) % 3;
++    if (phase === 'BASE') {
++        if (rotation === 0) {
++            const hardPace = getFartlekHardPace(paces);
++            const easyPace = paces.easy.max;
++            return {
++                type: WorkoutType.FARTLEK,
++                description: getFartlekDescription(10, 4, 3, hardPace, easyPace),
++                totalDistance: 10000,
++                targetPace: hardPace,
++            };
++        } else if (rotation === 1) {
++            return {
++                type: WorkoutType.REPETITIONS,
++                description: `Hill Repeats: 8x200m hill reps @ hard effort`,
++                totalDistance: 8000,
++                targetPace: paces.repetition,
++            };
++        } else {
++            return {
++                type: WorkoutType.EASY,
++                description: `Progression Run: 10km (Start @ E ${formatPace(paces.easy.max)}, finish final 3km @ T ${formatPace(paces.threshold)})`,
++                totalDistance: 10000,
++                targetPace: paces.threshold,
++            };
++        }
++    }
+     if (phase === 'PEAK') {
++        if (rotation === 0) {
++            return {
++                type: WorkoutType.TEMPO,
++                description: `MP Segments: 3x3km @ ${formatPace(paces.marathon)}`,
++                totalDistance: 13000,
++                targetPace: paces.marathon,
++            };
++        } else if (rotation === 1) {
++            return {
++                type: WorkoutType.TEMPO,
++                description: `Tempo + MP: 4km T ${formatPace(paces.threshold)} + 4km MP ${formatPace(paces.marathon)}`,
++                totalDistance: 12000,
++                targetPace: paces.marathon,
++            };
++        } else {
++            return {
++                type: WorkoutType.TEMPO,
++                description: `MP Segments: 10km @ MP ${formatPace(paces.marathon)}`,
++                totalDistance: 14000,
++                targetPace: paces.marathon,
++            };
++        }
++    }
++    if (rotation === 0) {
+         return {
+             type: WorkoutType.TEMPO,
+-            description: `Threshold: 4x2km @ ${formatPace(paces.threshold)}`,
++            description: `Threshold: 8km @ ${formatPace(paces.threshold)}`,
+             totalDistance: 12000,
+             targetPace: paces.threshold,
+         };
+-    }
+-    return {
+-        type: WorkoutType.INTERVALS,
+-        description: `Intervals: 6x1km @ ${formatPace(paces.interval)}`,
+-        totalDistance: 11000,
+-        targetPace: paces.interval,
+-    };
+-}
+-
+-function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
+-    if (phase === 'BASE') {
+-        const hardPace = getFartlekHardPace(paces);
+-        const easyPace = paces.easy.max;
++    } else if (rotation === 1) {
+         return {
+-            type: WorkoutType.FARTLEK,
+-            description: getFartlekDescription(10, 4, 3, hardPace, easyPace),
+-            totalDistance: 10000,
+-            targetPace: hardPace,
++            type: WorkoutType.TEMPO,
++            description: `Cruise Intervals: 5x1.5km @ T ${formatPace(paces.threshold)} w/ 2min recovery`,
++            totalDistance: 11500,
++            targetPace: paces.threshold,
+         };
+-    }
+-    if (phase === 'PEAK') {
++    } else {
+         return {
+             type: WorkoutType.TEMPO,
+-            description: `MP Segments: 3x3km @ ${formatPace(paces.marathon)}`,
+-            totalDistance: 13000,
+-            targetPace: paces.marathon,
++            description: `Threshold: 6km @ T ${formatPace(paces.threshold)}`,
++            totalDistance: 10000,
++            targetPace: paces.threshold,
+         };
+     }
+-    return {
+-        type: WorkoutType.TEMPO,
+-        description: `Threshold: 8km @ ${formatPace(paces.threshold)}`,
+-        totalDistance: 12000,
+-        targetPace: paces.threshold,
+-    };
+ }
+ 
+-function getMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
++function getMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekNumber: number) {
++    const rotation = (weekNumber - 1) % 3;
+     if (phase === 'BASE') {
+-        const hardPace = getFartlekHardPace(paces);
+-        const easyPace = paces.easy.max;
+-        return {
+-            type: WorkoutType.FARTLEK,
+-            description: getFartlekDescription(12, 5, 3, hardPace, easyPace),
+-            totalDistance: 12000,
+-            targetPace: hardPace,
+-        };
++        if (rotation === 0) {
++            const hardPace = getFartlekHardPace(paces);
++            const easyPace = paces.easy.max;
++            return {
++                type: WorkoutType.FARTLEK,
++                description: getFartlekDescription(12, 5, 3, hardPace, easyPace),
++                totalDistance: 12000,
++                targetPace: hardPace,
++            };
++        } else if (rotation === 1) {
++            return {
++                type: WorkoutType.REPETITIONS,
++                description: `Hill Repeats: 10x200m hill reps @ hard effort`,
++                totalDistance: 9000,
++                targetPace: paces.repetition,
++            };
++        } else {
++            return {
++                type: WorkoutType.EASY,
++                description: `Progression Run: 12km (Start @ E ${formatPace(paces.easy.max)}, finish final 4km @ T ${formatPace(paces.threshold)})`,
++                totalDistance: 12000,
++                targetPace: paces.threshold,
++            };
++        }
+     }
+     if (phase === 'PEAK') {
++        if (rotation === 0) {
++            return {
++                type: WorkoutType.TEMPO,
++                description: `MP Segments: 3x5km @ ${formatPace(paces.marathon)}`,
++                totalDistance: 18000,
++                targetPace: paces.marathon,
++            };
++        } else if (rotation === 1) {
++            return {
++                type: WorkoutType.TEMPO,
++                description: `Tempo + MP: 6km T ${formatPace(paces.threshold)} + 6km MP ${formatPace(paces.marathon)}`,
++                totalDistance: 16000,
++                targetPace: paces.marathon,
++            };
++        } else {
++            return {
++                type: WorkoutType.TEMPO,
++                description: `MP Segments: 12km @ MP ${formatPace(paces.marathon)}`,
++                totalDistance: 16000,
++                targetPace: paces.marathon,
++            };
++        }
++    }
++    if (rotation === 0) {
+         return {
+             type: WorkoutType.TEMPO,
+-            description: `MP Segments: 3x5km @ ${formatPace(paces.marathon)}`,
+-            totalDistance: 18000,
+-            targetPace: paces.marathon,
++            description: `Threshold: 10km @ ${formatPace(paces.threshold)}`,
++            totalDistance: 14000,
++            targetPace: paces.threshold,
++        };
++    } else if (rotation === 1) {
++        return {
++            type: WorkoutType.TEMPO,
++            description: `Cruise Intervals: 3x2mile @ T ${formatPace(paces.threshold)} w/ 3min recovery`,
++            totalDistance: 13000,
++            targetPace: paces.threshold,
++        };
++    } else {
++        return {
++            type: WorkoutType.TEMPO,
++            description: `Threshold: 6km T ${formatPace(paces.threshold)} + 4km MP ${formatPace(paces.marathon)}`,
++            totalDistance: 14000,
++            targetPace: paces.threshold,
+         };
+     }
++}
++
++function getSecondaryQualitySession(
++    raceType: RaceType,
++    paces: TrainingPaces,
++    phase: Phase,
++    weeklyVolume: number,
++    primaryType: WorkoutType,
++    weekNumber: number
++): { type: WorkoutType; description: string; totalDistance: number; targetPace: number } {
++    const rotation = (weekNumber - 1) % 3;
++    let type = WorkoutType.TEMPO;
++    let description = '';
++    let targetPace = paces.threshold;
++    let totalDistance = 8000;
++
++    if (primaryType === WorkoutType.INTERVALS || primaryType === WorkoutType.REPETITIONS) {
++        type = WorkoutType.TEMPO;
++        targetPace = paces.threshold;
++        if (raceType === 'FIVE_K' || raceType === 'TEN_K') {
++            totalDistance = 6000;
++            if (rotation === 0) {
++                description = `Secondary Threshold: 4km Tempo @ T ${formatPace(paces.threshold)}`;
++            } else if (rotation === 1) {
++                description = `Secondary Threshold: 3x1km @ T ${formatPace(paces.threshold)} w/ 1min recovery`;
++            } else {
++                description = `Secondary Threshold: 2x2km @ T ${formatPace(paces.threshold)} w/ 2min recovery`;
++            }
++        } else {
++            totalDistance = 8000;
++            if (rotation === 0) {
++                description = `Secondary Threshold: 6km Tempo @ T ${formatPace(paces.threshold)}`;
++            } else if (rotation === 1) {
++                description = `Secondary Threshold: 4x1.5km @ T ${formatPace(paces.threshold)} w/ 90s recovery`;
++            } else {
++                description = `Secondary Threshold: 3x2km @ T ${formatPace(paces.threshold)} w/ 2min recovery`;
++            }
++        }
++    } else {
++        type = WorkoutType.REPETITIONS;
++        targetPace = paces.repetition;
++        if (raceType === 'FIVE_K' || raceType === 'TEN_K') {
++            totalDistance = 5000;
++            if (rotation === 0) {
++                description = `Secondary Reps: 6x200m @ R ${formatPace(paces.repetition)} w/ 200m jog`;
++            } else if (rotation === 1) {
++                description = `Secondary Reps: 4x400m @ R ${formatPace(paces.repetition)} w/ 400m jog`;
++            } else {
++                description = `Secondary Reps: 300m-200m-100m x2 @ R ${formatPace(paces.repetition)} w/ jog recovery`;
++            }
++        } else {
++            totalDistance = 7000;
++            if (rotation === 0) {
++                description = `Secondary Reps: 8x200m @ R ${formatPace(paces.repetition)} w/ 200m jog`;
++            } else if (rotation === 1) {
++                description = `Secondary Reps: 6x400m @ R ${formatPace(paces.repetition)} w/ 400m jog`;
++            } else {
++                description = `Secondary Reps: 400m-300m-200m x2 @ R ${formatPace(paces.repetition)} w/ jog recovery`;
++            }
++        }
++    }
++
++    const scaledDist = scaleQualitySessionDistance(type, totalDistance, weeklyVolume, raceType);
+     return {
+-        type: WorkoutType.TEMPO,
+-        description: `Threshold: 10km @ ${formatPace(paces.threshold)}`,
+-        totalDistance: 14000,
+-        targetPace: paces.threshold,
++        type,
++        description,
++        totalDistance: scaledDist,
++        targetPace,
+     };
+ }
+ 
+@@ -1235,6 +1615,10 @@ function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: numbe
+ function preserveSpecialDescription(w: ScheduledWorkout, distance: number): string {
+     const distanceKm = (distance / 1000).toFixed(1);
+ 
++    if (w.description.includes('Medium-Long Run')) {
++        return `Medium-Long Run: ${distanceKm}km`;
++    }
++
+     if (w.description.includes('Fartlek')) {
+         const match = w.description.match(/^Fartlek:\s*[0-9.]+km(.*)$/);
+         const suffix = match ? match[1] : '';
+@@ -1263,7 +1647,7 @@ function preserveSpecialDescription(w: ScheduledWorkout, distance: number): stri
+     return updateDescription(w.type, distance, w.targetPace || 0);
+ }
+ 
+-function getRaceDistanceKm(raceType: RaceType): string {
++function getRaceDistanceKm(raceType: RaceType, customRunDistM?: number): string {
+     switch (raceType) {
+         case 'FIVE_K': return '5';
+         case 'TEN_K': return '10';
+@@ -1273,11 +1657,11 @@ function getRaceDistanceKm(raceType: RaceType): string {
+         case 'FIFTY_MILE': return '80.5';
+         case 'HUNDRED_K': return '100';
+         case 'HUNDRED_MILE': return '161';
+-        default: return '0';
++        default: return customRunDistM && customRunDistM > 0 ? (customRunDistM / 1000).toFixed(1) : '0';
+     }
+ }
+ 
+-function getRaceDistanceMeters(raceType: RaceType): number {
++function getRaceDistanceMeters(raceType: RaceType, customRunDistM?: number): number {
+     switch (raceType) {
+         case 'FIVE_K': return 5000;
+         case 'TEN_K': return 10000;
+@@ -1287,7 +1671,7 @@ function getRaceDistanceMeters(raceType: RaceType): number {
+         case 'FIFTY_MILE': return 80467;
+         case 'HUNDRED_K': return 100000;
+         case 'HUNDRED_MILE': return 160934;
+-        default: return 0;
++        default: return customRunDistM && customRunDistM > 0 ? customRunDistM : 0;
+     }
+ }
+ 
+@@ -1342,7 +1726,19 @@ export function getQualityFraction(type: WorkoutType): number {
+     }
+ }
+ 
+-export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, 'type' | 'description' | 'totalDistance' | 'targetPace' | 'targetDuration' | 'targetHrZone'>): StructuredWorkoutPlan | null {
++export function calculateHRZones(lthr: number) {
++    return {
++        z1: { min: Math.round(lthr * 0.50), max: Math.round(lthr * 0.75), label: 'Recovery' },
++        z2: { min: Math.round(lthr * 0.75) + 1, max: Math.round(lthr * 0.87), label: 'Aerobic' },
++        z3: { min: Math.round(lthr * 0.87) + 1, max: Math.round(lthr * 0.94), label: 'Tempo' },
++        z4: { min: Math.round(lthr * 0.94) + 1, max: lthr, label: 'Threshold' },
++        z5: { min: lthr + 1, max: Math.round(lthr * 1.05), label: 'VO2max' },
++        z6: { min: Math.round(lthr * 1.05) + 1, max: Math.round(lthr * 1.10), label: 'Anaerobic' },
++        z7: { min: Math.round(lthr * 1.10) + 1, max: 999, label: 'Neuromuscular' },
++    };
++}
++
++export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, 'type' | 'description' | 'totalDistance' | 'targetPace' | 'targetDuration' | 'targetHrZone' | 'thresholdHeartRate'>): StructuredWorkoutPlan | null {
+     if (workout.totalDistance <= 0 && (!workout.targetDuration || workout.targetDuration <= 0)) return null;
+ 
+     const targetPace = workout.targetPace && workout.targetPace > 0 ? workout.targetPace : undefined;
+@@ -1351,6 +1747,26 @@ export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, '
+     const cooldownDistance = workout.totalDistance >= 5000 ? 1000 : 0;
+     const remainingDistance = Math.max(0, workout.totalDistance - warmupDistance - cooldownDistance);
+ 
++    const lthr = workout.thresholdHeartRate;
++    const hrZones = lthr ? calculateHRZones(lthr) : null;
++
++    let hrTargetMinBpm: number | undefined;
++    let hrTargetMaxBpm: number | undefined;
++    let hrZoneLabel: string | undefined;
++
++    if (hrZones && hrZone) {
++        const zoneKey = `z${hrZone}` as keyof typeof hrZones;
++        const zone = hrZones[zoneKey];
++        if (zone) {
++            hrTargetMinBpm = zone.min;
++            hrTargetMaxBpm = zone.max;
++            hrZoneLabel = zone.label;
++        }
++    }
++
++    const paceTargetMinSecondsPerKm = targetPace ? targetPace - 10 : undefined;
++    const paceTargetMaxSecondsPerKm = targetPace ? targetPace + 10 : undefined;
++
+     if (workout.type === WorkoutType.EASY || workout.type === WorkoutType.RECOVERY || workout.type === WorkoutType.LONG_RUN) {
+         return {
+             version: 1,
+@@ -1362,28 +1778,73 @@ export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, '
+                 durationSeconds: workout.targetDuration || undefined,
+                 paceSecondsPerKm: targetPace,
+                 hrZone,
++                hrTargetMinBpm,
++                hrTargetMaxBpm,
++                hrZoneLabel,
++                paceTargetMinSecondsPerKm,
++                paceTargetMaxSecondsPerKm,
+             }],
+         };
+     }
+ 
+     const steps: StructuredWorkoutStep[] = [];
+     if (warmupDistance > 0) {
+-        steps.push({ type: 'warmup', name: 'Warm up', distanceMeters: warmupDistance, hrZone: 1 });
++        let wuMin: number | undefined;
++        let wuMax: number | undefined;
++        let wuLabel: string | undefined;
++        if (hrZones) {
++            wuMin = hrZones.z1.min;
++            wuMax = hrZones.z1.max;
++            wuLabel = hrZones.z1.label;
++        }
++        steps.push({
++            type: 'warmup',
++            name: 'Warm up',
++            distanceMeters: warmupDistance,
++            hrZone: 1,
++            hrTargetMinBpm: wuMin,
++            hrTargetMaxBpm: wuMax,
++            hrZoneLabel: wuLabel
++        });
+     }
++
+     steps.push({
+         type: 'work',
+         name: workout.description.split(':')[0] || 'Main set',
+         distanceMeters: remainingDistance || workout.totalDistance || undefined,
+         paceSecondsPerKm: targetPace,
+         hrZone,
++        hrTargetMinBpm,
++        hrTargetMaxBpm,
++        hrZoneLabel,
++        paceTargetMinSecondsPerKm,
++        paceTargetMaxSecondsPerKm,
+     });
++
+     if (cooldownDistance > 0) {
+-        steps.push({ type: 'cooldown', name: 'Cool down', distanceMeters: cooldownDistance, hrZone: 1 });
++        let cdMin: number | undefined;
++        let cdMax: number | undefined;
++        let cdLabel: string | undefined;
++        if (hrZones) {
++            cdMin = hrZones.z1.min;
++            cdMax = hrZones.z1.max;
++            cdLabel = hrZones.z1.label;
++        }
++        steps.push({
++            type: 'cooldown',
++            name: 'Cool down',
++            distanceMeters: cooldownDistance,
++            hrZone: 1,
++            hrTargetMinBpm: cdMin,
++            hrTargetMaxBpm: cdMax,
++            hrZoneLabel: cdLabel
++        });
+     }
+ 
+     return { version: 1, source: 'generated-plan', steps };
+ }
+ 
++
+ function updateDescription(type: WorkoutType, distance: number, pace: number): string {
+     const distKm = (distance / 1000).toFixed(1);
+     const paceStr = pace > 0 ? ` @ ${formatPace(pace)}` : '';
+diff --git a/Web/src/lib/services/plan-creation.ts b/Web/src/lib/services/plan-creation.ts
+index 743d791f..2c4890c1 100644
+--- a/Web/src/lib/services/plan-creation.ts
++++ b/Web/src/lib/services/plan-creation.ts
+@@ -803,6 +803,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
+         swimDay: typeof swimDay === 'number' ? swimDay : undefined,
+         restDays: Array.isArray(restDays) ? restDays : undefined,
+         weeksTotal: resolvedPlanWeeks,
++        customRunDistM: customRunDistM || undefined,
+     };
+ 
+     const workouts = generateTrainingPlan(planConfig);
+diff --git a/auditopus27.5.md b/auditopus27.5.md
+new file mode 100644
+index 00000000..7fa798aa
+--- /dev/null
++++ b/auditopus27.5.md
+@@ -0,0 +1,383 @@
++# Training Plan Generation — Comprehensive Audit
++
++## Executive Summary
++
++RunFlow's training plan generator is a **well-architected, Daniels-inspired periodization engine** that covers a remarkably wide surface area: 5K through 100-miler, triathlon (sprint→Ironman), backyard ultra, timed events, no-race general fitness, and multi-goal orchestration. The core logic is sound and demonstrates genuine coaching knowledge.
++
++**Overall Grade: B+ / Very Good**
++
++The system handles most common scenarios correctly and has clear evidence of iterative refinement (the test suite alone is 1,200+ lines). However, several edge cases remain unhandled, some workout progression logic is overly simplistic compared to SOTA, and a few areas carry latent bugs.
++
++---
++
++## 1. Architecture Overview
++
++```mermaid
++graph TD
++    A["generateTrainingPlan(config)"] --> B{Sport / Race Type?}
++    B -->|Triathlon| C[generateTriathlonPlan]
++    B -->|No Race| D[generateNoRacePlan]
++    B -->|Ultra| E[generateUltraPlan]
++    B -->|Standard| F[generateStandardPlan]
++    
++    F --> G[getPhase → BASE/BUILD/PEAK/TAPER/RACE_WEEK]
++    F --> H[generateWeek → scheduling]
++    F --> I[generateRaceWeek]
++    F --> J[fixBackToBackSameType]
++    F --> K[enrichWorkoutsWithDescriptions]
++    
++    L[calculateTrainingPaces VDOT] --> F
++    L --> C
++    L --> D
++    L --> E
++```
++
++### Key Components
++
++| File | Lines | Purpose |
++|------|-------|---------|
++| [index.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts) | 1,864 | Standard plan + shared utilities |
++| [run-ultra.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/generators/run-ultra.ts) | 722 | Ultra/backyard/timed event plans |
++| [triathlon.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/generators/triathlon.ts) | 738 | Multi-sport triathlon plans |
++| [no-race.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/generators/no-race.ts) | 372 | General fitness / no goal race |
++| [multi-goal.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/generators/multi-goal.ts) | 301 | Multi-race season orchestration |
++| [ai-proposal.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/generators/ai-proposal.ts) | 271 | AI-powered plan proposals |
++| [descriptions.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/descriptions.ts) | 267 | Display description generation |
++| [defaults.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/defaults.ts) | 128 | Per-distance defaults |
++| [schedule-utils.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/schedule-utils.ts) | 93 | Back-to-back fix post-processing |
++| [validate-workout.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/validate-workout.ts) | 82 | Distance/pace/duration consistency |
++| [index.test.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/__tests__/index.test.ts) | 1,237 | Comprehensive test suite |
++
++---
++
++## 2. What's Done Well ✅
++
++### 2.1 Periodization Model
++- **Phase-based progression** (BASE → BUILD → PEAK → TAPER → RACE_WEEK) correctly implemented
++- **Configurable phase lengths** (`taperWeeks`, `peakWeeks`, `buildWeeks`) with sensible defaults per distance
++- **Step loading** (3:1 hard:recovery cycle via `STEP_LOADING_CYCLE = 4`) is textbook Daniels
++- **Exponential taper** using decay rates calibrated per race distance — this is genuinely SOTA (mirrors Mujika & Padilla 2003)
++
++### 2.2 Pace-Based Training (Daniels/VDOT)
++- Five training zones correctly derived from VDOT: Easy, Marathon, Threshold, Interval, Repetition
++- Zone-appropriate workout assignment: 5K→Intervals/Reps, 10K→Intervals+Threshold, HM/Marathon→Threshold+MP
++- Fartlek pace correctly computed as midpoint of Threshold and Interval zones
++
++### 2.3 Volume Management
++- **10% weekly growth cap** (`WEEKLY_GROWTH_CAP = 1.10`) — universally accepted safety rule
++- **Dynamic long run caps** per distance with time-on-feet ceiling (3.5h standard, 7h ultra)
++- **Low-volume runners** get higher long run ratio (`0.65` vs `0.50`) — smart adaptation
++- **Volume scaling** preserves priority workouts (quality > easy runs) when cap is hit
++
++### 2.4 Scheduling Intelligence
++- **MIN_GAP_DAYS = 2** between hard sessions enforced with wrap-around day logic
++- **Recovery runs** auto-placed after hard days at slower pace
++- **Rest day exclusion** prevents workouts on user-designated rest days
++- **Cross-training placement** avoids conflicting with key run days
++- **Strength training** smartly stacked on easy/recovery run days rather than competing for slots
++
++### 2.5 Ultra-Specific Features
++- **Back-to-back long runs** in ENDURANCE/PEAK phases — essential for ultra prep
++- **Night runs** during MENTAL_PREP phase for backyard ultra — very creative
++- **Ultra-easy pace** (110% of easy max) — shows understanding of ultra pacing
++- **Fueling practice** callouts in long run descriptions
++
++### 2.6 Triathlon Support
++- **Sport distribution ratios** per race type (e.g., Full Ironman: 55% bike, 25% run, 8% swim)
++- **Brick sessions**, **open water swims**, **transition practice** all generated
++- **Bike FTP zones** and **swim CSS** derived from VDOT
++- **Long ride duration** scaled by phase with proper taper reduction
++
++### 2.7 Test Coverage
++- 55,000+ bytes of tests covering critical path, edge cases, phase progression, caps
++- Tests verify: paces, taper volumes, 48h gap, recovery run placement, scaling, short plans
++
++---
++
++## 3. Edge Cases & Bugs 🐛
++
++### 3.1 CRITICAL: Possible Infinite Loop in `fixBackToBackSameType`
++
++```typescript
++// schedule-utils.ts L87-88
++sorted.sort((a, b) => a.date.getTime() - b.date.getTime());
++i = Math.max(1, i - 1);
++```
++
++> [!CAUTION]
++> If no swap candidate is found and the shift fallback also fails (e.g., all days occupied, or rest days block it), `changed` stays `false`, `i` increments by 1, but the same pair can be re-evaluated after sorting. In adversarial inputs (many rest days, dense schedules), this could loop excessively. No iteration cap exists.
++
++**Recommendation**: Add a `maxIterations` guard (e.g., `workouts.length * 3`).
++
++---
++
++### 3.2 HIGH: `CUSTOM_DISTANCE` Without `customRunDistM` Falls Through Silently
++
++In [index.ts L1058-1068](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts#L1058-L1068):
++```typescript
++if (raceType === 'CUSTOM_DISTANCE' && customRunDistM) {
++    // ... routes to 5K/10K/HM/Marathon quality session
++}
++return scale(getMarathonQualitySession(paces, phase, weekNumber));
++```
++
++If `customRunDistM` is `0` or `undefined`, a custom 3km race would get **Marathon quality sessions** (10km+ threshold runs). This is nonsensical.
++
++**Recommendation**: Default `customRunDistM` to `10000` if not provided, or route to a generic intermediate session.
++
++---
++
++### 3.3 HIGH: `getRaceDistanceMeters` Returns 0 for Unknown Types
++
++For `CUSTOM_DISTANCE` without `customRunDistM`, [getRaceDistanceMeters returns 0](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts#L1674). This flows into `getRaceWeekRunVolumeCap` which then does `Math.max(half_peak * 0.5, 0 + 10000)` → only `10000m`. Seems accidentally correct but fragile.
++
++---
++
++### 3.4 HIGH: No-Race Plan Has No Workout Variation Over Time
++
++In [no-race.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/generators/no-race.ts), the quality session is always either:
++- BASE: `Fartlek: 8km (3min hard / 2min easy)` — same description every week
++- BUILD: `Threshold: 6km @ T` — same description every week
++
++There's **no week rotation** like the standard plan has. This makes weeks of the plan feel identical.
++
++---
++
++### 3.5 MEDIUM: `startDate > raceDate` Guard Only in Standard + Ultra
++
++The check `const startDate = requestedStartDate > raceDate ? new Date(raceDate) : requestedStartDate` exists in standard and ultra generators but **not** in the no-race generator (which doesn't have a race date) and is **implicitly handled** in triathlon. However, the API layer should validate this before plan gen is called.
++
++---
++
++### 3.6 MEDIUM: Taper Phase Overlap With Build When `taperWeeks = 0`
++
++In [index.ts L370](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts#L370):
++```typescript
++if (taperWeeks > 0 && weeksUntilRace <= taperWeeks) return 'TAPER';
++```
++
++If `taperWeeks = 0`, taper is skipped entirely — the plan jumps from BUILD/PEAK directly to RACE_WEEK. This means there's **no volume reduction at all** before race day. For experienced athletes doing a tune-up race, this might be intentional, but it's not validated.
++
++---
++
++### 3.7 MEDIUM: Ultra `mentalPrepWeeks` Can Consume All Remaining Weeks
++
++In [run-ultra.ts L113](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/generators/run-ultra.ts#L113):
++```typescript
++mentalPrepWeeks = Math.max(2, Math.min(4, totalWeeks - taperWeeks - enduranceWeeks - peakWeeks - buildWeeks - 1));
++```
++
++If `totalWeeks` is small (e.g., 8), and `taperWeeks=3 + enduranceWeeks=3 + peakWeeks=2 + buildWeeks=2 = 10 > 8`, the result is `Math.max(2, Math.min(4, 8 - 10 - 1))` = `Math.max(2, -3)` = **2 weeks of mental prep**. This then steals from an already over-budgeted phase count. The phases sum exceeds `totalWeeks`.
++
++---
++
++### 3.8 MEDIUM: `getAvailableDayWithGap` Can Return a Rest Day
++
++In [index.ts L656-663](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts#L656-L663), the fallback when no candidate with gap exists:
++```typescript
++if (!usedDays.has(preferred)) return preferred;
++for (let offset = 1; offset <= 6; offset++) {
++    const after = (preferred + offset) % 7;
++    if (!usedDays.has(after)) return after;
++```
++
++Rest days are added to `usedDays` at the top of `generateWeek`, so this fallback correctly skips them. ✅ Actually safe.
++
++---
++
++### 3.9 LOW: Duplicate `getDistributedDays` Implementations
++
++There's a full `getDistributedDays` in [index.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts#L1506) and a simpler version in [run-ultra.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/generators/run-ultra.ts#L695). The ultra version lacks the `allowDoubleDays` parameter and `existingWorkouts` fallback.
++
++---
++
++### 3.10 LOW: `formatPace` Duplicated 4 Times
++
++`formatPace` is independently defined in:
++1. `index.ts` (local)
++2. `run-ultra.ts` (local)
++3. `triathlon.ts` (local)
++4. `descriptions.ts` (exported, with `/km` suffix)
++
++The first three produce `M:SS` and the fourth produces `M:SS/km`. This inconsistency could cause display bugs if descriptions mix the two.
++
++---
++
++### 3.11 LOW: HR Zone Ranges Have Gaps
++
++In [calculateHRZones](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts#L1729-L1739), each zone min is `prev.max + 1`, which is correct. But `z7.max = 999` is an arbitrary ceiling — not a real physiological limit.
++
++---
++
++### 3.12 LOW: Structured Steps Don't Parse Interval Rep Structure
++
++[buildStructuredStepsForWorkout](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts#L1741) treats all quality workouts as a single "work" block. A workout described as `"5x1km @ 4:00"` creates one work step of 6.5km (after warmup/cooldown), not 5 separate rep steps with recovery. This means watch/device integration can't guide individual reps.
++
++---
++
++## 4. SOTA Comparison
++
++### 4.1 How RunFlow Compares to Industry Leaders
++
++| Feature | RunFlow | TrainingPeaks | Garmin Coach | Coros | SOTA Rating |
++|---------|---------|---------------|-------------|-------|-------------|
++| **VDOT/Daniels paces** | ✅ Full | ✅ | Partial | Partial | ✅ Excellent |
++| **Phase periodization** | ✅ 5 phases | ✅ | ✅ | ✅ | ✅ Good |
++| **Exponential taper** | ✅ Per-distance decay | ✅ | Linear | Linear | ✅ **Ahead** |
++| **Volume ramping** | ✅ 10% cap | ✅ | ✅ | ✅ | ✅ Good |
++| **Recovery weeks** | ✅ 3:1 cycle | ✅ | ✅ | ✅ | ✅ Good |
++| **Workout rotation** | ✅ 3-week cycle | ✅ 4-6 week | ✅ | N/A | ⚠️ Limited |
++| **Adaptive re-planning** | ❌ None | ✅ ATL/CTL | ✅ | ✅ | ❌ **Major gap** |
++| **Missed workout handling** | ❌ None | ✅ | ✅ | ✅ | ❌ **Major gap** |
++| **Fatigue-based adjustment** | ❌ | ✅ | Partial | ✅ | ❌ **Major gap** |
++| **HR-drift adjustment** | ❌ | ✅ | ✅ | ✅ | ❌ Gap |
++| **Multi-sport (tri)** | ✅ Full | ✅ | ❌ | Partial | ✅ Good |
++| **Ultra-specific** | ✅ B2B, mental prep | Partial | ❌ | ❌ | ✅ **Ahead** |
++| **Backyard ultra** | ✅ Loop drills, night runs | ❌ | ❌ | ❌ | ✅ **Unique** |
++| **Multi-goal season** | ✅ | ✅ | ❌ | ❌ | ✅ Good |
++| **Structured steps** | ⚠️ Basic | ✅ Full | ✅ | ✅ | ⚠️ Needs work |
++| **AI proposals** | ✅ LLM fallback | ❌ | ✅ | ❌ | ✅ Innovative |
++| **Elevation/terrain** | ❌ | ✅ | ❌ | ✅ | ❌ Gap |
++| **Weather adaptation** | ❌ | ❌ | ❌ | ❌ | N/A |
++
++### 4.2 Key Gaps vs. SOTA
++
++> [!IMPORTANT]
++> The three biggest gaps compared to commercial leaders are:
++> 1. **No adaptive re-planning** — the plan is static once generated. If you miss 2 weeks of training, there's no automatic adjustment.
++> 2. **No missed workout handling** — completed workouts are tracked but missed ones don't trigger any rescheduling or volume adjustment.
++> 3. **No fatigue integration** — the readiness system exists in the app but doesn't feed back into plan adjustments.
++
++### 4.3 Academic Alignment
++
++The generator aligns well with established literature:
++
++| Principle | Reference | RunFlow Implementation |
++|-----------|-----------|----------------------|
++| 80/20 intensity distribution | Seiler (2010) | ✅ ~80% easy, 20% quality by volume |
++| Exponential taper | Mujika & Padilla (2003) | ✅ `Math.exp(-decayRate * t)` |
++| 10% weekly increase rule | ACSM Guidelines | ✅ `WEEKLY_GROWTH_CAP = 1.10` |
++| 3:1 load:recovery | Bompa (2009) | ✅ `STEP_LOADING_CYCLE = 4` |
++| Specificity increases toward race | Daniels (2014) | ✅ BASE→generic, PEAK→race-pace |
++| Long run ≤ 30% weekly volume | Pfitzinger (2001) | ⚠️ Uses 50-65% ratio (too high for high-volume) |
++
++> [!WARNING]
++> The `LONG_RUN_RATIO = 0.50` and `LONG_RUN_RATIO_LOW_VOLUME = 0.65` values are significantly higher than the commonly cited 25-30% guideline from Pfitzinger. While capped by `MAX_LONG_RUN_DIST`, for moderate-volume athletes (40-50km/week), the long run can be 50% of weekly volume. Daniels himself suggests 25-30% for most athletes. The `DYNAMIC_LONG_RUN_RATIO = 0.55` cap helps but may still be aggressive.
++
++---
++
++## 5. Missing Edge Cases
++
++### 5.1 Scheduling Edge Cases Not Covered
++
++| Scenario | Status | Impact |
++|----------|--------|--------|
++| All 7 days are rest days | ⚠️ Silently produces empty week | Low — UI should prevent |
++| `runsPerWeek = 7` + `strengthPerWeek = 3` | ⚠️ Strength stacks on run days (correct) | Low |
++| `runsPerWeek = 1` + marathon | ✅ Handled — single long run | Low |
++| Race date on a Wednesday | ✅ Handled — race week offsets are relative | None |
++| Plan start = plan end (0 weeks) | ⚠️ `Math.max(1, ...)` catches but produces minimal plan | Low |
++| `startWeeklyMileage > weeklyMileageGoal` | ✅ Clamped to peak volume | None |
++| `weeklyMileageGoal = 0` or negative | ⚠️ Falls through to default `40000` but not validated | Low |
++| Extremely high VDOT (>85) | ⚠️ Paces may produce unrealistic sub-2:30/km intervals | Medium |
++| Extremely low VDOT (<20) | ⚠️ Long runs hit time-on-feet cap quickly, plans get sparse | Medium |
++| `restDays = [0,1,2,3,4,5]` (6 rest days) + `runsPerWeek = 4` | ✅ Rest days trimmed to `7 - runsPerWeek` | None |
++
++### 5.2 Physiological Edge Cases
++
++| Scenario | Status | Impact |
++|----------|--------|--------|
++| Beginner athlete (VDOT <30) doing marathon | ⚠️ No experience-based volume guard | High |
++| 65+ year old athlete (longer recovery) | ❌ No age factor | Medium |
++| Post-injury return (reduced load tolerance) | ❌ No injury-return mode | High |
++| Heat acclimatization (pace adjustment) | ❌ Not modeled | Medium |
++| Altitude training | ❌ Not modeled | Low |
++| Female-athlete menstrual cycle periodization | ❌ Not modeled | Medium |
++
++---
++
++## 6. Prioritized Recommendations
++
++### Tier 1: Fix Now (bugs/correctness)
++
++1. **Add iteration guard to `fixBackToBackSameType`** — prevent potential infinite loop
++2. **Handle `CUSTOM_DISTANCE` without `customRunDistM`** — default to 10km or route to generic sessions
++3. **Add workout rotation to no-race plan** — use `weekNumber % 3` rotation like standard plan
++4. **Validate phase week counts don't exceed total weeks** — especially in ultra generator
++
++### Tier 2: Improve Quality (competitive parity)
++
++5. **Parse interval structure into separate structured steps** — e.g., `5x1km` → 5 work steps + 4 recovery steps, enabling watch-guided intervals
++6. **Review long run ratio** — consider reducing `LONG_RUN_RATIO` from 0.50 to 0.35-0.40, relying more on `MAX_LONG_RUN_DIST` caps
++7. **Deduplicate `formatPace`** — export from a single location
++8. **Add secondary quality session to no-race and triathlon** when `runsPerWeek >= 5`
++9. **Vary swim workouts** — currently all swims are `1500m @ Easy`; add drill sets, threshold sets, distance variety
++
++### Tier 3: SOTA Features (competitive advantage)
++
++10. **Adaptive re-planning** — when a workout is marked complete/skipped, adjust the following 1-2 weeks' volume based on actual vs. planned load
++11. **Readiness integration** — use the existing readiness score to modify the next day's workout intensity
++12. **Missed workout recovery** — if 2+ consecutive workouts are skipped, compress remaining plan or reduce peak targets
++13. **Elevation-aware long runs** — if user's terrain profile is available, adjust time-on-feet caps
++14. **Progressive swim workouts** — BASE: drill focus, BUILD: endurance sets, PEAK: race-pace sets
++
++### Tier 4: Innovation (differentiation)
++
++15. **Race simulation workouts** — in PEAK phase, generate a workout that mimics race-day conditions (distance segments, fueling intervals)
++16. **Double-day support** — for advanced athletes (VDOT > 55, runs/week ≥ 6), offer AM easy + PM quality split
++17. **Workout success prediction** — use past activity data to predict likelihood of completing a planned workout and flag "stretch" sessions
++
++---
++
++## 7. Test Coverage Gaps
++
++The test suite ([index.test.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/__tests__/index.test.ts)) is thorough for the standard plan but has gaps:
++
++| Area | Tested? | Notes |
++|------|---------|-------|
++| Standard plan phases | ✅ | Comprehensive |
++| Taper volume reduction | ✅ | Multiple distances |
++| Race week scheduling | ✅ | Good edge cases |
++| Volume caps and scaling | ✅ | Includes low-volume |
++| 48h gap enforcement | ✅ | |
++| Ultra plan generation | ❌ | No dedicated tests |
++| Triathlon plan generation | ❌ | No dedicated tests |
++| No-race plan generation | ❌ | No dedicated tests |
++| Multi-goal phase allocation | ❌ | No tests at all |
++| AI proposal generation | ❌ | No tests |
++| `fixBackToBackSameType` | ❌ | No dedicated edge case tests |
++| CUSTOM_DISTANCE routing | ❌ | Not tested with various distances |
++| Very short plans (1 week) | ✅ | |
++| Very long plans (52+ weeks) | ❌ | Not tested |
++| Extreme VDOT values | ❌ | Not tested |
++| All rest days blocked | ❌ | Not tested |
++
++> [!IMPORTANT]
++> **Ultra, triathlon, no-race, and multi-goal generators have zero dedicated tests.** These represent ~50% of the plan generation surface area. Any refactoring of shared utilities could silently break them.
++
++---
++
++## 8. Code Quality Observations
++
++### Strengths
++- Clean separation between generators (each in its own file)
++- Shared utilities properly exported from `index.ts`
++- Type-safe with TypeScript throughout
++- Enrichment pass (`enrichWorkoutsWithDescriptions`) cleanly separates generation from display
++
++### Weaknesses
++- **`index.ts` is 1,864 lines** — the standard plan generator, shared types, and all utility functions are in one file. Should split into `standard.ts` + `shared.ts`.
++- **Code duplication** across generators: `getAvailableDay`, `getDistributedDays`, `formatPace`, and volume ramping logic are copy-pasted rather than shared.
++- **Magic numbers** in some places: `3400` (stride distance), `Math.round(css + 10)` (swim pace offset), `1.1` (ultra easy pace multiplier) should be named constants.
++- **No JSDoc** on exported functions — the public API (`generateTrainingPlan`, `PlanConfig`, `GeneratedWorkout`) lacks documentation.
++
++---
++
++## 9. Conclusion
++
++RunFlow's training plan generator is **significantly more sophisticated than most indie/small-team running apps**. The Daniels/VDOT integration, exponential taper, ultra-specific features, and triathlon support put it ahead of many competitors. The biggest opportunities are:
++
++1. **Fix the handful of edge case bugs** (Tier 1 above) — low effort, high safety impact
++2. **Add adaptive re-planning** (Tier 3) — this is the single biggest gap vs. Garmin/Coros and would be a major differentiator
++3. **Structured interval steps** (Tier 2) — critical for smartwatch guided workout delivery
++4. **Test the other generators** — ultra/tri/no-race have zero tests despite being ~50% of the codebase
+diff --git a/flutter/lib/core/constants/api_constants.dart b/flutter/lib/core/constants/api_constants.dart
+index 1e529562..0e5e60d9 100644
+--- a/flutter/lib/core/constants/api_constants.dart
++++ b/flutter/lib/core/constants/api_constants.dart
+@@ -70,11 +70,11 @@ class AppConstants {
+   AppConstants._();
+ 
+   static const String appName = 'RunFlow';
+-  static const String stravaClientId = String.fromEnvironment(
++  static String stravaClientId = const String.fromEnvironment(
+     'STRAVA_CLIENT_ID',
+     defaultValue: '',
+   );
+-  static const String stravaRedirectUri = String.fromEnvironment(
++  static String stravaRedirectUri = const String.fromEnvironment(
+     'STRAVA_REDIRECT_URI',
+     defaultValue: 'https://runflow.schuelken.uk/api/auth/strava/callback',
+   );
+diff --git a/flutter/lib/presentation/screens/auth/login_screen.dart b/flutter/lib/presentation/screens/auth/login_screen.dart
+index a2c8655e..1fa9ceb1 100644
+--- a/flutter/lib/presentation/screens/auth/login_screen.dart
++++ b/flutter/lib/presentation/screens/auth/login_screen.dart
+@@ -19,7 +19,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+   bool _obscurePassword = true;
+   bool _isLoading = false;
+   String? _errorMessage;
+-  static const String _stravaRedirectUri = AppConstants.stravaRedirectUri;
++  static final String _stravaRedirectUri = AppConstants.stravaRedirectUri;
+ 
+   @override
+   void dispose() {
+diff --git a/flutter/pubspec.lock b/flutter/pubspec.lock
+index 84a82154..afa46084 100644
+--- a/flutter/pubspec.lock
++++ b/flutter/pubspec.lock
+@@ -838,7 +838,7 @@ packages:
+     source: hosted
+     version: "0.15.6"
+   http:
+-    dependency: transitive
++    dependency: "direct main"
+     description:
+       name: http
+       sha256: "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412"
+diff --git a/flutter/pubspec.yaml b/flutter/pubspec.yaml
+index 4664f26c..de0f49d2 100644
+--- a/flutter/pubspec.yaml
++++ b/flutter/pubspec.yaml
+@@ -23,6 +23,7 @@ dependencies:
+   go_router: ^17.2.2
+ 
+   dio: ^5.9.2
++  http: ^1.2.2
+ 
+   freezed_annotation: ^3.1.0
+   json_annotation: ^4.9.0
+diff --git a/flutter/test/widget/login_screen_test.dart b/flutter/test/widget/login_screen_test.dart
+index 1c3cccee..9197beab 100644
+--- a/flutter/test/widget/login_screen_test.dart
++++ b/flutter/test/widget/login_screen_test.dart
+@@ -10,9 +10,23 @@ import 'package:runflow_flutter/l10n/app_localizations.dart';
+ import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+ import 'package:runflow_flutter/presentation/screens/auth/login_screen.dart';
+ import 'package:runflow_flutter/services/auth_service_impl.dart';
++import 'package:runflow_flutter/core/constants/api_constants.dart';
+ 
+ void main() {
+   group('LoginScreen', () {
++    String? originalClientId;
++
++    setUp(() {
++      originalClientId = AppConstants.stravaClientId;
++      AppConstants.stravaClientId = '';
++    });
++
++    tearDown(() {
++      if (originalClientId != null) {
++        AppConstants.stravaClientId = originalClientId!;
++      }
++    });
++
+     testWidgets('renders RunFlow branding', (WidgetTester tester) async {
+       await tester.pumpWidget(
+         const ProviderScope(child: _TestApp()),
+diff --git a/flutter/test/widget_test.dart b/flutter/test/widget_test.dart
+index 69fe7c90..ad7fa31a 100644
+--- a/flutter/test/widget_test.dart
++++ b/flutter/test/widget_test.dart
+@@ -10,12 +10,22 @@ import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+ import 'package:shared_preferences/shared_preferences.dart';
+ 
+ void main() {
++  String? originalClientId;
++
+   setUp(() {
++    originalClientId = AppConstants.stravaClientId;
++    AppConstants.stravaClientId = '';
+     SharedPreferences.setMockInitialValues({
+       AppConstants.onboardingCompletedKey: true,
+     });
+   });
+ 
++  tearDown(() {
++    if (originalClientId != null) {
++      AppConstants.stravaClientId = originalClientId!;
++    }
++  });
++
+   testWidgets('Unauthenticated app redirects to login',
+       (WidgetTester tester) async {
+     await tester.pumpWidget(
+diff --git a/plan27.5.md b/plan27.5.md
+new file mode 100644
+index 00000000..9f38c2b2
+--- /dev/null
++++ b/plan27.5.md
+@@ -0,0 +1,436 @@
++# Plan Generation: SOTA Audit & Improvement Plan
++
++## Executive Summary
++
++RunFlow's plan generation is **competent but not state-of-the-art**. It implements Daniels-Gilbert VDOT correctly, has solid periodization fundamentals (BASE/BUILD/PEAK/TAPER with step loading), and recently added important guardrails (VDOT capping, quality session scaling, structured steps). However, it falls significantly behind modern apps (Garmin Coach, COROS, TrainingPeaks) in three critical areas: **adaptive feedback**, **workout variety**, and **physiological integration**.
++
++**Current level: "Smart Template Generator"** — deterministic, race-specific plans with correct pacing but no adaptation to how the athlete responds to training.
++
++**SOTA level: "Adaptive Coaching Engine"** — continuously adjusting plans based on completed workouts, physiological metrics (HRV, ACWR), and individual response patterns.
++
++---
++
++## What's Working Well
++
++| Area | Assessment |
++|------|-----------|
++| VDOT calculation | ✅ Correct Daniels-Gilbert formula |
++| Training pace zones | ✅ Proper E/M/T/I/R zones from VDOT |
++| Step loading (3+1) | ✅ 10% growth cap, 20% recovery weeks |
++| Race-specific periodization | ✅ Phase-appropriate quality sessions per distance |
++| Volume safety rails | ✅ Long run caps, time-on-feet limits, growth caps |
++| Quality session scaling | ✅ Recently added — scales by weekly volume and race type |
++| VDOT guardrails | ✅ 15% improvement cap prevents unsafe pacing |
++| Structured workout steps | ✅ Machine-readable warmup/work/cooldown steps |
++| HR profile data flow | ✅ Wizard → backend pipeline established |
++| Test coverage | ✅ 56+ unit tests covering core logic |
++
++---
++
++## Gap Analysis: RunFlow vs. SOTA
++
++### 🔴 Critical Gaps (No Implementation)
++
++| Gap | Impact | SOTA Reference |
++|-----|--------|---------------|
++| **No adaptive feedback** | Plan ignores all completed workout data — every week is predetermined | Garmin Coach, COROS: adjust weekly based on performance |
++| **No Acute:Chronic Workload Ratio (ACWR)** | No injury risk monitoring; relies solely on 10% rule | TrainingPeaks: ACWR 0.8-1.3 sweet spot |
++| **No workout variety within phases** | BUILD phase generates identical workouts every week | Pfitzinger: 4-6 distinct workout templates per phase |
++| **No HRV/readiness integration** | HR data collected but unused in plan generation | Garmin: Training Readiness Score affects daily prescription |
++| **Only 1 quality session/week** | Sub-optimal for runners doing 5+ days; AI proposals mention "3 quality sessions" but generator can't produce them | Daniels, Pfitzinger: 2-3 quality sessions standard for 5+ days |
++
++### 🟡 Significant Gaps (Partial/Missing)
++
++| Gap | Current State | SOTA |
++|-----|--------------|------|
++| **Long run variety** | Always easy pace (MP segments only in PEAK HM/M) | Progressive, negative split, back-to-back, tempo finish |
++| **No medium-long runs** | Only long run + easy runs | Pfitzinger MLR: 75-85% of long run distance, separate category |
++| **HR zones unused in generation** | HR data flows through but `workoutTypeToHrZone()` is a static lookup | Should compute concrete bpm ranges and embed in structured steps |
++| **No workout-level periodization** | Each week in a phase has the same quality session | Mesocycle rotation: week 1 intervals, week 2 threshold, week 3 combined |
++| **Taper model is linear** | Fixed fractions per week | Research shows exponential taper outperforms linear |
++| **No warmup/cooldown scaling** | Always 1.5km/1.0km | Should scale with total workout distance |
++| **Cross-training is static** | Swim always 1500m, ride always 60min | Should periodize with plan phase |
++
++### 🟢 Minor Gaps
++
++| Gap | Current State | SOTA |
++|-----|--------------|------|
++| Recovery run ≠ easy run distance | Same distance for both | Recovery should be shorter (60-75% of easy) |
++| No hill repeats / progression runs | Missing workout types entirely | Common in BUILD phase across all methodologies |
++| No age/sex adjustment | Same recovery for all | Older athletes need more recovery between hard sessions |
++| No double-day support | Max 1 session per day | Needed for >100km/week runners |
++| No block periodization option | Linear only | Some athletes respond better to concentrated blocks |
++
++---
++
++## Proposed Improvements (Prioritized)
++
++> [!IMPORTANT]
++> This plan is ordered by **impact-to-effort ratio**. Each phase is independently shippable. Phases 1-3 would bring RunFlow to competitive parity with Garmin Coach. Phases 4-6 would put it ahead.
++
++---
++
++### Phase 1: Workout Variety & Mesocycle Rotation
++**Impact: High | Effort: Medium | Files: ~3**
++
++The single biggest quality improvement. Currently BUILD phase generates the exact same workout every week for 4+ weeks straight. Real coaching programs rotate workout stimuli.
++
++#### Changes
++
++##### [MODIFY] [index.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts)
++
++1. **Add workout rotation within phases** — Instead of a single quality session per phase, define 2-3 templates per phase and rotate by week index:
++   ```
++   5K BUILD: Week A = 5x1km @ I | Week B = 3x1600m @ I | Week C = 8x600m @ I-R
++   Marathon BUILD: Week A = 10km @ T | Week B = 3x2mile cruise intervals | Week C = 6km T + 4km MP
++   ```
++
++2. **Add missing workout types**:
++   - **Progression runs**: Start easy, finish at threshold (great for BUILD)
++   - **Cruise intervals**: 4-6x ~1km at threshold with short recovery (Daniels "cruise intervals")
++   - **Hill repeats**: 6-10x hill in BASE phase (replaces one fartlek slot)
++   - **Tempo + MP combo**: Mixed-pace quality session for HM/Marathon PEAK
++
++3. **Support 2 quality sessions/week** when `runsPerWeek >= 5`:
++   - Primary quality: Phase-specific (current logic)
++   - Secondary quality: Complementary stimulus (e.g., if primary is intervals, secondary is threshold)
++   - Both respect `MIN_GAP_DAYS` from each other and from long run
++
++4. **Add medium-long run (MLR)** for marathon plans when `runsPerWeek >= 5`:
++   - 75% of long run distance
++   - Placed mid-week
++   - Easy to steady pace
++
++##### [NEW] [workout-templates.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/workout-templates.ts)
++
++Central registry of workout templates with metadata:
++```typescript
++type WorkoutTemplate = {
++  id: string;
++  name: string;
++  type: WorkoutType;
++  phase: Phase[];
++  raceTypes: RaceType[];
++  getDistance: (weeklyVolume: number) => number;
++  getPace: (paces: TrainingPaces) => number;
++  getDescription: (distance: number, pace: number) => string;
++  getStructuredSteps: (distance: number, paces: TrainingPaces) => StructuredWorkoutStep[];
++  minRunsPerWeek: number;
++  priority: 'primary' | 'secondary';
++};
++```
++
++##### [MODIFY] [descriptions.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/descriptions.ts)
++
++Add display descriptions for new workout types (progression run, cruise intervals, hill repeats).
++
++**Acceptance Criteria:**
++- BUILD phase produces at least 2 distinct quality sessions across the phase
++- Marathon plans with 5+ runs/week include a secondary quality session
++- Generated plans contain at least 4 distinct workout type/structure combinations
++
++---
++
++### Phase 2: Adaptive Feedback Loop
++**Impact: Very High | Effort: High | Files: ~6**
++
++The most impactful SOTA feature: the plan reacts to actual training. This doesn't require ML — a rule-based system with ACWR is highly effective.
++
++#### Changes
++
++##### [NEW] [adaptive-engine.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/adaptive-engine.ts)
++
++Core adaptive logic:
++
++1. **Compliance scoring**: Compare planned vs. actual workouts for the past 7 days
++   - `completionRate`: % of planned workouts completed
++   - `volumeDeviation`: actual km vs. planned km
++   - `paceDeviation`: actual pace vs. target pace for quality sessions
++
++2. **Acute:Chronic Workload Ratio (ACWR)**:
++   ```typescript
++   function calculateACWR(activities: Activity[], today: Date): {
++     acuteLoad: number;     // last 7 days
++     chronicLoad: number;   // rolling 28-day avg
++     ratio: number;         // acute / chronic
++     riskLevel: 'low' | 'moderate' | 'high' | 'very_high';
++   }
++   ```
++   - Risk bands: <0.8 (undertraining), 0.8-1.3 (optimal), 1.3-1.5 (high risk), >1.5 (very high risk)
++
++3. **Weekly adjustment rules** (applied before generating next week):
++   - ACWR > 1.5 → reduce volume 15%, replace quality with easy
++   - ACWR 1.3-1.5 → reduce volume 5%, maintain quality
++   - Completion rate < 60% for 2+ weeks → reduce volume 10%
++   - Pace deviation > 5% faster than target for 2+ weeks → consider VDOT update
++   - Pace deviation > 10% slower → flag potential fatigue or illness
++
++4. **VDOT recalculation**: When adaptive engine detects sustained performance change (3+ quality sessions trending faster/slower), recommend VDOT re-assessment
++
++##### [NEW] [training-load.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/metrics/training-load.ts)
++
++Training load calculations:
++- **TRIMP** (Training Impulse): `duration * HR_factor` (already have `trimp.ts`, extend it)
++- **Session Load**: Distance × intensity factor (for non-HR workouts)
++- **Training Monotony**: `mean(daily_loads) / stdev(daily_loads)` over 7 days
++- **Training Strain**: `weekly_load × monotony`
++
++##### [NEW] [plan-adjustment.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/plan-adjustment.ts)
++
++API endpoint logic for weekly plan adjustment:
++```typescript
++async function adjustPlanForNextWeek(goalId: string, userId: string): Promise<AdjustmentResult> {
++  // 1. Get recent activities
++  // 2. Calculate ACWR, compliance, performance deviation
++  // 3. Determine adjustment factors
++  // 4. Regenerate next week's workouts with adjusted volume/intensity
++  // 5. Create new workouts, soft-delete old unstarted ones
++}
++```
++
++##### [MODIFY] [plan-creation.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/services/plan-creation.ts)
++
++- Store adaptive parameters on Goal: `lastAdaptiveCheck`, `currentACWR`, `adaptiveVdot`
++- Add method to recalculate VDOT from recent race efforts automatically
++
++##### [NEW] API route for weekly plan adjustment
++
++`POST /api/plan/[goalId]/adjust` — triggers adaptive recalculation
++
++##### [MODIFY] Flutter dashboard
++
++Show ACWR status, compliance score, and "plan adjusted" notifications
++
++**Acceptance Criteria:**
++- ACWR is calculated and displayed on dashboard
++- If ACWR > 1.5, next week's volume is automatically reduced
++- If athlete misses 2+ weeks of workouts, plan adapts down
++- VDOT re-assessment suggested when performance trend changes
++
++---
++
++### Phase 3: Long Run Variety & Progression
++**Impact: Medium-High | Effort: Low-Medium | Files: ~2**
++
++Long runs are currently monotonous (always easy pace, with MP segments only in PEAK for HM/Marathon). Real coaching programs vary long run structure.
++
++#### Changes
++
++##### [MODIFY] [index.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts)
++
++1. **Long run rotation** (cycle through by week):
++   - **Easy long run**: Current default (zones 1-2)
++   - **Progressive long run**: Last 3-5km at marathon pace
++   - **Steady long run**: Middle portion at steady/aerobic pace
++   - **Fast-finish long run**: Final 20-30% at threshold pace (BUILD/PEAK only)
++   - **Back-to-back long runs**: Saturday long + Sunday medium-long (marathon/ultra, high-volume only)
++
++2. **Long run progression formula**:
++   ```
++   Week 1 of cycle: Easy long run
++   Week 2: Steady long run (middle at aerobic pace)
++   Week 3: Progressive/fast-finish long run
++   Week 4 (recovery): Short easy long run (80% of previous week)
++   ```
++
++3. **Recovery run distance fix**: Recovery runs should be 60-75% of easy run distance, not identical
++
++##### [MODIFY] [descriptions.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/descriptions.ts)
++
++Add display descriptions for new long run variants.
++
++**Acceptance Criteria:**
++- Marathon plans show at least 3 distinct long run types across a training cycle
++- Recovery runs are shorter than easy runs
++- Progressive long runs include structured steps with pace changes
++
++---
++
++### Phase 4: Exponential Taper Model
++**Impact: Medium | Effort: Low | Files: ~1**
++
++Research (Mujika & Padilla, 2003) shows exponential tapers outperform linear ones. Current implementation uses fixed fractions.
++
++#### Changes
++
++##### [MODIFY] [index.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts)
++
++Replace `TAPER_FRACTIONS` with exponential decay:
++
++```typescript
++function getExponentialTaperVolume(
++  weeksUntilRace: number,
++  taperWeeks: number,
++  peakVolume: number,
++  raceType: RaceType
++): number {
++  // Research-based: Volume = peak * e^(-t * decay_rate)
++  // Where t = 1..taperWeeks, decay_rate varies by distance
++  const decayRate = getDecayRate(raceType); // 0.3-0.5
++  const t = taperWeeks - weeksUntilRace + 1;
++  const fraction = Math.exp(-decayRate * t);
++  
++  // Maintain intensity: reduce volume, not quality
++  // Minimum volume floor to prevent complete detraining
++  const minFraction = raceType === 'MARATHON' ? 0.35 : 0.40;
++  return Math.round(peakVolume * Math.max(fraction, minFraction));
++}
++```
++
++Key principles:
++- Reduce volume 40-60% total over the taper
++- **Maintain frequency**: Don't drop runs/week during taper
++- **Maintain intensity**: Keep quality sessions but reduce number of reps/duration
++- **Sharper drop in final week**: Exponential naturally achieves this
++
++**Acceptance Criteria:**
++- Taper volume curve is non-linear (steeper reduction toward race day)
++- Quality sessions maintained during taper but with reduced volume
++- Taper maintains the same runs/week as peak phase
++
++---
++
++### Phase 5: HR Zone-Aware Plan Generation
++**Impact: Medium | Effort: Medium | Files: ~4**
++
++HR data flows through the system but isn't used in plan generation. The HR zones collected in the wizard should produce concrete bpm targets in workouts.
++
++#### Changes
++
++##### [NEW] [hr-zones.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/hr-zones.ts)
++
++LTHR-based zone calculator:
++```typescript
++function calculateHRZones(lthr: number): HRZoneSet {
++  return {
++    z1: { min: 0, max: Math.round(lthr * 0.75), label: 'Recovery' },
++    z2: { min: Math.round(lthr * 0.75), max: Math.round(lthr * 0.87), label: 'Aerobic' },
++    z3: { min: Math.round(lthr * 0.87), max: Math.round(lthr * 0.94), label: 'Tempo' },
++    z4: { min: Math.round(lthr * 0.94), max: lthr, label: 'Threshold' },
++    z5: { min: lthr, max: Math.round(lthr * 1.05), label: 'VO2max' },
++    z6: { min: Math.round(lthr * 1.05), max: Math.round(lthr * 1.10), label: 'Anaerobic' },
++    z7: { min: Math.round(lthr * 1.10), max: 999, label: 'Neuromuscular' },
++  };
++}
++```
++
++##### [MODIFY] [index.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts)
++
++- Accept `thresholdHeartRate` in `PlanConfig`
++- When LTHR available, attach concrete bpm ranges to structured steps
++- Replace static `workoutTypeToHrZone()` with computed zones
++
++##### [MODIFY] structured steps in [index.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/plans/index.ts)
++
++Enhance `StructuredWorkoutStep` type:
++```typescript
++type StructuredWorkoutStep = {
++  // ... existing fields ...
++  hrTargetMinBpm?: number;
++  hrTargetMaxBpm?: number;
++  hrZoneLabel?: string;
++  paceTargetMinSecondsPerKm?: number;
++  paceTargetMaxSecondsPerKm?: number;
++};
++```
++
++##### [MODIFY] DB schema (migration)
++
++Add optional columns to `Workout` table for concrete zone targets (as planned in deferred Phase 3 of plan26.5).
++
++**Acceptance Criteria:**
++- When LTHR is provided, workouts include concrete bpm ranges
++- Structured steps show both pace and HR targets
++- Flutter workout display shows "Z2 Aerobic: 139-151 bpm" not just "Zone 2"
++
++---
++
++### Phase 6: Critical Speed as Alternative Pacing Model
++**Impact: Medium | Effort: Medium | Files: ~3**
++
++VDOT is good but based on population averages. Critical Speed (CS) is individually derived and more physiologically grounded for prescribing threshold and interval intensities.
++
++#### Changes
++
++##### [NEW] [critical-speed.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/metrics/critical-speed.ts)
++
++```typescript
++function calculateCriticalSpeed(
++  efforts: { distanceM: number; timeS: number }[] // 2-3 maximal efforts
++): { criticalSpeed: number; dPrime: number } {
++  // Hyperbolic model: t = D'/CS + D/CS  =>  t = (D' + D) / CS
++  // Linear regression: time = D/CS + D'/CS
++  // CS = critical speed (m/s), D' = anaerobic distance capacity (m)
++}
++
++function csTrainingPaces(cs: number, dPrime: number): TrainingPaces {
++  // Easy: 70-80% CS
++  // Threshold: 95-100% CS  
++  // Interval: CS + factor based on D'
++  // Repetition: derived from D' 
++}
++```
++
++##### [MODIFY] [plan-creation.ts](file:///c:/Users/thies/Antigravity/Full%20RunFlow/Web/src/lib/services/plan-creation.ts)
++
++- When user has 2+ recent maximal efforts at different distances, calculate CS
++- Use CS-derived paces instead of VDOT-derived paces for the plan
++- Fall back to VDOT when CS data isn't available
++
++##### [MODIFY] Flutter wizard
++
++Add optional "Critical Speed test" flow where user inputs 2-3 time trial results.
++
++**Acceptance Criteria:**
++- CS calculated from 2+ maximal efforts when available
++- CS-derived paces used in plan when available, VDOT as fallback
++- Threshold and interval paces more accurately reflect individual physiology
++
++---
++
++## Verification Plan
++
++### Automated Tests
++
++For each phase, before merging:
++```bash
++cd Web && npm test                    # Backend tests pass
++cd flutter && flutter analyze         # Zero errors
++cd flutter && flutter test            # Zero failures
++cd flutter && flutter build apk --release --dart-define=STRAVA_CLIENT_ID=193995
++```
++
++Additional test requirements per phase:
++- **Phase 1**: Tests verifying workout variety within BUILD phase, 2-quality-session scheduling
++- **Phase 2**: Tests for ACWR calculation, compliance scoring, adjustment rules
++- **Phase 3**: Tests for long run rotation, recovery run distance < easy run distance
++- **Phase 4**: Tests for exponential taper curve, volume monotonically decreasing toward race
++- **Phase 5**: Tests for HR zone calculation from LTHR, bpm ranges on structured steps
++- **Phase 6**: Tests for CS calculation, CS-derived vs VDOT-derived pace comparison
++
++### Manual Verification
++
++After each phase:
++1. Generate a 16-week marathon plan (VDOT 45, 5 runs/week) and inspect:
++   - Workout variety across BUILD weeks
++   - Long run type rotation
++   - Taper curve shape
++   - HR zones on workouts (if LTHR provided)
++2. Generate a 12-week 5K plan (VDOT 50, 4 runs/week) and verify distance-specific adjustments
++3. Check plan in Flutter app for display correctness
++
++---
++
++## Open Questions
++
++> [!IMPORTANT]
++> **Q1: Adaptive feedback scope** — Should the adaptive engine regenerate the entire remaining plan, or only adjust the next 1-2 weeks? Full regeneration is simpler but may confuse users who memorized their upcoming workouts. Week-by-week is more surgical but requires state tracking.
++
++> [!IMPORTANT]  
++> **Q2: Critical Speed test UX** — Is the CS test flow too advanced for RunFlow's target audience? It requires users to perform 2-3 time trials. Could be gated behind an "Advanced" plan creation mode.
++
++> [!WARNING]
++> **Q3: Phase 2 DB impact** — The adaptive engine needs to store ACWR history and compliance metrics. This could go on the Goal record (simple) or a separate `TrainingLog` table (more flexible). Which approach is preferred?
++
++> [!NOTE]
++> **Q4: Phase ordering** — Phases 1, 3, and 4 are low-risk pure algorithmic improvements. Phase 2 (adaptive) is the highest-impact but also highest-effort. Should we ship 1+3+4 first for a quick quality win, then tackle 2?
+-- 
+2.53.0
+

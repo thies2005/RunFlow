@@ -1,0 +1,1 @@
+First curated Android stable release in the 1.0.0 series. Existing app features and signing identity are preserved. Higher Android version code keeps upgrade ordering. Signed APK/AAB downloads and verified checksums. See GitHub release notes for installation and migration details.

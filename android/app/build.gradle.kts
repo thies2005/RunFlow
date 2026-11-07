@@ -23,8 +23,8 @@ android {
         applicationId = "com.runflow2.app"
         minSdk = 29
         targetSdk = 36
-        versionCode = 24
-        versionName = "2.8.3"
+        versionCode = 1002111
+        versionName = "1.0.0"
         // CI assigns monotonic channel codes without changing committed defaults.
         System.getenv("ANDROID_VERSION_CODE")?.let { versionCode = it.toInt() }
         System.getenv("ANDROID_VERSION_NAME")?.let { versionName = it }

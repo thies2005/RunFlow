@@ -16,8 +16,8 @@ Repo: https://github.com/thies2005/RunFlow.git
 AutoUpdateMode: None
 UpdateCheckMode: None
 Builds:
-  - versionName: 2.8.3
-    versionCode: 24
+  - versionName: 1.0.0
+    versionCode: 1002111
     commit: REPLACE_WITH_VERIFIED_IMMUTABLE_RELEASE_COMMIT
     subdir: android
     gradle:
@@ -26,3 +26,6 @@ MaintainerNotes: |-
   Draft only; verify dependencies/buildability and packaging first.
   CI version overrides are absent during source builds; use committed stable
   version defaults. Do not enable automatic updates until a real build passes.
+
+CurrentVersion: 1.0.0
+CurrentVersionCode: 1002111

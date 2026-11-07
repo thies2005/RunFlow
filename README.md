@@ -1,17 +1,37 @@
-# RunFlow
+<h1 align="center">RunFlow</h1>
 
-RunFlow is a self-hosted, multi-sport training platform for runners, cyclists, swimmers and triathletes. It combines AI-assisted training planning with deep performance analytics — from Daniels-style VDOT pacing and Runalyze-style TRIMP load to Coggan cycling power metrics and HRV-based daily readiness.
+<p align="center"><strong>Train with a plan. Understand your progress.</strong><br>A self-hosted training platform for Android and the web.</p>
 
-It consists of two applications that share one backend:
+<p align="center">
+  <a href="#get-started">Get started</a> ·
+  <a href="android/README.md">Android app</a> ·
+  <a href="docs/README.md">Documentation</a> ·
+  <a href="https://github.com/thies2005/RunFlow/releases">Releases</a>
+</p>
 
-- **Web Platform & PWA** ([`Web/`](Web)) — a Next.js 15 application: dashboard, training calendar, plan studio, analytics, health tracking, and the full REST API. Works in the browser and installs as a PWA.
-- **Android App** ([`android/`](android)) — a native Kotlin/Compose app: offline-first training, a guided workout player, Health Connect sync, and its own analytics. It talks to the same server via a JWT mobile API; when no server is configured, it falls back to an on-device port of the plan engine.
+RunFlow brings training plans, workout execution, performance analytics, and recovery tracking together for runners, cyclists, swimmers, and triathletes. The native Kotlin/Compose Android app and Next.js web platform share one backend. Android also supports on-device planning when no server is configured.
 
-> Historically the mobile app was a Flutter app, then a Capacitor web wrapper. Both are gone — the Flutter source was removed at v2.3.0 (backup kept out of repo), and the Capacitor wrapper under `Web/android/` is legacy and no longer the mobile app.
+## What you can do
 
----
+| | Features |
+|---|---|
+| **Plan your training** | Build and adapt plans, organize a training calendar, and edit structured workouts. |
+| **Record and review** | Follow guided workouts and review running and cycling performance. |
+| **Track recovery** | Log health and wellness data, with Health Connect integration on Android. |
+| **Connect your tools** | Use optional Strava sync, AI providers, and private or public MCP tools. |
 
-## ✨ What it does
+## A look inside
+
+Existing Android emulator captures from local QA; screens show test data and may differ from the latest build.
+
+<table>
+  <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/android-dashboard.png" width="220" alt="RunFlow Android dashboard with training and recovery cards"><br><strong>Your day</strong></td>
+    <td align="center" width="50%"><img src="docs/screenshots/android-plan.png" width="220" alt="RunFlow Android training plan showing scheduled workouts"><br><strong>Your plan</strong></td>
+  </tr>
+</table>
+
+## Planning, analytics and coaching
 
 **Planning & coaching**
 - AI-generated training plans for **17 race types** — 5K to 24-hour and backyard ultras, plus sprint→Ironman triathlons.
@@ -37,9 +57,7 @@ It consists of two applications that share one backend:
 
 Full details: [docs/MCP_API.md](docs/MCP_API.md).
 
----
-
-## 🏗️ Architecture
+## Architecture
 
 | Layer | Technology |
 |---|---|
@@ -53,9 +71,7 @@ Full details: [docs/MCP_API.md](docs/MCP_API.md).
 
 The **plan engine is the web engine only** (server-side when signed in, on-device port otherwise). The classic on-device Daniels engine was removed in v2.3.0.
 
----
-
-## 📂 Repository layout
+## Repository layout
 
 ```
 Web/          Next.js app: UI (src/app), API routes (src/app/api), engines (src/lib),
@@ -64,26 +80,27 @@ android/      Native Kotlin/Compose Android app (Gradle, Room, Health Connect)
 docs/         Project documentation — start at docs/README.md for the index
 ```
 
----
-
-## 🚀 Self-hosting (Docker)
+## Get started
 
 ```bash
 cd Web
 cp .env.example .env      # then set at minimum:
-                          #   NEXTAUTH_URL, NEXTAUTH_SECRET, STRAVA_CLIENT_ID/SECRET
+                          #   NEXTAUTH_URL, NEXTAUTH_SECRET, JWT_SECRET, ENCRYPTION_KEY,
+                          #   POSTGRES_PASSWORD and SMTP settings for email login
 docker compose up -d --build
 docker compose exec app npx prisma migrate deploy
 ```
+
+Set `NEXTAUTH_URL` to your public HTTPS origin (for example `https://training.example.com`), with no path, query, or credentials. Configure your reverse proxy's TLS certificate and forward requests to the app; the Android server URL must use the same origin. Plain HTTP is supported only for localhost development. Configure SMTP for email sign-in; it does not require Strava. Strava is optional: register your own application and set its callback to `https://training.example.com/api/auth/strava/callback`, then provide `STRAVA_CLIENT_ID` and `STRAVA_CLIENT_SECRET`. AI features require separately configured providers and network access.
+
+The optional Cloudflare tunnel can be started with `docker compose --profile tunnel up -d` after setting `TUNNEL_TOKEN`; it is not needed when using a reverse proxy.
 
 - The compose file publishes `127.0.0.1:3000` (app) and `127.0.0.1:5434` (Postgres) on loopback only — put a reverse proxy or Cloudflare Tunnel in front.
 - Optional Redis (rate limiting + caches) and automated `pg_dump` backups are configured in the compose file.
 - For Coolify deployments see [COOLIFY_DEPLOY.md](COOLIFY_DEPLOY.md) (adds a one-shot migrator, reminder and feedback-queue cron services).
 - Full environment-variable reference and operations guide: [Web/DOCUMENTATION.md](Web/DOCUMENTATION.md).
 
----
-
-## 🛠️ Development
+## Development
 
 ### Web (from `Web/`)
 
@@ -109,9 +126,7 @@ Requires JDK 17; SDK path is set in `android/gradle.properties`.
 
 Pre-push checklist for Android changes: compile check + unit tests, both green.
 
----
-
-## 📚 Documentation
+## Documentation
 
 | Document | Contents |
 |---|---|

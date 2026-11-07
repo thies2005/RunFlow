@@ -1,4 +1,10 @@
-# RunFlow Documentation Index
+<h1 align="center">RunFlow Documentation Index</h1>
+
+<p align="center"><strong>Project reference</strong><br>Setup, usage, and maintenance guidance.</p>
+
+<p align="center">
+  <a href="../README.md">Project overview</a>
+</p>
 
 Start here. Everything below is either a **living reference** (kept current with the code) or a
 **historical record** (point-in-time, kept for provenance in [`archive/`](archive/)).

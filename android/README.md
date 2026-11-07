@@ -1,4 +1,10 @@
-# RunFlow Android — Native Kotlin / Compose (Material 3 Expressive)
+<h1 align="center">RunFlow Android — Native Kotlin / Compose (Material 3 Expressive)</h1>
+
+<p align="center"><strong>Project reference</strong><br>Setup, usage, and maintenance guidance.</p>
+
+<p align="center">
+  <a href="../README.md">Project overview</a>
+</p>
 
 The RunFlow mobile app: native Android (Kotlin + Jetpack Compose), focused on **training,
 planning (run / ultra / triathlon), cycling and running analytics, health & readiness, account

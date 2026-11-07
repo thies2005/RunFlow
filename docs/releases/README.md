@@ -1,4 +1,10 @@
-# Android releases
+<h1 align="center">Android releases</h1>
+
+<p align="center"><strong>Project reference</strong><br>Setup, usage, and maintenance guidance.</p>
+
+<p align="center">
+  <a href="../../README.md">Project overview</a>
+</p>
 
 The workflow `android-release.yml` follows the CloudBridge release contract and
 `github-release-publishing` skill. Every push to `master` builds the exact trigger

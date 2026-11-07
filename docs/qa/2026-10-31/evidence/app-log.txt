@@ -1,0 +1,12 @@
+10-31 13:22:36.862  2151  2151 I RunFlow/App: RunFlow starting (process pid 2151)
+10-31 13:22:36.870  2151  2167 D RunFlow/Sync: sync skipped (not signed in), reason=startup
+10-31 13:22:36.929  2151  2169 D RunFlow/Sync: sync skipped (not signed in), reason=worker
+10-31 13:22:36.929  2151  2169 D RunFlow/Sync: worker finished: SyncResult(pushed=0, pulled=0, pruned=0, failed=0, skipped=true) → Success {mOutputData=Data {}}
+10-31 13:28:51.012  2151  2151 I RunFlow/Body: auto-refresh: hrRest=52 hrMax=192 zones=[136, 150, 164, 178, 185, 192]
+10-31 13:28:51.154  2151  3608 D RunFlow/HealthConnect: run import skipped — permissions not granted
+10-31 13:28:51.167  2151  3608 D RunFlow/HealthConnect: resting-HR import skipped — permission not granted
+10-31 13:28:51.167  2151  3608 D RunFlow/HealthConnect: HRV import skipped — permission not granted
+10-31 13:28:51.167  2151  3608 D RunFlow/HealthConnect: sleep import skipped — permission not granted
+10-31 13:28:51.167  2151  2628 D RunFlow/Sync: sync skipped (not signed in), reason=worker
+10-31 13:28:51.167  2151  2628 D RunFlow/Sync: worker finished: SyncResult(pushed=0, pulled=0, pruned=0, failed=0, skipped=true) → Success {mOutputData=Data {}}
+10-31 13:28:51.264  2151  3608 D RunFlow/Sync: pushPendingNow skipped (not signed in), reason=save_activity

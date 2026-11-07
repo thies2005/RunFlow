@@ -1,0 +1,157 @@
+Starting a Gradle Daemon, 3 stopped Daemons could not be reused, use --status for details
+> Task :app:clean
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig FROM-CACHE
+> Task :app:generateDebugResValues FROM-CACHE
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources FROM-CACHE
+> Task :app:mergeDebugResources FROM-CACHE
+> Task :app:packageDebugResources FROM-CACHE
+> Task :app:parseDebugLocalResources FROM-CACHE
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug FROM-CACHE
+> Task :app:processDebugMainManifest FROM-CACHE
+> Task :app:processDebugManifest FROM-CACHE
+> Task :app:processDebugManifestForPackage FROM-CACHE
+> Task :app:processDebugResources FROM-CACHE
+> Task :app:kspDebugKotlin FROM-CACHE
+> Task :app:javaPreCompileDebug FROM-CACHE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResValues FROM-CACHE
+> Task :app:extractProguardFiles
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:mergeReleaseNativeLibs
+> Task :app:buildKotlinToolingMetadata
+
+> Task :app:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libdatastore_shared_counter.so. Run with --info option to learn more.
+
+> Task :app:extractReleaseNativeSymbolTables FROM-CACHE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:generateReleaseBuildConfig FROM-CACHE
+> Task :app:generateReleaseResValues FROM-CACHE
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources FROM-CACHE
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseResources FROM-CACHE
+> Task :app:packageReleaseResources FROM-CACHE
+> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease FROM-CACHE
+> Task :app:processReleaseMainManifest FROM-CACHE
+> Task :app:processReleaseManifest FROM-CACHE
+> Task :app:processReleaseManifestForPackage FROM-CACHE
+> Task :app:processReleaseResources FROM-CACHE
+> Task :app:kspReleaseKotlin FROM-CACHE
+> Task :app:javaPreCompileRelease FROM-CACHE
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :app:mergeReleaseShaders
+> Task :app:mergeReleaseArtProfile
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets FROM-CACHE
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:compileDebugKotlin
+> Task :app:compileReleaseKotlin
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/domain/plan/WebPlanEngine.kt:86:13 Condition is always 'true'.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/components/Common.kt:71:51 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/components/Common.kt:80:58 'val Icons.Outlined.DirectionsBike: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsBike.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/components/Common.kt:81:51 'val Icons.Outlined.DirectionsBike: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsBike.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/components/Common.kt:84:52 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/ActivitiesScreen.kt:360:40 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/ActivitiesScreen.kt:361:41 'val Icons.Outlined.DirectionsBike: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsBike.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/ActivitiesScreen.kt:362:60 'val Icons.Outlined.DirectionsWalk: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsWalk.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/ActivitiesScreen.kt:364:28 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/AthleteScreen.kt:196:55 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/AthleteScreen.kt:269:51 'val Icons.Outlined.DirectionsWalk: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsWalk.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/AthleteScreen.kt:507:51 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/CompleteWorkoutSheet.kt:300:69 'val Icons.Outlined.DirectionsBike: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsBike.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/CompleteWorkoutSheet.kt:303:32 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/DashboardScreen.kt:307:59 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/DashboardScreen.kt:666:65 'val Icons.Outlined.Undo: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.Undo.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/DashboardScreen.kt:706:103 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/HrZonesScreen.kt:365:55 'val Icons.Outlined.DirectionsWalk: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsWalk.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/OnboardingScreen.kt:158:41 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanScreen.kt:733:75 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanWizardScreen.kt:465:50 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanWizardScreen.kt:468:54 'val Icons.Outlined.DirectionsBike: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsBike.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/StructuredEditorScreen.kt:221:46 Redundant creation of Json format. Creating instances for each usage can be slow.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/analytics/CyclingAnalyticsTab.kt:220:47 'val Icons.Outlined.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.TrendingUp.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/analytics/OverviewAnalyticsTab.kt:342:47 'val Icons.Outlined.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.TrendingUp.
+
+> Task :app:compileDebugKotlin
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/domain/plan/WebPlanEngine.kt:86:13 Condition is always 'true'.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/components/Common.kt:71:51 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/components/Common.kt:80:58 'val Icons.Outlined.DirectionsBike: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsBike.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/components/Common.kt:81:51 'val Icons.Outlined.DirectionsBike: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsBike.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/components/Common.kt:84:52 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/ActivitiesScreen.kt:360:40 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/ActivitiesScreen.kt:361:41 'val Icons.Outlined.DirectionsBike: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsBike.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/ActivitiesScreen.kt:362:60 'val Icons.Outlined.DirectionsWalk: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsWalk.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/ActivitiesScreen.kt:364:28 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/AthleteScreen.kt:196:55 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/AthleteScreen.kt:269:51 'val Icons.Outlined.DirectionsWalk: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsWalk.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/AthleteScreen.kt:507:51 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/CompleteWorkoutSheet.kt:300:69 'val Icons.Outlined.DirectionsBike: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsBike.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/CompleteWorkoutSheet.kt:303:32 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/DashboardScreen.kt:307:59 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/DashboardScreen.kt:666:65 'val Icons.Outlined.Undo: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.Undo.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/DashboardScreen.kt:706:103 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/HrZonesScreen.kt:365:55 'val Icons.Outlined.DirectionsWalk: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsWalk.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/OnboardingScreen.kt:158:41 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanScreen.kt:733:75 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanWizardScreen.kt:465:50 'val Icons.Outlined.DirectionsRun: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsRun.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanWizardScreen.kt:468:54 'val Icons.Outlined.DirectionsBike: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.DirectionsBike.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/StructuredEditorScreen.kt:221:46 Redundant creation of Json format. Creating instances for each usage can be slow.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/analytics/CyclingAnalyticsTab.kt:220:47 'val Icons.Outlined.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.TrendingUp.
+w: file:///home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/analytics/OverviewAnalyticsTab.kt:342:47 'val Icons.Outlined.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.TrendingUp.
+
+> Task :app:compileReleaseJavaWithJavac FROM-CACHE
+> Task :app:compileDebugJavaWithJavac FROM-CACHE
+> Task :app:processDebugJavaRes
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:generateDebugLintReportModel
+> Task :app:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :app:processReleaseJavaRes
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:mergeReleaseJavaResource
+
+> Task :app:minifyReleaseWithR8
+WARNING: /home/thies/.gradle/caches/8.14/transforms/805e209f9ca4d2b64ac2537d5c48aae7/transformed/rules/lib/META-INF/com.android.tools/r8/kotlinx-serialization-common.pro:5:12-27: R8: The type "<1>$*" is used in a field rule. The characters in this type are legal for the JVM, but unlikely to originate from a source language. Maybe this is not the rule you are looking for.
+
+> Task :app:compileDebugUnitTestKotlin
+w: file:///home/thies/Projects/RunFlow/android/app/src/test/java/com/runflow2/app/recording/RecordingStepsTest.kt:32:32 This declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+> Task :app:testDebugUnitTest
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:convertShrunkResourcesToBinaryRelease FROM-CACHE
+> Task :app:optimizeReleaseResources FROM-CACHE
+> Task :app:compileReleaseArtProfile
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease

@@ -1,0 +1,2 @@
+Restored profile: ('Web profile QA', 68.5, 185, 48, 135, 168, 290, 0)
+468 activities retained; 0 queued changes; web goal and workout present.

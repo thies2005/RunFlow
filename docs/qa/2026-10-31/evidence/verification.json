@@ -1,0 +1,10 @@
+{
+  "tests": 525,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "suites": 46,
+  "apk_sha256": "a26632433d7de0b048f7b6abeabfa6a4d75855d723dcfde8b6555d22babd16fa",
+  "version": "2.8.0 (21)",
+  "serial": "emulator-5556"
+}

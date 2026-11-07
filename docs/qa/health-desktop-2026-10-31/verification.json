@@ -1,0 +1,177 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "nutrition": {
+          "x": 112,
+          "y": 97,
+          "width": 742.1875,
+          "height": 276
+        },
+        "metrics": {
+          "x": 878.1875,
+          "y": 97,
+          "width": 449.796875,
+          "height": 252.5
+        },
+        "readiness": {
+          "x": 878.1875,
+          "y": 365.5,
+          "width": 449.796875,
+          "height": 322
+        },
+        "actions": {
+          "x": 112,
+          "y": 420.828125,
+          "width": 742.1875,
+          "height": 67
+        },
+        "meals": {
+          "x": 112,
+          "y": 535.65625,
+          "width": 742.1875,
+          "height": 128
+        },
+        "supplements": {
+          "x": 878.1875,
+          "y": 711.5,
+          "width": 449.796875,
+          "height": 206
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "layout": {
+        "clientWidth": 1024,
+        "scrollWidth": 1024,
+        "nutrition": {
+          "x": 32,
+          "y": 97,
+          "width": 582.78125,
+          "height": 276
+        },
+        "metrics": {
+          "x": 638.78125,
+          "y": 97,
+          "width": 353.203125,
+          "height": 252.5
+        },
+        "readiness": {
+          "x": 638.78125,
+          "y": 365.5,
+          "width": 353.203125,
+          "height": 322
+        },
+        "actions": {
+          "x": 32,
+          "y": 420.828125,
+          "width": 582.78125,
+          "height": 67
+        },
+        "meals": {
+          "x": 32,
+          "y": 535.65625,
+          "width": 582.78125,
+          "height": 128
+        },
+        "supplements": {
+          "x": 638.78125,
+          "y": 711.5,
+          "width": 353.203125,
+          "height": 216
+        }
+      }
+    },
+    {
+      "width": 768,
+      "layout": {
+        "clientWidth": 768,
+        "scrollWidth": 768,
+        "nutrition": {
+          "x": 176,
+          "y": 235,
+          "width": 416,
+          "height": 276
+        },
+        "metrics": {
+          "x": 176,
+          "y": 527,
+          "width": 416,
+          "height": 252.5
+        },
+        "readiness": {
+          "x": 176,
+          "y": 795.5,
+          "width": 416,
+          "height": 322
+        },
+        "actions": {
+          "x": 176,
+          "y": 1133.5,
+          "width": 416,
+          "height": 67
+        },
+        "meals": {
+          "x": 176,
+          "y": 1216.5,
+          "width": 416,
+          "height": 268
+        },
+        "supplements": {
+          "x": 176,
+          "y": 1500.5,
+          "width": 416,
+          "height": 216
+        }
+      }
+    },
+    {
+      "width": 390,
+      "layout": {
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "nutrition": {
+          "x": 16,
+          "y": 255,
+          "width": 358,
+          "height": 276
+        },
+        "metrics": {
+          "x": 16,
+          "y": 547,
+          "width": 358,
+          "height": 252.5
+        },
+        "readiness": {
+          "x": 16,
+          "y": 815.5,
+          "width": 358,
+          "height": 322
+        },
+        "actions": {
+          "x": 16,
+          "y": 1153.5,
+          "width": 358,
+          "height": 67
+        },
+        "meals": {
+          "x": 16,
+          "y": 1236.5,
+          "width": 358,
+          "height": 268
+        },
+        "supplements": {
+          "x": 16,
+          "y": 1520.5,
+          "width": 358,
+          "height": 216
+        }
+      }
+    }
+  ],
+  "pageErrors": []
+}

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.runflow2.app.domain.analytics.ServerMetricSnapshot
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +17,35 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore by preferencesDataStore(name = "runflow_settings")
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
+enum class DashboardLayout { HYBRID, RUNNING, CYCLING, SEPARATE, TRIATHLON }
+enum class DashboardWidget { EFFORT, SPORT, RECOVERY, FORM, PLAN, WORKOUT }
+enum class WorkoutCardStyle { COMPACT, DETAILED }
+enum class CountdownStyle { BAR, BOXES }
+enum class DashboardMetric { RUN_VDOT, RUN_WEEK_DISTANCE, RUN_AVG_DISTANCE, BIKE_VO2MAX, BIKE_FTP, BIKE_WKG, BIKE_WEEK_DISTANCE, BIKE_WEEK_TSS, BIKE_FITNESS, BIKE_FORM, SWIM_WEEK_DISTANCE }
+
+data class DashboardCustomization(
+    val layout: DashboardLayout = DashboardLayout.RUNNING,
+    val workoutStyle: WorkoutCardStyle = WorkoutCardStyle.COMPACT,
+    val countdownStyle: CountdownStyle = CountdownStyle.BAR,
+    val visibleWidgets: Set<DashboardWidget> = DashboardWidget.values().toSet(),
+    val metrics: Set<DashboardMetric> = setOf(DashboardMetric.RUN_VDOT, DashboardMetric.RUN_WEEK_DISTANCE, DashboardMetric.BIKE_VO2MAX, DashboardMetric.BIKE_FTP, DashboardMetric.BIKE_WKG, DashboardMetric.BIKE_WEEK_TSS),
+)
+
+internal inline fun <reified T : Enum<T>> parseEnum(value: String?, fallback: T): T =
+    enumValues<T>().firstOrNull { it.name == value } ?: fallback
+
+internal fun parseVisibleWidgets(value: Set<String>?): Set<DashboardWidget> =
+    value?.mapNotNull { raw -> DashboardWidget.values().firstOrNull { it.name == raw } }?.toSet() ?: DashboardWidget.values().toSet()
+
+internal fun presetMetrics(layout: DashboardLayout): Set<DashboardMetric> = when (layout) {
+    DashboardLayout.RUNNING -> setOf(DashboardMetric.RUN_VDOT, DashboardMetric.RUN_WEEK_DISTANCE)
+    DashboardLayout.CYCLING -> setOf(DashboardMetric.BIKE_VO2MAX, DashboardMetric.BIKE_FTP, DashboardMetric.BIKE_WKG, DashboardMetric.BIKE_WEEK_TSS)
+    else -> setOf(DashboardMetric.RUN_VDOT, DashboardMetric.RUN_WEEK_DISTANCE, DashboardMetric.BIKE_VO2MAX, DashboardMetric.BIKE_FTP, DashboardMetric.BIKE_WKG, DashboardMetric.BIKE_WEEK_TSS, DashboardMetric.SWIM_WEEK_DISTANCE)
+}
+
+internal fun parseDashboardMetrics(value: Set<String>?): Set<DashboardMetric> =
+    value?.mapNotNull { raw -> DashboardMetric.values().firstOrNull { it.name == raw } }?.toSet()
+        ?: DashboardCustomization().metrics
 
 data class AppSettings(
     val onboardingDone: Boolean = false,
@@ -76,6 +106,7 @@ data class AppSettings(
     // ---- load & UI preference sync ----
     val primaryLoadMetric: String = "TSS", // "TSS", "DUAL", "TRIMP"
     val effortCardMode: String = "WEEK_AND_MONTH",
+    val customization: DashboardCustomization = DashboardCustomization(),
 )
 
 class SettingsRepository(private val context: Context) {
@@ -151,6 +182,11 @@ class SettingsRepository(private val context: Context) {
         // ---- load & UI preference sync ----
         val PRIMARY_LOAD_METRIC = stringPreferencesKey("primary_load_metric")
         val EFFORT_CARD_MODE = stringPreferencesKey("effort_card_mode")
+        val DASHBOARD_LAYOUT = stringPreferencesKey("dashboard_layout")
+        val WORKOUT_STYLE = stringPreferencesKey("dashboard_workout_style")
+        val COUNTDOWN_STYLE = stringPreferencesKey("dashboard_countdown_style")
+        val DASHBOARD_METRICS = stringSetPreferencesKey("dashboard_metrics")
+        val DASHBOARD_WIDGETS = stringSetPreferencesKey("dashboard_widgets")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -205,6 +241,13 @@ class SettingsRepository(private val context: Context) {
             effectiveVo2maxCorrection = p[Keys.EFFECTIVE_VO2MAX_CORRECTION] ?: 1.0,
             primaryLoadMetric = p[Keys.PRIMARY_LOAD_METRIC] ?: "TSS",
             effortCardMode = p[Keys.EFFORT_CARD_MODE] ?: "WEEK_AND_MONTH",
+            customization = DashboardCustomization(
+                layout = parseEnum(p[Keys.DASHBOARD_LAYOUT], DashboardLayout.RUNNING),
+                workoutStyle = parseEnum(p[Keys.WORKOUT_STYLE], WorkoutCardStyle.COMPACT),
+                countdownStyle = parseEnum(p[Keys.COUNTDOWN_STYLE], CountdownStyle.BAR),
+                metrics = parseDashboardMetrics(p[Keys.DASHBOARD_METRICS]),
+                visibleWidgets = parseVisibleWidgets(p[Keys.DASHBOARD_WIDGETS]),
+            ),
         )
     }
 
@@ -463,6 +506,30 @@ class SettingsRepository(private val context: Context) {
     }
 
     // ---- load & UI preference sync ----
+
+    suspend fun applyDashboardPreset(value: DashboardLayout) = context.dataStore.edit {
+        it[Keys.DASHBOARD_LAYOUT] = value.name
+        it[Keys.DASHBOARD_METRICS] = presetMetrics(value).map { metric -> metric.name }.toSet()
+    }
+    suspend fun setDashboardWidget(widget: DashboardWidget, enabled: Boolean) = context.dataStore.edit {
+        val current = parseVisibleWidgets(it[Keys.DASHBOARD_WIDGETS])
+        it[Keys.DASHBOARD_WIDGETS] = (if (enabled) current + widget else current - widget).map { item -> item.name }.toSet()
+    }
+    suspend fun setDashboardLayout(value: DashboardLayout) = context.dataStore.edit { it[Keys.DASHBOARD_LAYOUT] = value.name }
+    suspend fun setWorkoutCardStyle(value: WorkoutCardStyle) = context.dataStore.edit { it[Keys.WORKOUT_STYLE] = value.name }
+    suspend fun setCountdownStyle(value: CountdownStyle) = context.dataStore.edit { it[Keys.COUNTDOWN_STYLE] = value.name }
+    suspend fun setDashboardMetric(metric: DashboardMetric, enabled: Boolean) = context.dataStore.edit {
+        val current = parseDashboardMetrics(it[Keys.DASHBOARD_METRICS])
+        it[Keys.DASHBOARD_METRICS] = (if (enabled) current + metric else current - metric).map { item -> item.name }.toSet()
+    }
+    suspend fun resetDashboardCustomization() = context.dataStore.edit {
+        it.remove(Keys.DASHBOARD_LAYOUT)
+        it.remove(Keys.WORKOUT_STYLE)
+        it.remove(Keys.COUNTDOWN_STYLE)
+        it.remove(Keys.DASHBOARD_METRICS)
+        it.remove(Keys.DASHBOARD_WIDGETS)
+        it.remove(Keys.EFFORT_CARD_MODE)
+    }
 
     /** Sets the primary load metric: "TSS", "DUAL", or "TRIMP" (Decision U1). */
     suspend fun setPrimaryLoadMetric(mode: String) = context.dataStore.edit {

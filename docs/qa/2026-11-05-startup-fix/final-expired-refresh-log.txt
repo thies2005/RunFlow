@@ -1,0 +1,16 @@
+11-05 16:21:17.997  2318  2337 I RunFlow/Sync: sync start, reason=startup forceStrava=false
+11-05 16:21:20.481  2318  2351 I RunFlow/Net: 401 on /api/plans/import — refreshing session
+11-05 16:21:20.967  2318  2351 W RunFlow/Net: token refresh failed — request left unauthenticated
+11-05 16:21:20.968  2318  2336 W RunFlow/Sync: plan b02f4a71-af7c-437f-8f35-bd12de4104ad upload rejected (HTTP 401) — stays local
+11-05 16:21:22.016  2318  2351 I RunFlow/Net: 401 on /api/plans/import — refreshing session
+11-05 16:21:22.497  2318  2351 W RunFlow/Net: token refresh failed — request left unauthenticated
+11-05 16:21:22.497  2318  2333 W RunFlow/Sync: plan 957f2c33-3174-40c8-b0f0-16cabc71c401 upload rejected (HTTP 401) — stays local
+11-05 16:21:23.333  2318  2351 I RunFlow/Net: 401 on /api/mobile/v1/activities — refreshing session
+11-05 16:21:23.685  2318  2351 W RunFlow/Net: token refresh failed — request left unauthenticated
+11-05 16:21:23.685  2318  2333 E RunFlow/Sync: sync aborted: server error 401 — K4.q: HTTP 401 
+11-05 16:21:23.685  2318  2333 E RunFlow/Sync: 	at K4.w.g(Unknown Source:138)
+11-05 16:21:23.685  2318  2333 E RunFlow/Sync: 	at Q.q.F(Unknown Source:12)
+11-05 16:21:23.685  2318  2333 E RunFlow/Sync: 	at z4.f.run(Unknown Source:48)
+11-05 16:21:23.685  2318  2333 E RunFlow/Sync: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)
+11-05 16:21:23.685  2318  2333 E RunFlow/Sync: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:644)
+11-05 16:21:23.685  2318  2333 E RunFlow/Sync: 	at java.lang.Thread.run(Thread.java:1012)

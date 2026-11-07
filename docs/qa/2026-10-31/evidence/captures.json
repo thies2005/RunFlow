@@ -1,0 +1,247 @@
+[
+  {
+    "file": "screenshots/01-onboarding.png",
+    "caption": "Onboarding: record every run",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/02-onboarding-plan.png",
+    "caption": "Onboarding: planning",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/03-onboarding-analytics.png",
+    "caption": "Onboarding: analytics",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/04-data-source.png",
+    "caption": "Choose data sources",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/05-offline-setup.png",
+    "caption": "Android Health Connect setup opened by offline choice",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/06-dashboard.png",
+    "caption": "Fresh dashboard after canceling Health Connect",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/07-plan.png",
+    "caption": "Seeded plan: zero-TSS/nonzero-adherence header",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/08-athlete.png",
+    "caption": "Seeded athlete body metrics and identity",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/09-edit-profile.png",
+    "caption": "Profile editor, unchanged seeded values",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/10-analytics.png",
+    "caption": "Analytics Overview before test recording",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/11-recovery.png",
+    "caption": "Recovery empty states",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/12-record.png",
+    "caption": "Record entry, Run selected and location missing",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/13-strength.png",
+    "caption": "Strength selected, run-specific copy retained",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/14-permission.png",
+    "caption": "Android location permission prompt",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/15-permission-denied.png",
+    "caption": "Physical-activity prompt after location denial",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/16-notification-permission.png",
+    "caption": "Notification prompt during denial flow",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/17-permission-retry.png",
+    "caption": "Location permission retry",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/18-activity-permission-retry.png",
+    "caption": "Strength entry after location grant",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/19-recording.png",
+    "caption": "Recording active behind physical-activity permission",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/20-notifications-retry.png",
+    "caption": "Recording active behind notification permission",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/21-active-run.png",
+    "caption": "Run auto-paused; labels wrap",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/22-paused-run.png",
+    "caption": "Auto-paused state re-captured",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/23-resumed-run.png",
+    "caption": "Resumed recording; Pause and Finish labels wrap",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/24-finish.png",
+    "caption": "Finish confirmation while time continues",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/25-saved-run.png",
+    "caption": "Saved synthetic run detail",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/26-plan-wizard.png",
+    "caption": "Plan wizard step 1: selected category contrast",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/27-race-type.png",
+    "caption": "Step 2: default Marathon race selected",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/28-plan-method.png",
+    "caption": "Step 3: race date (filename says plan-method)",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/29-calibration.png",
+    "caption": "Step 4: calibration from seeded history",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/30-target.png",
+    "caption": "Step 5: displayed target time",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/31-schedule.png",
+    "caption": "Step 6: training volume",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/32-availability.png",
+    "caption": "Step 7: advanced options",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/33-review.png",
+    "caption": "Step 8: weekly schedule with Sunday off-screen",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/34-created-plan.png",
+    "caption": "Created local Marathon plan named Audit 5K",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/35-athlete-menu.png",
+    "caption": "Athlete screen after one scroll",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/36-athlete-more.png",
+    "caption": "Athlete More menu and saved run",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/37-settings.png",
+    "caption": "Settings account and diagnostics",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/38-sign-in.png",
+    "caption": "Sign-in entry; no credentials submitted",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/39-settings-display.png",
+    "caption": "Nested diagnostics scrolling and units",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/40-settings-theme.png",
+    "caption": "Imperial selected; theme and export settings",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/41-export-share.png",
+    "caption": "CSV export chooser: no receiving apps on AOSP image",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/42-dark-imperial.png",
+    "caption": "App dark theme and imperial dashboard",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/43-large-dashboard.png",
+    "caption": "150% text: dashboard truncation and dark status icons",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/44-large-analytics.png",
+    "caption": "150% text: Analytics segmented and bottom navigation wrapping",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/45-readiness-form.png",
+    "caption": "Recovery sheet initially partially expanded",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/46-readiness-expanded.png",
+    "caption": "Recovery sheet after an ineffective body swipe",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/47-readiness-full.png",
+    "caption": "Recovery sheet fully expanded; Save near bottom edge",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/48-recovery-save-visible.png",
+    "caption": "Recovery sheet scrolled to Save, default sliders shown",
+    "inspected": true
+  },
+  {
+    "file": "screenshots/49-recovery-after-empty-save.png",
+    "caption": "After saving untouched recovery defaults: No vitals yet",
+    "inspected": true
+  }
+]

@@ -1,0 +1,13 @@
+--------- beginning of crash
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: FATAL EXCEPTION: main
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: PID: 4302
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: java.lang.ExceptionInInitializerError
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: 	at com.android.org.conscrypt.TrustedCertificateStore.setDefaultUserDirectory(TrustedCertificateStore.java:151)
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:8671)
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:886)
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: Caused by: java.lang.NullPointerException: Attempt to get length of null array
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: 	at com.android.org.conscrypt.TrustedCertificateStore$PreloadHolder.shouldUseApex(TrustedCertificateStore.java:123)
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: 	at com.android.org.conscrypt.TrustedCertificateStore$PreloadHolder.<clinit>(TrustedCertificateStore.java:108)
+11-05 21:48:10.811  4302  4302 E AndroidRuntime: 	... 5 more

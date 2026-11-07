@@ -1,0 +1,1 @@
+Verified actual native clipboard paste into unsaved field. Report includes version2.8.2, queue and events. Pasted character count: 724

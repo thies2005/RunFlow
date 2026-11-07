@@ -1,0 +1,157 @@
+[
+  {
+    "file": "01-login-strava.jpg",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "file": "02-email-signin.jpg",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "file": "03-password-recovery.jpg",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "file": "04-registration-desktop.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "05-registration-mobile.jpg",
+    "width": 390,
+    "height": 844
+  },
+  {
+    "file": "06-login-mobile.jpg",
+    "width": 382,
+    "height": 827
+  },
+  {
+    "file": "07-consent-gate.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "08-dashboard-desktop.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "09-workout-completion-dialog.jpg",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "file": "10-calendar-desktop.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "11-calendar-week.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "12-plan-editor-desktop.jpg",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "file": "13-plan-editor-mobile.jpg",
+    "width": 382,
+    "height": 827
+  },
+  {
+    "file": "14-dashboard-after-save.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "15-analytics-desktop.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "16-cycling-analytics.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "17-navigation-menu.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "18-biometrics.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "19-health-desktop.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "20-weight-save.jpg",
+    "width": 1272,
+    "height": 716
+  },
+  {
+    "file": "21-health-mobile.jpg",
+    "width": 382,
+    "height": 827
+  },
+  {
+    "file": "22-import-studio-result.jpg",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "file": "23-engine-generator.jpg",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "file": "24-engine-result.jpg",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "file": "25-activity-details.jpg",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "file": "26-activity-analysis.jpg",
+    "width": 706,
+    "height": 772
+  },
+  {
+    "file": "27-ai-coach.jpg",
+    "width": 714,
+    "height": 780
+  },
+  {
+    "file": "28-ai-setup.jpg",
+    "width": 714,
+    "height": 780
+  },
+  {
+    "file": "29-analytics-mobile.jpg",
+    "width": 390,
+    "height": 844
+  },
+  {
+    "file": "30-running-mobile.jpg",
+    "width": 390,
+    "height": 844
+  },
+  {
+    "file": "31-mobile-editor-confirmation.jpg",
+    "width": 382,
+    "height": 827
+  }
+]

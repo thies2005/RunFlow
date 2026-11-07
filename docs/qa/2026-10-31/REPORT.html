@@ -1,0 +1,459 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>RunFlow Android QA — 31 October 2026</title><style>body{font:17px/1.65 system-ui,sans-serif;background:#f7f8fc;color:#172033;margin:0}main{max-width:1100px;margin:auto;background:white;padding:48px}h1{font-size:36px;line-height:1.2}h2{margin-top:54px;border-bottom:2px solid #dee5f2;padding-bottom:10px}h3{margin-top:36px}a{color:#244c9e}table{border-collapse:collapse;width:100%;font-size:15px}td,th{border:1px solid #d7deeb;padding:10px;text-align:left;vertical-align:top}th{background:#edf2fb}img{max-width:100%;width:320px;height:auto;border:1px solid #ddd;border-radius:14px;display:block}code{overflow-wrap:anywhere;background:#edf2f7;padding:2px 5px}pre{white-space:pre-wrap}p{max-width:90ch}@media(max-width:650px){main{padding:20px}table{display:block;overflow-x:auto}}@media print{h2,h3{break-after:avoid}img{max-height:650px;width:auto;max-width:100%}}</style></head><body><main><h1 id="runflow-android-detailed-qa-and-product-design-audit">RunFlow Android: detailed QA and product-design audit</h1>
+<p>Date: <strong>31 October 2026</strong> · Native Android release <strong>2.8.0 (21)</strong> · Base Git commit <strong>74aaace4</strong>, with the current uncommitted environment-setup changes. This is an audit report; no product fixes were applied during this audit.</p>
+<h2 id="verdict">Verdict</h2>
+<p>The offline app launches, records and saves a synthetic run, navigates its core tabs, and generates a training plan. However, it should not be treated as ready for a polished public onboarding experience: a new install silently becomes a fully trained demo athlete, and multiple screens disagree about values, choices or units. Recording and larger-text navigation need layout fixes.</p>
+<p><strong>16 findings: 1 P1, 13 P2, 2 P3.</strong> P1 means address before exposing the affected flow to new users; P2 means a material inconsistency or accessibility/interaction problem; P3 means a lower-priority clarity or usability improvement. Severity is this audit’s prioritization, not a formal release gate.</p>
+<h2 id="scope-environment-and-method">Scope, environment and method</h2>
+<ul>
+<li>Fresh isolated <strong>RunFlow_Audit_API35</strong> emulator, Android 15 / API 35 AOSP x86_64, Pixel 7 profile, 1080×2400 pixels, 420 dpi (approximately 411 dp wide), Europe/Bucharest timezone.</li>
+<li>Signed, R8-minified release APK; SHA-256: <code>a26632433d7de0b048f7b6abeabfa6a4d75855d723dcfde8b6555d22babd16fa</code>.</li>
+<li>Normal text size and 150% system text size; light theme and app-selected dark theme; metric and imperial settings. System text size was restored to 1.0 after testing.</li>
+<li>ADB launch/input, fresh UIAutomator trees for target coordinates, exact emulator screenshots inspected in this run, filtered app logs, crash buffer and source inspection to explain observed behavior.</li>
+<li>Skills used: Test Android Apps / Android Emulator QA and Product Design / Audit. Screenshot evidence comes from the native emulator, not a recreated webpage.</li>
+<li>No account was used. No OAuth flow was completed, no email sent, and no production training records were modified. All saved activities/plans in this run belong to the isolated audit emulator.</li>
+<li>The test goal was deliberately named <strong>Audit 5K</strong>, but <strong>Marathon remained selected</strong> in the race selector. Its Marathon result is expected for that selected race, not a detected race-type bug.</li>
+<li>Screenshot filenames are capture identifiers. Some early recording filenames refer to the intended action but actually contain permission dialogs; the gallery captions below identify their real visible state.</li>
+</ul>
+<h2 id="fresh-automated-verification">Fresh automated verification</h2>
+<p><code>./gradlew :app:testDebugUnitTest --rerun :app:lintDebug</code> succeeded during this audit. <strong>525 tests across 46 suites; zero failures/errors/skips.</strong> The JVM test task was actually rerun; lint reused its current analysis outputs. Lint reports <strong>zero errors, 33 warnings and 18 hints</strong>. The dedicated audit emulator’s crash buffer was empty at collection time. These checks do not establish crash-free behavior outside the observed flows.</p>
+<p>Evidence: <a href="evidence/gradle-verification.txt">Gradle output</a>, <a href="evidence/verification.json">verification metadata</a>, <a href="evidence/crash-log.txt">crash buffer</a>, <a href="evidence/app-log.txt">filtered app logs</a>, <a href="evidence/package.txt">installed package metadata</a>. UI-tree XML files are saved under <code>evidence/</code> with matching screenshot identifiers.</p>
+<h2 id="numbered-flow-coverage">Numbered flow coverage</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Task</th>
+<th>Observed health</th>
+<th>Screenshots</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Fresh onboarding and source selection</td>
+<td>Works; demo disclosure fails</td>
+<td>01–06</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Dashboard and athlete/profile inspection</td>
+<td>Loads; identity and metric consistency issues</td>
+<td>06–10</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Analytics and recovery empty states</td>
+<td>Loads; summary/scale issues</td>
+<td>10–11</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Sport selection and permission denial/retry</td>
+<td>Completes; copy/timing issues</td>
+<td>12–20</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Recording, auto-pause and resume</td>
+<td>Works; control labels break</td>
+<td>21–23</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Finish, save and activity detail</td>
+<td>Saves locally; endpoint timing issue</td>
+<td>24–25</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Eight-step running-plan wizard</td>
+<td>Completes; contrast/default-state issues</td>
+<td>26–33</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Plan creation and saved result</td>
+<td>96 workouts created; load/target display issues</td>
+<td>34</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Athlete navigation, settings and sign-in entry</td>
+<td>Loads; diagnostics friction</td>
+<td>35–40</td>
+</tr>
+<tr>
+<td>10</td>
+<td>CSV export handoff</td>
+<td>Partial: Android chooser has no receiving apps</td>
+<td>41</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Imperial units and dark appearance</td>
+<td>Applied; mixed units/system-bar issues</td>
+<td>42</td>
+</tr>
+<tr>
+<td>12</td>
+<td>150% text-size accessibility check</td>
+<td>Fails readable navigation reflow</td>
+<td>43–44</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Recovery sheet and empty/default Save</td>
+<td>Scrollable after expansion; default-state mismatch</td>
+<td>45–49</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-works-well">What works well</h2>
+<p>The onboarding has clear primary actions and readable spacing at normal text size. The app offers an offline route without requiring an account. Main navigation is persistent and selected tabs are visible. Recovery empty states explain which data is missing. Recording presents GPS accuracy and supports auto-pause/resume; a saved recording opens its detail page. The wizard has explicit progress, back navigation, and successfully creates a local plan. Unit chips do convert when Imperial is chosen, and the dark content palette remains visually coherent apart from system-bar handling.</p>
+<h2 id="findings-and-concrete-fixes">Findings and concrete fixes</h2>
+<h3 id="f01-p1-fresh-installation-impersonates-a-trained-athlete-and-uses-demo-history-for-planning">F01 · P1 · Fresh installation impersonates a trained athlete and uses demo history for planning</h3>
+<p><strong>Reproduce:</strong> Install on a new AVD; finish onboarding; choose Set up offline; leave Health Connect without granting access; open Today, Athlete, and New plan.</p>
+<p><strong>Observed:</strong> Today immediately reports 55.8 km and fitness 54; Athlete contains Thies, birth year 1998, 71.5 kg, 181 cm, HR thresholds and 120 runs. No demo banner appears. The wizard says “Your history says VDOT 52.6” and derives starting volume from approximately 55 km of sample history.</p>
+<p><strong>Why it matters:</strong> A newcomer can mistake synthetic training history, health measurements and pace prescriptions for their own. This is more than cosmetic sample content: it becomes input to a real local plan.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/RunFlowApp.kt:113">RunFlowApp.kt:113</a> calls the seeder on first launch; <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/data/seed/DemoSeeder.kt:46">DemoSeeder.kt:46</a> supplies the personal defaults. The wizard consumes resulting history.</p>
+<p><strong>How to fix:</strong> Start production installs with an empty profile. Make Explore demo a separate explicit choice, use a clearly fictional athlete, and keep demo data outside normal metric/plan inputs. Show a persistent Demo mode banner and a clear exit/reset action. Require the user’s own calibration before generating personalized targets.</p>
+<p><strong>Acceptance check:</strong> Fresh offline install shows no invented identity or records. Demo mode is unmistakable. A real plan never derives VDOT, body metrics or weekly volume from demo entries.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-06">Capture 06</a>, <a href="#capture-08">Capture 08</a>, <a href="#capture-26">Capture 26</a>, <a href="#capture-29">Capture 29</a>, <a href="#capture-32">Capture 32</a></p>
+<h3 id="f02-p2-dashboard-and-analytics-disagree-because-they-format-the-same-metrics-differently">F02 · P2 · Dashboard and Analytics disagree because they format the same metrics differently</h3>
+<p><strong>Reproduce:</strong> Before recording or editing anything, compare Today’s Form card with Analytics → Overview. Repeat after returning to Today.</p>
+<p><strong>Observed:</strong> Today shows CTL 54, ATL 61, TSB -6; Analytics shows CTL 55, ATL 62, TSB -7. The same mismatch remains later in the audit.</p>
+<p><strong>Why it matters:</strong> Users cannot reconcile their training status between the summary and detail screens.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/core/util/Format.kt:207">Format.kt:207</a> truncates with toInt(); <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/DashboardScreen.kt:305">DashboardScreen.kt:305</a> and line 430 use it. <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/analytics/OverviewAnalyticsTab.kt:185">OverviewAnalyticsTab.kt:185</a> and nearby labels use roundToInt(). This confirms a display mismatch, not evidence of two different underlying physiological estimates.</p>
+<p><strong>How to fix:</strong> Use one shared rounded formatter for CTL/ATL/TSB in cards, legends, accessibility summaries and detail screens. Keep the sign convention consistent for negative form values.</p>
+<p><strong>Acceptance check:</strong> Identical underlying values, including negative fractions, render identically on Today and every Analytics summary.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-06">Capture 06</a>, <a href="#capture-10">Capture 10</a>, <a href="#capture-42">Capture 42</a>, <a href="#capture-44">Capture 44</a></p>
+<h3 id="f03-p2-block-load-display-combines-zero-tss-with-adherence-calculated-from-another-measure">F03 · P2 · Block-load display combines zero TSS with adherence calculated from another measure</h3>
+<p><strong>Reproduce:</strong> Open the seeded Training Plan; then create a new offline plan and inspect its 4-Week Block Load summary.</p>
+<p><strong>Observed:</strong> The seeded plan displays “0 / 0 TSS · 85% Adherence”. A newly generated plan with 96 scheduled workouts and nonzero distances displays “0 / 0 TSS · 0% Adherence”.</p>
+<p><strong>Why it matters:</strong> A precise adherence percentage beside an unusable zero-load denominator gives no explanation of what was measured. The fresh plan also visually signals poor adherence before meaningful training has occurred.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanScreen.kt:512">PlanScreen.kt:512</a> always labels the header as TSS. <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/domain/plan/ComplianceCalculator.kt:186">ComplianceCalculator.kt:186</a> falls back to distance, duration or completion count when planned TSS is unavailable. The fallback is not reflected in the header label.</p>
+<p><strong>How to fix:</strong> Return the actual compliance basis with the result and label it Distance adherence, Duration adherence or Workout completion. Show Load unavailable rather than zero when planned load is missing. Calculate planned load for generated workouts where supported, and use a neutral Not started state for future sessions.</p>
+<p><strong>Acceptance check:</strong> No header shows 0/0 TSS with unexplained nonzero adherence. Generated plans either contain valid planned load or explicitly name the fallback measure.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-07">Capture 07</a>, <a href="#capture-34">Capture 34</a></p>
+<h3 id="f04-p2-critical-recording-button-labels-break-mid-word-at-normal-text-size">F04 · P2 · Critical recording button labels break mid-word at normal text size</h3>
+<p><strong>Reproduce:</strong> Start a recording with permissions granted; inspect active controls; allow auto-pause; resume.</p>
+<p><strong>Observed:</strong> At font scale 1.0, Finish is rendered “Finis / h”, Resume “Resu / me”, and Pause “Paus / e”. Lap fits because its button receives more width.</p>
+<p><strong>Why it matters:</strong> These controls need immediate recognition during exercise. The problem occurs on a normal Pixel 7 layout before accessibility scaling.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/RecordScreen.kt:634">RecordScreen.kt:634</a> puts three icon-and-label controls in a fixed row with weights 1 / 1.2 / 1 and 56 dp height, leaving too little room after button padding and icons.</p>
+<p><strong>How to fix:</strong> Use a responsive control layout: a full-width primary Pause/Resume action with a second row for Finish and Lap, or icon-above-label controls with adequate measured width. Preserve readable labels rather than reducing text size. Support a longer Lap / Next label.</p>
+<p><strong>Acceptance check:</strong> Finish, Pause, Resume and Lap / Next are readable without mid-word wrapping at 1.0, 1.3, 1.5 and 2.0 font scales and on narrower screens.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-21">Capture 21</a>, <a href="#capture-22">Capture 22</a>, <a href="#capture-23">Capture 23</a></p>
+<h3 id="f05-p2-recording-starts-while-optional-permission-dialogs-still-cover-the-app">F05 · P2 · Recording starts while optional permission dialogs still cover the app</h3>
+<p><strong>Reproduce:</strong> Deny permissions on first attempt; grant location using Grant; press Start while physical-activity/notification access is still denied.</p>
+<p><strong>Observed:</strong> The recording screen and timer start behind the physical-activity and notification dialogs. The notification screenshot already shows 0:17 elapsed while the user is still deciding whether to allow notifications.</p>
+<p><strong>Why it matters:</strong> Permission setup time can become recorded workout time, and the user cannot see or use recording controls while system dialogs cover them.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/RecordScreen.kt:142">RecordScreen.kt:142</a> launches optional permission requests and immediately calls RecordingService.start when location is already granted.</p>
+<p><strong>How to fix:</strong> Finish the permission sequence before starting the countdown or service. Track a pending Start intent and resume it from the permission result callback. Treat optional denial as a supported state, with a clear explanation of the feature affected.</p>
+<p><strong>Acceptance check:</strong> No timer advances behind permission dialogs. After required access is resolved, the user sees one unambiguous start/countdown transition.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-19">Capture 19</a>, <a href="#capture-20">Capture 20</a></p>
+<h3 id="f06-p2-finishing-does-not-freeze-the-recorded-workout-time">F06 · P2 · Finishing does not freeze the recorded workout time</h3>
+<p><strong>Reproduce:</strong> While recording, press Finish; leave the confirmation open before choosing Save.</p>
+<p><strong>Observed:</strong> The confirmation was captured around 0:44–0:45. The final saved activity reports 1:02 after the confirmation remained open. The live timer continues in the background.</p>
+<p><strong>Why it matters:</strong> Time spent deciding between Save, Discard and Keep going changes the saved activity. This is especially noticeable on short workouts or when users review the confirmation slowly.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/RecordScreen.kt:170">RecordScreen.kt:170</a> only opens showStopDialog; ACTION_STOP is sent when Save is pressed.</p>
+<p><strong>How to fix:</strong> Pause or snapshot the session when Finish is requested. Save that frozen endpoint. Keep going should explicitly restore the previous running state, and closing the dialog should follow the same documented policy.</p>
+<p><strong>Acceptance check:</strong> Waiting 30 seconds on Finish confirmation does not increase the saved workout duration or distance. Keep going resumes without losing prior data.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-24">Capture 24</a>, <a href="#capture-25">Capture 25</a></p>
+<h3 id="f07-p2-changing-sport-leaves-run-specific-instructions-and-accessibility-text">F07 · P2 · Changing sport leaves run-specific instructions and accessibility text</h3>
+<p><strong>Reproduce:</strong> Open Record and select Strength instead of Run.</p>
+<p><strong>Observed:</strong> The selected chip changes to Strength, but the subtitle remains “GPS run with live pace coaching”, the start action is exposed as “Start run”, and the UI still says GPS is required for distance and pace. Run-specific auto-pause/voice-coach copy remains.</p>
+<p><strong>Why it matters:</strong> The app offers several activity types but does not explain which recording capabilities apply. A screen-reader user also hears the wrong activity on the primary action.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/RecordScreen.kt:270">RecordScreen.kt:270</a> updates selectedSportType, while surrounding copy and start semantics remain run-specific.</p>
+<p><strong>How to fix:</strong> Derive the title, action label, metrics, permission rationale and supported options from the selected activity. Decide whether Strength supports a timer-only session and whether Swim means outdoor GPS or pool logging; communicate that explicitly.</p>
+<p><strong>Acceptance check:</strong> Each sport presents matching visible and accessible labels. Permission requests are justified by supported features rather than generic run copy.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-12">Capture 12</a>, <a href="#capture-13">Capture 13</a>, <a href="#capture-18">Capture 18</a></p>
+<h3 id="f08-p2-imperial-settings-convert-metric-chips-but-leave-generated-descriptions-in-kilometres">F08 · P2 · Imperial settings convert metric chips but leave generated descriptions in kilometres</h3>
+<p><strong>Reproduce:</strong> Choose Imperial (mi) in Settings; return to Today and inspect the same planned workout.</p>
+<p><strong>Observed:</strong> The workout shows “Easy Run: 4.0km” while its adjacent chips show “2.5 mi” and “8:23 /mi”. Weekly distance converts to miles correctly.</p>
+<p><strong>Why it matters:</strong> The same workout mixes measurement systems and forces users to decide which distance to follow.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/DashboardScreen.kt:691">DashboardScreen.kt:691</a> renders w.description directly; generated descriptions contain baked-in distance text, while chips use the unit formatter.</p>
+<p><strong>How to fix:</strong> Generate display descriptions from structured workout data and the selected unit. Preserve imported free text as quoted original instructions if conversion cannot be reliable; do not blindly replace km strings inside arbitrary notes.</p>
+<p><strong>Acceptance check:</strong> Generated workout names, descriptions, distance chips, pace labels and recording summaries use the selected measurement system consistently.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-40">Capture 40</a>, <a href="#capture-42">Capture 42</a></p>
+<h3 id="f09-p2-app-selected-dark-theme-leaves-dark-status-bar-icons-on-a-dark-background">F09 · P2 · App-selected dark theme leaves dark status-bar icons on a dark background</h3>
+<p><strong>Reproduce:</strong> Keep Android in its default light appearance; select Dark inside RunFlow Settings; return to Today.</p>
+<p><strong>Observed:</strong> The content turns dark, but the time, Wi-Fi, cellular and battery icons at the top remain black and are very difficult to read. Opening the recovery sheet produces white system icons, highlighting the inconsistency.</p>
+<p><strong>Why it matters:</strong> System status information becomes unreadable when the app theme differs from the system theme.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/MainActivity.kt:15">MainActivity.kt:15</a> calls enableEdgeToEdge before content; <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/RunFlowRoot.kt:124">RunFlowRoot.kt:124</a> resolves the app theme separately. Updating system-bar appearance from the resolved app theme is the likely missing connection.</p>
+<p><strong>How to fix:</strong> Update WindowInsetsControllerCompat light-status-bar and light-navigation-bar appearance whenever the resolved application theme changes. Apply a consistent background/scrim policy for system bars and modal windows.</p>
+<p><strong>Acceptance check:</strong> Status and navigation controls remain readable for system-light/app-dark, system-dark/app-light, System theme, and modal sheets.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-42">Capture 42</a>, <a href="#capture-43">Capture 43</a>, <a href="#capture-49">Capture 49</a></p>
+<h3 id="f10-p2-150-text-scaling-breaks-analytics-and-bottom-navigation-labels">F10 · P2 · 150% text scaling breaks Analytics and bottom-navigation labels</h3>
+<p><strong>Reproduce:</strong> Set the audit emulator font_scale to 1.5; open Analytics → Overview.</p>
+<p><strong>Observed:</strong> Overview becomes “Overvi / ew” and Recovery “Recov / ery”; the outer segments grow to two lines while Run/Bike stay one line. The selected bottom Analytics label splits its final “s” onto a second line. Today also ellipsizes the recovery hint and form details.</p>
+<p><strong>Why it matters:</strong> Larger text exposes rigid navigation layouts and hides supporting information. This is a confirmed visual accessibility issue; TalkBack behavior was not tested.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/AnalyticsScreen.kt:163">AnalyticsScreen.kt:163</a> uses four labeled/icon segments in one row. <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/RunFlowRoot.kt:210">RunFlowRoot.kt:210</a> uses five ShortNavigationBarItems with labels.</p>
+<p><strong>How to fix:</strong> Use scrollable tabs or a two-row/adaptive section selector, keep each label as a readable unit, and allow the bottom bar sufficient label space or a suitable accessible alternate layout. Reflow supporting cards at larger text sizes.</p>
+<p><strong>Acceptance check:</strong> At 1.5 and 2.0 text scales, navigation words do not split mid-word, selected states remain clear, and essential supporting text can be read without truncation.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-43">Capture 43</a>, <a href="#capture-44">Capture 44</a></p>
+<h3 id="f11-p2-selected-plan-category-description-has-low-contrast">F11 · P2 · Selected plan-category description has low contrast</h3>
+<p><strong>Reproduce:</strong> Open New training plan with the default Run category selected.</p>
+<p><strong>Observed:</strong> The selected card uses a slate background while its description and icon remain dark. Pixel sampling of the solid subtitle foreground/background gives approximately 2.13:1 (#40434b on #6e7488). This is a screenshot measurement, not a full accessibility certification.</p>
+<p><strong>Why it matters:</strong> Choosing a category makes its explanatory text harder to read than the unselected choices.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanWizardScreen.kt:517">PlanWizardScreen.kt:517</a> uses secondaryContainer for the selected card, but the subtitle at line 532 still uses onSurfaceVariant and the icon uses primary.</p>
+<p><strong>How to fix:</strong> Use the paired onSecondaryContainer color for selected-card text and icon, or choose an accessible selected surface. Keep a non-color selection cue such as a checkmark and explicit selected semantics.</p>
+<p><strong>Acceptance check:</strong> Measure selected/unselected text contrast in static and dynamic palettes, light/dark themes. Normal-size body text reaches the chosen accessibility target; selection remains perceivable without color alone.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-26">Capture 26</a></p>
+<h3 id="f12-p2-default-sunday-long-run-selection-is-hidden-off-screen">F12 · P2 · Default Sunday long-run selection is hidden off-screen</h3>
+<p><strong>Reproduce:</strong> Advance through the default Run plan wizard to Weekly schedule without changing days.</p>
+<p><strong>Observed:</strong> The Long run day row displays Monday through Saturday with none visibly selected. Sunday is not visible, yet the generated plan schedules its first long run for Sunday. The Rest days section shows Sunday on a wrapped second row.</p>
+<p><strong>Why it matters:</strong> The chosen long-run day is not visible at the moment the user commits the plan, and identical day selectors behave differently on the same screen.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanWizardScreen.kt:126">PlanWizardScreen.kt:126</a> defaults longRunDay to SUNDAY; <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanWizardScreen.kt:1281">PlanWizardScreen.kt:1281</a> uses a horizontally scrolling Row, while rest days use FlowRow.</p>
+<p><strong>How to fix:</strong> Use a wrapping seven-day control consistently, or automatically scroll the selected day into view and show a plain-text selected-day summary. Include long-run and quality-day choices in a compact confirmation before creation.</p>
+<p><strong>Acceptance check:</strong> All seven days, including the default selected Sunday, are discoverable without guessing. The selected day is visible before Create plan is pressed.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-33">Capture 33</a>, <a href="#capture-34">Capture 34</a></p>
+<h3 id="f13-p2-recovery-sliders-display-answered-values-that-are-not-actually-saved">F13 · P2 · Recovery sliders display answered values that are not actually saved</h3>
+<p><strong>Reproduce:</strong> Open Today → Recovery on a day without entries; expand the sheet; leave the three sliders at their visible 5/10 defaults and save without entering vitals.</p>
+<p><strong>Observed:</strong> The form visibly presents Exhaustion, Muscle soreness and Stress as 5/10. Save closes the sheet, but the dashboard remains unavailable and changes its hint to “No vitals yet”. Source inspection confirms untouched sliders are saved as null.</p>
+<p><strong>Why it matters:</strong> The screen displays what looks like an answer while internally treating it as unanswered. Users who really feel 5/10 must move away and back to record that value.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/components/DailyFormSheet.kt:100">DailyFormSheet.kt:100</a> initializes sliders to 5, tracks separate touched flags, and only persists touched values. This avoids fabricated health answers but does not communicate the distinction.</p>
+<p><strong>How to fix:</strong> Show Not answered until explicitly selected. Provide an accessible way to confirm the displayed value, and disable Save when nothing has changed or explain what was saved. Prefer an explicit score picker or a Use 5/10 action over requiring incidental slider movement.</p>
+<p><strong>Acceptance check:</strong> Unanswered values are visibly unanswered. A user can intentionally save 5/10 without first choosing another value. Empty Save never looks like successful wellness logging.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-47">Capture 47</a>, <a href="#capture-48">Capture 48</a>, <a href="#capture-49">Capture 49</a></p>
+<h3 id="f14-p3-diagnostics-dominate-settings-and-intercept-expected-page-scrolling">F14 · P3 · Diagnostics dominate Settings and intercept expected page scrolling</h3>
+<p><strong>Reproduce:</strong> Open Settings from Athlete; scroll upward with the gesture beginning over the diagnostics content.</p>
+<p><strong>Observed:</strong> A large raw diagnostic panel appears before Units, Theme and workout preferences. During the audit, scrolling over it moved the log contents while the settings page only advanced slightly, requiring gestures outside the panel.</p>
+<p><strong>Why it matters:</strong> Common preferences are harder to find, and nested scrolling makes the page feel inconsistent. Raw worker/object strings are prominent in a normal user flow.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/SettingsScreen.kt:199">SettingsScreen.kt:199</a> renders the diagnostics section near the top of the settings list.</p>
+<p><strong>How to fix:</strong> Move diagnostics into a collapsed Troubleshooting section lower in Settings. Present friendly status first, with a separate scrollable log viewer and copy/export controls when needed.</p>
+<p><strong>Acceptance check:</strong> Users can reach Units and Theme with predictable page scrolling. Technical logs remain available without dominating the normal preferences flow.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-37">Capture 37</a>, <a href="#capture-39">Capture 39</a>, <a href="#capture-40">Capture 40</a></p>
+<h3 id="f15-p3-charts-provide-insufficient-readable-scalecontext-in-captured-states">F15 · P3 · Charts provide insufficient readable scale/context in captured states</h3>
+<p><strong>Reproduce:</strong> Inspect Analytics Overview’s fitness chart and the recorded activity’s Elevation chart.</p>
+<p><strong>Observed:</strong> The fitness chart has colored lines and a legend but no visible numeric Y-axis in the captured viewport. The activity chart shows a large empty-looking elevation plot, only a 0:00–0:33 X range, while total activity time is 1:02.</p>
+<p><strong>Why it matters:</strong> The user cannot tell from these views whether a flat/empty chart represents valid zero elevation, insufficient samples, or a different time basis. The session’s stream duration can differ from moving time; this audit does not establish a corrupt recording.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/components/Charts.kt:1">Charts.kt:1</a> and <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/ActivityDetailScreen.kt:1">ActivityDetailScreen.kt:1</a> are the relevant presentation areas; confirm data availability and stream/elapsed-time semantics before changing calculations.</p>
+<p><strong>How to fix:</strong> Show axis units, useful ticks and the applicable date/time range. Label insufficient or constant data explicitly. If stream duration differs from session time, identify the sampling range and explain the difference instead of presenting an unexplained blank plot.</p>
+<p><strong>Acceptance check:</strong> A user can read the value scale and time window and distinguish valid zero/constant data from unavailable data. Screen-reader summaries include equivalent context.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-10">Capture 10</a>, <a href="#capture-25">Capture 25</a></p>
+<h3 id="f16-p2-displayed-target-time-is-not-committed-unless-the-slider-is-moved">F16 · P2 · Displayed target time is not committed unless the slider is moved</h3>
+<p><strong>Reproduce:</strong> Advance to Target time, leave the displayed 3:02:30 untouched, press Continue, and create the plan.</p>
+<p><strong>Observed:</strong> The wizard prominently displays 3:02:30, yet the resulting header has no Target field. The seeded plan does show a Target field. The wizard also offers a separate Skip action, although leaving the slider untouched already keeps targetTimeSec null.</p>
+<p><strong>Why it matters:</strong> The visible selected target and the stored choice do not agree. Users cannot tell whether Continue accepted their target or silently chose prediction mode.</p>
+<p><strong>Code evidence / likely cause:</strong> <a href="/home/thies/Projects/RunFlow/android/app/src/main/java/com/runflow2/app/ui/screens/PlanWizardScreen.kt:813">PlanWizardScreen.kt:813</a> computes a displayed fallback current value without persisting it; only onValueChange at line 824 stores targetTimeSec. Creation passes the nullable value at line 326.</p>
+<p><strong>How to fix:</strong> Make prediction mode explicit. Either persist the displayed target on Continue, or label it Predicted finish and visibly distinguish Use prediction from Set target. Ensure the final plan summary states the chosen mode/value.</p>
+<p><strong>Acceptance check:</strong> Continue with an untouched displayed target has an explicit, consistent meaning. The resulting plan clearly shows the accepted target or prediction mode. No precision difference is hidden between displayed rounded time and stored prediction.</p>
+<p><strong>Screenshot evidence:</strong> <a href="#capture-30">Capture 30</a>, <a href="#capture-34">Capture 34</a></p>
+<h2 id="accessibility-assessment-and-limits">Accessibility assessment and limits</h2>
+<p>Confirmed visual problems include low selected-card contrast, mid-word wrapping at normal text size, broken 150% navigation labels, and unreadable dark-theme status icons. UI-tree inspection also confirms the start action retains “Start run” when Strength is selected. Positive evidence includes a descriptive fitness-chart accessibility summary in the UI tree and accessible labels on several icon actions.</p>
+<p>This was <strong>not</strong> a full WCAG or Android accessibility compliance evaluation. TalkBack reading order, switch access, external keyboard focus, color-vision simulation, full contrast coverage, 200% text, RTL, landscape, tablets/foldables and minimum API 29 runtime were not exercised. Touch-target sizes need measurement of the actual clickable parent bounds rather than the smaller text/icon child bounds. The approximately 2.13:1 selected-card measurement is limited to the captured dynamic light palette.</p>
+<h2 id="recommended-repair-order">Recommended repair order</h2>
+<ol>
+<li>Remove implicit demo identity/history from the real onboarding and plan-calibration path (F01).</li>
+<li>Correct recording endpoint/permission timing and responsive controls (F04–F07).</li>
+<li>Make display states agree with stored choices and calculations: rounded metrics, load basis, targets and recovery answers (F02, F03, F13, F16).</li>
+<li>Resolve accessibility and layout failures: selected colors, system bars, text-scale navigation and selected-day visibility (F09–F12).</li>
+<li>Unify generated unit-sensitive instructions and simplify settings/chart presentation (F08, F14, F15).</li>
+</ol>
+<p>Add regression coverage for user outcomes: fresh install has no synthetic calibration; all metric surfaces show the same rounded values; permission prompts do not accrue workout time; Finish freezes the endpoint; generated descriptions respect units; untouched targets and wellness scores have explicit semantics. Screenshot tests should cover normal and 150%/200% text, light/dark, with long button labels. Do not rely on a navigation smoke test alone to catch these issues.</p>
+<h2 id="not-verified-follow-up-test-matrix">Not verified / follow-up test matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Why incomplete</th>
+<th>Required next test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Email auth, registration, reset and Strava OAuth</td>
+<td>No test account; only sign-in entry UI inspected</td>
+<td>Dedicated staging account, success/failure/expiry/cancel and callback tests</td>
+</tr>
+<tr>
+<td>Server sync, conflict handling and tenant isolation</td>
+<td>Audit stayed signed out</td>
+<td>Staging accounts with offline queue, reconnect, duplicate and conflict scenarios</td>
+</tr>
+<tr>
+<td>AI coach and streaming recovery</td>
+<td>Requires authenticated backend/provider</td>
+<td>Staging account with request quota, SSE interruption and error cases</td>
+</tr>
+<tr>
+<td>Health Connect data reads</td>
+<td>Android setup opened, then canceled; no wearable records supplied</td>
+<td>Populate test records and verify grants, revocation, deduplication and daily import</td>
+</tr>
+<tr>
+<td>Real GPS, battery and background recording</td>
+<td>Emulator supplied synthetic coordinates only</td>
+<td>Physical-device outdoor run, screen off, process recreation, weak GPS and permission revocation</td>
+</tr>
+<tr>
+<td>CSV export contents / PDF / backup restore</td>
+<td>CSV reached Android chooser, which had no receiving apps</td>
+<td>Install a safe local file receiver, inspect CSV/PDF, then round-trip a disposable backup</td>
+</tr>
+<tr>
+<td>Other race types and workout editing</td>
+<td>One default Marathon plan created through eight steps</td>
+<td>5K/ultra/triathlon/cycling presets; invalid limits; edit/undo and structured execution</td>
+</tr>
+<tr>
+<td>Profile validation</td>
+<td>Form opened and its seeded values inspected; no fields changed</td>
+<td>Boundary values, invalid pace/HR, blank name, persistence and units</td>
+</tr>
+<tr>
+<td>Performance</td>
+<td>No dedicated profiler/benchmark run</td>
+<td>Physical-device startup/frame/memory evidence; this audit makes no performance claim</td>
+</tr>
+</tbody>
+</table>
+<h2 id="screenshot-walkthrough">Screenshot walkthrough</h2>
+<p>These are the exact inspected screenshots from this audit. Open an image for full resolution. Each capture has a paired UI-tree XML where available. Captures 21 and 22 intentionally show the same auto-paused state; this is not evidence of a successful manual Pause action. Resume was exercised in capture 23. The readiness form was recoverable by expanding the drag handle and scrolling; it is not reported as an inaccessible or permanently blocked sheet.</p>
+<p><a id="capture-01"></a></p>
+<h3 id="capture-01-onboarding-record-every-run">Capture 01 — Onboarding: record every run</h3>
+<p><img alt="Onboarding: record every run" src="screenshots/01-onboarding.png" /></p>
+<p><a id="capture-02"></a></p>
+<h3 id="capture-02-onboarding-planning">Capture 02 — Onboarding: planning</h3>
+<p><img alt="Onboarding: planning" src="screenshots/02-onboarding-plan.png" /></p>
+<p><a id="capture-03"></a></p>
+<h3 id="capture-03-onboarding-analytics">Capture 03 — Onboarding: analytics</h3>
+<p><img alt="Onboarding: analytics" src="screenshots/03-onboarding-analytics.png" /></p>
+<p><a id="capture-04"></a></p>
+<h3 id="capture-04-choose-data-sources">Capture 04 — Choose data sources</h3>
+<p><img alt="Choose data sources" src="screenshots/04-data-source.png" /></p>
+<p><a id="capture-05"></a></p>
+<h3 id="capture-05-android-health-connect-setup-opened-by-offline-choice">Capture 05 — Android Health Connect setup opened by offline choice</h3>
+<p><img alt="Android Health Connect setup opened by offline choice" src="screenshots/05-offline-setup.png" /></p>
+<p><a id="capture-06"></a></p>
+<h3 id="capture-06-fresh-dashboard-after-canceling-health-connect">Capture 06 — Fresh dashboard after canceling Health Connect</h3>
+<p><img alt="Fresh dashboard after canceling Health Connect" src="screenshots/06-dashboard.png" /></p>
+<p><a id="capture-07"></a></p>
+<h3 id="capture-07-seeded-plan-zero-tssnonzero-adherence-header">Capture 07 — Seeded plan: zero-TSS/nonzero-adherence header</h3>
+<p><img alt="Seeded plan: zero-TSS/nonzero-adherence header" src="screenshots/07-plan.png" /></p>
+<p><a id="capture-08"></a></p>
+<h3 id="capture-08-seeded-athlete-body-metrics-and-identity">Capture 08 — Seeded athlete body metrics and identity</h3>
+<p><img alt="Seeded athlete body metrics and identity" src="screenshots/08-athlete.png" /></p>
+<p><a id="capture-09"></a></p>
+<h3 id="capture-09-profile-editor-unchanged-seeded-values">Capture 09 — Profile editor, unchanged seeded values</h3>
+<p><img alt="Profile editor, unchanged seeded values" src="screenshots/09-edit-profile.png" /></p>
+<p><a id="capture-10"></a></p>
+<h3 id="capture-10-analytics-overview-before-test-recording">Capture 10 — Analytics Overview before test recording</h3>
+<p><img alt="Analytics Overview before test recording" src="screenshots/10-analytics.png" /></p>
+<p><a id="capture-11"></a></p>
+<h3 id="capture-11-recovery-empty-states">Capture 11 — Recovery empty states</h3>
+<p><img alt="Recovery empty states" src="screenshots/11-recovery.png" /></p>
+<p><a id="capture-12"></a></p>
+<h3 id="capture-12-record-entry-run-selected-and-location-missing">Capture 12 — Record entry, Run selected and location missing</h3>
+<p><img alt="Record entry, Run selected and location missing" src="screenshots/12-record.png" /></p>
+<p><a id="capture-13"></a></p>
+<h3 id="capture-13-strength-selected-run-specific-copy-retained">Capture 13 — Strength selected, run-specific copy retained</h3>
+<p><img alt="Strength selected, run-specific copy retained" src="screenshots/13-strength.png" /></p>
+<p><a id="capture-14"></a></p>
+<h3 id="capture-14-android-location-permission-prompt">Capture 14 — Android location permission prompt</h3>
+<p><img alt="Android location permission prompt" src="screenshots/14-permission.png" /></p>
+<p><a id="capture-15"></a></p>
+<h3 id="capture-15-physical-activity-prompt-after-location-denial">Capture 15 — Physical-activity prompt after location denial</h3>
+<p><img alt="Physical-activity prompt after location denial" src="screenshots/15-permission-denied.png" /></p>
+<p><a id="capture-16"></a></p>
+<h3 id="capture-16-notification-prompt-during-denial-flow">Capture 16 — Notification prompt during denial flow</h3>
+<p><img alt="Notification prompt during denial flow" src="screenshots/16-notification-permission.png" /></p>
+<p><a id="capture-17"></a></p>
+<h3 id="capture-17-location-permission-retry">Capture 17 — Location permission retry</h3>
+<p><img alt="Location permission retry" src="screenshots/17-permission-retry.png" /></p>
+<p><a id="capture-18"></a></p>
+<h3 id="capture-18-strength-entry-after-location-grant">Capture 18 — Strength entry after location grant</h3>
+<p><img alt="Strength entry after location grant" src="screenshots/18-activity-permission-retry.png" /></p>
+<p><a id="capture-19"></a></p>
+<h3 id="capture-19-recording-active-behind-physical-activity-permission">Capture 19 — Recording active behind physical-activity permission</h3>
+<p><img alt="Recording active behind physical-activity permission" src="screenshots/19-recording.png" /></p>
+<p><a id="capture-20"></a></p>
+<h3 id="capture-20-recording-active-behind-notification-permission">Capture 20 — Recording active behind notification permission</h3>
+<p><img alt="Recording active behind notification permission" src="screenshots/20-notifications-retry.png" /></p>
+<p><a id="capture-21"></a></p>
+<h3 id="capture-21-run-auto-paused-labels-wrap">Capture 21 — Run auto-paused; labels wrap</h3>
+<p><img alt="Run auto-paused; labels wrap" src="screenshots/21-active-run.png" /></p>
+<p><a id="capture-22"></a></p>
+<h3 id="capture-22-auto-paused-state-re-captured">Capture 22 — Auto-paused state re-captured</h3>
+<p><img alt="Auto-paused state re-captured" src="screenshots/22-paused-run.png" /></p>
+<p><a id="capture-23"></a></p>
+<h3 id="capture-23-resumed-recording-pause-and-finish-labels-wrap">Capture 23 — Resumed recording; Pause and Finish labels wrap</h3>
+<p><img alt="Resumed recording; Pause and Finish labels wrap" src="screenshots/23-resumed-run.png" /></p>
+<p><a id="capture-24"></a></p>
+<h3 id="capture-24-finish-confirmation-while-time-continues">Capture 24 — Finish confirmation while time continues</h3>
+<p><img alt="Finish confirmation while time continues" src="screenshots/24-finish.png" /></p>
+<p><a id="capture-25"></a></p>
+<h3 id="capture-25-saved-synthetic-run-detail">Capture 25 — Saved synthetic run detail</h3>
+<p><img alt="Saved synthetic run detail" src="screenshots/25-saved-run.png" /></p>
+<p><a id="capture-26"></a></p>
+<h3 id="capture-26-plan-wizard-step-1-selected-category-contrast">Capture 26 — Plan wizard step 1: selected category contrast</h3>
+<p><img alt="Plan wizard step 1: selected category contrast" src="screenshots/26-plan-wizard.png" /></p>
+<p><a id="capture-27"></a></p>
+<h3 id="capture-27-step-2-default-marathon-race-selected">Capture 27 — Step 2: default Marathon race selected</h3>
+<p><img alt="Step 2: default Marathon race selected" src="screenshots/27-race-type.png" /></p>
+<p><a id="capture-28"></a></p>
+<h3 id="capture-28-step-3-race-date-filename-says-plan-method">Capture 28 — Step 3: race date (filename says plan-method)</h3>
+<p><img alt="Step 3: race date (filename says plan-method)" src="screenshots/28-plan-method.png" /></p>
+<p><a id="capture-29"></a></p>
+<h3 id="capture-29-step-4-calibration-from-seeded-history">Capture 29 — Step 4: calibration from seeded history</h3>
+<p><img alt="Step 4: calibration from seeded history" src="screenshots/29-calibration.png" /></p>
+<p><a id="capture-30"></a></p>
+<h3 id="capture-30-step-5-displayed-target-time">Capture 30 — Step 5: displayed target time</h3>
+<p><img alt="Step 5: displayed target time" src="screenshots/30-target.png" /></p>
+<p><a id="capture-31"></a></p>
+<h3 id="capture-31-step-6-training-volume">Capture 31 — Step 6: training volume</h3>
+<p><img alt="Step 6: training volume" src="screenshots/31-schedule.png" /></p>
+<p><a id="capture-32"></a></p>
+<h3 id="capture-32-step-7-advanced-options">Capture 32 — Step 7: advanced options</h3>
+<p><img alt="Step 7: advanced options" src="screenshots/32-availability.png" /></p>
+<p><a id="capture-33"></a></p>
+<h3 id="capture-33-step-8-weekly-schedule-with-sunday-off-screen">Capture 33 — Step 8: weekly schedule with Sunday off-screen</h3>
+<p><img alt="Step 8: weekly schedule with Sunday off-screen" src="screenshots/33-review.png" /></p>
+<p><a id="capture-34"></a></p>
+<h3 id="capture-34-created-local-marathon-plan-named-audit-5k">Capture 34 — Created local Marathon plan named Audit 5K</h3>
+<p><img alt="Created local Marathon plan named Audit 5K" src="screenshots/34-created-plan.png" /></p>
+<p><a id="capture-35"></a></p>
+<h3 id="capture-35-athlete-screen-after-one-scroll">Capture 35 — Athlete screen after one scroll</h3>
+<p><img alt="Athlete screen after one scroll" src="screenshots/35-athlete-menu.png" /></p>
+<p><a id="capture-36"></a></p>
+<h3 id="capture-36-athlete-more-menu-and-saved-run">Capture 36 — Athlete More menu and saved run</h3>
+<p><img alt="Athlete More menu and saved run" src="screenshots/36-athlete-more.png" /></p>
+<p><a id="capture-37"></a></p>
+<h3 id="capture-37-settings-account-and-diagnostics">Capture 37 — Settings account and diagnostics</h3>
+<p><img alt="Settings account and diagnostics" src="screenshots/37-settings.png" /></p>
+<p><a id="capture-38"></a></p>
+<h3 id="capture-38-sign-in-entry-no-credentials-submitted">Capture 38 — Sign-in entry; no credentials submitted</h3>
+<p><img alt="Sign-in entry; no credentials submitted" src="screenshots/38-sign-in.png" /></p>
+<p><a id="capture-39"></a></p>
+<h3 id="capture-39-nested-diagnostics-scrolling-and-units">Capture 39 — Nested diagnostics scrolling and units</h3>
+<p><img alt="Nested diagnostics scrolling and units" src="screenshots/39-settings-display.png" /></p>
+<p><a id="capture-40"></a></p>
+<h3 id="capture-40-imperial-selected-theme-and-export-settings">Capture 40 — Imperial selected; theme and export settings</h3>
+<p><img alt="Imperial selected; theme and export settings" src="screenshots/40-settings-theme.png" /></p>
+<p><a id="capture-41"></a></p>
+<h3 id="capture-41-csv-export-chooser-no-receiving-apps-on-aosp-image">Capture 41 — CSV export chooser: no receiving apps on AOSP image</h3>
+<p><img alt="CSV export chooser: no receiving apps on AOSP image" src="screenshots/41-export-share.png" /></p>
+<p><a id="capture-42"></a></p>
+<h3 id="capture-42-app-dark-theme-and-imperial-dashboard">Capture 42 — App dark theme and imperial dashboard</h3>
+<p><img alt="App dark theme and imperial dashboard" src="screenshots/42-dark-imperial.png" /></p>
+<p><a id="capture-43"></a></p>
+<h3 id="capture-43-150-text-dashboard-truncation-and-dark-status-icons">Capture 43 — 150% text: dashboard truncation and dark status icons</h3>
+<p><img alt="150% text: dashboard truncation and dark status icons" src="screenshots/43-large-dashboard.png" /></p>
+<p><a id="capture-44"></a></p>
+<h3 id="capture-44-150-text-analytics-segmented-and-bottom-navigation-wrapping">Capture 44 — 150% text: Analytics segmented and bottom navigation wrapping</h3>
+<p><img alt="150% text: Analytics segmented and bottom navigation wrapping" src="screenshots/44-large-analytics.png" /></p>
+<p><a id="capture-45"></a></p>
+<h3 id="capture-45-recovery-sheet-initially-partially-expanded">Capture 45 — Recovery sheet initially partially expanded</h3>
+<p><img alt="Recovery sheet initially partially expanded" src="screenshots/45-readiness-form.png" /></p>
+<p><a id="capture-46"></a></p>
+<h3 id="capture-46-recovery-sheet-after-an-ineffective-body-swipe">Capture 46 — Recovery sheet after an ineffective body swipe</h3>
+<p><img alt="Recovery sheet after an ineffective body swipe" src="screenshots/46-readiness-expanded.png" /></p>
+<p><a id="capture-47"></a></p>
+<h3 id="capture-47-recovery-sheet-fully-expanded-save-near-bottom-edge">Capture 47 — Recovery sheet fully expanded; Save near bottom edge</h3>
+<p><img alt="Recovery sheet fully expanded; Save near bottom edge" src="screenshots/47-readiness-full.png" /></p>
+<p><a id="capture-48"></a></p>
+<h3 id="capture-48-recovery-sheet-scrolled-to-save-default-sliders-shown">Capture 48 — Recovery sheet scrolled to Save, default sliders shown</h3>
+<p><img alt="Recovery sheet scrolled to Save, default sliders shown" src="screenshots/48-recovery-save-visible.png" /></p>
+<p><a id="capture-49"></a></p>
+<h3 id="capture-49-after-saving-untouched-recovery-defaults-no-vitals-yet">Capture 49 — After saving untouched recovery defaults: No vitals yet</h3>
+<p><img alt="After saving untouched recovery defaults: No vitals yet" src="screenshots/49-recovery-after-empty-save.png" /></p></main></body></html>

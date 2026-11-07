@@ -86,6 +86,10 @@ fun AnalyticsScreen(
                 selectedTab = AnalyticsTab.RECOVERY
                 scrollState.scrollTo(0)
             }
+            "cycling" -> {
+                selectedTab = AnalyticsTab.CYCLING
+                scrollState.scrollTo(0)
+            }
             "volume" -> {
                 selectedTab = AnalyticsTab.RUNNING
                 scrollState.scrollTo(0)

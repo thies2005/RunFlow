@@ -1,0 +1,227 @@
+<!doctype html><meta charset="utf-8"><title>RunFlow fix retest</title><style>body{font:16px/1.6 system-ui;max-width:1050px;margin:40px auto;padding:20px}img{width:320px;max-width:100%;height:auto}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:9px;text-align:left;vertical-align:top}h2{margin-top:40px}code{overflow-wrap:anywhere}</style><h1>RunFlow Android: QA follow-up retest</h1>
+<p>Date: <strong>1 November 2026</strong> · Follow-up to the <a href="../2026-10-31/REPORT.md">31 October audit</a>. This document records implementation and automated/source evidence. Device observations and screenshots are recorded below. Source/unit evidence and direct runtime evidence are distinguished.</p>
+<h2>Final automated verification</h2>
+<p>Final serial command: <code>./gradlew :app:compileDebugKotlin testDebugUnitTest lintDebug assembleRelease --no-parallel</code> — <strong>BUILD SUCCESSFUL</strong>. All <strong>534 unit tests passed</strong>, with zero failures/errors. Kotlin compilation and lint passed; the release APK signature verified with apksigner. Warnings remain; this is not a warning-free build.</p>
+<p>See <a href="retest/evidence/gradle-final.txt">final Gradle log</a>. Earlier overlapping Gradle processes caused intermediate-cache failures; those runs are not counted as verification. The final successful runs were serialized after worker edits stopped.</p>
+<p>The retest found and fixed two additional correctness bugs: calibration multiplied metre distances by 1,000, blocking a valid 50-minute 10K; stationary strength sessions were silently discarded by a GPS-distance save threshold. Both now have regression tests. Calibration copy now correctly says Required when history is absent.</p>
+<h2>Observed emulator results</h2>
+<p>The final release was installed on RunFlow_FixTest_API35, Android 15, 1080×2400, 420 dpi. Earlier captures used the preceding release during iterative diagnosis; captures 29 onward use the final release. Evidence filenames are raw chronological capture identifiers; some failed automation attempts captured the preceding screen. The curated screenshots below are the accepted evidence, not every raw capture.</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Observed result</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Fresh offline install</td>
+<td>Zero runs/distance, generic athlete, no invented body measurements</td>
+<td>04, 05</td>
+</tr>
+<tr>
+<td>2. Permission setup</td>
+<td>Idle recording screen remains behind optional permission dialogs; no elapsed timer</td>
+<td>15, 16</td>
+</tr>
+<tr>
+<td>3. Recording controls</td>
+<td>Full-width Pause/Lap/Finish and Resume labels remain readable</td>
+<td>17, 20, 35</td>
+</tr>
+<tr>
+<td>4. Finish confirmation</td>
+<td>Time stayed 0:04 across separate captures, then saved as 0:04</td>
+<td>36–38</td>
+</tr>
+<tr>
+<td>5. Stationary strength</td>
+<td>Correct session title/time display; zero-distance activity successfully saved</td>
+<td>35, 38</td>
+</tr>
+<tr>
+<td>6. New calibration</td>
+<td>Required own result; 10K 0:50:00 yields VDOT 40.0 and Continue works</td>
+<td>30, 31</td>
+</tr>
+<tr>
+<td>7. Target mode</td>
+<td>Prediction explicitly selected; fixed target is a separate action</td>
+<td>32</td>
+</tr>
+<tr>
+<td>8. Weekly schedule</td>
+<td>Sunday visible and selected; long-run/quality summary present</td>
+<td>33</td>
+</tr>
+<tr>
+<td>9. Created plan</td>
+<td>101 workouts generated; neutral Not started; explicit Use prediction</td>
+<td>34</td>
+</tr>
+<tr>
+<td>10. Imperial units</td>
+<td>Converted distance/pace chips; unmodified metric instructions explicitly labeled</td>
+<td>34</td>
+</tr>
+<tr>
+<td>11. Settings</td>
+<td>Units/theme reachable without a large diagnostic panel</td>
+<td>23, 24</td>
+</tr>
+<tr>
+<td>12. Large text and dark mode</td>
+<td>At 150%, navigation words remain whole; white status icons readable on dark background</td>
+<td>29</td>
+</tr>
+<tr>
+<td>13. Recovery defaults</td>
+<td>Not answered is explicit, Use 5/10 available, empty Save disabled; explicit selection permitted saving</td>
+<td>27</td>
+</tr>
+<tr>
+<td>14. Chart context</td>
+<td>Numeric fitness scale and accessibility range are exposed</td>
+<td>40</td>
+</tr>
+</tbody>
+</table>
+<p>A System UI-not-responding dialog occurred during initial emulator startup under host build load; Wait recovered it. It was Android System UI, not a RunFlow crash. No RunFlow crash appeared in the collected crash buffer. The recovery reopening automation landed in Analytics instead of the intended form, so persistence after reopening is <strong>not claimed as manually verified</strong>. Fixed-target creation, triathlon, full denied-permission matrix, populated nonzero chart scales, legacy demo upgrade/reset, 200% text and physical-device behavior remain follow-up acceptance coverage.</p>
+<h2>Finding-by-finding evidence</h2>
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Implementation and automated/source evidence</th>
+<th>Additional acceptance coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>F01</strong> Fresh install/demo</td>
+<td>Automatic startup seeding was removed from <code>RunFlowApp</code>. Repository analytics excludes <code>isDemo</code> activities; the wizard does not prefill legacy demo profile values. Dashboard and Athlete warn when legacy sample activities remain and Settings offers a local reset. Calibration requires a user result or available history for flows containing that step.</td>
+<td>Fresh offline install, legacy seeded upgrade and reset; verify no sample identity/history influences a real plan. There is no separate Explore demo mode. Generic profile defaults still exist in some calculations; unconfigured values are not a substitute for the athlete's measurements.</td>
+</tr>
+<tr>
+<td><strong>F02</strong> Metric rounding</td>
+<td>Today uses <code>Format.roundedIntOrDash</code> for fitness and form values. <code>AuditRegressionTest</code> checks positive and negative rounding.</td>
+<td>Compare Today and Analytics with the same underlying positive and negative values.</td>
+</tr>
+<tr>
+<td><strong>F03</strong> Block-load basis</td>
+<td><code>ComplianceCalculator.displaySummary</code> identifies unavailable load and distance, duration or completion fallback; future untouched sessions use a neutral Not started status. <code>AuditRegressionTest</code> covers distance fallback and future sessions.</td>
+<td>Inspect generated and completed plans with each basis and verify labels, values and readable layout.</td>
+</tr>
+<tr>
+<td><strong>F04</strong> Recording labels</td>
+<td>Recording actions use separate full-width controls with minimum height rather than a narrow three-button row.</td>
+<td>Check Finish, Pause, Resume and Lap / Next on narrow screens and at 1.0, 1.3, 1.5 and 2.0 font scales.</td>
+</tr>
+<tr>
+<td><strong>F05</strong> Permission timing</td>
+<td>A pending start is resumed from the permission result callback after required location is granted; the service is not started before pending requests return.</td>
+<td>Exercise permission grant, denial and retry for location and optional permissions; confirm no timer runs behind dialogs.</td>
+</tr>
+<tr>
+<td><strong>F06</strong> Finish endpoint</td>
+<td>Finish begins a frozen finish state; dismiss/Keep going cancels it, while save uses the frozen endpoint. <code>AuditRegressionTest</code> checks paused controller time and distance do not advance.</td>
+<td>Wait at least 30 seconds in confirmation and check saved time/distance; test Keep going, dismissal and already-paused sessions.</td>
+</tr>
+<tr>
+<td><strong>F07</strong> Sport-specific recording copy</td>
+<td>Record entry describes the selected activity and derives the accessible start label; strength and outdoor swim have specific explanations, and auto-pause/voice-coach text varies.</td>
+<td>Check each activity's visible and spoken labels, permission rationale and actual recording behavior. Strength still requires location.</td>
+</tr>
+<tr>
+<td><strong>F08</strong> Units in instructions</td>
+<td>Structured distance and pace chips use selected units. <code>Format.workoutInstructions</code> labels metric-bearing original instruction text in imperial mode; <code>AuditRegressionTest</code> covers preservation and labeling.</td>
+<td>Inspect Today, Plan and Record in both unit systems. Original instruction text remains metric, including generated text where provenance cannot be established; it is labeled rather than converted.</td>
+</tr>
+<tr>
+<td><strong>F09</strong> System bars</td>
+<td><code>RunFlowTheme</code> sets status and navigation bar icon appearance from the resolved app theme.</td>
+<td>Check app/system light and dark combinations and modal sheets on device.</td>
+</tr>
+<tr>
+<td><strong>F10</strong> Large text navigation</td>
+<td>Bottom navigation and Analytics tabs use wrapping chip layouts with single-line labels.</td>
+<td>Verify readable, reachable navigation at 150% and 200% text and on narrower screens.</td>
+</tr>
+<tr>
+<td><strong>F11</strong> Selected-card contrast</td>
+<td>Wizard event cards use <code>onSecondaryContainer</code> for selected content and expose selected semantics.</td>
+<td>Measure selected card text/icon contrast in light and dark themes and verify selection without relying only on color.</td>
+</tr>
+<tr>
+<td><strong>F12</strong> Long-run day</td>
+<td>Day selectors wrap; the schedule shows a text summary of long-run and quality days.</td>
+<td>Verify all seven choices, default Sunday, selection changes and confirmation before creation at normal and large text sizes.</td>
+</tr>
+<tr>
+<td><strong>F13</strong> Recovery answers</td>
+<td>Unanswered sliders display Not answered, offer an explicit Use value action, and Save requires a change.</td>
+<td>Confirm intentional 5/10, untouched empty Save, editing and clearing existing values, and persistence after reopening.</td>
+</tr>
+<tr>
+<td><strong>F14</strong> Diagnostics</td>
+<td>Troubleshooting is collapsed and moved below common settings; the technical log remains available on expansion.</td>
+<td>Verify page scrolling over collapsed and expanded sections and access to Units and Theme.</td>
+</tr>
+<tr>
+<td><strong>F15</strong> Chart context</td>
+<td>Fitness chart adds numeric scale and accessible range; activity streams identify sampling range, elevation availability/constant values and session moving time.</td>
+<td>Check empty, constant and populated series, axis readability and screen-reader descriptions against sample duration.</td>
+</tr>
+<tr>
+<td><strong>F16</strong> Target choice</td>
+<td>Running and triathlon target steps distinguish prediction from a fixed target and offer an explicit Set target action; plan header indicates prediction when no target is stored.</td>
+<td>Create plans with untouched prediction and explicit target for both disciplines; compare displayed and persisted values, including rounding.</td>
+</tr>
+</tbody>
+</table>
+<h2>Coverage limits</h2>
+<p>Authenticated email/Strava flows, server sync and conflict handling, Health Connect imports, real GPS and background recording, battery behavior, and real-device accessibility remain outside the automated evidence. They need the staging-account and physical-device checks described in the original audit. Screenshots and UI trees alone do not establish TalkBack, switch-access, contrast or full accessibility compliance.</p>
+<h2>Curated screenshot evidence</h2>
+<h3>04-dashboard</h3>
+<p><img alt="04-dashboard" src="retest/screenshots/04-dashboard.png" /></p>
+<h3>05-athlete</h3>
+<p><img alt="05-athlete" src="retest/screenshots/05-athlete.png" /></p>
+<h3>07-wizard</h3>
+<p><img alt="07-wizard" src="retest/screenshots/07-wizard.png" /></p>
+<h3>13-strength</h3>
+<p><img alt="13-strength" src="retest/screenshots/13-strength.png" /></p>
+<h3>15-before-start-activity-permission</h3>
+<p><img alt="15-before-start-activity-permission" src="retest/screenshots/15-before-start-activity-permission.png" /></p>
+<h3>16-before-start-notification</h3>
+<p><img alt="16-before-start-notification" src="retest/screenshots/16-before-start-notification.png" /></p>
+<h3>20-paused</h3>
+<p><img alt="20-paused" src="retest/screenshots/20-paused.png" /></p>
+<h3>23-settings</h3>
+<p><img alt="23-settings" src="retest/screenshots/23-settings.png" /></p>
+<h3>27-unanswered</h3>
+<p><img alt="27-unanswered" src="retest/screenshots/27-unanswered.png" /></p>
+<h3>29-final-large-analytics</h3>
+<p><img alt="29-final-large-analytics" src="retest/screenshots/29-final-large-analytics.png" /></p>
+<h3>30-final-calibration-required</h3>
+<p><img alt="30-final-calibration-required" src="retest/screenshots/30-final-calibration-required.png" /></p>
+<h3>31-calibration-valid</h3>
+<p><img alt="31-calibration-valid" src="retest/screenshots/31-calibration-valid.png" /></p>
+<h3>32-prediction-mode</h3>
+<p><img alt="32-prediction-mode" src="retest/screenshots/32-prediction-mode.png" /></p>
+<h3>33-final-schedule</h3>
+<p><img alt="33-final-schedule" src="retest/screenshots/33-final-schedule.png" /></p>
+<h3>34-final-plan</h3>
+<p><img alt="34-final-plan" src="retest/screenshots/34-final-plan.png" /></p>
+<h3>35-final-strength</h3>
+<p><img alt="35-final-strength" src="retest/screenshots/35-final-strength.png" /></p>
+<h3>36-final-finish</h3>
+<p><img alt="36-final-finish" src="retest/screenshots/36-final-finish.png" /></p>
+<h3>37-final-frozen</h3>
+<p><img alt="37-final-frozen" src="retest/screenshots/37-final-frozen.png" /></p>
+<h3>38-strength-saved</h3>
+<p><img alt="38-strength-saved" src="retest/screenshots/38-strength-saved.png" /></p>
+<h3>40-chart-scale</h3>
+<p><img alt="40-chart-scale" src="retest/screenshots/40-chart-scale.png" /></p>
+<h2>Review providers and limits</h2>
+<p>Three GPT-6.1 Terra subagents at medium reasoning implemented/reviewed scoped changes as requested. The primary chat integrated their work and ran final verification. The newly supplied GLM/Gemini MCP review tools were not callable in this session; no GLM or Gemini sign-off is claimed. Unrelated Web edits were preserved. No changes were committed or pushed.</p>

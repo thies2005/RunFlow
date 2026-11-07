@@ -75,6 +75,9 @@ import com.runflow2.app.core.util.DistanceUnit
 import com.runflow2.app.core.util.Format
 import com.runflow2.app.core.util.LoginPrompt
 import com.runflow2.app.data.repo.AppSettings
+import com.runflow2.app.data.repo.DashboardWidget
+import com.runflow2.app.data.repo.CountdownStyle
+import com.runflow2.app.data.repo.WorkoutCardStyle
 import com.runflow2.app.data.repo.raceType
 import com.runflow2.app.domain.analytics.AnalyticsBundle
 import com.runflow2.app.ui.components.DailyFormSheet
@@ -140,6 +143,7 @@ fun DashboardScreen(
     var dismissedAdaptations by rememberSaveable { mutableStateOf(setOf<String>()) }
     var loginPromptHidden by remember { mutableStateOf(false) }
     var showDailyForm by remember { mutableStateOf(false) }
+    var showCustomization by remember { mutableStateOf(false) }
     var showCompleteSheetForWorkout by remember { mutableStateOf<com.runflow2.app.data.db.WorkoutEntity?>(null) }
     val now = remember { System.currentTimeMillis() }
     val showLoginPrompt = auth.initialized && !loginPromptHidden && LoginPrompt.shouldShow(
@@ -150,7 +154,7 @@ fun DashboardScreen(
         offlineModeChosen = settings.offlineModeChosen,
     )
 
-    val analytics by produceState<AnalyticsBundle?>(null, activities) {
+    val analytics by produceState<AnalyticsBundle?>(null, activities, settings.primaryLoadMetric, settings.ftpWatts, settings.autoEstimateFtp, settings.includeCrossTraining, settings.effectiveVo2maxCorrection) {
         value = container.repository.analytics(365)
     }
 
@@ -237,102 +241,25 @@ fun DashboardScreen(
                                 fontWeight = FontWeight.Bold,
                             )
                         }
-                        Box(
-                            Modifier
-                                .size(44.dp)
-                                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                initials,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            )
-                        }
+                        TextButton(onClick = { showCustomization = true }) { Text("Edit widgets") }
                     }
                 }
 
-                // ---- This week ----
-                item {
-                    val a = analytics
-                    // Fitness gets a change caption so it doesn't look frozen:
-                    // reference is the newest daily point at least 7 days old
-                    // (the first entry when the series is younger); suppressed
-                    // when the change rounds to zero.
-                    val ctlDelta = a?.let { bundle ->
-                        val ref = bundle.daily.lastOrNull { it.date <= today.minusDays(7) }
-                            ?: bundle.daily.firstOrNull()
-                        ref?.let { bundle.ctl - it.ctl }
-                    }?.takeIf { abs(it) >= 0.05 }
-                    Card(
-                        shape = CardShape,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Column(Modifier.weight(1f)) {
-                                    Text(
-                                        "This week",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                    Text(
-                                        Format.distance(a?.currentWeekKm ?: 0.0, unit),
-                                        style = MaterialTheme.typography.displaySmall,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                }
-                                val weekGoal = activeGoal?.weeklyKmGoal
-                                if (weekGoal != null && weekGoal > 0) {
-                                    ProgressRing(
-                                        progress = ((a?.currentWeekKm ?: 0.0) / weekGoal).toFloat(),
-                                        modifier = Modifier.size(64.dp),
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                }
-                            }
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                            ) {
-                                StatTile(
-                                    label = if (ridesThisWeek > 0 || otherThisWeek > 0) "Runs · Rides" else "Runs",
-                                    value = if (ridesThisWeek > 0 || otherThisWeek > 0) {
-                                        "$runsThisWeek · $ridesThisWeek" + (if (otherThisWeek > 0) " (+$otherThisWeek)" else "")
-                                    } else "$runsThisWeek",
-                                    icon = Icons.Outlined.DirectionsRun,
-                                )
-                                StatTile(
-                                    label = "Fitness",
-                                    value = Format.roundedIntOrDash(a?.ctl),
-                                    icon = Icons.Outlined.Favorite,
-                                    accent = MaterialTheme.colorScheme.primary,
-                                    caption = ctlDelta?.let {
-                                        if (it > 0) "Δ7d +${Format.oneDecimal(it)}"
-                                        else "Δ7d -${Format.oneDecimal(abs(it))}"
-                                    },
-                                    captionGood = ctlDelta?.let { it > 0 },
-                                )
-                            }
-                        }
-                    }
+                if (DashboardWidget.EFFORT in settings.customization.visibleWidgets) item {
+                    DashboardEffortCard(settings, activities, workouts, today, unit)
+                }
+                if (DashboardWidget.SPORT in settings.customization.visibleWidgets) item {
+                    DashboardSportMetrics(settings, analytics, activities, today, unit, onOpenAnalytics = onOpenAnalyticsSection)
                 }
 
                 // ---- Recovery + Form quick squares ----
-                item {
+                if (DashboardWidget.RECOVERY in settings.customization.visibleWidgets || DashboardWidget.FORM in settings.customization.visibleWidgets) item {
                     val a = analytics
                     val entry = todayEntry
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         // Recovery — today's readiness; tap for the detailed trends
                         val stateColor = readinessColor(entry?.state)
-                        Card(
+                        if (DashboardWidget.RECOVERY in settings.customization.visibleWidgets) Card(
                             shape = MetricCardShape,
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -401,7 +328,7 @@ fun DashboardScreen(
                         }
                         // Form — fitness/fatigue status; tap for the detailed trends
                         val status = a?.tsbStatus ?: TsbStatus.NEUTRAL
-                        Card(
+                        if (DashboardWidget.FORM in settings.customization.visibleWidgets) Card(
                             shape = MetricCardShape,
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -448,13 +375,13 @@ fun DashboardScreen(
                 }
 
                 // ---- Race countdown ----
-                if (activeGoal != null) {
+                if (DashboardWidget.PLAN in settings.customization.visibleWidgets && activeGoal != null) {
                     item {
                         val goal = activeGoal!!
                         val raceDate = Format.localDate(goal.raceDate)
                         val daysToGo = ChronoUnit.DAYS.between(today, raceDate)
                         val done = workouts.count { it.isCompleted }
-                        val total = workouts.size.coerceAtLeast(1)
+                        val total = workouts.size
                         val a = analytics
                         val race = goal.raceType()
                         // "Now" projection: the HR-based aerobic VO2max is the
@@ -485,6 +412,21 @@ fun DashboardScreen(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                if (settings.customization.countdownStyle == CountdownStyle.BOXES) {
+                                    Text(goal.name, style = MaterialTheme.typography.titleMedium)
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                        Column(Modifier.weight(1f)) {
+                                            Text("$daysToGo", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                            Text(if (daysToGo == 1L) "day to go" else "days to go", style = MaterialTheme.typography.labelMedium)
+                                        }
+                                        Column(Modifier.weight(1f)) {
+                                            Text("$done / $total", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                            Text("workouts completed", style = MaterialTheme.typography.labelMedium)
+                                        }
+                                    }
+                                    Text("${goal.raceType().label} · ${Format.dateWithYear(raceDate)}", style = MaterialTheme.typography.bodySmall)
+                                    if (goal.targetTimeSec != null) Text("Goal ${Format.duration(goal.targetTimeSec)} · Now ${nowPredicted?.let { Format.duration(it) } ?: "—"}", style = MaterialTheme.typography.bodyMedium)
+                                } else {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Icon(
                                         Icons.Outlined.EmojiEvents, null,
@@ -514,7 +456,7 @@ fun DashboardScreen(
                                 }
 
                                 LinearProgressIndicator(
-                                    progress = { done.toFloat() / total },
+                                    progress = { done.toFloat() / total.coerceAtLeast(1) },
                                     modifier = Modifier.fillMaxWidth(),
                                 )
                                 Text(
@@ -542,10 +484,11 @@ fun DashboardScreen(
                                         }
                                     }
                                 }
+                                }
                             }
                         }
                     }
-                } else if (!hidePlanReminder) {
+                } else if (DashboardWidget.PLAN in settings.customization.visibleWidgets && !hidePlanReminder) {
                     item {
                         Card(
                             shape = CardShape,
@@ -578,7 +521,7 @@ fun DashboardScreen(
 
                 // ---- Today's workout ----
                 val todayWorkouts = workouts.filter { Format.localDate(it.scheduledDate) == today }
-                if (todayWorkouts.isNotEmpty()) {
+                if (DashboardWidget.WORKOUT in settings.customization.visibleWidgets && todayWorkouts.isNotEmpty()) {
                     item {
                         SectionTitle("Today")
                         Spacer(Modifier.height(8.dp))
@@ -696,7 +639,7 @@ fun DashboardScreen(
                                         Spacer(Modifier.width(12.dp))
                                         Column(Modifier.weight(1f)) {
                                             Text(type.label, style = MaterialTheme.typography.titleMedium)
-                                            Text(
+                                            if (settings.customization.workoutStyle == WorkoutCardStyle.DETAILED) Text(
                                                 Format.workoutInstructions(w.description, unit, w.webWorkoutType != null),
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -979,6 +922,8 @@ fun DashboardScreen(
             }
         }
     }
+
+    if (showCustomization) CustomizationEditor(container) { showCustomization = false }
 
     // ---- sign-in nudge dialog (Sign in / Remind in a week / Dismiss) ----
     if (showLoginPrompt) {

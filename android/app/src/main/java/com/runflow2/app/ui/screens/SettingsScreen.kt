@@ -79,7 +79,9 @@ fun SettingsScreen(
     val syncStatus by container.syncManager.status.collectAsState()
     val pending by container.syncManager.pendingCount.collectAsState(initial = 0)
     var showResetDialog by remember { mutableStateOf(false) }
+    var showCustomization by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+    if (showCustomization) CustomizationEditor(container) { showCustomization = false }
     val context = LocalContext.current
     var backupStatusMessage by remember { mutableStateOf<String?>(null) }
     var diagnosticsFallback by remember { mutableStateOf<String?>(null) }
@@ -347,6 +349,8 @@ fun SettingsScreen(
                     )
                 }
             }
+
+            OutlinedButton(onClick = { showCustomization = true }, modifier = Modifier.fillMaxWidth()) { Text("Customization") }
 
             SettingSection("Theme") {
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {

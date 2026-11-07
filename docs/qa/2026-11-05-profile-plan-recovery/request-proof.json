@@ -1,0 +1,136 @@
+{
+  "before": {
+    "detailRequests": 32,
+    "uniqueDetailActivities": 24
+  },
+  "after": {
+    "detailRequests": 0,
+    "profilePutRequests": 0,
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/api/plans"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=0"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=100"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=200"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=300"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=400"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=0"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=100"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=200"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=300"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=400"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/user/profile"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/user/profile"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/user/profile"
+      },
+      {
+        "method": "GET",
+        "path": "/api/plans"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=0"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=100"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=200"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=300"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=400"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/readiness/history?start=2026-08-07&end=2026-11-05"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/analytics/stats"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/user/profile"
+      },
+      {
+        "method": "GET",
+        "path": "/api/plans"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=0"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=100"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=200"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=300"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/activities?limit=100&offset=400"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/readiness/history?start=2026-08-07&end=2026-11-05"
+      },
+      {
+        "method": "GET",
+        "path": "/api/mobile/v1/analytics/stats"
+      }
+    ]
+  }
+}

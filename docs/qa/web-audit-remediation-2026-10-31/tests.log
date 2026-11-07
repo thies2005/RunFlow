@@ -1,0 +1,2050 @@
+
+> runflow@1.2.9 test
+> node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --forceExit
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /home/thies/Projects/RunFlow/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /home/thies/Projects/RunFlow/Web/package-lock.json
+
+PASS src/lib/ai/__tests__/usage.security.test.ts
+PASS src/app/mcp/__tests__/route.test.ts
+  ● Console
+
+    console.error
+      OAuth token endpoint error: Error: Refresh token already used or revoked
+          at refreshOAuthTokenPair (/home/thies/Projects/RunFlow/Web/src/lib/mcp/oauth.ts:492:15)
+          at POST (/home/thies/Projects/RunFlow/Web/src/app/mcp/oauth/token/route.ts:229:28)
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/mcp/__tests__/route.test.ts:794:25)
+
+      246 |         );
+      247 |     } catch (error: any) {
+    > 248 |         console.error('OAuth token endpoint error:', error);
+          |                 ^
+      249 |         return NextResponse.json(
+      250 |             { error: 'invalid_grant', error_description: error?.message || 'Token exchange failed' },
+      251 |             { status: 400, headers: CORS_HEADERS }
+
+      at error (src/app/mcp/oauth/token/route.ts:248:17)
+      at Object.<anonymous> (src/app/mcp/__tests__/route.test.ts:794:25)
+
+PASS src/lib/plans/__tests__/index.test.ts
+PASS src/lib/plans/__tests__/sota-updates.test.ts
+PASS src/lib/mywhoosh/__tests__/parser.test.ts
+PASS src/app/mcp/public/__tests__/route.test.ts
+PASS src/lib/__tests__/auth.test.ts
+PASS src/app/api/__tests__/tenant-isolation.security.test.ts
+PASS src/app/api/plan-advanced/[goalId]/mywhoosh/import-files/__tests__/route.test.ts
+PASS src/lib/ai/__tests__/usage-reservation.test.ts
+PASS src/lib/metrics/__tests__/power.test.ts
+  ● Console
+
+    console.log
+      prisma:error 
+      Invalid `prisma.activity.findFirst()` invocation:
+      
+      
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+          at async Promise.all (index 1)
+
+    console.log
+      prisma:error 
+      Invalid `prisma.activity.findFirst()` invocation:
+      
+      
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+          at async Promise.all (index 2)
+
+    console.log
+      prisma:error 
+      Invalid `prisma.activity.count()` invocation:
+      
+      
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+          at async Promise.all (index 3)
+
+    console.log
+      prisma:error 
+      Invalid `prisma.dailyFitness.aggregate()` invocation:
+      
+      
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+          at async Promise.all (index 4)
+
+    console.log
+      [31m[ERROR][0m [FitnessCache] Error ensuring fitness cache update {
+        error: PrismaClientKnownRequestError: 
+        Invalid `prisma.activity.findFirst()` invocation:
+        
+        
+        Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+            at Gr.handleRequestError (/home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/src/runtime/RequestHandler.ts:237:13)
+            at Gr.handleAndLogRequestError (/home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/src/runtime/RequestHandler.ts:183:12)
+            at Gr.request (/home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/src/runtime/RequestHandler.ts:152:12)
+            at a (/home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:938:24)
+            at async Promise.all (index 1)
+            at ensureFitnessCacheUpToDate (/home/thies/Projects/RunFlow/Web/src/lib/metrics/fitnessCache.ts:383:77)
+            at getCyclingAnalytics (/home/thies/Projects/RunFlow/Web/src/lib/metrics/cyclingAnalytics.ts:519:5)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/lib/metrics/__tests__/power.test.ts:355:28) {
+          code: 'ERR_REQUIRE_ESM',
+          meta: { modelName: 'Activity' },
+          clientVersion: '7.6.0'
+        }
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/plans/__tests__/structured.test.ts
+PASS src/lib/metrics/__tests__/plannedTss.test.ts
+PASS src/app/api/ai/chat/__tests__/route.test.ts
+  ● Console
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream starting { sessionId: 'session-1', userId: 'user-1', model: 'gpt-4' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream ended { sessionId: 'session-1', tokenCount: 2, responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Saved AI response to database { sessionId: 'session-1', responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Stream error {
+        sessionId: 'session-1',
+        error: 'AI access has not been granted by the admin. Contact admin to enable AI for your account.'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Cleaned up empty session after stream error { sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Stream error { sessionId: 'session-1', error: 'Usage limit exceeded' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Cleaned up empty session after stream error { sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream starting { sessionId: 'session-1', userId: 'user-1', model: 'gpt-4' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream ended { sessionId: 'session-1', tokenCount: 2, responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Saved AI response to database { sessionId: 'session-1', responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream starting { sessionId: 'session-1', userId: 'user-1', model: 'gpt-4' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream ended { sessionId: 'session-1', tokenCount: 2, responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Saved AI response to database { sessionId: 'session-1', responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream starting { sessionId: 'session-1', userId: 'user-1', model: 'gpt-4' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Stream error { sessionId: 'session-1', error: 'provider exploded' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Cleaned up empty session after stream error { sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream starting { sessionId: 'session-1', userId: 'user-1', model: 'gpt-4' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Stream error { sessionId: 'session-1', error: 'provider exploded' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Cleaned up empty session after stream error { sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'existing-session' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream starting { sessionId: 'existing-session', userId: 'user-1', model: 'gpt-4' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream ended { sessionId: 'existing-session', tokenCount: 2, responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Saved AI response to database { sessionId: 'existing-session', responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream starting { sessionId: 'session-1', userId: 'user-1', model: 'gpt-4' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream ended { sessionId: 'session-1', tokenCount: 2, responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Saved AI response to database { sessionId: 'session-1', responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream starting { sessionId: 'session-1', userId: 'user-1', model: 'gpt-4' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream ended { sessionId: 'session-1', tokenCount: 2, responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Saved AI response to database { sessionId: 'session-1', responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/plans/__tests__/zwo-export.test.ts
+PASS src/app/api/plans/import/__tests__/route.test.ts
+PASS src/app/api/health/nutrition/scan-image/__tests__/route.test.ts
+PASS src/lib/ai/__tests__/providers-ssrf.test.ts
+PASS src/lib/__tests__/rateLimit.test.ts
+PASS src/lib/ai/__tests__/feedback-quota.test.ts
+PASS src/lib/ai/__tests__/context-builder.test.ts
+PASS src/lib/__tests__/rateLimitAdmin.test.ts
+PASS src/app/api/goals/__tests__/route.test.ts
+  ● Console
+
+    console.error
+      [DashboardCache] Invalidation error: Error: Stream isn't writeable and enableOfflineQueue options is false
+          at EventEmitter.sendCommand (/home/thies/Projects/RunFlow/Web/node_modules/ioredis/built/Redis.js:365:32)
+          at EventEmitter.incr (/home/thies/Projects/RunFlow/Web/node_modules/ioredis/built/utils/Commander.js:90:25)
+          at Object.incr (/home/thies/Projects/RunFlow/Web/src/lib/redis.ts:37:28)
+          at incr (/home/thies/Projects/RunFlow/Web/src/lib/redis.ts:131:25)
+          at POST (/home/thies/Projects/RunFlow/Web/src/app/api/goals/route.ts:159:9)
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/goals/__tests__/route.test.ts:240:26)
+
+      132 |         }
+      133 |     } catch (e) {
+    > 134 |         console.error('[DashboardCache] Invalidation error:', e);
+          |                 ^
+      135 |     }
+      136 | }
+      137 |
+
+      at error (src/lib/redis.ts:134:17)
+      at POST (src/app/api/goals/route.ts:159:9)
+      at Object.<anonymous> (src/app/api/goals/__tests__/route.test.ts:240:26)
+
+    console.error
+      [DashboardCache] Invalidation error: Error: Stream isn't writeable and enableOfflineQueue options is false
+          at EventEmitter.sendCommand (/home/thies/Projects/RunFlow/Web/node_modules/ioredis/built/Redis.js:365:32)
+          at EventEmitter.incr (/home/thies/Projects/RunFlow/Web/node_modules/ioredis/built/utils/Commander.js:90:25)
+          at Object.incr (/home/thies/Projects/RunFlow/Web/src/lib/redis.ts:37:28)
+          at incr (/home/thies/Projects/RunFlow/Web/src/lib/redis.ts:131:25)
+          at POST (/home/thies/Projects/RunFlow/Web/src/app/api/goals/route.ts:159:9)
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/goals/__tests__/route.test.ts:318:26)
+
+      132 |         }
+      133 |     } catch (e) {
+    > 134 |         console.error('[DashboardCache] Invalidation error:', e);
+          |                 ^
+      135 |     }
+      136 | }
+      137 |
+
+      at error (src/lib/redis.ts:134:17)
+      at POST (src/app/api/goals/route.ts:159:9)
+      at Object.<anonymous> (src/app/api/goals/__tests__/route.test.ts:318:26)
+
+PASS src/lib/plan/__tests__/snapshot.test.ts
+PASS src/app/api/session-replay/__tests__/route.test.ts
+  ● Console
+
+    console.error
+      Failed to trim session replays: Error: db down
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/session-replay/__tests__/route.test.ts:266:69)
+          at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+
+      123 |       }
+      124 |     } catch (retentionError) {
+    > 125 |       console.error('Failed to trim session replays:', retentionError);
+          |               ^
+      126 |     }
+      127 |
+      128 |     return NextResponse.json({ success: true });
+
+      at error (src/app/api/session-replay/route.ts:125:15)
+      at Object.<anonymous> (src/app/api/session-replay/__tests__/route.test.ts:268:26)
+
+PASS src/lib/plans/__tests__/adapt.test.ts
+PASS src/app/api/admin/backups/__tests__/route.test.ts
+  ● Console
+
+    console.log
+      prisma:error 
+      Invalid `prisma.adminAuditLog.create()` invocation in
+      /home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36
+      
+        47 
+        48 const userAgent = req.headers.get('user-agent') || 'unknown';
+        49 
+      → 50 await prisma.adminAuditLog.create(
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_BACKUPS',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          '/home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36\n' +
+          '\n' +
+          '  47 \n' +
+          "  48 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  49 \n' +
+          '→ 50 await prisma.adminAuditLog.create(\n' +
+          'Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      prisma:error 
+      Invalid `prisma.adminAuditLog.create()` invocation in
+      /home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36
+      
+        47 
+        48 const userAgent = req.headers.get('user-agent') || 'unknown';
+        49 
+      → 50 await prisma.adminAuditLog.create(
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_BACKUPS',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          '/home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36\n' +
+          '\n' +
+          '  47 \n' +
+          "  48 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  49 \n' +
+          '→ 50 await prisma.adminAuditLog.create(\n' +
+          'Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      prisma:error 
+      Invalid `prisma.adminAuditLog.create()` invocation in
+      /home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36
+      
+        47 
+        48 const userAgent = req.headers.get('user-agent') || 'unknown';
+        49 
+      → 50 await prisma.adminAuditLog.create(
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_BACKUPS',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          '/home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36\n' +
+          '\n' +
+          '  47 \n' +
+          "  48 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  49 \n' +
+          '→ 50 await prisma.adminAuditLog.create(\n' +
+          'Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      prisma:error 
+      Invalid `prisma.adminAuditLog.create()` invocation in
+      /home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36
+      
+        47 
+        48 const userAgent = req.headers.get('user-agent') || 'unknown';
+        49 
+      → 50 await prisma.adminAuditLog.create(
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'UPLOAD_BACKUP',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          '/home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36\n' +
+          '\n' +
+          '  47 \n' +
+          "  48 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  49 \n' +
+          '→ 50 await prisma.adminAuditLog.create(\n' +
+          'Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      prisma:error 
+      Invalid `prisma.adminAuditLog.create()` invocation in
+      /home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36
+      
+        47 
+        48 const userAgent = req.headers.get('user-agent') || 'unknown';
+        49 
+      → 50 await prisma.adminAuditLog.create(
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'UPLOAD_BACKUP',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          '/home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36\n' +
+          '\n' +
+          '  47 \n' +
+          "  48 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  49 \n' +
+          '→ 50 await prisma.adminAuditLog.create(\n' +
+          'Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      prisma:error 
+      Invalid `prisma.adminAuditLog.create()` invocation in
+      /home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36
+      
+        47 
+        48 const userAgent = req.headers.get('user-agent') || 'unknown';
+        49 
+      → 50 await prisma.adminAuditLog.create(
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'DELETE_BACKUP',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          '/home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36\n' +
+          '\n' +
+          '  47 \n' +
+          "  48 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  49 \n' +
+          '→ 50 await prisma.adminAuditLog.create(\n' +
+          'Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      prisma:error 
+      Invalid `prisma.adminAuditLog.create()` invocation in
+      /home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36
+      
+        47 
+        48 const userAgent = req.headers.get('user-agent') || 'unknown';
+        49 
+      → 50 await prisma.adminAuditLog.create(
+      Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs
+
+      at Object.Ou (node_modules/@prisma/internals/src/logger.ts:13:11)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'UPLOAD_BACKUP',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          '/home/thies/Projects/RunFlow/Web/src/lib/admin/auditLog.ts:50:36\n' +
+          '\n' +
+          '  47 \n' +
+          "  48 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  49 \n' +
+          '→ 50 await prisma.adminAuditLog.create(\n' +
+          'Must use import to load ES Module: /home/thies/Projects/RunFlow/Web/node_modules/@prisma/client/runtime/query_compiler_fast_bg.postgresql.mjs'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/data/__tests__/externalFoodSearch.test.ts
+PASS src/app/api/mobile/v1/health/nutrition/ai-scan/__tests__/route.test.ts
+PASS src/app/api/ai/activity-feedback/__tests__/route.test.ts
+  ● Console
+
+    console.error
+      Get activity feedback error: Error: Database error
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/ai/activity-feedback/__tests__/route.test.ts:108:68)
+          at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+
+      37 |         });
+      38 |     } catch (error) {
+    > 39 |         console.error('Get activity feedback error:', error);
+         |                 ^
+      40 |         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      41 |     }
+      42 | }
+
+      at error (src/app/api/ai/activity-feedback/route.ts:39:17)
+      at Object.<anonymous> (src/app/api/ai/activity-feedback/__tests__/route.test.ts:112:26)
+
+    console.error
+      Generate activity feedback error: Error: Unexpected error
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/ai/activity-feedback/__tests__/route.test.ts:271:74)
+          at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+
+      122 |
+      123 |     } catch (error) {
+    > 124 |         console.error('Generate activity feedback error:', error);
+          |                 ^
+      125 |         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      126 |     }
+      127 | }
+
+      at error (src/app/api/ai/activity-feedback/route.ts:124:17)
+      at Object.<anonymous> (src/app/api/ai/activity-feedback/__tests__/route.test.ts:279:26)
+
+PASS src/app/api/analytics/stats/__tests__/route.test.ts
+  ● Console
+
+    console.error
+      Stats API Error: Error: Database error
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/analytics/stats/__tests__/route.test.ts:253:65)
+          at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+
+      214 |
+      215 |     } catch (error) {
+    > 216 |         console.error('Stats API Error:', error);
+          |                 ^
+      217 |         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      218 |     }
+      219 | }
+
+      at error (src/app/api/analytics/stats/route.ts:216:17)
+      at Object.<anonymous> (src/app/api/analytics/stats/__tests__/route.test.ts:257:26)
+
+PASS src/lib/__tests__/workoutEmail.test.ts
+PASS src/app/api/activities/__tests__/route.test.ts
+  ● Console
+
+    console.log
+      [31m[ERROR][0m Activities GET: No session or user ID { path: '/api/activities' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m [FitnessCache] Error updating fitness cache {
+        error: TypeError: Cannot read properties of undefined (reading 'findFirst')
+            at findFirst (/home/thies/Projects/RunFlow/Web/src/lib/metrics/fitnessCache.ts:91:52)
+            at POST (/home/thies/Projects/RunFlow/Web/src/app/api/activities/route.ts:273:33)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/activities/__tests__/route.test.ts:191:26)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/app/api/ai/chat/sessions/__tests__/route.test.ts
+PASS src/lib/services/__tests__/plan-creation-horizon.test.ts
+  ● Console
+
+    console.log
+      [36m[INFO][0m No VDOT data available. Defaulting to VDOT 30. { userId: 'user-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m No VDOT data available. Defaulting to VDOT 30. { userId: 'user-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [33m[WARN][0m Training paces differ from target time expectation; keeping fitness-derived VDOT {
+        userId: 'user-1',
+        trainingVdot: 30,
+        warnings: [ 'Threshold pace (384s/km) is not faster than race pace (368s/km)' ]
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m No VDOT data available. Defaulting to VDOT 30. { userId: 'user-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m No VDOT data available. Defaulting to VDOT 30. { userId: 'user-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS tests/integration/auth-flow.test.ts
+PASS src/lib/metrics/__tests__/runalyze.test.ts
+PASS src/app/api/plan-advanced/[goalId]/workouts/from-template/__tests__/route.test.ts
+PASS src/lib/export/__tests__/plan-export.test.ts
+PASS src/app/api/activities/[id]/__tests__/route.test.ts
+PASS src/app/api/mobile/v1/auth/email-login/__tests__/route.test.ts
+PASS src/app/api/auth/register/__tests__/route.test.ts
+PASS tests/api/mobile/stats.test.ts
+  ● Console
+
+    console.error
+      Cache read error: Error: Redis error
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/tests/api/mobile/stats.test.ts:161:46)
+          at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+
+       97 |             } catch (e) {
+       98 |                 // Ignore cache errors and proceed to calculation
+    >  99 |                 console.error('Cache read error:', e);
+          |                         ^
+      100 |             }
+      101 |         }
+      102 |
+
+      at error (src/app/api/mobile/v1/analytics/stats/route.ts:99:25)
+      at Object.<anonymous> (tests/api/mobile/stats.test.ts:169:26)
+
+PASS src/lib/__tests__/apiError.test.ts
+  ● Console
+
+    console.log
+      [31m[ERROR][0m API error {
+        error: 'User not found',
+        errorName: 'ApiError',
+        errorStack: 'ApiError: User not found\n' +
+          '    at ApiError.notFound (/home/thies/Projects/RunFlow/Web/src/lib/apiError.ts:90:16)\n' +
+          '    at Object.notFound (/home/thies/Projects/RunFlow/Web/src/lib/__tests__/apiError.test.ts:184:32)\n' +
+          '    at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)\n' +
+          '    at new Promise (<anonymous>)\n' +
+          '    at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)\n' +
+          '    at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)\n' +
+          '    at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)\n' +
+          '    at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)\n' +
+          '    at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)\n' +
+          '    at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)\n' +
+          '    at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n' +
+          '    at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n' +
+          '    at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)\n' +
+          '    at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m API error {
+        error: 'Something went wrong',
+        errorName: 'Error',
+        errorStack: 'Error: Something went wrong\n' +
+          '    at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/lib/__tests__/apiError.test.ts:193:23)\n' +
+          '    at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)\n' +
+          '    at new Promise (<anonymous>)\n' +
+          '    at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)\n' +
+          '    at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)\n' +
+          '    at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)\n' +
+          '    at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)\n' +
+          '    at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)\n' +
+          '    at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)\n' +
+          '    at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n' +
+          '    at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n' +
+          '    at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)\n' +
+          '    at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      {"level":"error","message":"API error","timestamp":"2026-11-01T07:32:44.695Z","environment":"production","error":"Sensitive database error","errorName":"Error","errorStack":"Error: Sensitive database error\n    at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/lib/__tests__/apiError.test.ts:202:23)\n    at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)\n    at new Promise (<anonymous>)\n    at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)\n    at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)\n    at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)\n    at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)\n    at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)\n    at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)\n    at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)\n    at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)\n    at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)\n    at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)"}
+
+      at log (src/lib/logging/logger.ts:24:13)
+
+    console.log
+      [31m[ERROR][0m API error { error: 'string error', errorName: undefined, errorStack: undefined }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/services/__tests__/plan-creation.test.ts
+  ● Console
+
+    console.log
+      [36m[INFO][0m No VDOT data available. Defaulting to VDOT 30. { userId: 'user-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/app/api/auth/reset-password/__tests__/route.test.ts
+PASS src/lib/ai/__tests__/prompts.test.ts
+PASS src/app/api/plan-advanced/[goalId]/sub-goals/__tests__/route.test.ts
+PASS src/app/api/admin/recalculate-fitness/__tests__/route.test.ts
+  ● Console
+
+    console.log
+      [36m[INFO][0m Starting fitness recalculation for ALL users {}
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Found users to process { count: 2 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Recalculating for user {
+        userEmail: 'user1@example.com',
+        startDate: '2023-01-01T00:00:00.000Z'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Error cleaning up duplicates for user {
+        userId: 'user-1',
+        error: TypeError: _db.prisma.activity.findMany is not a function
+            at findMany (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:154:58)
+            at cleanupDuplicateActivities (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:99:48)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:4:10
+            at new Promise (<anonymous>)
+            at pTry (/home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:3:37)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:23:18)
+            at enqueue (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:32:4)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:60
+            at new Promise (<anonymous>)
+            at generator (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:37)
+            at limit (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:44)
+            at Array.map (<anonymous>)
+            at map (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:32)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:69:26)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [36m[INFO][0m Recalculating for user {
+        userEmail: 'user2@example.com',
+        startDate: '2023-01-02T00:00:00.000Z'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Error cleaning up duplicates for user {
+        userId: 'user-2',
+        error: TypeError: _db.prisma.activity.findMany is not a function
+            at findMany (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:154:58)
+            at cleanupDuplicateActivities (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:99:48)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:4:10
+            at new Promise (<anonymous>)
+            at pTry (/home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:3:37)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:23:18)
+            at enqueue (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:32:4)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:60
+            at new Promise (<anonymous>)
+            at generator (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:37)
+            at limit (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:44)
+            at Array.map (<anonymous>)
+            at map (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:32)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:69:26)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Starting fitness recalculation for user { targetUserId: 'user-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Found users to process { count: 1 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Recalculating for user {
+        userEmail: 'user1@example.com',
+        startDate: '2023-01-01T00:00:00.000Z'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Error cleaning up duplicates for user {
+        userId: 'user-1',
+        error: TypeError: _db.prisma.activity.findMany is not a function
+            at findMany (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:154:58)
+            at cleanupDuplicateActivities (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:99:48)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:4:10
+            at new Promise (<anonymous>)
+            at pTry (/home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:3:37)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:23:18)
+            at enqueue (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:32:4)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:60
+            at new Promise (<anonymous>)
+            at generator (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:37)
+            at limit (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:44)
+            at Array.map (<anonymous>)
+            at map (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:32)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:104:26)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Starting fitness recalculation for ALL users {}
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Found users to process { count: 2 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m User has no activities, skipping { userEmail: 'user1@example.com' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [36m[INFO][0m User has no activities, skipping { userEmail: 'user2@example.com' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Starting fitness recalculation for ALL users {}
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Found users to process { count: 2 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Recalculating for user {
+        userEmail: 'user1@example.com',
+        startDate: '2023-01-01T00:00:00.000Z'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Error cleaning up duplicates for user {
+        userId: 'user-1',
+        error: TypeError: _db.prisma.activity.findMany is not a function
+            at findMany (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:154:58)
+            at cleanupDuplicateActivities (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:99:48)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:4:10
+            at new Promise (<anonymous>)
+            at pTry (/home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:3:37)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:23:18)
+            at enqueue (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:32:4)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:60
+            at new Promise (<anonymous>)
+            at generator (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:37)
+            at limit (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:44)
+            at Array.map (<anonymous>)
+            at map (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:32)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:185:26)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [36m[INFO][0m Recalculating for user {
+        userEmail: 'user2@example.com',
+        startDate: '2023-01-02T00:00:00.000Z'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Error cleaning up duplicates for user {
+        userId: 'user-2',
+        error: TypeError: _db.prisma.activity.findMany is not a function
+            at findMany (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:154:58)
+            at cleanupDuplicateActivities (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:99:48)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:4:10
+            at new Promise (<anonymous>)
+            at pTry (/home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:3:37)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:23:18)
+            at enqueue (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:32:4)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:60
+            at new Promise (<anonymous>)
+            at generator (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:37)
+            at limit (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:44)
+            at Array.map (<anonymous>)
+            at map (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:32)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:185:26)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Failed to recalculate for user {
+        userEmail: 'user1@example.com',
+        error: Error: Fitness cache error
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:177:61)
+            at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+            at new Promise (<anonymous>)
+            at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+            at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+            at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+            at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+            at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+            at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+            at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+            at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+            at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to recalculate for user {
+        userEmail: 'user2@example.com',
+        error: Error: Fitness cache error
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:177:61)
+            at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+            at new Promise (<anonymous>)
+            at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+            at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+            at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+            at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+            at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+            at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+            at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+            at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+            at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Starting fitness recalculation for ALL users {}
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Found users to process { count: 2 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Recalculating for user {
+        userEmail: 'user1@example.com',
+        startDate: '2023-01-01T00:00:00.000Z'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Error cleaning up duplicates for user {
+        userId: 'user-1',
+        error: TypeError: _db.prisma.activity.findMany is not a function
+            at findMany (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:154:58)
+            at cleanupDuplicateActivities (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:99:48)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:4:10
+            at new Promise (<anonymous>)
+            at pTry (/home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:3:37)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:23:18)
+            at enqueue (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:32:4)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:60
+            at new Promise (<anonymous>)
+            at generator (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:37)
+            at limit (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:44)
+            at Array.map (<anonymous>)
+            at map (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:32)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:201:26)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [36m[INFO][0m Recalculating for user {
+        userEmail: 'user2@example.com',
+        startDate: '2023-01-02T00:00:00.000Z'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Error cleaning up duplicates for user {
+        userId: 'user-2',
+        error: TypeError: _db.prisma.activity.findMany is not a function
+            at findMany (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:154:58)
+            at cleanupDuplicateActivities (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:99:48)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:4:10
+            at new Promise (<anonymous>)
+            at pTry (/home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:3:37)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:23:18)
+            at enqueue (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:32:4)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:60
+            at new Promise (<anonymous>)
+            at generator (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:37)
+            at limit (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:44)
+            at Array.map (<anonymous>)
+            at map (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:32)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:201:26)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Starting fitness recalculation for ALL users {}
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Found users to process { count: 2 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Recalculating for user {
+        userEmail: 'user1@example.com',
+        startDate: '2023-01-01T00:00:00.000Z'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Error cleaning up duplicates for user {
+        userId: 'user-1',
+        error: TypeError: _db.prisma.activity.findMany is not a function
+            at findMany (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:154:58)
+            at cleanupDuplicateActivities (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:99:48)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:4:10
+            at new Promise (<anonymous>)
+            at pTry (/home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:3:37)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:23:18)
+            at enqueue (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:32:4)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:60
+            at new Promise (<anonymous>)
+            at generator (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:37)
+            at limit (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:44)
+            at Array.map (<anonymous>)
+            at map (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:32)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:213:26)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [36m[INFO][0m Recalculating for user {
+        userEmail: 'user2@example.com',
+        startDate: '2023-01-02T00:00:00.000Z'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Error cleaning up duplicates for user {
+        userId: 'user-2',
+        error: TypeError: _db.prisma.activity.findMany is not a function
+            at findMany (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:154:58)
+            at cleanupDuplicateActivities (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:99:48)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:4:10
+            at new Promise (<anonymous>)
+            at pTry (/home/thies/Projects/RunFlow/Web/node_modules/p-try/index.js:3:37)
+            at run (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:23:18)
+            at enqueue (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:32:4)
+            at /home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:60
+            at new Promise (<anonymous>)
+            at generator (/home/thies/Projects/RunFlow/Web/node_modules/p-limit/index.js:38:37)
+            at limit (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:44)
+            at Array.map (<anonymous>)
+            at map (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/route.ts:91:32)
+            at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:213:26)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/validation/__tests__/dateRange.security.test.ts
+PASS src/app/api/plan-advanced/[goalId]/csv/import/__tests__/route.test.ts
+PASS src/app/api/v1/ai/chat/__tests__/route.test.ts
+  ● Console
+
+    console.log
+      [31m[ERROR][0m [STREAM ERROR] {
+        sessionId: 'session-1',
+        error: Error: Usage limit exceeded
+            at Object.start (/home/thies/Projects/RunFlow/Web/src/app/api/v1/ai/chat/route.ts:154:53)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m [STREAM ERROR] {
+        sessionId: 'session-1',
+        error: Error: provider exploded
+            at /home/thies/Projects/RunFlow/Web/src/app/api/v1/ai/chat/__tests__/route.test.ts:212:19
+            at /home/thies/Projects/RunFlow/Web/node_modules/jest-mock/build/index.js:397:39
+            at /home/thies/Projects/RunFlow/Web/node_modules/jest-mock/build/index.js:404:13
+            at mockConstructor (/home/thies/Projects/RunFlow/Web/node_modules/jest-mock/build/index.js:148:19)
+            at Object.start (/home/thies/Projects/RunFlow/Web/src/app/api/v1/ai/chat/route.ts:212:52)
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/app/api/mobile/v1/workouts/[id]/__tests__/route.test.ts
+PASS src/lib/metrics/__tests__/trimp.test.ts
+PASS src/app/api/admin/analytics/__tests__/route.test.ts
+PASS src/lib/metrics/__tests__/goalProjection.test.ts
+PASS src/lib/config/__tests__/validation.test.ts
+PASS src/lib/plans/__tests__/fit-export.test.ts
+PASS src/app/api/mobile/v1/health/sync-batch/__tests__/route.test.ts
+PASS src/lib/metrics/__tests__/vdot.test.ts
+PASS src/lib/admin/__tests__/auth.test.ts
+PASS src/lib/api/__tests__/apiResponse.test.ts
+PASS src/lib/analytics/__tests__/zones.test.ts
+PASS src/lib/metrics/__tests__/hr-zones.test.ts
+PASS src/lib/metrics/__tests__/calories.test.ts
+PASS src/app/api/admin/users/__tests__/route.test.ts
+  ● Console
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/plans/__tests__/validate-workout.test.ts
+PASS src/components/Editor/__tests__/StructuredWorkoutEditor.test.tsx
+PASS src/app/api/admin/login/__tests__/route.test.ts
+  ● Console
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: undefined }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [33m[WARN][0m Admin login credential mismatch { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/backup/__tests__/alert.test.ts
+PASS src/lib/auth/__tests__/tokens.test.ts
+PASS src/app/api/user/consent/__tests__/route.test.ts
+PASS src/app/api/ai/chat/history/__tests__/route.test.ts
+  ● Console
+
+    console.error
+      Error fetching chat history: Error: Database error
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/ai/chat/history/__tests__/route.test.ts:105:70)
+          at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+
+      52 |         });
+      53 |     } catch (error) {
+    > 54 |         console.error('Error fetching chat history:', error);
+         |                 ^
+      55 |         return new Response(JSON.stringify({ error: 'Failed to fetch chat history' }), {
+      56 |             status: 500,
+      57 |             headers: { 'Content-Type': 'application/json' },
+
+      at error (src/app/api/ai/chat/history/route.ts:54:17)
+      at Object.<anonymous> (src/app/api/ai/chat/history/__tests__/route.test.ts:109:26)
+
+    console.error
+      Error clearing chat history: Error: Database error
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/ai/chat/history/__tests__/route.test.ts:185:72)
+          at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+
+      89 |         });
+      90 |     } catch (error) {
+    > 91 |         console.error('Error clearing chat history:', error);
+         |                 ^
+      92 |         return new Response(JSON.stringify({ error: 'Failed to clear chat history' }), {
+      93 |             status: 500,
+      94 |             headers: { 'Content-Type': 'application/json' },
+
+      at error (src/app/api/ai/chat/history/route.ts:91:17)
+      at Object.<anonymous> (src/app/api/ai/chat/history/__tests__/route.test.ts:191:26)
+
+PASS src/lib/metrics/__tests__/gradeAdjustedPace.test.ts
+PASS src/app/api/admin/stats/__tests__/route.test.ts
+PASS src/app/api/auth/forgot-password/__tests__/route.test.ts
+  ● Console
+
+    console.log
+      [31m[ERROR][0m Failed to send reset email { email: 'test@example.com', error: 'Email error' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/components/__tests__/DeepLinkHandler.test.tsx
+PASS src/app/api/public/plan/export/__tests__/route.test.ts
+PASS src/app/api/mobile/v1/readiness/daily/__tests__/route.test.ts
+PASS src/app/api/health/nutrition/meals/__tests__/route.test.ts
+PASS src/lib/admin/__tests__/csrfHelper.test.ts
+PASS src/lib/admin/__tests__/adminCheck.test.ts
+PASS src/lib/plans/__tests__/csv-parser.test.ts
+PASS src/lib/__tests__/rateLimitAdmin.security.test.ts
+PASS src/lib/services/__tests__/analytics.fitness.test.ts
+PASS src/components/__tests__/markdown-sanitization.security.test.tsx
+PASS tests/api/auth/strava-callback.test.ts
+PASS src/lib/logging/__tests__/logger.test.ts
+PASS src/app/api/admin/ai-settings/__tests__/route.test.ts
+  ● Console
+
+    console.error
+      Admin AI settings GET error: Error: Database error
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/ai-settings/__tests__/route.test.ts:94:27)
+          at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+
+      103 |         return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
+      104 |     } catch (error) {
+    > 105 |         console.error('Admin AI settings GET error:', error);
+          |                 ^
+      106 |         return handleError(error);
+      107 |     }
+      108 | }
+
+      at error (src/app/api/admin/ai-settings/route.ts:105:17)
+      at Object.<anonymous> (src/app/api/admin/ai-settings/__tests__/route.test.ts:99:13)
+
+    console.error
+      Admin AI settings PUT error: Error: Update failed
+          at Object.<anonymous> (/home/thies/Projects/RunFlow/Web/src/app/api/admin/ai-settings/__tests__/route.test.ts:131:27)
+          at Promise.then.completed (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at _runTestsForDescribeBlock (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:121:9)
+          at run (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/home/thies/Projects/RunFlow/Web/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/home/thies/Projects/RunFlow/Web/node_modules/jest-runner/build/runTest.js:444:34)
+
+      260 |         return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
+      261 |     } catch (error) {
+    > 262 |         console.error('Admin AI settings PUT error:', error);
+          |                 ^
+      263 |         return handleError(error);
+      264 |     }
+      265 | }
+
+      at error (src/app/api/admin/ai-settings/route.ts:262:17)
+      at Object.<anonymous> (src/app/api/admin/ai-settings/__tests__/route.test.ts:140:13)
+
+PASS src/lib/strava/sync.test.ts
+  ● Console
+
+    console.log
+      [36m[INFO][0m Sync page fetched { page: 1, activityCount: 5, after: 1672531200 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Activity sync status {
+        activityId: 1000,
+        isNew: true,
+        needsUpdate: null,
+        hasHeartrate: false,
+        existingZone1: undefined
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [36m[INFO][0m Activity sync status {
+        activityId: 1001,
+        isNew: true,
+        needsUpdate: null,
+        hasHeartrate: false,
+        existingZone1: undefined
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [36m[INFO][0m Activity sync status {
+        activityId: 1002,
+        isNew: true,
+        needsUpdate: null,
+        hasHeartrate: false,
+        existingZone1: undefined
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Error syncing activity {
+        activityId: 1000,
+        error: "Cannot read properties of undefined (reading 'id')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Error syncing activity {
+        activityId: 1001,
+        error: "Cannot read properties of undefined (reading 'id')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Error syncing activity {
+        activityId: 1002,
+        error: "Cannot read properties of undefined (reading 'id')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Error syncing activity {
+        activityId: 1003,
+        error: "Cannot read properties of undefined (reading 'id')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Error syncing activity {
+        activityId: 1004,
+        error: "Cannot read properties of undefined (reading 'id')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Sync page fetched { page: 2, activityCount: 0, after: 1672531200 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [33m[WARN][0m Sync completed with errors; not advancing lastSyncAt so failed activities are retried { userId: 'user-123', errors: 5 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      prisma.activity.findUnique called 0 times
+
+      at Object.log (src/lib/strava/sync.test.ts:148:17)
+
+    console.log
+      prisma.activity.findMany called 1 times
+
+      at Object.log (src/lib/strava/sync.test.ts:149:17)
+
+PASS src/lib/plans/__tests__/compute-duration.test.ts
+PASS src/lib/backup/__tests__/scheduler.test.ts
+PASS src/app/api/mobile/v1/activities/route.test.ts
+PASS src/lib/api/__tests__/bodyLimit.test.ts
+PASS src/lib/admin/__tests__/auditLog.test.ts
+PASS src/lib/metrics/__tests__/effectiveVdot.test.ts
+PASS src/lib/ai/__tests__/tokenCounter.test.ts
+PASS src/lib/security/__tests__/cors.test.ts
+PASS src/app/api/mobile/v1/user/consent/__tests__/route.test.ts
+PASS src/app/api/admin/users/[id]/__tests__/route.test.ts
+  ● Console
+
+    console.log
+      [36m[INFO][0m User deleted {
+        userId: 'user-1',
+        userName: 'Test User',
+        userEmail: 'test@example.com'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'DELETE_USER',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m User deleted {
+        userId: 'user-1',
+        userName: 'Test User',
+        userEmail: 'test@example.com'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'DELETE_USER',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m User deleted {
+        userId: 'user-1',
+        userName: 'Test User',
+        userEmail: 'test@example.com'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'DELETE_USER',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/backup/status.test.ts
+PASS src/app/api/health/sync-batch/__tests__/route.test.ts
+PASS src/lib/plans/__tests__/horizon-clamp.test.ts
+PASS src/lib/strava/__tests__/fetch.test.ts
+PASS src/lib/__tests__/crypto.test.ts
+PASS src/lib/__tests__/push.test.ts
+PASS src/lib/plans/__tests__/recalculate-paces.test.ts
+PASS src/middleware.test.ts
+PASS src/lib/plans/triathlon-time.test.ts
+PASS src/lib/plans/__tests__/compliance.test.ts
+PASS src/lib/services/__tests__/analytics.test.ts
+PASS src/app/api/mobile/auth/login/route.test.ts
+PASS src/lib/__tests__/rateLimit.security.test.ts
+  ● Console
+
+    console.warn
+      Rate Limit: Redis not available in production. Falling back to in-memory (acceptable for long-running Docker containers).
+
+      147 |
+      148 |     if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+    > 149 |         console.warn('Rate Limit: Redis not available in production. Falling back to in-memory (acceptable for long-running Docker containers).');
+          |                 ^
+      150 |     }
+      151 |
+      152 |     return checkRateLimitInMemory(key, limit, windowSeconds);
+
+      at warn (src/lib/rateLimit.ts:149:17)
+      at Object.<anonymous> (src/lib/__tests__/rateLimit.security.test.ts:47:24)
+
+    console.log
+      [36m[INFO][0m Redis client initialized with auto-reconnect {}
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Redis client initialized with auto-reconnect {}
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Redis client initialized with auto-reconnect {}
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/security/__tests__/csrf.test.ts
+PASS src/app/api/plan-advanced/[goalId]/workouts/__tests__/route.test.ts
+PASS src/lib/errors/__tests__/handler.test.ts
+PASS src/lib/utils/__tests__/format.test.ts
+PASS src/lib/metrics/__tests__/fitnessCache_logger.test.ts
+PASS src/lib/auth/__tests__/auth-email.test.ts
+PASS src/app/admin/login/page.test.tsx
+PASS src/lib/pwa/__tests__/authCacheEviction.test.ts
+PASS src/app/api/mobile/v1/health/nutrition/search/__tests__/route.test.ts
+  ● Console
+
+    console.log
+      [Mobile Nutrition Search] Query="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" local=0 bls=0 off=0 fs=0 usda=0 nix=0 total=0
+
+      at log (src/app/api/mobile/v1/health/nutrition/search/route.ts:86:17)
+
+PASS src/lib/metrics/__tests__/calibration.test.ts
+PASS src/app/api/webhooks/strava/__tests__/route.test.ts
+PASS src/lib/__tests__/stravaSync.test.ts
+  ● Console
+
+    console.log
+      [36m[INFO][0m Rate limit reached (Redis), waiting { waitSeconds: 1 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/app/api/admin/logout/__tests__/route.test.ts
+PASS src/lib/plans/backyard-time.test.ts
+PASS src/lib/plans/__tests__/csv-parser-row-cap.test.ts
+PASS src/app/api/admin/performance/__tests__/route.test.ts
+PASS src/lib/services/__tests__/analytics.vo2max.test.ts
+PASS src/lib/plans/__tests__/csv-preview-cache.test.ts
+PASS src/lib/health/__tests__/consent-gate.test.ts
+PASS src/lib/plans/__tests__/schedule-utils.test.ts
+PASS src/lib/mobile/__tests__/healthConnect.test.ts
+PASS src/lib/__tests__/config.test.ts
+  ● Console
+
+    console.warn
+      
+      === CONFIGURATION WARNINGS (dev only) ===
+
+      77 |     // Log warnings in development
+      78 |     if (errors.length > 0) {
+    > 79 |         console.warn('\n=== CONFIGURATION WARNINGS (dev only) ===');
+         |                 ^
+      80 |         errors.forEach(err => console.warn(`  - ${err}`));
+      81 |         console.warn('==========================================\n');
+      82 |     }
+
+      at warn (src/lib/config.ts:79:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:34:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:34:48)
+
+    console.warn
+        - Missing required environment variable: NEXTAUTH_SECRET
+
+      78 |     if (errors.length > 0) {
+      79 |         console.warn('\n=== CONFIGURATION WARNINGS (dev only) ===');
+    > 80 |         errors.forEach(err => console.warn(`  - ${err}`));
+         |                                       ^
+      81 |         console.warn('==========================================\n');
+      82 |     }
+      83 | }
+
+      at warn (src/lib/config.ts:80:39)
+          at Array.forEach (<anonymous>)
+      at forEach (src/lib/config.ts:80:16)
+      at validateConfig (src/lib/__tests__/config.test.ts:34:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:34:48)
+
+    console.warn
+      ==========================================
+
+      79 |         console.warn('\n=== CONFIGURATION WARNINGS (dev only) ===');
+      80 |         errors.forEach(err => console.warn(`  - ${err}`));
+    > 81 |         console.warn('==========================================\n');
+         |                 ^
+      82 |     }
+      83 | }
+      84 |
+
+      at warn (src/lib/config.ts:81:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:34:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:34:48)
+
+    console.error
+      
+      === CONFIGURATION ERROR ===
+
+      66 |     // Only throw in production
+      67 |     if (errors.length > 0 && process.env.NODE_ENV === 'production') {
+    > 68 |         console.error('\n=== CONFIGURATION ERROR ===');
+         |                 ^
+      69 |         errors.forEach(err => console.error(`  - ${err}`));
+      70 |         console.error('===========================\n');
+      71 |         throw new Error(
+
+      at error (src/lib/config.ts:68:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:43:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:43:44)
+
+    console.error
+        - Missing required environment variable: NEXTAUTH_SECRET
+
+      67 |     if (errors.length > 0 && process.env.NODE_ENV === 'production') {
+      68 |         console.error('\n=== CONFIGURATION ERROR ===');
+    > 69 |         errors.forEach(err => console.error(`  - ${err}`));
+         |                                       ^
+      70 |         console.error('===========================\n');
+      71 |         throw new Error(
+      72 |             `Configuration validation failed with ${errors.length} error(s). ` +
+
+      at error (src/lib/config.ts:69:39)
+          at Array.forEach (<anonymous>)
+      at forEach (src/lib/config.ts:69:16)
+      at validateConfig (src/lib/__tests__/config.test.ts:43:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:43:44)
+
+    console.error
+      ===========================
+
+      68 |         console.error('\n=== CONFIGURATION ERROR ===');
+      69 |         errors.forEach(err => console.error(`  - ${err}`));
+    > 70 |         console.error('===========================\n');
+         |                 ^
+      71 |         throw new Error(
+      72 |             `Configuration validation failed with ${errors.length} error(s). ` +
+      73 |             `See logs above for details.`
+
+      at error (src/lib/config.ts:70:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:43:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:43:44)
+
+    console.error
+      
+      === CONFIGURATION ERROR ===
+
+      66 |     // Only throw in production
+      67 |     if (errors.length > 0 && process.env.NODE_ENV === 'production') {
+    > 68 |         console.error('\n=== CONFIGURATION ERROR ===');
+         |                 ^
+      69 |         errors.forEach(err => console.error(`  - ${err}`));
+      70 |         console.error('===========================\n');
+      71 |         throw new Error(
+
+      at error (src/lib/config.ts:68:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:52:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:52:44)
+
+    console.error
+        - Security: NEXTAUTH_SECRET appears to be using a default/example value. Generate a secure value with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+
+      67 |     if (errors.length > 0 && process.env.NODE_ENV === 'production') {
+      68 |         console.error('\n=== CONFIGURATION ERROR ===');
+    > 69 |         errors.forEach(err => console.error(`  - ${err}`));
+         |                                       ^
+      70 |         console.error('===========================\n');
+      71 |         throw new Error(
+      72 |             `Configuration validation failed with ${errors.length} error(s). ` +
+
+      at error (src/lib/config.ts:69:39)
+          at Array.forEach (<anonymous>)
+      at forEach (src/lib/config.ts:69:16)
+      at validateConfig (src/lib/__tests__/config.test.ts:52:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:52:44)
+
+    console.error
+      ===========================
+
+      68 |         console.error('\n=== CONFIGURATION ERROR ===');
+      69 |         errors.forEach(err => console.error(`  - ${err}`));
+    > 70 |         console.error('===========================\n');
+         |                 ^
+      71 |         throw new Error(
+      72 |             `Configuration validation failed with ${errors.length} error(s). ` +
+      73 |             `See logs above for details.`
+
+      at error (src/lib/config.ts:70:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:52:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:52:44)
+
+    console.warn
+      [Config] Missing NONEXISTENT, using empty string (dev only)
+
+       95 |             throw new Error(`Required environment variable ${name} is not set`);
+       96 |         }
+    >  97 |         console.warn(`[Config] Missing ${name}, using empty string (dev only)`);
+          |                 ^
+       98 |         return '';
+       99 |     }
+      100 |
+
+      at warn (src/lib/config.ts:97:17)
+      at Object.getRequiredEnv (src/lib/__tests__/config.test.ts:76:20)
+
+PASS src/components/__tests__/RaceCountdown.test.tsx
+PASS src/lib/json/__tests__/serializer.test.ts
+PASS src/app/api/public/plan/generate/__tests__/route.test.ts
+PASS src/lib/strava/transform.test.ts
+PASS src/lib/strava/__tests__/fitness.test.ts
+PASS src/lib/metrics/__tests__/fitness.test.ts
+PASS src/lib/utils/__tests__/bigint.test.ts
+PASS src/lib/metrics/__tests__/fitnessCache.test.ts
+  ● Console
+
+    console.log
+      [36m[INFO][0m [FitnessCache] Updated 30 days { userId: 'user1', count: 30, latestCtl: 4.9, latestAtl: 0.1 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/strava/persistence.test.ts
+PASS src/lib/validation/schemas.test.ts
+PASS src/lib/security/__tests__/nonce.test.ts
+PASS src/lib/ai/__tests__/feedbackNormalize.test.ts
+PASS src/lib/api/__tests__/externalAuth.test.ts
+PASS src/lib/strava/autoSync.test.ts
+PASS src/lib/utils/__tests__/numbers.test.ts
+PASS src/components/__tests__/CalendarView.test.tsx
+PASS src/app/calendar-preview/__tests__/calendar.test.tsx
+PASS src/components/__tests__/Modal.test.tsx
+PASS src/components/__tests__/AiSettingsModal.test.tsx
+PASS src/components/PlanEditor/__tests__/EngineGenerateModal.test.tsx
+PASS src/app/api/dashboard/__tests__/route.test.ts
+PASS src/lib/metrics/__tests__/activeFtp.test.ts
+PASS src/lib/plans/__tests__/replacement-scope.test.ts
+
+Test Suites: 158 passed, 158 total
+Tests:       1598 passed, 1598 total
+Snapshots:   0 total
+Time:        38.448 s
+Ran all test suites.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

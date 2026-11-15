@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { Mail, Lock, User, ArrowRight, ArrowLeft, Check } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, ArrowLeft, Check, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import VerificationModal from '@/components/auth/VerificationModal';
 
@@ -22,6 +22,26 @@ export default function RegisterPage() {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [healthAccepted, setHealthAccepted] = useState(false);
     const [isOver16, setIsOver16] = useState(false);
+    const [signupsAllowed, setSignupsAllowed] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetch('/api/auth/register')
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (!cancelled) {
+                    setSignupsAllowed(typeof data?.allowSignups === 'boolean' ? data.allowSignups : true);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setSignupsAllowed(true);
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const passwordRequirements = [
         { label: 'At least 8 characters', met: password.length >= 8 },
@@ -111,13 +131,39 @@ export default function RegisterPage() {
                     <div className="text-center mb-8">
                         <p className="text-2xl font-bold mb-4">Run<span className="text-accent-orange">Flow</span></p>
                         <h1 className="text-3xl font-bold text-foreground mb-2">
-                            Create your account
+                            {signupsAllowed === false ? 'Registration disabled' : 'Create your account'}
                         </h1>
-                        <p className="text-foreground-muted">
-                            Track your training across running, cycling, and more
-                        </p>
+                        {signupsAllowed !== false && (
+                            <p className="text-foreground-muted">
+                                Track your training across running, cycling, and more
+                            </p>
+                        )}
                     </div>
 
+                    {signupsAllowed === null ? (
+                        <div className="bg-background-secondary p-6 rounded-md border border-line text-center text-sm text-foreground-muted">
+                            Checking registration availability...
+                        </div>
+                    ) : signupsAllowed === false ? (
+                        <div className="bg-background-secondary p-6 rounded-md border border-line text-center space-y-4">
+                            <div className="mx-auto w-12 h-12 rounded-full bg-negative/10 text-negative flex items-center justify-center">
+                                <ShieldAlert className="w-6 h-6" />
+                            </div>
+                            <p className="text-foreground font-medium">
+                                New account registration is currently disabled by the administrator.
+                            </p>
+                            <p className="text-sm text-foreground-muted">
+                                If you already have an account, you can still sign in below.
+                            </p>
+                            <Link
+                                href="/login"
+                                className="btn-primary w-full py-3 inline-flex items-center justify-center gap-2"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                Back to login
+                            </Link>
+                        </div>
+                    ) : (
                     <form onSubmit={handleRegister} className="space-y-4">
                         {/* Name (optional) */}
                         <div className="relative">
@@ -295,6 +341,7 @@ export default function RegisterPage() {
                             </Link>
                         </div>
                     </form>
+                    )}
                 </div>
             </div>
             <VerificationModal

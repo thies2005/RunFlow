@@ -10,6 +10,7 @@ import { verifyPassword } from '@/lib/auth/auth-email';
 import { TIME_RANGES } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
 import { checkRateLimitAsync, getClientIdentifier, resetRateLimit } from '@/lib/rateLimit';
+import { isSignupAllowed } from '@/lib/auth/signupSettings';
 
 function encryptTokenOrFail(
     token: string | null | undefined,
@@ -161,6 +162,7 @@ const authConfig = {
 
             try {
                 if (account?.provider === 'strava' && account.providerAccountId) {
+                    let isExistingUser = false;
                     try {
                         const existingAccount = await prisma.account.findUnique({
                             where: {
@@ -172,6 +174,7 @@ const authConfig = {
                         });
 
                         if (existingAccount) {
+                            isExistingUser = true;
                             await prisma.account.update({
                                 where: { id: existingAccount.id },
                                 data: {
@@ -183,9 +186,24 @@ const authConfig = {
                                 },
                             });
                             logger.info('Force-updated Strava tokens', { userId: existingAccount.userId });
+                        } else {
+                            const existingUser = await prisma.user?.findUnique?.({
+                                where: { stravaId: String(account.providerAccountId) },
+                                select: { id: true },
+                            });
+                            if (existingUser) {
+                                isExistingUser = true;
+                            }
                         }
                     } catch (err) {
                         logger.error('Failed to force-update Strava tokens', { error: err instanceof Error ? err.message : String(err) });
+                    }
+
+                    if (!isExistingUser && !(await isSignupAllowed())) {
+                        logger.warn('Blocked new Strava signup because registration is disabled', {
+                            providerAccountId: String(account.providerAccountId),
+                        });
+                        return false;
                     }
                 }
 

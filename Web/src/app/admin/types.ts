@@ -92,6 +92,10 @@ export interface AdminAiSettingsData {
 
     planBuilderModel: string | null;
     planMaxTokensPerAnalysis: number;
+
+    allowSignups?: boolean;
+    envAllowSignups?: boolean;
+    effectiveAllowSignups?: boolean;
 }
 
 export interface AdminAiSettings {

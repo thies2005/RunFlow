@@ -14,6 +14,7 @@ import { AuthCodeType } from '@/generated/prisma/browser';
 import { generateTokenPair } from '@/lib/mobile/auth';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
 import { readBodyWithLimit } from '@/lib/api/bodyLimit';
+import { isSignupAllowed } from '@/lib/auth/signupSettings';
 
 export async function POST(request: NextRequest) {
     try {
@@ -29,6 +30,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 { error: 'Too many requests. Please try again later.' },
                 { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+            );
+        }
+
+        if (!(await isSignupAllowed())) {
+            return NextResponse.json(
+                { error: 'New account registration is currently disabled.' },
+                { status: 403, headers: rateLimitHeaders(rateLimitResult) }
             );
         }
 

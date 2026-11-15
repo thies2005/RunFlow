@@ -11,6 +11,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 import { logger } from '@/lib/logging/logger';
+import { isSignupAllowed } from '@/lib/auth/signupSettings';
 
 // JWT configuration - uses lazy initialization to avoid build-time errors
 let _jwtSecret: Uint8Array | null = null;
@@ -313,6 +314,10 @@ export async function exchangeStravaCodeForTokens(
         }
 
         if (!user) {
+            if (!(await isSignupAllowed())) {
+                return { error: 'New account registration is currently disabled.' };
+            }
+
             // Create new user. Email is unique — if another account (e.g. an
             // email-login user) already holds the Strava email, retry without
             // it instead of failing the whole sign-in.

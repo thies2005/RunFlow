@@ -15,6 +15,16 @@ import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { readBodyWithLimit } from '@/lib/api/bodyLimit';
 import { handleError } from '@/lib/errors/handler';
 import { logger } from '@/lib/logging/logger';
+import { getSignupStatus, isSignupAllowed } from '@/lib/auth/signupSettings';
+
+export async function GET() {
+    try {
+        const status = await getSignupStatus();
+        return NextResponse.json({ allowSignups: status.allowSignups });
+    } catch (error) {
+        return handleError(error);
+    }
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -24,6 +34,13 @@ export async function POST(request: NextRequest) {
 
         if (!rateLimitResult.allowed) {
             return NextResponse.json({ error: 'Too many registration attempts. Please try again later.' }, { status: 429 });
+        }
+
+        if (!(await isSignupAllowed())) {
+            return NextResponse.json(
+                { error: 'New account registration is currently disabled.' },
+                { status: 403 }
+            );
         }
 
         // p4: bound the anonymous body before parsing (the middleware gates the

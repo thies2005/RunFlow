@@ -401,5 +401,28 @@ describe('auth.ts security regressions', () => {
             expect(result).toBe(true);
             expect(mockAccountUpdate).not.toHaveBeenCalled();
         });
+
+        it('blocks new Strava signups when ALLOW_SIGNUPS=false', async () => {
+            process.env.ENCRYPTION_KEY = randomBytes(32).toString('base64');
+            process.env.ALLOW_SIGNUPS = 'false';
+            mockAccountFindUnique.mockResolvedValue(null);
+            mockUserFindUnique.mockResolvedValue(null);
+
+            const result = await callbacks.signIn({ account: stravaAccount() });
+
+            expect(result).toBe(false);
+            expect(mockAccountUpdate).not.toHaveBeenCalled();
+        });
+
+        it('allows existing Strava users to sign in even when ALLOW_SIGNUPS=false', async () => {
+            process.env.ENCRYPTION_KEY = randomBytes(32).toString('base64');
+            process.env.ALLOW_SIGNUPS = 'false';
+            mockAccountFindUnique.mockResolvedValue({ id: 'account-1', userId: 'user-1' });
+
+            const result = await callbacks.signIn({ account: stravaAccount() });
+
+            expect(result).toBe(true);
+            expect(mockAccountUpdate).toHaveBeenCalled();
+        });
     });
 });

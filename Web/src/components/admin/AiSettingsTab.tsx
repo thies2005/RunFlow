@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Plus, Bot, Eye, Trash2, Save, Loader2, Zap, AlertTriangle, CheckCircle, Sparkles } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import TierInputGroup from '@/components/admin/TierInputGroup';
+import SignupAccessControl from '@/components/admin/SignupAccessControl';
 import useConfirmAction from '@/hooks/useConfirmAction';
 import { AdminAiSettingsData } from '@/app/admin/types';
 
@@ -177,6 +178,17 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
 
     return (
         <div className="space-y-8">
+            {/* System Access & Registration */}
+            <SignupAccessControl
+                title="System Access & Registration"
+                allowSignups={settings?.allowSignups}
+                envAllowSignups={settings?.envAllowSignups}
+                processing={processing}
+                setProcessing={setProcessing}
+                setActionMessage={setActionMessage}
+                onUpdated={() => onRefresh()}
+            />
+
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-background-secondary p-4 rounded-md border border-line">

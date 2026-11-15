@@ -77,6 +77,7 @@ interface MigrationGlobalSettingsBundle {
   dailyMessageLimit: number;
   monthlyMessageLimit: number;
   systemPrompt: string;
+  allowSignups?: boolean;
   _activeProviderSlug: string | null;
   _fallbackProviderSlug: string | null;
 }
@@ -168,6 +169,7 @@ function parseGlobalAiSettings(value: unknown): MigrationGlobalSettingsBundle | 
     dailyMessageLimit: getNumber('dailyMessageLimit'),
     monthlyMessageLimit: getNumber('monthlyMessageLimit'),
     systemPrompt: getString('systemPrompt'),
+    allowSignups: getOptionalBoolean('allowSignups'),
     _activeProviderSlug: getNullableString('_activeProviderSlug'),
     _fallbackProviderSlug: getNullableString('_fallbackProviderSlug'),
   };
@@ -384,6 +386,7 @@ export async function GET(request: NextRequest) {
           dailyMessageLimit: globalSettings.dailyMessageLimit,
           monthlyMessageLimit: globalSettings.monthlyMessageLimit,
           systemPrompt: globalSettings.systemPrompt,
+          allowSignups: globalSettings.allowSignups,
           _activeProviderSlug: globalSettings.activeProvider?.slug ?? null,
           _fallbackProviderSlug: globalSettings.fallbackProvider?.slug ?? null,
         }
@@ -497,6 +500,7 @@ export async function POST(request: NextRequest) {
           _fallbackProviderSlug,
           defaultApiKey,
           defaultApiKeyUnavailable,
+          allowSignups,
           ...rest
         } = bundle.globalAiSettings;
 
@@ -516,6 +520,7 @@ export async function POST(request: NextRequest) {
 
         const baseSettingsData = {
           ...rest,
+          ...(allowSignups !== undefined ? { allowSignups } : {}),
           activeProviderId: activeProvider?.id ?? null,
           fallbackProviderId: fallbackProvider?.id ?? null,
         };

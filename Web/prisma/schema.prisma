@@ -172,6 +172,7 @@ model GlobalAiSettings {
   fallbackProvider       AiProvider? @relation("FallbackProvider", fields: [fallbackProviderId], references: [id])
   planBuilderModel       String      @default("gpt-4o")
   planMaxTokensPerAnalysis Int       @default(8000)
+  allowSignups             Boolean     @default(true)
 }
 
 model AiProvider {

@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Activity, Mail, Trash2 } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import useConfirmAction from '@/hooks/useConfirmAction';
+import SignupAccessControl from '@/components/admin/SignupAccessControl';
 import { AdminUser, AdminAiSettings } from '@/app/admin/types';
 
 interface UsersTabProps {
@@ -142,8 +143,17 @@ export default function UsersTab({
     };
 
     return (
-        <div>
-            <div className="flex justify-end mb-4">
+        <div className="space-y-6">
+            <SignupAccessControl
+                allowSignups={aiSettings?.settings?.allowSignups}
+                envAllowSignups={aiSettings?.settings?.envAllowSignups}
+                processing={processing}
+                setProcessing={setProcessing}
+                setActionMessage={setActionMessage}
+                onUpdated={() => fetchAllData()}
+            />
+
+            <div className="flex justify-end">
                 <button
                     onClick={() => handleRecalculateFitness()}
                     disabled={processing}

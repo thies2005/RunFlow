@@ -11,6 +11,7 @@ import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/c
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logAdminAction } from '@/lib/admin/auditLog';
 import { handleError } from '@/lib/errors/handler';
+import { isEnvSignupsAllowed } from '@/lib/auth/signupSettings';
 
 export async function GET(request: NextRequest) {
     const rateLimit = await adminRateLimit(request, 'read');
@@ -92,6 +93,11 @@ export async function GET(request: NextRequest) {
                 dailyMessageLimit: globalSettings.dailyMessageLimit,
                 monthlyMessageLimit: globalSettings.monthlyMessageLimit,
                 systemPrompt: globalSettings.systemPrompt,
+
+                // Signups
+                allowSignups: globalSettings.allowSignups ?? true,
+                envAllowSignups: isEnvSignupsAllowed(),
+                effectiveAllowSignups: isEnvSignupsAllowed() && (globalSettings.allowSignups ?? true),
             },
             stats: {
                 totalUsers,
@@ -160,7 +166,18 @@ export async function PUT(request: NextRequest) {
             dailyMessageLimit,
             monthlyMessageLimit,
             systemPrompt,
+
+            // Signups
+            allowSignups,
         } = body;
+
+        const envAllowSignups = isEnvSignupsAllowed();
+        if (allowSignups !== undefined && !envAllowSignups && Boolean(allowSignups) === true && Object.keys(body).length === 1) {
+            return NextResponse.json(
+                { error: 'Signups are disabled by the ALLOW_SIGNUPS environment variable and cannot be enabled.' },
+                { status: 403 }
+            );
+        }
 
         const updateData: Record<string, unknown> = {};
 
@@ -221,6 +238,11 @@ export async function PUT(request: NextRequest) {
         if (monthlyMessageLimit !== undefined) updateData.monthlyMessageLimit = parseInt(monthlyMessageLimit) || 500;
         if (systemPrompt !== undefined) updateData.systemPrompt = systemPrompt;
 
+        // Signups
+        if (allowSignups !== undefined && envAllowSignups) {
+            updateData.allowSignups = Boolean(allowSignups);
+        }
+
         const settings = await prisma.globalAiSettings.upsert({
             where: { id: 'singleton' },
             create: {
@@ -250,6 +272,10 @@ export async function PUT(request: NextRequest) {
                 calorieSnapModel: settings.calorieSnapModel,
                 planBuilderModel: settings.planBuilderModel,
                 planMaxTokensPerAnalysis: settings.planMaxTokensPerAnalysis,
+
+                allowSignups: settings.allowSignups ?? true,
+                envAllowSignups,
+                effectiveAllowSignups: envAllowSignups && (settings.allowSignups ?? true),
             },
         });
 

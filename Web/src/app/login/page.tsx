@@ -21,11 +21,27 @@ export default function LoginPage() {
 
     const [isLoading, setIsLoading] = useState(false);
     const [showForgotPwd, setShowForgotPwd] = useState(false);
+    const [signupsAllowed, setSignupsAllowed] = useState(true);
 
     // Consent checkboxes for Strava (since Strava login creates an account if it doesn't exist)
     const [stravaTermsAccepted, setStravaTermsAccepted] = useState(false);
     const [stravaHealthAccepted, setStravaHealthAccepted] = useState(false);
     const [stravaAgeAccepted, setStravaAgeAccepted] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        fetch('/api/auth/register')
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (!cancelled && typeof data?.allowSignups === 'boolean') {
+                    setSignupsAllowed(data.allowSignups);
+                }
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     useEffect(() => {
         if (status === 'authenticated') {
@@ -259,12 +275,18 @@ export default function LoginPage() {
                                 {!isLoading && <ArrowRight className="w-4 h-4" />}
                             </button>
 
-                            <p className="text-sm text-foreground-muted">
-                                Don&apos;t have an account?{' '}
-                                <Link href="/register" className="text-accent-orange hover:underline">
-                                    Create one
-                                </Link>
-                            </p>
+                            {signupsAllowed ? (
+                                <p className="text-sm text-foreground-muted">
+                                    Don&apos;t have an account?{' '}
+                                    <Link href="/register" className="text-accent-orange hover:underline">
+                                        Create one
+                                    </Link>
+                                </p>
+                            ) : (
+                                <p className="text-sm text-foreground-muted">
+                                    New account registrations are currently closed.
+                                </p>
+                            )}
                         </form>
                     )}
                 </div>

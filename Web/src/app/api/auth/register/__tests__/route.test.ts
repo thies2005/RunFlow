@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { POST } from '../route';
+import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
 
 jest.mock('@/lib/db', () => ({
@@ -10,6 +10,9 @@ jest.mock('@/lib/db', () => ({
         user: {
             findUnique: jest.fn(),
             create: jest.fn(),
+        },
+        globalAiSettings: {
+            findUnique: jest.fn(),
         },
     },
 }));
@@ -52,8 +55,13 @@ import { handleError } from '@/lib/errors/handler';
 import { logger } from '@/lib/logging/logger';
 
 describe('POST /api/auth/register', () => {
+    const originalEnv = process.env;
+
     beforeEach(() => {
         jest.clearAllMocks();
+        process.env = { ...originalEnv };
+        delete process.env.ALLOW_SIGNUPS;
+        (prisma.globalAiSettings.findUnique as jest.Mock).mockResolvedValue({ allowSignups: true });
         (getClientIdentifier as jest.Mock).mockReturnValue('test-client');
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
         (hashPassword as jest.Mock).mockResolvedValue('hashed-password');
@@ -247,5 +255,70 @@ describe('POST /api/auth/register', () => {
             '[Register] Failed to send welcome email',
             { error: emailError }
         );
+    });
+
+    it('should return 403 when ALLOW_SIGNUPS=false in env even if admin allows signups', async () => {
+        process.env.ALLOW_SIGNUPS = 'false';
+        (prisma.globalAiSettings.findUnique as jest.Mock).mockResolvedValue({ allowSignups: true });
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: 'test@example.com',
+                password: 'ValidPassword123!',
+            }),
+        });
+
+        const response = await POST(mockRequest);
+        const data = await response.json();
+
+        expect(response.status).toBe(403);
+        expect(data.error).toContain('disabled');
+        expect(prisma.user.create).not.toHaveBeenCalled();
+    });
+
+    it('should return 403 when ALLOW_SIGNUPS=true and admin allowSignups is false', async () => {
+        process.env.ALLOW_SIGNUPS = 'true';
+        (prisma.globalAiSettings.findUnique as jest.Mock).mockResolvedValue({ allowSignups: false });
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: 'test@example.com',
+                password: 'ValidPassword123!',
+            }),
+        });
+
+        const response = await POST(mockRequest);
+        const data = await response.json();
+
+        expect(response.status).toBe(403);
+        expect(data.error).toContain('disabled');
+        expect(prisma.user.create).not.toHaveBeenCalled();
+    });
+
+    it('GET /api/auth/register returns effective allowSignups status', async () => {
+        process.env.ALLOW_SIGNUPS = 'yes';
+        (prisma.globalAiSettings.findUnique as jest.Mock).mockResolvedValue({ allowSignups: true });
+        let response = await GET();
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ allowSignups: true });
+
+        (prisma.globalAiSettings.findUnique as jest.Mock).mockResolvedValue({ allowSignups: false });
+        response = await GET();
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ allowSignups: false });
+
+        process.env.ALLOW_SIGNUPS = 'no';
+        (prisma.globalAiSettings.findUnique as jest.Mock).mockResolvedValue({ allowSignups: true });
+        response = await GET();
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ allowSignups: false });
+    });
+
+    afterAll(() => {
+        process.env = originalEnv;
     });
 });

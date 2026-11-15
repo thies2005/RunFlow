@@ -7,24 +7,73 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@/generated/prisma/client';
 import { encryptToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logAdminAction } from '@/lib/admin/auditLog';
+import { validateBaseUrl } from '@/lib/ai/providers';
+import { parseRoutingConfig, scrubProviderFromRoutingConfig } from '@/lib/ai/routing';
 
-/** Validate that a provider URL is safe (https only, or localhost for dev) */
-function isValidProviderUrl(url: string): boolean {
+const VALID_PROVIDER_TYPES = new Set(['openai', 'anthropic', 'google']);
+
+function getPrismaErrorCode(error: unknown): string | undefined {
+    if (error && typeof error === 'object' && 'code' in error && typeof (error as { code?: unknown }).code === 'string') {
+        return (error as { code: string }).code;
+    }
+    return undefined;
+}
+
+function parseMonthlyTokenLimit(raw: unknown): { ok: true; value: bigint | null } | { ok: false } {
+    if (raw === undefined || raw === null || raw === '') {
+        return { ok: true, value: null };
+    }
     try {
-        const parsed = new URL(url);
-        // Allow https in production, http only for localhost/dev
-        if (parsed.protocol === 'https:') return true;
-        if (parsed.protocol === 'http:' && (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1')) return true;
-        return false;
+        const parsed = typeof raw === 'bigint' ? raw : BigInt(String(raw).trim());
+        if (parsed < BigInt(0)) return { ok: false };
+        return { ok: true, value: parsed };
+    } catch {
+        return { ok: false };
+    }
+}
+
+/** Validate that a provider URL is safe (public HTTPS only, or localhost HTTP in development) */
+function isValidProviderUrl(url: string): boolean {
+    let parsed: URL;
+    try {
+        parsed = new URL(url);
     } catch {
         return false;
     }
+
+    if (parsed.username || parsed.password) {
+        return false;
+    }
+
+    const bareHost = parsed.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+
+    if (process.env.NODE_ENV === 'development') {
+        if (
+            parsed.protocol === 'http:' &&
+            (bareHost === 'localhost' || bareHost === '127.0.0.1' || bareHost === '::1')
+        ) {
+            return true;
+        }
+    }
+
+    if (
+        bareHost === '::1' ||
+        bareHost === '::' ||
+        bareHost.startsWith('fe80:') ||
+        bareHost.startsWith('fc') ||
+        bareHost.startsWith('fd')
+    ) {
+        return false;
+    }
+
+    return validateBaseUrl(url, [url]);
 }
 
 
@@ -80,24 +129,50 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { name, type, baseUrl, apiKey, models, slug, monthlyTokenLimit } = body;
 
-        if (!name || !type || !baseUrl || !apiKey || !slug) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        const trimmedName = typeof name === 'string' ? name.trim() : '';
+        const trimmedSlug = typeof slug === 'string' ? slug.trim() : '';
+        const trimmedType = typeof type === 'string' ? type.trim() : '';
+        const trimmedBaseUrl = typeof baseUrl === 'string' ? baseUrl.trim() : '';
+        const trimmedApiKey = typeof apiKey === 'string' ? apiKey.trim() : '';
+
+        if (!trimmedName || !trimmedType || !trimmedBaseUrl || !trimmedSlug) {
+            return NextResponse.json({ error: 'Name, slug, type, and baseUrl are required' }, { status: 400 });
         }
 
-        if (!isValidProviderUrl(baseUrl)) {
-            return NextResponse.json({ error: 'Invalid base URL. Must be a valid HTTPS URL.' }, { status: 400 });
+        if (!trimmedApiKey) {
+            return NextResponse.json({ error: 'API key is required' }, { status: 400 });
+        }
+
+        if (!VALID_PROVIDER_TYPES.has(trimmedType)) {
+            return NextResponse.json({ error: 'Provider type must be openai, anthropic, or google' }, { status: 400 });
+        }
+
+        if (!isValidProviderUrl(trimmedBaseUrl)) {
+            return NextResponse.json(
+                { error: 'Invalid base URL. Must be a public HTTPS URL (localhost HTTP is allowed in development only).' },
+                { status: 400 }
+            );
+        }
+
+        const parsedLimit = parseMonthlyTokenLimit(monthlyTokenLimit);
+        if (!parsedLimit.ok) {
+            return NextResponse.json({ error: 'monthlyTokenLimit must be a non-negative integer' }, { status: 400 });
+        }
+
+        if (models !== undefined && (!Array.isArray(models) || models.some((m) => typeof m !== 'string'))) {
+            return NextResponse.json({ error: 'models must be an array of strings' }, { status: 400 });
         }
 
         const provider = await prisma.aiProvider.create({
             data: {
-                name,
-                slug,
-                type,
-                baseUrl,
-                apiKey: encryptToken(apiKey),
+                name: trimmedName,
+                slug: trimmedSlug,
+                type: trimmedType,
+                baseUrl: trimmedBaseUrl,
+                apiKey: encryptToken(trimmedApiKey),
                 models: models || [],
                 isActive: true, // Default active
-                monthlyTokenLimit: monthlyTokenLimit ? BigInt(monthlyTokenLimit) : null,
+                monthlyTokenLimit: parsedLimit.value,
             },
         });
 
@@ -145,24 +220,45 @@ export async function PUT(request: NextRequest) {
         const body = await request.json();
         const { id, name, type, baseUrl, apiKey, models, isActive, monthlyTokenLimit } = body;
 
-        if (!id) {
+        if (!id || typeof id !== 'string') {
             return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
         }
 
-        const updateData: Record<string, unknown> = {};
-        if (name) updateData.name = name;
-        if (type) updateData.type = type;
-        if (baseUrl) {
-            if (!isValidProviderUrl(baseUrl)) {
-                return NextResponse.json({ error: 'Invalid base URL. Must be a valid HTTPS URL.' }, { status: 400 });
+        const updateData: Prisma.AiProviderUpdateInput = {};
+        if (typeof name === 'string' && name.trim()) updateData.name = name.trim();
+        if (type !== undefined) {
+            const trimmedType = typeof type === 'string' ? type.trim() : '';
+            if (!VALID_PROVIDER_TYPES.has(trimmedType)) {
+                return NextResponse.json({ error: 'Provider type must be openai, anthropic, or google' }, { status: 400 });
             }
-            updateData.baseUrl = baseUrl;
+            updateData.type = trimmedType;
         }
-        if (apiKey) updateData.apiKey = encryptToken(apiKey); // Only update if provided
-        if (models) updateData.models = models;
-        if (isActive !== undefined) updateData.isActive = isActive;
+        if (baseUrl !== undefined) {
+            const trimmedBaseUrl = typeof baseUrl === 'string' ? baseUrl.trim() : '';
+            if (!trimmedBaseUrl || !isValidProviderUrl(trimmedBaseUrl)) {
+                return NextResponse.json(
+                    { error: 'Invalid base URL. Must be a public HTTPS URL (localhost HTTP is allowed in development only).' },
+                    { status: 400 }
+                );
+            }
+            updateData.baseUrl = trimmedBaseUrl;
+        }
+        if (typeof apiKey === 'string' && apiKey.trim()) {
+            updateData.apiKey = encryptToken(apiKey.trim()); // Only update if provided
+        }
+        if (models !== undefined) {
+            if (!Array.isArray(models) || models.some((m) => typeof m !== 'string')) {
+                return NextResponse.json({ error: 'models must be an array of strings' }, { status: 400 });
+            }
+            updateData.models = models;
+        }
+        if (isActive !== undefined) updateData.isActive = Boolean(isActive);
         if (monthlyTokenLimit !== undefined) {
-            updateData.monthlyTokenLimit = monthlyTokenLimit ? BigInt(monthlyTokenLimit) : null;
+            const parsedLimit = parseMonthlyTokenLimit(monthlyTokenLimit);
+            if (!parsedLimit.ok) {
+                return NextResponse.json({ error: 'monthlyTokenLimit must be a non-negative integer' }, { status: 400 });
+            }
+            updateData.monthlyTokenLimit = parsedLimit.value;
         }
 
         const provider = await prisma.aiProvider.update({
@@ -187,10 +283,19 @@ export async function PUT(request: NextRequest) {
 
         return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
+        const code = getPrismaErrorCode(error);
+        if (code === 'P2025') {
+            return NextResponse.json({ error: 'Provider not found' }, { status: 404 });
+        }
+        if (code === 'P2002') {
+            return NextResponse.json({ error: 'A provider with this slug already exists' }, { status: 400 });
+        }
         console.error('Providers PUT error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
+export { PUT as PATCH };
 
 export async function DELETE(request: NextRequest) {
     if (!validateCsrfToken(request)) {
@@ -215,20 +320,36 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-        // Clear active/fallback references if deleting a referenced provider
-        const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
-        if (globalSettings && (globalSettings.activeProviderId === id || globalSettings.fallbackProviderId === id)) {
-            const clearData: { activeProviderId?: null; fallbackProviderId?: null } = {};
-            if (globalSettings.activeProviderId === id) clearData.activeProviderId = null;
-            if (globalSettings.fallbackProviderId === id) clearData.fallbackProviderId = null;
-            await prisma.globalAiSettings.update({
-                where: { id: 'singleton' },
-                data: clearData,
-            });
-        }
+        await prisma.$transaction(async (tx) => {
+            // Clear active/fallback/routingConfig references if deleting a referenced provider
+            const globalSettings = await tx.globalAiSettings.findUnique({ where: { id: 'singleton' } });
+            if (globalSettings) {
+                const clearData: Prisma.GlobalAiSettingsUncheckedUpdateInput = {};
+                if (globalSettings.activeProviderId === id) clearData.activeProviderId = null;
+                if (globalSettings.fallbackProviderId === id) clearData.fallbackProviderId = null;
 
-        await prisma.aiProvider.delete({
-            where: { id },
+                if (globalSettings.routingConfig != null) {
+                    const currentParsed = parseRoutingConfig(globalSettings.routingConfig);
+                    const scrubbed = scrubProviderFromRoutingConfig(globalSettings.routingConfig, id);
+                    if (JSON.stringify(scrubbed) !== JSON.stringify(currentParsed)) {
+                        const hasTiers = scrubbed !== null && Object.keys(scrubbed.tiers).length > 0;
+                        clearData.routingConfig = hasTiers
+                            ? (scrubbed as unknown as Prisma.InputJsonValue)
+                            : Prisma.DbNull;
+                    }
+                }
+
+                if (Object.keys(clearData).length > 0) {
+                    await tx.globalAiSettings.update({
+                        where: { id: 'singleton' },
+                        data: clearData,
+                    });
+                }
+            }
+
+            await tx.aiProvider.delete({
+                where: { id },
+            });
         });
 
         await logAdminAction(request, 'MODIFY_PROVIDERS', { type: 'PROVIDER', id }, {
@@ -238,6 +359,9 @@ export async function DELETE(request: NextRequest) {
         const response = NextResponse.json({ success: true });
         return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
+        if (getPrismaErrorCode(error) === 'P2025') {
+            return NextResponse.json({ error: 'Provider not found' }, { status: 404 });
+        }
         console.error('Providers DELETE error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

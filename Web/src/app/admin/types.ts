@@ -1,3 +1,36 @@
+import type {
+    AiFunction,
+    AiTier,
+    FunctionRouteConfig,
+    ModelTarget,
+    TierRouteConfig,
+    TierRoutingConfig,
+} from '@/lib/ai/routing';
+
+export type {
+    AiFunction,
+    AiTier,
+    FunctionRouteConfig,
+    ModelTarget,
+    TierRouteConfig,
+    TierRoutingConfig,
+};
+
+export interface AdminAiProvider {
+    id: string;
+    name: string;
+    slug: string;
+    type: string;
+    baseUrl: string;
+    apiKey: string | null;
+    hasKey?: boolean;
+    models: string[];
+    isActive: boolean;
+    monthlyTokenLimit: string | null;
+    monthlyInputTokensUsed?: number;
+    monthlyOutputTokensUsed?: number;
+}
+
 export interface AdminStats {
     users: {
         total: number;
@@ -107,6 +140,8 @@ export interface AdminAiSettingsData {
 
     planBuilderModel: string | null;
     planMaxTokensPerAnalysis: number;
+
+    routingConfig?: TierRoutingConfig | null;
 
     allowSignups?: boolean;
     envAllowSignups?: boolean;

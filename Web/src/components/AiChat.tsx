@@ -347,7 +347,11 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                             });
                         }
                         if (json.error) {
-                            throw new Error(json.error);
+                            const cleaned = String(json.error).replace(/^Error:\s*/i, '');
+                            const retryHint = typeof json.retryAfterSeconds === 'number' && json.retryAfterSeconds > 0
+                                ? ` (Try again in ${json.retryAfterSeconds}s)`
+                                : '';
+                            throw new Error(`${cleaned}${retryHint}`);
                         }
                     } catch (e) {
                         // Re-throw intentional errors (from json.error above)
@@ -367,7 +371,8 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
             }
         } catch (err) {
             if ((err as Error).name === 'AbortError') return;
-            setError((err as Error).message);
+            const rawMsg = err instanceof Error ? err.message : String(err);
+            setError(rawMsg.replace(/^Error:\s*/i, ''));
             setMessages((prev) => {
                 const last = prev[prev.length - 1];
                 if (last?.role === 'assistant' && !last.content) {
@@ -437,6 +442,20 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 {isStreaming ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Send className="w-4 h-4 text-white" />}
                             </button>
                         </div>
+                        {error && (
+                            <div role="alert" className="mt-2 p-2.5 bg-negative/10 border border-negative/25 rounded-md flex items-start gap-2 text-negative text-xs">
+                                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                <span className="flex-1">{error}</span>
+                                <button
+                                    type="button"
+                                    aria-label="Dismiss error"
+                                    onClick={() => setError(null)}
+                                    className="text-negative/80 hover:text-negative underline shrink-0"
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
+                        )}
                     </>
                 )}
             </div>

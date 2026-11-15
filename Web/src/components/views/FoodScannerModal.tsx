@@ -147,7 +147,11 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
             }
 
             if (!res.ok) {
-                throw new Error(data.error || `Error ${res.status}`);
+                const cleaned = String(data.error || `Error ${res.status}`).replace(/^Error:\s*/i, '');
+                const retryAfter = typeof data.retryAfterSeconds === 'number' && data.retryAfterSeconds > 0
+                    ? ` (Try again in ${data.retryAfterSeconds}s)`
+                    : '';
+                throw new Error(`${cleaned}${retryAfter}`);
             }
 
             onScanComplete(data);
@@ -302,7 +306,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                                     {isAnalyzing ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin" />
-                                            <span>Analyzing with Gemini...</span>
+                                            <span>Analyzing food photo...</span>
                                         </>
                                     ) : (
                                         <>

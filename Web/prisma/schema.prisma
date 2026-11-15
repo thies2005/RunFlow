@@ -173,6 +173,7 @@ model GlobalAiSettings {
   planBuilderModel       String      @default("gpt-4o")
   planMaxTokensPerAnalysis Int       @default(8000)
   allowSignups             Boolean     @default(true)
+  routingConfig            Json?
 }
 
 model AiProvider {

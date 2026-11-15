@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { generateAndSaveActivityFeedback } from '@/lib/ai/feedback';
+import { AiProviderError, toSafeUserError } from '@/lib/ai/errors';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders, RATE_LIMITS } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 
@@ -77,8 +78,10 @@ export async function POST(request: NextRequest) {
             const result = await generateAndSaveActivityFeedback(activityId, user.id, regenerate, controller.signal);
             return NextResponse.json(result, { headers: rateLimitHeaders(rateLimitResult) });
         } catch (error: unknown) {
+            const rlHeaders = rateLimitHeaders(rateLimitResult);
+
             if (controller.signal.aborted) {
-                await prisma.feedbackJob.upsert({
+                const job = await prisma.feedbackJob.upsert({
                     where: { activityId },
                     create: {
                         userId: user.id,
@@ -94,8 +97,64 @@ export async function POST(request: NextRequest) {
                 });
                 return NextResponse.json({
                     queued: true,
+                    jobId: job?.id,
+                    status: 'pending',
                     message: 'Generation is taking longer than expected. It has been queued and will appear shortly.',
-                });
+                }, { headers: rlHeaders });
+            }
+
+            if (error instanceof AiProviderError) {
+                if (error.code === 'USER_LIMIT_REACHED') {
+                    return NextResponse.json(
+                        { error: error.userMessage, errorCode: error.code },
+                        { status: 429, headers: rlHeaders }
+                    );
+                }
+
+                if (
+                    error.code === 'RATE_LIMITED' ||
+                    error.code === 'TIMEOUT' ||
+                    error.code === 'PROVIDER_UNAVAILABLE'
+                ) {
+                    const job = await prisma.feedbackJob.upsert({
+                        where: { activityId },
+                        create: {
+                            userId: user.id,
+                            activityId,
+                            priority: 1,
+                        },
+                        update: {
+                            status: 'PENDING',
+                            retryCount: 0,
+                            nextRunAt: new Date(),
+                            errorLog: `${error.code} during on-demand mobile request`,
+                        },
+                    });
+                    const safe = toSafeUserError(error);
+                    return NextResponse.json(
+                        {
+                            queued: true,
+                            jobId: job?.id,
+                            status: 'pending',
+                            message: error.code === 'TIMEOUT'
+                                ? 'Generation timed out. Your feedback has been queued and will appear shortly.'
+                                : 'Server rate limited. Your feedback is being prepared and will appear shortly.',
+                            error: safe.message,
+                            errorCode: safe.code,
+                        },
+                        { status: 429, headers: rlHeaders }
+                    );
+                }
+
+                const safe = toSafeUserError(error);
+                return NextResponse.json(
+                    {
+                        error: safe.message,
+                        errorCode: safe.code,
+                        ...(safe.retryAfterSeconds !== undefined ? { retryAfterSeconds: safe.retryAfterSeconds } : {}),
+                    },
+                    { status: safe.httpStatus, headers: rlHeaders }
+                );
             }
 
             const message = error instanceof Error ? error.message : String(error);
@@ -105,8 +164,14 @@ export async function POST(request: NextRequest) {
             if (message.includes('AI features not enabled or no provider configured')) {
                 return errorResponses.forbidden(message);
             }
+            if (message.includes('Usage limit reached') || message.includes('No tokens remaining') || message.includes('Quota exhausted')) {
+                return NextResponse.json(
+                    { error: message, errorCode: 'USER_LIMIT_REACHED' },
+                    { status: 429, headers: rlHeaders }
+                );
+            }
             if (message.includes('rate limited') || message.includes('(429)')) {
-                await prisma.feedbackJob.upsert({
+                const job = await prisma.feedbackJob.upsert({
                     where: { activityId },
                     create: {
                         userId: user.id,
@@ -117,18 +182,27 @@ export async function POST(request: NextRequest) {
                         status: 'PENDING',
                         retryCount: 0,
                         nextRunAt: new Date(),
-                        errorLog: 'Rate limited during on-demand mobile request',
+                        errorLog: 'Rate limited during on-demand mobile request'
                     }
                 });
                 return NextResponse.json({
                     queued: true,
+                    jobId: job?.id,
+                    status: 'pending',
                     message: 'Server rate limited. Your feedback is being prepared and will appear shortly.',
-                }, { status: 429 });
+                    error: 'AI provider is temporarily rate-limited. Please try again in a moment.',
+                    errorCode: 'RATE_LIMITED',
+                }, { status: 429, headers: rlHeaders });
             }
-            if (message.includes('Usage limit reached') || message.includes('No tokens remaining') || message.includes('Quota exhausted')) {
-                return NextResponse.json({ error: message }, { status: 429 });
+
+            const safe = toSafeUserError(error);
+            if (safe.httpStatus >= 500) {
+                return handleApiError(error, { path: '/api/mobile/v1/ai/activity-feedback' });
             }
-            throw error;
+            return NextResponse.json(
+                { error: safe.message, errorCode: safe.code },
+                { status: safe.httpStatus, headers: rlHeaders }
+            );
         } finally {
             clearTimeout(timeout);
         }

@@ -61,6 +61,8 @@ jest.mock('@/lib/db', () => {
         userId: '',
         usageTier: 'tier1',
         customApiKey: null,
+        adminAllowed: true,
+        aiEnabled: true,
         lastUsageReset: new Date(),
         messagesUsedToday: 0,
         messagesUsedThisMonth: 0,
@@ -198,6 +200,55 @@ describe('reserveUsageSlot (atomic chat quota reservation)', () => {
         expect(reservation.claimed).toBe(false);
         expect(reservation.reason).toBe('Daily or monthly AI message/token limit reached');
         expect(ENGINE.__getRow('u1').messagesUsedToday).toBe(0);
+    });
+
+    it('rejects when combined daily (input + output) tokens reach the cap', async () => {
+        ENGINE.__setRow({
+            userId: 'u1',
+            usageTier: 'tier1',
+            inputTokensUsedToday: 30000,
+            outputTokensUsedToday: 20000,
+        });
+
+        const reservation = await reserveUsageSlot('u1');
+
+        expect(reservation.allowed).toBe(false);
+        expect(reservation.claimed).toBe(false);
+        expect(reservation.reason).toBe('Daily or monthly AI message/token limit reached');
+        expect(ENGINE.__getRow('u1').messagesUsedToday).toBe(0);
+    });
+
+    it('rejects when combined monthly (input + output) tokens reach the cap', async () => {
+        ENGINE.__setRow({
+            userId: 'u1',
+            usageTier: 'tier1',
+            inputTokensUsedThisMonth: 300000,
+            outputTokensUsedThisMonth: 200000,
+        });
+
+        const reservation = await reserveUsageSlot('u1');
+
+        expect(reservation.allowed).toBe(false);
+        expect(reservation.claimed).toBe(false);
+        expect(reservation.reason).toBe('Daily or monthly AI message/token limit reached');
+        expect(ENGINE.__getRow('u1').messagesUsedThisMonth).toBe(0);
+    });
+
+    it('rejects BYOK users when adminAllowed is false', async () => {
+        ENGINE.__setRow({
+            userId: 'u1',
+            usageTier: 'none',
+            customApiKey: 'sk-own-key',
+            adminAllowed: false,
+        });
+
+        const reservation = await reserveUsageSlot('u1');
+
+        expect(reservation).toEqual({
+            allowed: false,
+            claimed: false,
+            reason: 'AI features are not enabled for your account',
+        });
     });
 
     it('rejects when the monthly message cap is already reached', async () => {

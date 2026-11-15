@@ -1,10 +1,12 @@
 /**
  * Plan access control helpers.
  *
- * - checkPlanAccess  → any authenticated user (free tier)
- * - checkPremiumAccess → tier2/tier3/admin only (AI features)
+ * - checkPlanAccess        → any authenticated user (free tier)
+ * - checkPremiumAccess     → tier2/tier3/admin only (backward-compatible premium flag)
+ * - isPremiumOrAllowedTier / hasPlanBuilderAccess → Plan Builder eligibility
+ *   (tier2/tier3, admin, active BYOK, or tier1 with explicit planBuilder route)
  */
-import { prisma } from '@/lib/db';
+import { checkPlanBuilderEligibility } from '@/lib/ai/routing';
 
 export async function checkPlanAccess(_userId: string): Promise<true> {
     // The advanced editor is available to ALL authenticated users.
@@ -13,13 +15,16 @@ export async function checkPlanAccess(_userId: string): Promise<true> {
 }
 
 export async function checkPremiumAccess(userId: string): Promise<boolean> {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, isAdmin: true, aiSettings: { select: { usageTier: true } } },
-    });
-    const tier = user?.aiSettings?.usageTier || 'none';
-    if (tier !== 'tier2' && tier !== 'tier3' && !user?.isAdmin) {
-        return false;
-    }
-    return true;
+    const { isPremium } = await checkPlanBuilderEligibility(userId);
+    return isPremium;
+}
+
+export async function isPremiumOrAllowedTier(userId: string): Promise<boolean> {
+    const { canUsePlanBuilder } = await checkPlanBuilderEligibility(userId);
+    return canUsePlanBuilder;
+}
+
+export async function hasPlanBuilderAccess(userId: string): Promise<boolean> {
+    const { canUsePlanBuilder } = await checkPlanBuilderEligibility(userId);
+    return canUsePlanBuilder;
 }

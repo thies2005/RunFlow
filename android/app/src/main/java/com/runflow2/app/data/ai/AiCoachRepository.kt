@@ -16,13 +16,86 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.HttpException
 import java.io.IOException
 import java.util.UUID
+
+private const val MAX_ERROR_BODY_BYTES = 16_384L
+private val LEADING_ERROR_PREFIX = Regex("^(?:[A-Za-z]*Error:\\s*)+", RegexOption.IGNORE_CASE)
+
+internal fun cleanErrorMessage(raw: String?): String? {
+    val cleaned = raw
+        ?.trim()
+        ?.replace(LEADING_ERROR_PREFIX, "")
+        ?.trim()
+    return cleaned?.takeIf { it.isNotEmpty() }
+}
+
+internal fun readBoundedBody(body: ResponseBody?, maxBytes: Long = MAX_ERROR_BODY_BYTES): String {
+    if (body == null) return ""
+    return runCatching {
+        body.use {
+            val source = it.source()
+            source.request(maxBytes + 1)
+            source.readUtf8(minOf(source.buffer.size, maxBytes))
+        }
+    }.getOrDefault("")
+}
+
+internal fun parseHttpErrorMessage(
+    code: Int,
+    rawBody: String?,
+    fallback: String? = null,
+): String {
+    val obj = rawBody
+        ?.takeIf { it.isNotBlank() }
+        ?.let { runCatching { Api.json.parseToJsonElement(it) as? JsonObject }.getOrNull() }
+
+    val serverError = cleanErrorMessage(
+        (obj?.get("error") as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+    )
+    val errorCode = (obj?.get("errorCode") as? JsonPrimitive)
+        ?.takeIf { it.isString }
+        ?.contentOrNull
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+
+    if (code == 401) {
+        if (errorCode == "AUTH_FAILED") {
+            return serverError ?: "AI provider authentication failed. Please check your AI settings."
+        }
+        if (serverError != null && !serverError.equals("Unauthorized", ignoreCase = true)) {
+            return serverError
+        }
+        return "Session expired. Please sign in again."
+    }
+
+    if (serverError != null) {
+        return serverError
+    }
+
+    if (fallback != null) {
+        return fallback
+    }
+
+    return when (code) {
+        402, 403 -> "AI coach is not enabled for your account."
+        else -> "AI service temporarily unavailable ($code)"
+    }
+}
+
+private fun extractHttpErrorMessage(e: HttpException, fallback: String? = null): String {
+    val rawBody = readBoundedBody(e.response()?.errorBody())
+    return parseHttpErrorMessage(e.code(), rawBody, fallback)
+}
 
 /**
  * AI coach chat backed by the RunFlow server's AI endpoints. Messages are
@@ -101,7 +174,9 @@ class AiCoachRepository(
         } catch (e: IOException) {
             // offline: cached history stays
         } catch (e: HttpException) {
-            if (e.code() != 404) _error.value = "Could not load history (${e.code()})"
+            if (e.code() != 404) {
+                _error.value = extractHttpErrorMessage(e, fallback = "Could not load history (${e.code()})")
+            }
         }
     }
 
@@ -129,7 +204,9 @@ class AiCoachRepository(
         } catch (e: IOException) {
             // offline: cached history stays
         } catch (e: HttpException) {
-            if (e.code() != 404) _error.value = "Could not load history (${e.code()})"
+            if (e.code() != 404) {
+                _error.value = extractHttpErrorMessage(e, fallback = "Could not load history (${e.code()})")
+            }
         }
     }
 
@@ -201,7 +278,7 @@ class AiCoachRepository(
                         // keeps matching server history.
                         db.chatDao().delete(userId)
                         db.chatDao().delete(assistantId)
-                        _error.value = sseError
+                        _error.value = cleanErrorMessage(sseError) ?: sseError
                     }
                     assistantText.isBlank() -> db.chatDao().updateContent(assistantId, "(no response)")
                     else -> db.chatDao().updateContent(assistantId, assistantText)
@@ -216,11 +293,7 @@ class AiCoachRepository(
             } catch (e: HttpException) {
                 db.chatDao().delete(userId)
                 db.chatDao().delete(assistantId)
-                _error.value = when (e.code()) {
-                    401 -> "Session expired — sign in again."
-                    402, 403 -> "AI coach is not enabled for your account."
-                    else -> "AI coach error (${e.code()})"
-                }
+                _error.value = extractHttpErrorMessage(e)
             } finally {
                 _streaming.value = false
             }
@@ -253,11 +326,12 @@ class AiCoachRepository(
 
             client.okHttp.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    val errBody = response.body?.string().orEmpty()
+                    val mediaType = response.body?.contentType() ?: "application/json".toMediaType()
+                    val errBody = readBoundedBody(response.body)
                     throw HttpException(
                         retrofit2.Response.error<String>(
                             response.code,
-                            errBody.toResponseBody("text/plain".toMediaType()),
+                            errBody.toResponseBody(mediaType),
                         )
                     )
                 }

@@ -14,7 +14,8 @@ export interface HealthCheckResult {
             error?: string;
         };
         aiProviders: {
-            status: 'healthy' | 'unhealthy';
+            status: 'healthy' | 'degraded' | 'unhealthy';
+            activeProviders?: number;
             error?: string;
         };
         memory: {
@@ -67,17 +68,62 @@ export async function checkStravaHealth(): Promise<{ status: 'healthy' | 'unheal
     }
 }
 
-export async function checkAiProvidersHealth(): Promise<{ status: 'healthy' | 'unhealthy'; error?: string }> {
-    try {
-        const hasProvider = process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.GOOGLE_AI_API_KEY;
+export async function checkAiProvidersHealth(): Promise<{
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    activeProviders?: number;
+    error?: string;
+}> {
+    const hasEnvProvider = Boolean(
+        process.env.OPENAI_API_KEY ||
+        process.env.ANTHROPIC_API_KEY ||
+        process.env.GOOGLE_AI_API_KEY
+    );
 
-        if (!hasProvider) {
-            return { status: 'unhealthy', error: 'No AI provider configured' };
+    try {
+        const [activeProviders, globalSettings] = await Promise.all([
+            prisma.aiProvider.findMany({
+                where: { isActive: true },
+                select: { id: true, apiKey: true },
+            }),
+            prisma.globalAiSettings.findUnique({
+                where: { id: 'singleton' },
+                select: { defaultApiKey: true },
+            }),
+        ]);
+
+        const configuredProviders = activeProviders.filter(
+            (provider) => Boolean(provider.apiKey && provider.apiKey.trim())
+        );
+        if (configuredProviders.length > 0) {
+            return { status: 'healthy', activeProviders: configuredProviders.length };
         }
 
-        return { status: 'healthy' };
+        if (globalSettings?.defaultApiKey && globalSettings.defaultApiKey.trim()) {
+            return { status: 'healthy', activeProviders: 1 };
+        }
+
+        if (hasEnvProvider) {
+            return { status: 'healthy' };
+        }
+
+        return {
+            status: 'degraded',
+            activeProviders: 0,
+            error: activeProviders.length > 0
+                ? 'Active AI providers found, but none have an API key configured'
+                : 'No active AI provider configured',
+        };
     } catch (error) {
-        return { status: 'unhealthy', error: error instanceof Error ? error.message : 'Unknown error' };
+        if (hasEnvProvider) {
+            return {
+                status: 'degraded',
+                error: 'AI provider database check failed; environment fallback configured',
+            };
+        }
+        return {
+            status: 'degraded',
+            error: error instanceof Error ? error.message : 'Failed to verify AI providers',
+        };
     }
 }
 

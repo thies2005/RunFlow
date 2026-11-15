@@ -246,10 +246,16 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     if (errorData?.queued) {
                         setFeedbackError(errorData.message || 'Server rate limited. Your feedback is being prepared and will appear shortly.');
                     } else {
-                        setFeedbackError("Quota exhausted. Please upgrade your plan or contact admin.");
+                        setFeedbackError(
+                            (errorData?.error ? String(errorData.error).replace(/^Error:\s*/i, '') : null) ||
+                            'Quota exhausted. Please upgrade your plan or contact admin.'
+                        );
                     }
                 } else {
-                    setFeedbackError(errorData?.error || 'Failed to generate AI feedback');
+                    setFeedbackError(
+                        (errorData?.error ? String(errorData.error).replace(/^Error:\s*/i, '') : null) ||
+                        'Failed to generate AI feedback'
+                    );
                 }
             }
         } catch (error) {

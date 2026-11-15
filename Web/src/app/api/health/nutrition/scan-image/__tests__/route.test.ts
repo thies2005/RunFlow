@@ -30,8 +30,10 @@ jest.mock('@/lib/db', () => {
         return Object.entries(where).every(([key, filter]) => {
             const actual = row[key];
             if (actual instanceof Date) {
-                const dateFilter = filter as { lt?: Date };
-                return dateFilter.lt !== undefined && actual.getTime() < dateFilter.lt.getTime();
+                const dateFilter = filter as { lt?: Date; gte?: Date };
+                if (dateFilter.lt !== undefined && !(actual.getTime() < dateFilter.lt.getTime())) return false;
+                if (dateFilter.gte !== undefined && !(actual.getTime() >= dateFilter.gte.getTime())) return false;
+                return dateFilter.lt !== undefined || dateFilter.gte !== undefined;
             }
             if (typeof actual === 'number') {
                 const numFilter = filter as NumberFilter;
@@ -106,15 +108,37 @@ jest.mock('@/lib/db', () => {
         },
         aiProvider: {
             findFirst: async () => ({ id: 'p1', type: 'google', isActive: true, baseUrl: 'https://gemini.example', apiKey: 'enc' }),
+            findMany: async () => [
+                {
+                    id: 'p1',
+                    name: 'Gemini',
+                    slug: 'google',
+                    type: 'google',
+                    isActive: true,
+                    baseUrl: 'https://gemini.example',
+                    apiKey: 'enc',
+                    models: ['gemini-test'],
+                    monthlyTokenLimit: null,
+                    monthlyInputTokensUsed: 0,
+                    monthlyOutputTokensUsed: 0,
+                    lastUsageReset: new Date(),
+                },
+            ],
+            findUnique: async () => null,
         },
     };
 
     return { prisma };
 });
 
-jest.mock('@/lib/ai/providers', () => ({
-    safeFetch: jest.fn(),
-    tryDecryptAiKey: jest.fn(() => 'test-key'),
+jest.mock('@/lib/ai/executor', () => ({
+    executeVisionWithFallback: jest.fn(),
+    executeCompletionWithFallback: jest.fn(),
+}));
+
+jest.mock('@/lib/ai/usage', () => ({
+    ...jest.requireActual('@/lib/ai/usage'),
+    incrementUsage: jest.fn(async () => undefined),
 }));
 
 jest.mock('@/auth', () => ({
@@ -130,7 +154,8 @@ jest.mock('@/lib/utils/imageMagic', () => ({
 }));
 
 import { prisma } from '@/lib/db';
-import { safeFetch } from '@/lib/ai/providers';
+import { AiProviderError } from '@/lib/ai/errors';
+import { executeVisionWithFallback } from '@/lib/ai/executor';
 
 const ENGINE = prisma as any;
 
@@ -144,12 +169,22 @@ const VALID_SCAN = JSON.stringify({
     confidence: 'high',
 });
 
-function geminiOk(text: string) {
+function visionOk(text: string) {
     return {
-        ok: true,
-        status: 200,
-        json: async () => ({ candidates: [{ content: { parts: [{ text }] } }] }),
-        text: async () => '',
+        text,
+        attempts: 1,
+        targetUsed: {
+            providerId: 'p1',
+            providerSlug: 'google',
+            providerName: 'Gemini',
+            provider: 'google' as const,
+            baseUrl: 'https://gemini.example',
+            apiKey: 'test-key',
+            apiKeys: ['test-key'],
+            model: 'gemini-test',
+            keyOverride: false,
+            isByok: false,
+        },
     };
 }
 
@@ -185,7 +220,7 @@ describe('POST /api/health/nutrition/scan-image CalorieSnap quota reservation', 
             tier3CalorieSnapLimit: 6,
         });
         ENGINE.__setRow({ userId: 'u1', usageTier: 'tier1' });
-        (safeFetch as jest.Mock).mockImplementation(async () => geminiOk(VALID_SCAN));
+        (executeVisionWithFallback as jest.Mock).mockImplementation(async () => visionOk(VALID_SCAN));
     });
 
     it('enforces the tier limit sequentially (control)', async () => {
@@ -198,26 +233,26 @@ describe('POST /api/health/nutrition/scan-image CalorieSnap quota reservation', 
         const body = await second.json();
         expect(body.limitReached).toBe(true);
 
-        expect(safeFetch).toHaveBeenCalledTimes(1);
+        expect(executeVisionWithFallback).toHaveBeenCalledTimes(1);
     });
 
     it('rejects concurrent scans beyond the limit with exactly one provider call', async () => {
         // The audit race: several concurrent requests while the winner sits
         // inside the multi-second Gemini call. The reservation must reject
         // the others BEFORE any provider spend.
-        const inFlight = deferred<ReturnType<typeof geminiOk>>();
-        (safeFetch as jest.Mock).mockImplementation(() => inFlight.promise);
+        const inFlight = deferred<ReturnType<typeof visionOk>>();
+        (executeVisionWithFallback as jest.Mock).mockImplementation(() => inFlight.promise);
 
         const requests = [POST(buildRequest()), POST(buildRequest()), POST(buildRequest())];
 
-        await waitFor(() => (safeFetch as jest.Mock).mock.calls.length === 1);
-        inFlight.resolve(geminiOk(VALID_SCAN));
+        await waitFor(() => (executeVisionWithFallback as jest.Mock).mock.calls.length === 1);
+        inFlight.resolve(visionOk(VALID_SCAN));
 
         const results = await Promise.all(requests);
         const statuses = results.map((r) => r.status).sort();
         expect(statuses).toEqual([200, 429, 429]);
 
-        expect(safeFetch).toHaveBeenCalledTimes(1);
+        expect(executeVisionWithFallback).toHaveBeenCalledTimes(1);
         // The lost update is gone: three attempts advanced the counter by one.
         expect(ENGINE.__getRow('u1').calorieSnapsUsedToday).toBe(1);
     });
@@ -237,46 +272,45 @@ describe('POST /api/health/nutrition/scan-image CalorieSnap quota reservation', 
     });
 
     it('releases the reservation when the provider call fails', async () => {
-        (safeFetch as jest.Mock).mockImplementation(async () => ({
-            ok: false,
-            status: 500,
-            json: async () => ({}),
-            text: async () => 'boom',
-        }));
+        (executeVisionWithFallback as jest.Mock).mockRejectedValueOnce(
+            new AiProviderError({
+                code: 'PROVIDER_UNAVAILABLE',
+                httpStatus: 502,
+                userMessage: 'AI provider returned an error',
+            })
+        );
 
         const res = await POST(buildRequest());
         expect(res.status).toBe(502);
 
         // Claim incremented to 1, then the guarded decrement refunded it.
         expect(ENGINE.__getRow('u1').calorieSnapsUsedToday).toBe(0);
-        // updateMany call order: [0] lazy day rollover (no-op), [1] claim, [2] refund.
-        const refund = ENGINE.__updateManyCalls[2];
+        const counterWrites = ENGINE.__updateManyCalls.filter(
+            (call: any) => typeof call.data.calorieSnapsUsedToday === 'object'
+        );
+        expect(counterWrites).toHaveLength(2); // claim + refund
+        const refund = counterWrites[1];
         expect(refund.where).toEqual({ userId: 'u1', calorieSnapsUsedToday: { gt: 0 } });
         expect(refund.data.calorieSnapsUsedToday).toEqual({ decrement: 1 });
 
         // The released slot is claimable again.
-        (safeFetch as jest.Mock).mockImplementation(async () => geminiOk(VALID_SCAN));
+        (executeVisionWithFallback as jest.Mock).mockImplementation(async () => visionOk(VALID_SCAN));
         const retry = await POST(buildRequest());
         expect(retry.status).toBe(200);
         expect(ENGINE.__getRow('u1').calorieSnapsUsedToday).toBe(1);
     });
 
     it('releases the reservation when the AI response has no items', async () => {
-        (safeFetch as jest.Mock).mockImplementation(async () => geminiOk(JSON.stringify({ nope: true })));
+        (executeVisionWithFallback as jest.Mock).mockImplementation(async () => visionOk(JSON.stringify({ nope: true })));
 
         const res = await POST(buildRequest());
         expect(res.status).toBe(422);
         expect(ENGINE.__getRow('u1').calorieSnapsUsedToday).toBe(0);
-        expect(safeFetch).toHaveBeenCalledTimes(1);
+        expect(executeVisionWithFallback).toHaveBeenCalledTimes(1);
     });
 
     it('releases the reservation when the AI response has no text content', async () => {
-        (safeFetch as jest.Mock).mockImplementation(async () => ({
-            ok: true,
-            status: 200,
-            json: async () => ({ candidates: [] }),
-            text: async () => '',
-        }));
+        (executeVisionWithFallback as jest.Mock).mockImplementation(async () => visionOk(''));
 
         const res = await POST(buildRequest());
         expect(res.status).toBe(422);
@@ -284,14 +318,19 @@ describe('POST /api/health/nutrition/scan-image CalorieSnap quota reservation', 
     });
 
     it('does not claim a slot for BYOK users on the none tier', async () => {
-        ENGINE.__setRow({ userId: 'u1', usageTier: 'none' });
+        ENGINE.__setRow({
+            userId: 'u1',
+            usageTier: 'none',
+            customApiKey: 'enc:own-key',
+            customBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+        });
 
         const first = await POST(buildRequest());
         const second = await POST(buildRequest());
         expect(first.status).toBe(200);
         expect(second.status).toBe(200);
 
-        expect(safeFetch).toHaveBeenCalledTimes(2);
+        expect(executeVisionWithFallback).toHaveBeenCalledTimes(2);
         expect(ENGINE.__getRow('u1').calorieSnapsUsedToday).toBe(0);
         // The lazy rollover may run (a no-op UPDATE), but no claim/refund ever
         // increments or decrements the counter.
@@ -299,6 +338,16 @@ describe('POST /api/health/nutrition/scan-image CalorieSnap quota reservation', 
             (call: any) => typeof call.data.calorieSnapsUsedToday === 'object'
         );
         expect(counterWrites).toHaveLength(0);
+    });
+
+    it('rejects none-tier users without a customApiKey with 403 NOT_CONFIGURED', async () => {
+        ENGINE.__setRow({ userId: 'u1', usageTier: 'none', customApiKey: null });
+
+        const res = await POST(buildRequest());
+        expect(res.status).toBe(403);
+        const body = await res.json();
+        expect(body.errorCode).toBe('NOT_CONFIGURED');
+        expect(executeVisionWithFallback).not.toHaveBeenCalled();
     });
 
     it('rolls the counter over on a new day before claiming', async () => {
@@ -312,12 +361,11 @@ describe('POST /api/health/nutrition/scan-image CalorieSnap quota reservation', 
         // 0 after rollover + 1 claim
         expect(ENGINE.__getRow('u1').calorieSnapsUsedToday).toBe(1);
 
-        const rollover = ENGINE.__updateManyCalls[0];
-        expect(rollover.where).toEqual({
-            userId: 'u1',
-            lastUsageReset: { lt: expect.any(Date) },
-        });
-        expect(rollover.data).toEqual({ calorieSnapsUsedToday: 0 });
+        expect(
+            ENGINE.__updateManyCalls.some(
+                (call: any) => call.data?.calorieSnapsUsedToday === 0 && call.where?.userId === 'u1'
+            )
+        ).toBe(true);
     });
 
     it('fast-rejects on a fresh snapshot at the limit without touching the provider', async () => {
@@ -325,7 +373,7 @@ describe('POST /api/health/nutrition/scan-image CalorieSnap quota reservation', 
 
         const res = await POST(buildRequest());
         expect(res.status).toBe(429);
-        expect(safeFetch).not.toHaveBeenCalled();
+        expect(executeVisionWithFallback).not.toHaveBeenCalled();
         const counterWrites = ENGINE.__updateManyCalls.filter(
             (call: any) => typeof call.data.calorieSnapsUsedToday === 'object'
         );

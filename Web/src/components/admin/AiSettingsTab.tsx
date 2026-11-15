@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Bot, Eye, Trash2, Save, Loader2, Zap, AlertTriangle, CheckCircle, Sparkles } from 'lucide-react';
+import { Plus, Sliders, Eye, Trash2, Save, Loader2, Zap, AlertTriangle, CheckCircle, Activity, GitBranch } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import TierInputGroup from '@/components/admin/TierInputGroup';
+import TierRoutingEditor from '@/components/admin/TierRoutingEditor';
 import { Modal } from '@/components/ui/Modal';
 import useConfirmAction from '@/hooks/useConfirmAction';
-import { AdminAiSettingsData } from '@/app/admin/types';
+import { AdminAiProvider, AdminAiSettingsData, TierRoutingConfig } from '@/app/admin/types';
 
 interface AiSettingsTabProps {
     settings?: AdminAiSettingsData;
@@ -21,11 +22,12 @@ interface AiSettingsTabProps {
 
 export default function AiSettingsTab({ settings, stats, onRefresh, processing, setProcessing, setActionMessage }: AiSettingsTabProps) {
     const { confirm, ConfirmDialog } = useConfirmAction();
-    const [providers, setProviders] = useState<any[]>([]);
+    const [providers, setProviders] = useState<AdminAiProvider[]>([]);
     const [activeProviderId, setActiveProviderId] = useState<string | null>(settings?.activeProviderId || null);
     const [fallbackProviderId, setFallbackProviderId] = useState<string | null>(settings?.fallbackProviderId || null);
+    const [routingConfig, setRoutingConfig] = useState<TierRoutingConfig | null>(settings?.routingConfig ?? null);
     const [showProviderForm, setShowProviderForm] = useState(false);
-    const [editingProvider, setEditingProvider] = useState<any | null>(null);
+    const [editingProvider, setEditingProvider] = useState<AdminAiProvider | null>(null);
 
     // Global Settings Form Data (Tiers & System Prompt)
     const [formData, setFormData] = useState({
@@ -51,13 +53,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
         tier2CalorieSnapLimit: settings?.tier2CalorieSnapLimit ?? 3,
         tier3CalorieSnapLimit: settings?.tier3CalorieSnapLimit ?? 6,
 
-        tier1MealSuggestLimit: settings?.tier1MealSuggestLimit ?? 1,
-        tier2MealSuggestLimit: settings?.tier2MealSuggestLimit ?? 3,
-        tier3MealSuggestLimit: settings?.tier3MealSuggestLimit ?? 6,
+        tier1MealSuggestLimit: settings?.tier1MealSuggestLimit ?? 3,
+        tier2MealSuggestLimit: settings?.tier2MealSuggestLimit ?? 10,
+        tier3MealSuggestLimit: settings?.tier3MealSuggestLimit ?? 25,
 
-        tier1ActivityFeedbackLimit: settings?.tier1ActivityFeedbackLimit ?? 1,
-        tier2ActivityFeedbackLimit: settings?.tier2ActivityFeedbackLimit ?? 3,
-        tier3ActivityFeedbackLimit: settings?.tier3ActivityFeedbackLimit ?? 6,
+        tier1ActivityFeedbackLimit: settings?.tier1ActivityFeedbackLimit ?? 5,
+        tier2ActivityFeedbackLimit: settings?.tier2ActivityFeedbackLimit ?? 15,
+        tier3ActivityFeedbackLimit: settings?.tier3ActivityFeedbackLimit ?? 50,
 
         calorieSnapModel: settings?.calorieSnapModel || 'gemini-1.5-flash',
         mealSuggestModel: settings?.mealSuggestModel || 'gemini-1.5-flash',
@@ -77,6 +79,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
         if (settings) {
             setActiveProviderId(settings.activeProviderId);
             setFallbackProviderId(settings.fallbackProviderId);
+            setRoutingConfig(settings.routingConfig ?? null);
             setFormData(prev => ({
                 ...prev,
                 tier1Name: settings.tier1Name || prev.tier1Name,
@@ -131,6 +134,9 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
         }
     };
 
+    const hasUnsavedRoutingChanges =
+        JSON.stringify(routingConfig ?? null) !== JSON.stringify(settings?.routingConfig ?? null);
+
     const handleProviderSlotChange = async (nextActiveId: string | null, nextFallbackId: string | null) => {
         const prevActive = activeProviderId;
         const prevFallback = fallbackProviderId;
@@ -147,7 +153,10 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     fallbackProviderId: nextFallbackId,
                 }),
             });
-            if (!res.ok) throw new Error('Failed to update provider routing');
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'Failed to update provider routing');
+            }
             setActionMessage({ type: 'success', text: 'Provider routing updated' });
             onRefresh();
         } catch (error: any) {
@@ -168,10 +177,14 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 body: JSON.stringify({
                     ...formData,
                     activeProviderId,
-                    fallbackProviderId
+                    fallbackProviderId,
+                    routingConfig,
                 }),
             });
-            if (!res.ok) throw new Error('Failed to save settings');
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'Failed to save settings');
+            }
             setActionMessage({ type: 'success', text: 'Global settings saved' });
             onRefresh();
         } catch (error: any) {
@@ -196,6 +209,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             fetchProviders();
             if (activeProviderId === id) setActiveProviderId(null);
             if (fallbackProviderId === id) setFallbackProviderId(null);
+            onRefresh();
             setActionMessage({ type: 'success', text: 'Provider deleted' });
         } catch (error: any) {
             setActionMessage({ type: 'error', text: error.message });
@@ -226,7 +240,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             <div className="bg-background-secondary p-6 rounded-md border border-line space-y-4">
                 <div className="flex justify-between items-center">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
-                        <Bot className="w-5 h-5 text-foreground-muted" />
+                        <Sliders className="w-5 h-5 text-foreground-muted" aria-hidden="true" />
                         AI Providers
                     </h3>
                     <button
@@ -249,8 +263,16 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                                 <div className="flex items-center gap-3">
                                     <div className={`w-3 h-3 rounded-full ${activeProviderId === provider.id ? 'bg-accent-orange' : fallbackProviderId === provider.id ? 'bg-workout-tempo' : 'bg-line-strong'}`} />
                                     <div>
-                                        <h4 className="font-medium text-foreground">{provider.name} {activeProviderId === provider.id && '(Active)'} {fallbackProviderId === provider.id && '(Fallback)'}</h4>
-                                        <p className="text-xs text-foreground-muted flex gap-2">
+                                        <h4 className="font-medium text-foreground flex items-center gap-2">
+                                            <span>{provider.name} {activeProviderId === provider.id && '(Active)'} {fallbackProviderId === provider.id && '(Fallback)'}</span>
+                                            {!provider.isActive && (
+                                                <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/30">
+                                                    Inactive
+                                                </span>
+                                            )}
+                                        </h4>
+                                        <p className="text-xs text-foreground-muted flex flex-wrap gap-2">
+                                            <span className="bg-background-tertiary px-1.5 rounded-sm font-mono">{provider.slug}</span>
                                             <span className="bg-background-tertiary px-1.5 rounded-sm">{provider.type}</span>
                                             <span>{provider.models.join(', ')}</span>
                                         </p>
@@ -298,6 +320,47 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                         ))}
                     </div>
                 )}
+            </div>
+
+            {/* Tier & Function Routing Section */}
+            <div className="bg-background-secondary p-6 rounded-md border border-line space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h3 className="font-semibold text-foreground flex items-center gap-2">
+                            <GitBranch className="w-5 h-5 text-accent-orange" aria-hidden="true" />
+                            Tier &amp; Function Routing
+                        </h3>
+                        <p className="text-xs text-foreground-muted mt-1">
+                            Assign specific primary models and ordered fallback chains per user tier and AI function. Same-provider downgrades and cross-provider failovers are supported.
+                        </p>
+                    </div>
+                    {hasUnsavedRoutingChanges && (
+                        <span className="px-2.5 py-1 text-xs font-medium rounded bg-accent-orange/15 text-accent-orange border border-accent-orange/30 self-start sm:self-center shrink-0">
+                            Unsaved routing changes
+                        </span>
+                    )}
+                </div>
+
+                <TierRoutingEditor
+                    value={routingConfig}
+                    onChange={setRoutingConfig}
+                    providers={providers}
+                    tierNames={{
+                        tier1: formData.tier1Name,
+                        tier2: formData.tier2Name,
+                        tier3: formData.tier3Name,
+                    }}
+                    legacyDefaults={{
+                        activeProviderId,
+                        fallbackProviderId,
+                        defaultModel: settings?.defaultModel ?? undefined,
+                        calorieSnapModel: formData.calorieSnapModel,
+                        mealSuggestModel: formData.mealSuggestModel,
+                        activityFeedbackModel: formData.activityFeedbackModel,
+                        planBuilderModel: formData.planBuilderModel,
+                    }}
+                    disabled={processing}
+                />
             </div>
 
             {/* Global Limits & Prompt */}
@@ -370,7 +433,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             {/* Plan Builder AI Settings */}
             <div className="bg-background-secondary p-6 rounded border border-line space-y-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-accent-orange" aria-hidden="true" />
+                    <Activity className="w-5 h-5 text-accent-orange" aria-hidden="true" />
                     Plan Builder AI
                 </h3>
                 <p className="text-xs text-foreground-muted">
@@ -410,7 +473,14 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
             </div>
 
             {/* Sticky Bottom Action Bar */}
-            <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur-sm border-t border-line py-3 px-4 flex justify-end">
+            <div className="sticky bottom-0 z-10 bg-background border-t border-line py-3 px-4 flex items-center justify-between gap-4">
+                <div className="text-xs text-foreground-muted">
+                    {hasUnsavedRoutingChanges && (
+                        <span className="text-accent-orange font-medium">
+                            Tier routing changes pending save
+                        </span>
+                    )}
+                </div>
                 <button
                     type="button"
                     onClick={handleSaveGlobal}

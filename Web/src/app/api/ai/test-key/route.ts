@@ -10,7 +10,25 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { requireAdmin, COOKIE_NAME } from '@/lib/admin/auth';
 import { testAiConfig, tryDecryptAiKey, AiConfig, validateBaseUrl } from '@/lib/ai/providers';
+import { detectByokProviderType, parseApiKeys } from '@/lib/ai/routing';
+import { sanitizeErrorMessage, toSafeUserError, type AiProviderType } from '@/lib/ai/errors';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS } from '@/lib/rateLimit';
+
+function isValidProviderType(value: unknown): value is AiProviderType {
+    return value === 'openai' || value === 'anthropic' || value === 'google';
+}
+
+function defaultTestModelForProvider(provider: AiProviderType): string {
+    switch (provider) {
+        case 'google':
+            return 'gemini-2.5-flash';
+        case 'anthropic':
+            return 'claude-3-5-sonnet-latest';
+        case 'openai':
+        default:
+            return 'gpt-4o-mini';
+    }
+}
 
 export async function POST(request: NextRequest) {
     const clientId = getClientIdentifier(request);
@@ -62,8 +80,13 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        if (provider !== undefined && provider !== null && provider !== '' && !isValidProviderType(provider)) {
+            return NextResponse.json({ valid: false, error: 'Invalid provider type' }, { status: 400 });
+        }
+
+        let storedProviderMeta: { baseUrl?: string; type?: string } | null = null;
         let resolvedApiKey = typeof apiKey === 'string' && apiKey.trim() ? apiKey.trim() : null;
-        if (!resolvedApiKey && providerId) {
+        if (providerId) {
             if (!isAdmin) {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
             }
@@ -72,43 +95,68 @@ export async function POST(request: NextRequest) {
             }
             const storedProvider = await prisma.aiProvider.findUnique({
                 where: { id: providerId },
-                select: { apiKey: true },
+                select: { apiKey: true, baseUrl: true, type: true },
             });
-            if (!storedProvider?.apiKey) {
-                return NextResponse.json({ error: 'Stored API key not found for provider' }, { status: 404 });
+            storedProviderMeta = storedProvider;
+            if (!resolvedApiKey) {
+                if (!storedProvider?.apiKey) {
+                    return NextResponse.json({ error: 'Stored API key not found for provider' }, { status: 404 });
+                }
+                resolvedApiKey = tryDecryptAiKey(storedProvider.apiKey, 'test-key-provider', providerId);
             }
-            resolvedApiKey = tryDecryptAiKey(storedProvider.apiKey, 'test-key-provider', providerId);
         }
 
         if (!resolvedApiKey) {
             return NextResponse.json({ error: 'API key is required' }, { status: 400 });
         }
 
-        const effectiveBaseUrl = baseUrl || (provider === 'google' ? 'https://generativelanguage.googleapis.com' : 'https://api.openai.com/v1');
-        const adminAllowedUrls = isAdmin && typeof baseUrl === 'string' && baseUrl.startsWith('https://') ? [baseUrl] : [];
+        const requestedBaseUrl = typeof baseUrl === 'string' && baseUrl.trim() ? baseUrl.trim() : '';
+        const explicitProvider: AiProviderType | null = isValidProviderType(provider)
+            ? provider
+            : isValidProviderType(storedProviderMeta?.type)
+                ? storedProviderMeta.type
+                : null;
+
+        const effectiveBaseUrl =
+            requestedBaseUrl ||
+            storedProviderMeta?.baseUrl?.trim() ||
+            (explicitProvider === 'google'
+                ? 'https://generativelanguage.googleapis.com'
+                : explicitProvider === 'anthropic'
+                    ? 'https://api.anthropic.com'
+                    : 'https://api.openai.com/v1');
+
+        const adminAllowedUrls =
+            isAdmin && effectiveBaseUrl.startsWith('https://') ? [effectiveBaseUrl] : [];
         if (!validateBaseUrl(effectiveBaseUrl, adminAllowedUrls)) {
             return NextResponse.json({ valid: false, error: 'Base URL must be a valid HTTPS AI provider endpoint' }, { status: 400 });
         }
 
-        const effectiveModel = model || 'gpt-4o-mini';
-        if (typeof effectiveModel !== 'string' || !/^[A-Za-z0-9._:/-]+$/.test(effectiveModel) || effectiveModel.includes('..')) {
+        const effectiveProvider: AiProviderType = explicitProvider ?? detectByokProviderType(effectiveBaseUrl);
+
+        if (typeof model !== 'undefined' && model !== null && model !== '' && (typeof model !== 'string' || !/^[A-Za-z0-9._:/-]+$/.test(model) || model.includes('..'))) {
             return NextResponse.json({ valid: false, error: 'Invalid model identifier' }, { status: 400 });
         }
-        if (typeof model !== 'undefined' && (typeof model !== 'string' || !/^[A-Za-z0-9._:/-]+$/.test(model) || model.includes('..'))) {
+        const effectiveModel =
+            typeof model === 'string' && model.trim()
+                ? model.trim()
+                : defaultTestModelForProvider(effectiveProvider);
+        if (!/^[A-Za-z0-9._:/-]+$/.test(effectiveModel) || effectiveModel.includes('..')) {
             return NextResponse.json({ valid: false, error: 'Invalid model identifier' }, { status: 400 });
         }
 
+        const parsedKeys = parseApiKeys(resolvedApiKey);
         const config: AiConfig = {
-            provider: provider || 'openai',
-            apiKey: resolvedApiKey,
-            apiKeys: [resolvedApiKey],
+            provider: effectiveProvider,
+            apiKey: parsedKeys[0] || resolvedApiKey,
+            apiKeys: parsedKeys.length > 0 ? parsedKeys : [resolvedApiKey],
             baseUrl: effectiveBaseUrl,
             model: effectiveModel,
         };
 
         const result = await testAiConfig(config, {
             statusOnly: true,
-            allowedUrls: isAdmin && baseUrl ? [baseUrl] : undefined,
+            allowedUrls: isAdmin && effectiveBaseUrl ? [effectiveBaseUrl] : undefined,
         });
 
         if (result.success) {
@@ -119,19 +167,28 @@ export async function POST(request: NextRequest) {
                 model: result.model || config.model
             });
         } else {
+            const safeError = result.error ? sanitizeErrorMessage(result.error) : '';
             return NextResponse.json({
                 success: false,
                 valid: false,
-                error: result.error || 'Unknown error'
+                error: safeError || 'API key validation failed. Please check your key, base URL, and model.',
+                ...(result.errorCode ? { errorCode: result.errorCode } : {}),
             });
         }
 
     } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Internal server error';
+        if (error instanceof SyntaxError) {
+            return NextResponse.json(
+                { success: false, valid: false, error: 'Invalid request payload' },
+                { status: 400 }
+            );
+        }
+        const safe = toSafeUserError(error);
         return NextResponse.json({
             success: false,
             valid: false,
-            error: message,
+            error: safe.message,
+            errorCode: safe.code,
         });
     }
 }

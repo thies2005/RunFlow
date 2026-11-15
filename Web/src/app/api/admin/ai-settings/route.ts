@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma, type GlobalAiSettings } from '@/generated/prisma/client';
 import { encryptToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
@@ -12,6 +13,96 @@ import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logAdminAction } from '@/lib/admin/auditLog';
 import { handleError } from '@/lib/errors/handler';
 import { isEnvSignupsAllowed } from '@/lib/auth/signupSettings';
+import {
+    parseRoutingConfig,
+    TierRoutingConfigSchema,
+    type TierRoutingConfig,
+} from '@/lib/ai/routing';
+
+function extractRoutingProviderIds(config: TierRoutingConfig): string[] {
+    const ids = new Set<string>();
+    for (const tierConfig of Object.values(config.tiers)) {
+        if (!tierConfig) continue;
+        if (tierConfig.defaultPrimary?.providerId) {
+            ids.add(tierConfig.defaultPrimary.providerId);
+        }
+        for (const fb of tierConfig.defaultFallbacks ?? []) {
+            if (fb.providerId) ids.add(fb.providerId);
+        }
+        if (tierConfig.functions) {
+            for (const fnConfig of Object.values(tierConfig.functions)) {
+                if (!fnConfig) continue;
+                if (fnConfig.primary?.providerId) {
+                    ids.add(fnConfig.primary.providerId);
+                }
+                for (const fb of fnConfig.fallbacks ?? []) {
+                    if (fb.providerId) ids.add(fb.providerId);
+                }
+            }
+        }
+    }
+    return Array.from(ids);
+}
+
+function serializeGlobalAiSettings(settings: GlobalAiSettings, envAllowSignups: boolean) {
+    return {
+        defaultBaseUrl: settings.defaultBaseUrl,
+        hasDefaultApiKey: !!settings.defaultApiKey, // Don't return the key itself
+        defaultModel: settings.defaultModel,
+        activeProviderId: settings.activeProviderId,
+        fallbackProviderId: settings.fallbackProviderId,
+        routingConfig: parseRoutingConfig(settings.routingConfig),
+
+        // Tier settings
+        tier1Name: settings.tier1Name,
+        tier1DailyLimit: settings.tier1DailyLimit,
+        tier1MonthlyLimit: settings.tier1MonthlyLimit,
+        tier1DailyTokenLimit: settings.tier1DailyTokenLimit,
+        tier1MonthlyTokenLimit: settings.tier1MonthlyTokenLimit,
+
+        tier2Name: settings.tier2Name,
+        tier2DailyLimit: settings.tier2DailyLimit,
+        tier2MonthlyLimit: settings.tier2MonthlyLimit,
+        tier2DailyTokenLimit: settings.tier2DailyTokenLimit,
+        tier2MonthlyTokenLimit: settings.tier2MonthlyTokenLimit,
+
+        tier3Name: settings.tier3Name,
+        tier3DailyLimit: settings.tier3DailyLimit,
+        tier3MonthlyLimit: settings.tier3MonthlyLimit,
+        tier3DailyTokenLimit: settings.tier3DailyTokenLimit,
+        tier3MonthlyTokenLimit: settings.tier3MonthlyTokenLimit,
+
+        // CalorieSnap limits & Config
+        calorieSnapModel: settings.calorieSnapModel,
+        tier1CalorieSnapLimit: settings.tier1CalorieSnapLimit,
+        tier2CalorieSnapLimit: settings.tier2CalorieSnapLimit,
+        tier3CalorieSnapLimit: settings.tier3CalorieSnapLimit,
+
+        tier1MealSuggestLimit: settings.tier1MealSuggestLimit,
+        tier2MealSuggestLimit: settings.tier2MealSuggestLimit,
+        tier3MealSuggestLimit: settings.tier3MealSuggestLimit,
+
+        tier1ActivityFeedbackLimit: settings.tier1ActivityFeedbackLimit,
+        tier2ActivityFeedbackLimit: settings.tier2ActivityFeedbackLimit,
+        tier3ActivityFeedbackLimit: settings.tier3ActivityFeedbackLimit,
+
+        // Non-realtime AI Feature Models
+        mealSuggestModel: settings.mealSuggestModel,
+        activityFeedbackModel: settings.activityFeedbackModel,
+        planBuilderModel: settings.planBuilderModel,
+        planMaxTokensPerAnalysis: settings.planMaxTokensPerAnalysis,
+
+        // Legacy (deprecated)
+        dailyMessageLimit: settings.dailyMessageLimit,
+        monthlyMessageLimit: settings.monthlyMessageLimit,
+        systemPrompt: settings.systemPrompt,
+
+        // Signups
+        allowSignups: settings.allowSignups ?? true,
+        envAllowSignups,
+        effectiveAllowSignups: envAllowSignups && (settings.allowSignups ?? true),
+    };
+}
 
 export async function GET(request: NextRequest) {
     const rateLimit = await adminRateLimit(request, 'read');
@@ -44,61 +135,7 @@ export async function GET(request: NextRequest) {
         ]);
 
         const response = NextResponse.json({
-            settings: {
-                defaultBaseUrl: globalSettings.defaultBaseUrl,
-                hasDefaultApiKey: !!globalSettings.defaultApiKey, // Don't return the key itself
-                defaultModel: globalSettings.defaultModel,
-                activeProviderId: globalSettings.activeProviderId,
-                fallbackProviderId: globalSettings.fallbackProviderId,
-                // Tier settings
-                tier1Name: globalSettings.tier1Name,
-                tier1DailyLimit: globalSettings.tier1DailyLimit,
-                tier1MonthlyLimit: globalSettings.tier1MonthlyLimit,
-                tier1DailyTokenLimit: globalSettings.tier1DailyTokenLimit,
-                tier1MonthlyTokenLimit: globalSettings.tier1MonthlyTokenLimit,
-
-                tier2Name: globalSettings.tier2Name,
-                tier2DailyLimit: globalSettings.tier2DailyLimit,
-                tier2MonthlyLimit: globalSettings.tier2MonthlyLimit,
-                tier2DailyTokenLimit: globalSettings.tier2DailyTokenLimit,
-                tier2MonthlyTokenLimit: globalSettings.tier2MonthlyTokenLimit,
-
-                tier3Name: globalSettings.tier3Name,
-                tier3DailyLimit: globalSettings.tier3DailyLimit,
-                tier3MonthlyLimit: globalSettings.tier3MonthlyLimit,
-                tier3DailyTokenLimit: globalSettings.tier3DailyTokenLimit,
-                tier3MonthlyTokenLimit: globalSettings.tier3MonthlyTokenLimit,
-
-                // CalorieSnap limits & Config
-                calorieSnapModel: globalSettings.calorieSnapModel,
-                tier1CalorieSnapLimit: globalSettings.tier1CalorieSnapLimit,
-                tier2CalorieSnapLimit: globalSettings.tier2CalorieSnapLimit,
-                tier3CalorieSnapLimit: globalSettings.tier3CalorieSnapLimit,
-
-                tier1MealSuggestLimit: globalSettings.tier1MealSuggestLimit,
-                tier2MealSuggestLimit: globalSettings.tier2MealSuggestLimit,
-                tier3MealSuggestLimit: globalSettings.tier3MealSuggestLimit,
-
-                tier1ActivityFeedbackLimit: globalSettings.tier1ActivityFeedbackLimit,
-                tier2ActivityFeedbackLimit: globalSettings.tier2ActivityFeedbackLimit,
-                tier3ActivityFeedbackLimit: globalSettings.tier3ActivityFeedbackLimit,
-
-                // Non-realtime AI Feature Models
-                mealSuggestModel: globalSettings.mealSuggestModel,
-                activityFeedbackModel: globalSettings.activityFeedbackModel,
-                planBuilderModel: globalSettings.planBuilderModel,
-                planMaxTokensPerAnalysis: globalSettings.planMaxTokensPerAnalysis,
-
-                // Legacy (deprecated)
-                dailyMessageLimit: globalSettings.dailyMessageLimit,
-                monthlyMessageLimit: globalSettings.monthlyMessageLimit,
-                systemPrompt: globalSettings.systemPrompt,
-
-                // Signups
-                allowSignups: globalSettings.allowSignups ?? true,
-                envAllowSignups: isEnvSignupsAllowed(),
-                effectiveAllowSignups: isEnvSignupsAllowed() && (globalSettings.allowSignups ?? true),
-            },
+            settings: serializeGlobalAiSettings(globalSettings, isEnvSignupsAllowed()),
             stats: {
                 totalUsers,
                 enabledUsers,
@@ -139,6 +176,7 @@ export async function PUT(request: NextRequest) {
             defaultModel,
             activeProviderId,
             fallbackProviderId,
+            routingConfig,
             // Tier fields
             tier1Name, tier1DailyLimit, tier1MonthlyLimit,
             tier1DailyTokenLimit, tier1MonthlyTokenLimit,
@@ -180,11 +218,48 @@ export async function PUT(request: NextRequest) {
             );
         }
 
-        const updateData: Record<string, unknown> = {};
+        const updateData: Prisma.GlobalAiSettingsUncheckedCreateInput = {};
 
         if (defaultBaseUrl !== undefined) updateData.defaultBaseUrl = defaultBaseUrl;
         if (activeProviderId !== undefined) updateData.activeProviderId = activeProviderId || null;
         if (fallbackProviderId !== undefined) updateData.fallbackProviderId = fallbackProviderId || null;
+
+        if (routingConfig !== undefined) {
+            if (routingConfig === null) {
+                updateData.routingConfig = Prisma.DbNull;
+            } else {
+                const parsedRouting = TierRoutingConfigSchema.safeParse(routingConfig);
+                if (!parsedRouting.success) {
+                    return NextResponse.json(
+                        {
+                            error: 'Invalid routingConfig schema',
+                            details: parsedRouting.error.issues.slice(0, 5),
+                        },
+                        { status: 400 }
+                    );
+                }
+
+                const referencedIds = extractRoutingProviderIds(parsedRouting.data);
+                if (referencedIds.length > 0 && typeof prisma.aiProvider?.findMany === 'function') {
+                    const existingProviders = await prisma.aiProvider.findMany({
+                        where: { id: { in: referencedIds } },
+                        select: { id: true },
+                    });
+                    const existingIds = new Set(existingProviders.map((p) => p.id));
+                    const missingIds = referencedIds.filter((id) => !existingIds.has(id));
+                    if (missingIds.length > 0) {
+                        return NextResponse.json(
+                            {
+                                error: `Unknown provider ID(s) in routingConfig: ${missingIds.join(', ')}`,
+                            },
+                            { status: 400 }
+                        );
+                    }
+                }
+
+                updateData.routingConfig = parsedRouting.data as unknown as Prisma.InputJsonValue;
+            }
+        }
 
         // Encrypt API key if provided
         if (defaultApiKey !== undefined) {
@@ -256,29 +331,7 @@ export async function PUT(request: NextRequest) {
 
         const response = NextResponse.json({
             success: true,
-            settings: {
-                defaultBaseUrl: settings.defaultBaseUrl,
-                hasDefaultApiKey: !!settings.defaultApiKey,
-                defaultModel: settings.defaultModel,
-                activeProviderId: settings.activeProviderId,
-                fallbackProviderId: settings.fallbackProviderId,
-                dailyMessageLimit: settings.dailyMessageLimit,
-                monthlyMessageLimit: settings.monthlyMessageLimit,
-                systemPrompt: settings.systemPrompt,
-
-                tier1Name: settings.tier1Name,
-                tier1DailyLimit: settings.tier1DailyLimit,
-                tier1MonthlyLimit: settings.tier1MonthlyLimit,
-                tier1DailyTokenLimit: settings.tier1DailyTokenLimit,
-                tier1MonthlyTokenLimit: settings.tier1MonthlyTokenLimit,
-                calorieSnapModel: settings.calorieSnapModel,
-                planBuilderModel: settings.planBuilderModel,
-                planMaxTokensPerAnalysis: settings.planMaxTokensPerAnalysis,
-
-                allowSignups: settings.allowSignups ?? true,
-                envAllowSignups,
-                effectiveAllowSignups: envAllowSignups && (settings.allowSignups ?? true),
-            },
+            settings: serializeGlobalAiSettings(settings, envAllowSignups),
         });
 
         await logAdminAction(request, 'MODIFY_AI_SETTINGS', { type: 'SETTINGS' }, {

@@ -5456,7 +5456,8 @@ export const GlobalAiSettingsScalarFieldEnum = {
   tier3ActivityFeedbackLimit: 'tier3ActivityFeedbackLimit',
   planBuilderModel: 'planBuilderModel',
   planMaxTokensPerAnalysis: 'planMaxTokensPerAnalysis',
-  allowSignups: 'allowSignups'
+  allowSignups: 'allowSignups',
+  routingConfig: 'routingConfig'
 } as const
 
 export type GlobalAiSettingsScalarFieldEnum = (typeof GlobalAiSettingsScalarFieldEnum)[keyof typeof GlobalAiSettingsScalarFieldEnum]

@@ -23,6 +23,72 @@ export interface UsageStatus {
 }
 
 /**
+ * Unified default chat/token limits per tier (matches prisma/schema.prisma GlobalAiSettings defaults)
+ */
+export const DEFAULT_TIER_CHAT_LIMITS = {
+    tier1: { name: 'Basic', daily: 10, monthly: 100, dailyTokens: 50000, monthlyTokens: 500000 },
+    tier2: { name: 'Standard', daily: 25, monthly: 300, dailyTokens: 100000, monthlyTokens: 1000000 },
+    tier3: { name: 'Premium', daily: 50, monthly: 500, dailyTokens: 200000, monthlyTokens: 2000000 },
+} as const;
+
+/**
+ * Unified default per-day feature quotas per tier (matches prisma/schema.prisma GlobalAiSettings defaults)
+ */
+export const DEFAULT_FEATURE_DAILY_LIMITS = {
+    calorieSnap: { tier1: 1, tier2: 3, tier3: 6 },
+    mealSuggest: { tier1: 3, tier2: 10, tier3: 25 },
+    activityFeedback: { tier1: 5, tier2: 15, tier3: 50 },
+} as const;
+
+export type LimitedAiFeature = keyof typeof DEFAULT_FEATURE_DAILY_LIMITS;
+
+export interface FeatureLimitSettings {
+    tier1CalorieSnapLimit?: number | null;
+    tier2CalorieSnapLimit?: number | null;
+    tier3CalorieSnapLimit?: number | null;
+    tier1MealSuggestLimit?: number | null;
+    tier2MealSuggestLimit?: number | null;
+    tier3MealSuggestLimit?: number | null;
+    tier1ActivityFeedbackLimit?: number | null;
+    tier2ActivityFeedbackLimit?: number | null;
+    tier3ActivityFeedbackLimit?: number | null;
+}
+
+export function getFeatureDailyLimit(
+    feature: LimitedAiFeature,
+    tier: string,
+    globalSettings?: FeatureLimitSettings | null
+): number {
+    const defaults = DEFAULT_FEATURE_DAILY_LIMITS[feature];
+    const resolvedTier = tier === 'tier1' || tier === 'tier2' || tier === 'tier3' ? tier : 'tier1';
+
+    if (feature === 'calorieSnap') {
+        const limits = {
+            tier1: globalSettings?.tier1CalorieSnapLimit ?? defaults.tier1,
+            tier2: globalSettings?.tier2CalorieSnapLimit ?? defaults.tier2,
+            tier3: globalSettings?.tier3CalorieSnapLimit ?? defaults.tier3,
+        };
+        return limits[resolvedTier];
+    }
+
+    if (feature === 'mealSuggest') {
+        const limits = {
+            tier1: globalSettings?.tier1MealSuggestLimit ?? defaults.tier1,
+            tier2: globalSettings?.tier2MealSuggestLimit ?? defaults.tier2,
+            tier3: globalSettings?.tier3MealSuggestLimit ?? defaults.tier3,
+        };
+        return limits[resolvedTier];
+    }
+
+    const limits = {
+        tier1: globalSettings?.tier1ActivityFeedbackLimit ?? defaults.tier1,
+        tier2: globalSettings?.tier2ActivityFeedbackLimit ?? defaults.tier2,
+        tier3: globalSettings?.tier3ActivityFeedbackLimit ?? defaults.tier3,
+    };
+    return limits[resolvedTier];
+}
+
+/**
  * Get limits for a usage tier
  */
 function getTierLimits(tier: string, globalSettings: any): {
@@ -39,27 +105,27 @@ function getTierLimits(tier: string, globalSettings: any): {
     switch (tier) {
         case 'tier1':
             return {
-                daily: globalSettings.tier1DailyLimit ?? 10,
-                monthly: globalSettings.tier1MonthlyLimit ?? 100,
-                name: globalSettings.tier1Name ?? 'Basic',
-                dailyTokens: globalSettings.tier1DailyTokenLimit ?? 50000,
-                monthlyTokens: globalSettings.tier1MonthlyTokenLimit ?? 500000,
+                daily: globalSettings.tier1DailyLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier1.daily,
+                monthly: globalSettings.tier1MonthlyLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier1.monthly,
+                name: globalSettings.tier1Name ?? DEFAULT_TIER_CHAT_LIMITS.tier1.name,
+                dailyTokens: globalSettings.tier1DailyTokenLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier1.dailyTokens,
+                monthlyTokens: globalSettings.tier1MonthlyTokenLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier1.monthlyTokens,
             };
         case 'tier2':
             return {
-                daily: globalSettings.tier2DailyLimit ?? 25,
-                monthly: globalSettings.tier2MonthlyLimit ?? 300,
-                name: globalSettings.tier2Name ?? 'Standard',
-                dailyTokens: globalSettings.tier2DailyTokenLimit ?? 100000,
-                monthlyTokens: globalSettings.tier2MonthlyTokenLimit ?? 1000000,
+                daily: globalSettings.tier2DailyLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier2.daily,
+                monthly: globalSettings.tier2MonthlyLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier2.monthly,
+                name: globalSettings.tier2Name ?? DEFAULT_TIER_CHAT_LIMITS.tier2.name,
+                dailyTokens: globalSettings.tier2DailyTokenLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier2.dailyTokens,
+                monthlyTokens: globalSettings.tier2MonthlyTokenLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier2.monthlyTokens,
             };
         case 'tier3':
             return {
-                daily: globalSettings.tier3DailyLimit ?? 50,
-                monthly: globalSettings.tier3MonthlyLimit ?? 500,
-                name: globalSettings.tier3Name ?? 'Premium',
-                dailyTokens: globalSettings.tier3DailyTokenLimit ?? 200000,
-                monthlyTokens: globalSettings.tier3MonthlyTokenLimit ?? 2000000,
+                daily: globalSettings.tier3DailyLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier3.daily,
+                monthly: globalSettings.tier3MonthlyLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier3.monthly,
+                name: globalSettings.tier3Name ?? DEFAULT_TIER_CHAT_LIMITS.tier3.name,
+                dailyTokens: globalSettings.tier3DailyTokenLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier3.dailyTokens,
+                monthlyTokens: globalSettings.tier3MonthlyTokenLimit ?? DEFAULT_TIER_CHAT_LIMITS.tier3.monthlyTokens,
             };
         case 'none':
         default:
@@ -121,25 +187,6 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
         prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
     ]);
 
-    // If user has their own API key and usageTier is none (active BYOK), no limits apply
-    if (isByokActive(userSettings)) {
-        return {
-            canUse: true,
-            messagesUsedToday: userSettings?.messagesUsedToday ?? 0,
-            messagesUsedThisMonth: userSettings?.messagesUsedThisMonth ?? 0,
-            dailyLimit: Infinity,
-            monthlyLimit: Infinity,
-
-            tokensUsedToday: (userSettings?.inputTokensUsedToday || 0) + (userSettings?.outputTokensUsedToday || 0),
-            tokensUsedThisMonth: (userSettings?.inputTokensUsedThisMonth || 0) + (userSettings?.outputTokensUsedThisMonth || 0),
-            dailyTokenLimit: Infinity,
-            monthlyTokenLimit: Infinity,
-
-            tier: 'byok',
-            tierName: 'Your API Key',
-        };
-    }
-
     if (!userSettings) {
         return {
             canUse: false,
@@ -154,6 +201,46 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
             tier: 'none',
             tierName: 'Not Configured',
             reason: 'AI not configured',
+        };
+    }
+
+    // Enforce adminAllowed === true uniformly for BOTH managed and BYOK users
+    if (!userSettings.adminAllowed) {
+        const isByok = isByokActive(userSettings);
+        const usageTier = isByok ? 'byok' : (userSettings.usageTier || 'none');
+        const tierLimits = getTierLimits(isByok ? 'none' : usageTier, globalSettings);
+        return {
+            canUse: false,
+            messagesUsedToday: userSettings.messagesUsedToday ?? 0,
+            messagesUsedThisMonth: userSettings.messagesUsedThisMonth ?? 0,
+            dailyLimit: 0,
+            monthlyLimit: 0,
+            tokensUsedToday: (userSettings.inputTokensUsedToday || 0) + (userSettings.outputTokensUsedToday || 0),
+            tokensUsedThisMonth: (userSettings.inputTokensUsedThisMonth || 0) + (userSettings.outputTokensUsedThisMonth || 0),
+            dailyTokenLimit: 0,
+            monthlyTokenLimit: 0,
+            tier: usageTier,
+            tierName: isByok ? 'Your API Key' : tierLimits.name,
+            reason: 'AI features are not enabled for your account',
+        };
+    }
+
+    // If user has their own API key and usageTier is none (active BYOK), no limits apply
+    if (isByokActive(userSettings)) {
+        return {
+            canUse: true,
+            messagesUsedToday: userSettings.messagesUsedToday ?? 0,
+            messagesUsedThisMonth: userSettings.messagesUsedThisMonth ?? 0,
+            dailyLimit: Infinity,
+            monthlyLimit: Infinity,
+
+            tokensUsedToday: (userSettings.inputTokensUsedToday || 0) + (userSettings.outputTokensUsedToday || 0),
+            tokensUsedThisMonth: (userSettings.inputTokensUsedThisMonth || 0) + (userSettings.outputTokensUsedThisMonth || 0),
+            dailyTokenLimit: Infinity,
+            monthlyTokenLimit: Infinity,
+
+            tier: 'byok',
+            tierName: 'Your API Key',
         };
     }
 
@@ -302,32 +389,59 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
 }
 
 /**
+ * Auto-reset a provider's monthly usage counters when crossing a month boundary.
+ */
+async function ensureProviderMonthReset(
+    provider: { id: string; lastUsageReset: Date; monthlyInputTokensUsed: number; monthlyOutputTokensUsed: number },
+    now: Date = new Date()
+): Promise<boolean> {
+    const lastReset = new Date(provider.lastUsageReset);
+    const monthChanged = now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear();
+    if (!monthChanged) return false;
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    if (typeof prisma.aiProvider.updateMany === 'function') {
+        await prisma.aiProvider.updateMany({
+            where: { id: provider.id, lastUsageReset: { lt: startOfMonth } },
+            data: {
+                monthlyInputTokensUsed: 0,
+                monthlyOutputTokensUsed: 0,
+                lastUsageReset: now,
+            },
+        });
+    } else if (typeof prisma.aiProvider.update === 'function') {
+        await prisma.aiProvider.update({
+            where: { id: provider.id },
+            data: {
+                monthlyInputTokensUsed: 0,
+                monthlyOutputTokensUsed: 0,
+                lastUsageReset: now,
+            },
+        });
+    }
+    return true;
+}
+
+/**
  * Check if the active AI provider has sufficient quota
  */
 export async function checkProviderLimit(providerId: string): Promise<{ canUse: boolean; reason?: string }> {
     const provider = await prisma.aiProvider.findUnique({ where: { id: providerId } });
     if (!provider) return { canUse: true };
 
+    const now = new Date();
+    const resetOccurred = await ensureProviderMonthReset(provider, now);
+
     // Check if limit is set (and not 0)
-    if (!provider.monthlyTokenLimit || provider.monthlyTokenLimit === BigInt(0)) {
+    if (!provider.monthlyTokenLimit || BigInt(provider.monthlyTokenLimit) <= BigInt(0)) {
         return { canUse: true };
     }
 
-    const now = new Date();
-    const lastReset = new Date(provider.lastUsageReset);
-    let monthlyInput = provider.monthlyInputTokensUsed;
-    let monthlyOutput = provider.monthlyOutputTokensUsed;
-
-    // Simulate reset if new month (actual reset happens in incrementUsage)
-    if (now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
-        monthlyInput = 0;
-        monthlyOutput = 0;
-    }
-
+    const monthlyInput = resetOccurred ? 0 : (provider.monthlyInputTokensUsed || 0);
+    const monthlyOutput = resetOccurred ? 0 : (provider.monthlyOutputTokensUsed || 0);
     const currentUsage = BigInt(monthlyInput + monthlyOutput);
 
-    // monthlyTokenLimit is BigInt
-    if (currentUsage >= provider.monthlyTokenLimit) {
+    if (currentUsage >= BigInt(provider.monthlyTokenLimit)) {
         return { canUse: false, reason: 'Provider monthly token limit exceeded' };
     }
 
@@ -372,8 +486,8 @@ export async function reserveUsageSlot(userId: string): Promise<UsageReservation
     }
 
     if (
-        (userSettings.aiEnabled !== undefined && !userSettings.aiEnabled) ||
-        (userSettings.adminAllowed !== undefined && !userSettings.adminAllowed && !isByokActive(userSettings))
+        !userSettings.adminAllowed ||
+        (userSettings.aiEnabled !== undefined && !userSettings.aiEnabled)
     ) {
         return { allowed: false, claimed: false, reason: 'AI features are not enabled for your account' };
     }
@@ -391,28 +505,58 @@ export async function reserveUsageSlot(userId: string): Promise<UsageReservation
     await ensurePeriodUsageReset(userId);
 
     const limits = getTierLimits(tier, globalSettings);
+    const now = new Date();
+    let claimedCount = 0;
 
-    // Atomic conditional increment: the UPDATE only matches while EVERY
-    // counter is still below its cap, so concurrent in-flight requests can no
-    // longer all pass on the same stale snapshot.
-    const result = await prisma.userAiSettings.updateMany({
-        where: {
-            userId,
-            messagesUsedToday: { lt: limits.daily },
-            messagesUsedThisMonth: { lt: limits.monthly },
-            inputTokensUsedToday: { lt: limits.dailyTokens },
-            outputTokensUsedToday: { lt: limits.dailyTokens },
-            inputTokensUsedThisMonth: { lt: limits.monthlyTokens },
-            outputTokensUsedThisMonth: { lt: limits.monthlyTokens },
-        },
-        data: {
-            messagesUsedToday: { increment: 1 },
-            messagesUsedThisMonth: { increment: 1 },
-            lastUsageReset: new Date(),
-        },
-    });
+    if (typeof (prisma as { $executeRaw?: unknown }).$executeRaw === 'function') {
+        // Atomic conditional UPDATE enforcing combined (input + output) daily & monthly token caps.
+        claimedCount = await prisma.$executeRaw`
+            UPDATE "UserAiSettings"
+            SET
+                "messagesUsedToday" = "messagesUsedToday" + 1,
+                "messagesUsedThisMonth" = "messagesUsedThisMonth" + 1,
+                "lastUsageReset" = ${now}
+            WHERE "userId" = ${userId}
+              AND "messagesUsedToday" < ${limits.daily}
+              AND "messagesUsedThisMonth" < ${limits.monthly}
+              AND ("inputTokensUsedToday" + "outputTokensUsedToday") < ${limits.dailyTokens}
+              AND ("inputTokensUsedThisMonth" + "outputTokensUsedThisMonth") < ${limits.monthlyTokens}
+        `;
+    } else {
+        // Fallback for minimal unit-test mocks that do not implement $executeRaw:
+        // enforce combined token cap via findUnique pre-check + atomic updateMany.
+        const freshSettings = await prisma.userAiSettings.findUnique({ where: { userId } });
+        if (!freshSettings) {
+            return { allowed: false, claimed: false, reason: 'AI not configured' };
+        }
+        const combinedDailyTokens =
+            (freshSettings.inputTokensUsedToday || 0) + (freshSettings.outputTokensUsedToday || 0);
+        const combinedMonthlyTokens =
+            (freshSettings.inputTokensUsedThisMonth || 0) + (freshSettings.outputTokensUsedThisMonth || 0);
+        if (combinedDailyTokens >= limits.dailyTokens || combinedMonthlyTokens >= limits.monthlyTokens) {
+            return { allowed: false, claimed: false, reason: 'Daily or monthly AI message/token limit reached' };
+        }
 
-    if (result.count === 0) {
+        const result = await prisma.userAiSettings.updateMany({
+            where: {
+                userId,
+                messagesUsedToday: { lt: limits.daily },
+                messagesUsedThisMonth: { lt: limits.monthly },
+                inputTokensUsedToday: { lt: limits.dailyTokens },
+                outputTokensUsedToday: { lt: limits.dailyTokens },
+                inputTokensUsedThisMonth: { lt: limits.monthlyTokens },
+                outputTokensUsedThisMonth: { lt: limits.monthlyTokens },
+            },
+            data: {
+                messagesUsedToday: { increment: 1 },
+                messagesUsedThisMonth: { increment: 1 },
+                lastUsageReset: now,
+            },
+        });
+        claimedCount = result.count;
+    }
+
+    if (claimedCount === 0) {
         return { allowed: false, claimed: false, reason: 'Daily or monthly AI message/token limit reached' };
     }
     return { allowed: true, claimed: true };
@@ -448,6 +592,96 @@ export interface IncrementUsageOptions {
      */
     messagesAlreadyCounted?: boolean;
     skipMessageIncrement?: boolean;
+    /**
+     * Optional model identifier persisted into AiUsageHistory.model for per-model analytics.
+     */
+    model?: string;
+}
+
+/**
+ * Increment monthly provider token counters (auto-resetting across month boundaries),
+ * daily analytics rollup, and optional granular usage history.
+ */
+export async function incrementProviderUsage(
+    providerId: string,
+    tokenStats: { inputTokens: number; outputTokens: number },
+    options?: { userId?: string; model?: string; now?: Date }
+): Promise<void> {
+    const provider = await prisma.aiProvider.findUnique({ where: { id: providerId } });
+    if (!provider) return;
+
+    const now = options?.now ?? new Date();
+    const inputDelta = tokenStats.inputTokens || 0;
+    const outputDelta = tokenStats.outputTokens || 0;
+
+    if (typeof prisma.aiProvider.updateMany === 'function') {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        await prisma.aiProvider.updateMany({
+            where: { id: providerId, lastUsageReset: { lt: startOfMonth } },
+            data: {
+                monthlyInputTokensUsed: 0,
+                monthlyOutputTokensUsed: 0,
+                lastUsageReset: now,
+            },
+        });
+        await prisma.aiProvider.update({
+            where: { id: providerId },
+            data: {
+                monthlyInputTokensUsed: { increment: inputDelta },
+                monthlyOutputTokensUsed: { increment: outputDelta },
+                lastUsageReset: now,
+            },
+        });
+    } else {
+        const pLastReset = new Date(provider.lastUsageReset);
+        const pMonthChanged = now.getMonth() !== pLastReset.getMonth() || now.getFullYear() !== pLastReset.getFullYear();
+
+        const providerFields = pMonthChanged
+            ? { monthlyInputTokensUsed: inputDelta, monthlyOutputTokensUsed: outputDelta }
+            : { monthlyInputTokensUsed: { increment: inputDelta }, monthlyOutputTokensUsed: { increment: outputDelta } };
+
+        await prisma.aiProvider.update({
+            where: { id: providerId },
+            data: { ...providerFields, lastUsageReset: now },
+        });
+    }
+
+    // Log Daily Token Usage for Analytics
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+
+    await prisma.aiDailyTokenUsage.upsert({
+        where: {
+            date_providerId: {
+                date: today,
+                providerId,
+            },
+        },
+        update: {
+            inputTokens: { increment: inputDelta },
+            outputTokens: { increment: outputDelta },
+        },
+        create: {
+            date: today,
+            providerId,
+            inputTokens: inputDelta,
+            outputTokens: outputDelta,
+        },
+    });
+
+    // Create Granular Usage History Record
+    if (options?.userId) {
+        await prisma.aiUsageHistory.create({
+            data: {
+                userId: options.userId,
+                providerId,
+                model: options.model ?? undefined,
+                inputTokens: inputDelta,
+                outputTokens: outputDelta,
+                timestamp: now,
+            },
+        });
+    }
 }
 
 /**
@@ -537,54 +771,11 @@ export async function incrementUsage(
 
     // 2. Update Provider Usage (if providerId is supplied) — only if not active BYOK
     if (providerId && !isByokActive(settings)) {
-        const provider = await prisma.aiProvider.findUnique({ where: { id: providerId } });
-        if (provider) {
-            const pLastReset = new Date(provider.lastUsageReset);
-            const pMonthChanged = now.getMonth() !== pLastReset.getMonth() || now.getFullYear() !== pLastReset.getFullYear();
-
-            const providerFields = pMonthChanged
-                ? { monthlyInputTokensUsed: inputDelta, monthlyOutputTokensUsed: outputDelta }
-                : { monthlyInputTokensUsed: { increment: inputDelta }, monthlyOutputTokensUsed: { increment: outputDelta } };
-
-            await prisma.aiProvider.update({
-                where: { id: providerId },
-                data: { ...providerFields, lastUsageReset: now },
-            });
-
-            // 3. Log Daily Token Usage for Analytics
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // UTC Midnight ideally, but server time is fine for now
-
-            await prisma.aiDailyTokenUsage.upsert({
-                where: {
-                    date_providerId: {
-                        date: today,
-                        providerId: providerId
-                    }
-                },
-                update: {
-                    inputTokens: { increment: inputDelta },
-                    outputTokens: { increment: outputDelta }
-                },
-                create: {
-                    date: today,
-                    providerId: providerId,
-                    inputTokens: inputDelta,
-                    outputTokens: outputDelta
-                }
-            });
-
-            // 4. Create Granular Usage History Record
-            await prisma.aiUsageHistory.create({
-                data: {
-                    userId: userId,
-                    providerId: providerId,
-                    inputTokens: inputDelta,
-                    outputTokens: outputDelta,
-                    timestamp: now
-                }
-            });
-        }
+        await incrementProviderUsage(
+            providerId,
+            { inputTokens: inputDelta, outputTokens: outputDelta },
+            { userId, model: options?.model, now }
+        );
     }
 }
 

@@ -1,5 +1,10 @@
 package com.runflow2.app.data.ai
 
+import com.runflow2.app.data.net.Api
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+
 /**
  * Incremental parser for the AI coach's token stream. The server speaks
  * Server-Sent-Events: each `data: {...}` line carries one {"token": "..."}
@@ -14,6 +19,10 @@ class SseParser {
 
     /** Set when a payload carries {"error": "..."} — surfaced by the repository. */
     var errorPayload: String? = null
+        private set
+
+    /** Set when a payload carries {"errorCode": "..."}. */
+    var errorCode: String? = null
         private set
 
     /** Feed a raw chunk; returns the tokens completed by this chunk. */
@@ -49,8 +58,23 @@ class SseParser {
             done = true
             return null
         }
+        val obj = runCatching { Api.json.parseToJsonElement(data) as? JsonObject }.getOrNull()
+        if (obj != null) {
+            if (errorPayload == null) {
+                val rawErr = (obj["error"] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+                cleanErrorMessage(rawErr)?.let { errorPayload = it }
+            }
+            if (errorCode == null) {
+                errorCode = (obj["errorCode"] as? JsonPrimitive)
+                    ?.takeIf { it.isString }
+                    ?.contentOrNull
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
+            }
+            return (obj["token"] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+        }
         if (errorPayload == null) {
-            extractStringField(data, "error")?.let { errorPayload = it }
+            cleanErrorMessage(extractStringField(data, "error"))?.let { errorPayload = it }
         }
         return extractStringField(data, "token")
     }

@@ -80,4 +80,16 @@ class SseParserTest {
         assertEquals(listOf("hi"), out)
         assertEquals("AI access denied", p.errorPayload)
     }
+
+    @Test
+    fun `strips Error prefix and ignores null error field`() {
+        val p = SseParser()
+        val out = p.feed(
+            "data: {\"error\":null,\"token\":\"ok\"}\n" +
+                "data: {\"error\":\"Error: AI provider is temporarily rate-limited.\",\"errorCode\":\"RATE_LIMITED\"}\n"
+        )
+        assertEquals(listOf("ok"), out)
+        assertEquals("AI provider is temporarily rate-limited.", p.errorPayload)
+        assertEquals("RATE_LIMITED", p.errorCode)
+    }
 }

@@ -15,9 +15,12 @@ jest.mock('@/lib/db', () => ({
             create: jest.fn(),
             findUnique: jest.fn(),
             update: jest.fn(),
+            delete: jest.fn(),
         },
         chatMessage: {
             create: jest.fn(),
+            findMany: jest.fn(),
+            deleteMany: jest.fn(),
         },
         globalAiSettings: {
             findUnique: jest.fn(),
@@ -42,6 +45,41 @@ jest.mock('@/lib/ai', () => ({
     generateCompletion: jest.fn(),
     countTokens: jest.fn(() => 10),
 }));
+
+jest.mock('@/lib/ai/executor', () => {
+    const ai = jest.requireMock('@/lib/ai');
+    return {
+        executeStreamWithFallback: jest.fn(async (userId: string, _fn: string, messages: unknown[], opts?: unknown) => {
+            const config = await ai.getAiConfig(userId);
+            if (!config) {
+                throw new Error('AI not configured');
+            }
+            const stream = await ai.streamChat(config, messages, opts);
+            return {
+                stream,
+                targetUsed: {
+                    providerId: config.providerId ?? 'provider-1',
+                    providerSlug: 'mock',
+                    model: config.model ?? 'gpt-4',
+                },
+                attempts: 1,
+            };
+        }),
+        executeCompletionWithFallback: jest.fn(async (userId: string, _fn: string, messages: unknown[]) => {
+            const config = await ai.getAiConfig(userId);
+            const text = await ai.generateCompletion(config, messages);
+            return {
+                text,
+                targetUsed: {
+                    providerId: config?.providerId ?? 'provider-1',
+                    providerSlug: 'mock',
+                    model: config?.model ?? 'gpt-4',
+                },
+                attempts: 1,
+            };
+        }),
+    };
+});
 
 jest.mock('@/lib/rateLimit', () => ({
     checkRateLimitAsync: jest.fn(),
@@ -161,7 +199,7 @@ describe('POST /api/v1/ai/chat', () => {
         expect(systemMessage.content).toContain('[untrusted user data: Steady zone 2]');
     });
 
-    it('should emit the usage-limit error over SSE when the reservation is denied', async () => {
+    it('should return 429 JSON error with version headers when the reservation is denied', async () => {
         (reserveUsageSlot as jest.Mock).mockResolvedValue({
             allowed: false,
             claimed: false,
@@ -173,7 +211,8 @@ describe('POST /api/v1/ai/chat', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: 'Hello AI' }),
         }));
-        await consumeStream(response);
+        expect(response.status).toBe(429);
+        expect(response.headers.get('API-Version')).toBe('v1');
 
         expect(streamChat).not.toHaveBeenCalled();
     });
@@ -203,7 +242,7 @@ describe('POST /api/v1/ai/chat', () => {
             'user-1',
             { inputTokens: 20, outputTokens: 10 },
             'provider-1',
-            { messagesAlreadyCounted: true }
+            { messagesAlreadyCounted: true, model: 'gpt-4' }
         );
     });
 
@@ -217,7 +256,8 @@ describe('POST /api/v1/ai/chat', () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: 'Hello AI' }),
         }));
-        await consumeStream(response);
+        expect(response.status).toBe(500);
+        expect(response.headers.get('API-Version')).toBe('v1');
 
         expect(releaseUsageReservation).toHaveBeenCalledWith('user-1');
         expect(incrementUsage).not.toHaveBeenCalled();

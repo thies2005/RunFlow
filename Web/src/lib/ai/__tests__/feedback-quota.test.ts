@@ -145,16 +145,24 @@ jest.mock('@/lib/ai/prompts', () => ({
     fenceUntrusted: jest.fn((value: unknown) => String(value ?? '')),
 }));
 
-jest.mock('@/lib/ai/providers', () => ({
-    generateCompletion: jest.fn(),
+jest.mock('@/lib/ai/executor', () => ({
+    executeCompletionWithFallback: jest.fn(),
 }));
+
+jest.mock('@/lib/ai/usage', () => {
+    const actual = jest.requireActual('@/lib/ai/usage');
+    return {
+        ...actual,
+        incrementUsage: jest.fn(async () => undefined),
+    };
+});
 
 jest.mock('@/lib/logging/logger', () => ({
     logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
 import { prisma } from '@/lib/db';
-import { generateCompletion } from '@/lib/ai/providers';
+import { executeCompletionWithFallback } from '@/lib/ai/executor';
 
 const ENGINE = prisma as any;
 
@@ -176,7 +184,10 @@ describe('generateAndSaveActivityFeedback daily quota reservation', () => {
         ENGINE.__reset();
         defaultGlobalSettings();
         ENGINE.__setRow({ userId: 'u1', usageTier: 'tier1' });
-        (generateCompletion as jest.Mock).mockResolvedValue(RAW_FEEDBACK);
+        (executeCompletionWithFallback as jest.Mock).mockResolvedValue({
+            text: RAW_FEEDBACK,
+            targetUsed: { providerId: 'provider-1', model: 'test-model', isByok: false },
+        });
     });
 
     it('enforces the tier limit sequentially (control)', async () => {
@@ -187,7 +198,7 @@ describe('generateAndSaveActivityFeedback daily quota reservation', () => {
             'Daily limit of 1 activity analyses reached for your tier.'
         );
 
-        expect(generateCompletion).toHaveBeenCalledTimes(1);
+        expect(executeCompletionWithFallback).toHaveBeenCalledTimes(1);
         expect(ENGINE.__getRow('u1').activityFeedbackUsedToday).toBe(1);
     });
 
@@ -209,7 +220,7 @@ describe('generateAndSaveActivityFeedback daily quota reservation', () => {
                 'Daily limit of 1 activity analyses reached for your tier.'
             );
         }
-        expect(generateCompletion).toHaveBeenCalledTimes(1);
+        expect(executeCompletionWithFallback).toHaveBeenCalledTimes(1);
         // The lost update is gone: five attempts advanced the counter by one.
         expect(ENGINE.__getRow('u1').activityFeedbackUsedToday).toBe(1);
     });
@@ -230,7 +241,7 @@ describe('generateAndSaveActivityFeedback daily quota reservation', () => {
     });
 
     it('releases the reservation when the provider call fails', async () => {
-        (generateCompletion as jest.Mock).mockRejectedValue(new Error('provider exploded'));
+        (executeCompletionWithFallback as jest.Mock).mockRejectedValue(new Error('provider exploded'));
 
         await expect(generateAndSaveActivityFeedback('act-1', 'u1', true)).rejects.toThrow('provider exploded');
 
@@ -241,7 +252,10 @@ describe('generateAndSaveActivityFeedback daily quota reservation', () => {
         expect(refund.data.activityFeedbackUsedToday).toEqual({ decrement: 1 });
 
         // The released slot is claimable again.
-        (generateCompletion as jest.Mock).mockResolvedValue(RAW_FEEDBACK);
+        (executeCompletionWithFallback as jest.Mock).mockResolvedValue({
+            text: RAW_FEEDBACK,
+            targetUsed: { providerId: 'provider-1', model: 'test-model', isByok: false },
+        });
         const retry = await generateAndSaveActivityFeedback('act-1', 'u1', true);
         expect(retry.cached).toBe(false);
     });
@@ -264,7 +278,7 @@ describe('generateAndSaveActivityFeedback daily quota reservation', () => {
         const result = await generateAndSaveActivityFeedback('act-1', 'u1', false);
 
         expect(result.cached).toBe(true);
-        expect(generateCompletion).not.toHaveBeenCalled();
+        expect(executeCompletionWithFallback).not.toHaveBeenCalled();
         expect(ENGINE.__updateManyCalls).toHaveLength(0);
         expect(ENGINE.__getRow('u1').activityFeedbackUsedToday).toBe(0);
     });
@@ -275,7 +289,7 @@ describe('generateAndSaveActivityFeedback daily quota reservation', () => {
         const result = await generateAndSaveActivityFeedback('act-1', 'u1', true);
 
         expect(result.cached).toBe(false);
-        expect(generateCompletion).toHaveBeenCalledTimes(1);
+        expect(executeCompletionWithFallback).toHaveBeenCalledTimes(1);
         expect(ENGINE.__updateManyCalls).toHaveLength(0);
         expect(ENGINE.__getRow('u1').activityFeedbackUsedToday).toBe(0);
     });

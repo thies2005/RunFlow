@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { generateAndSaveActivityFeedback } from '@/lib/ai/feedback';
+import { AiProviderError, toSafeUserError } from '@/lib/ai/errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
         } catch (error: unknown) {
             if (controller.signal.aborted) {
                 // Enqueue as fallback if it timed out but might still succeed in background
-                await prisma.feedbackJob.upsert({
+                const job = await prisma.feedbackJob.upsert({
                     where: { activityId },
                     create: {
                         userId,
@@ -79,10 +80,66 @@ export async function POST(request: NextRequest) {
                         errorLog: 'Timed out during on-demand request'
                     }
                 });
-                return NextResponse.json({ 
-                    queued: true, 
-                    message: 'Generation is taking longer than expected. It has been queued and will appear shortly.' 
+                return NextResponse.json({
+                    queued: true,
+                    jobId: job?.id,
+                    status: 'pending',
+                    message: 'Generation is taking longer than expected. It has been queued and will appear shortly.'
                 });
+            }
+
+            if (error instanceof AiProviderError) {
+                if (error.code === 'USER_LIMIT_REACHED') {
+                    return NextResponse.json(
+                        { error: error.userMessage, errorCode: error.code },
+                        { status: 429 }
+                    );
+                }
+
+                if (
+                    error.code === 'RATE_LIMITED' ||
+                    error.code === 'TIMEOUT' ||
+                    error.code === 'PROVIDER_UNAVAILABLE'
+                ) {
+                    const job = await prisma.feedbackJob.upsert({
+                        where: { activityId },
+                        create: {
+                            userId,
+                            activityId,
+                            priority: 1,
+                        },
+                        update: {
+                            status: 'PENDING',
+                            retryCount: 0,
+                            nextRunAt: new Date(),
+                            errorLog: `${error.code} during on-demand request`,
+                        },
+                    });
+                    const safe = toSafeUserError(error);
+                    return NextResponse.json(
+                        {
+                            queued: true,
+                            jobId: job?.id,
+                            status: 'pending',
+                            message: error.code === 'TIMEOUT'
+                                ? 'Generation timed out. Your feedback has been queued and will appear shortly.'
+                                : 'Server rate limited. Your feedback is being prepared and will appear shortly.',
+                            error: safe.message,
+                            errorCode: safe.code,
+                        },
+                        { status: 429 }
+                    );
+                }
+
+                const safe = toSafeUserError(error);
+                return NextResponse.json(
+                    {
+                        error: safe.message,
+                        errorCode: safe.code,
+                        ...(safe.retryAfterSeconds !== undefined ? { retryAfterSeconds: safe.retryAfterSeconds } : {}),
+                    },
+                    { status: safe.httpStatus }
+                );
             }
 
             const message = error instanceof Error ? error.message : String(error);
@@ -90,10 +147,13 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ error: message }, { status: 404 });
             }
             if (message.includes('AI features not enabled or no provider configured')) {
-                return NextResponse.json({ error: message }, { status: 403 });
+                return NextResponse.json({ error: message, errorCode: 'AI_DISABLED' }, { status: 403 });
+            }
+            if (message.includes('Usage limit reached') || message.includes('No tokens remaining') || message.includes('Quota exhausted')) {
+                return NextResponse.json({ error: message, errorCode: 'USER_LIMIT_REACHED' }, { status: 429 });
             }
             if (message.includes('rate limited') || message.includes('(429)')) {
-                await prisma.feedbackJob.upsert({
+                const job = await prisma.feedbackJob.upsert({
                     where: { activityId },
                     create: {
                         userId,
@@ -109,13 +169,20 @@ export async function POST(request: NextRequest) {
                 });
                 return NextResponse.json({
                     queued: true,
-                    message: 'Server rate limited. Your feedback is being prepared and will appear shortly.'
+                    jobId: job?.id,
+                    status: 'pending',
+                    message: 'Server rate limited. Your feedback is being prepared and will appear shortly.',
+                    error: 'AI provider is temporarily rate-limited. Please try again in a moment.',
+                    errorCode: 'RATE_LIMITED',
                 }, { status: 429 });
             }
-            if (message.includes('Usage limit reached') || message.includes('No tokens remaining') || message.includes('Quota exhausted')) {
-                return NextResponse.json({ error: message }, { status: 429 });
-            }
-            throw error;
+
+            console.error('Generate activity feedback error:', error);
+            const safe = toSafeUserError(error);
+            return NextResponse.json(
+                { error: safe.message, errorCode: safe.code },
+                { status: safe.httpStatus }
+            );
         } finally {
             clearTimeout(timeout);
         }

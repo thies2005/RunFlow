@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getAiConfigForModel, generateCompletion, reserveUsageSlot, releaseUsageReservation, incrementUsage, checkProviderLimit, countTokens } from '@/lib/ai';
+import { reserveUsageSlot, releaseUsageReservation, incrementUsage, countTokens } from '@/lib/ai';
+import { executeCompletionWithFallback } from '@/lib/ai/executor';
+import { toSafeUserError } from '@/lib/ai/errors';
 import { logger } from '@/lib/logging/logger';
 import { auth } from '@/auth';
 import { subDays, format } from 'date-fns';
@@ -27,9 +29,16 @@ export async function POST(_request: Request) {
             where: { userId },
         });
 
-        if (!userSettings?.adminAllowed || !userSettings?.aiEnabled) {
+        if (!userSettings?.adminAllowed) {
             return NextResponse.json(
-                { error: 'AI features are not enabled for your account.' },
+                { error: 'AI access is not enabled for your account. Contact an administrator.', errorCode: 'AI_DISABLED' },
+                { status: 403 }
+            );
+        }
+
+        if (!userSettings.aiEnabled) {
+            return NextResponse.json(
+                { error: 'AI features are currently disabled. Enable them in your AI settings.', errorCode: 'AI_DISABLED' },
                 { status: 403 }
             );
         }
@@ -104,35 +113,32 @@ Please provide a short, actionable weekly insight report (max 3 short paragraphs
 
 Write directly to me (e.g., "You did a great job..."). Use markdown formatting. Keep it encouraging but data-driven.`;
 
-        const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
-        const insightModel = globalSettings?.activityFeedbackModel || 'gemini-1.5-flash';
-        const providerConfig = await getAiConfigForModel(userId, insightModel);
-
-        if (!providerConfig) {
+        const reservation = await reserveUsageSlot(userId);
+        if (!reservation.allowed) {
+            const reason = reservation.reason || 'AI usage limit reached';
+            if (reason === 'AI not configured' || reason.includes('Add your own API key')) {
+                return NextResponse.json(
+                    { error: reason, errorCode: 'NOT_CONFIGURED' },
+                    { status: 403 }
+                );
+            }
+            if (reason.includes('not enabled')) {
+                return NextResponse.json(
+                    { error: reason, errorCode: 'AI_DISABLED' },
+                    { status: 403 }
+                );
+            }
             return NextResponse.json(
-                { error: 'AI features not enabled or no provider configured that supports the requested model' },
-                { status: 503 }
+                { error: reason, errorCode: 'USER_LIMIT_REACHED' },
+                { status: 429 }
             );
         }
 
-        const reservation = await reserveUsageSlot(userId);
-        if (!reservation.allowed) {
-            return NextResponse.json({ error: reservation.reason || 'AI usage limit reached' }, { status: 429 });
-        }
-
-        if (providerConfig.providerId) {
-            const provLimit = await checkProviderLimit(providerConfig.providerId);
-            if (!provLimit.canUse) {
-                if (reservation.claimed) {
-                    await releaseUsageReservation(userId).catch(() => undefined);
-                }
-                return NextResponse.json({ error: provLimit.reason || 'Provider monthly token limit exceeded' }, { status: 429 });
-            }
-        }
-
-        let insightContent: string | null = null;
+        let result;
         try {
-            insightContent = await generateCompletion(providerConfig, [{ role: 'user', content: prompt }]);
+            result = await executeCompletionWithFallback(userId, 'healthInsights', [
+                { role: 'user', content: prompt },
+            ]);
         } catch (genError) {
             if (reservation.claimed) {
                 await releaseUsageReservation(userId).catch(() => undefined);
@@ -140,23 +146,24 @@ Write directly to me (e.g., "You did a great job..."). Use markdown formatting. 
             throw genError;
         }
 
-        if (!insightContent) {
-            if (reservation.claimed) {
-                await releaseUsageReservation(userId).catch(() => undefined);
-            }
-            return NextResponse.json({ error: 'AI failed to return an insight.' }, { status: 500 });
+        const insightContent = result.text;
+
+        try {
+            const inputTokens = countTokens(prompt, result.targetUsed.model);
+            const outputTokens = countTokens(insightContent, result.targetUsed.model);
+
+            await incrementUsage(
+                userId,
+                { inputTokens, outputTokens },
+                result.targetUsed.providerId,
+                { skipMessageIncrement: true, model: result.targetUsed.model }
+            );
+        } catch (usageError) {
+            logger.warn('[Insights Generator] Failed to record token usage', {
+                userId,
+                error: usageError instanceof Error ? usageError.message : String(usageError),
+            });
         }
-
-        const inputTokensEstimate = countTokens(prompt, providerConfig.model);
-        const outputTokensEstimate = countTokens(insightContent, providerConfig.model);
-
-        await incrementUsage(
-            userId,
-            inputTokensEstimate,
-            outputTokensEstimate,
-            providerConfig.providerId,
-            { skipMessageIncrement: reservation.claimed }
-        );
 
         // Save Insight
         const newInsight = await prisma.healthInsight.create({
@@ -176,6 +183,14 @@ Write directly to me (e.g., "You did a great job..."). Use markdown formatting. 
         logger.error('[Insights Generator] Unexpected error', {
             error: error instanceof Error ? error.message : String(error),
         });
-        return NextResponse.json({ error: 'Failed to generate insight.' }, { status: 500 });
+        const safe = toSafeUserError(error);
+        return NextResponse.json(
+            {
+                error: safe.message,
+                errorCode: safe.code,
+                ...(safe.retryAfterSeconds !== undefined ? { retryAfterSeconds: safe.retryAfterSeconds } : {}),
+            },
+            { status: safe.httpStatus }
+        );
     }
 }

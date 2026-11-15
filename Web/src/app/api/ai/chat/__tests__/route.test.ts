@@ -19,7 +19,14 @@ jest.mock('@/lib/db', () => ({
         },
         chatMessage: {
             create: jest.fn(),
+            findMany: jest.fn(),
             deleteMany: jest.fn(),
+        },
+        foodItem: {
+            create: jest.fn(),
+        },
+        nutritionLog: {
+            create: jest.fn(),
         },
         globalAiSettings: {
             findUnique: jest.fn(),
@@ -44,6 +51,41 @@ jest.mock('@/lib/ai', () => ({
     generateCompletion: jest.fn(),
     countTokens: jest.fn(() => 10),
 }));
+
+jest.mock('@/lib/ai/executor', () => {
+    const ai = jest.requireMock('@/lib/ai');
+    return {
+        executeStreamWithFallback: jest.fn(async (userId: string, _fn: string, messages: unknown[], opts?: unknown) => {
+            const config = await ai.getAiConfig(userId);
+            if (!config) {
+                throw new Error('AI not configured');
+            }
+            const stream = await ai.streamChat(config, messages, opts);
+            return {
+                stream,
+                targetUsed: {
+                    providerId: config.providerId ?? 'provider-1',
+                    providerSlug: 'mock',
+                    model: config.model ?? 'gpt-4',
+                },
+                attempts: 1,
+            };
+        }),
+        executeCompletionWithFallback: jest.fn(async (userId: string, _fn: string, messages: unknown[]) => {
+            const config = await ai.getAiConfig(userId);
+            const text = await ai.generateCompletion(config, messages);
+            return {
+                text,
+                targetUsed: {
+                    providerId: config?.providerId ?? 'provider-1',
+                    providerSlug: 'mock',
+                    model: config?.model ?? 'gpt-4',
+                },
+                attempts: 1,
+            };
+        }),
+    };
+});
 
 jest.mock('@/lib/rateLimit', () => ({
     checkRateLimitAsync: jest.fn(),
@@ -93,11 +135,26 @@ describe('POST /api/ai/chat', () => {
             id: 'session-1',
             title: 'Test message',
         });
+        (prisma.chatMessage.findMany as jest.Mock).mockResolvedValue([]);
+        (prisma.foodItem.create as jest.Mock).mockResolvedValue({
+            id: 'food-1',
+            calories: 300,
+            protein: 20,
+            carbs: 30,
+            fats: 10,
+        });
+        (prisma.nutritionLog.create as jest.Mock).mockResolvedValue({ id: 'log-1' });
         (prisma.globalAiSettings.findUnique as jest.Mock).mockResolvedValue({
             systemPrompt: 'System prompt',
         });
         (prisma.userAiSettings.findUnique as jest.Mock).mockResolvedValue(null);
 
+        (handleError as jest.Mock).mockImplementation((err: unknown) =>
+            new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Internal error' }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' },
+            })
+        );
         (streamChat as jest.Mock).mockImplementation(async function* () {
             yield 'Hello';
             yield ' world';
@@ -169,17 +226,9 @@ describe('POST /api/ai/chat', () => {
         });
 
         const response = await POST(mockRequest);
-
-        const chunks = [];
-        const reader = response.body?.getReader();
-        if (reader) {
-            let result;
-            while (!(result = await reader.read()).done) {
-                chunks.push(result.value);
-            }
-        }
-        const text = Buffer.concat(chunks).toString();
-        expect(text).toContain('error');
+        expect(response.status).toBe(500);
+        const body = await response.json();
+        expect(body.error).toBeTruthy();
     });
 
     it('should emit the usage-limit error over SSE when the reservation is denied', async () => {
@@ -196,17 +245,9 @@ describe('POST /api/ai/chat', () => {
         });
 
         const response = await POST(mockRequest);
-
-        const chunks = [];
-        const reader = response.body?.getReader();
-        if (reader) {
-            let result;
-            while (!(result = await reader.read()).done) {
-                chunks.push(result.value);
-            }
-        }
-        const text = Buffer.concat(chunks).toString();
-        expect(text).toContain('Usage limit exceeded');
+        expect(response.status).toBe(429);
+        const body = await response.json();
+        expect(body.error).toContain('Usage limit exceeded');
         // Denied before any provider spend.
         expect(streamChat).not.toHaveBeenCalled();
     });
@@ -251,7 +292,7 @@ describe('POST /api/ai/chat', () => {
             'user-1',
             { inputTokens: 20, outputTokens: 10 },
             'provider-1',
-            { messagesAlreadyCounted: true }
+            { messagesAlreadyCounted: true, model: 'gpt-4' }
         );
     });
 
@@ -267,11 +308,7 @@ describe('POST /api/ai/chat', () => {
         });
 
         const response = await POST(mockRequest);
-        const reader = response.body?.getReader();
-        if (reader) {
-            let result;
-            while (!(result = await reader.read()).done);
-        }
+        expect(response.status).toBe(500);
 
         expect(releaseUsageReservation).toHaveBeenCalledWith('user-1');
         // The failed stream never settles usage.
@@ -292,11 +329,7 @@ describe('POST /api/ai/chat', () => {
         });
 
         const response = await POST(mockRequest);
-        const reader = response.body?.getReader();
-        if (reader) {
-            let result;
-            while (!(result = await reader.read()).done);
-        }
+        expect(response.status).toBe(500);
 
         expect(releaseUsageReservation).not.toHaveBeenCalled();
     });
@@ -406,5 +439,134 @@ describe('POST /api/ai/chat', () => {
             (m: { role: string }) => m.role === 'system'
         );
         expect(systemMessage.content).toContain('Morning Run');
+    });
+
+    it('should include sanitized chronological history for an existing owned session', async () => {
+        (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue({
+            id: 'existing-session',
+            userId: 'user-1',
+            title: 'Previous title',
+        });
+        (prisma.chatMessage.findMany as jest.Mock).mockResolvedValue([
+            {
+                role: 'assistant',
+                content: 'Logged lunch! <!-- MEAL_LOGGED_WIDGET: {"name":"Salad","calories":400} -->',
+            },
+            {
+                role: 'user',
+                content: 'I ate a salad <!-- WATER_LOGGED_WIDGET: {"amount": 2} -->',
+            },
+        ]);
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: 'What about dinner?',
+                sessionId: 'existing-session',
+            }),
+        });
+
+        const response = await POST(mockRequest);
+        const reader = response.body?.getReader();
+        if (reader) {
+            let result;
+            while (!(result = await reader.read()).done);
+        }
+
+        expect(prisma.chatMessage.findMany).toHaveBeenCalledWith({
+            where: { sessionId: 'existing-session', userId: 'user-1' },
+            orderBy: { createdAt: 'desc' },
+            take: 20,
+            select: { role: true, content: true },
+        });
+
+        const sentMessages = (streamChat as jest.Mock).mock.calls[0][1];
+        expect(sentMessages).toHaveLength(4);
+        expect(sentMessages[0].role).toBe('system');
+        expect(sentMessages[1]).toEqual({ role: 'user', content: 'I ate a salad' });
+        expect(sentMessages[2]).toEqual({ role: 'assistant', content: 'Logged lunch!' });
+        expect(sentMessages[3]).toEqual({ role: 'user', content: 'What about dinner?' });
+    });
+
+    it('should not load history when sessionId belongs to another user', async () => {
+        (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue({
+            id: 'foreign-session',
+            userId: 'other-user',
+            title: 'Other user chat',
+        });
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: 'Hello',
+                sessionId: 'foreign-session',
+            }),
+        });
+
+        const response = await POST(mockRequest);
+        const reader = response.body?.getReader();
+        if (reader) {
+            let result;
+            while (!(result = await reader.read()).done);
+        }
+
+        expect(prisma.chatMessage.findMany).not.toHaveBeenCalled();
+    });
+
+    it('should normalize mealType to uppercase valid MealType defaulting to SNACK', async () => {
+        (streamChat as jest.Mock).mockImplementationOnce(async function* () {
+            yield 'Logged your breakfast! <!-- MEAL_LOGGED_WIDGET: {"name":"Oats","mealType":"breakfast","calories":350,"protein":12,"carbs":55,"fats":7} -->';
+        });
+
+        const req1 = new NextRequest('http://localhost:3000/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'I ate oats for breakfast' }),
+        });
+        const res1 = await POST(req1);
+        const reader1 = res1.body?.getReader();
+        if (reader1) {
+            let r;
+            while (!(r = await reader1.read()).done);
+        }
+
+        expect(prisma.nutritionLog.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({ mealType: 'BREAKFAST' }),
+            })
+        );
+
+        jest.clearAllMocks();
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue({ id: 'user-1', authMethod: 'session' });
+        (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
+        (getAiConfig as jest.Mock).mockResolvedValue({ model: 'gpt-4', providerId: 'provider-1' });
+        (reserveUsageSlot as jest.Mock).mockResolvedValue({ allowed: true, claimed: true });
+        (prisma.chatSession.create as jest.Mock).mockResolvedValue({ id: 'session-2', title: 'Test' });
+        (prisma.globalAiSettings.findUnique as jest.Mock).mockResolvedValue({ systemPrompt: 'System' });
+        (prisma.userAiSettings.findUnique as jest.Mock).mockResolvedValue(null);
+        (prisma.foodItem.create as jest.Mock).mockResolvedValue({ id: 'food-2', calories: 200, protein: 5, carbs: 25, fats: 8 });
+        (streamChat as jest.Mock).mockImplementationOnce(async function* () {
+            yield 'Logged! <!-- MEAL_LOGGED_WIDGET: {"name":"Apple","calories":95,"protein":0,"carbs":25,"fats":0} -->';
+        });
+
+        const req2 = new NextRequest('http://localhost:3000/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'I ate an apple' }),
+        });
+        const res2 = await POST(req2);
+        const reader2 = res2.body?.getReader();
+        if (reader2) {
+            let r;
+            while (!(r = await reader2.read()).done);
+        }
+
+        expect(prisma.nutritionLog.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({ mealType: 'SNACK' }),
+            })
+        );
     });
 });

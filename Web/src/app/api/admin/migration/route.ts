@@ -18,6 +18,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
@@ -26,6 +27,12 @@ import { logAdminAction } from '@/lib/admin/auditLog';
 import { handleError } from '@/lib/errors/handler';
 import { encryptToken, decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
+import {
+  slugifyRoutingConfig,
+  TierRoutingConfigSchema,
+  unslugifyRoutingConfig,
+  type TierRoutingConfig,
+} from '@/lib/ai/routing';
 import { createHash } from 'crypto';
 
 const BUNDLE_VERSION = '1';
@@ -74,12 +81,40 @@ interface MigrationGlobalSettingsBundle {
   tier1ActivityFeedbackLimit: number;
   tier2ActivityFeedbackLimit: number;
   tier3ActivityFeedbackLimit: number;
+  planBuilderModel?: string;
+  planMaxTokensPerAnalysis?: number;
+  routingConfig?: TierRoutingConfig | null;
   dailyMessageLimit: number;
   monthlyMessageLimit: number;
   systemPrompt: string;
   allowSignups?: boolean;
   _activeProviderSlug: string | null;
   _fallbackProviderSlug: string | null;
+}
+
+function extractRoutingSlugs(config: TierRoutingConfig): string[] {
+  const slugs = new Set<string>();
+  for (const tierConfig of Object.values(config.tiers)) {
+    if (!tierConfig) continue;
+    if (tierConfig.defaultPrimary?.providerId) {
+      slugs.add(tierConfig.defaultPrimary.providerId);
+    }
+    for (const fb of tierConfig.defaultFallbacks ?? []) {
+      if (fb.providerId) slugs.add(fb.providerId);
+    }
+    if (tierConfig.functions) {
+      for (const fnConfig of Object.values(tierConfig.functions)) {
+        if (!fnConfig) continue;
+        if (fnConfig.primary?.providerId) {
+          slugs.add(fnConfig.primary.providerId);
+        }
+        for (const fb of fnConfig.fallbacks ?? []) {
+          if (fb.providerId) slugs.add(fb.providerId);
+        }
+      }
+    }
+  }
+  return Array.from(slugs);
 }
 
 interface MigrationBundle {
@@ -134,6 +169,37 @@ function parseGlobalAiSettings(value: unknown): MigrationGlobalSettingsBundle | 
     return fieldValue;
   };
 
+  const getOptionalString = (key: keyof MigrationGlobalSettingsBundle): string | undefined => {
+    const fieldValue = value[key];
+    if (fieldValue === undefined) return undefined;
+    if (typeof fieldValue !== 'string') {
+      throw new Error(`Invalid globalAiSettings.${String(key)}: expected string or undefined`);
+    }
+    return fieldValue;
+  };
+
+  const getOptionalNumber = (key: keyof MigrationGlobalSettingsBundle): number | undefined => {
+    const fieldValue = value[key];
+    if (fieldValue === undefined) return undefined;
+    if (typeof fieldValue !== 'number' || !Number.isFinite(fieldValue)) {
+      throw new Error(`Invalid globalAiSettings.${String(key)}: expected number or undefined`);
+    }
+    return fieldValue;
+  };
+
+  let parsedRoutingConfig: TierRoutingConfig | null | undefined = undefined;
+  if (value.routingConfig !== undefined) {
+    if (value.routingConfig === null) {
+      parsedRoutingConfig = null;
+    } else {
+      const parsed = TierRoutingConfigSchema.safeParse(value.routingConfig);
+      if (!parsed.success) {
+        throw new Error('Invalid globalAiSettings.routingConfig: invalid routing configuration');
+      }
+      parsedRoutingConfig = parsed.data;
+    }
+  }
+
   return {
     defaultBaseUrl: getString('defaultBaseUrl'),
     defaultApiKey: getNullableString('defaultApiKey'),
@@ -166,6 +232,9 @@ function parseGlobalAiSettings(value: unknown): MigrationGlobalSettingsBundle | 
     tier1ActivityFeedbackLimit: getNumber('tier1ActivityFeedbackLimit'),
     tier2ActivityFeedbackLimit: getNumber('tier2ActivityFeedbackLimit'),
     tier3ActivityFeedbackLimit: getNumber('tier3ActivityFeedbackLimit'),
+    planBuilderModel: getOptionalString('planBuilderModel'),
+    planMaxTokensPerAnalysis: getOptionalNumber('planMaxTokensPerAnalysis'),
+    routingConfig: parsedRoutingConfig,
     dailyMessageLimit: getNumber('dailyMessageLimit'),
     monthlyMessageLimit: getNumber('monthlyMessageLimit'),
     systemPrompt: getString('systemPrompt'),
@@ -350,6 +419,12 @@ export async function GET(request: NextRequest) {
       exportWarnings.push(`Missing decryptable secrets: ${unavailableSecrets.join(', ')}`);
     }
 
+    const providerRefs = providers.map((p) => ({ id: p.id, slug: p.slug }));
+    const exportedRoutingConfig =
+      globalSettings?.routingConfig != null
+        ? slugifyRoutingConfig(globalSettings.routingConfig, providerRefs)
+        : null;
+
     const settingsExport = globalSettings
       ? {
           defaultBaseUrl: globalSettings.defaultBaseUrl,
@@ -383,6 +458,9 @@ export async function GET(request: NextRequest) {
           tier1ActivityFeedbackLimit: globalSettings.tier1ActivityFeedbackLimit,
           tier2ActivityFeedbackLimit: globalSettings.tier2ActivityFeedbackLimit,
           tier3ActivityFeedbackLimit: globalSettings.tier3ActivityFeedbackLimit,
+          planBuilderModel: globalSettings.planBuilderModel,
+          planMaxTokensPerAnalysis: globalSettings.planMaxTokensPerAnalysis,
+          routingConfig: exportedRoutingConfig,
           dailyMessageLimit: globalSettings.dailyMessageLimit,
           monthlyMessageLimit: globalSettings.monthlyMessageLimit,
           systemPrompt: globalSettings.systemPrompt,
@@ -501,28 +579,53 @@ export async function POST(request: NextRequest) {
           defaultApiKey,
           defaultApiKeyUnavailable,
           allowSignups,
+          planBuilderModel,
+          planMaxTokensPerAnalysis,
+          routingConfig,
           ...rest
         } = bundle.globalAiSettings;
 
-        const activeProvider = _activeProviderSlug
-          ? await tx.aiProvider.findUnique({ where: { slug: _activeProviderSlug } })
-          : null;
-        const fallbackProvider = _fallbackProviderSlug
-          ? await tx.aiProvider.findUnique({ where: { slug: _fallbackProviderSlug } })
-          : null;
+        const allProviders = await tx.aiProvider.findMany({
+          select: { id: true, slug: true },
+        });
+        const providerBySlug = new Map(allProviders.map((p) => [p.slug, p.id]));
 
-        if (_activeProviderSlug && !activeProvider) {
+        const activeProviderId = _activeProviderSlug ? providerBySlug.get(_activeProviderSlug) ?? null : null;
+        const fallbackProviderId = _fallbackProviderSlug ? providerBySlug.get(_fallbackProviderSlug) ?? null : null;
+
+        if (_activeProviderSlug && !activeProviderId) {
           warnings.push(`Active provider "${_activeProviderSlug}" was not found during import.`);
         }
-        if (_fallbackProviderSlug && !fallbackProvider) {
+        if (_fallbackProviderSlug && !fallbackProviderId) {
           warnings.push(`Fallback provider "${_fallbackProviderSlug}" was not found during import.`);
+        }
+
+        let resolvedRoutingConfig: Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue | undefined;
+        if (routingConfig !== undefined) {
+          if (routingConfig === null) {
+            resolvedRoutingConfig = Prisma.DbNull;
+          } else {
+            for (const slug of extractRoutingSlugs(routingConfig)) {
+              if (!providerBySlug.has(slug)) {
+                warnings.push(`Routing provider "${slug}" was not found during import and was omitted from routingConfig.`);
+              }
+            }
+            const unslugified = unslugifyRoutingConfig(routingConfig, allProviders);
+            const hasTiers = unslugified !== null && Object.keys(unslugified.tiers).length > 0;
+            resolvedRoutingConfig = hasTiers
+              ? (unslugified as unknown as Prisma.InputJsonValue)
+              : Prisma.DbNull;
+          }
         }
 
         const baseSettingsData = {
           ...rest,
           ...(allowSignups !== undefined ? { allowSignups } : {}),
-          activeProviderId: activeProvider?.id ?? null,
-          fallbackProviderId: fallbackProvider?.id ?? null,
+          ...(planBuilderModel !== undefined ? { planBuilderModel } : {}),
+          ...(planMaxTokensPerAnalysis !== undefined ? { planMaxTokensPerAnalysis } : {}),
+          ...(resolvedRoutingConfig !== undefined ? { routingConfig: resolvedRoutingConfig } : {}),
+          activeProviderId,
+          fallbackProviderId,
         };
 
         const defaultKeyValue = defaultApiKey == null ? null : defaultApiKey === '' ? '' : encryptToken(defaultApiKey);

@@ -65,6 +65,8 @@ jest.mock('@/lib/db', () => {
         userId: '',
         usageTier: 'tier1',
         customApiKey: null,
+        adminAllowed: true,
+        aiEnabled: true,
         lastUsageReset: new Date(),
         messagesUsedToday: 0,
         messagesUsedThisMonth: 0,
@@ -237,6 +239,25 @@ describe('SEC-2 Security: BYOK Quota Bypass & Unified Daily Reset', () => {
             const reservation = await reserveUsageSlot('user-byok');
             expect(reservation.allowed).toBe(true);
             expect(reservation.claimed).toBe(false);
+        });
+
+        it('blocks BYOK users when adminAllowed is false', async () => {
+            DB.__setRow({
+                userId: 'user-byok-blocked',
+                usageTier: 'none',
+                customApiKey: 'enc:valid',
+                adminAllowed: false,
+            });
+
+            const check = await checkUsageLimit('user-byok-blocked');
+            expect(check.canUse).toBe(false);
+            expect(check.tier).toBe('byok');
+            expect(check.reason).toBe('AI features are not enabled for your account');
+
+            const reservation = await reserveUsageSlot('user-byok-blocked');
+            expect(reservation.allowed).toBe(false);
+            expect(reservation.claimed).toBe(false);
+            expect(reservation.reason).toBe('AI features are not enabled for your account');
         });
     });
 

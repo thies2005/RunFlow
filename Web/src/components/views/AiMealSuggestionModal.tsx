@@ -44,13 +44,16 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
             if (!res.ok) {
                 const errorBody = await res.text();
                 let message = `Failed to fetch suggestion (${res.status})`;
-                if (isJson) {
-                    try {
-                        const err = JSON.parse(errorBody);
-                        if (err?.error) message = err.error;
-                    } catch {
-                        // Ignore JSON parse failure and use fallback message.
+                try {
+                    const err = JSON.parse(errorBody);
+                    if (err?.error) {
+                        message = String(err.error).replace(/^Error:\s*/i, '');
+                        if (typeof err.retryAfterSeconds === 'number' && err.retryAfterSeconds > 0) {
+                            message += ` (Try again in ${err.retryAfterSeconds}s)`;
+                        }
                     }
+                } catch {
+                    // Ignore JSON parse failure and use fallback message.
                 }
                 throw new Error(message);
             }

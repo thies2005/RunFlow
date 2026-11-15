@@ -3,57 +3,36 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { validateBaseUrl, generateCompletion, tryDecryptAiKey, type ChatMessage, type AiConfig } from '@/lib/ai/providers';
-import { reserveUsageSlot, releaseUsageReservation, incrementUsage, checkProviderLimit, countTokens } from '@/lib/ai';
+import { type ChatMessage } from '@/lib/ai/providers';
+import { reserveUsageSlot, releaseUsageReservation, incrementUsage, countTokens } from '@/lib/ai';
+import { checkPlanBuilderEligibility } from '@/lib/ai/routing';
+import { executeCompletionWithFallback } from '@/lib/ai/executor';
+import { AiProviderError, toSafeUserError } from '@/lib/ai/errors';
 import { fenceUntrusted } from '@/lib/ai/prompts';
-
-async function checkPremium(userId: string) {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, isAdmin: true, aiSettings: { select: { usageTier: true, aiEnabled: true, adminAllowed: true } } },
-    });
-    const tier = user?.aiSettings?.usageTier || 'none';
-    if (tier !== 'tier2' && tier !== 'tier3' && !user?.isAdmin) {
-        return false;
-    }
-    if (!Boolean(user?.aiSettings?.aiEnabled && user?.aiSettings?.adminAllowed)) {
-        return false;
-    }
-    return true;
-}
+import { logger } from '@/lib/logging/logger';
 
 type RouteContext = { params: Promise<{ goalId: string }> };
 
-async function getPlanBuilderConfig(): Promise<{ config: AiConfig; maxTokens: number } | null> {
-    const settings = await prisma.globalAiSettings.findUnique({
-        where: { id: 'singleton' },
-        include: { activeProvider: true },
-    });
-
-    if (!settings?.activeProvider) {
-        return null;
+function reservationToError(reason?: string): AiProviderError {
+    if (reason?.includes('not enabled')) {
+        return new AiProviderError({
+            code: 'AI_DISABLED',
+            httpStatus: 403,
+            userMessage: reason,
+        });
     }
-
-    const provider = settings.activeProvider;
-    const decryptedKey = tryDecryptAiKey(provider.apiKey, 'activeProvider', provider.id);
-    if (!decryptedKey) return null;
-
-    const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
-    if (apiKeys.length === 0) return null;
-
-    if (!validateBaseUrl(provider.baseUrl, [provider.baseUrl])) return null;
-
-    return {
-        config: {
-            provider: provider.type as 'openai' | 'anthropic' | 'google',
-            baseUrl: provider.baseUrl,
-            apiKey: apiKeys[0],
-            apiKeys,
-            model: settings.planBuilderModel || 'gpt-4o',
-            providerId: provider.id,
-        },
-        maxTokens: settings.planMaxTokensPerAnalysis || 8000,
-    };
+    if (reason?.includes('not configured') || reason?.includes('Add your own API key')) {
+        return new AiProviderError({
+            code: 'NOT_CONFIGURED',
+            httpStatus: 403,
+            userMessage: reason,
+        });
+    }
+    return new AiProviderError({
+        code: 'USER_LIMIT_REACHED',
+        httpStatus: 429,
+        userMessage: reason || 'AI usage limit reached',
+    });
 }
 
 const PROMPT_VERSION = 2;
@@ -197,8 +176,12 @@ export async function GET(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if (!(await checkPremium(session.user.id))) {
-            return NextResponse.json({ error: 'Premium feature. Please upgrade your plan.' }, { status: 403 });
+        const { canUsePlanBuilder } = await checkPlanBuilderEligibility(session.user.id);
+        if (!canUsePlanBuilder) {
+            return NextResponse.json(
+                { error: 'Plan Builder AI requires an eligible tier or personal API key.' },
+                { status: 403 }
+            );
         }
 
         const { goalId } = await ctx.params;
@@ -255,49 +238,11 @@ export async function GET(req: Request, ctx: RouteContext) {
 
         return NextResponse.json({ analysis });
     } catch (error) {
-        console.error('Get AI analysis error:', error);
+        logger.error('Get AI analysis error', {
+            error: error instanceof Error ? error.message : String(error),
+        });
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-}
-
-function getProviderErrorMessage(error: unknown): { message: string; status: number } {
-    if (error instanceof Error) {
-        const msg = error.message;
-        if (msg.includes('503')) {
-            return {
-                message: 'The AI model is temporarily unavailable due to high demand. Please try again in a few minutes.',
-                status: 503,
-            };
-        }
-        if (msg.includes('429') || msg.includes('rate limited')) {
-            return {
-                message: 'AI provider rate limit reached. Please wait a moment before trying again.',
-                status: 429,
-            };
-        }
-        if (msg.includes('502')) {
-            return {
-                message: 'The AI provider is experiencing issues. Please try again shortly.',
-                status: 502,
-            };
-        }
-        if (msg.includes('fetch failed') || msg.includes('Failed to connect')) {
-            return {
-                message: 'Could not reach the AI provider. Please check your network and try again.',
-                status: 502,
-            };
-        }
-        if (msg.includes('AI API error')) {
-            return {
-                message: `AI provider error: ${msg.replace('AI API error: ', '')}`,
-                status: 502,
-            };
-        }
-    }
-    return {
-        message: 'Failed to generate analysis. Please try again.',
-        status: 500,
-    };
 }
 
 export async function POST(req: Request, ctx: RouteContext) {
@@ -307,8 +252,12 @@ export async function POST(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if (!(await checkPremium(session.user.id))) {
-            return NextResponse.json({ error: 'Premium feature. Please upgrade your plan.' }, { status: 403 });
+        const { canUsePlanBuilder } = await checkPlanBuilderEligibility(session.user.id);
+        if (!canUsePlanBuilder) {
+            return NextResponse.json(
+                { error: 'Plan Builder AI requires an eligible tier or personal API key.' },
+                { status: 403 }
+            );
         }
 
         const clientId = getClientIdentifier(req);
@@ -343,11 +292,6 @@ export async function POST(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
         }
 
-        const builderConfig = await getPlanBuilderConfig();
-        if (!builderConfig) {
-            return NextResponse.json({ error: 'AI plan builder is not configured. Please set up a plan builder provider in admin settings.' }, { status: 503 });
-        }
-
         const workouts = await prisma.workout.findMany({
             where: { goalId },
             orderBy: [{ scheduledDate: 'asc' }, { order: 'asc' }],
@@ -357,13 +301,25 @@ export async function POST(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: 'Cannot analyze an empty plan. Add workouts first.' }, { status: 400 });
         }
 
-        const body = await req.json();
+        let body: { analysisType?: string; targetWeekIndex?: number; context?: string };
+        try {
+            body = await req.json();
+        } catch {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
+
         const { analysisType, targetWeekIndex, context } = body;
         const validTypes = ['full', 'week', 'risks', 'readiness', 'alternatives'];
 
         if (analysisType && !validTypes.includes(analysisType)) {
             return NextResponse.json({ error: `Invalid analysisType. Must be one of: ${validTypes.join(', ')}` }, { status: 400 });
         }
+
+        const globalSettings = await prisma.globalAiSettings.findUnique({
+            where: { id: 'singleton' },
+            select: { planMaxTokensPerAnalysis: true },
+        });
+        const maxTokens = globalSettings?.planMaxTokensPerAnalysis ?? 8000;
 
         const effectiveSport = detectEffectiveSport(goal, workouts);
 
@@ -399,22 +355,24 @@ export async function POST(req: Request, ctx: RouteContext) {
         // Reserve usage quota slot before provider work
         const reservation = await reserveUsageSlot(session.user.id);
         if (!reservation.allowed) {
-            return NextResponse.json({ error: reservation.reason || 'AI usage limit reached' }, { status: 429 });
-        }
-
-        if (builderConfig.config.providerId) {
-            const provLimit = await checkProviderLimit(builderConfig.config.providerId);
-            if (!provLimit.canUse) {
-                if (reservation.claimed) {
-                    await releaseUsageReservation(session.user.id).catch(() => undefined);
-                }
-                return NextResponse.json({ error: provLimit.reason || 'Provider monthly token limit exceeded' }, { status: 429 });
-            }
+            const safe = toSafeUserError(reservationToError(reservation.reason));
+            return NextResponse.json(
+                { error: safe.message, errorCode: safe.code },
+                { status: safe.httpStatus }
+            );
         }
 
         let result: string;
+        let targetUsed: { providerId?: string; model: string };
         try {
-            result = await generateCompletion(builderConfig.config, messages);
+            const execution = await executeCompletionWithFallback(
+                session.user.id,
+                'planBuilder',
+                messages,
+                { maxTokens, signal: req.signal }
+            );
+            result = execution.text;
+            targetUsed = execution.targetUsed;
         } catch (genError) {
             if (reservation.claimed) {
                 await releaseUsageReservation(session.user.id).catch(() => undefined);
@@ -423,17 +381,16 @@ export async function POST(req: Request, ctx: RouteContext) {
         }
 
         const inputTokensEstimate = messages.reduce(
-            (acc, m) => acc + countTokens(m.content, builderConfig.config.model),
+            (acc, m) => acc + countTokens(m.content, targetUsed.model),
             0
         );
-        const outputTokensEstimate = countTokens(result, builderConfig.config.model);
+        const outputTokensEstimate = countTokens(result, targetUsed.model);
 
         await incrementUsage(
             session.user.id,
-            inputTokensEstimate,
-            outputTokensEstimate,
-            builderConfig.config.providerId,
-            { skipMessageIncrement: reservation.claimed }
+            { inputTokens: inputTokensEstimate, outputTokens: outputTokensEstimate },
+            targetUsed.providerId,
+            { skipMessageIncrement: true, model: targetUsed.model }
         );
 
         let analysisData: Record<string, any>;
@@ -473,7 +430,7 @@ export async function POST(req: Request, ctx: RouteContext) {
                 riskFlags: analysisData.riskFlags || [],
                 raceReadiness: analysisData.raceReadiness || {},
                 suggestions: analysisData.suggestions || [],
-                modelUsed: `${builderConfig.config.model}:v${PROMPT_VERSION}`,
+                modelUsed: `${targetUsed.model}:v${PROMPT_VERSION}`,
                 inputTokens: inputTokensEstimate,
                 outputTokens: outputTokensEstimate,
             },
@@ -484,7 +441,7 @@ export async function POST(req: Request, ctx: RouteContext) {
                 riskFlags: analysisData.riskFlags || [],
                 raceReadiness: analysisData.raceReadiness || {},
                 suggestions: analysisData.suggestions || [],
-                modelUsed: `${builderConfig.config.model}:v${PROMPT_VERSION}`,
+                modelUsed: `${targetUsed.model}:v${PROMPT_VERSION}`,
                 inputTokens: inputTokensEstimate,
                 outputTokens: outputTokensEstimate,
             },
@@ -492,8 +449,15 @@ export async function POST(req: Request, ctx: RouteContext) {
 
         return NextResponse.json({ analysis });
     } catch (error) {
-        console.error('AI plan analysis error:', error);
-        const { message, status } = getProviderErrorMessage(error);
-        return NextResponse.json({ error: message }, { status });
+        const safe = toSafeUserError(error);
+        logger.error('AI plan analysis error', {
+            code: safe.code,
+            httpStatus: safe.httpStatus,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        return NextResponse.json(
+            { error: safe.message, errorCode: safe.code },
+            { status: safe.httpStatus }
+        );
     }
 }

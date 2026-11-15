@@ -7,6 +7,14 @@ import { prisma } from '@/lib/db';
 import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 import { resolveHostAddresses } from '@/lib/net/dnsResolve';
+import {
+    AiErrorCode,
+    AiProviderError,
+    classifyFetchError,
+    parseUpstreamProviderError,
+    sanitizeErrorMessage,
+    type UpstreamErrorContext,
+} from './errors';
 
 /**
  * Decrypt an AI provider key, falling back to plaintext for historical data.
@@ -40,6 +48,22 @@ export interface ChatMessage {
     content: string;
 }
 
+export interface AiImageInput {
+    mimeType: string;
+    base64Data: string;
+}
+
+export interface AiRequestOptions {
+    maxTokens?: number;
+    temperature?: number;
+    timeoutMs?: number;
+    responseMimeType?: string;
+}
+
+export interface AiCompletionOptions extends AiRequestOptions {
+    signal?: AbortSignal;
+}
+
 export interface AiConfig {
     provider: 'openai' | 'anthropic' | 'google';
     baseUrl: string;
@@ -48,6 +72,8 @@ export interface AiConfig {
     model: string;
     keyOverride?: boolean;
     providerId?: string;
+    providerSlug?: string;
+    isByok?: boolean;
     fallback?: AiConfig;
     allowedUrls?: string[];
     statusOnly?: boolean;
@@ -58,6 +84,8 @@ const WELL_KNOWN_BASE_URLS = [
     'https://api.anthropic.com',
     'https://generativelanguage.googleapis.com',
     'https://openrouter.ai/api/v1',
+    'https://integrate.api.nvidia.com/v1',
+    'https://open.bigmodel.cn/api/paas/v4',
 ];
 
 const DEFAULT_ALLOWED_BASE_URLS = WELL_KNOWN_BASE_URLS;
@@ -302,7 +330,7 @@ export function validateBaseUrl(baseUrl: string, extraAllowedUrls: string[] = []
     }
 }
 
-export interface StreamOptions {
+export interface StreamOptions extends AiRequestOptions {
     onToken?: (_token: string) => void;
     signal?: AbortSignal;
 }
@@ -495,6 +523,302 @@ export async function hasAiAccess(userId: string): Promise<boolean> {
     return config !== null;
 }
 
+const KEY_ROTATION_STATUSES = new Set([429, 401, 403, 503]);
+
+function buildErrorContext(config: AiConfig): UpstreamErrorContext {
+    return {
+        providerId: config.providerId,
+        providerSlug: config.providerSlug,
+        model: config.model,
+        isByok: config.isByok,
+    };
+}
+
+function resolveApiKeys(config: AiConfig): string[] {
+    const keys = Array.isArray(config.apiKeys) && config.apiKeys.length > 0
+        ? config.apiKeys.filter(Boolean)
+        : config.apiKey
+            ? [config.apiKey]
+            : [];
+
+    if (keys.length === 0) {
+        throw new AiProviderError({
+            code: 'NOT_CONFIGURED',
+            httpStatus: 503,
+            userMessage: 'AI provider API key is not configured.',
+            shouldFallback: true,
+            providerId: config.providerId,
+            providerSlug: config.providerSlug,
+            model: config.model,
+        });
+    }
+
+    return keys;
+}
+
+function normalizeBaseUrl(baseUrl: string): string {
+    return baseUrl.replace(/\/+$/, '');
+}
+
+function getAllowedUrls(config: AiConfig): string[] {
+    return config.allowedUrls && config.allowedUrls.length > 0
+        ? config.allowedUrls
+        : [config.baseUrl];
+}
+
+function isReasoningModel(model: string): boolean {
+    const lower = model.toLowerCase();
+    return (
+        /(?:^|[^a-z0-9])o[134](?:$|[^a-z0-9])/.test(lower) ||
+        lower.includes('kimi') ||
+        lower.includes('deepseek') ||
+        lower.includes('reasoning')
+    );
+}
+
+function isStrictOSeriesModel(model: string): boolean {
+    return /(?:^|[^a-z0-9])o[134](?:$|[^a-z0-9])/i.test(model);
+}
+
+function buildRequestSignal(
+    externalSignal?: AbortSignal,
+    timeoutMs?: number
+): { signal?: AbortSignal; clearTimeoutOnly: () => void; cleanup: () => void } {
+    if (!timeoutMs || timeoutMs <= 0) {
+        return {
+            signal: externalSignal,
+            clearTimeoutOnly: () => {},
+            cleanup: () => {},
+        };
+    }
+
+    const controller = new AbortController();
+    const onExternalAbort = () => controller.abort(externalSignal?.reason);
+    if (externalSignal) {
+        if (externalSignal.aborted) {
+            controller.abort(externalSignal.reason);
+        } else {
+            externalSignal.addEventListener('abort', onExternalAbort, { once: true });
+        }
+    }
+
+    const timer = setTimeout(() => {
+        const timeoutErr = new Error(`AI request timed out after ${timeoutMs}ms`);
+        timeoutErr.name = 'TimeoutError';
+        controller.abort(timeoutErr);
+    }, timeoutMs);
+
+    return {
+        signal: controller.signal,
+        clearTimeoutOnly: () => clearTimeout(timer),
+        cleanup: () => {
+            clearTimeout(timer);
+            externalSignal?.removeEventListener('abort', onExternalAbort);
+        },
+    };
+}
+
+function shouldRetryOpenAiWithoutUnsupportedParams(status: number, rawBody: string): boolean {
+    if (status !== 400 && status !== 422) return false;
+    return /unsupported[_\s]?(?:param|parameter|value)|unknown[_\s]?parameter|unrecognized request argument|extra_forbidden|not supported.*(?:temperature|max_tokens|max_completion_tokens)|(?:temperature|max_tokens|max_completion_tokens).*(?:not supported|unsupported|invalid|not allowed)/i.test(
+        rawBody
+    );
+}
+
+function buildOpenAiPayload(opts: {
+    model: string;
+    messages: unknown[];
+    stream: boolean;
+    maxTokens: number;
+    temperature: number;
+    useMaxCompletionTokens: boolean;
+    includeTemperature: boolean;
+}): Record<string, unknown> {
+    const payload: Record<string, unknown> = {
+        model: opts.model,
+        messages: opts.messages,
+        ...(opts.stream ? { stream: true } : {}),
+        ...(opts.useMaxCompletionTokens
+            ? { max_completion_tokens: opts.maxTokens }
+            : { max_tokens: opts.maxTokens }),
+    };
+    if (opts.includeTemperature) {
+        payload.temperature = opts.temperature;
+    }
+    return payload;
+}
+
+function createContentFilteredError(ctx: UpstreamErrorContext, detail: string): AiProviderError {
+    return new AiProviderError({
+        code: 'CONTENT_FILTERED',
+        httpStatus: 422,
+        userMessage: 'The AI provider declined to respond due to content safety policies. Please rephrase your request.',
+        retryable: false,
+        shouldFallback: false,
+        providerId: ctx.providerId,
+        providerSlug: ctx.providerSlug,
+        model: ctx.model,
+        internalMessage: detail,
+    });
+}
+
+function createEmptyResponseError(ctx: UpstreamErrorContext, reason: string, isMaxTokens: boolean): AiProviderError {
+    return new AiProviderError({
+        code: 'INVALID_RESPONSE',
+        httpStatus: 502,
+        userMessage: isMaxTokens
+            ? 'The AI response was cut off before producing output. Please try again.'
+            : 'The AI provider returned an empty response. Please try again.',
+        retryable: true,
+        shouldFallback: true,
+        providerId: ctx.providerId,
+        providerSlug: ctx.providerSlug,
+        model: ctx.model,
+        internalMessage: reason,
+    });
+}
+
+async function readResponseTextSafe(response: Response): Promise<string> {
+    if (typeof response.text === 'function') {
+        return (await response.text().catch(() => '')) ?? '';
+    }
+    if (typeof response.json === 'function') {
+        try {
+            const json = await response.json();
+            return JSON.stringify(json);
+        } catch {
+            return '';
+        }
+    }
+    return '';
+}
+
+async function fetchOpenAiWithRotation(
+    config: AiConfig,
+    messages: unknown[],
+    opts: {
+        stream: boolean;
+        maxTokens: number;
+        temperature: number;
+        signal?: AbortSignal;
+        logPrefix: string;
+    }
+): Promise<Response> {
+    const keys = resolveApiKeys(config);
+    const ctx = buildErrorContext(config);
+    const url = `${normalizeBaseUrl(config.baseUrl)}/chat/completions`;
+    const allowedUrls = getAllowedUrls(config);
+
+    for (let i = 0; i < keys.length; i++) {
+        const currentKey = keys[i];
+        const useMaxCompletionTokens = isReasoningModel(config.model);
+        const includeTemperature = !isStrictOSeriesModel(config.model) || opts.temperature !== 0.7;
+
+        let response: Response;
+        try {
+            response = await safeFetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentKey}`,
+                },
+                body: JSON.stringify(
+                    buildOpenAiPayload({
+                        model: config.model,
+                        messages,
+                        stream: opts.stream,
+                        maxTokens: opts.maxTokens,
+                        temperature: opts.temperature,
+                        useMaxCompletionTokens,
+                        includeTemperature,
+                    })
+                ),
+                signal: opts.signal,
+                allowedUrls,
+            });
+        } catch (error) {
+            throw classifyFetchError(error, ctx);
+        }
+
+        if (response.ok) {
+            return response;
+        }
+
+        let rawBody = await readResponseTextSafe(response);
+
+        if (shouldRetryOpenAiWithoutUnsupportedParams(response.status, rawBody)) {
+            const nextUseMaxCompletionTokens =
+                /max_completion_tokens/i.test(rawBody) && useMaxCompletionTokens
+                    ? false
+                    : /max_tokens/i.test(rawBody) && !useMaxCompletionTokens
+                        ? true
+                        : useMaxCompletionTokens;
+
+            try {
+                const retryResponse = await safeFetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentKey}`,
+                    },
+                    body: JSON.stringify(
+                        buildOpenAiPayload({
+                            model: config.model,
+                            messages,
+                            stream: opts.stream,
+                            maxTokens: opts.maxTokens,
+                            temperature: opts.temperature,
+                            useMaxCompletionTokens: nextUseMaxCompletionTokens,
+                            includeTemperature: false,
+                        })
+                    ),
+                    signal: opts.signal,
+                    allowedUrls,
+                });
+
+                if (retryResponse.ok) {
+                    return retryResponse;
+                }
+                response = retryResponse;
+                rawBody = await readResponseTextSafe(retryResponse);
+            } catch (error) {
+                throw classifyFetchError(error, ctx);
+            }
+        }
+
+        const parsedError = parseUpstreamProviderError(
+            'openai',
+            response.status,
+            rawBody,
+            response.headers,
+            ctx
+        );
+
+        if (i < keys.length - 1 && (KEY_ROTATION_STATUSES.has(response.status) || parsedError.shouldRotateKey)) {
+            logger.warn(`${opts.logPrefix} Upstream error (${response.status}), rotating to next API key`, {
+                provider: config.provider,
+                providerId: config.providerId,
+                model: config.model,
+                status: response.status,
+                keyIndex: i,
+                totalKeys: keys.length,
+            });
+            continue;
+        }
+
+        throw parsedError;
+    }
+
+    throw new AiProviderError({
+        code: 'PROVIDER_UNAVAILABLE',
+        httpStatus: 503,
+        userMessage: 'The AI service is temporarily unavailable. Please try again shortly.',
+        retryable: true,
+        shouldFallback: true,
+        ...ctx,
+    });
+}
+
 /**
  * Stream a chat completion from an AI provider
  */
@@ -523,59 +847,33 @@ async function streamOpenAI(
     messages: ChatMessage[],
     options?: StreamOptions
 ): Promise<AsyncIterable<string>> {
+    const reqSignal = buildRequestSignal(options?.signal, options?.timeoutMs);
     try {
-        const response = await handleOpenAIRetry(config, messages, options);
-        return createOpenAIAsyncIterator(response, config, options);
+        const response = await fetchOpenAiWithRotation(config, messages, {
+            stream: true,
+            maxTokens: options?.maxTokens ?? 4096,
+            temperature: options?.temperature ?? 0.7,
+            signal: reqSignal.signal,
+            logPrefix: '[OPENAI STREAM]',
+        });
+        return createOpenAIAsyncIterator(response, config, options, reqSignal);
     } catch (error: unknown) {
-        handlePermissionError(error, config);
-        throw error;
+        reqSignal.cleanup();
+        throw classifyFetchError(error, buildErrorContext(config));
     }
 }
 
-async function handleOpenAIRetry(
-    config: AiConfig,
-    messages: ChatMessage[],
-    options?: StreamOptions
-): Promise<Response> {
-    let response: Response | undefined;
+interface OpenAiStreamDelta {
+    reasoning_content?: string;
+    content?: string;
+}
 
-    for (let i = 0; i < config.apiKeys.length; i++) {
-        const currentKey = config.apiKeys[i];
-
-        response = await safeFetch(`${config.baseUrl}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentKey}`,
-            },
-            body: JSON.stringify({
-                model: config.model,
-                messages,
-                stream: true,
-                ...(config.model.includes('kimi') || config.model.includes('deepseek') || config.model.includes('reasoning') || config.model.includes('o1')
-                    ? { max_completion_tokens: 4096 }
-                    : { max_tokens: 4096 }),
-                temperature: 0.7,
-            }),
-            signal: options?.signal,
-            allowedUrls: [config.baseUrl],
-        });
-
-        if (response.ok) break;
-
-        if (response.status === 429 && i < config.apiKeys.length - 1) {
-            logger.warn('[OPENAI STREAM] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
-            continue;
-        }
-
-        break;
-    }
-
-    if (!response || !response.ok) {
-        await handleError(response!);
-    }
-
-    return response as Response;
+interface OpenAiStreamChunk {
+    error?: { message?: string; code?: number };
+    choices?: Array<{
+        delta?: OpenAiStreamDelta;
+        finish_reason?: string | null;
+    }>;
 }
 
 function parseOpenAIStreamContent(
@@ -583,21 +881,34 @@ function parseOpenAIStreamContent(
     config: AiConfig,
     isReasoning: boolean,
     options?: StreamOptions
-): { tokens: string[]; newIsReasoning: boolean } {
+): { tokens: string[]; newIsReasoning: boolean; finishReason?: string } {
     const tokens: string[] = [];
     let newIsReasoning = isReasoning;
+    let finishReason: string | undefined;
 
     try {
-        const json = JSON.parse(trimmed.slice(6));
+        const json = JSON.parse(trimmed.slice(6)) as OpenAiStreamChunk;
 
         if (json.error) {
-            const errorMsg = json.error.message || JSON.stringify(json.error);
-            logger.error('[OPENAI STREAM] Provider error', { error: errorMsg, model: config.model, provider: config.provider });
-            throw new Error(`OpenAI provider error: ${errorMsg}`);
+            const embeddedStatus =
+                typeof json.error.code === 'number' && json.error.code >= 400 && json.error.code < 600
+                    ? json.error.code
+                    : 502;
+            throw parseUpstreamProviderError(
+                'openai',
+                embeddedStatus,
+                JSON.stringify(json),
+                undefined,
+                buildErrorContext(config)
+            );
         }
 
-        const delta = json.choices?.[0]?.delta;
-        if (!delta) return { tokens, newIsReasoning };
+        const choice = json.choices?.[0];
+        if (choice?.finish_reason) {
+            finishReason = choice.finish_reason;
+        }
+        const delta = choice?.delta;
+        if (!delta) return { tokens, newIsReasoning, finishReason };
 
         if (delta.reasoning_content) {
             if (!newIsReasoning) {
@@ -617,22 +928,34 @@ function parseOpenAIStreamContent(
             tokens.push(delta.content);
         }
     } catch (error) {
-        if (error instanceof Error && error.message.startsWith('OpenAI provider error:')) {
+        if (error instanceof AiProviderError) {
             throw error;
         }
-        logger.warn('[OPENAI STREAM] Skipped invalid JSON line', { line: trimmed, model: config.model });
+        logger.warn('[OPENAI STREAM] Skipped invalid JSON line', { model: config.model });
     }
 
-    return { tokens, newIsReasoning };
+    return { tokens, newIsReasoning, finishReason };
 }
 
 function createOpenAIAsyncIterator(
     response: Response,
     config: AiConfig,
-    options?: StreamOptions
+    options?: StreamOptions,
+    reqSignal?: { clearTimeoutOnly: () => void; cleanup: () => void }
 ): AsyncIterable<string> {
     const reader = response.body?.getReader();
-    if (!reader) throw new Error('No response body from AI provider');
+    const ctx = buildErrorContext(config);
+    if (!reader) {
+        reqSignal?.cleanup();
+        throw new AiProviderError({
+            code: 'INVALID_RESPONSE',
+            httpStatus: 502,
+            userMessage: 'The AI provider returned an empty stream. Please try again.',
+            retryable: true,
+            shouldFallback: true,
+            ...ctx,
+        });
+    }
 
     const decoder = new TextDecoder();
     let lineBuffer = '';
@@ -642,6 +965,8 @@ function createOpenAIAsyncIterator(
             let isReasoning = false;
             let chunkCount = 0;
             let yieldCount = 0;
+            let lastFinishReason = '';
+            let finished = false;
             logger.info('[OPENAI STREAM] Starting async iterator', { model: config.model, provider: config.provider });
 
             try {
@@ -650,6 +975,7 @@ function createOpenAIAsyncIterator(
                     chunkCount++;
 
                     if (done) {
+                        finished = true;
                         logger.info('[OPENAI STREAM] Reader done', { chunkCount, yieldCount, model: config.model });
                         break;
                     }
@@ -664,25 +990,55 @@ function createOpenAIAsyncIterator(
                         if (!trimmed.startsWith('data: ')) continue;
 
                         const parsed = parseOpenAIStreamContent(trimmed, config, isReasoning, options);
+                        if (parsed.finishReason) {
+                            lastFinishReason = parsed.finishReason.toLowerCase();
+                        }
                         for (const token of parsed.tokens) {
+                            if (yieldCount === 0) {
+                                reqSignal?.clearTimeoutOnly();
+                            }
                             yield token;
                             yieldCount++;
                         }
                         isReasoning = parsed.newIsReasoning;
                     }
                 }
-            } catch (error) {
-                logger.error('[OPENAI STREAM] Error in iterator', { error: error instanceof Error ? error.message : String(error), model: config.model, provider: config.provider, chunkCount, yieldCount });
-                throw error;
-            } finally {
+
                 if (isReasoning) {
                     yield '\n</details>\n\n';
                     yieldCount++;
+                    isReasoning = false;
                 }
+
+                if (yieldCount === 0) {
+                    if (lastFinishReason === 'content_filter' || lastFinishReason === 'content_filtered') {
+                        throw createContentFilteredError(ctx, `OpenAI stream blocked (finish_reason=${lastFinishReason})`);
+                    }
+                    throw createEmptyResponseError(
+                        ctx,
+                        `OpenAI stream yielded 0 tokens (finish_reason=${lastFinishReason || 'unknown'})`,
+                        lastFinishReason === 'length'
+                    );
+                }
+            } catch (error) {
+                const classified = classifyFetchError(error, ctx);
+                logger.error('[OPENAI STREAM] Error in iterator', {
+                    code: classified.code,
+                    model: config.model,
+                    provider: config.provider,
+                    chunkCount,
+                    yieldCount,
+                });
+                throw classified;
+            } finally {
+                if (!finished && typeof reader.cancel === 'function') {
+                    void reader.cancel().catch(() => {});
+                }
+                reqSignal?.cleanup();
                 logger.info('[OPENAI STREAM] Cleanup', { yieldCount, model: config.model });
                 reader.releaseLock();
             }
-        }
+        },
     };
 }
 
@@ -694,64 +1050,97 @@ async function streamAnthropic(
     messages: ChatMessage[],
     options?: StreamOptions
 ): Promise<AsyncIterable<string>> {
+    const reqSignal = buildRequestSignal(options?.signal, options?.timeoutMs);
+    const ctx = buildErrorContext(config);
+
     try {
+        const keys = resolveApiKeys(config);
         const systemMessage = messages.find(m => m.role === 'system');
         const userMessages = messages.filter(m => m.role !== 'system');
+        const url = `${normalizeBaseUrl(config.baseUrl)}/v1/messages`;
+        const allowedUrls = getAllowedUrls(config);
 
         let response: Response | undefined;
-        let _activeKeyIndex = 0;
 
-        for (let i = 0; i < config.apiKeys.length; i++) {
-            _activeKeyIndex = i;
-            const currentKey = config.apiKeys[i];
+        for (let i = 0; i < keys.length; i++) {
+            const currentKey = keys[i];
 
-            response = await safeFetch(`${config.baseUrl}/v1/messages`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': currentKey,
-                    'anthropic-version': '2023-06-01'
-                },
-                body: JSON.stringify({
-                    model: config.model,
-                    system: systemMessage?.content,
-                    messages: userMessages.map(m => ({ role: m.role, content: m.content })),
-                    stream: true,
-                    max_tokens: 4096,
-                    temperature: 0.7,
-                }),
-                signal: options?.signal,
-                allowedUrls: [config.baseUrl],
-            });
-
-            if (response.ok) {
-                break; // Success! Break out of the retry loop.
+            try {
+                response = await safeFetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': currentKey,
+                        'anthropic-version': '2023-06-01',
+                    },
+                    body: JSON.stringify({
+                        model: config.model,
+                        system: systemMessage?.content,
+                        messages: userMessages.map(m => ({ role: m.role, content: m.content })),
+                        stream: true,
+                        max_tokens: options?.maxTokens ?? 4096,
+                        temperature: options?.temperature ?? 0.7,
+                    }),
+                    signal: reqSignal.signal,
+                    allowedUrls,
+                });
+            } catch (error) {
+                throw classifyFetchError(error, ctx);
             }
 
-            if (response.status === 429 && i < config.apiKeys.length - 1) {
-                logger.warn('[ANTHROPIC STREAM] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
+            if (response.ok) {
+                break;
+            }
+
+            const rawBody = await readResponseTextSafe(response);
+            const parsedError = parseUpstreamProviderError(
+                'anthropic',
+                response.status,
+                rawBody,
+                response.headers,
+                ctx
+            );
+
+            if (i < keys.length - 1 && (KEY_ROTATION_STATUSES.has(response.status) || parsedError.shouldRotateKey)) {
+                logger.warn('[ANTHROPIC STREAM] Upstream error, rotating to next API key', {
+                    model: config.model,
+                    status: response.status,
+                    keyIndex: i,
+                    totalKeys: keys.length,
+                });
                 continue;
             }
 
-            break; // Other error or last key, break and handle below
+            throw parsedError;
         }
 
-        if (!response || !response.ok) {
-            await handleError(response!);
+        const reader = response?.body?.getReader();
+        if (!reader) {
+            throw new AiProviderError({
+                code: 'INVALID_RESPONSE',
+                httpStatus: 502,
+                userMessage: 'The AI provider returned an empty stream. Please try again.',
+                retryable: true,
+                shouldFallback: true,
+                ...ctx,
+            });
         }
-
-        const reader = response!.body?.getReader();
-        if (!reader) throw new Error('No response body from AI provider');
 
         const decoder = new TextDecoder();
         let lineBuffer = '';
 
         return {
             async *[Symbol.asyncIterator]() {
+                let yieldCount = 0;
+                let lastStopReason = '';
+                let finished = false;
                 try {
                     while (true) {
                         const { done, value } = await reader.read();
-                        if (done) break;
+                        if (done) {
+                            finished = true;
+                            break;
+                        }
 
                         lineBuffer += decoder.decode(value, { stream: true });
                         const lines = lineBuffer.split('\n');
@@ -764,34 +1153,73 @@ async function streamAnthropic(
 
                             if (trimmed.startsWith('data: ')) {
                                 try {
-                                    const json = JSON.parse(trimmed.slice(6));
+                                    const json = JSON.parse(trimmed.slice(6)) as {
+                                        type?: string;
+                                        error?: unknown;
+                                        message?: string;
+                                        delta?: { text?: string; stop_reason?: string };
+                                    };
 
                                     if (json.error || json.type === 'error') {
-                                        throw new Error(`Anthropic error: ${(json.error?.message || json.message) || JSON.stringify(json)}`);
+                                        throw parseUpstreamProviderError(
+                                            'anthropic',
+                                            502,
+                                            JSON.stringify(json),
+                                            undefined,
+                                            ctx
+                                        );
+                                    }
+
+                                    if (json.delta?.stop_reason) {
+                                        lastStopReason = json.delta.stop_reason.toLowerCase();
                                     }
 
                                     if (json.type === 'content_block_delta' && json.delta?.text) {
                                         const content = json.delta.text;
+                                        if (yieldCount === 0) {
+                                            reqSignal.clearTimeoutOnly();
+                                        }
                                         options?.onToken?.(content);
                                         yield content;
+                                        yieldCount++;
                                     }
                                 } catch (e) {
-                                    if (e instanceof Error && e.message.startsWith('Anthropic error:')) throw e;
+                                    if (e instanceof AiProviderError) throw e;
                                 }
                             }
                         }
                     }
+
+                    if (yieldCount === 0) {
+                        if (lastStopReason === 'refusal' || lastStopReason === 'content_filter') {
+                            throw createContentFilteredError(ctx, `Anthropic stream blocked (stop_reason=${lastStopReason})`);
+                        }
+                        throw createEmptyResponseError(
+                            ctx,
+                            `Anthropic stream yielded 0 tokens (stop_reason=${lastStopReason || 'unknown'})`,
+                            lastStopReason === 'max_tokens'
+                        );
+                    }
                 } catch (error) {
-                    logger.error('Anthropic stream error', { error: error instanceof Error ? error.message : String(error), model: config.model, provider: config.provider });
-                    throw error;
+                    const classified = classifyFetchError(error, ctx);
+                    logger.error('Anthropic stream error', {
+                        code: classified.code,
+                        model: config.model,
+                        provider: config.provider,
+                    });
+                    throw classified;
                 } finally {
+                    if (!finished && typeof reader.cancel === 'function') {
+                        void reader.cancel().catch(() => {});
+                    }
+                    reqSignal.cleanup();
                     reader.releaseLock();
                 }
-            }
+            },
         };
     } catch (error: unknown) {
-        handlePermissionError(error, config);
-        throw error;
+        reqSignal.cleanup();
+        throw classifyFetchError(error, ctx);
     }
 }
 
@@ -803,71 +1231,111 @@ async function streamGoogle(
     messages: ChatMessage[],
     options?: StreamOptions
 ): Promise<AsyncIterable<string>> {
+    const reqSignal = buildRequestSignal(options?.signal, options?.timeoutMs);
+    const ctx = buildErrorContext(config);
+
     try {
+        const keys = resolveApiKeys(config);
         const systemMessage = messages.find(m => m.role === 'system');
         const chatMessages = messages.filter(m => m.role !== 'system');
 
         const geminiContent = chatMessages.map(m => ({
             role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }]
+            parts: [{ text: m.content }],
         })).filter(m => m.parts[0].text);
 
+        const generationConfig: Record<string, unknown> = {
+            maxOutputTokens: options?.maxTokens ?? 4096,
+            temperature: options?.temperature ?? 0.7,
+        };
+        if (options?.responseMimeType) {
+            generationConfig.responseMimeType = options.responseMimeType;
+        }
+
+        const url = `${normalizeBaseUrl(config.baseUrl)}/v1beta/models/${encodeURIComponent(config.model.replace(/^models\//, ''))}:streamGenerateContent`;
+        const allowedUrls = getAllowedUrls(config);
+
         let response: Response | undefined;
-        let _activeKeyIndex = 0;
 
-        for (let i = 0; i < config.apiKeys.length; i++) {
-            _activeKeyIndex = i;
-            const currentKey = config.apiKeys[i];
-            const url = `${config.baseUrl}/v1beta/models/${config.model}:streamGenerateContent`;
+        for (let i = 0; i < keys.length; i++) {
+            const currentKey = keys[i];
 
-            response = await safeFetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': currentKey,
-                },
-                body: JSON.stringify({
-                    system_instruction: systemMessage ? {
-                        parts: [{ text: systemMessage.content }]
-                    } : undefined,
-                    contents: geminiContent,
-                    generationConfig: {
-                        maxOutputTokens: 4096,
-                        temperature: 0.7,
-                    }
-                }),
-                signal: options?.signal,
-                allowedUrls: [config.baseUrl],
-            });
-
-            if (response.ok) {
-                break; // Success! Break out of the retry loop.
+            try {
+                response = await safeFetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': currentKey,
+                    },
+                    body: JSON.stringify({
+                        system_instruction: systemMessage ? {
+                            parts: [{ text: systemMessage.content }],
+                        } : undefined,
+                        contents: geminiContent,
+                        generationConfig,
+                    }),
+                    signal: reqSignal.signal,
+                    allowedUrls,
+                });
+            } catch (error) {
+                throw classifyFetchError(error, ctx);
             }
 
-            if (response.status === 429 && i < config.apiKeys.length - 1) {
-                logger.warn('[GEMINI STREAM] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
+            if (response.ok) {
+                break;
+            }
+
+            const rawBody = await readResponseTextSafe(response);
+            const parsedError = parseUpstreamProviderError(
+                'google',
+                response.status,
+                rawBody,
+                response.headers,
+                ctx
+            );
+
+            if (i < keys.length - 1 && (KEY_ROTATION_STATUSES.has(response.status) || parsedError.shouldRotateKey)) {
+                logger.warn('[GEMINI STREAM] Upstream error, rotating to next API key', {
+                    model: config.model,
+                    status: response.status,
+                    keyIndex: i,
+                    totalKeys: keys.length,
+                });
                 continue;
             }
 
-            break; // Other error or last key, break and handle below
+            throw parsedError;
         }
 
-        if (!response || !response.ok) {
-            await handleError(response!);
+        const reader = response?.body?.getReader();
+        if (!reader) {
+            throw new AiProviderError({
+                code: 'INVALID_RESPONSE',
+                httpStatus: 502,
+                userMessage: 'The AI provider returned an empty stream. Please try again.',
+                retryable: true,
+                shouldFallback: true,
+                ...ctx,
+            });
         }
-
-        const reader = response!.body?.getReader();
-        if (!reader) throw new Error('No response body from AI provider');
 
         const decoder = new TextDecoder();
         let buffer = '';
 
         return {
             async *[Symbol.asyncIterator]() {
+                let yieldCount = 0;
+                let lastFinishReason = '';
+                let promptBlockReason = '';
+                let finished = false;
+
                 try {
                     while (true) {
                         const { done, value } = await reader.read();
-                        if (done) break;
+                        if (done) {
+                            finished = true;
+                            break;
+                        }
 
                         buffer += decoder.decode(value, { stream: true });
 
@@ -890,32 +1358,93 @@ async function streamGoogle(
                             buffer = buffer.slice(boundary + 1);
 
                             try {
-                                const part = JSON.parse(jsonStr);
+                                const part = JSON.parse(jsonStr) as {
+                                    error?: { code?: number; message?: string };
+                                    promptFeedback?: { blockReason?: string };
+                                    candidates?: Array<{
+                                        finishReason?: string;
+                                        content?: {
+                                            parts?: Array<{ text?: string; thought?: boolean }>;
+                                        };
+                                    }>;
+                                };
+
                                 if (part.error) {
-                                    throw new Error(`Google error: ${part.error.message || JSON.stringify(part.error)}`);
+                                    const code = typeof part.error.code === 'number' && part.error.code >= 400 && part.error.code < 600
+                                        ? part.error.code
+                                        : 502;
+                                    throw parseUpstreamProviderError('google', code, jsonStr, undefined, ctx);
                                 }
-                                const text = part.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                                if (part.promptFeedback?.blockReason) {
+                                    promptBlockReason = part.promptFeedback.blockReason;
+                                }
+
+                                const candidate = part.candidates?.[0];
+                                if (candidate?.finishReason) {
+                                    lastFinishReason = candidate.finishReason.toUpperCase();
+                                }
+
+                                const parts = Array.isArray(candidate?.content?.parts) ? candidate.content.parts : [];
+                                const text = parts
+                                    .filter((p) => typeof p?.text === 'string' && !p?.thought)
+                                    .map((p) => p.text as string)
+                                    .join('');
+
                                 if (text) {
+                                    if (yieldCount === 0) {
+                                        reqSignal.clearTimeoutOnly();
+                                    }
                                     options?.onToken?.(text);
                                     yield text;
+                                    yieldCount++;
                                 }
                             } catch (e) {
-                                if (e instanceof Error && e.message.startsWith('Google error:')) throw e;
-                                logger.warn('[GEMINI STREAM] Failed to parse chunk', { error: e instanceof Error ? e.message : String(e), jsonPreview: jsonStr.substring(0, 100), model: config.model });
+                                if (e instanceof AiProviderError) throw e;
+                                logger.warn('[GEMINI STREAM] Failed to parse chunk', {
+                                    error: e instanceof Error ? e.message : String(e),
+                                    model: config.model,
+                                });
                             }
                         }
                     }
+
+                    if (yieldCount === 0) {
+                        if (
+                            promptBlockReason ||
+                            ['SAFETY', 'RECITATION', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII'].includes(lastFinishReason)
+                        ) {
+                            throw createContentFilteredError(
+                                ctx,
+                                `Google stream blocked (${promptBlockReason || lastFinishReason})`
+                            );
+                        }
+                        throw createEmptyResponseError(
+                            ctx,
+                            `Google stream yielded 0 tokens (finishReason=${lastFinishReason || 'unknown'})`,
+                            lastFinishReason === 'MAX_TOKENS'
+                        );
+                    }
                 } catch (error) {
-                    logger.error('Google stream error', { error: error instanceof Error ? error.message : String(error), model: config.model, provider: config.provider });
-                    throw error;
+                    const classified = classifyFetchError(error, ctx);
+                    logger.error('Google stream error', {
+                        code: classified.code,
+                        model: config.model,
+                        provider: config.provider,
+                    });
+                    throw classified;
                 } finally {
+                    if (!finished && typeof reader.cancel === 'function') {
+                        void reader.cancel().catch(() => {});
+                    }
+                    reqSignal.cleanup();
                     reader.releaseLock();
                 }
-            }
+            },
         };
     } catch (error: unknown) {
-        handlePermissionError(error, config);
-        throw error;
+        reqSignal.cleanup();
+        throw classifyFetchError(error, ctx);
     }
 }
 
@@ -948,227 +1477,627 @@ function findJsonBoundary(str: string): number {
     return -1;
 }
 
-async function handleError(response: Response) {
-    if (response.status === 429) {
-        throw new Error('AI provider rate limited (429)');
-    }
-    if (response.status === 503) {
-        throw new Error('AI API error: 503 - The AI model is temporarily overloaded. Please try again in a few minutes.');
-    }
-    let errorMessage = `AI API error: ${response.status}`;
-    try {
-        const data = await response.json();
-        if (data.error?.message) errorMessage += ` - ${data.error.message}`;
-        else if (data.message) errorMessage += ` - ${data.message}`;
-        else errorMessage += ` - ${JSON.stringify(data)}`;
-    } catch {
-        const text = await response.text();
-        if (text) errorMessage += ` - ${text}`;
-    }
-    throw new Error(errorMessage);
+export async function handleError(response: Response): Promise<never> {
+    const rawBody = await readResponseTextSafe(response);
+    throw parseUpstreamProviderError('openai', response.status, rawBody, response.headers);
 }
 
-function handlePermissionError(error: unknown, config: AiConfig) {
-    if (error instanceof Error && error.name === 'TypeError' && error.message === 'fetch failed') {
-        throw new Error(`Failed to connect to ${config.provider} at ${config.baseUrl}. Please check the URL and internet connection.`);
+function resolveCompletionOptions(
+    signalOrOptions?: AbortSignal | AiCompletionOptions,
+    options?: AiRequestOptions
+): AiCompletionOptions {
+    if (!signalOrOptions) {
+        return options ? { ...options } : {};
+    }
+    if (
+        (typeof AbortSignal !== 'undefined' && signalOrOptions instanceof AbortSignal) ||
+        ('aborted' in signalOrOptions && typeof (signalOrOptions as AbortSignal).aborted === 'boolean')
+    ) {
+        return { ...(options ?? {}), signal: signalOrOptions as AbortSignal };
+    }
+    return { ...(signalOrOptions as AiCompletionOptions), ...(options ?? {}) };
+}
+
+function extractOpenAiResponseText(data: unknown, ctx: UpstreamErrorContext): string {
+    const payload = (data && typeof data === 'object' ? data : {}) as {
+        error?: { code?: number; message?: string };
+        choices?: Array<{
+            finish_reason?: string | null;
+            message?: {
+                reasoning_content?: string;
+                content?: string | Array<{ text?: string }>;
+            };
+        }>;
+    };
+
+    if (payload.error) {
+        const code = typeof payload.error.code === 'number' && payload.error.code >= 400 && payload.error.code < 600
+            ? payload.error.code
+            : 502;
+        throw parseUpstreamProviderError('openai', code, JSON.stringify(payload), undefined, ctx);
+    }
+
+    const choice = payload.choices?.[0];
+    const finishReason = String(choice?.finish_reason || '').toLowerCase();
+    const message = choice?.message;
+
+    if (finishReason === 'content_filter' || finishReason === 'content_filtered') {
+        throw createContentFilteredError(ctx, `OpenAI blocked response (finish_reason=${finishReason})`);
+    }
+
+    let contentText = '';
+    if (typeof message?.content === 'string') {
+        contentText = message.content;
+    } else if (Array.isArray(message?.content)) {
+        contentText = message.content
+            .filter((part) => typeof part?.text === 'string')
+            .map((part) => part.text as string)
+            .join('');
+    }
+
+    let output = '';
+    if (message?.reasoning_content && typeof message.reasoning_content === 'string') {
+        output += `<details>\n<summary>Thinking Process</summary>\n\n${message.reasoning_content}\n</details>\n\n`;
+    }
+    output += contentText;
+
+    const trimmed = output.trim();
+    if (!trimmed || (!contentText.trim() && finishReason === 'length')) {
+        throw createEmptyResponseError(
+            ctx,
+            `OpenAI empty response (finish_reason=${finishReason || 'unknown'})`,
+            finishReason === 'length'
+        );
+    }
+
+    return trimmed;
+}
+
+function extractAnthropicResponseText(data: unknown, ctx: UpstreamErrorContext): string {
+    const payload = (data && typeof data === 'object' ? data : {}) as {
+        type?: string;
+        error?: unknown;
+        stop_reason?: string;
+        content?: Array<{ type?: string; text?: string }>;
+    };
+
+    if (payload.error || payload.type === 'error') {
+        throw parseUpstreamProviderError('anthropic', 502, JSON.stringify(payload), undefined, ctx);
+    }
+
+    const stopReason = String(payload.stop_reason || '').toLowerCase();
+    if (stopReason === 'refusal' || stopReason === 'content_filter') {
+        throw createContentFilteredError(ctx, `Anthropic blocked response (stop_reason=${stopReason})`);
+    }
+
+    const blocks = Array.isArray(payload.content) ? payload.content : [];
+    const text = blocks
+        .filter((block) => (!block.type || block.type === 'text') && typeof block.text === 'string')
+        .map((block) => block.text as string)
+        .join('')
+        .trim();
+
+    if (!text) {
+        throw createEmptyResponseError(
+            ctx,
+            `Anthropic empty response (stop_reason=${stopReason || 'unknown'})`,
+            stopReason === 'max_tokens'
+        );
+    }
+
+    return text;
+}
+
+function extractGoogleResponseText(data: unknown, ctx: UpstreamErrorContext): string {
+    const payload = (data && typeof data === 'object' ? data : {}) as {
+        error?: { code?: number; message?: string };
+        promptFeedback?: { blockReason?: string };
+        candidates?: Array<{
+            finishReason?: string;
+            content?: {
+                parts?: Array<{ text?: string; thought?: boolean }>;
+            };
+        }>;
+    };
+
+    if (payload.error) {
+        const code = typeof payload.error.code === 'number' && payload.error.code >= 400 && payload.error.code < 600
+            ? payload.error.code
+            : 502;
+        throw parseUpstreamProviderError('google', code, JSON.stringify(payload), undefined, ctx);
+    }
+
+    const promptBlockReason = payload.promptFeedback?.blockReason;
+    const candidate = payload.candidates?.[0];
+    const finishReason = String(candidate?.finishReason || '').toUpperCase();
+
+    if (
+        promptBlockReason ||
+        ['SAFETY', 'RECITATION', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII'].includes(finishReason)
+    ) {
+        throw createContentFilteredError(ctx, `Google blocked response (${promptBlockReason || finishReason})`);
+    }
+
+    const parts = Array.isArray(candidate?.content?.parts) ? candidate.content.parts : [];
+    const text = parts
+        .filter((part) => typeof part?.text === 'string' && !part?.thought)
+        .map((part) => part.text as string)
+        .join('')
+        .trim();
+
+    if (!text) {
+        throw createEmptyResponseError(
+            ctx,
+            `Google empty response (finishReason=${finishReason || 'unknown'})`,
+            finishReason === 'MAX_TOKENS'
+        );
+    }
+
+    return text;
+}
+
+async function parseJsonResponseOrThrow(response: Response, ctx: UpstreamErrorContext): Promise<unknown> {
+    try {
+        return await response.json();
+    } catch (error) {
+        throw new AiProviderError({
+            code: 'INVALID_RESPONSE',
+            httpStatus: 502,
+            userMessage: 'The AI provider returned an unreadable response. Please try again.',
+            retryable: true,
+            shouldFallback: true,
+            ...ctx,
+            cause: error,
+        });
     }
 }
 
 export async function generateCompletion(
     config: AiConfig,
     messages: ChatMessage[],
-    signal?: AbortSignal
+    signalOrOptions?: AbortSignal | AiCompletionOptions,
+    options?: AiRequestOptions
 ): Promise<string> {
+    const resolved = resolveCompletionOptions(signalOrOptions, options);
+    const reqSignal = buildRequestSignal(resolved.signal, resolved.timeoutMs);
+    const ctx = buildErrorContext(config);
+
     try {
         if (config.provider === 'google') {
-            return await generateGoogleCompletion(config, messages, signal);
+            return await generateGoogleCompletion(config, messages, { ...resolved, signal: reqSignal.signal });
         } else if (config.provider === 'anthropic') {
-            return await generateAnthropicCompletion(config, messages, signal);
+            return await generateAnthropicCompletion(config, messages, { ...resolved, signal: reqSignal.signal });
         } else {
-            return await generateOpenAICompletion(config, messages, signal);
+            return await generateOpenAICompletion(config, messages, { ...resolved, signal: reqSignal.signal });
         }
     } catch (error: unknown) {
-        handlePermissionError(error, config);
-        throw error;
+        throw classifyFetchError(error, ctx);
+    } finally {
+        reqSignal.cleanup();
     }
 }
 
 async function generateOpenAICompletion(
     config: AiConfig,
-    messages: ChatMessage[],
-    signal?: AbortSignal
+    messages: unknown[],
+    options?: AiCompletionOptions
 ): Promise<string> {
-    let response: Response | undefined;
+    const ctx = buildErrorContext(config);
+    const response = await fetchOpenAiWithRotation(config, messages, {
+        stream: false,
+        maxTokens: options?.maxTokens ?? 4096,
+        temperature: options?.temperature ?? 0.7,
+        signal: options?.signal,
+        logPrefix: '[GEN COMP]',
+    });
 
-    for (let i = 0; i < config.apiKeys.length; i++) {
-        const currentKey = config.apiKeys[i];
-
-        response = await safeFetch(`${config.baseUrl}/chat/completions`, {
-            method: 'POST',
-            signal,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentKey}`,
-            },
-            body: JSON.stringify({
-                model: config.model,
-                messages,
-                max_tokens: 4096,
-                temperature: 0.7,
-            }),
-            allowedUrls: [config.baseUrl],
-        });
-
-        if (response.ok) {
-            break;
-        }
-
-        if (response.status === 429 && i < config.apiKeys.length - 1) {
-            logger.warn('[GEN COMP] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
-            continue;
-        }
-
-        break;
-    }
-
-    if (!response || !response.ok) await handleError(response!);
-    
-    // Check if body is readable, text() could consume it so only json()
-    const data = await response!.json();
-    
-    if (data.error) {
-        logger.error('[GEN COMP] Provider returned 200 OK but with error payload', { error: data.error, model: config.model });
-        throw new Error(data.error.message || JSON.stringify(data.error));
-    }
-
-    const message = data.choices?.[0]?.message;
-    if (!message) return '';
-
-    let output = '';
-    if (message.reasoning_content) {
-        output += `<details>\n<summary>Thinking Process</summary>\n\n${message.reasoning_content}\n</details>\n\n`;
-    }
-    if (message.content) {
-        output += message.content;
-    }
-    
-    // If somehow both were empty, fallback to logging
-    if (!output) {
-        logger.warn('[GEN COMP] Empty message content in response', { data: JSON.stringify(data).substring(0, 300) });
-    }
-
-    return output.trim();
+    const data = await parseJsonResponseOrThrow(response, ctx);
+    return extractOpenAiResponseText(data, ctx);
 }
 
 async function generateAnthropicCompletion(
     config: AiConfig,
     messages: ChatMessage[],
-    signal?: AbortSignal
+    options?: AiCompletionOptions
 ): Promise<string> {
+    const keys = resolveApiKeys(config);
+    const ctx = buildErrorContext(config);
     const systemMessage = messages.find(m => m.role === 'system');
     const userMessages = messages.filter(m => m.role !== 'system');
+    const url = `${normalizeBaseUrl(config.baseUrl)}/v1/messages`;
+    const allowedUrls = getAllowedUrls(config);
 
     let response: Response | undefined;
 
-    for (let i = 0; i < config.apiKeys.length; i++) {
-        const currentKey = config.apiKeys[i];
+    for (let i = 0; i < keys.length; i++) {
+        const currentKey = keys[i];
 
-        response = await safeFetch(`${config.baseUrl}/v1/messages`, {
-            method: 'POST',
-            signal,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': currentKey,
-                'anthropic-version': '2023-06-01'
-            },
-            body: JSON.stringify({
-                model: config.model,
-                system: systemMessage?.content,
-                messages: userMessages.map(m => ({ role: m.role, content: m.content })),
-                max_tokens: 4096,
-                temperature: 0.7,
-            }),
-            allowedUrls: [config.baseUrl],
-        });
+        try {
+            response = await safeFetch(url, {
+                method: 'POST',
+                signal: options?.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': currentKey,
+                    'anthropic-version': '2023-06-01',
+                },
+                body: JSON.stringify({
+                    model: config.model,
+                    system: systemMessage?.content,
+                    messages: userMessages.map(m => ({ role: m.role, content: m.content })),
+                    max_tokens: options?.maxTokens ?? 4096,
+                    temperature: options?.temperature ?? 0.7,
+                }),
+                allowedUrls,
+            });
+        } catch (error) {
+            throw classifyFetchError(error, ctx);
+        }
 
         if (response.ok) break;
 
-        if (response.status === 429 && i < config.apiKeys.length - 1) {
-            logger.warn('[ANTHROPIC COMP] Rate limit hit (429), retrying', { model: config.model, keyIndex: i });
+        const rawBody = await readResponseTextSafe(response);
+        const parsedError = parseUpstreamProviderError(
+            'anthropic',
+            response.status,
+            rawBody,
+            response.headers,
+            ctx
+        );
+
+        if (i < keys.length - 1 && (KEY_ROTATION_STATUSES.has(response.status) || parsedError.shouldRotateKey)) {
+            logger.warn('[ANTHROPIC COMP] Upstream error, rotating to next API key', {
+                model: config.model,
+                status: response.status,
+                keyIndex: i,
+                totalKeys: keys.length,
+            });
             continue;
         }
 
-        break;
+        throw parsedError;
     }
 
-    if (!response || !response.ok) await handleError(response!);
-    const data = await response!.json();
-
-    if (data.error || data.type === 'error') {
-        logger.error('[ANTHROPIC COMP] Provider returned error payload', { error: data.error || data, model: config.model });
-        throw new Error(data.error?.message || data.message || JSON.stringify(data));
+    if (!response) {
+        throw new AiProviderError({
+            code: 'PROVIDER_UNAVAILABLE',
+            httpStatus: 503,
+            userMessage: 'The AI service is temporarily unavailable. Please try again shortly.',
+            retryable: true,
+            shouldFallback: true,
+            ...ctx,
+        });
     }
 
-    if (!data.content || data.content.length === 0) {
-        logger.warn('[ANTHROPIC COMP] Empty content in response', { data: JSON.stringify(data).substring(0, 300) });
-        return '';
-    }
-
-    return data.content[0]?.text || '';
+    const data = await parseJsonResponseOrThrow(response, ctx);
+    return extractAnthropicResponseText(data, ctx);
 }
 
 async function generateGoogleCompletion(
     config: AiConfig,
     messages: ChatMessage[],
-    signal?: AbortSignal
+    options?: AiCompletionOptions
 ): Promise<string> {
+    const keys = resolveApiKeys(config);
+    const ctx = buildErrorContext(config);
     const systemMessage = messages.find(m => m.role === 'system');
     const chatMessages = messages.filter(m => m.role !== 'system');
 
     const geminiContent = chatMessages.map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
+        parts: [{ text: m.content }],
     })).filter(m => m.parts[0].text);
+
+    const generationConfig: Record<string, unknown> = {
+        maxOutputTokens: options?.maxTokens ?? 4096,
+        temperature: options?.temperature ?? 0.7,
+    };
+    if (options?.responseMimeType) {
+        generationConfig.responseMimeType = options.responseMimeType;
+    }
+
+    const url = `${normalizeBaseUrl(config.baseUrl)}/v1beta/models/${encodeURIComponent(config.model.replace(/^models\//, ''))}:generateContent`;
+    const allowedUrls = getAllowedUrls(config);
 
     let response: Response | undefined;
 
-    for (let i = 0; i < config.apiKeys.length; i++) {
-        const currentKey = config.apiKeys[i];
-        const url = `${config.baseUrl}/v1beta/models/${config.model}:generateContent`;
+    for (let i = 0; i < keys.length; i++) {
+        const currentKey = keys[i];
 
-        response = await safeFetch(url, {
-            method: 'POST',
-            signal,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': currentKey,
-            },
-            body: JSON.stringify({
-                system_instruction: systemMessage ? {
-                    parts: [{ text: systemMessage.content }]
-                } : undefined,
-                contents: geminiContent,
-                generationConfig: {
-                    maxOutputTokens: 1000,
-                    temperature: 0.7,
-                }
-            }),
-            allowedUrls: [config.baseUrl],
-        });
+        try {
+            response = await safeFetch(url, {
+                method: 'POST',
+                signal: options?.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': currentKey,
+                },
+                body: JSON.stringify({
+                    system_instruction: systemMessage ? {
+                        parts: [{ text: systemMessage.content }],
+                    } : undefined,
+                    contents: geminiContent,
+                    generationConfig,
+                }),
+                allowedUrls,
+            });
+        } catch (error) {
+            throw classifyFetchError(error, ctx);
+        }
 
         if (response.ok) break;
 
-        if (response.status === 429 && i < config.apiKeys.length - 1) {
-            logger.warn('[GEMINI COMP] Rate limit hit (429), retrying', { model: config.model, keyIndex: i });
+        const rawBody = await readResponseTextSafe(response);
+        const parsedError = parseUpstreamProviderError(
+            'google',
+            response.status,
+            rawBody,
+            response.headers,
+            ctx
+        );
+
+        if (i < keys.length - 1 && (KEY_ROTATION_STATUSES.has(response.status) || parsedError.shouldRotateKey)) {
+            logger.warn('[GEMINI COMP] Upstream error, rotating to next API key', {
+                model: config.model,
+                status: response.status,
+                keyIndex: i,
+                totalKeys: keys.length,
+            });
             continue;
         }
 
-        break;
+        throw parsedError;
     }
 
-    if (!response || !response.ok) await handleError(response!);
-    const data = await response!.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!response) {
+        throw new AiProviderError({
+            code: 'PROVIDER_UNAVAILABLE',
+            httpStatus: 503,
+            userMessage: 'The AI service is temporarily unavailable. Please try again shortly.',
+            retryable: true,
+            shouldFallback: true,
+            ...ctx,
+        });
+    }
+
+    const data = await parseJsonResponseOrThrow(response, ctx);
+    return extractGoogleResponseText(data, ctx);
+}
+
+function normalizeImageInput(image: AiImageInput): { mimeType: string; rawBase64: string; dataUrl: string } {
+    const match = image.base64Data.match(/^data:([^;]+);base64,(.+)$/i);
+    if (match) {
+        const mimeType = image.mimeType || match[1] || 'image/jpeg';
+        const rawBase64 = match[2];
+        return {
+            mimeType,
+            rawBase64,
+            dataUrl: `data:${mimeType};base64,${rawBase64}`,
+        };
+    }
+
+    const mimeType = image.mimeType || 'image/jpeg';
+    return {
+        mimeType,
+        rawBase64: image.base64Data,
+        dataUrl: `data:${mimeType};base64,${image.base64Data}`,
+    };
+}
+
+/**
+ * Generate a vision completion (prompt + base64 image) across Google, Anthropic, or OpenAI-compatible endpoints.
+ */
+export async function generateVisionCompletion(
+    config: AiConfig,
+    prompt: string,
+    image: AiImageInput,
+    options?: AiCompletionOptions
+): Promise<string> {
+    const reqSignal = buildRequestSignal(options?.signal, options?.timeoutMs);
+    const ctx = buildErrorContext(config);
+    const normalizedImage = normalizeImageInput(image);
+
+    try {
+        if (config.provider === 'google') {
+            const keys = resolveApiKeys(config);
+            const generationConfig: Record<string, unknown> = {
+                maxOutputTokens: options?.maxTokens ?? 4096,
+                temperature: options?.temperature ?? 0.7,
+            };
+            if (options?.responseMimeType) {
+                generationConfig.responseMimeType = options.responseMimeType;
+            }
+
+            const url = `${normalizeBaseUrl(config.baseUrl)}/v1beta/models/${encodeURIComponent(config.model.replace(/^models\//, ''))}:generateContent`;
+            const allowedUrls = getAllowedUrls(config);
+
+            let response: Response | undefined;
+            for (let i = 0; i < keys.length; i++) {
+                try {
+                    response = await safeFetch(url, {
+                        method: 'POST',
+                        signal: reqSignal.signal,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-goog-api-key': keys[i],
+                        },
+                        body: JSON.stringify({
+                            contents: [
+                                {
+                                    role: 'user',
+                                    parts: [
+                                        { text: prompt },
+                                        {
+                                            inlineData: {
+                                                mimeType: normalizedImage.mimeType,
+                                                data: normalizedImage.rawBase64,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                            generationConfig,
+                        }),
+                        allowedUrls,
+                    });
+                } catch (error) {
+                    throw classifyFetchError(error, ctx);
+                }
+
+                if (response.ok) break;
+
+                const rawBody = await readResponseTextSafe(response);
+                const parsedError = parseUpstreamProviderError(
+                    'google',
+                    response.status,
+                    rawBody,
+                    response.headers,
+                    ctx
+                );
+
+                if (i < keys.length - 1 && (KEY_ROTATION_STATUSES.has(response.status) || parsedError.shouldRotateKey)) {
+                    logger.warn('[GEMINI VISION] Upstream error, rotating to next API key', {
+                        model: config.model,
+                        status: response.status,
+                        keyIndex: i,
+                        totalKeys: keys.length,
+                    });
+                    continue;
+                }
+
+                throw parsedError;
+            }
+
+            if (!response) {
+                throw new AiProviderError({
+                    code: 'PROVIDER_UNAVAILABLE',
+                    httpStatus: 503,
+                    userMessage: 'The AI service is temporarily unavailable. Please try again shortly.',
+                    retryable: true,
+                    shouldFallback: true,
+                    ...ctx,
+                });
+            }
+
+            const data = await parseJsonResponseOrThrow(response, ctx);
+            return extractGoogleResponseText(data, ctx);
+        }
+
+        if (config.provider === 'anthropic') {
+            const keys = resolveApiKeys(config);
+            const url = `${normalizeBaseUrl(config.baseUrl)}/v1/messages`;
+            const allowedUrls = getAllowedUrls(config);
+
+            let response: Response | undefined;
+            for (let i = 0; i < keys.length; i++) {
+                try {
+                    response = await safeFetch(url, {
+                        method: 'POST',
+                        signal: reqSignal.signal,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': keys[i],
+                            'anthropic-version': '2023-06-01',
+                        },
+                        body: JSON.stringify({
+                            model: config.model,
+                            max_tokens: options?.maxTokens ?? 4096,
+                            temperature: options?.temperature ?? 0.7,
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: [
+                                        {
+                                            type: 'image',
+                                            source: {
+                                                type: 'base64',
+                                                media_type: normalizedImage.mimeType,
+                                                data: normalizedImage.rawBase64,
+                                            },
+                                        },
+                                        {
+                                            type: 'text',
+                                            text: prompt,
+                                        },
+                                    ],
+                                },
+                            ],
+                        }),
+                        allowedUrls,
+                    });
+                } catch (error) {
+                    throw classifyFetchError(error, ctx);
+                }
+
+                if (response.ok) break;
+
+                const rawBody = await readResponseTextSafe(response);
+                const parsedError = parseUpstreamProviderError(
+                    'anthropic',
+                    response.status,
+                    rawBody,
+                    response.headers,
+                    ctx
+                );
+
+                if (i < keys.length - 1 && (KEY_ROTATION_STATUSES.has(response.status) || parsedError.shouldRotateKey)) {
+                    logger.warn('[ANTHROPIC VISION] Upstream error, rotating to next API key', {
+                        model: config.model,
+                        status: response.status,
+                        keyIndex: i,
+                        totalKeys: keys.length,
+                    });
+                    continue;
+                }
+
+                throw parsedError;
+            }
+
+            if (!response) {
+                throw new AiProviderError({
+                    code: 'PROVIDER_UNAVAILABLE',
+                    httpStatus: 503,
+                    userMessage: 'The AI service is temporarily unavailable. Please try again shortly.',
+                    retryable: true,
+                    shouldFallback: true,
+                    ...ctx,
+                });
+            }
+
+            const data = await parseJsonResponseOrThrow(response, ctx);
+            return extractAnthropicResponseText(data, ctx);
+        }
+
+        const visionMessages = [
+            {
+                role: 'user',
+                content: [
+                    { type: 'text', text: prompt },
+                    {
+                        type: 'image_url',
+                        image_url: {
+                            url: normalizedImage.dataUrl,
+                        },
+                    },
+                ],
+            },
+        ];
+
+        const response = await fetchOpenAiWithRotation(config, visionMessages, {
+            stream: false,
+            maxTokens: options?.maxTokens ?? 4096,
+            temperature: options?.temperature ?? 0.7,
+            signal: reqSignal.signal,
+            logPrefix: '[OPENAI VISION]',
+        });
+
+        const data = await parseJsonResponseOrThrow(response, ctx);
+        return extractOpenAiResponseText(data, ctx);
+    } catch (error: unknown) {
+        throw classifyFetchError(error, ctx);
+    } finally {
+        reqSignal.cleanup();
+    }
 }
 
 /**
@@ -1185,84 +2114,149 @@ function boundEchoText(value: unknown): string | undefined {
         : value;
 }
 
+async function readTestResponseBody(
+    res: Response
+): Promise<{ rawBody: string; parsedMessage?: string }> {
+    if (typeof res.json === 'function') {
+        try {
+            const data = (await res.json()) as {
+                error?: { message?: unknown };
+                message?: unknown;
+            };
+            const parsedMessage =
+                typeof data?.error?.message === 'string'
+                    ? data.error.message
+                    : typeof data?.message === 'string'
+                        ? data.message
+                        : undefined;
+            return {
+                rawBody: JSON.stringify(data),
+                parsedMessage,
+            };
+        } catch {
+            // Fall back to text body below
+        }
+    }
+
+    if (typeof res.text === 'function') {
+        const text = (await res.text().catch(() => '')) ?? '';
+        return {
+            rawBody: text,
+            parsedMessage: text || undefined,
+        };
+    }
+
+    return { rawBody: '' };
+}
+
 export async function testAiConfig(
     config: AiConfig,
     options?: { statusOnly?: boolean; allowedUrls?: string[] }
-): Promise<{ success: boolean; error?: string; model?: string }> {
+): Promise<{ success: boolean; error?: string; errorCode?: AiErrorCode; model?: string }> {
     try {
         const allowedUrls =
             options && 'allowedUrls' in options
                 ? options.allowedUrls
                 : (config.allowedUrls ?? [config.baseUrl]);
         const statusOnly = options?.statusOnly ?? config.statusOnly ?? false;
+        const apiKey = config.apiKey || config.apiKeys?.[0] || '';
+        const baseUrl = normalizeBaseUrl(config.baseUrl);
+        const ctx: UpstreamErrorContext = {
+            ...buildErrorContext(config),
+            isByok: true,
+        };
 
         if (config.provider === 'google') {
-            const url = `${config.baseUrl.replace(/\/$/, '')}/v1beta/models/${encodeURIComponent(config.model)}`;
+            const url = `${baseUrl}/v1beta/models/${encodeURIComponent(config.model.replace(/^models\//, ''))}`;
             const res = await safeFetch(url, {
-                headers: { 'x-goog-api-key': config.apiKey },
+                headers: { 'x-goog-api-key': apiKey },
                 allowedUrls,
             });
             if (res.ok) return { success: true, model: config.model };
+
+            const { rawBody, parsedMessage } = await readTestResponseBody(res);
+            const parsedErr = parseUpstreamProviderError('google', res.status, rawBody, res.headers, ctx);
             if (statusOnly) {
-                return { success: false, error: `API returned ${res.status}` };
+                return { success: false, error: parsedErr.userMessage, errorCode: parsedErr.code };
             }
-            const data = await res.json();
-            return { success: false, error: boundEchoText(data.error?.message) || 'Google API Error' };
+            const bounded = boundEchoText(parsedMessage ? sanitizeErrorMessage(parsedMessage) : undefined);
+            return {
+                success: false,
+                error: bounded || parsedErr.userMessage,
+                errorCode: parsedErr.code,
+            };
         }
+
         if (config.provider === 'anthropic') {
-            const res = await safeFetch(`${config.baseUrl}/v1/messages`, {
+            const res = await safeFetch(`${baseUrl}/v1/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-api-key': config.apiKey,
-                    'anthropic-version': '2023-06-01'
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01',
                 },
                 body: JSON.stringify({
                     model: config.model,
                     max_tokens: 1,
-                    messages: [{ role: 'user', content: 'Hi' }]
+                    messages: [{ role: 'user', content: 'Hi' }],
                 }),
                 allowedUrls,
             });
             if (res.ok) return { success: true, model: config.model };
+
+            const { rawBody, parsedMessage } = await readTestResponseBody(res);
+            const parsedErr = parseUpstreamProviderError('anthropic', res.status, rawBody, res.headers, ctx);
             if (statusOnly) {
-                return { success: false, error: `API returned ${res.status}` };
+                return { success: false, error: parsedErr.userMessage, errorCode: parsedErr.code };
             }
-            const data = await res.json();
-            return { success: false, error: boundEchoText(data.error?.message) || 'Anthropic API Error' };
+            const bounded = boundEchoText(parsedMessage ? sanitizeErrorMessage(parsedMessage) : undefined);
+            return {
+                success: false,
+                error: bounded || parsedErr.userMessage,
+                errorCode: parsedErr.code,
+            };
         }
 
-        const chatResponse = await safeFetch(`${config.baseUrl}/chat/completions`, {
+        const chatResponse = await safeFetch(`${baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.apiKey}`,
+                'Authorization': `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
                 model: config.model,
                 messages: [{ role: 'user', content: 'Hi' }],
-                max_tokens: 5,
+                ...(isReasoningModel(config.model) ? { max_completion_tokens: 16 } : { max_tokens: 5 }),
             }),
             allowedUrls,
         });
 
         if (chatResponse.ok) return { success: true, model: config.model };
 
-        let errorMessage = `API returned ${chatResponse.status}`;
+        const { rawBody, parsedMessage } = await readTestResponseBody(chatResponse);
+        const parsedErr = parseUpstreamProviderError(
+            'openai',
+            chatResponse.status,
+            rawBody,
+            chatResponse.headers,
+            ctx
+        );
         if (statusOnly) {
-            return { success: false, error: errorMessage };
+            return { success: false, error: parsedErr.userMessage, errorCode: parsedErr.code };
         }
-        try {
-            const data = await chatResponse.json();
-            const message = boundEchoText(data.error?.message);
-            if (message) errorMessage += `: ${message}`;
-        } catch {
-            const text = boundEchoText((await chatResponse.text().catch(() => '')) ?? '');
-            if (text) errorMessage += `: ${text}`;
-        }
-        return { success: false, error: errorMessage };
+
+        const bounded = boundEchoText(parsedMessage ? sanitizeErrorMessage(parsedMessage) : undefined);
+        return {
+            success: false,
+            error: bounded ? `API returned ${chatResponse.status}: ${bounded}` : parsedErr.userMessage,
+            errorCode: parsedErr.code,
+        };
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
-        return { success: false, error: message };
+        if (message.includes('SSRF Protection:')) {
+            return { success: false, error: message };
+        }
+        const classified = classifyFetchError(error, { ...buildErrorContext(config), isByok: true });
+        return { success: false, error: classified.userMessage, errorCode: classified.code };
     }
 }

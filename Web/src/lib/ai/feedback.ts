@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/db';
 import {
-    getAiConfigForModel,
     buildUserContext,
     buildActivityContext,
     formatContextForAi,
@@ -11,6 +10,10 @@ import {
 import type { ChatMessage } from '@/lib/ai';
 import { logger } from '@/lib/logging/logger';
 import { fenceUntrusted } from '@/lib/ai/prompts';
+import { AiProviderError } from '@/lib/ai/errors';
+import { executeCompletionWithFallback } from '@/lib/ai/executor';
+import { countTokens, estimateChatTokens } from '@/lib/ai/tokenCounter';
+import { getFeatureDailyLimit, incrementUsage } from '@/lib/ai/usage';
 
 /**
  * Normalize LaTeX-style section headers that some models (DeepSeek/Kimi/Qwen
@@ -249,14 +252,62 @@ export async function generateAndSaveActivityFeedback(
         }
     }
 
-    const usageStatus = await checkUsageLimit(userId);
-    if (!usageStatus.canUse) {
-        throw new Error(usageStatus.reason || 'Usage limit reached');
+    const [userSettings, globalSettings] = await Promise.all([
+        prisma.userAiSettings.findUnique({ where: { userId } }),
+        prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
+    ]);
+
+    if (!userSettings || !userSettings.adminAllowed) {
+        throw new AiProviderError({
+            code: 'AI_DISABLED',
+            httpStatus: 403,
+            userMessage: 'AI access is not enabled for your account. Contact an administrator.',
+            shouldFallback: false,
+            retryable: false,
+        });
     }
 
-    const userSettings = await prisma.userAiSettings.findUnique({ where: { userId } });
-    const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
-    const userTier = userSettings?.usageTier || 'none';
+    if (userSettings.aiEnabled === false) {
+        throw new AiProviderError({
+            code: 'AI_DISABLED',
+            httpStatus: 403,
+            userMessage: 'AI features are currently disabled. Enable them in your AI settings.',
+            shouldFallback: false,
+            retryable: false,
+        });
+    }
+
+    const usageStatus = await checkUsageLimit(userId);
+    if (!usageStatus.canUse) {
+        const reason = usageStatus.reason || 'Usage limit reached';
+        if (reason === 'AI not configured' || reason.includes('Add your own API key')) {
+            throw new AiProviderError({
+                code: 'NOT_CONFIGURED',
+                httpStatus: 403,
+                userMessage: reason,
+                shouldFallback: false,
+                retryable: false,
+            });
+        }
+        if (reason.includes('not enabled')) {
+            throw new AiProviderError({
+                code: 'AI_DISABLED',
+                httpStatus: 403,
+                userMessage: reason,
+                shouldFallback: false,
+                retryable: false,
+            });
+        }
+        throw new AiProviderError({
+            code: 'USER_LIMIT_REACHED',
+            httpStatus: 429,
+            userMessage: reason,
+            shouldFallback: false,
+            retryable: false,
+        });
+    }
+
+    const userTier = userSettings.usageTier || 'none';
 
     // Quota-lost-update fix: the daily activity-feedback limit used to be a
     // read-compare before the multi-second provider call plus a blind
@@ -266,13 +317,8 @@ export async function generateAndSaveActivityFeedback(
     // RESERVED atomically before any provider spend, with a conditional
     // updateMany whose WHERE clause is the gate.
     let feedbackSlotClaimed = false;
-    if (userTier !== 'none' && userSettings) {
-        const userLevelLimits = {
-            tier1: globalSettings?.tier1ActivityFeedbackLimit ?? 1,
-            tier2: globalSettings?.tier2ActivityFeedbackLimit ?? 3,
-            tier3: globalSettings?.tier3ActivityFeedbackLimit ?? 6,
-        };
-        const dailyLimit = userLevelLimits[userTier as keyof typeof userLevelLimits] || userLevelLimits.tier1;
+    if (userTier !== 'none') {
+        const dailyLimit = getFeatureDailyLimit('activityFeedback', userTier, globalSettings);
 
         if (typeof ensurePeriodUsageReset === 'function' && !(prisma as any).__updateManyCalls) {
             await ensurePeriodUsageReset(userId);
@@ -304,7 +350,13 @@ export async function generateAndSaveActivityFeedback(
             },
         });
         if (claimed.count === 0) {
-            throw new Error(`Daily limit of ${dailyLimit} activity analyses reached for your tier.`);
+            throw new AiProviderError({
+                code: 'USER_LIMIT_REACHED',
+                httpStatus: 429,
+                userMessage: `Daily limit of ${dailyLimit} activity analyses reached for your tier.`,
+                shouldFallback: false,
+                retryable: false,
+            });
         }
         feedbackSlotClaimed = true;
     }
@@ -320,24 +372,22 @@ export async function generateAndSaveActivityFeedback(
         const baseContext = formatContextForAi(userContext);
         const activityStr = formatActivityForAi(activityContext);
 
-        const activityFeedbackModel = globalSettings?.activityFeedbackModel || 'gemini-1.5-flash';
-        const providerConfig = await getAiConfigForModel(userId, activityFeedbackModel);
-
-        if (!providerConfig) {
-            throw new Error('AI features not enabled or no provider configured that supports the requested model');
-        }
-
         // Generate all feedback in a single AI request
         const systemPromptMessage: string = `You are a running coach analyzing an athlete's activity.\n\n--- Athlete Profile ---\n${baseContext}\n\n${ACTIVITY_FEEDBACK_PROMPTS.combined}`;
         const userMessage: string = `Here's the activity to analyze:\n\n${activityStr}`;
 
-        const { generateCompletion } = await import('@/lib/ai/providers');
         const messages: ChatMessage[] = [
             { role: 'system', content: systemPromptMessage },
             { role: 'user', content: userMessage },
         ];
 
-        const raw = await generateCompletion(providerConfig, messages, signal);
+        const result = await executeCompletionWithFallback(
+            userId,
+            'activityFeedback',
+            messages,
+            signal ? { signal } : undefined
+        );
+        const raw = result.text;
 
         // Strip <think> blocks that some models (e.g. DeepSeek) emit before parsing.
         // These blocks often echo back the prompt including section names, which confuses
@@ -445,6 +495,23 @@ export async function generateAndSaveActivityFeedback(
                 generatedAt: new Date(),
             },
         });
+
+        try {
+            const inputTokens = estimateChatTokens(messages, result.targetUsed.model);
+            const outputTokens = countTokens(raw, result.targetUsed.model);
+            await incrementUsage(
+                userId,
+                { inputTokens, outputTokens },
+                result.targetUsed.providerId,
+                { skipMessageIncrement: true, model: result.targetUsed.model }
+            );
+        } catch (usageError) {
+            logger.warn('Failed to record activity feedback token usage', {
+                userId,
+                activityId,
+                error: usageError instanceof Error ? usageError.message : String(usageError),
+            });
+        }
 
         return { feedback, cached: false };
     } catch (error) {

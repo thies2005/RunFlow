@@ -39,6 +39,8 @@ ENV NODE_OPTIONS="--max-old-space-size=6144"
 RUN --mount=type=cache,target=/app/.next/cache \
     npm run build
 
+RUN rm -rf /app/node_modules/@capacitor /app/node_modules/@trapezedev
+
 # ==================================
 # Stage 2: Runner
 # ==================================

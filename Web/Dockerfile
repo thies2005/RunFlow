@@ -6,8 +6,9 @@
 FROM node:24-alpine AS builder
 # M-11 fix: Pin node version for reproducible builds
 
-# Install required packages
-RUN apk add --no-cache libc6-compat openssl
+# Install required packages and patch base image packages / bundled npm
+RUN apk upgrade --no-cache && apk add --no-cache libc6-compat openssl \
+    && npm install -g npm@latest && npm cache clean --force
 WORKDIR /app
 
 # Install dependencies with cache and memory limit
@@ -42,7 +43,8 @@ RUN --mount=type=cache,target=/app/.next/cache \
 # Stage 2: Runner
 # ==================================
 FROM node:24-alpine AS runner
-RUN apk add --no-cache openssl libc6-compat wget curl postgresql16-client
+RUN apk upgrade --no-cache && apk add --no-cache openssl libc6-compat wget curl postgresql16-client \
+    && npm install -g npm@latest && npm cache clean --force
 WORKDIR /app
 
 ENV NODE_ENV=production
